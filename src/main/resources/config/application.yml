@@ -1,0 +1,210 @@
+# ===================================================================
+# Spring Boot configuration.
+#
+# This configuration will be overridden by the Spring profile you use,
+# for example application-dev.yml if you use the "dev" profile.
+#
+# More information on profiles: https://jhipster.github.io/profiles/
+# More information on configuration properties: https://jhipster.github.io/common-application-properties/
+# ===================================================================
+
+# ===================================================================
+# Standard Spring Boot properties.
+# Full reference is available at:
+# http://docs.spring.io/spring-boot/docs/current/reference/html/common-application-properties.html
+# ===================================================================
+
+# See https://github.com/Netflix/Hystrix/wiki/Configuration
+#hystrix:
+#    command:
+#        default:
+#            execution:
+#                isolation:
+#                    thread:
+#                        timeoutInMilliseconds: 10000
+
+management:
+    security:
+        roles: ADMIN
+    context-path: /management
+    health:
+        mail:
+            enabled: false # When using the MailService, configure an SMTP server and set this to true
+spring:
+    application:
+        name: entity
+    cloud:
+        consul:
+            discovery:
+                healthCheckPath: /management/health
+                instanceId: ${spring.application.name}:${spring.application.instance-id:${random.value}}
+    jackson:
+        serialization.write_dates_as_timestamps: false
+        default-property-inclusion: NON_NULL
+        serialization.write_empty_json_arrays: false
+    jpa:
+        open-in-view: false
+        hibernate:
+            ddl-auto: none
+            naming:
+                physical-strategy: org.springframework.boot.orm.jpa.hibernate.SpringPhysicalNamingStrategy
+                implicit-strategy: org.springframework.boot.orm.jpa.hibernate.SpringImplicitNamingStrategy
+    messages:
+        basename: i18n/messages
+    mvc:
+        favicon:
+            enabled: false
+    thymeleaf:
+        mode: XHTML
+    http:
+        multipart:
+            max-file-size: 20MB
+            max-request-size: 20MB
+    kafka:
+        consumer:
+            group-id: entity
+            key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+            value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+        listener:
+            concurrency: 16
+        producer:
+            key-serializer: org.apache.kafka.common.serialization.StringSerializer
+            value-serializer: org.apache.kafka.common.serialization.StringSerializer
+security:
+    basic:
+        enabled: false
+    oauth2:
+        resource:
+            filter-order: 3
+liquibase:
+    default-schema: XM
+server:
+    session:
+        cookie:
+            http-only: true
+
+
+# ===================================================================
+# JHipster specific properties
+#
+# Full reference is available at: https://jhipster.github.io/common-application-properties/
+# ===================================================================
+
+jhipster:
+    async:
+        core-pool-size: 2
+        max-pool-size: 50
+        queue-capacity: 10000
+    # By default CORS is disabled. Uncomment to enable.
+    #cors:
+        #allowed-origins: "*"
+        #allowed-methods: GET, PUT, POST, DELETE, OPTIONS
+        #allowed-headers: "*"
+        #exposed-headers:
+        #allow-credentials: true
+        #max-age: 1800
+    mail:
+        from: entity@localhost
+    swagger:
+        default-include-pattern: /api/.*
+        title: entity API
+        description: entity API documentation
+        version: 0.0.1
+        terms-of-service-url:
+        contact-name:
+        contact-url:
+        contact-email:
+        license:
+        license-url:
+    ribbon:
+        display-on-active-profiles: dev
+
+# ===================================================================
+# Application specific properties
+# Add your own application properties here, see the ApplicationProperties class
+# to have type-safe configuration, like in the JHipsterProperties above
+#
+# More documentation is available at:
+# https://jhipster.github.io/common-application-properties/
+# ===================================================================
+
+xm-config:
+    enabled: true
+    hazelcast:
+        hazelcast-config-url: classpath:./config/hazelcast-consul.xml
+        interfaces:
+        consul-host: ${spring.cloud.consul.host}
+        consul-port: ${spring.cloud.consul.port}
+        consul-service-name: xm-tenant-config-hazelcast-cluster
+        consul-healthy-only: true
+        consul-service-tags: 'hazelcast'
+        consul-discovery-delay-ms: 10000
+        group-name: xm-tenant-config-hazelcast-cluster
+        group-pass:
+    xm-config-url: http://config
+
+application:
+    tenant-ignored-path-list: /v2/api-docs, /api/profile-info, /swagger-resources/configuration/ui, /management/health
+    timelines-enabled: true
+    kafka-enabled: true
+    tenant-create-service-list: uaa, gate, timeline, entity, dashboard
+    tenant-client-connection-timeout: 2000
+    tenant-client-read-timeout: 40000
+    webapp-name: webapp
+    specification-webapp-name: settings-public.yml
+    specification-name: xmentityspec.yml
+    specification-path-pattern: /config/tenants/{tenantName}/entity/${application.specification-name}
+    kafka-system-topic: system_topic
+    kafka-system-queue: system_queue
+    retry:
+        max-attempts: 3
+        delay: 1000 #in milliseconds
+        multiplier: 2
+
+# ===================================================================
+# Timeline specific properties
+#
+#    Example:
+# mask-rules: # rule for masking data in request/response (e.g. image content)
+#   - endpoint-to-mask: /api/attachments # endpoint to mask
+#     http-method: POST, PUT # list of http methods of endpoint
+#     path-to-mask: $.content.value # list of json-path variables to mask
+#     mask: <bytes[]> # replacement string
+#     mask-request: true # apply mask to request body
+#     mask-response: true # apply mask to response body
+#
+# ===================================================================
+timelines:
+    mask-rules:
+        - endpoint-to-mask: /api/attachments
+          http-method: POST, PUT
+          path-to-mask: $.content.value
+          mask: <bytes[]>
+          mask-request: true
+          mask-response: true
+        - endpoint-to-mask: /api/attachments/**
+          http-method: GET
+          path-to-mask: $.content.value
+          mask: <bytes[]>
+          mask-response: true
+        - endpoint-to-mask: /api/xm-entity-specs
+          http-method: GET
+          path-to-mask: $.[*]
+          mask: SPECS
+          mask-response: true
+        - endpoint-to-mask: /api/contents
+          http-method: POST, PUT
+          path-to-mask: $.value
+          mask: <bytes[]>
+          mask-request: true
+          mask-response: true
+        - endpoint-to-mask: /api/contents
+          http-method: GET
+          path-to-mask: $.[*].value
+          mask: <bytes[]>
+          mask-response: true
+        - endpoint-to-mask: /api/contents/**
+          http-method: GET
+          path-to-mask: $.value
+          mask: <bytes[]>
+          mask-response: true

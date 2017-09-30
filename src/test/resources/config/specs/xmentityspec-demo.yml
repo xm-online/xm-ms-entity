@@ -1,0 +1,60 @@
+---
+types:
+    - key: ACCOUNT
+      name: { en: "Account" }
+      isApp: true
+      isAbstract: true
+      tags:
+          - key: TEST
+            name: { en: "Test Account" }
+          - key: FAVORIT
+            name: { en: "Favorite" }
+    - key: ACCOUNT.ADMIN
+      name: { en: "Admin" }
+      isApp: false
+      isAbstract: false
+    - key: ACCOUNT.USER
+      name: { en: "User" }
+      isApp: false
+      isAbstract: false
+    - key: PRODUCT-OFFERING
+      name: { en: "Offering" }
+      isApp: true
+      isAbstract: true
+    - key: PRODUCT-OFFERING.CAMPAIGN
+      name: { en: "Campaign" }
+      isApp: false
+      isAbstract: false
+    - key: PRODUCT-OFFERING.RATE-PLAN
+      name: { en: "Rate plan" }
+      isApp: false
+      isAbstract: false
+      links:
+          - key: PRICE
+            name: { en: "Price" }
+            typeKey: PRICE
+            max: 10
+    - key: PRICE
+      name: { en: "Price" }
+      isApp: false
+      isAbstract: true
+    - key: PRICE.ONE-TIME-FEE
+      name: { en: "One time fee" }
+      isApp: false
+      isAbstract: false
+    - key: PRICE.USAGE
+      name: { en: "Usage" }
+      isApp: false
+      isAbstract: false
+    - key: PRICE.RECURRING-FEE
+      name: { en: "Recurring fee" }
+      isApp: false
+      isAbstract: false
+    - key: PRICE.DISCOUNT
+      name: { en: "Discount" }
+      isApp: false
+      isAbstract: false
+    - key: PRICE.ALLOWANCE
+      name: { en: "Allowance" }
+      isApp: false
+      isAbstract: false

@@ -1,0 +1,83 @@
+---
+types:
+    - key: ACCOUNT
+      name: { en: "Account" }
+      isApp: true
+      isAbstract: true
+      dataSpec: |
+                {
+                    "type": "object",
+                    "title": "Data",
+                    "properties": {
+                        "booleanProperties": {
+                            "title": "booleanProperties title",
+                            "type": "boolean"
+                        },
+                        "numberProperties": {
+                            "title": "numberProperties title",
+                            "type": "number"
+                        },
+                        "AAAAAAAAAA": {
+                            "title": "AAAAAAAAAA title",
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "AAAAAAAAAA"
+                    ]
+                }
+      tags:
+          - key: TEST
+            name: { en: "Test Account" }
+          - key: FAVORIT
+            name: { en: "Favorit" }
+      attachments:
+          - key: AAAAAAAAAA
+          - key: BBBBBBBBBB
+      locations:
+          - key: AAAAAAAAAA
+          - key: BBBBBBBBBB
+      ratings:
+          - key: AAAAAAAAAA
+          - key: BBBBBBBBBB
+      calendars:
+          - key: AAAAAAAAAA
+          - key: BBBBBBBBBB
+      states:
+          - key: STATE1
+            name: { en: "State 1", ru: "Состояние 1" }
+            icon: null
+            color: null
+            next:
+                - stateKey: STATE2
+          - key: STATE2
+            name: { en: "State 2", ru: "Состояние 2" }
+            icon: null
+            color: null
+            next:
+                - stateKey: STATE1
+                - stateKey: STATE3
+          - key: STATE3
+            name: { en: "State 3", ru: "Состояние 3" }
+            icon: highlight_off
+            color: null
+    - key: ACCOUNT.ADMIN
+      name: { en: "Admin" }
+      isApp: false
+      isAbstract: false
+      calendars:
+          - key: TYPEKEY
+            events:
+                - key: TYPEKEY
+    - key: ACCOUNT.USER
+      name: { en: "User" }
+      isApp: false
+      isAbstract: false
+    - key: ACCOUNT.OWNER
+      name: { en: "Owner" }
+      isApp: false
+      isAbstract: false
+    - key: ACCOUNTING
+      name: { en: "ACCOUNTING" }
+      isApp: false
+      isAbstract: false
