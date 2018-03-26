@@ -15,18 +15,18 @@ import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.services.s3.transfer.TransferManager;
 import com.amazonaws.services.s3.transfer.TransferManagerBuilder;
 import com.amazonaws.services.s3.transfer.Upload;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URLConnection;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @RequiredArgsConstructor
 public class AmazonS3Template {
 
-    private static final String BUCKET = "xm-avatar";
-
+    private final String bucket;
     private final String endpoint;
     private final String region;
     private final String accessKeyId;
@@ -44,7 +44,7 @@ public class AmazonS3Template {
     public void save(String key, InputStream inputStream) throws IOException {
         ObjectMetadata metadata = new ObjectMetadata();
         metadata.setContentType(URLConnection.guessContentTypeFromStream(inputStream));
-        PutObjectRequest request = new PutObjectRequest(BUCKET, key, inputStream, metadata);
+        PutObjectRequest request = new PutObjectRequest(bucket, key, inputStream, metadata);
         request.setCannedAcl(CannedAccessControlList.PublicRead);
         request.getRequestClientOptions().setReadLimit(Integer.MAX_VALUE);
         Upload upload = getTransferManager().upload(request);
@@ -67,7 +67,7 @@ public class AmazonS3Template {
      * @return an instance of {@link S3Object} containing the file from S3
      */
     public S3Object get(String key) {
-        return getAmazonS3Client().getObject(BUCKET, key);
+        return getAmazonS3Client().getObject(bucket, key);
     }
 
     /**

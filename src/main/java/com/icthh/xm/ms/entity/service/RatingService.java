@@ -1,36 +1,35 @@
 package com.icthh.xm.ms.entity.service;
 
+import com.icthh.xm.commons.permission.annotation.FindWithPermission;
+import com.icthh.xm.commons.permission.repository.PermittedRepository;
 import com.icthh.xm.ms.entity.domain.Rating;
 import com.icthh.xm.ms.entity.repository.RatingRepository;
+import com.icthh.xm.ms.entity.repository.search.PermittedSearchRepository;
 import com.icthh.xm.ms.entity.repository.search.RatingSearchRepository;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.icthh.xm.ms.entity.service.impl.StartUpdateDateGenerationStrategy;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
-
-import static org.elasticsearch.index.query.QueryBuilders.*;
 
 /**
  * Service Implementation for managing Rating.
  */
 @Service
 @Transactional
+@RequiredArgsConstructor
 public class RatingService {
-
-    private final Logger log = LoggerFactory.getLogger(RatingService.class);
 
     private final RatingRepository ratingRepository;
 
     private final RatingSearchRepository ratingSearchRepository;
 
-    public RatingService(RatingRepository ratingRepository, RatingSearchRepository ratingSearchRepository) {
-        this.ratingRepository = ratingRepository;
-        this.ratingSearchRepository = ratingSearchRepository;
-    }
+    private final PermittedRepository permittedRepository;
+
+    private final PermittedSearchRepository permittedSearchRepository;
+
+    private final StartUpdateDateGenerationStrategy startUpdateDateGenerationStrategy;
 
     /**
      * Save a rating.
@@ -39,7 +38,13 @@ public class RatingService {
      * @return the persisted entity
      */
     public Rating save(Rating rating) {
-        log.debug("Request to save Rating : {}", rating);
+
+        startUpdateDateGenerationStrategy.preProcessStartDate(rating,
+                                                              rating.getId(),
+                                                              ratingRepository,
+                                                              Rating::setStartDate,
+                                                              Rating::getStartDate);
+
         Rating result = ratingRepository.save(rating);
         ratingSearchRepository.save(result);
         return result;
@@ -51,9 +56,9 @@ public class RatingService {
      *  @return the list of entities
      */
     @Transactional(readOnly = true)
-    public List<Rating> findAll() {
-        log.debug("Request to get all Ratings");
-        return ratingRepository.findAll();
+    @FindWithPermission("RATING.GET_LIST")
+    public List<Rating> findAll(String privilegeKey) {
+        return permittedRepository.findAll(Rating.class, privilegeKey);
     }
 
     /**
@@ -64,7 +69,6 @@ public class RatingService {
      */
     @Transactional(readOnly = true)
     public Rating findOne(Long id) {
-        log.debug("Request to get Rating : {}", id);
         return ratingRepository.findOne(id);
     }
 
@@ -74,7 +78,6 @@ public class RatingService {
      *  @param id the id of the entity
      */
     public void delete(Long id) {
-        log.debug("Request to delete Rating : {}", id);
         ratingRepository.delete(id);
         ratingSearchRepository.delete(id);
     }
@@ -86,10 +89,8 @@ public class RatingService {
      *  @return the list of entities
      */
     @Transactional(readOnly = true)
-    public List<Rating> search(String query) {
-        log.debug("Request to search Ratings for query {}", query);
-        return StreamSupport
-            .stream(ratingSearchRepository.search(queryStringQuery(query)).spliterator(), false)
-            .collect(Collectors.toList());
+    @FindWithPermission("RATING.SEARCH")
+    public List<Rating> search(String query, String privilegeKey) {
+        return permittedSearchRepository.search(query, Rating.class, privilegeKey);
     }
 }

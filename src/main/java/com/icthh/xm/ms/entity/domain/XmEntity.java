@@ -1,11 +1,15 @@
 package com.icthh.xm.ms.entity.domain;
 
+import static javax.persistence.CascadeType.MERGE;
+import static javax.persistence.CascadeType.PERSIST;
+import static javax.persistence.CascadeType.REMOVE;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.hazelcast.util.CollectionUtil;
 import com.icthh.xm.ms.entity.domain.converter.MapToStringConverter;
 import com.icthh.xm.ms.entity.domain.listener.AvatarUrlListener;
 import com.icthh.xm.ms.entity.validator.JsonData;
-import com.icthh.xm.ms.entity.validator.NotNullTenantAware;
 import com.icthh.xm.ms.entity.validator.StateKey;
 import com.icthh.xm.ms.entity.validator.TypeKey;
 import io.swagger.annotations.ApiModel;
@@ -14,14 +18,30 @@ import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.springframework.data.elasticsearch.annotations.Document;
 
-import javax.persistence.*;
-import javax.validation.Valid;
-import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.time.Instant;
-import java.util.*;
-
-import static javax.persistence.CascadeType.PERSIST;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.UUID;
+import java.util.function.BiConsumer;
+import javax.persistence.Column;
+import javax.persistence.Convert;
+import javax.persistence.Entity;
+import javax.persistence.EntityListeners;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.NamedAttributeNode;
+import javax.persistence.NamedEntityGraph;
+import javax.persistence.OneToMany;
+import javax.persistence.SequenceGenerator;
+import javax.persistence.Table;
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 
 /**
  * Represents any XM entity like Account, Product Offering, Product, Order, Handling,
@@ -37,9 +57,15 @@ import static javax.persistence.CascadeType.PERSIST;
 @Document(indexName = "#{@indexName.prefix}xmentity")
 // load tags and locations eagerly in repository queries hinted by @EntityGraph("xmEntityGraph")
 @NamedEntityGraph(name = "xmEntityGraph",
-    attributeNodes = {@NamedAttributeNode("tags"), @NamedAttributeNode("locations"),
-        @NamedAttributeNode("attachments"), @NamedAttributeNode("targets"), @NamedAttributeNode("comments"),
-        @NamedAttributeNode("ratings"), @NamedAttributeNode("functions") })
+    attributeNodes = {
+        @NamedAttributeNode("tags"),
+        @NamedAttributeNode("locations"),
+        @NamedAttributeNode("attachments"),
+        @NamedAttributeNode("targets"),
+        @NamedAttributeNode("comments"),
+        @NamedAttributeNode("ratings"),
+        @NamedAttributeNode("functionContexts")
+    })
 @EntityListeners(AvatarUrlListener.class)
 public class XmEntity implements Serializable {
 
@@ -58,7 +84,7 @@ public class XmEntity implements Serializable {
      * but only one entity could be addressable at one time, as other should be ended
      * by endDate property.
      */
-    @NotNullTenantAware
+    @NotNull
     @ApiModelProperty(value = "Additional lateral identification for this entity could be defined by template Example: PO-1 for Product Offering, e-Mail or MSISDN for account, external Id for Order etc). Key is not full unique entity identification. Few entities could have one key, but only one entity could be addressable at one time, as other should be ended by endDate property.", required = true)
     @Column(name = "jhi_key", nullable = false)
     private String key;
@@ -89,7 +115,7 @@ public class XmEntity implements Serializable {
      * This is i18n name of Entity.
      * TODO: change data type
      */
-    @NotNullTenantAware
+    @NotNull
     @ApiModelProperty(value = "This is i18n name of Entity. TODO: change data type", required = true)
     @Column(name = "name", nullable = false)
     private String name;
@@ -97,16 +123,14 @@ public class XmEntity implements Serializable {
     /**
      * Start date.
      */
-    @NotNullTenantAware
-    @ApiModelProperty(value = "Start date.", required = true)
+    @ApiModelProperty(value = "Start date.")
     @Column(name = "start_date", nullable = false)
     private Instant startDate;
 
     /**
      * Update date.
      */
-    @NotNullTenantAware
-    @ApiModelProperty(value = "Update date.", required = true)
+    @ApiModelProperty(value = "Update date.")
     @Column(name = "update_date", nullable = false)
     private Instant updateDate;
 
@@ -149,49 +173,57 @@ public class XmEntity implements Serializable {
     @Column(name = "removed")
     private Boolean removed;
 
-    @OneToMany(mappedBy = "xmEntity", cascade = PERSIST)
+    /**
+     * Created by user key.
+     */
+    @ApiModelProperty(value = "Created by user key.")
+    @Column(name = "created_by")
+    private String createdBy;
+
+    @OneToMany(mappedBy = "xmEntity", cascade = {PERSIST, MERGE, REMOVE})
     @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
     private Set<Attachment> attachments = new HashSet<>();
 
-    @OneToMany(mappedBy = "xmEntity", cascade = PERSIST)
+    @OneToMany(mappedBy = "xmEntity", cascade = {PERSIST, MERGE, REMOVE})
     @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
     private Set<Calendar> calendars = new HashSet<>();
 
-    @OneToMany(mappedBy = "xmEntity", cascade = PERSIST)
+    @OneToMany(mappedBy = "xmEntity", cascade = {PERSIST, MERGE, REMOVE})
     @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
     private Set<Location> locations = new HashSet<>();
 
-    @OneToMany(mappedBy = "xmEntity")
+    @OneToMany(mappedBy = "xmEntity", cascade = {PERSIST, MERGE, REMOVE})
     @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
     private Set<Rating> ratings = new HashSet<>();
 
     @Valid
-    @OneToMany(mappedBy = "xmEntity", cascade = PERSIST)
+    @OneToMany(mappedBy = "xmEntity", cascade = {PERSIST, MERGE, REMOVE})
     @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
     private Set<Tag> tags = new HashSet<>();
 
-    @OneToMany(mappedBy = "xmEntity")
+    @OneToMany(mappedBy = "xmEntity", cascade = {PERSIST, MERGE, REMOVE})
     @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
     private Set<Comment> comments = new HashSet<>();
 
-    @OneToMany(mappedBy = "xmEntity")
+    @OneToMany(mappedBy = "xmEntity", cascade = {PERSIST, MERGE, REMOVE})
     @JsonIgnore
     @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
     private Set<Vote> votes = new HashSet<>();
 
-    @OneToMany(mappedBy = "target", cascade = PERSIST)
+    @OneToMany(mappedBy = "target", cascade = {PERSIST, MERGE, REMOVE})
     @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
     private Set<Link> sources = new HashSet<>();
 
-    @OneToMany(mappedBy = "source", cascade = PERSIST)
+    // No REMOVE it's not mistake. Link will be removed in logic.
+    @OneToMany(mappedBy = "source", cascade = {PERSIST, MERGE})
     @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
     private Set<Link> targets = new HashSet<>();
 
-    @OneToMany(mappedBy = "xmEntity")
+    @OneToMany(mappedBy = "xmEntity", cascade = {PERSIST, MERGE, REMOVE})
     @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
-    private Set<XmFunction> functions = new HashSet<>();
+    private Set<FunctionContext> functionContexts = new HashSet<>();
 
-    @OneToMany(mappedBy = "assigned")
+    @OneToMany(mappedBy = "assigned", cascade = {PERSIST, MERGE, REMOVE})
     @JsonIgnore
     @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
     private Set<Event> events = new HashSet<>();
@@ -210,6 +242,11 @@ public class XmEntity implements Serializable {
 
     public XmEntity key(String key) {
         this.key = key;
+        return this;
+    }
+
+    public XmEntity key(UUID key) {
+        this.key = key.toString();
         return this;
     }
 
@@ -345,6 +382,19 @@ public class XmEntity implements Serializable {
 
     public void setRemoved(Boolean removed) {
         this.removed = removed;
+    }
+
+    public String getCreatedBy() {
+        return createdBy;
+    }
+
+    public XmEntity createdBy(String createdBy) {
+        this.createdBy = createdBy;
+        return this;
+    }
+
+    public void setCreatedBy(String createdBy) {
+        this.createdBy = createdBy;
     }
 
     public Set<Attachment> getAttachments() {
@@ -574,29 +624,29 @@ public class XmEntity implements Serializable {
         this.targets = links;
     }
 
-    public Set<XmFunction> getFunctions() {
-        return functions;
+    public Set<FunctionContext> getFunctionContexts() {
+        return functionContexts;
     }
 
-    public XmEntity functions(Set<XmFunction> xmFunctions) {
-        this.functions = xmFunctions;
+    public XmEntity functionContexts(Set<FunctionContext> functionContexts) {
+        this.functionContexts = functionContexts;
         return this;
     }
 
-    public XmEntity addFunctions(XmFunction xmFunction) {
-        this.functions.add(xmFunction);
-        xmFunction.setXmEntity(this);
+    public XmEntity addFunctionContexts(FunctionContext functionContext) {
+        this.functionContexts.add(functionContext);
+        functionContext.setXmEntity(this);
         return this;
     }
 
-    public XmEntity removeFunctions(XmFunction xmFunction) {
-        this.functions.remove(xmFunction);
-        xmFunction.setXmEntity(null);
+    public XmEntity removeFunctionContexts(FunctionContext functionContext) {
+        this.functionContexts.remove(functionContext);
+        functionContext.setXmEntity(null);
         return this;
     }
 
-    public void setFunctions(Set<XmFunction> xmFunctions) {
-        this.functions = xmFunctions;
+    public void setFunctionContexts(Set<FunctionContext> functionContexts) {
+        this.functionContexts = functionContexts;
     }
 
     public Set<Event> getEvents() {
@@ -622,6 +672,12 @@ public class XmEntity implements Serializable {
 
     public void setEvents(Set<Event> events) {
         this.events = events;
+    }
+
+    public <T> void updateXmEntityReference(Collection<T> objects, BiConsumer<T, XmEntity> xmEntitySetter) {
+        if (CollectionUtil.isNotEmpty(objects)) {
+            objects.forEach(object -> xmEntitySetter.accept(object, this));
+        }
     }
 
     @Override
@@ -659,6 +715,8 @@ public class XmEntity implements Serializable {
             ", description='" + getDescription() + "'" +
             ", data='" + getData() + "'" +
             ", removed='" + isRemoved() + "'" +
+            ", createdBy='" + getCreatedBy() + "'" +
             "}";
     }
+
 }

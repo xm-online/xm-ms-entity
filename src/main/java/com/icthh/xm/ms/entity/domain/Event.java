@@ -35,6 +35,7 @@ public class Event implements Serializable {
     /**
      * String typeKey with tree-like structure.
      */
+    @NotNull
     @ApiModelProperty(value = "String typeKey with tree-like structure.")
     @Column(name = "type_key")
     private String typeKey;
@@ -197,6 +198,13 @@ public class Event implements Serializable {
 
     public void setAssigned(XmEntity xmEntity) {
         this.assigned = xmEntity;
+    }
+
+    @PrePersist
+    private void prePersist() {
+        if (id == null && startDate == null) {
+            startDate = Instant.now();
+        }
     }
 
     @Override

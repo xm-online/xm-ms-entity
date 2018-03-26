@@ -1,0 +1,17 @@
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+
+    <!-- Drop xm_function -->
+    <changeSet id="20170918123400-1" author="adovbnya">
+        <dropTable cascadeConstraints="true" tableName="xm_function"/>
+    </changeSet>
+
+    <!-- Drop config_content and config_node -->
+    <changeSet id="20170918123400-2" author="adovbnya">
+        <dropTable cascadeConstraints="true" tableName="config_content"/>
+        <dropTable cascadeConstraints="true" tableName="config_node"/>
+    </changeSet>
+
+</databaseChangeLog>

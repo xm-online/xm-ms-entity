@@ -1,0 +1,74 @@
+{
+    "fluentMethods": true,
+    "relationships": [
+        {
+            "relationshipType": "many-to-one",
+            "relationshipValidateRules": "required",
+            "relationshipName": "xmEntity",
+            "otherEntityName": "xmEntity",
+            "otherEntityField": "id"
+        }
+    ],
+    "fields": [
+        {
+            "fieldName": "typeKey",
+            "javadoc": "String typeKey with tree-like structure.",
+            "fieldType": "String",
+            "fieldValidateRules": [
+                "required"
+            ]
+        },
+        {
+            "fieldName": "countryKey",
+            "javadoc": "Country code.",
+            "fieldType": "String"
+        },
+        {
+            "fieldName": "longitude",
+            "javadoc": "GPS longityde in decimal format",
+            "fieldType": "Double"
+        },
+        {
+            "fieldName": "latitude",
+            "javadoc": "GPS latitude in decimal format",
+            "fieldType": "Double"
+        },
+        {
+            "fieldName": "name",
+            "javadoc": "Full address name",
+            "fieldType": "String"
+        },
+        {
+            "fieldName": "addressLine1",
+            "javadoc": "Street and number, P.O. box, c/o",
+            "fieldType": "String"
+        },
+        {
+            "fieldName": "addressLine2",
+            "javadoc": "Apartment, suite, unit, building, floor, etc.",
+            "fieldType": "String"
+        },
+        {
+            "fieldName": "city",
+            "javadoc": "City name",
+            "fieldType": "String"
+        },
+        {
+            "fieldName": "region",
+            "javadoc": "State, Province, Region",
+            "fieldType": "String"
+        },
+        {
+            "fieldName": "zip",
+            "javadoc": "ZIP code",
+            "fieldType": "String"
+        }
+    ],
+    "changelogDate": "20170418134028",
+    "entityTableName": "location",
+    "dto": "no",
+    "pagination": "no",
+    "service": "no",
+    "microserviceName": "entity",
+    "searchEngine": "elasticsearch"
+}

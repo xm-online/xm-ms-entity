@@ -1,30 +1,33 @@
 package com.icthh.xm.ms.entity.web.rest;
 
 import com.codahale.metrics.annotation.Timed;
-import com.icthh.xm.commons.errors.ErrorConstants;
-import com.icthh.xm.commons.errors.exception.BusinessException;
+import com.icthh.xm.commons.exceptions.BusinessException;
+import com.icthh.xm.commons.exceptions.ErrorConstants;
 import com.icthh.xm.ms.entity.domain.Content;
-
 import com.icthh.xm.ms.entity.repository.ContentRepository;
 import com.icthh.xm.ms.entity.repository.search.ContentSearchRepository;
+import com.icthh.xm.ms.entity.service.ContentService;
 import com.icthh.xm.ms.entity.web.rest.util.HeaderUtil;
 import com.icthh.xm.ms.entity.web.rest.util.RespContentUtil;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.security.access.prepost.PostAuthorize;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
-import javax.validation.Valid;
 import java.net.URI;
 import java.net.URISyntaxException;
-
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
-
-import static org.elasticsearch.index.query.QueryBuilders.*;
+import javax.validation.Valid;
 
 /**
  * REST controller for managing Content.
@@ -33,17 +36,22 @@ import static org.elasticsearch.index.query.QueryBuilders.*;
 @RequestMapping("/api")
 public class ContentResource {
 
-    private final Logger log = LoggerFactory.getLogger(ContentResource.class);
-
     private static final String ENTITY_NAME = "content";
 
     private final ContentRepository contentRepository;
-
     private final ContentSearchRepository contentSearchRepository;
+    private final ContentService contentService;
+    private final ContentResource contentResource;
 
-    public ContentResource(ContentRepository contentRepository, ContentSearchRepository contentSearchRepository) {
+    public ContentResource(
+                    ContentRepository contentRepository,
+                    ContentSearchRepository contentSearchRepository,
+                    ContentService contentService,
+                    @Lazy ContentResource contentResource) {
         this.contentRepository = contentRepository;
         this.contentSearchRepository = contentSearchRepository;
+        this.contentService = contentService;
+        this.contentResource = contentResource;
     }
 
     /**
@@ -55,11 +63,11 @@ public class ContentResource {
      */
     @PostMapping("/contents")
     @Timed
+    @PreAuthorize("hasPermission({'content': #content}, 'CONTENT.CREATE')")
     public ResponseEntity<Content> createContent(@Valid @RequestBody Content content) throws URISyntaxException {
-        log.debug("REST request to save Content : {}", content);
         if (content.getId() != null) {
             throw new BusinessException(ErrorConstants.ERR_BUSINESS_IDEXISTS,
-                                              "A new content cannot already have an ID");
+                                        "A new content cannot already have an ID");
         }
         Content result = contentRepository.save(content);
         contentSearchRepository.save(result);
@@ -79,10 +87,11 @@ public class ContentResource {
      */
     @PutMapping("/contents")
     @Timed
+    @PreAuthorize("hasPermission({'id': #content.id, 'newContent': #content}, 'content', 'CONTENT.UPDATE')")
     public ResponseEntity<Content> updateContent(@Valid @RequestBody Content content) throws URISyntaxException {
-        log.debug("REST request to update Content : {}", content);
         if (content.getId() == null) {
-            return createContent(content);
+            //in order to call method with permissions check
+            return this.contentResource.createContent(content);
         }
         Content result = contentRepository.save(content);
         contentSearchRepository.save(result);
@@ -99,8 +108,7 @@ public class ContentResource {
     @GetMapping("/contents")
     @Timed
     public List<Content> getAllContents() {
-        log.debug("REST request to get all Contents");
-        return contentRepository.findAll();
+        return contentService.findAll(null);
     }
 
     /**
@@ -111,8 +119,8 @@ public class ContentResource {
      */
     @GetMapping("/contents/{id}")
     @Timed
+    @PostAuthorize("hasPermission({'returnObject': returnObject.body}, 'CONTENT.GET_LIST.ITEM')")
     public ResponseEntity<Content> getContent(@PathVariable Long id) {
-        log.debug("REST request to get Content : {}", id);
         Content content = contentRepository.findOne(id);
         return RespContentUtil.wrapOrNotFound(Optional.ofNullable(content));
     }
@@ -125,8 +133,8 @@ public class ContentResource {
      */
     @DeleteMapping("/contents/{id}")
     @Timed
+    @PreAuthorize("hasPermission({'id': #id}, 'content', 'CONTENT.DELETE')")
     public ResponseEntity<Void> deleteContent(@PathVariable Long id) {
-        log.debug("REST request to delete Content : {}", id);
         contentRepository.delete(id);
         contentSearchRepository.delete(id);
         return ResponseEntity.ok().headers(HeaderUtil.createEntityDeletionAlert(ENTITY_NAME, id.toString())).build();
@@ -142,10 +150,7 @@ public class ContentResource {
     @GetMapping("/_search/contents")
     @Timed
     public List<Content> searchContents(@RequestParam String query) {
-        log.debug("REST request to search Contents for query {}", query);
-        return StreamSupport
-            .stream(contentSearchRepository.search(queryStringQuery(query)).spliterator(), false)
-            .collect(Collectors.toList());
+        return contentService.search(query, null);
     }
 
 }

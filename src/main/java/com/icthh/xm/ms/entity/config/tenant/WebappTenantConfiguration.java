@@ -12,7 +12,11 @@ import org.springframework.web.client.RestTemplate;
 public class WebappTenantConfiguration {
     @Bean
     @Qualifier("webappTenantConfigRepository")
-    public TenantConfigRepository webappTenantConfigRepository(@Qualifier("xm-config-rest-template") RestTemplate restTemplate, @Value("${application.webapp-name}") String applicationName, XmConfigProperties applicationProperties) {
+    public TenantConfigRepository webappTenantConfigRepository(
+        @Qualifier("xm-config-rest-template") RestTemplate restTemplate,
+        @Value("${application.webapp-name}") String applicationName,
+        XmConfigProperties applicationProperties) {
+
         return new TenantConfigRepository(restTemplate, applicationName, applicationProperties);
     }
 }

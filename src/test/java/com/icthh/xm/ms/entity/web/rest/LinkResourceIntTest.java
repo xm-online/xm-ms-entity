@@ -1,46 +1,59 @@
 package com.icthh.xm.ms.entity.web.rest;
 
+import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_AUTH_CONTEXT;
+import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_TENANT_CONTEXT;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.notNullValue;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.icthh.xm.commons.errors.ExceptionTranslator;
+import com.icthh.xm.lep.api.LepManager;
+import com.icthh.xm.commons.exceptions.spring.web.ExceptionTranslator;
+import com.icthh.xm.commons.permission.repository.PermittedRepository;
+import com.icthh.xm.commons.security.XmAuthenticationContextHolder;
+import com.icthh.xm.commons.tenant.TenantContextHolder;
+import com.icthh.xm.commons.tenant.TenantContextUtils;
 import com.icthh.xm.ms.entity.EntityApp;
-
 import com.icthh.xm.ms.entity.config.SecurityBeanOverrideConfiguration;
-
-import com.icthh.xm.ms.entity.config.tenant.TenantContext;
 import com.icthh.xm.ms.entity.config.tenant.WebappTenantOverrideConfiguration;
 import com.icthh.xm.ms.entity.domain.Link;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.repository.LinkRepository;
-import com.icthh.xm.ms.entity.service.LinkService;
 import com.icthh.xm.ms.entity.repository.search.LinkSearchRepository;
-
+import com.icthh.xm.ms.entity.repository.search.PermittedSearchRepository;
+import com.icthh.xm.ms.entity.service.LinkService;
+import com.icthh.xm.ms.entity.service.impl.StartUpdateDateGenerationStrategy;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.mockito.Spy;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.context.transaction.BeforeTransaction;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.persistence.EntityManager;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.hamcrest.Matchers.hasItem;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import javax.persistence.EntityManager;
 
 /**
  * Test class for the LinkResource REST controller.
@@ -48,6 +61,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * @see LinkResource
  */
 @RunWith(SpringRunner.class)
+@WithMockUser(authorities = {"SUPER-ADMIN"})
 @SpringBootTest(classes = {EntityApp.class, SecurityBeanOverrideConfiguration.class, WebappTenantOverrideConfiguration.class})
 public class LinkResourceIntTest {
 
@@ -67,13 +81,19 @@ public class LinkResourceIntTest {
     private static final Instant UPDATED_END_DATE = Instant.now().truncatedTo(ChronoUnit.MILLIS);
 
     @Autowired
+    private LinkResource linkResource;
+
+    @Autowired
     private LinkRepository linkRepository;
 
     @Autowired
-    private LinkService linkService;
+    private LinkSearchRepository linkSearchRepository;
 
     @Autowired
-    private LinkSearchRepository linkSearchRepository;
+    private PermittedRepository permittedRepository;
+
+    @Autowired
+    private PermittedSearchRepository permittedSearchRepository;
 
     @Autowired
     private MappingJackson2HttpMessageConverter jacksonMessageConverter;
@@ -87,18 +107,49 @@ public class LinkResourceIntTest {
     @Autowired
     private EntityManager em;
 
+    @Autowired
+    private TenantContextHolder tenantContextHolder;
+
+
+    @Autowired
+    private XmAuthenticationContextHolder authContextHolder;
+
+    @Autowired
+    private LepManager lepManager;
+
+    @Spy
+    private StartUpdateDateGenerationStrategy startUpdateDateGenerationStrategy;
+
+    private LinkService linkService;
+
     private MockMvc restLinkMockMvc;
 
     private Link link;
 
+    @BeforeTransaction
+    public void beforeTransaction() {
+        TenantContextUtils.setTenant(tenantContextHolder, "RESINTTEST");
+    }
+
     @Before
     public void setup() {
-
-        TenantContext.setCurrent("RESINTTEST");
+        lepManager.beginThreadContext(ctx -> {
+            ctx.setValue(THREAD_CONTEXT_KEY_TENANT_CONTEXT, tenantContextHolder.getContext());
+            ctx.setValue(THREAD_CONTEXT_KEY_AUTH_CONTEXT, authContextHolder.getContext());
+        });
 
         MockitoAnnotations.initMocks(this);
-        LinkResource linkResource = new LinkResource(linkService);
-        this.restLinkMockMvc = MockMvcBuilders.standaloneSetup(linkResource)
+
+        when(startUpdateDateGenerationStrategy.generateStartDate()).thenReturn(DEFAULT_START_DATE);
+
+        linkService = new LinkService(linkRepository,
+                                      linkSearchRepository,
+                                      permittedRepository,
+                                      permittedSearchRepository,
+                                      startUpdateDateGenerationStrategy);
+
+        LinkResource linkResourceMock = new LinkResource(linkService, linkResource);
+        this.restLinkMockMvc = MockMvcBuilders.standaloneSetup(linkResourceMock)
             .setCustomArgumentResolvers(pageableArgumentResolver)
             .setControllerAdvice(exceptionTranslator)
             .setMessageConverters(jacksonMessageConverter).build();
@@ -108,8 +159,10 @@ public class LinkResourceIntTest {
     }
 
     @After
+    @Override
     public void finalize() {
-        TenantContext.setCurrent("XM");
+        lepManager.endThreadContext();
+        tenantContextHolder.getPrivilegedContext().destroyCurrentContext();
     }
 
     /**
@@ -217,6 +270,7 @@ public class LinkResourceIntTest {
 
     @Test
     @Transactional
+    @Ignore("see LinkResourceExtendedIntTest.checkStartDateIsNotRequired instead")
     public void checkStartDateIsRequired() throws Exception {
         int databaseSizeBeforeTest = linkRepository.findAll().size();
         // set the field null
@@ -241,6 +295,7 @@ public class LinkResourceIntTest {
 
     @Test
     @Transactional
+    @WithMockUser(authorities = "SUPER-ADMIN")
     public void getAllLinks() throws Exception {
         // Initialize the database
         linkRepository.saveAndFlush(link);

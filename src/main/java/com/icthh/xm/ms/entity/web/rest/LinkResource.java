@@ -1,28 +1,37 @@
 package com.icthh.xm.ms.entity.web.rest;
 
 import com.codahale.metrics.annotation.Timed;
-import com.icthh.xm.commons.errors.ErrorConstants;
-import com.icthh.xm.commons.errors.exception.BusinessException;
+import com.icthh.xm.commons.exceptions.BusinessException;
+import com.icthh.xm.commons.exceptions.ErrorConstants;
 import com.icthh.xm.ms.entity.domain.Link;
 import com.icthh.xm.ms.entity.service.LinkService;
 import com.icthh.xm.ms.entity.web.rest.util.HeaderUtil;
 import com.icthh.xm.ms.entity.web.rest.util.PaginationUtil;
 import com.icthh.xm.ms.entity.web.rest.util.RespContentUtil;
 import io.swagger.annotations.ApiParam;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.security.access.prepost.PostAuthorize;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
-import javax.validation.Valid;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Optional;
+import javax.validation.Valid;
 
 /**
  * REST controller for managing Link.
@@ -31,14 +40,16 @@ import java.util.Optional;
 @RequestMapping("/api")
 public class LinkResource {
 
-    private final Logger log = LoggerFactory.getLogger(LinkResource.class);
-
     private static final String ENTITY_NAME = "link";
 
     private final LinkService linkService;
+    private final LinkResource linkResource;
 
-    public LinkResource(LinkService linkService) {
+    public LinkResource(
+                    LinkService linkService,
+                    @Lazy LinkResource linkResource) {
         this.linkService = linkService;
+        this.linkResource = linkResource;
     }
 
     /**
@@ -50,11 +61,11 @@ public class LinkResource {
      */
     @PostMapping("/links")
     @Timed
+    @PreAuthorize("hasPermission({'link': #link}, 'LINK.CREATE')")
     public ResponseEntity<Link> createLink(@Valid @RequestBody Link link) throws URISyntaxException {
-        log.debug("REST request to save Link : {}", link);
         if (link.getId() != null) {
             throw new BusinessException(ErrorConstants.ERR_BUSINESS_IDEXISTS,
-                                              "A new link cannot already have an ID");
+                                        "A new link cannot already have an ID");
         }
         Link result = linkService.save(link);
         return ResponseEntity.created(new URI("/api/links/" + result.getId()))
@@ -73,10 +84,11 @@ public class LinkResource {
      */
     @PutMapping("/links")
     @Timed
+    @PreAuthorize("hasPermission({'id': #link.id, 'newLink': #link}, 'link', 'LINK.UPDATE')")
     public ResponseEntity<Link> updateLink(@Valid @RequestBody Link link) throws URISyntaxException {
-        log.debug("REST request to update Link : {}", link);
         if (link.getId() == null) {
-            return createLink(link);
+            //in order to call method with permissions check
+            return this.linkResource.createLink(link);
         }
         Link result = linkService.save(link);
         return ResponseEntity.ok()
@@ -93,8 +105,7 @@ public class LinkResource {
     @GetMapping("/links")
     @Timed
     public ResponseEntity<List<Link>> getAllLinks(@ApiParam Pageable pageable) {
-        log.debug("REST request to get a page of Links");
-        Page<Link> page = linkService.findAll(pageable);
+        Page<Link> page = linkService.findAll(pageable, null);
         HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(page, "/api/links");
         return new ResponseEntity<>(page.getContent(), headers, HttpStatus.OK);
     }
@@ -107,8 +118,8 @@ public class LinkResource {
      */
     @GetMapping("/links/{id}")
     @Timed
+    @PostAuthorize("hasPermission({'returnObject': returnObject.body}, 'LINK.GET_LIST.ITEM')")
     public ResponseEntity<Link> getLink(@PathVariable Long id) {
-        log.debug("REST request to get Link : {}", id);
         Link link = linkService.findOne(id);
         return RespContentUtil.wrapOrNotFound(Optional.ofNullable(link));
     }
@@ -121,8 +132,8 @@ public class LinkResource {
      */
     @DeleteMapping("/links/{id}")
     @Timed
+    @PreAuthorize("hasPermission({'id': #id}, 'link', 'LINK.DELETE')")
     public ResponseEntity<Void> deleteLink(@PathVariable Long id) {
-        log.debug("REST request to delete Link : {}", id);
         linkService.delete(id);
         return ResponseEntity.ok().headers(HeaderUtil.createEntityDeletionAlert(ENTITY_NAME, id.toString())).build();
     }
@@ -138,8 +149,7 @@ public class LinkResource {
     @GetMapping("/_search/links")
     @Timed
     public ResponseEntity<List<Link>> searchLinks(@RequestParam String query, @ApiParam Pageable pageable) {
-        log.debug("REST request to search for a page of Links for query {}", query);
-        Page<Link> page = linkService.search(query, pageable);
+        Page<Link> page = linkService.search(query, pageable, null);
         HttpHeaders headers = PaginationUtil.generateSearchPaginationHttpHeaders(query, page, "/api/_search/links");
         return new ResponseEntity<>(page.getContent(), headers, HttpStatus.OK);
     }

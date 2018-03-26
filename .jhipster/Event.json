@@ -1,0 +1,59 @@
+{
+    "fluentMethods": true,
+    "relationships": [
+        {
+            "relationshipName": "calendar",
+            "otherEntityName": "calendar",
+            "relationshipType": "many-to-one",
+            "otherEntityField": "id"
+        },
+        {
+            "relationshipType": "many-to-one",
+            "relationshipName": "assigned",
+            "otherEntityName": "xmEntity",
+            "otherEntityField": "id"
+        }
+    ],
+    "fields": [
+        {
+            "fieldName": "typeKey",
+            "javadoc": "String typeKey with tree-like structure.",
+            "fieldType": "String"
+        },
+        {
+            "fieldName": "repeatRuleKey",
+            "javadoc": "Configuration for event repetition",
+            "fieldType": "String"
+        },
+        {
+            "fieldName": "title",
+            "javadoc": "Event title",
+            "fieldType": "String",
+            "fieldValidateRules": [
+                "required"
+            ]
+        },
+        {
+            "fieldName": "description",
+            "javadoc": "Event description",
+            "fieldType": "String"
+        },
+        {
+            "fieldName": "startDate",
+            "javadoc": "Start date",
+            "fieldType": "Instant"
+        },
+        {
+            "fieldName": "endDate",
+            "javadoc": "End date",
+            "fieldType": "Instant"
+        }
+    ],
+    "changelogDate": "20170418134025",
+    "entityTableName": "event",
+    "dto": "no",
+    "pagination": "no",
+    "service": "serviceClass",
+    "microserviceName": "entity",
+    "searchEngine": "elasticsearch"
+}

@@ -1,14 +1,28 @@
 package com.icthh.xm.ms.entity.service;
 
-import static com.icthh.xm.ms.entity.config.TenantConfigMockConfiguration.createXmEntitySpecService;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
+import com.icthh.xm.commons.config.client.repository.TenantConfigRepository;
+import com.icthh.xm.commons.tenant.TenantContext;
+import com.icthh.xm.commons.tenant.TenantContextHolder;
+import com.icthh.xm.commons.tenant.TenantKey;
 import com.icthh.xm.ms.entity.config.ApplicationProperties;
-import com.icthh.xm.ms.entity.config.tenant.TenantContext;
-import com.icthh.xm.ms.entity.domain.spec.*;
+import com.icthh.xm.ms.entity.config.tenant.LocalXmEntitySpecService;
+import com.icthh.xm.ms.entity.domain.spec.AttachmentSpec;
+import com.icthh.xm.ms.entity.domain.spec.LinkSpec;
+import com.icthh.xm.ms.entity.domain.spec.LocationSpec;
+import com.icthh.xm.ms.entity.domain.spec.NextSpec;
+import com.icthh.xm.ms.entity.domain.spec.RatingSpec;
+import com.icthh.xm.ms.entity.domain.spec.StateSpec;
+import com.icthh.xm.ms.entity.domain.spec.TagSpec;
+import com.icthh.xm.ms.entity.domain.spec.TypeSpec;
 import lombok.SneakyThrows;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -40,19 +54,28 @@ public class XmEntitySpecServiceUnitTest {
 
     private XmEntitySpecService xmEntitySpecService;
 
+    private TenantContextHolder tenantContextHolder;
+
 
     @Before
     @SneakyThrows
     public void init() {
-        TenantContext.setCurrent(TENANT);
+        TenantContext tenantContext = mock(TenantContext.class);
+        when(tenantContext.getTenantKey()).thenReturn(Optional.of(TenantKey.valueOf(TENANT)));
+
+        tenantContextHolder = mock(TenantContextHolder.class);
+        when(tenantContextHolder.getContext()).thenReturn(tenantContext);
+
         ApplicationProperties ap = new ApplicationProperties();
         ap.setSpecificationPathPattern(URL);
-        xmEntitySpecService = createXmEntitySpecService(ap);
+        xmEntitySpecService = createXmEntitySpecService(ap, tenantContextHolder);
     }
 
-    @After
-    public void finalize() {
-        TenantContext.setCurrent("XM");
+    private static XmEntitySpecService createXmEntitySpecService(ApplicationProperties applicationProperties,
+                                                                TenantContextHolder tenantContextHolder) {
+        return new LocalXmEntitySpecService(mock(TenantConfigRepository.class),
+                                            applicationProperties,
+                                            tenantContextHolder);
     }
 
     @Test

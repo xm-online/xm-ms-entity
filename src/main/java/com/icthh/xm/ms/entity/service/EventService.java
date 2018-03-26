@@ -1,36 +1,32 @@
 package com.icthh.xm.ms.entity.service;
 
+import com.icthh.xm.commons.permission.annotation.FindWithPermission;
+import com.icthh.xm.commons.permission.repository.PermittedRepository;
 import com.icthh.xm.ms.entity.domain.Event;
 import com.icthh.xm.ms.entity.repository.EventRepository;
 import com.icthh.xm.ms.entity.repository.search.EventSearchRepository;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.icthh.xm.ms.entity.repository.search.PermittedSearchRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
-
-import static org.elasticsearch.index.query.QueryBuilders.*;
 
 /**
  * Service Implementation for managing Event.
  */
 @Service
 @Transactional
+@RequiredArgsConstructor
 public class EventService {
-
-    private final Logger log = LoggerFactory.getLogger(EventService.class);
 
     private final EventRepository eventRepository;
 
     private final EventSearchRepository eventSearchRepository;
 
-    public EventService(EventRepository eventRepository, EventSearchRepository eventSearchRepository) {
-        this.eventRepository = eventRepository;
-        this.eventSearchRepository = eventSearchRepository;
-    }
+    private final PermittedRepository permittedRepository;
+
+    private final PermittedSearchRepository permittedSearchRepository;
 
     /**
      * Save a event.
@@ -39,7 +35,6 @@ public class EventService {
      * @return the persisted entity
      */
     public Event save(Event event) {
-        log.debug("Request to save Event : {}", event);
         Event result = eventRepository.save(event);
         eventSearchRepository.save(result);
         return result;
@@ -51,9 +46,9 @@ public class EventService {
      *  @return the list of entities
      */
     @Transactional(readOnly = true)
-    public List<Event> findAll() {
-        log.debug("Request to get all Events");
-        return eventRepository.findAll();
+    @FindWithPermission("EVENT.GET_LIST")
+    public List<Event> findAll(String privilegeKey) {
+        return permittedRepository.findAll(Event.class, privilegeKey);
     }
 
     /**
@@ -64,7 +59,6 @@ public class EventService {
      */
     @Transactional(readOnly = true)
     public Event findOne(Long id) {
-        log.debug("Request to get Event : {}", id);
         return eventRepository.findOne(id);
     }
 
@@ -74,7 +68,6 @@ public class EventService {
      *  @param id the id of the entity
      */
     public void delete(Long id) {
-        log.debug("Request to delete Event : {}", id);
         eventRepository.delete(id);
         eventSearchRepository.delete(id);
     }
@@ -86,10 +79,8 @@ public class EventService {
      *  @return the list of entities
      */
     @Transactional(readOnly = true)
-    public List<Event> search(String query) {
-        log.debug("Request to search Events for query {}", query);
-        return StreamSupport
-            .stream(eventSearchRepository.search(queryStringQuery(query)).spliterator(), false)
-            .collect(Collectors.toList());
+    @FindWithPermission("EVENT.SEARCH")
+    public List<Event> search(String query, String privilegeKey) {
+        return permittedSearchRepository.search(query, Event.class, privilegeKey);
     }
 }

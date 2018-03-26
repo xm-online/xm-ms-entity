@@ -1,0 +1,62 @@
+{
+    "fluentMethods": true,
+    "relationships": [
+        {
+            "relationshipType": "one-to-many",
+            "relationshipName": "events",
+            "otherEntityName": "event",
+            "otherEntityRelationshipName": "calendar"
+        },
+        {
+            "relationshipType": "many-to-one",
+            "relationshipValidateRules": "required",
+            "relationshipName": "xmEntity",
+            "otherEntityName": "xmEntity",
+            "otherEntityField": "id"
+        }
+    ],
+    "fields": [
+        {
+            "fieldName": "typeKey",
+            "javadoc": "String typeKey with tree-like structure.",
+            "fieldType": "String",
+            "fieldValidateRules": [
+                "required"
+            ]
+        },
+        {
+            "fieldName": "name",
+            "javadoc": "Calendar name.",
+            "fieldType": "String",
+            "fieldValidateRules": [
+                "required"
+            ]
+        },
+        {
+            "fieldName": "description",
+            "javadoc": "Calendar description",
+            "fieldType": "String"
+        },
+        {
+            "fieldName": "startDate",
+            "javadoc": "Start date",
+            "fieldType": "Instant",
+            "fieldValidateRules": [
+                "required"
+            ]
+        },
+        {
+            "fieldName": "endDate",
+            "javadoc": "End date",
+            "fieldType": "Instant"
+        }
+    ],
+    "changelogDate": "20170418134024",
+    "javadoc": "Represents calendar instance related to XmEntity.",
+    "entityTableName": "calendar",
+    "dto": "no",
+    "pagination": "no",
+    "service": "serviceClass",
+    "microserviceName": "entity",
+    "searchEngine": "elasticsearch"
+}

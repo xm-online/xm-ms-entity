@@ -132,7 +132,7 @@ xm-config:
     enabled: true
     hazelcast:
         hazelcast-config-url: classpath:./config/hazelcast-consul.xml
-        interfaces:
+        interfaces: 192.168.1.*,10.0.0.*
         consul-host: ${spring.cloud.consul.host}
         consul-port: ${spring.cloud.consul.port}
         consul-service-name: xm-tenant-config-hazelcast-cluster
@@ -150,6 +150,7 @@ application:
     tenant-create-service-list: uaa, gate, timeline, entity, dashboard
     tenant-client-connection-timeout: 2000
     tenant-client-read-timeout: 40000
+    email-path-pattern: /config/tenants/{tenantName}/entity/emails/{langKey}/{fileName}.ftl
     webapp-name: webapp
     specification-webapp-name: settings-public.yml
     specification-name: xmentityspec.yml
@@ -160,6 +161,8 @@ application:
         max-attempts: 3
         delay: 1000 #in milliseconds
         multiplier: 2
+    lep:
+        tenant-script-storage: XM_MS_CONFIG
 
 # ===================================================================
 # Timeline specific properties
@@ -182,7 +185,7 @@ timelines:
           mask: <bytes[]>
           mask-request: true
           mask-response: true
-        - endpoint-to-mask: /api/attachments/**
+        - endpoint-to-mask: /api/attachments/*
           http-method: GET
           path-to-mask: $.content.value
           mask: <bytes[]>
@@ -203,7 +206,7 @@ timelines:
           path-to-mask: $.[*].value
           mask: <bytes[]>
           mask-response: true
-        - endpoint-to-mask: /api/contents/**
+        - endpoint-to-mask: /api/contents/*
           http-method: GET
           path-to-mask: $.value
           mask: <bytes[]>

@@ -1,0 +1,60 @@
+{
+    "fluentMethods": true,
+    "relationships": [
+        {
+            "relationshipType": "many-to-one",
+            "relationshipValidateRules": "required",
+            "relationshipName": "target",
+            "otherEntityName": "xmEntity",
+            "otherEntityField": "id"
+        },
+        {
+            "relationshipType": "many-to-one",
+            "relationshipValidateRules": "required",
+            "relationshipName": "source",
+            "otherEntityName": "xmEntity",
+            "otherEntityField": "id"
+        }
+    ],
+    "fields": [
+        {
+            "fieldName": "typeKey",
+            "javadoc": "String typeKey with tree-like structure.",
+            "fieldType": "String",
+            "fieldValidateRules": [
+                "required"
+            ]
+        },
+        {
+            "fieldName": "name",
+            "javadoc": "Link name",
+            "fieldType": "String"
+        },
+        {
+            "fieldName": "description",
+            "javadoc": "Link description",
+            "fieldType": "String"
+        },
+        {
+            "fieldName": "startDate",
+            "javadoc": "Start date",
+            "fieldType": "Instant",
+            "fieldValidateRules": [
+                "required"
+            ]
+        },
+        {
+            "fieldName": "endDate",
+            "javadoc": "End date",
+            "fieldType": "Instant"
+        }
+    ],
+    "changelogDate": "20170418134027",
+    "javadoc": "Bidirectional link between two XmEntites.",
+    "entityTableName": "link",
+    "dto": "no",
+    "pagination": "pager",
+    "service": "serviceClass",
+    "microserviceName": "entity",
+    "searchEngine": "elasticsearch"
+}

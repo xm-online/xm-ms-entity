@@ -7,12 +7,24 @@ import java.util.Objects;
  */
 public final class IdOrKey {
 
+    private static final String SELF_KEY = "self";
+
+    public static final IdOrKey SELF = IdOrKey.of(SELF_KEY);
+
     private final String value;
     private Long id;
     private String key;
     private Boolean isKey;
 
     private IdOrKey(String value) {
+        this(value, false);
+    }
+
+    private IdOrKey(String value, boolean forceKey) {
+        if (forceKey) {
+            this.isKey = true;
+            this.key = value;
+        }
         this.value = Objects.requireNonNull(value, "value can't be null");
     }
 
@@ -24,6 +36,11 @@ public final class IdOrKey {
 
     public static IdOrKey of(String value) {
         return new IdOrKey(value);
+    }
+
+
+    public static IdOrKey ofKey(String value) {
+        return new IdOrKey(value, true);
     }
 
     public static IdOrKey of(Long id) {
@@ -53,6 +70,12 @@ public final class IdOrKey {
         lazyInit();
 
         return !isKey();
+    }
+
+    public boolean isSelf() {
+        lazyInit();
+
+        return isKey() && SELF_KEY.equalsIgnoreCase(key);
     }
 
     public Long getId() {

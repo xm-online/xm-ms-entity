@@ -1,0 +1,65 @@
+{
+    "fluentMethods": true,
+    "relationships": [
+        {
+            "relationshipType": "many-to-one",
+            "relationshipName": "xmEntity",
+            "otherEntityName": "xmEntity",
+            "otherEntityField": "id"
+        }
+    ],
+    "fields": [
+        {
+            "fieldName": "key",
+            "javadoc": "Function context alphanumeric alias.",
+            "fieldType": "String",
+            "fieldValidateRules": [
+                "required"
+            ]
+        },
+        {
+            "fieldName": "typeKey",
+            "javadoc": "String typeKey with tree-like structure.",
+            "fieldType": "String",
+            "fieldValidateRules": [
+                "required"
+            ]
+        },
+        {
+            "fieldName": "description",
+            "javadoc": "Function context description.",
+            "fieldType": "String"
+        },
+        {
+            "fieldName": "startDate",
+            "javadoc": "Start date.",
+            "fieldType": "Instant",
+            "fieldValidateRules": [
+                "required"
+            ]
+        },
+        {
+            "fieldName": "updateDate",
+            "javadoc": "Update date.",
+            "fieldType": "Instant"
+        },
+        {
+            "fieldName": "endDate",
+            "javadoc": "End date.",
+            "fieldType": "Instant"
+        },
+        {
+            "fieldName": "data",
+            "javadoc": "Function context execution related data in JSON format.\nOn DTO level data type should be Map<String,Object>",
+            "fieldType": "String"
+        }
+    ],
+    "changelogDate": "20170918112702",
+    "javadoc": "Represents function context with result of function execution.",
+    "entityTableName": "function_context",
+    "dto": "no",
+    "pagination": "no",
+    "service": "serviceClass",
+    "microserviceName": "entity",
+    "searchEngine": "elasticsearch"
+}

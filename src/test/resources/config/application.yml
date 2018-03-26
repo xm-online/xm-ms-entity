@@ -51,6 +51,9 @@ spring:
                 path:
                     logs: build/elasticsearch/log
                     data: build/elasticsearch/data
+                cluster.routing.allocation.disk.threshold_enabled: false
+                cluster.routing.allocation.disk.watermark.low: 500mb
+                cluster.routing.allocation.disk.watermark.high: 600mb
     mail:
         host: localhost
     messages:
@@ -93,7 +96,7 @@ jhipster:
     security:
         authentication:
             jwt:
-                secret: put-your-secret-here
+                secret: b5838c74b2228da2189310693b41bac7c3162d51
                 # Token is valid 24 hours
                 token-validity-in-seconds: 86400
         client-authorization:
@@ -116,11 +119,14 @@ jhipster:
 # https://jhipster.github.io/common-application-properties/
 # ===================================================================
 
+xm-config:
+    enabled: false
+
 application:
     kafka-enabled: false
     amazon:
         aws:
-            template: http://%s:7480/
+            template: http://%s.rgw.icthh.test:7480/
         s3:
             bucket: xm-avatar
     max-avatar-size: 2
@@ -129,3 +135,5 @@ application:
     specification-path-pattern: /config/tenants/{tenantName}/entity/specs/xmentityspecs.yml
     kafka-system-topic: system_topic
     kafka-system-queue: system_queue
+    lep:
+        tenant-script-storage: XM_MS_CONFIG

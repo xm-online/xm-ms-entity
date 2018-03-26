@@ -3,10 +3,9 @@ package com.icthh.xm.ms.entity.domain.idresolver;
 import com.fasterxml.jackson.annotation.ObjectIdGenerator;
 import com.fasterxml.jackson.annotation.ObjectIdResolver;
 import com.fasterxml.jackson.annotation.SimpleObjectIdResolver;
-import com.icthh.xm.commons.errors.ErrorConstants;
-import com.icthh.xm.commons.errors.exception.BusinessException;
+import com.icthh.xm.commons.exceptions.BusinessException;
+import com.icthh.xm.commons.exceptions.ErrorConstants;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
-
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
@@ -22,7 +21,7 @@ import org.springframework.stereotype.Component;
 @Slf4j
 public class XmEntityObjectIdResolver extends SimpleObjectIdResolver {
 
-    XmEntityRepository repository;
+    private XmEntityRepository repository;
 
     @Autowired
     public XmEntityObjectIdResolver(XmEntityRepository repository) {
@@ -30,9 +29,12 @@ public class XmEntityObjectIdResolver extends SimpleObjectIdResolver {
     }
 
     public XmEntityObjectIdResolver() {
-        log.debug("xmentity object id resolver inited");
+        log.debug("XmEntity object id resolver inited");
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Object resolveId(final ObjectIdGenerator.IdKey id) {
         Object entity = repository.findOne((Long) id.key);
@@ -44,11 +46,12 @@ public class XmEntityObjectIdResolver extends SimpleObjectIdResolver {
         return entity;
     }
 
-
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public ObjectIdResolver newForDeserialization(final Object context) {
-        ObjectIdResolver resolver = new XmEntityObjectIdResolver(repository);
-        return resolver;
+        return new XmEntityObjectIdResolver(repository);
     }
 
 }

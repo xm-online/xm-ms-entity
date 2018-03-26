@@ -11,13 +11,14 @@ import com.github.fge.jsonschema.main.JsonSchemaFactory;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.domain.spec.TypeSpec;
 import com.icthh.xm.ms.entity.service.XmEntitySpecService;
-import java.util.Map;
-import javax.validation.ConstraintValidator;
-import javax.validation.ConstraintValidatorContext;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
+
+import java.util.Map;
+import javax.validation.ConstraintValidator;
+import javax.validation.ConstraintValidatorContext;
 
 @Slf4j
 public class JsonDataValidator implements ConstraintValidator<JsonData, XmEntity> {
@@ -46,7 +47,7 @@ public class JsonDataValidator implements ConstraintValidator<JsonData, XmEntity
         }
 
         if (dataWithoutSpecification(value, typeSpecification)) {
-            log.info("Data specification null, but data is not null");
+            log.error("Data specification null, but data is not null");
             return false;
         }
 
@@ -80,7 +81,7 @@ public class JsonDataValidator implements ConstraintValidator<JsonData, XmEntity
 
         boolean isSuccess = report.isSuccess();
         if (!isSuccess) {
-            log.info("Validation data report: {}", report.toString().replaceAll("\n", " | "));
+            log.error("Validation data report: {}", report.toString().replaceAll("\n", " | "));
         }
         return isSuccess;
     }

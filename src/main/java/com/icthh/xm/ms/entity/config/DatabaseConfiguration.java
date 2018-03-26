@@ -4,12 +4,13 @@ import static com.icthh.xm.ms.entity.config.Constants.CHANGE_LOG_PATH;
 import static org.hibernate.cfg.AvailableSettings.JPA_VALIDATION_FACTORY;
 
 import com.fasterxml.jackson.datatype.hibernate5.Hibernate5Module;
+import com.icthh.xm.commons.config.client.config.XmConfigAutoConfigration;
 import com.icthh.xm.commons.config.client.repository.TenantListRepository;
-import com.icthh.xm.commons.db.migration.XmMultiTenantSpringLiquibase;
+import com.icthh.xm.commons.migration.db.XmMultiTenantSpringLiquibase;
+import com.icthh.xm.commons.migration.db.XmSpringLiquibase;
 import com.icthh.xm.ms.entity.repository.entitygraph.EntityGraphRepositoryImpl;
 import com.icthh.xm.ms.entity.util.DatabaseUtil;
 import io.github.jhipster.config.JHipsterConstants;
-import io.github.jhipster.config.liquibase.AsyncSpringLiquibase;
 import liquibase.integration.spring.MultiTenantSpringLiquibase;
 import liquibase.integration.spring.SpringLiquibase;
 import org.h2.tools.Server;
@@ -18,15 +19,14 @@ import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.engine.jdbc.connections.spi.MultiTenantConnectionProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.liquibase.LiquibaseProperties;
 import org.springframework.boot.autoconfigure.orm.jpa.JpaProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.DependsOn;
+import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.Profile;
 import org.springframework.core.env.Environment;
-import org.springframework.core.task.TaskExecutor;
 import org.springframework.data.elasticsearch.repository.config.EnableElasticsearchRepositories;
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
@@ -36,18 +36,19 @@ import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
 
-import javax.sql.DataSource;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import javax.sql.DataSource;
 
 @Configuration
 @EnableJpaRepositories(value = "com.icthh.xm.ms.entity.repository", repositoryBaseClass = EntityGraphRepositoryImpl.class)
 @EnableJpaAuditing(auditorAwareRef = "springSecurityAuditorAware")
 @EnableTransactionManagement
 @EnableElasticsearchRepositories("com.icthh.xm.ms.entity.repository.search")
+@Import({XmConfigAutoConfigration.class})
 public class DatabaseConfiguration {
 
     private final Logger log = LoggerFactory.getLogger(DatabaseConfiguration.class);
@@ -73,15 +74,13 @@ public class DatabaseConfiguration {
     @Bean(initMethod = "start", destroyMethod = "stop")
     @Profile(JHipsterConstants.SPRING_PROFILE_DEVELOPMENT)
     public Server h2TCPServer() throws SQLException {
-        return Server.createTcpServer("-tcp","-tcpAllowOthers");
+        return Server.createTcpServer("-tcp", "-tcpAllowOthers");
     }
 
     @Bean
-    public SpringLiquibase liquibase(@Qualifier("taskExecutor") TaskExecutor taskExecutor,
-        DataSource dataSource, LiquibaseProperties liquibaseProperties) {
+    public SpringLiquibase liquibase(DataSource dataSource, LiquibaseProperties liquibaseProperties) {
         createSchemas(dataSource);
-        // Use liquibase.integration.spring.SpringLiquibase if you don't want Liquibase to start asynchronously
-        SpringLiquibase liquibase = new AsyncSpringLiquibase(taskExecutor, env);
+        SpringLiquibase liquibase = new XmSpringLiquibase();
         liquibase.setDataSource(dataSource);
         liquibase.setChangeLog(CHANGE_LOG_PATH);
         liquibase.setContexts(liquibaseProperties.getContexts());
@@ -119,7 +118,11 @@ public class DatabaseConfiguration {
 
     private void createSchemas(DataSource dataSource) {
         for (String schema : getSchemas()) {
-            DatabaseUtil.createSchema(dataSource, schema);
+            try {
+                DatabaseUtil.createSchema(dataSource, schema);
+            } catch (Exception e) {
+                log.error("Failed to create schema '{}', error: {}", schema, e.getMessage(), e);
+            }
         }
     }
 

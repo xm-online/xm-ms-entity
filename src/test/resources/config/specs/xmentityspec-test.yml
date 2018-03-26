@@ -44,6 +44,7 @@ types:
             name: { en: "Link 1", ru: "Связь 1" }
             icon: local_offer
             typeKey: TYPE 2
+            backName: { en: "Link to me", ru: "Линка на меня" }
             max: 10
       states:
           - key: STATE1
@@ -68,6 +69,7 @@ types:
             color: null
     - key: TYPE2
       name: { ru: "Тип 2" }
+      pluralName: { ru: "Типы 2" }
       isApp: true
       isAbstract: false
       dataSpec: <Formly fields specification 2>
@@ -99,6 +101,17 @@ types:
           - key: LOCATION1
             name: { en: "Location 1", ru:  "Адрес 1" }
             max: 2
+      functions:
+          - key: FUNCTION1
+            name: { en: "Function 1" }
+            actionName: { en: "Function Button 1" }
+            allowedStateKeys:
+                - STATE5
+                - STATE6
+            inputSpec: |
+                        {}
+            inputForm: |
+                        []
     - key: TYPE1.SUBTYPE1
       name: { en: "Subtype 1", ru: "Подтип 1" }
       isApp: false

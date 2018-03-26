@@ -14,6 +14,7 @@ public class AmazonConfiguration {
     @Bean
     AmazonS3Template amazonS3Template() {
         return new AmazonS3Template(
+            applicationProperties.getAmazon().getS3().getBucket(),
             applicationProperties.getAmazon().getAws().getEndpoint(),
             applicationProperties.getAmazon().getAws().getRegion(),
             applicationProperties.getAmazon().getAws().getAccessKeyId(),

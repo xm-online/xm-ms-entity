@@ -1,6 +1,6 @@
 package com.icthh.xm.ms.entity.config;
 
-import com.icthh.xm.ms.entity.security.AuthoritiesConstants;
+import com.icthh.xm.commons.permission.constants.RoleConstant;
 import com.icthh.xm.ms.entity.security.DomainJwtAccessTokenConverter;
 
 import java.io.ByteArrayInputStream;
@@ -54,10 +54,9 @@ public class MicroserviceSecurityConfiguration extends ResourceServerConfigurerA
             .antMatchers("/api/profile-info").permitAll()
             .antMatchers("/api/xm-entities/registration").permitAll()
             .antMatchers("/api/xm-entities/registration/activate/*").permitAll()
-            .antMatchers("/api/xm-functions/call/ACCOUNT.VERIFY-CONTACT-DATA").permitAll()
             .antMatchers("/api/**").authenticated()
             .antMatchers("/management/health").permitAll()
-            .antMatchers("/management/**").hasAuthority(AuthoritiesConstants.ADMIN)
+            .antMatchers("/management/**").hasAuthority(RoleConstant.SUPER_ADMIN)
             .antMatchers("/swagger-resources/configuration/ui").permitAll();
     }
 

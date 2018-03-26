@@ -17,8 +17,11 @@
     <include file="classpath:config/liquibase/changelog/20170418134030_added_entity_Rating.xml" relativeToChangelogFile="false"/>
     <include file="classpath:config/liquibase/changelog/20170418134031_added_entity_Vote.xml" relativeToChangelogFile="false"/>
     <include file="classpath:config/liquibase/changelog/20170418134032_added_entity_Tag.xml" relativeToChangelogFile="false"/>
+    <include file="classpath:config/liquibase/changelog/20170531145213_added_entity_ConfigNode.xml" relativeToChangelogFile="false"/>
+    <include file="classpath:config/liquibase/changelog/20170531145214_added_entity_ConfigContent.xml" relativeToChangelogFile="false"/>
     <include file="classpath:config/liquibase/changelog/20170717073433_added_entity_XmFunction.xml" relativeToChangelogFile="false"/>
     <include file="classpath:config/liquibase/changelog/20170828093604_added_entity_Profile.xml" relativeToChangelogFile="false"/>
+    <include file="classpath:config/liquibase/changelog/20170918112702_added_entity_FunctionContext.xml" relativeToChangelogFile="false"/>
     <!-- jhipster-needle-liquibase-add-changelog - JHipster will add liquibase changelogs here -->
     <include file="classpath:config/liquibase/changelog/20170418134022_added_entity_constraints_Attachment.xml" relativeToChangelogFile="false"/>
     <include file="classpath:config/liquibase/changelog/20170418134024_added_entity_constraints_Calendar.xml" relativeToChangelogFile="false"/>
@@ -29,10 +32,13 @@
     <include file="classpath:config/liquibase/changelog/20170418134030_added_entity_constraints_Rating.xml" relativeToChangelogFile="false"/>
     <include file="classpath:config/liquibase/changelog/20170418134031_added_entity_constraints_Vote.xml" relativeToChangelogFile="false"/>
     <include file="classpath:config/liquibase/changelog/20170418134032_added_entity_constraints_Tag.xml" relativeToChangelogFile="false"/>
+    <include file="classpath:config/liquibase/changelog/20170531145213_added_entity_constraints_ConfigNode.xml" relativeToChangelogFile="false"/>
     <include file="classpath:config/liquibase/changelog/20170717073433_added_entity_constraints_XmFunction.xml" relativeToChangelogFile="false"/>
     <include file="classpath:config/liquibase/changelog/20170828093604_added_entity_constraints_Profile.xml" relativeToChangelogFile="false"/>
+    <include file="classpath:config/liquibase/changelog/20170918112702_added_entity_constraints_FunctionContext.xml" relativeToChangelogFile="false"/>
     <!-- jhipster-needle-liquibase-add-constraints-changelog - JHipster will add liquibase constraints changelogs here -->
 
+    <include file="classpath:config/liquibase/changelog/20170531230000_load_config_data.xml" relativeToChangelogFile="false"/>
     <include file="classpath:config/liquibase/changelog/20170711154147_move_conent_type_to_attachment_and_add_conent_size.xml" relativeToChangelogFile="false"/>
 
     <!-- Amedvedchuk: regenerate model (create changelogs manually) -->
@@ -53,5 +59,11 @@
 
     <!-- ekashina: multilogin patch -->
     <include file="classpath:config/liquibase/changelog/20170828084400_multilogin_model.xml" relativeToChangelogFile="false"/>
+
+    <!-- adovbnya: drop tables xm_function, config_node, config_content -->
+    <include file="classpath:config/liquibase/changelog/20170918123400_drop_entities_XmFunction_ConfigNode_ConfigContent.xml" relativeToChangelogFile="false"/>
+
+    <!-- agorobey: add createdBy column to XmEntity -->
+    <include file="classpath:config/liquibase/changelog/20171009145000_added_createdBy_XmEntity.xml" relativeToChangelogFile="false"/>
 
 </databaseChangeLog>

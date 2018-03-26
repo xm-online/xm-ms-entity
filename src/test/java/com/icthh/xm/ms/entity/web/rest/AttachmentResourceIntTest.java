@@ -1,42 +1,66 @@
 package com.icthh.xm.ms.entity.web.rest;
 
+import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_AUTH_CONTEXT;
+import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_TENANT_CONTEXT;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.notNullValue;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.mockito.Matchers.anyObject;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.icthh.xm.commons.errors.ExceptionTranslator;
+import com.icthh.xm.lep.api.LepManager;
+import com.icthh.xm.commons.exceptions.spring.web.ExceptionTranslator;
+import com.icthh.xm.commons.permission.repository.PermittedRepository;
+import com.icthh.xm.commons.security.XmAuthenticationContext;
+import com.icthh.xm.commons.security.XmAuthenticationContextHolder;
+import com.icthh.xm.commons.tenant.TenantContextHolder;
+import com.icthh.xm.commons.tenant.TenantContextUtils;
 import com.icthh.xm.ms.entity.EntityApp;
 import com.icthh.xm.ms.entity.config.SecurityBeanOverrideConfiguration;
-import com.icthh.xm.ms.entity.config.tenant.TenantContext;
 import com.icthh.xm.ms.entity.config.tenant.WebappTenantOverrideConfiguration;
 import com.icthh.xm.ms.entity.domain.Attachment;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.repository.AttachmentRepository;
 import com.icthh.xm.ms.entity.repository.search.AttachmentSearchRepository;
+import com.icthh.xm.ms.entity.repository.search.PermittedSearchRepository;
 import com.icthh.xm.ms.entity.service.AttachmentService;
+import com.icthh.xm.ms.entity.service.impl.StartUpdateDateGenerationStrategy;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.mockito.Spy;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.context.transaction.BeforeTransaction;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.Validator;
 
-import javax.persistence.EntityManager;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
+import javax.persistence.EntityManager;
 
 /**
  * Test class for the AttachmentResource REST controller.
@@ -44,6 +68,7 @@ import java.util.List;
  * @see AttachmentResource
  */
 @RunWith(SpringRunner.class)
+@WithMockUser(authorities = {"SUPER-ADMIN"})
 @SpringBootTest(classes = {EntityApp.class, SecurityBeanOverrideConfiguration.class, WebappTenantOverrideConfiguration.class})
 public class AttachmentResourceIntTest {
 
@@ -72,13 +97,22 @@ public class AttachmentResourceIntTest {
     private static final Long UPDATED_VALUE_CONTENT_SIZE = 2L;
 
     @Autowired
+    private AttachmentResource attachmentResource;
+
+    @Autowired
     private AttachmentRepository attachmentRepository;
 
     @Autowired
-    private AttachmentService attachmentService;
+    private AttachmentSearchRepository attachmentSearchRepository;
 
     @Autowired
-    private AttachmentSearchRepository attachmentSearchRepository;
+    private PermittedRepository permittedRepository;
+
+    @Autowired
+    private PermittedSearchRepository permittedSearchRepository;
+
+    @Spy
+    private StartUpdateDateGenerationStrategy startUpdateDateGenerationStrategy;
 
     @Autowired
     private MappingJackson2HttpMessageConverter jacksonMessageConverter;
@@ -92,6 +126,8 @@ public class AttachmentResourceIntTest {
     @Autowired
     private EntityManager em;
 
+    private AttachmentService attachmentService;
+
     private MockMvc restAttachmentMockMvc;
 
     private Attachment attachment;
@@ -99,14 +135,40 @@ public class AttachmentResourceIntTest {
     @Autowired
     private Validator validator;
 
-    @Before
-    public void setup() {
+    @Autowired
+    private TenantContextHolder tenantContextHolder;
 
-        TenantContext.setCurrent("RESINTTEST");
+    @Autowired
+    private XmAuthenticationContextHolder authContextHolder;
+
+    @Autowired
+    private LepManager lepManager;
+
+    @BeforeTransaction
+    public void beforeTransaction() {
+        TenantContextUtils.setTenant(tenantContextHolder, "RESINTTEST");
+    }
+
+    @Before
+    public void setup() throws URISyntaxException {
+
+        lepManager.beginThreadContext(ctx -> {
+            ctx.setValue(THREAD_CONTEXT_KEY_TENANT_CONTEXT, tenantContextHolder.getContext());
+            ctx.setValue(THREAD_CONTEXT_KEY_AUTH_CONTEXT, authContextHolder.getContext());
+        });
 
         MockitoAnnotations.initMocks(this);
-        AttachmentResource attachmentResource = new AttachmentResource(attachmentService);
-        this.restAttachmentMockMvc = MockMvcBuilders.standaloneSetup(attachmentResource)
+
+        when(startUpdateDateGenerationStrategy.generateStartDate()).thenReturn(DEFAULT_START_DATE);
+
+        attachmentService = new AttachmentService(attachmentRepository,
+                                                  attachmentSearchRepository,
+                                                  permittedRepository,
+                                                  permittedSearchRepository,
+                                                  startUpdateDateGenerationStrategy);
+
+        AttachmentResource attachmentResourceMock = new AttachmentResource(attachmentService, attachmentResource);
+        this.restAttachmentMockMvc = MockMvcBuilders.standaloneSetup(attachmentResourceMock)
             .setCustomArgumentResolvers(pageableArgumentResolver)
             .setControllerAdvice(exceptionTranslator)
             .setValidator(validator)
@@ -117,17 +179,19 @@ public class AttachmentResourceIntTest {
 
     @Before
     public void initTest() {
-      //  attachmentSearchRepository.deleteAll();
+        //  attachmentSearchRepository.deleteAll();
     }
 
     @After
+    @Override
     public void finalize() {
-        TenantContext.setCurrent("XM");
+        lepManager.endThreadContext();
+        tenantContextHolder.getPrivilegedContext().destroyCurrentContext();
     }
 
     /**
      * Create an entity for this test.
-     *
+     * <p>
      * This is a static method, as tests for other entities might also need it,
      * if they test an entity which requires the current entity.
      */
@@ -156,8 +220,8 @@ public class AttachmentResourceIntTest {
 
         // Create the Attachment
         restAttachmentMockMvc.perform(post("/api/attachments")
-            .contentType(TestUtil.APPLICATION_JSON_UTF8)
-            .content(TestUtil.convertObjectToJsonBytes(attachment)))
+                                          .contentType(TestUtil.APPLICATION_JSON_UTF8)
+                                          .content(TestUtil.convertObjectToJsonBytes(attachment)))
             .andExpect(status().isCreated());
 
         // Validate the Attachment in the database
@@ -188,8 +252,8 @@ public class AttachmentResourceIntTest {
 
         // An entity with an existing ID cannot be created, so this API call must fail
         restAttachmentMockMvc.perform(post("/api/attachments")
-            .contentType(TestUtil.APPLICATION_JSON_UTF8)
-            .content(TestUtil.convertObjectToJsonBytes(attachment)))
+                                          .contentType(TestUtil.APPLICATION_JSON_UTF8)
+                                          .content(TestUtil.convertObjectToJsonBytes(attachment)))
             .andExpect(status().isBadRequest())
             .andExpect(jsonPath("$.error").value("error.business.idexists"))
             .andExpect(jsonPath("$.error_description").value(notNullValue()))
@@ -210,8 +274,8 @@ public class AttachmentResourceIntTest {
         // Create the Attachment, which fails.
 
         restAttachmentMockMvc.perform(post("/api/attachments")
-            .contentType(TestUtil.APPLICATION_JSON_UTF8)
-            .content(TestUtil.convertObjectToJsonBytes(attachment)))
+                                          .contentType(TestUtil.APPLICATION_JSON_UTF8)
+                                          .content(TestUtil.convertObjectToJsonBytes(attachment)))
             .andExpect(status().isBadRequest())
             .andExpect(jsonPath("$.error").value("error.validation"))
             .andExpect(jsonPath("$.error_description").value(notNullValue()))
@@ -234,8 +298,8 @@ public class AttachmentResourceIntTest {
         // Create the Attachment, which fails.
 
         restAttachmentMockMvc.perform(post("/api/attachments")
-            .contentType(TestUtil.APPLICATION_JSON_UTF8)
-            .content(TestUtil.convertObjectToJsonBytes(attachment)))
+                                          .contentType(TestUtil.APPLICATION_JSON_UTF8)
+                                          .content(TestUtil.convertObjectToJsonBytes(attachment)))
             .andExpect(status().isBadRequest())
             .andExpect(jsonPath("$.error").value("error.validation"))
             .andExpect(jsonPath("$.error_description").value(notNullValue()))
@@ -259,8 +323,8 @@ public class AttachmentResourceIntTest {
         // Create the Attachment, which fails.
 
         restAttachmentMockMvc.perform(post("/api/attachments")
-            .contentType(TestUtil.APPLICATION_JSON_UTF8)
-            .content(TestUtil.convertObjectToJsonBytes(attachment)))
+                                          .contentType(TestUtil.APPLICATION_JSON_UTF8)
+                                          .content(TestUtil.convertObjectToJsonBytes(attachment)))
             .andExpect(status().isBadRequest())
             .andExpect(jsonPath("$.error").value("error.validation"))
             .andExpect(jsonPath("$.error_description").value(notNullValue()))
@@ -275,6 +339,7 @@ public class AttachmentResourceIntTest {
 
     @Test
     @Transactional
+    @Ignore("see AttachmentResourceExtendedIntTest.checkStartDateIsNotRequired instead")
     public void checkStartDateIsRequired() throws Exception {
         int databaseSizeBeforeTest = attachmentRepository.findAll().size();
         // set the field null
@@ -283,8 +348,8 @@ public class AttachmentResourceIntTest {
         // Create the Attachment, which fails.
 
         restAttachmentMockMvc.perform(post("/api/attachments")
-            .contentType(TestUtil.APPLICATION_JSON_UTF8)
-            .content(TestUtil.convertObjectToJsonBytes(attachment)))
+                                          .contentType(TestUtil.APPLICATION_JSON_UTF8)
+                                          .content(TestUtil.convertObjectToJsonBytes(attachment)))
             .andExpect(status().isBadRequest())
             .andExpect(jsonPath("$.error").value("error.validation"))
             .andExpect(jsonPath("$.error_description").value(notNullValue()))
@@ -299,6 +364,7 @@ public class AttachmentResourceIntTest {
 
     @Test
     @Transactional
+    @WithMockUser(authorities = "SUPER-ADMIN")
     public void getAllAttachments() throws Exception {
         // Initialize the database
         attachmentRepository.saveAndFlush(attachment);
@@ -371,8 +437,8 @@ public class AttachmentResourceIntTest {
             .valueContentSize(UPDATED_VALUE_CONTENT_SIZE);
 
         restAttachmentMockMvc.perform(put("/api/attachments")
-            .contentType(TestUtil.APPLICATION_JSON_UTF8)
-            .content(TestUtil.convertObjectToJsonBytes(updatedAttachment)))
+                                          .contentType(TestUtil.APPLICATION_JSON_UTF8)
+                                          .content(TestUtil.convertObjectToJsonBytes(updatedAttachment)))
             .andExpect(status().isOk());
 
         // Validate the Attachment in the database
@@ -402,8 +468,8 @@ public class AttachmentResourceIntTest {
 
         // If the entity doesn't have an ID, it will be created instead of just being updated
         restAttachmentMockMvc.perform(put("/api/attachments")
-            .contentType(TestUtil.APPLICATION_JSON_UTF8)
-            .content(TestUtil.convertObjectToJsonBytes(attachment)))
+                                          .contentType(TestUtil.APPLICATION_JSON_UTF8)
+                                          .content(TestUtil.convertObjectToJsonBytes(attachment)))
             .andExpect(status().isCreated());
 
         // Validate the Attachment in the database
@@ -421,7 +487,7 @@ public class AttachmentResourceIntTest {
 
         // Get the attachment
         restAttachmentMockMvc.perform(delete("/api/attachments/{id}", attachment.getId())
-            .accept(TestUtil.APPLICATION_JSON_UTF8))
+                                          .accept(TestUtil.APPLICATION_JSON_UTF8))
             .andExpect(status().isOk());
 
         // Validate Elasticsearch is empty
