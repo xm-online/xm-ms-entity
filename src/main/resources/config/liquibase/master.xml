@@ -13,8 +13,8 @@
     <include file="classpath:config/liquibase/changelog/20170418134026_added_entity_Comment.xml" relativeToChangelogFile="false"/>
     <include file="classpath:config/liquibase/changelog/20170418134027_added_entity_Link.xml" relativeToChangelogFile="false"/>
     <include file="classpath:config/liquibase/changelog/20170418134028_added_entity_Location.xml" relativeToChangelogFile="false"/>
-    <!--include file="classpath:config/liquibase/changelog/20170418134029_added_entity_Country.xml"
-    relativeToChangelogFile="false"/-->
+    <include file="classpath:config/liquibase/changelog/20170418134029_added_entity_Country.xml"
+    relativeToChangelogFile="false"/>
     <include file="classpath:config/liquibase/changelog/20170418134030_added_entity_Rating.xml" relativeToChangelogFile="false"/>
     <include file="classpath:config/liquibase/changelog/20170418134031_added_entity_Vote.xml" relativeToChangelogFile="false"/>
     <include file="classpath:config/liquibase/changelog/20170418134032_added_entity_Tag.xml" relativeToChangelogFile="false"/>
@@ -60,8 +60,8 @@
     <include file="classpath:config/liquibase/changelog/20170717110008_entity_constraints_Tag.xml" relativeToChangelogFile="false"/>
 
     <!-- Amedvedchuk: drop table country -->
-    <!--include file="classpath:config/liquibase/changelog/20170719190001_entity_drop_Country.xml"
-    relativeToChangelogFile="false"/-->
+    <include file="classpath:config/liquibase/changelog/20170719190001_entity_drop_Country.xml"
+    relativeToChangelogFile="false"/>
 
     <!--include file="classpath:config/liquibase/changelog/20170731230001_modify_data_type_XmFunction.xml"
     relativeToChangelogFile="false"/-->
