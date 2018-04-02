@@ -3,6 +3,8 @@ package com.icthh.xm.ms.entity.web.rest;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.notNullValue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -11,21 +13,19 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.icthh.xm.commons.errors.ExceptionTranslator;
+import com.icthh.xm.commons.exceptions.spring.web.ExceptionTranslator;
+import com.icthh.xm.commons.security.XmAuthenticationContext;
+import com.icthh.xm.commons.security.XmAuthenticationContextHolder;
+import com.icthh.xm.commons.tenant.TenantContextHolder;
+import com.icthh.xm.commons.tenant.TenantContextUtils;
 import com.icthh.xm.ms.entity.EntityApp;
 import com.icthh.xm.ms.entity.config.SecurityBeanOverrideConfiguration;
-import com.icthh.xm.ms.entity.config.tenant.TenantContext;
-import com.icthh.xm.ms.entity.config.tenant.TenantInfo;
 import com.icthh.xm.ms.entity.config.tenant.WebappTenantOverrideConfiguration;
 import com.icthh.xm.ms.entity.domain.Comment;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.repository.CommentRepository;
 import com.icthh.xm.ms.entity.repository.search.CommentSearchRepository;
 import com.icthh.xm.ms.entity.service.CommentService;
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
-import java.util.List;
-import javax.persistence.EntityManager;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -33,13 +33,24 @@ import org.junit.runner.RunWith;
 import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.context.transaction.BeforeTransaction;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.List;
+import java.util.Optional;
+import javax.persistence.EntityManager;
 
 /**
  * Test class for the CommentResource REST controller.
@@ -47,7 +58,14 @@ import org.springframework.transaction.annotation.Transactional;
  * @see CommentResource
  */
 @RunWith(SpringRunner.class)
-@SpringBootTest(classes = {EntityApp.class, SecurityBeanOverrideConfiguration.class, WebappTenantOverrideConfiguration.class})
+@WithMockUser(authorities = {"SUPER-ADMIN"})
+@SpringBootTest(classes = {
+    EntityApp.class,
+    SecurityBeanOverrideConfiguration.class,
+    WebappTenantOverrideConfiguration.class,
+    CommentResourceIntTest.class
+})
+@Configuration
 public class CommentResourceIntTest {
 
     private static final String DEFAULT_USER_KEY = "AAAAAAAAAA";
@@ -58,6 +76,9 @@ public class CommentResourceIntTest {
 
     private static final Instant DEFAULT_ENTRY_DATE = Instant.ofEpochMilli(0L);
     private static final Instant UPDATED_ENTRY_DATE = Instant.now().truncatedTo(ChronoUnit.MILLIS);
+
+    @Autowired
+    private CommentResource commentResource;
 
     @Autowired
     private CommentRepository commentRepository;
@@ -80,29 +101,48 @@ public class CommentResourceIntTest {
     @Autowired
     private EntityManager em;
 
+    @Autowired
+    private TenantContextHolder tenantContextHolder;
+
     private MockMvc restCommentMockMvc;
 
     private Comment comment;
 
+    @Bean
+    @Primary
+    public XmAuthenticationContextHolder xmAuthenticationContextHolder() {
+        XmAuthenticationContext context = mock(XmAuthenticationContext.class);
+        when(context.hasAuthentication()).thenReturn(true);
+        when(context.getLogin()).thenReturn(Optional.of("testLogin"));
+        when(context.getUserKey()).thenReturn(Optional.of(DEFAULT_USER_KEY));
+
+        XmAuthenticationContextHolder holder = mock(XmAuthenticationContextHolder.class);
+        when(holder.getContext()).thenReturn(context);
+
+        return holder;
+    }
+
+    @BeforeTransaction
+    public void beforeTransaction() {
+        TenantContextUtils.setTenant(tenantContextHolder, "RESINTTEST");
+    }
+
     @Before
     public void setup() {
-
-        TenantContext.setCurrent(new TenantInfo("RESINTTEST", "", DEFAULT_USER_KEY));
-
         MockitoAnnotations.initMocks(this);
-        CommentResource commentResource = new CommentResource(commentService);
-        this.restCommentMockMvc = MockMvcBuilders.standaloneSetup(commentResource)
+        CommentResource commentResourceMock = new CommentResource(commentService, commentResource);
+        this.restCommentMockMvc = MockMvcBuilders.standaloneSetup(commentResourceMock)
             .setCustomArgumentResolvers(pageableArgumentResolver)
             .setControllerAdvice(exceptionTranslator)
             .setMessageConverters(jacksonMessageConverter).build();
 
         comment = createEntity(em);
-
     }
 
     @After
+    @Override
     public void finalize() {
-        TenantContext.setCurrent("XM");
+        tenantContextHolder.getPrivilegedContext().destroyCurrentContext();
     }
 
     /**
@@ -195,6 +235,7 @@ public class CommentResourceIntTest {
 
     @Test
     @Transactional
+    @WithMockUser(authorities = "SUPER-ADMIN")
     public void getAllComments() throws Exception {
         // Initialize the database
         commentRepository.saveAndFlush(comment);
@@ -339,4 +380,5 @@ public class CommentResourceIntTest {
         comment1.setId(null);
         assertThat(comment1).isNotEqualTo(comment2);
     }
+
 }

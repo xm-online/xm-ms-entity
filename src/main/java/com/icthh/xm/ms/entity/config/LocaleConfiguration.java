@@ -37,7 +37,7 @@ public class LocaleConfiguration extends WebMvcConfigurerAdapter implements Envi
     }
 
     @Bean
-    public MessageSource defaultMessageSource() {
+    public MessageSource messageSource() {
         ResourceBundleMessageSource messageSource = new ResourceBundleMessageSource();
         messageSource.setBasenames("messages", "i18n/messages");
         messageSource.setDefaultEncoding(Charset.forName("UTF-8").name());

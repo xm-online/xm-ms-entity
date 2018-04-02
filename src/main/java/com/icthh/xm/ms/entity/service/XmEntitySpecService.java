@@ -8,18 +8,17 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.icthh.xm.commons.config.client.api.RefreshableConfiguration;
 import com.icthh.xm.commons.config.client.repository.TenantConfigRepository;
 import com.icthh.xm.commons.logging.aop.IgnoreLogginAspect;
+import com.icthh.xm.commons.tenant.TenantContextHolder;
+import com.icthh.xm.commons.tenant.TenantContextUtils;
 import com.icthh.xm.ms.entity.config.ApplicationProperties;
-import com.icthh.xm.ms.entity.config.tenant.TenantContext;
 import com.icthh.xm.ms.entity.domain.spec.*;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 import org.springframework.util.AntPathMatcher;
 
-import java.io.InputStream;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
@@ -52,23 +51,28 @@ public class XmEntitySpecService implements RefreshableConfiguration {
 
     private final ApplicationProperties applicationProperties;
 
+    private final TenantContextHolder tenantContextHolder;
+
+    private String getTenantKeyValue() {
+        return TenantContextUtils.getRequiredTenantKeyValue(tenantContextHolder);
+    }
+
     @SneakyThrows
     public void updateXmEntitySpec(String xmEntitySpecString) {
-        String tenant = TenantContext.getCurrent().getTenant();
         String configName = applicationProperties.getSpecificationName();
 
         // Simple validation correct structure.
         XmEntitySpec xmEntitySpec = mapper.readValue(xmEntitySpecString, XmEntitySpec.class);
 
-        tenantConfigRepository.updateConfig(tenant, "/" + configName, xmEntitySpecString);
+        tenantConfigRepository.updateConfig(getTenantKeyValue(), "/" + configName, xmEntitySpecString);
     }
 
     protected Map<String, TypeSpec> getTypeSpecs() {
-        String tenant = TenantContext.getCurrent().getTenant();
-        if (!types.containsKey(tenant)) {
+        String tenantKeyValue = getTenantKeyValue();
+        if (!types.containsKey(tenantKeyValue)) {
             throw new IllegalArgumentException("Tenant configuration not found");
         }
-        return types.get(tenant);
+        return types.get(tenantKeyValue);
     }
 
     private Map<String, TypeSpec> toTypeSpecsMap(XmEntitySpec xmEntitySpec) {
@@ -78,7 +82,10 @@ public class XmEntitySpecService implements RefreshableConfiguration {
         } else {
             // Convert List<TypeSpec> to Map<key, TypeSpec>
             Map<String, TypeSpec> result = typeSpecs.stream()
-                .collect(Collectors.toMap(TypeSpec::getKey, Function.identity()));
+                .collect(Collectors.toMap(TypeSpec::getKey, Function.identity(),
+                    (u, v) -> {
+                        throw new IllegalStateException(String.format("Duplicate key %s", u));
+                    }, LinkedHashMap::new));
 
             // add inheritance
             inheritance(result);
@@ -266,9 +273,18 @@ public class XmEntitySpecService implements RefreshableConfiguration {
         return getTypeSpecs().get(key).getStates().stream().filter(s -> s.getKey().contains(stateKey)).findFirst();
     }
 
+    private <T> Iterable<T> nullSafe(Iterable<T> itr) {
+        return itr == null ? Collections.emptyList() : itr;
+    }
+
+    private <T> Stream<T> streamOf(List<T> list) {
+        return list == null ? Stream.empty() : list.stream();
+    }
+
+    @IgnoreLogginAspect
     public Optional<FunctionSpec> findFunction(String functionKey) {
         for (TypeSpec ts : getTypeSpecs().values()) {
-            for (FunctionSpec fs : ts.getFunctions()) {
+            for (FunctionSpec fs : nullSafe(ts.getFunctions())) {
                 if (fs.getKey().equals(functionKey)) {
                     return Optional.of(fs);
                 }
@@ -277,12 +293,13 @@ public class XmEntitySpecService implements RefreshableConfiguration {
         return Optional.empty();
     }
 
+    @IgnoreLogginAspect
     public Optional<FunctionSpec> findFunction(String typeKey, String functionKey) {
         TypeSpec typeSpec = getTypeSpecs().get(typeKey);
         if (typeSpec == null) {
             return Optional.empty();
         }
-        Stream<FunctionSpec> functionSpecStream = typeSpec.getFunctions().stream();
+        Stream<FunctionSpec> functionSpecStream = streamOf(typeSpec.getFunctions());
         return functionSpecStream.filter(fs -> fs.getKey().equals(functionKey)).findFirst();
     }
 
@@ -303,7 +320,12 @@ public class XmEntitySpecService implements RefreshableConfiguration {
                 .build()).collect(Collectors.toList());
         }
         Optional<StateSpec> state = findState(key, stateKey);
-        return state.isPresent() ? state.get().getNext() : Collections.emptyList();
+        if (state.isPresent()) {
+            List<NextSpec> next = state.get().getNext();
+            return next != null ? next : Collections.emptyList();
+        } else {
+            return Collections.emptyList();
+        }
     }
 
     /**

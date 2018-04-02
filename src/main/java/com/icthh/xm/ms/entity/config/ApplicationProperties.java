@@ -1,14 +1,13 @@
 package com.icthh.xm.ms.entity.config;
 
+import com.icthh.xm.commons.lep.TenantScriptStorage;
+import java.util.List;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.Collections;
 
 /**
  * Properties specific to JHipster.
@@ -23,8 +22,9 @@ public class ApplicationProperties {
 
     private final Amazon amazon = new Amazon();
     private final Retry retry = new Retry();
+    private final Lep lep = new Lep();
 
-    private List<String> tenantIgnoredPathList;
+    private List<String> tenantIgnoredPathList = Collections.emptyList();
     /**
      * Default max avatar size 1Mb
      */
@@ -36,13 +36,9 @@ public class ApplicationProperties {
     private Integer tenantClientReadTimeout;
     private String kafkaSystemTopic;
     private String kafkaSystemQueue;
+    private String emailPathPattern;
 
-    @Getter
-    @Setter
     private String specificationPathPattern;
-
-    @Getter
-    @Setter
     private String specificationName;
 
     private String specificationWebappName;
@@ -80,5 +76,11 @@ public class ApplicationProperties {
         private int maxAttempts;
         private long delay;
         private int multiplier;
+    }
+
+    @Getter
+    @Setter
+    private static class Lep {
+        private TenantScriptStorage tenantScriptStorage;
     }
 }

@@ -1,6 +1,7 @@
 package com.icthh.xm.ms.entity.domain.ext;
 
-import com.icthh.xm.commons.errors.exception.BusinessException;
+
+import com.icthh.xm.commons.exceptions.BusinessException;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;

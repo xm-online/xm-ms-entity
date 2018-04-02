@@ -1,30 +1,31 @@
 package com.icthh.xm.ms.entity.web.rest;
 
 import com.codahale.metrics.annotation.Timed;
-import com.icthh.xm.commons.errors.ErrorConstants;
-import com.icthh.xm.commons.errors.exception.BusinessException;
+import com.icthh.xm.commons.exceptions.BusinessException;
+import com.icthh.xm.commons.exceptions.ErrorConstants;
 import com.icthh.xm.ms.entity.domain.Tag;
-
-import com.icthh.xm.ms.entity.repository.TagRepository;
-import com.icthh.xm.ms.entity.repository.search.TagSearchRepository;
+import com.icthh.xm.ms.entity.service.TagService;
 import com.icthh.xm.ms.entity.web.rest.util.HeaderUtil;
 import com.icthh.xm.ms.entity.web.rest.util.RespContentUtil;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.security.access.prepost.PostAuthorize;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
-import javax.validation.Valid;
 import java.net.URI;
 import java.net.URISyntaxException;
-
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
-
-import static org.elasticsearch.index.query.QueryBuilders.*;
+import javax.validation.Valid;
 
 /**
  * REST controller for managing Tag.
@@ -33,17 +34,16 @@ import static org.elasticsearch.index.query.QueryBuilders.*;
 @RequestMapping("/api")
 public class TagResource {
 
-    private final Logger log = LoggerFactory.getLogger(TagResource.class);
-
     private static final String ENTITY_NAME = "tag";
 
-    private final TagRepository tagRepository;
+    private final TagResource tagResource;
+    private final TagService tagService;
 
-    private final TagSearchRepository tagSearchRepository;
-
-    public TagResource(TagRepository tagRepository, TagSearchRepository tagSearchRepository) {
-        this.tagRepository = tagRepository;
-        this.tagSearchRepository = tagSearchRepository;
+    public TagResource(
+                    @Lazy TagResource tagResource,
+                    TagService tagService) {
+        this.tagResource = tagResource;
+        this.tagService = tagService;
     }
 
     /**
@@ -55,14 +55,13 @@ public class TagResource {
      */
     @PostMapping("/tags")
     @Timed
+    @PreAuthorize("hasPermission({'tag': #tag}, 'TAG.CREATE')")
     public ResponseEntity<Tag> createTag(@Valid @RequestBody Tag tag) throws URISyntaxException {
-        log.debug("REST request to save Tag : {}", tag);
         if (tag.getId() != null) {
             throw new BusinessException(ErrorConstants.ERR_BUSINESS_IDEXISTS,
-                                              "A new tag cannot already have an ID");
+                                        "A new tag cannot already have an ID");
         }
-        Tag result = tagRepository.save(tag);
-        tagSearchRepository.save(result);
+        Tag result = tagService.save(tag);
         return ResponseEntity.created(new URI("/api/tags/" + result.getId()))
             .headers(HeaderUtil.createEntityCreationAlert(ENTITY_NAME, result.getId().toString()))
             .body(result);
@@ -79,13 +78,13 @@ public class TagResource {
      */
     @PutMapping("/tags")
     @Timed
+    @PreAuthorize("hasPermission({'id': #tag.id, 'newTag': #tag}, 'tag', 'TAG.UPDATE')")
     public ResponseEntity<Tag> updateTag(@Valid @RequestBody Tag tag) throws URISyntaxException {
-        log.debug("REST request to update Tag : {}", tag);
         if (tag.getId() == null) {
-            return createTag(tag);
+            //in order to call method with permissions check
+            return this.tagResource.createTag(tag);
         }
-        Tag result = tagRepository.save(tag);
-        tagSearchRepository.save(result);
+        Tag result = tagService.save(tag);
         return ResponseEntity.ok()
             .headers(HeaderUtil.createEntityUpdateAlert(ENTITY_NAME, tag.getId().toString()))
             .body(result);
@@ -99,8 +98,7 @@ public class TagResource {
     @GetMapping("/tags")
     @Timed
     public List<Tag> getAllTags() {
-        log.debug("REST request to get all Tags");
-        return tagRepository.findAll();
+        return tagService.findAll(null);
     }
 
     /**
@@ -111,9 +109,9 @@ public class TagResource {
      */
     @GetMapping("/tags/{id}")
     @Timed
+    @PostAuthorize("hasPermission({'returnObject': returnObject.body}, 'TAG.GET_LIST.ITEM')")
     public ResponseEntity<Tag> getTag(@PathVariable Long id) {
-        log.debug("REST request to get Tag : {}", id);
-        Tag tag = tagRepository.findOne(id);
+        Tag tag = tagService.findOne(id);
         return RespContentUtil.wrapOrNotFound(Optional.ofNullable(tag));
     }
 
@@ -125,10 +123,9 @@ public class TagResource {
      */
     @DeleteMapping("/tags/{id}")
     @Timed
+    @PreAuthorize("hasPermission({'id': #id}, 'tag', 'TAG.DELETE')")
     public ResponseEntity<Void> deleteTag(@PathVariable Long id) {
-        log.debug("REST request to delete Tag : {}", id);
-        tagRepository.delete(id);
-        tagSearchRepository.delete(id);
+        tagService.delete(id);
         return ResponseEntity.ok().headers(HeaderUtil.createEntityDeletionAlert(ENTITY_NAME, id.toString())).build();
     }
 
@@ -142,10 +139,7 @@ public class TagResource {
     @GetMapping("/_search/tags")
     @Timed
     public List<Tag> searchTags(@RequestParam String query) {
-        log.debug("REST request to search Tags for query {}", query);
-        return StreamSupport
-            .stream(tagSearchRepository.search(queryStringQuery(query)).spliterator(), false)
-            .collect(Collectors.toList());
+        return tagService.search(query, null);
     }
 
 }

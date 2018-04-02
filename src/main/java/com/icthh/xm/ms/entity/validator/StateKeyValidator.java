@@ -3,9 +3,6 @@ package com.icthh.xm.ms.entity.validator;
 import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.collections.CollectionUtils.isEmpty;
 
-import com.google.common.collect.Sets;
-import com.icthh.xm.ms.entity.config.Constants;
-import com.icthh.xm.ms.entity.config.tenant.TenantContext;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.domain.spec.StateSpec;
 import com.icthh.xm.ms.entity.domain.spec.TypeSpec;
@@ -13,11 +10,11 @@ import com.icthh.xm.ms.entity.service.XmEntitySpecService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import javax.validation.ConstraintValidator;
-import javax.validation.ConstraintValidatorContext;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import javax.validation.ConstraintValidator;
+import javax.validation.ConstraintValidatorContext;
 
 @Slf4j
 public class StateKeyValidator implements ConstraintValidator<StateKey, XmEntity> {

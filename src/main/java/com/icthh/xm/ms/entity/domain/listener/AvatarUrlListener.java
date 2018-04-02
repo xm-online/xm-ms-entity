@@ -3,18 +3,19 @@ package com.icthh.xm.ms.entity.domain.listener;
 import com.icthh.xm.ms.entity.config.ApplicationProperties;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.util.ApplicationContextHolder;
-import javax.persistence.PostLoad;
-import javax.persistence.PrePersist;
-import javax.persistence.PreUpdate;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.context.ApplicationContext;
 
+import javax.persistence.PostLoad;
+import javax.persistence.PrePersist;
+import javax.persistence.PreUpdate;
+
 @Slf4j
 public class AvatarUrlListener {
 
-    private static final String PATTERN_FULL = "^http:\\/\\/[a-zA-Z0-9-]+[.]rgw[.]icthh[.][a-z]+(:\\d+)?/[a-zA-Z0-9-.]+$";
+    private static final String PATTERN_FULL = "^http(s)?:\\/\\/[a-zA-Z0-9-.]+[.]icthh[.][a-z]+(:\\d+)?/[a-zA-Z0-9-.]+$";
     private static final String PATTERN_PART = "^[a-zA-Z0-9-.]+$";
     private String prefix;
 

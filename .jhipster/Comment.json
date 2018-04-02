@@ -1,0 +1,51 @@
+{
+    "fluentMethods": true,
+    "relationships": [
+        {
+            "relationshipName": "comment",
+            "otherEntityName": "comment",
+            "relationshipType": "many-to-one",
+            "otherEntityField": "id"
+        },
+        {
+            "relationshipType": "one-to-many",
+            "relationshipName": "replies",
+            "otherEntityName": "comment",
+            "otherEntityRelationshipName": "comment"
+        },
+        {
+            "relationshipType": "many-to-one",
+            "relationshipValidateRules": "required",
+            "relationshipName": "xmEntity",
+            "otherEntityName": "xmEntity",
+            "otherEntityField": "id"
+        }
+    ],
+    "fields": [
+        {
+            "fieldName": "userKey",
+            "javadoc": "Comment author user key",
+            "fieldType": "String",
+            "fieldValidateRules": [
+                "required"
+            ]
+        },
+        {
+            "fieldName": "message",
+            "javadoc": "Message content",
+            "fieldType": "String"
+        },
+        {
+            "fieldName": "entryDate",
+            "javadoc": "Entry date",
+            "fieldType": "Instant"
+        }
+    ],
+    "changelogDate": "20170418134026",
+    "entityTableName": "comment",
+    "dto": "no",
+    "pagination": "pager",
+    "service": "serviceClass",
+    "microserviceName": "entity",
+    "searchEngine": "elasticsearch"
+}

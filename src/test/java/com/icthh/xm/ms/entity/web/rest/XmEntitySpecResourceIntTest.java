@@ -1,25 +1,33 @@
 package com.icthh.xm.ms.entity.web.rest;
 
+import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_AUTH_CONTEXT;
+import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_TENANT_CONTEXT;
+import static com.icthh.xm.commons.tenant.TenantContextUtils.setTenant;
 import static org.hamcrest.Matchers.hasItem;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.icthh.lep.api.LepManager;
+import com.icthh.xm.lep.api.LepManager;
+import com.icthh.xm.commons.security.XmAuthenticationContext;
+import com.icthh.xm.commons.security.XmAuthenticationContextHolder;
+import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.ms.entity.EntityApp;
+import com.icthh.xm.ms.entity.config.LepConfiguration;
 import com.icthh.xm.ms.entity.config.SecurityBeanOverrideConfiguration;
-import com.icthh.xm.ms.entity.config.tenant.TenantContext;
 import com.icthh.xm.ms.entity.config.tenant.WebappTenantOverrideConfiguration;
-import com.icthh.xm.ms.entity.lep.XmLepConstants;
-import com.icthh.xm.ms.entity.repository.XmEntityRepository;
 import com.icthh.xm.ms.entity.service.XmEntityGeneratorService;
-import com.icthh.xm.ms.entity.service.XmEntityServiceImpl;
+import com.icthh.xm.ms.entity.service.impl.XmEntityServiceImpl;
 import com.icthh.xm.ms.entity.service.XmEntitySpecService;
 import lombok.SneakyThrows;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -34,8 +42,12 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
  * @see XmEntitySpecResource
  */
 @RunWith(SpringRunner.class)
-@SpringBootTest(classes = {EntityApp.class, SecurityBeanOverrideConfiguration.class,
-    WebappTenantOverrideConfiguration.class})
+@SpringBootTest(classes = {
+    EntityApp.class,
+    SecurityBeanOverrideConfiguration.class,
+    WebappTenantOverrideConfiguration.class,
+    LepConfiguration.class
+})
 public class XmEntitySpecResourceIntTest {
 
     private static final String KEY1 = "ACCOUNT";
@@ -47,13 +59,19 @@ public class XmEntitySpecResourceIntTest {
     private static final String KEY4 = "PRODUCT-OFFERING";
 
     @Autowired
-    private XmEntityRepository xmEntityRepository;
-
-    @Autowired
     private XmEntityServiceImpl xmEntityService;
 
     @Autowired
     private XmEntitySpecService xmEntitySpecService;
+
+    @Autowired
+    private TenantContextHolder tenantContextHolder;
+
+    @Mock
+    private XmAuthenticationContextHolder authContextHolder;
+
+    @Mock
+    private XmAuthenticationContext context;
 
     @Autowired
     private LepManager lepManager;
@@ -65,23 +83,29 @@ public class XmEntitySpecResourceIntTest {
     @Before
     @SneakyThrows
     public void setup() {
-        TenantContext.setCurrent("DEMO");
+        MockitoAnnotations.initMocks(this);
+        when(authContextHolder.getContext()).thenReturn(context);
+        when(context.getRequiredUserKey()).thenReturn("userKey");
+
+        setTenant(tenantContextHolder, "DEMO");
         lepManager.beginThreadContext(ctx -> {
-            ctx.setValue(XmLepConstants.CONTEXT_KEY_TENANT, TenantContext.getCurrent());
+            ctx.setValue(THREAD_CONTEXT_KEY_TENANT_CONTEXT, tenantContextHolder.getContext());
+            ctx.setValue(THREAD_CONTEXT_KEY_AUTH_CONTEXT, authContextHolder.getContext());
         });
 
-        xmEntityGeneratorService = new XmEntityGeneratorService(xmEntityService, xmEntitySpecService);
+        xmEntityGeneratorService = new XmEntityGeneratorService(xmEntityService,
+            xmEntitySpecService, authContextHolder);
 
-        MockitoAnnotations.initMocks(this);
         XmEntitySpecResource xmEntitySpecResource = new XmEntitySpecResource(xmEntitySpecService,
-            xmEntityGeneratorService);
+                                                                             xmEntityGeneratorService);
         this.restXmEntitySpecMockMvc = MockMvcBuilders.standaloneSetup(xmEntitySpecResource).build();
     }
 
     @After
+    @Override
     public void finalize() {
         lepManager.endThreadContext();
-        TenantContext.setCurrent("XM");
+        tenantContextHolder.getPrivilegedContext().destroyCurrentContext();
     }
 
     @Test

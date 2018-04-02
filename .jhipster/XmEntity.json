@@ -1,0 +1,157 @@
+{
+    "fluentMethods": true,
+    "relationships": [
+        {
+            "relationshipType": "one-to-many",
+            "relationshipName": "attachments",
+            "otherEntityName": "attachment",
+            "otherEntityRelationshipName": "xmEntity"
+        },
+        {
+            "relationshipType": "one-to-many",
+            "relationshipName": "calendars",
+            "otherEntityName": "calendar",
+            "otherEntityRelationshipName": "xmEntity"
+        },
+        {
+            "relationshipType": "one-to-many",
+            "relationshipName": "locations",
+            "otherEntityName": "location",
+            "otherEntityRelationshipName": "xmEntity"
+        },
+        {
+            "relationshipType": "one-to-many",
+            "relationshipName": "ratings",
+            "otherEntityName": "rating",
+            "otherEntityRelationshipName": "xmEntity"
+        },
+        {
+            "relationshipType": "one-to-many",
+            "relationshipName": "tags",
+            "otherEntityName": "tag",
+            "otherEntityRelationshipName": "xmEntity"
+        },
+        {
+            "relationshipType": "one-to-many",
+            "relationshipName": "comments",
+            "otherEntityName": "comment",
+            "otherEntityRelationshipName": "xmEntity"
+        },
+        {
+            "relationshipType": "one-to-many",
+            "relationshipName": "votes",
+            "otherEntityName": "vote",
+            "otherEntityRelationshipName": "xmEntity"
+        },
+        {
+            "relationshipType": "one-to-many",
+            "relationshipName": "sources",
+            "otherEntityName": "link",
+            "otherEntityRelationshipName": "target"
+        },
+        {
+            "relationshipType": "one-to-many",
+            "relationshipName": "targets",
+            "otherEntityName": "link",
+            "otherEntityRelationshipName": "source"
+        },
+        {
+            "relationshipType": "one-to-many",
+            "relationshipName": "functionContexts",
+            "otherEntityName": "functionContext",
+            "otherEntityRelationshipName": "xmEntity"
+        },
+        {
+            "relationshipType": "one-to-many",
+            "relationshipName": "event",
+            "otherEntityName": "event",
+            "otherEntityRelationshipName": "assigned"
+        }
+    ],
+    "fields": [
+        {
+            "fieldName": "key",
+            "javadoc": "Additional lateral identification for this entity could be defined by template\nExample: PO-1 for Product Offering, e-Mail or MSISDN for account, external Id\nfor Order etc).\nKey is not full unique entity identification. Few entities could have one key,\nbut only one entity could be addressable at one time, as other should be ended\nby endDate property.",
+            "fieldType": "String",
+            "fieldValidateRules": [
+                "required"
+            ]
+        },
+        {
+            "fieldName": "typeKey",
+            "javadoc": "Key reference to the configured Entity Type. Convention is capital letter with\ndash '-'.\nExample: ACCOUNT, PRODUCT-OFFERING, PRICE etc.\nEntity Sub Types could be separated by dot '.'. Convention is same as for Type.\nExample: ACCOUNT.ADMIN, ACCOUNT.USER, ACCOUNT.PARTNER for type ACCOUNT or\nPRODUCT-OFFERING.CAMPAIGN, PRODUCT-OFFERING.RATE-PLAN etc.",
+            "fieldType": "String",
+            "fieldValidateRules": [
+                "required"
+            ]
+        },
+        {
+            "fieldName": "stateKey",
+            "javadoc": "Key reference to the configured Entity State. Entity State matrix related to the\npair of Entity Type. Convention is same as for type (ACTIVE, ORDERED, PRODUCTION,\nCANCELED, CANCELED.MANUAL etc).",
+            "fieldType": "String"
+        },
+        {
+            "fieldName": "name",
+            "javadoc": "This is i18n name of Entity.\nTODO: change data type",
+            "fieldType": "String",
+            "fieldValidateRules": [
+                "required"
+            ]
+        },
+        {
+            "fieldName": "startDate",
+            "javadoc": "Start date.",
+            "fieldType": "Instant",
+            "fieldValidateRules": [
+                "required"
+            ]
+        },
+        {
+            "fieldName": "updateDate",
+            "javadoc": "Update date.",
+            "fieldType": "Instant",
+            "fieldValidateRules": [
+                "required"
+            ]
+        },
+        {
+            "fieldName": "endDate",
+            "javadoc": "End date.",
+            "fieldType": "Instant"
+        },
+        {
+            "fieldName": "avatarUrl",
+            "javadoc": "Relative link to the avatar image. It should support to use additional parameters\nto identify avatar size for different views.",
+            "fieldType": "String"
+        },
+        {
+            "fieldName": "description",
+            "javadoc": "This field describe instance of entity and is not i18n. It could be a big text.\nMarkdown or HTML format should be supported.",
+            "fieldType": "String"
+        },
+        {
+            "fieldName": "data",
+            "javadoc": "Data property represents entity fields as JSON structure. Fields specified by\nFormly and could use them for form building.",
+            "fieldType": "String"
+        },
+        {
+            "fieldName": "removed",
+            "javadoc": "Field is used to mark entities as deleted without physical deletion.",
+            "fieldType": "Boolean"
+        },
+        {
+            "fieldName": "createdBy",
+            "javadoc": "Created by user key",
+            "fieldType": "String"
+        }
+    ],
+    "changelogDate": "20170418134021",
+    "javadoc": "Represents any XM entity like Account, Product Offering, Product, Order, Handling,\nResource, Task, Agreement, Contact, Organization, Price, Channel, Segment and other.",
+    "entityTableName": "xm_entity",
+    "dto": "no",
+    "pagination": "pager",
+    "service": "serviceClass",
+    "jpaMetamodelFiltering": false,
+    "microserviceName": "entity",
+    "searchEngine": "elasticsearch"
+}

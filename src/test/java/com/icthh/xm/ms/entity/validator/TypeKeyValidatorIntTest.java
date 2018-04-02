@@ -3,9 +3,10 @@ package com.icthh.xm.ms.entity.validator;
 import static com.google.common.collect.ImmutableMap.of;
 import static org.junit.Assert.assertEquals;
 
+import com.icthh.xm.commons.tenant.TenantContextHolder;
+import com.icthh.xm.commons.tenant.TenantContextUtils;
 import com.icthh.xm.ms.entity.EntityApp;
 import com.icthh.xm.ms.entity.config.SecurityBeanOverrideConfiguration;
-import com.icthh.xm.ms.entity.config.tenant.TenantContext;
 import com.icthh.xm.ms.entity.config.tenant.WebappTenantOverrideConfiguration;
 import com.icthh.xm.ms.entity.domain.Tag;
 import com.icthh.xm.ms.entity.domain.XmEntity;
@@ -18,11 +19,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import javax.validation.ConstraintViolation;
-import javax.validation.Validator;
 import java.time.Instant;
 import java.util.Map;
 import java.util.Set;
+import javax.validation.ConstraintViolation;
+import javax.validation.Validator;
 
 @Slf4j
 @RunWith(SpringRunner.class)
@@ -31,15 +32,18 @@ public class TypeKeyValidatorIntTest {
 
     @Autowired
     private Validator validator;
+    @Autowired
+    private TenantContextHolder tenantContextHolder;
 
     @Before
     public void setup() {
-        TenantContext.setCurrent("TEST");
+        TenantContextUtils.setTenant(tenantContextHolder, "TEST");
     }
 
     @After
+    @Override
     public void finalize() {
-        TenantContext.setCurrent("XM");
+        tenantContextHolder.getPrivilegedContext().destroyCurrentContext();
     }
 
     @Test

@@ -9,9 +9,10 @@ import static org.mockito.Mockito.when;
 
 import com.icthh.xm.commons.config.client.repository.TenantConfigRepository;
 import com.icthh.xm.commons.config.client.repository.TenantListRepository;
+import com.icthh.xm.commons.config.client.service.TenantConfigService;
+import com.icthh.xm.commons.tenant.TenantContextHolder;
+import com.icthh.xm.commons.web.spring.TenantVerifyInterceptor;
 import com.icthh.xm.ms.entity.config.tenant.LocalXmEntitySpecService;
-import com.icthh.xm.ms.entity.config.tenant.TenantContext;
-import com.icthh.xm.ms.entity.domain.spec.TypeSpec;
 import com.icthh.xm.ms.entity.service.XmEntitySpecService;
 import lombok.SneakyThrows;
 import org.apache.commons.io.IOUtils;
@@ -20,7 +21,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ClassPathResource;
 
 import java.io.InputStream;
-import java.util.*;
+import java.util.HashSet;
+import java.util.Set;
 
 @Configuration
 public class TenantConfigMockConfiguration {
@@ -35,8 +37,11 @@ public class TenantConfigMockConfiguration {
     }
 
     @Bean
-    public XmEntitySpecService xmEntitySpecService(ApplicationProperties applicationProperties) {
-        XmEntitySpecService xmEntitySpecService = createXmEntitySpecService(applicationProperties);
+    public XmEntitySpecService xmEntitySpecService(ApplicationProperties applicationProperties,
+                                                   TenantContextHolder tenantContextHolder) {
+        XmEntitySpecService xmEntitySpecService = new LocalXmEntitySpecService(tenantConfigRepository(),
+                                                                               applicationProperties,
+                                                                               tenantContextHolder);
         return xmEntitySpecService;
     }
 
@@ -46,17 +51,12 @@ public class TenantConfigMockConfiguration {
         doAnswer(mvc -> tenants.add(mvc.getArguments()[0].toString())).when(mockTenantListRepository).addTenant(any());
         doAnswer(mvc -> tenants.remove(mvc.getArguments()[0].toString())).when(mockTenantListRepository).deleteTenant(any());
         when(mockTenantListRepository.getTenants()).thenReturn(tenants);
-        return  mockTenantListRepository;
+        return mockTenantListRepository;
     }
 
     @Bean
     public TenantConfigRepository tenantConfigRepository() {
-        TenantConfigRepository tenantConfigRepository = mock(TenantConfigRepository.class);
-        return  tenantConfigRepository;
-    }
-
-    public static XmEntitySpecService createXmEntitySpecService(ApplicationProperties applicationProperties) {
-        return new LocalXmEntitySpecService(mock(TenantConfigRepository.class), applicationProperties);
+        return mock(TenantConfigRepository.class);
     }
 
     @SneakyThrows
@@ -66,4 +66,13 @@ public class TenantConfigMockConfiguration {
         return IOUtils.toString(cfgInputStream, UTF_8);
     }
 
+    @Bean
+    public TenantConfigService tenantContigService() {
+        return mock(TenantConfigService.class);
+    }
+
+    @Bean
+    public TenantVerifyInterceptor tenantVerifyInterceptor() {
+        return mock(TenantVerifyInterceptor.class);
+    }
 }

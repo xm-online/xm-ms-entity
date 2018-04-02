@@ -53,8 +53,7 @@ public class Vote implements Serializable {
     /**
      * Entry date
      */
-    @NotNull
-    @ApiModelProperty(value = "Entry date", required = true)
+    @ApiModelProperty(value = "Entry date")
     @Column(name = "entry_date", nullable = false)
     private Instant entryDate;
 
@@ -149,6 +148,13 @@ public class Vote implements Serializable {
 
     public void setXmEntity(XmEntity xmEntity) {
         this.xmEntity = xmEntity;
+    }
+
+    @PrePersist
+    private void prePersist() {
+        if (id == null && entryDate == null) {
+            entryDate = Instant.now();
+        }
     }
 
     @Override

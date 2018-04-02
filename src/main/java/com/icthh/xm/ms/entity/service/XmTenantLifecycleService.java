@@ -1,19 +1,21 @@
 package com.icthh.xm.ms.entity.service;
 
 import com.icthh.xm.commons.gen.model.Tenant;
+import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.ms.entity.config.ApplicationProperties;
 import com.icthh.xm.ms.entity.domain.EntityState;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.web.client.tenant.TenantClient;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -29,6 +31,7 @@ public class XmTenantLifecycleService {
 
     private final List<TenantClient> clients;
     private final ApplicationProperties applicationProperties;
+    private final TenantContextHolder tenantContextHolder;
 
     /**
      * Call services during state change.
@@ -37,6 +40,11 @@ public class XmTenantLifecycleService {
      * @param context additional data
      */
     public void changeState(XmEntity xmEntity, String nextStateKey, Map<String, Object> context) {
+        if (!tenantContextHolder.getContext().getTenant()
+            .orElseThrow(() -> new IllegalArgumentException("Tenant not supplied")).isSuper()) {
+            throw new IllegalArgumentException("Creating new tenants allowed only from super tenant");
+        }
+
         // noinspection unchecked
         List<String> services = (List<String>) context.getOrDefault(KEY_SERVICES,
                         applicationProperties.getTenantCreateServiceList());

@@ -9,8 +9,8 @@ import java.util.List;
 import java.util.Map;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonPropertyOrder( {"key", "name", "isApp", "isAbstract", "fastSearch", "icon", "dataSpec", "dataForm", "functions",
-    "access", "attachments", "calendars", "links", "locations", "ratings", "states", "tags"})
+@JsonPropertyOrder( {"key", "name", "pluralName", "isApp", "isAbstract", "fastSearch", "icon", "dataSpec", "dataForm",
+    "functions", "access", "attachments", "calendars", "links", "locations", "ratings", "states", "tags"})
 @Data
 public class TypeSpec {
 
@@ -18,6 +18,8 @@ public class TypeSpec {
     private String key;
     @JsonProperty("name")
     private Map<String, String> name;
+    @JsonProperty("pluralName")
+    private Map<String, String> pluralName;
     @JsonProperty("isApp")
     private Boolean isApp;
     @JsonProperty("isAbstract")
@@ -50,5 +52,7 @@ public class TypeSpec {
     private List<TagSpec> tags = null;
     @JsonProperty("comments")
     private List<CommentSpec> comments = null;
+
+
 
 }

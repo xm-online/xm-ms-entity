@@ -66,7 +66,8 @@
     <logger name="sun.net.www" level="INFO"/>
     <logger name="sun.rmi.transport" level="WARN"/>
     <logger name="com.jayway.jsonpath.internal.path" level="INFO"/>
-
+    <logger name="com.hazelcast.internal" level="INFO"/>
+    <logger name="org.reflections" level="INFO"/>
 
     <contextListener class="ch.qos.logback.classic.jul.LevelChangePropagator">
         <resetJUL>true</resetJUL>

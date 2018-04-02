@@ -57,6 +57,7 @@ public class XmEntitySpecUnitTest {
         assertEquals("TYPE1-OTHER", xmEntitySpec.getTypes().get(3).getKey());
         assertEquals(1, xmEntitySpec.getTypes().get(0).getName().size());
         assertEquals(1, xmEntitySpec.getTypes().get(1).getName().size());
+        assertEquals(1, xmEntitySpec.getTypes().get(1).getPluralName().size());
         assertEquals(2, xmEntitySpec.getTypes().get(2).getName().size());
         assertEquals(2, xmEntitySpec.getTypes().get(3).getName().size());
         assertNotNull(xmEntitySpec.getTypes().get(0).getDataSpec());
@@ -66,8 +67,17 @@ public class XmEntitySpecUnitTest {
         assertEquals("typeKey:TYPE1*", xmEntitySpec.getTypes().get(0).getFastSearch().get(0).getQuery());
         assertFalse(xmEntitySpec.getTypes().get(0).getFastSearch().get(0).getName().isEmpty());
         assertEquals("NEW", xmEntitySpec.getTypes().get(0).getLinks().get(0).getBuilderType());
+        assertEquals("Link to me", xmEntitySpec.getTypes().get(0).getLinks().get(0).getBackName().get("en"));
         assertNotNull("NEW", xmEntitySpec.getTypes().get(0).getLinks().get(0).getIcon());
         assertEquals("5STARS", xmEntitySpec.getTypes().get(2).getRatings().get(0).getStyle());
+
+        FunctionSpec functionSpec = xmEntitySpec.getTypes().get(1).getFunctions().get(0);
+        assertEquals("FUNCTION1", functionSpec.getKey());
+        assertEquals("Function 1", functionSpec.getName().get("en"));
+        assertEquals("Function Button 1", functionSpec.getActionName().get("en"));
+        assertEquals(2, functionSpec.getAllowedStateKeys().size());
+        assertEquals("{}", functionSpec.getInputSpec().trim());
+        assertEquals("[]", functionSpec.getInputForm().trim());
     }
 
     @Test
@@ -172,6 +182,13 @@ public class XmEntitySpecUnitTest {
             InputStream cfgInputStream = new ClassPathResource(configName).getInputStream();
             XmEntitySpec xmEntitySpec = mapper.readValue(cfgInputStream, XmEntitySpec.class);
             assertNotNull(xmEntitySpec);
+            xmEntitySpec.getTypes().forEach(typeSpec -> {
+                if ("RESOURCE.CAR".equals(typeSpec.getKey())) {
+                    verifyRating(typeSpec);
+                } else if ("RESOURCE.CHARGING-STATION".equals(typeSpec.getKey())) {
+                    verifyRating(typeSpec);
+                }
+            });
         }
     }
     private void verifyRating(TypeSpec typeSpec) {

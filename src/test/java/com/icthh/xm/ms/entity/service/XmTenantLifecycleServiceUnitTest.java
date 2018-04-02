@@ -1,24 +1,30 @@
 package com.icthh.xm.ms.entity.service;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import com.icthh.xm.commons.gen.model.Tenant;
+import com.icthh.xm.commons.tenant.TenantContext;
+import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.ms.entity.config.ApplicationProperties;
 import com.icthh.xm.ms.entity.domain.EntityState;
 import com.icthh.xm.ms.entity.domain.XmEntity;
-import com.icthh.xm.ms.entity.lep.XmLepScriptConstants;
+import com.icthh.xm.ms.entity.lep.LepXmEntityMsConstants;
 import com.icthh.xm.ms.entity.service.XmTenantLifecycleService.ServiceInfo;
 import com.icthh.xm.ms.entity.web.client.tenant.TenantClient;
+import org.junit.Before;
+import org.junit.Test;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import org.junit.Before;
-import org.junit.Test;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import java.util.Optional;
 
 public class XmTenantLifecycleServiceUnitTest {
 
@@ -34,15 +40,59 @@ public class XmTenantLifecycleServiceUnitTest {
     @Mock
     private ApplicationProperties applicationProperties;
 
+    @Mock
+    private com.icthh.xm.commons.tenant.Tenant tenant;
+
+    @Mock
+    private TenantContext tenantContext;
+
     @Before
     public void before() {
         MockitoAnnotations.initMocks(this);
-        xmTenantLifecycleService = new XmTenantLifecycleService(tenantClients, applicationProperties);
+
+        TenantContextHolder tenantContextHolder = mock(TenantContextHolder.class);
+
+        when(tenantContextHolder.getContext()).thenReturn(tenantContext);
+        when(tenantContext.getTenant()).thenReturn(Optional.of(tenant));
+        when(tenant.isSuper()).thenReturn(true);
+
+        xmTenantLifecycleService = new XmTenantLifecycleService(tenantClients,
+            applicationProperties, tenantContextHolder);
+    }
+
+    @Test
+    public void testNoTenant() throws Exception {
+        when(tenantContext.getTenant()).thenReturn(Optional.empty());
+
+        IllegalArgumentException exception = null;
+        try {
+            xmTenantLifecycleService.changeState(getEntity(), EntityState.ACTIVE.name(), context);
+        } catch (IllegalArgumentException e) {
+            exception = e;
+        }
+
+        assertNotNull(exception);
+        assertEquals("Tenant not supplied", exception.getMessage());
+    }
+
+    @Test
+    public void testNotSuperTenant() throws Exception {
+        when(tenant.isSuper()).thenReturn(false);
+
+        IllegalArgumentException exception = null;
+        try {
+            xmTenantLifecycleService.changeState(getEntity(), EntityState.ACTIVE.name(), context);
+        } catch (IllegalArgumentException e) {
+            exception = e;
+        }
+
+        assertNotNull(exception);
+        assertEquals("Creating new tenants allowed only from super tenant", exception.getMessage());
     }
 
     @Test
     public void testNoContext() {
-        XmEntity xmEntity = new XmEntity().typeKey(ENTITY_TYPE_KEY).stateKey(EntityState.NEW.name());
+        XmEntity xmEntity = getEntity();
 
         xmTenantLifecycleService.changeState(xmEntity, EntityState.ACTIVE.name(), context);
 
@@ -51,8 +101,8 @@ public class XmTenantLifecycleServiceUnitTest {
 
     @Test
     public void testNoService() {
-        XmEntity xmEntity = new XmEntity().typeKey(ENTITY_TYPE_KEY).stateKey(EntityState.NEW.name());
-        context.put(XmLepScriptConstants.BINDING_KEY_SERVICES, Collections.singletonList(SERVICE_NAME));
+        XmEntity xmEntity = getEntity();
+        context.put(LepXmEntityMsConstants.BINDING_KEY_SERVICES, Collections.singletonList(SERVICE_NAME));
 
         xmTenantLifecycleService.changeState(xmEntity, EntityState.ACTIVE.name(), context);
 
@@ -64,8 +114,8 @@ public class XmTenantLifecycleServiceUnitTest {
 
     @Test
     public void testServiceCallFail() {
-        XmEntity xmEntity = new XmEntity().typeKey(ENTITY_TYPE_KEY).stateKey(EntityState.NEW.name());
-        context.put(XmLepScriptConstants.BINDING_KEY_SERVICES, Collections.singletonList(SERVICE_NAME));
+        XmEntity xmEntity = getEntity();
+        context.put(LepXmEntityMsConstants.BINDING_KEY_SERVICES, Collections.singletonList(SERVICE_NAME));
         TenantClient client = new FailClient();
         tenantClients.add(client);
 
@@ -78,13 +128,13 @@ public class XmTenantLifecycleServiceUnitTest {
 
     @Test
     public void testServiceCallPass() {
-        XmEntity xmEntity = new XmEntity().typeKey(ENTITY_TYPE_KEY).stateKey(EntityState.NEW.name());
+        XmEntity xmEntity = getEntity();
         Map<String, Object> serviceInfo = new HashMap<>();
         Map<String, Object> action = new HashMap<>();
         serviceInfo.put("create", action);
         action.put(SUCCESS_NAME, true);
         xmEntity.getData().put(SERVICE_NAME, serviceInfo);
-        context.put(XmLepScriptConstants.BINDING_KEY_SERVICES, Collections.singletonList(SERVICE_NAME));
+        context.put(LepXmEntityMsConstants.BINDING_KEY_SERVICES, Collections.singletonList(SERVICE_NAME));
         TenantClient client = new FailClient();
         tenantClients.add(client);
 
@@ -96,8 +146,8 @@ public class XmTenantLifecycleServiceUnitTest {
 
     @Test
     public void testServiceCallSuccess() {
-        XmEntity xmEntity = new XmEntity().typeKey(ENTITY_TYPE_KEY).stateKey(EntityState.NEW.name());
-        context.put(XmLepScriptConstants.BINDING_KEY_SERVICES, Collections.singletonList(SERVICE_NAME));
+        XmEntity xmEntity = getEntity();
+        context.put(LepXmEntityMsConstants.BINDING_KEY_SERVICES, Collections.singletonList(SERVICE_NAME));
         TenantClient client = new SuccessClient();
         tenantClients.add(client);
 
@@ -105,6 +155,10 @@ public class XmTenantLifecycleServiceUnitTest {
 
         assertEquals(1, xmEntity.getData().size());
         assertEquals(true, ((ServiceInfo) ((Map) xmEntity.getData().get(SERVICE_NAME)).get("create")).isSuccess());
+    }
+
+    private XmEntity getEntity() {
+        return new XmEntity().typeKey(ENTITY_TYPE_KEY).stateKey(EntityState.NEW.name());
     }
 
     private static class FailClient implements TenantClient {

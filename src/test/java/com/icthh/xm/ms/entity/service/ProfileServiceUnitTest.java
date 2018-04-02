@@ -4,9 +4,13 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.icthh.xm.commons.security.XmAuthenticationContextHolder;
+import com.icthh.xm.commons.tenant.TenantContextHolder;
+import com.icthh.xm.commons.tenant.TenantContextUtils;
+import com.icthh.xm.commons.tenant.spring.config.TenantContextConfiguration;
 import com.icthh.xm.ms.entity.EntityApp;
 import com.icthh.xm.ms.entity.config.SecurityBeanOverrideConfiguration;
-import com.icthh.xm.ms.entity.config.tenant.TenantContext;
+import com.icthh.xm.ms.entity.config.WebMvcConfig;
 import com.icthh.xm.ms.entity.config.tenant.WebappTenantOverrideConfiguration;
 import com.icthh.xm.ms.entity.domain.Profile;
 import com.icthh.xm.ms.entity.domain.XmEntity;
@@ -14,14 +18,22 @@ import com.icthh.xm.ms.entity.repository.ProfileRepository;
 import com.icthh.xm.ms.entity.repository.search.ProfileSearchRepository;
 import com.icthh.xm.ms.entity.repository.search.XmEntitySearchRepository;
 import com.icthh.xm.ms.entity.web.rest.XmEntityResourceIntTest;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
 @RunWith(SpringRunner.class)
-@SpringBootTest(classes = {EntityApp.class, SecurityBeanOverrideConfiguration.class, WebappTenantOverrideConfiguration.class})
+@SpringBootTest(classes = {
+    EntityApp.class,
+    SecurityBeanOverrideConfiguration.class,
+    WebappTenantOverrideConfiguration.class,
+    TenantContextConfiguration.class
+})
 public class ProfileServiceUnitTest {
 
     private static final Long ID = 1L;
@@ -35,13 +47,26 @@ public class ProfileServiceUnitTest {
 
     private ProfileService service;
 
+    @Autowired
+    private TenantContextHolder tenantContextHolder;
+
+    @Autowired
+    private XmAuthenticationContextHolder authContextHolder;
+
     @Before
     public void init() {
+        TenantContextUtils.setTenant(tenantContextHolder, "TEST");
+
         profileRepository = mock(ProfileRepository.class);
         profileSearchRepository = mock(ProfileSearchRepository.class);
         entitySearchRepository = mock(XmEntitySearchRepository.class);
-        service = new ProfileService(profileRepository, profileSearchRepository, entitySearchRepository);
-        TenantContext.setCurrent("TEST");
+        service = new ProfileService(profileRepository, profileSearchRepository, entitySearchRepository, authContextHolder);
+    }
+
+    @After
+    @Override
+    public void finalize() {
+        tenantContextHolder.getPrivilegedContext().destroyCurrentContext();
     }
 
     @Test

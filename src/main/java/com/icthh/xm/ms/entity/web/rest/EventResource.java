@@ -1,22 +1,31 @@
 package com.icthh.xm.ms.entity.web.rest;
 
 import com.codahale.metrics.annotation.Timed;
-import com.icthh.xm.commons.errors.ErrorConstants;
-import com.icthh.xm.commons.errors.exception.BusinessException;
+import com.icthh.xm.commons.exceptions.BusinessException;
+import com.icthh.xm.commons.exceptions.ErrorConstants;
 import com.icthh.xm.ms.entity.domain.Event;
 import com.icthh.xm.ms.entity.service.EventService;
 import com.icthh.xm.ms.entity.web.rest.util.HeaderUtil;
 import com.icthh.xm.ms.entity.web.rest.util.RespContentUtil;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.security.access.prepost.PostAuthorize;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
-import javax.validation.Valid;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Optional;
+import javax.validation.Valid;
 
 /**
  * REST controller for managing Event.
@@ -25,14 +34,16 @@ import java.util.Optional;
 @RequestMapping("/api")
 public class EventResource {
 
-    private final Logger log = LoggerFactory.getLogger(EventResource.class);
-
     private static final String ENTITY_NAME = "event";
 
     private final EventService eventService;
+    private final EventResource eventResource;
 
-    public EventResource(EventService eventService) {
+    public EventResource(
+                    EventService eventService,
+                    @Lazy EventResource eventResource) {
         this.eventService = eventService;
+        this.eventResource = eventResource;
     }
 
     /**
@@ -44,11 +55,11 @@ public class EventResource {
      */
     @PostMapping("/events")
     @Timed
+    @PreAuthorize("hasPermission({'event': #event}, 'EVENT.CREATE')")
     public ResponseEntity<Event> createEvent(@Valid @RequestBody Event event) throws URISyntaxException {
-        log.debug("REST request to save Event : {}", event);
         if (event.getId() != null) {
             throw new BusinessException(ErrorConstants.ERR_BUSINESS_IDEXISTS,
-                                              "A new event cannot already have an ID");
+                                        "A new event cannot already have an ID");
         }
         Event result = eventService.save(event);
         return ResponseEntity.created(new URI("/api/events/" + result.getId()))
@@ -67,10 +78,11 @@ public class EventResource {
      */
     @PutMapping("/events")
     @Timed
+    @PreAuthorize("hasPermission({'id': #event.id, 'newEvent': #event}, 'event', 'EVENT.UPDATE')")
     public ResponseEntity<Event> updateEvent(@Valid @RequestBody Event event) throws URISyntaxException {
-        log.debug("REST request to update Event : {}", event);
         if (event.getId() == null) {
-            return createEvent(event);
+            //in order to call method with permissions check
+            return this.eventResource.createEvent(event);
         }
         Event result = eventService.save(event);
         return ResponseEntity.ok()
@@ -86,8 +98,7 @@ public class EventResource {
     @GetMapping("/events")
     @Timed
     public List<Event> getAllEvents() {
-        log.debug("REST request to get all Events");
-        return eventService.findAll();
+        return eventService.findAll(null);
     }
 
     /**
@@ -98,8 +109,8 @@ public class EventResource {
      */
     @GetMapping("/events/{id}")
     @Timed
+    @PostAuthorize("hasPermission({'returnObject': returnObject.body}, 'EVENT.GET_LIST.ITEM')")
     public ResponseEntity<Event> getEvent(@PathVariable Long id) {
-        log.debug("REST request to get Event : {}", id);
         Event event = eventService.findOne(id);
         return RespContentUtil.wrapOrNotFound(Optional.ofNullable(event));
     }
@@ -112,8 +123,8 @@ public class EventResource {
      */
     @DeleteMapping("/events/{id}")
     @Timed
+    @PreAuthorize("hasPermission({'id': #id}, 'event', 'EVENT.DELETE')")
     public ResponseEntity<Void> deleteEvent(@PathVariable Long id) {
-        log.debug("REST request to delete Event : {}", id);
         eventService.delete(id);
         return ResponseEntity.ok().headers(HeaderUtil.createEntityDeletionAlert(ENTITY_NAME, id.toString())).build();
     }
@@ -128,8 +139,7 @@ public class EventResource {
     @GetMapping("/_search/events")
     @Timed
     public List<Event> searchEvents(@RequestParam String query) {
-        log.debug("REST request to search Events for query {}", query);
-        return eventService.search(query);
+        return eventService.search(query, null);
     }
 
 }

@@ -4,18 +4,25 @@ import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.JsonIdentityReference;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import com.icthh.xm.ms.entity.domain.idresolver.XmEntityObjectIdResolver;
-
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.springframework.data.elasticsearch.annotations.Document;
 
-import javax.persistence.*;
-import javax.validation.constraints.*;
 import java.io.Serializable;
 import java.time.Instant;
 import java.util.Objects;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.ManyToOne;
+import javax.persistence.PrePersist;
+import javax.persistence.SequenceGenerator;
+import javax.persistence.Table;
+import javax.validation.constraints.NotNull;
 
 /**
  * Bidirectional link between two XmEntites.
@@ -59,8 +66,7 @@ public class Link implements Serializable {
     /**
      * Start date
      */
-    @NotNull
-    @ApiModelProperty(value = "Start date", required = true)
+    @ApiModelProperty(value = "Start date")
     @Column(name = "start_date", nullable = false)
     private Instant startDate;
 
@@ -81,6 +87,10 @@ public class Link implements Serializable {
         XmEntityObjectIdResolver.class)
     @JsonIdentityReference(alwaysAsId = true) // otherwise first ref as POJO, others as id
     private XmEntity source;
+
+    public Link() {
+        super();
+    }
 
     public Long getId() {
         return id;
@@ -179,6 +189,17 @@ public class Link implements Serializable {
 
     public void setSource(XmEntity xmEntity) {
         this.source = xmEntity;
+    }
+
+    public boolean linkFromSameEntity(Link link) {
+        return this.getSource().getId().equals(link.getSource().getId());
+    }
+
+    @PrePersist
+    private void prePersist() {
+        if (id == null && startDate == null) {
+            startDate = Instant.now();
+        }
     }
 
     @Override

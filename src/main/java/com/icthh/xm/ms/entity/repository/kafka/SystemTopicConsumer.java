@@ -1,6 +1,6 @@
 package com.icthh.xm.ms.entity.repository.kafka;
 
-import com.icthh.xm.commons.logging.util.MDCUtil;
+import com.icthh.xm.commons.logging.util.MdcUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -15,18 +15,19 @@ public class SystemTopicConsumer {
 
     /**
      * Consume tenant command event message.
+     *
      * @param message the tenant command event message
      */
     @Retryable(maxAttemptsExpression = "${application.retry.max-attempts}",
         backoff = @Backoff(delayExpression = "${application.retry.delay}",
             multiplierExpression = "${application.retry.multiplier}"))
     public void consumeEvent(ConsumerRecord<String, String> message) {
-        MDCUtil.put();
+        MdcUtils.putRid();
         try {
-            log.info("Input message {}", message);
+            log.info("Consume event from topic [{}]", message.topic());
 
         } finally {
-            MDCUtil.remove();
+            MdcUtils.removeRid();
         }
     }
 }

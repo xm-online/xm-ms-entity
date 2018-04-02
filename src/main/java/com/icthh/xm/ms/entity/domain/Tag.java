@@ -54,8 +54,7 @@ public class Tag implements Serializable {
     /**
      * Start date
      */
-    @NotNull
-    @ApiModelProperty(value = "Start date", required = true)
+    @ApiModelProperty(value = "Start date")
     @Column(name = "start_date", nullable = false)
     private Instant startDate;
 
@@ -124,6 +123,13 @@ public class Tag implements Serializable {
 
     public void setXmEntity(XmEntity xmEntity) {
         this.xmEntity = xmEntity;
+    }
+
+    @PrePersist
+    private void prePersist() {
+        if (id == null && startDate == null) {
+            startDate = Instant.now();
+        }
     }
 
     @Override

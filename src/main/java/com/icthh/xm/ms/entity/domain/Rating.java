@@ -1,5 +1,9 @@
 package com.icthh.xm.ms.entity.domain;
 
+import static javax.persistence.CascadeType.MERGE;
+import static javax.persistence.CascadeType.PERSIST;
+import static javax.persistence.CascadeType.REMOVE;
+
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.JsonIdentityReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -54,8 +58,7 @@ public class Rating implements Serializable {
     /**
      * Start date
      */
-    @NotNull
-    @ApiModelProperty(value = "Start date", required = true)
+    @ApiModelProperty(value = "Start date")
     @Column(name = "start_date", nullable = false)
     private Instant startDate;
 
@@ -66,7 +69,7 @@ public class Rating implements Serializable {
     @Column(name = "end_date")
     private Instant endDate;
 
-    @OneToMany(mappedBy = "rating")
+    @OneToMany(mappedBy = "rating", cascade = {PERSIST, MERGE, REMOVE})
     @JsonIgnore
     @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
     private Set<Vote> votes = new HashSet<>();
@@ -174,6 +177,17 @@ public class Rating implements Serializable {
 
     public void setXmEntity(XmEntity xmEntity) {
         this.xmEntity = xmEntity;
+    }
+
+    @PrePersist
+    @PreUpdate
+    private void prePersist() {
+        if (id == null && startDate == null) {
+            startDate = Instant.now();
+        }
+        if (xmEntity != null) {
+            xmEntity.updateXmEntityReference(this.votes, Vote::setXmEntity);
+        }
     }
 
     @Override

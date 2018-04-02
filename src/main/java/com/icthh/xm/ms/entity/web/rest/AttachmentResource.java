@@ -1,21 +1,31 @@
 package com.icthh.xm.ms.entity.web.rest;
 
 import com.codahale.metrics.annotation.Timed;
-import com.icthh.xm.commons.errors.ErrorConstants;
-import com.icthh.xm.commons.errors.exception.BusinessException;
+import com.icthh.xm.commons.exceptions.BusinessException;
+import com.icthh.xm.commons.exceptions.ErrorConstants;
 import com.icthh.xm.ms.entity.domain.Attachment;
 import com.icthh.xm.ms.entity.service.AttachmentService;
 import com.icthh.xm.ms.entity.web.rest.util.HeaderUtil;
 import com.icthh.xm.ms.entity.web.rest.util.RespContentUtil;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PostAuthorize;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Optional;
 import javax.validation.Valid;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
 
 /**
  * REST controller for managing Attachment.
@@ -24,14 +34,16 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api")
 public class AttachmentResource {
 
-    private final Logger log = LoggerFactory.getLogger(AttachmentResource.class);
-
     private static final String ENTITY_NAME = "attachment";
 
     private final AttachmentService attachmentService;
+    private final AttachmentResource attachmentResource;
 
-    public AttachmentResource(AttachmentService attachmentService) {
+    public AttachmentResource(
+                    AttachmentService attachmentService,
+                    @Lazy AttachmentResource attachmentResource) {
         this.attachmentService = attachmentService;
+        this.attachmentResource = attachmentResource;
     }
 
     /**
@@ -43,11 +55,11 @@ public class AttachmentResource {
      */
     @PostMapping("/attachments")
     @Timed
+    @PreAuthorize("hasPermission({'attachment': #attachment}, 'ATTACHMENT.CREATE')")
     public ResponseEntity<Attachment> createAttachment(@Valid @RequestBody Attachment attachment) throws URISyntaxException {
-        log.debug("REST request to save Attachment : {}", attachment);
         if (attachment.getId() != null) {
             throw new BusinessException(ErrorConstants.ERR_BUSINESS_IDEXISTS,
-                                              "A new attachment cannot already have an ID");
+                "A new attachment cannot already have an ID");
         }
         Attachment result = attachmentService.save(attachment);
         return ResponseEntity.created(new URI("/api/attachments/" + result.getId()))
@@ -66,10 +78,11 @@ public class AttachmentResource {
      */
     @PutMapping("/attachments")
     @Timed
+    @PreAuthorize("hasPermission({'id': #attachment.id, 'newAttachment': #attachment}, 'attachment', 'ATTACHMENT.UPDATE')")
     public ResponseEntity<Attachment> updateAttachment(@Valid @RequestBody Attachment attachment) throws URISyntaxException {
-        log.debug("REST request to update Attachment : {}", attachment);
         if (attachment.getId() == null) {
-            return createAttachment(attachment);
+            //in order to call method with permissions check
+            return this.attachmentResource.createAttachment(attachment);
         }
         Attachment result = attachmentService.save(attachment);
         return ResponseEntity.ok()
@@ -85,8 +98,7 @@ public class AttachmentResource {
     @GetMapping("/attachments")
     @Timed
     public List<Attachment> getAllAttachments() {
-        log.debug("REST request to get all Attachments");
-        return attachmentService.findAll();
+        return attachmentService.findAll(null);
     }
 
     /**
@@ -97,8 +109,8 @@ public class AttachmentResource {
      */
     @GetMapping("/attachments/{id}")
     @Timed
+    @PostAuthorize("hasPermission({'returnObject': returnObject.body}, 'ATTACHMENT.GET_LIST.ITEM')")
     public ResponseEntity<Attachment> getAttachment(@PathVariable Long id) {
-        log.debug("REST request to get Attachment : {}", id);
         Attachment attachment = attachmentService.findOneWithContent(id);
         return RespContentUtil.wrapOrNotFound(Optional.ofNullable(attachment));
     }
@@ -111,8 +123,8 @@ public class AttachmentResource {
      */
     @DeleteMapping("/attachments/{id}")
     @Timed
+    @PreAuthorize("hasPermission({'id': #id}, 'attachment', 'ATTACHMENT.DELETE')")
     public ResponseEntity<Void> deleteAttachment(@PathVariable Long id) {
-        log.debug("REST request to delete Attachment : {}", id);
         attachmentService.delete(id);
         return ResponseEntity.ok().headers(HeaderUtil.createEntityDeletionAlert(ENTITY_NAME, id.toString())).build();
     }
@@ -127,8 +139,7 @@ public class AttachmentResource {
     @GetMapping("/_search/attachments")
     @Timed
     public List<Attachment> searchAttachments(@RequestParam String query) {
-        log.debug("REST request to search Attachments for query {}", query);
-        return attachmentService.search(query);
+        return attachmentService.search(query, null);
     }
 
 }

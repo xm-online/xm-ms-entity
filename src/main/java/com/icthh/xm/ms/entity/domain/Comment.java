@@ -169,6 +169,13 @@ public class Comment implements Serializable {
         this.xmEntity = xmEntity;
     }
 
+    @PrePersist
+    private void prePersist() {
+        if (id == null && entryDate == null) {
+            entryDate = Instant.now();
+        }
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) {

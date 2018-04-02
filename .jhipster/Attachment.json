@@ -1,0 +1,79 @@
+{
+    "fluentMethods": true,
+    "relationships": [
+        {
+            "relationshipType": "one-to-one",
+            "relationshipName": "content",
+            "otherEntityName": "content",
+            "otherEntityField": "id",
+            "ownerSide": true,
+            "otherEntityRelationshipName": "attachment"
+        },
+        {
+            "relationshipType": "many-to-one",
+            "relationshipValidateRules": "required",
+            "relationshipName": "xmEntity",
+            "otherEntityName": "xmEntity",
+            "otherEntityField": "id"
+        }
+    ],
+    "fields": [
+        {
+            "fieldName": "typeKey",
+            "javadoc": "String typeKey with tree-like structure.",
+            "fieldType": "String",
+            "fieldValidateRules": [
+                "required"
+            ]
+        },
+        {
+            "fieldName": "name",
+            "javadoc": "Attachment name",
+            "fieldType": "String",
+            "fieldValidateRules": [
+                "required"
+            ]
+        },
+        {
+            "fieldName": "contentUrl",
+            "javadoc": "Content retrieving URL",
+            "fieldType": "String"
+        },
+        {
+            "fieldName": "description",
+            "javadoc": "Content description",
+            "fieldType": "String"
+        },
+        {
+            "fieldName": "startDate",
+            "javadoc": "Start date",
+            "fieldType": "Instant",
+            "fieldValidateRules": [
+                "required"
+            ]
+        },
+        {
+            "fieldName": "endDate",
+            "javadoc": "End date",
+            "fieldType": "Instant"
+        },
+        {
+            "fieldName": "valueContentType",
+            "javadoc": "Content type",
+            "fieldType": "String"
+        },
+        {
+            "fieldName": "valueContentSize",
+            "javadoc": "Content size in bytes",
+            "fieldType": "Long"
+        }
+    ],
+    "changelogDate": "20170418134022",
+    "javadoc": "Represents any XM entity file attachment. It could be image, zip archive, pdf\ndocument or other file formats (List of available file formats should be\nconfigured).\nFiles should be verified on:\n- size\n- zip bombs\n- viruses",
+    "entityTableName": "attachment",
+    "dto": "no",
+    "pagination": "no",
+    "service": "serviceClass",
+    "microserviceName": "entity",
+    "searchEngine": "elasticsearch"
+}

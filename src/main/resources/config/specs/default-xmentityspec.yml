@@ -1,0 +1,11 @@
+---
+types:
+    - key: ACCOUNT.USER
+      name: { en: "User",  ru: "Пользователь" }
+      isApp: false
+      isAbstract: false
+      states:
+        - key: NEW
+          name: { en: "New", ru: "Новый" }
+          icon: fiber_new
+          color: '#FFEB3B'

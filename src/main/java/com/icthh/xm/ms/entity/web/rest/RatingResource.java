@@ -1,22 +1,31 @@
 package com.icthh.xm.ms.entity.web.rest;
 
 import com.codahale.metrics.annotation.Timed;
-import com.icthh.xm.commons.errors.ErrorConstants;
-import com.icthh.xm.commons.errors.exception.BusinessException;
+import com.icthh.xm.commons.exceptions.BusinessException;
+import com.icthh.xm.commons.exceptions.ErrorConstants;
 import com.icthh.xm.ms.entity.domain.Rating;
 import com.icthh.xm.ms.entity.service.RatingService;
 import com.icthh.xm.ms.entity.web.rest.util.HeaderUtil;
 import com.icthh.xm.ms.entity.web.rest.util.RespContentUtil;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.security.access.prepost.PostAuthorize;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
-import javax.validation.Valid;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Optional;
+import javax.validation.Valid;
 
 /**
  * REST controller for managing Rating.
@@ -25,14 +34,16 @@ import java.util.Optional;
 @RequestMapping("/api")
 public class RatingResource {
 
-    private final Logger log = LoggerFactory.getLogger(RatingResource.class);
-
     private static final String ENTITY_NAME = "rating";
 
     private final RatingService ratingService;
+    private final RatingResource ratingResource;
 
-    public RatingResource(RatingService ratingService) {
+    public RatingResource(
+                    RatingService ratingService,
+                    @Lazy RatingResource ratingResource) {
         this.ratingService = ratingService;
+        this.ratingResource = ratingResource;
     }
 
     /**
@@ -44,11 +55,11 @@ public class RatingResource {
      */
     @PostMapping("/ratings")
     @Timed
+    @PreAuthorize("hasPermission({'rating': #rating}, 'RATING.CREATE')")
     public ResponseEntity<Rating> createRating(@Valid @RequestBody Rating rating) throws URISyntaxException {
-        log.debug("REST request to save Rating : {}", rating);
         if (rating.getId() != null) {
             throw new BusinessException(ErrorConstants.ERR_BUSINESS_IDEXISTS,
-                                              "A new rating cannot already have an ID");
+                                        "A new rating cannot already have an ID");
         }
         Rating result = ratingService.save(rating);
         return ResponseEntity.created(new URI("/api/ratings/" + result.getId()))
@@ -67,10 +78,11 @@ public class RatingResource {
      */
     @PutMapping("/ratings")
     @Timed
+    @PreAuthorize("hasPermission({'id': #rating.id, 'newRating': #rating}, 'rating', 'RATING.UPDATE')")
     public ResponseEntity<Rating> updateRating(@Valid @RequestBody Rating rating) throws URISyntaxException {
-        log.debug("REST request to update Rating : {}", rating);
         if (rating.getId() == null) {
-            return createRating(rating);
+            //in order to call method with permissions check
+            return this.ratingResource.createRating(rating);
         }
         Rating result = ratingService.save(rating);
         return ResponseEntity.ok()
@@ -86,8 +98,7 @@ public class RatingResource {
     @GetMapping("/ratings")
     @Timed
     public List<Rating> getAllRatings() {
-        log.debug("REST request to get all Ratings");
-        return ratingService.findAll();
+        return ratingService.findAll(null);
     }
 
     /**
@@ -98,8 +109,8 @@ public class RatingResource {
      */
     @GetMapping("/ratings/{id}")
     @Timed
+    @PostAuthorize("hasPermission({'returnObject': returnObject.body}, 'RATING.GET_LIST.ITEM')")
     public ResponseEntity<Rating> getRating(@PathVariable Long id) {
-        log.debug("REST request to get Rating : {}", id);
         Rating rating = ratingService.findOne(id);
         return RespContentUtil.wrapOrNotFound(Optional.ofNullable(rating));
     }
@@ -112,8 +123,8 @@ public class RatingResource {
      */
     @DeleteMapping("/ratings/{id}")
     @Timed
+    @PreAuthorize("hasPermission({'id': #id}, 'rating', 'RATING.DELETE')")
     public ResponseEntity<Void> deleteRating(@PathVariable Long id) {
-        log.debug("REST request to delete Rating : {}", id);
         ratingService.delete(id);
         return ResponseEntity.ok().headers(HeaderUtil.createEntityDeletionAlert(ENTITY_NAME, id.toString())).build();
     }
@@ -128,8 +139,7 @@ public class RatingResource {
     @GetMapping("/_search/ratings")
     @Timed
     public List<Rating> searchRatings(@RequestParam String query) {
-        log.debug("REST request to search Ratings for query {}", query);
-        return ratingService.search(query);
+        return ratingService.search(query, null);
     }
 
 }

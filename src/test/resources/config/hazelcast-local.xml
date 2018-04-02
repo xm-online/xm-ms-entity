@@ -5,7 +5,7 @@
            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
     <group>
         <name>dev</name>
-        <password>put-pasword-here</password>
+        <password>dev-pass</password>
     </group>
     <management-center enabled="false">http://localhost:8080/mancenter</management-center>
     <network>

@@ -1,22 +1,31 @@
 package com.icthh.xm.ms.entity.web.rest;
 
 import com.codahale.metrics.annotation.Timed;
-import com.icthh.xm.commons.errors.ErrorConstants;
-import com.icthh.xm.commons.errors.exception.BusinessException;
+import com.icthh.xm.commons.exceptions.BusinessException;
+import com.icthh.xm.commons.exceptions.ErrorConstants;
 import com.icthh.xm.ms.entity.domain.Calendar;
 import com.icthh.xm.ms.entity.service.CalendarService;
 import com.icthh.xm.ms.entity.web.rest.util.HeaderUtil;
 import com.icthh.xm.ms.entity.web.rest.util.RespContentUtil;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.security.access.prepost.PostAuthorize;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
-import javax.validation.Valid;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Optional;
+import javax.validation.Valid;
 
 /**
  * REST controller for managing Calendar.
@@ -25,14 +34,16 @@ import java.util.Optional;
 @RequestMapping("/api")
 public class CalendarResource {
 
-    private final Logger log = LoggerFactory.getLogger(CalendarResource.class);
-
     private static final String ENTITY_NAME = "calendar";
 
     private final CalendarService calendarService;
+    private final CalendarResource calendarResource;
 
-    public CalendarResource(CalendarService calendarService) {
+    public CalendarResource(
+                    CalendarService calendarService,
+                    @Lazy CalendarResource calendarResource) {
         this.calendarService = calendarService;
+        this.calendarResource = calendarResource;
     }
 
     /**
@@ -44,11 +55,11 @@ public class CalendarResource {
      */
     @PostMapping("/calendars")
     @Timed
+    @PreAuthorize("hasPermission({'calendar': #calendar}, 'CALENDAR.CREATE')")
     public ResponseEntity<Calendar> createCalendar(@Valid @RequestBody Calendar calendar) throws URISyntaxException {
-        log.debug("REST request to save Calendar : {}", calendar);
         if (calendar.getId() != null) {
             throw new BusinessException(ErrorConstants.ERR_BUSINESS_IDEXISTS,
-                                              "A new calendar cannot already have an ID");
+                                        "A new calendar cannot already have an ID");
         }
         Calendar result = calendarService.save(calendar);
         return ResponseEntity.created(new URI("/api/calendars/" + result.getId()))
@@ -67,10 +78,11 @@ public class CalendarResource {
      */
     @PutMapping("/calendars")
     @Timed
+    @PreAuthorize("hasPermission({'id': #calendar.id, 'newCalendar': #calendar}, 'calendar', 'CALENDAR.UPDATE')")
     public ResponseEntity<Calendar> updateCalendar(@Valid @RequestBody Calendar calendar) throws URISyntaxException {
-        log.debug("REST request to update Calendar : {}", calendar);
         if (calendar.getId() == null) {
-            return createCalendar(calendar);
+            //in order to call method with permissions check
+            return this.calendarResource.createCalendar(calendar);
         }
         Calendar result = calendarService.save(calendar);
         return ResponseEntity.ok()
@@ -86,8 +98,7 @@ public class CalendarResource {
     @GetMapping("/calendars")
     @Timed
     public List<Calendar> getAllCalendars() {
-        log.debug("REST request to get all Calendars");
-        return calendarService.findAll();
+        return calendarService.findAll(null);
     }
 
     /**
@@ -98,8 +109,8 @@ public class CalendarResource {
      */
     @GetMapping("/calendars/{id}")
     @Timed
+    @PostAuthorize("hasPermission({'returnObject': returnObject.body}, 'CALENDAR.GET_LIST.ITEM')")
     public ResponseEntity<Calendar> getCalendar(@PathVariable Long id) {
-        log.debug("REST request to get Calendar : {}", id);
         Calendar calendar = calendarService.findOne(id);
         return RespContentUtil.wrapOrNotFound(Optional.ofNullable(calendar));
     }
@@ -112,8 +123,8 @@ public class CalendarResource {
      */
     @DeleteMapping("/calendars/{id}")
     @Timed
+    @PreAuthorize("hasPermission({'id': #id}, 'calendar', 'CALENDAR.DELETE')")
     public ResponseEntity<Void> deleteCalendar(@PathVariable Long id) {
-        log.debug("REST request to delete Calendar : {}", id);
         calendarService.delete(id);
         return ResponseEntity.ok().headers(HeaderUtil.createEntityDeletionAlert(ENTITY_NAME, id.toString())).build();
     }
@@ -128,8 +139,7 @@ public class CalendarResource {
     @GetMapping("/_search/calendars")
     @Timed
     public List<Calendar> searchCalendars(@RequestParam String query) {
-        log.debug("REST request to search Calendars for query {}", query);
-        return calendarService.search(query);
+        return calendarService.search(query, null);
     }
 
 }

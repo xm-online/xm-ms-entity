@@ -1,5 +1,7 @@
 package com.icthh.xm.ms.entity.listener;
 
+import com.icthh.xm.commons.logging.util.MdcUtils;
+import com.icthh.xm.commons.permission.inspector.PrivilegeInspector;
 import com.icthh.xm.ms.entity.config.ApplicationProperties;
 import com.icthh.xm.ms.entity.repository.kafka.SystemQueueConsumer;
 import com.icthh.xm.ms.entity.repository.kafka.SystemTopicConsumer;
@@ -30,11 +32,16 @@ public class ApplicationStartup implements ApplicationListener<ApplicationReadyE
     private final SystemQueueConsumer systemQueueConsumer;
     private final SystemTopicConsumer systemTopicConsumer;
     private final KafkaProperties kafkaProperties;
+    private final PrivilegeInspector privilegeInspector;
 
     @Override
     public void onApplicationEvent(ApplicationReadyEvent event) {
         if (applicationProperties.isKafkaEnabled()) {
             createKafkaConsumers();
+            privilegeInspector.readPrivileges(MdcUtils.getRid());
+        } else {
+            log.warn("WARNING! Privileges inspection is disabled by "
+                + "configuration parameter 'application.kafka-enabled'");
         }
     }
 

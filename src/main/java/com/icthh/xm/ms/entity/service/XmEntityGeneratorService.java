@@ -1,6 +1,6 @@
 package com.icthh.xm.ms.entity.service;
 
-import static com.icthh.xm.commons.errors.ErrorConstants.ERR_METHOD_NOT_SUPPORTED;
+import static com.icthh.xm.commons.exceptions.ErrorConstants.ERR_METHOD_NOT_SUPPORTED;
 import static java.lang.Integer.min;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Collections.emptyMap;
@@ -12,7 +12,8 @@ import static org.apache.commons.lang.StringUtils.isEmpty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.type.CollectionType;
 import com.google.common.collect.ImmutableList;
-import com.icthh.xm.commons.errors.exception.BusinessException;
+import com.icthh.xm.commons.exceptions.BusinessException;
+import com.icthh.xm.commons.security.XmAuthenticationContextHolder;
 import com.icthh.xm.ms.entity.config.Constants;
 import com.icthh.xm.ms.entity.domain.Location;
 import com.icthh.xm.ms.entity.domain.Tag;
@@ -21,6 +22,14 @@ import com.icthh.xm.ms.entity.domain.spec.LocationSpec;
 import com.icthh.xm.ms.entity.domain.spec.NextSpec;
 import com.icthh.xm.ms.entity.domain.spec.TagSpec;
 import com.icthh.xm.ms.entity.domain.spec.TypeSpec;
+import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
+import lombok.val;
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.RandomUtils;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.stereotype.Service;
+
 import java.io.InputStream;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -33,13 +42,6 @@ import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.IntStream;
-import lombok.SneakyThrows;
-import lombok.extern.slf4j.Slf4j;
-import lombok.val;
-import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang3.RandomUtils;
-import org.springframework.core.io.ClassPathResource;
-import org.springframework.stereotype.Service;
 
 @Service
 @Slf4j
@@ -56,15 +58,19 @@ public class XmEntityGeneratorService {
     private static final String PROPERTIES = "properties";
     private static final String TYPE = "type";
 
-    private final XmEntityServiceImpl xmEntityService;
+    private final XmEntityService xmEntityService;
     private final XmEntitySpecService xmEntitySpecService;
     private final String locationsJson;
     private final ObjectMapper mapper = new ObjectMapper();
+    private final XmAuthenticationContextHolder authContextHolder;
 
-    public XmEntityGeneratorService(XmEntityServiceImpl xmEntityService, XmEntitySpecService xmEntitySpecService) {
+    public XmEntityGeneratorService(XmEntityService xmEntityService,
+                                    XmEntitySpecService xmEntitySpecService,
+                                    XmAuthenticationContextHolder authContextHolder) {
         this.xmEntityService = xmEntityService;
         this.xmEntitySpecService = xmEntitySpecService;
         this.locationsJson = getLocationsJson();
+        this.authContextHolder = authContextHolder;
     }
 
     private TypeSpec getRandomTypeSpec(String rootTypeKey) {
@@ -77,6 +83,8 @@ public class XmEntityGeneratorService {
         String name = typeSpec.getName().entrySet().iterator().next().getValue();
         if (!Constants.TENANT_TYPE_KEY.equals(rootTypeKey)) {
             name = name.concat(" name");
+        } else {
+            name = name.concat(String.valueOf(System.currentTimeMillis()));
         }
         XmEntity xmEntity = new XmEntity().key(UUID.randomUUID().toString())
             .typeKey(typeSpec.getKey())
@@ -90,7 +98,8 @@ public class XmEntityGeneratorService {
             .avatarUrl(generateXmEntityAvatarUrl())
             .data(generateXmEntityData(typeSpec))
             .locations(generateLocations(typeSpec.getLocations()))
-            .tags(generateTags(typeSpec));
+            .tags(generateTags(typeSpec))
+            .createdBy(authContextHolder.getContext().getRequiredUserKey());
 
         return xmEntityService.save(xmEntity);
     }

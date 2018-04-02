@@ -1,22 +1,22 @@
 package com.icthh.xm.ms.entity.web.rest;
 
 import com.codahale.metrics.annotation.Timed;
-import com.icthh.xm.commons.errors.ErrorConstants;
-import com.icthh.xm.commons.errors.exception.BusinessException;
+import com.icthh.xm.commons.exceptions.BusinessException;
+import com.icthh.xm.commons.exceptions.ErrorConstants;
 import com.icthh.xm.ms.entity.domain.Vote;
-import com.icthh.xm.ms.entity.repository.VoteRepository;
-import com.icthh.xm.ms.entity.repository.search.VoteSearchRepository;
+import com.icthh.xm.ms.entity.service.VoteService;
 import com.icthh.xm.ms.entity.web.rest.util.HeaderUtil;
 import com.icthh.xm.ms.entity.web.rest.util.PaginationUtil;
 import com.icthh.xm.ms.entity.web.rest.util.RespContentUtil;
 import io.swagger.annotations.ApiParam;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PostAuthorize;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -27,13 +27,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import javax.validation.Valid;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Optional;
-
-import static org.elasticsearch.index.query.QueryBuilders.queryStringQuery;
+import javax.validation.Valid;
 
 /**
  * REST controller for managing Vote.
@@ -42,17 +40,16 @@ import static org.elasticsearch.index.query.QueryBuilders.queryStringQuery;
 @RequestMapping("/api")
 public class VoteResource {
 
-    private final Logger log = LoggerFactory.getLogger(VoteResource.class);
-
     private static final String ENTITY_NAME = "vote";
 
-    private final VoteRepository voteRepository;
+    private final VoteResource voteResource;
+    private final VoteService voteService;
 
-    private final VoteSearchRepository voteSearchRepository;
-
-    public VoteResource(VoteRepository voteRepository, VoteSearchRepository voteSearchRepository) {
-        this.voteRepository = voteRepository;
-        this.voteSearchRepository = voteSearchRepository;
+    public VoteResource(
+                    @Lazy VoteResource voteResource,
+                    VoteService voteService) {
+        this.voteResource = voteResource;
+        this.voteService = voteService;
     }
 
     /**
@@ -64,14 +61,13 @@ public class VoteResource {
      */
     @PostMapping("/votes")
     @Timed
+    @PreAuthorize("hasPermission({'vote': #vote}, 'VOTE.CREATE')")
     public ResponseEntity<Vote> createVote(@Valid @RequestBody Vote vote) throws URISyntaxException {
-        log.debug("REST request to save Vote : {}", vote);
         if (vote.getId() != null) {
             throw new BusinessException(ErrorConstants.ERR_BUSINESS_IDEXISTS,
-                                              "A new vote cannot already have an ID");
+                                        "A new vote cannot already have an ID");
         }
-        Vote result = voteRepository.save(vote);
-        voteSearchRepository.save(result);
+        Vote result = voteService.save(vote);
         return ResponseEntity.created(new URI("/api/votes/" + result.getId()))
             .headers(HeaderUtil.createEntityCreationAlert(ENTITY_NAME, result.getId().toString()))
             .body(result);
@@ -88,13 +84,13 @@ public class VoteResource {
      */
     @PutMapping("/votes")
     @Timed
+    @PreAuthorize("hasPermission({'id': #vote.id, 'newVote': #vote}, 'vote', 'VOTE.UPDATE')")
     public ResponseEntity<Vote> updateVote(@Valid @RequestBody Vote vote) throws URISyntaxException {
-        log.debug("REST request to update Vote : {}", vote);
         if (vote.getId() == null) {
-            return createVote(vote);
+            //in order to call method with permissions check
+            return this.voteResource.createVote(vote);
         }
-        Vote result = voteRepository.save(vote);
-        voteSearchRepository.save(result);
+        Vote result = voteService.save(vote);
         return ResponseEntity.ok()
             .headers(HeaderUtil.createEntityUpdateAlert(ENTITY_NAME, vote.getId().toString()))
             .body(result);
@@ -109,8 +105,7 @@ public class VoteResource {
     @GetMapping("/votes")
     @Timed
     public ResponseEntity<List<Vote>> getAllVotes(@ApiParam Pageable pageable) {
-        log.debug("REST request to get a page of Votes");
-        Page<Vote> page = voteRepository.findAll(pageable);
+        Page<Vote> page = voteService.findAll(pageable, null);
         HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(page, "/api/votes");
         return new ResponseEntity<>(page.getContent(), headers, HttpStatus.OK);
     }
@@ -123,9 +118,9 @@ public class VoteResource {
      */
     @GetMapping("/votes/{id}")
     @Timed
+    @PostAuthorize("hasPermission({'returnObject': returnObject.body}, 'VOTE.GET_LIST.ITEM')")
     public ResponseEntity<Vote> getVote(@PathVariable Long id) {
-        log.debug("REST request to get Vote : {}", id);
-        Vote vote = voteRepository.findOne(id);
+        Vote vote = voteService.findOne(id);
         return RespContentUtil.wrapOrNotFound(Optional.ofNullable(vote));
     }
 
@@ -137,10 +132,9 @@ public class VoteResource {
      */
     @DeleteMapping("/votes/{id}")
     @Timed
+    @PreAuthorize("hasPermission({'id': #id}, 'vote', 'VOTE.DELETE')")
     public ResponseEntity<Void> deleteVote(@PathVariable Long id) {
-        log.debug("REST request to delete Vote : {}", id);
-        voteRepository.delete(id);
-        voteSearchRepository.delete(id);
+        voteService.delete(id);
         return ResponseEntity.ok().headers(HeaderUtil.createEntityDeletionAlert(ENTITY_NAME, id.toString())).build();
     }
 
@@ -155,8 +149,7 @@ public class VoteResource {
     @GetMapping("/_search/votes")
     @Timed
     public ResponseEntity<List<Vote>> searchVotes(@RequestParam String query, @ApiParam Pageable pageable) {
-        log.debug("REST request to search for a page of Votes for query {}", query);
-        Page<Vote> page = voteSearchRepository.search(queryStringQuery(query), pageable);
+        Page<Vote> page = voteService.search(query, pageable, null);
         HttpHeaders headers = PaginationUtil.generateSearchPaginationHttpHeaders(query, page, "/api/_search/votes");
         return new ResponseEntity<>(page.getContent(), headers, HttpStatus.OK);
     }

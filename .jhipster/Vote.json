@@ -1,0 +1,56 @@
+{
+    "fluentMethods": true,
+    "relationships": [
+        {
+            "relationshipName": "rating",
+            "otherEntityName": "rating",
+            "relationshipType": "many-to-one",
+            "otherEntityField": "id"
+        },
+        {
+            "relationshipType": "many-to-one",
+            "relationshipValidateRules": "required",
+            "relationshipName": "xmEntity",
+            "otherEntityName": "xmEntity",
+            "otherEntityField": "id"
+        }
+    ],
+    "fields": [
+        {
+            "fieldName": "userKey",
+            "javadoc": "Vote author user key",
+            "fieldType": "String",
+            "fieldValidateRules": [
+                "required"
+            ]
+        },
+        {
+            "fieldName": "value",
+            "javadoc": "Vote value",
+            "fieldType": "Double",
+            "fieldValidateRules": [
+                "required"
+            ]
+        },
+        {
+            "fieldName": "message",
+            "javadoc": "Vote message",
+            "fieldType": "String"
+        },
+        {
+            "fieldName": "entryDate",
+            "javadoc": "Entry date",
+            "fieldType": "Instant",
+            "fieldValidateRules": [
+                "required"
+            ]
+        }
+    ],
+    "changelogDate": "20170418134031",
+    "entityTableName": "vote",
+    "dto": "no",
+    "pagination": "pager",
+    "service": "no",
+    "microserviceName": "entity",
+    "searchEngine": "elasticsearch"
+}

@@ -1,15 +1,28 @@
 package com.icthh.xm.ms.entity.web.rest;
 
-import com.icthh.xm.commons.errors.ExceptionTranslator;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.notNullValue;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import com.icthh.xm.commons.exceptions.spring.web.ExceptionTranslator;
+import com.icthh.xm.commons.permission.repository.PermittedRepository;
+import com.icthh.xm.commons.tenant.TenantContextHolder;
+import com.icthh.xm.commons.tenant.TenantContextUtils;
 import com.icthh.xm.ms.entity.EntityApp;
-
 import com.icthh.xm.ms.entity.config.SecurityBeanOverrideConfiguration;
-
 import com.icthh.xm.ms.entity.config.tenant.WebappTenantOverrideConfiguration;
 import com.icthh.xm.ms.entity.domain.Content;
 import com.icthh.xm.ms.entity.repository.ContentRepository;
 import com.icthh.xm.ms.entity.repository.search.ContentSearchRepository;
-
+import com.icthh.xm.ms.entity.service.ContentService;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -19,20 +32,16 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.context.transaction.BeforeTransaction;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Base64Utils;
 
-import javax.persistence.EntityManager;
 import java.util.List;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.hamcrest.Matchers.hasItem;
-import static org.hamcrest.Matchers.notNullValue;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import javax.persistence.EntityManager;
 
 /**
  * Test class for the ContentResource REST controller.
@@ -40,11 +49,15 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * @see ContentResource
  */
 @RunWith(SpringRunner.class)
+@WithMockUser(authorities = {"SUPER-ADMIN"})
 @SpringBootTest(classes = {EntityApp.class, SecurityBeanOverrideConfiguration.class, WebappTenantOverrideConfiguration.class})
 public class ContentResourceIntTest {
 
     private static final byte[] DEFAULT_VALUE = TestUtil.createByteArray(1, "0");
     private static final byte[] UPDATED_VALUE = TestUtil.createByteArray(2, "1");
+
+    @Autowired
+    private ContentResource contentResource;
 
     @Autowired
     private ContentRepository contentRepository;
@@ -68,14 +81,32 @@ public class ContentResourceIntTest {
 
     private Content content;
 
+    @Autowired
+    private TenantContextHolder tenantContextHolder;
+
+    @Autowired
+    private ContentService contentService;
+
+    @BeforeTransaction
+    public void beforeTransaction() {
+        TenantContextUtils.setTenant(tenantContextHolder, "RESINTTEST");
+    }
+
     @Before
     public void setup() {
         MockitoAnnotations.initMocks(this);
-        ContentResource contentResource = new ContentResource(contentRepository, contentSearchRepository);
-        this.restContentMockMvc = MockMvcBuilders.standaloneSetup(contentResource)
+        ContentResource contentResourceMock = new ContentResource(contentRepository,
+                        contentSearchRepository, contentService, contentResource);
+        this.restContentMockMvc = MockMvcBuilders.standaloneSetup(contentResourceMock)
             .setCustomArgumentResolvers(pageableArgumentResolver)
             .setControllerAdvice(exceptionTranslator)
             .setMessageConverters(jacksonMessageConverter).build();
+    }
+
+    @After
+    @Override
+    public void finalize() {
+        tenantContextHolder.getPrivilegedContext().destroyCurrentContext();
     }
 
     /**
@@ -166,6 +197,7 @@ public class ContentResourceIntTest {
 
     @Test
     @Transactional
+    @WithMockUser(authorities = "SUPER-ADMIN")
     public void getAllContents() throws Exception {
         // Initialize the database
         contentRepository.saveAndFlush(content);

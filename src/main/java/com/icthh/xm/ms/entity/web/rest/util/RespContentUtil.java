@@ -1,11 +1,11 @@
 package com.icthh.xm.ms.entity.web.rest.util;
 
-import java.util.Optional;
-
-import com.icthh.xm.commons.errors.exception.EntityNotFoundException;
+import com.icthh.xm.commons.exceptions.EntityNotFoundException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+
+import java.util.Optional;
 
 
 /**

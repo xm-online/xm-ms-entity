@@ -42,7 +42,7 @@ spring:
             hibernate.cache.use_second_level_cache: true
             hibernate.cache.use_query_cache: false
             hibernate.generate_statistics: false
-            hibernate.cache.region.factory_class: com.hazelcast.hibernate.HazelcastCacheRegionFactory
+            hibernate.cache.region.factory_class: com.hazelcast.hibernate.HazelcastLocalCacheRegionFactory
             hibernate.cache.hazelcast.instance_name: entity
             hibernate.cache.use_minimal_puts: true
             hibernate.cache.hazelcast.use_lite_member: true
@@ -53,10 +53,9 @@ spring:
     kafka:
         bootstrap-servers: localhost
     mail:
-        host: localhost
-        port: 25
-        username:
-        password:
+        host:
+        port:
+        protocol:
     thymeleaf:
         cache: true
     zipkin: # Use the "zipkin" Maven profile to have the Spring Cloud Zipkin dependencies
@@ -112,10 +111,10 @@ jhipster:
         client-authorization:
             access-token-uri: http://uaa/oauth/token
             token-service-id: uaa
-            client-id: internal
-            client-secret: internal
+            client-id:
+            client-secret:
     mail: # specific JHipster mail property, for standard properties see MailProperties
-        from: entity@localhost
+        from: <tenantname>@xm-online.com
         base-url: http://my-server-url-to-change # Modify according to your server's URL
     metrics: # DropWizard Metrics configuration, used by MetricsConfiguration
         jmx.enabled: true
@@ -154,8 +153,8 @@ application:
         aws:
             endpoint:
             template:
-            region: eu-central-1
+            region:
             access-key-id:
             access-key-secret:
         s3:
-            bucket: xm-avatar
+            bucket:

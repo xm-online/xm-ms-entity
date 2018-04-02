@@ -10,13 +10,12 @@ import com.icthh.xm.ms.entity.service.XmEntitySpecService;
 import com.icthh.xm.ms.entity.web.rest.util.HeaderUtil;
 import com.icthh.xm.ms.entity.web.rest.util.RespContentUtil;
 import io.swagger.annotations.ApiParam;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.List;
-import java.util.Optional;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PostAuthorize;
+import org.springframework.security.access.prepost.PostFilter;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -24,10 +23,16 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.List;
+import java.util.Optional;
+
 /**
  * REST controller for managing XmEntitySpec.
  */
 @Slf4j
+@RequiredArgsConstructor
 @RestController
 @RequestMapping("/api")
 public class XmEntitySpecResource {
@@ -37,12 +42,6 @@ public class XmEntitySpecResource {
     private final XmEntitySpecService xmEntitySpecService;
 
     private final XmEntityGeneratorService xmEntityGeneratorService;
-
-    public XmEntitySpecResource(XmEntitySpecService xmEntitySpecService, XmEntityGeneratorService
-        xmEntityGeneratorService) {
-        this.xmEntitySpecService = xmEntitySpecService;
-        this.xmEntityGeneratorService = xmEntityGeneratorService;
-    }
 
     public enum Filter {
         ALL, APP, NON_ABSTRACT;
@@ -56,7 +55,8 @@ public class XmEntitySpecResource {
      */
     @GetMapping("/xm-entity-specs")
     @Timed
-    public ResponseEntity<List<TypeSpec>> getTypeSpecs(@ApiParam XmEntitySpecResource.Filter filter) {
+    @PostFilter("hasPermission({'returnObject': filterObject, 'log': false}, 'XMENTITY_SPEC.GET')")
+    public List<TypeSpec> getTypeSpecs(@ApiParam XmEntitySpecResource.Filter filter) {
         log.debug("REST request to get a list of TypeSpec");
         List<TypeSpec> typeSpecs;
         switch (filter != null ? filter : Filter.ALL) {
@@ -70,7 +70,7 @@ public class XmEntitySpecResource {
                 typeSpecs = xmEntitySpecService.findAllTypes();
                 break;
         }
-        return new ResponseEntity<>(typeSpecs, HttpStatus.OK);
+        return typeSpecs;
     }
 
     /**
@@ -81,6 +81,7 @@ public class XmEntitySpecResource {
      */
     @GetMapping("/xm-entity-specs/{key}")
     @Timed
+    @PostAuthorize("hasPermission({'returnObject': returnObject.body}, 'XMENTITY_SPEC.GET_LIST.ITEM')")
     public ResponseEntity<TypeSpec> getTypeSpec(@PathVariable String key) {
         log.debug("REST request to get TypeSpec : {}", key);
         TypeSpec typeSpec = xmEntitySpecService.findTypeByKey(key);
@@ -95,6 +96,7 @@ public class XmEntitySpecResource {
      */
     @PostMapping("/xm-entity-specs/generate-xm-entity")
     @Timed
+    @PreAuthorize("hasPermission({'rootTypeKey': #rootTypeKey}, 'XMENTITY_SPEC.GENERATE')")
     public ResponseEntity<XmEntity> generateXmEntity(@ApiParam String rootTypeKey) throws URISyntaxException {
         log.debug("REST request to generate XmEntity");
         XmEntity result = xmEntityGeneratorService.generateXmEntity(rootTypeKey != null ? rootTypeKey : "");
@@ -111,6 +113,7 @@ public class XmEntitySpecResource {
      */
     @PostMapping(value = "/xm-entity-specs", consumes = {TEXT_PLAIN_VALUE})
     @Timed
+    @PreAuthorize("hasPermission({'xmEntitySpec': #xmEntitySpec}, 'XMENTITY_SPEC.UPDATE')")
     public ResponseEntity<XmEntity> updateXmEntitySpec(@RequestBody String xmEntitySpec) {
         xmEntitySpecService.updateXmEntitySpec(xmEntitySpec);
         return ResponseEntity.ok().build();

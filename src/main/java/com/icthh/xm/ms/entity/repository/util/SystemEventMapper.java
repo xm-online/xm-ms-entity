@@ -26,9 +26,9 @@ public class SystemEventMapper {
         XmEntity entity = profile.getXmentity();
         entity.setTypeKey(Constants.ACCOUNT_TYPE_KEY);
         profile.setXmentity(entity);
-        Map<String, Object> data = event.getData();
+        Map<String, Object> data = event.getDataMap();
 
-        entity.setKey(entity.getTypeKey() + "-" + event.getData().get(Constants.ID));
+        entity.setKey(entity.getTypeKey() + "-" + data.get(Constants.ID));
         entity.setName(data.get(Constants.FIRST_NAME) + " " + data.get(Constants.LAST_NAME));
         entity.setAvatarUrl(String.valueOf(data.get(Constants.IMAGE_URL)));
         if (StringUtils.isBlank(entity.getStateKey())) {
@@ -48,6 +48,6 @@ public class SystemEventMapper {
         }
         profile.setUserKey(String.valueOf(data.get(Constants.USER_KEY)));
 
-        entity.setData((Map<String, Object>) event.getData().get(Constants.DATA));
+        entity.setData((Map<String, Object>) data.get(Constants.DATA));
     }
 }

@@ -44,6 +44,15 @@ public class AvatarUrlListenerUnitTest {
     }
 
     @Test
+    public void testPrePersistSuccessNginx() {
+        XmEntity entity = new XmEntity().avatarUrl("https://hello-rgw.icthh.test/hello.jpg");
+
+        target.prePersist(entity);
+
+        assertEquals("hello.jpg", entity.getAvatarUrl());
+    }
+
+    @Test
     public void testPostLoadEmpty() {
         XmEntity entity = new XmEntity().avatarUrl(null);
 

@@ -1,27 +1,35 @@
 package com.icthh.xm.ms.entity.repository.kafka;
 
-import com.icthh.xm.ms.entity.EntityApp;
-import com.icthh.xm.ms.entity.config.SecurityBeanOverrideConfiguration;
-import com.icthh.xm.ms.entity.config.tenant.TenantContext;
-import com.icthh.xm.ms.entity.config.tenant.WebappTenantOverrideConfiguration;
-import com.icthh.xm.ms.entity.domain.Profile;
-import com.icthh.xm.ms.entity.service.ProfileService;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.kafka.clients.consumer.ConsumerRecord;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.junit4.SpringRunner;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.icthh.xm.lep.api.LepManager;
+import com.icthh.xm.commons.security.XmAuthenticationContextHolder;
+import com.icthh.xm.commons.tenant.TenantContextHolder;
+import com.icthh.xm.commons.tenant.TenantContextUtils;
+import com.icthh.xm.ms.entity.EntityApp;
+import com.icthh.xm.ms.entity.config.SecurityBeanOverrideConfiguration;
+import com.icthh.xm.ms.entity.config.tenant.WebappTenantOverrideConfiguration;
+import com.icthh.xm.ms.entity.domain.Profile;
+import com.icthh.xm.ms.entity.service.ProfileService;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Ignore;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.junit4.SpringRunner;
+
 @Slf4j
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = {EntityApp.class, SecurityBeanOverrideConfiguration.class, WebappTenantOverrideConfiguration.class})
+@Ignore // FIXME enable lep in this test
 public class SystemQueueConsumerUnitTest {
 
     private static final String USER_KEY = "f81d3142-a259-4ff8-99e4-be533d68ca99";
@@ -90,11 +98,30 @@ public class SystemQueueConsumerUnitTest {
 
     private SystemQueueConsumer consumer;
 
+    @Autowired
+    private TenantContextHolder tenantContextHolder;
+
+    @Autowired
+    private XmAuthenticationContextHolder authContextHolder;
+
+    @Autowired
+    private SystemConsumerService systemConsumerService;
+
+    @Autowired
+    private LepManager lepManager;
+
     @Before
     public void init() {
+        TenantContextUtils.setTenant(tenantContextHolder, "TEST");
+
         profileService = mock(ProfileService.class);
-        consumer = new SystemQueueConsumer(profileService);
-        TenantContext.setCurrent("TEST");
+        consumer = new SystemQueueConsumer(tenantContextHolder, authContextHolder, systemConsumerService, lepManager);
+    }
+
+    @After
+    @Override
+    public void finalize() {
+        tenantContextHolder.getPrivilegedContext().destroyCurrentContext();
     }
 
     @Test

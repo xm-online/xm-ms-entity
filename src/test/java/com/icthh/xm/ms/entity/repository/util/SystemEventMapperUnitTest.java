@@ -79,8 +79,8 @@ public class SystemEventMapperUnitTest {
 
     private SystemEvent createEvent() {
         SystemEvent event = createEventWithoutDates();
-        event.getData().put(Constants.CREATED_DATE, DEFAULT_CREATED_DATE.toString());
-        event.getData().put(Constants.LAST_MODIFIED_DATE, DEFAULT_LAST_MODIFIED_DATE.toString());
+        event.getDataMap().put(Constants.CREATED_DATE, DEFAULT_CREATED_DATE.toString());
+        event.getDataMap().put(Constants.LAST_MODIFIED_DATE, DEFAULT_LAST_MODIFIED_DATE.toString());
 
         return event;
     }

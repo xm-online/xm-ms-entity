@@ -2,17 +2,21 @@ package com.icthh.xm.ms.entity.web.rest;
 
 import com.icthh.xm.ms.entity.config.DefaultProfileUtil;
 import io.github.jhipster.config.JHipsterProperties;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import lombok.RequiredArgsConstructor;
 import org.springframework.core.env.Environment;
+import org.springframework.security.access.prepost.PostAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 /**
  * Resource to return information about the currently running Spring profiles.
  */
+@RequiredArgsConstructor
 @RestController
 @RequestMapping("/api")
 public class ProfileInfoResource {
@@ -21,12 +25,8 @@ public class ProfileInfoResource {
 
     private final JHipsterProperties jHipsterProperties;
 
-    public ProfileInfoResource(Environment env, JHipsterProperties jHipsterProperties) {
-        this.env = env;
-        this.jHipsterProperties = jHipsterProperties;
-    }
-
     @GetMapping("/profile-info")
+    @PostAuthorize("hasPermission({'returnObject': returnObject}, 'ENTITY.PROFILE_INFO.GET_LIST.ITEM')")
     public ProfileInfoVM getActiveProfiles() {
         String[] activeProfiles = DefaultProfileUtil.getActiveProfiles(env);
         return new ProfileInfoVM(activeProfiles, getRibbonEnv(activeProfiles));

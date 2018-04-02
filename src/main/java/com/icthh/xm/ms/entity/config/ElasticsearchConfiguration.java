@@ -1,32 +1,44 @@
 package com.icthh.xm.ms.entity.config;
 
-import java.io.IOException;
-
-import com.icthh.xm.ms.entity.config.tenant.TenantContext;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.icthh.xm.commons.tenant.TenantContextHolder;
+import com.icthh.xm.commons.tenant.TenantContextUtils;
 import org.elasticsearch.client.Client;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
 import org.springframework.data.elasticsearch.core.EntityMapper;
 import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
-
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.stereotype.Component;
+
+import java.io.IOException;
 
 @Configuration
 public class ElasticsearchConfiguration {
 
     @Bean
-    public ElasticsearchTemplate elasticsearchTemplate(Client client, Jackson2ObjectMapperBuilder jackson2ObjectMapperBuilder) {
-        return new ElasticsearchTemplate(client, new CustomEntityMapper(jackson2ObjectMapperBuilder.createXmlMapper(false).build()));
+    public ElasticsearchTemplate elasticsearchTemplate(Client client,
+                                                       Jackson2ObjectMapperBuilder jackson2ObjectMapperBuilder) {
+        ObjectMapper objectMapper = jackson2ObjectMapperBuilder.createXmlMapper(false).build();
+        return new ElasticsearchTemplate(client, new CustomEntityMapper(objectMapper));
     }
 
     @Component("indexName")
     public static class IndexName {
 
+        private final TenantContextHolder tenantContextHolder;
+
+        public IndexName(TenantContextHolder tenantContextHolder) {
+            this.tenantContextHolder = tenantContextHolder;
+        }
+
+        private String getTenantKeyLowerCase() {
+            return TenantContextUtils.getRequiredTenantKeyValue(tenantContextHolder).toLowerCase();
+        }
+
         public String getPrefix() {
-            return TenantContext.getCurrent().getTenant().toLowerCase() + "_";
+            return getTenantKeyLowerCase() + "_";
         }
     }
 
@@ -49,5 +61,7 @@ public class ElasticsearchConfiguration {
         public <T> T mapToObject(String source, Class<T> clazz) throws IOException {
             return objectMapper.readValue(source, clazz);
         }
+
     }
+
 }

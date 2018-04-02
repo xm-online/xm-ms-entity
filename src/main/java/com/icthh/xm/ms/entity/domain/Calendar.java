@@ -1,5 +1,9 @@
 package com.icthh.xm.ms.entity.domain;
 
+import static javax.persistence.CascadeType.MERGE;
+import static javax.persistence.CascadeType.PERSIST;
+import static javax.persistence.CascadeType.REMOVE;
+
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.JsonIdentityReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -64,8 +68,7 @@ public class Calendar implements Serializable {
     /**
      * Start date
      */
-    @NotNull
-    @ApiModelProperty(value = "Start date", required = true)
+    @ApiModelProperty(value = "Start date")
     @Column(name = "start_date", nullable = false)
     private Instant startDate;
 
@@ -76,7 +79,7 @@ public class Calendar implements Serializable {
     @Column(name = "end_date")
     private Instant endDate;
 
-    @OneToMany(mappedBy = "calendar", cascade = CascadeType.PERSIST)
+    @OneToMany(mappedBy = "calendar", cascade = {PERSIST, MERGE, REMOVE})
     @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
     private Set<Event> events = new HashSet<>();
 
@@ -196,6 +199,17 @@ public class Calendar implements Serializable {
 
     public void setXmEntity(XmEntity xmEntity) {
         this.xmEntity = xmEntity;
+    }
+
+    @PrePersist
+    @PreUpdate
+    private void prePersist() {
+        if (id == null && startDate == null) {
+            startDate = Instant.now();
+        }
+        if (xmEntity != null) {
+            this.xmEntity.updateXmEntityReference(this.events, Event::setAssigned);
+        }
     }
 
     @Override

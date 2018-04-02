@@ -43,6 +43,13 @@ types:
       calendars:
           - key: AAAAAAAAAA
           - key: BBBBBBBBBB
+      links:
+            - key: TEST.LINK
+              builderType: NEW
+              name: { en: "Link 1", ru: "Связь 1" }
+              icon: local_offer
+              typeKey: TYPE 2
+              max: 10
       states:
           - key: STATE1
             name: { en: "State 1", ru: "Состояние 1" }
@@ -81,3 +88,196 @@ types:
       name: { en: "ACCOUNTING" }
       isApp: false
       isAbstract: false
+    - key: RESOURCE.XM-TENANT
+      name: { en: "RESOURCE.XM-TENANT" }
+      isApp: false
+      isAbstract: false
+    - key: TEST_LIFECYCLE
+      name: { en: "Test lifecycle", ru: "test" }
+      isApp: false
+      isAbstract: false
+      states:
+          - key: STATE1
+            next:
+                - stateKey: STATE2
+          - key: STATE2
+            next:
+                - stateKey: STATE3
+          - key: STATE3
+            next:
+                - stateKey: STATE4
+          - key: STATE4
+            next:
+                - stateKey: STATE5
+          - key: STATE5
+            next:
+                - stateKey: STATE6
+          - key: STATE6
+            next:
+                - stateKey: STATE7
+          - key: STATE7
+      dataSpec: |
+                {
+                    "type": "object",
+                    "properties": {
+                        "updateState": {
+                            "type": "number"
+                        },
+                        "updateByTransition": {
+                            "type": "number"
+                        },
+                        "updateByTargetState": {
+                            "type": "number"
+                        },
+                        "updateByEntity": {
+                            "type": "number"
+                        }
+                    }
+                }
+    - key: TEST_DELETE_PARENT
+      isApp: false
+      isAbstract: false
+      links:
+            - key: testLink
+              builderType: SEARCH
+              typeKey: TEST_DELETE
+    - key: TEST_DELETE
+      name: { en: "TEST_DELETE" }
+      isApp: false
+      isAbstract: false
+      functions:
+          - key: A
+      attachments:
+          - key: A
+
+      calendars:
+          - key: A
+            events:
+                - key: B
+      locations:
+          - key: A
+      ratings:
+          - key: A
+      tags:
+          - key: A
+      comments:
+          - key: A
+      links:
+            - key: cascadeDeleteLinks
+              builderType: NEW
+              typeKey: TEST_LIFECYCLE_LINK_NEW
+            - key: breakLinks
+              builderType: SEARCH
+              typeKey: TEST_LIFECYCLE_LINK_SEARCH
+
+    - key: TEST_LIFECYCLE_LINK_NEW
+      isApp: false
+      isAbstract: false
+      links:
+            - key: cascadeDeleteSubLinks
+              builderType: NEW
+              typeKey: TEST_LIFECYCLE_LINK_NEW
+            - key: cascadeBreakSubLinks
+              builderType: SEARCH
+              typeKey: TEST_LIFECYCLE_LINK_SEARCH
+    - key: TEST_LIFECYCLE_LINK_SEARCH
+      isApp: false
+      isAbstract: false
+    - key: TEST_LIFECYCLE_SUBLINK_NEW
+      isApp: false
+      isAbstract: false
+    - key: TEST_LIFECYCLE_SUBLINK_SEARCH
+      isApp: false
+      isAbstract: false
+
+    - key: TEST_DELETE_NEW_LINK
+      isApp: false
+      isAbstract: false
+      links:
+            - key: newLink
+              builderType: NEW
+              typeKey: TARGET_ENTITY
+
+    - key: TEST_DELETE_SEARCH_LINK
+      isApp: false
+      isAbstract: false
+      links:
+            - key: searchLink
+              builderType: SEARCH
+              typeKey: TARGET_ENTITY
+
+    - key: TARGET_ENTITY
+      isApp: false
+      isAbstract: false
+    - key: TEST_SAVE_AND_PROCEED
+      isApp: false
+      isAbstract: false
+
+    - key: TEST_SAVE_RUN
+      isApp: false
+      isAbstract: false
+    - key: TEST_NOT_RUN_SAVE
+      isApp: false
+      isAbstract: false
+
+    - key: TEST_DELETE_AND_PROCEED
+      isApp: false
+      isAbstract: false
+      states:
+          - key: STATE1
+      dataSpec: |
+                {
+                    "type": "object",
+                    "properties": {
+                        "runGeneralScriptDELETE": {
+                            "type": "number"
+                        },
+                        "runDeleteProceed": {
+                            "type": "number"
+                        },
+                        "runDeleteRun": {
+                            "type": "number"
+                        }
+                    }
+                }
+    - key: TEST_DELETE_RUN
+      isApp: false
+      isAbstract: false
+      states:
+          - key: STATE1
+      dataSpec: |
+                {
+                    "type": "object",
+                    "properties": {
+                        "runGeneralScriptDELETE": {
+                            "type": ["number", "null"]
+                        },
+                        "runDeleteProceed": {
+                            "type": ["number", "null"]
+                        },
+                        "runDeleteRun": {
+                            "type": ["number", "null"]
+                        }
+                    }
+                }
+    - key: TEST_NOT_RUN_DELETE
+      isApp: false
+      isAbstract: false
+      states:
+          - key: STATE1
+      dataSpec: |
+                {
+                    "type": "object",
+                    "properties": {
+                        "runGeneralScriptDELETE": {
+                            "type": ["number", "null"]
+                        },
+                        "runDeleteProceed": {
+                            "type": ["number", "null"]
+                        },
+                        "runDeleteRun": {
+                            "type": ["number", "null"]
+                        }
+                    }
+                }
+

@@ -3,42 +3,53 @@ package com.icthh.xm.ms.entity.web.rest;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.notNullValue;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.icthh.xm.commons.errors.ExceptionTranslator;
+import com.icthh.xm.commons.exceptions.spring.web.ExceptionTranslator;
+import com.icthh.xm.commons.permission.repository.PermittedRepository;
+import com.icthh.xm.commons.tenant.TenantContextHolder;
+import com.icthh.xm.commons.tenant.TenantContextUtils;
 import com.icthh.xm.ms.entity.EntityApp;
-
 import com.icthh.xm.ms.entity.config.SecurityBeanOverrideConfiguration;
-
-import com.icthh.xm.ms.entity.config.tenant.TenantContext;
 import com.icthh.xm.ms.entity.config.tenant.WebappTenantOverrideConfiguration;
 import com.icthh.xm.ms.entity.domain.Rating;
 import com.icthh.xm.ms.entity.domain.Vote;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.repository.VoteRepository;
+import com.icthh.xm.ms.entity.repository.search.PermittedSearchRepository;
 import com.icthh.xm.ms.entity.repository.search.VoteSearchRepository;
-
+import com.icthh.xm.ms.entity.service.VoteService;
+import com.icthh.xm.ms.entity.service.impl.StartUpdateDateGenerationStrategy;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.MockitoAnnotations;
+import org.mockito.Spy;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.context.transaction.BeforeTransaction;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.persistence.EntityManager;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
-
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import javax.persistence.EntityManager;
 
 /**
  * Test class for the VoteResource REST controller.
@@ -46,6 +57,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * @see VoteResource
  */
 @RunWith(SpringRunner.class)
+@WithMockUser(authorities = {"SUPER-ADMIN"})
 @SpringBootTest(classes = {EntityApp.class, SecurityBeanOverrideConfiguration.class, WebappTenantOverrideConfiguration.class})
 public class VoteResourceIntTest {
 
@@ -60,6 +72,9 @@ public class VoteResourceIntTest {
 
     private static final Instant DEFAULT_ENTRY_DATE = Instant.ofEpochMilli(0L);
     private static final Instant UPDATED_ENTRY_DATE = Instant.now().truncatedTo(ChronoUnit.MILLIS);
+
+    @Autowired
+    private VoteResource voteResource;
 
     @Autowired
     private VoteRepository voteRepository;
@@ -79,18 +94,43 @@ public class VoteResourceIntTest {
     @Autowired
     private EntityManager em;
 
+    @Autowired
+    private TenantContextHolder tenantContextHolder;
+
+    @Autowired
+    private PermittedRepository permittedRepository;
+
+    @Autowired
+    private PermittedSearchRepository permittedSearchRepository;
+
+    private VoteService voteService;
+
+    @Spy
+    private StartUpdateDateGenerationStrategy startUpdateDateGenerationStrategy;
+
     private MockMvc restVoteMockMvc;
 
     private Vote vote;
 
+    @BeforeTransaction
+    public void beforeTransaction() {
+        TenantContextUtils.setTenant(tenantContextHolder, "RESINTTEST");
+    }
+
     @Before
     public void setup() {
-
-        TenantContext.setCurrent("RESINTTEST");
-
         MockitoAnnotations.initMocks(this);
-        VoteResource voteResource = new VoteResource(voteRepository, voteSearchRepository);
-        this.restVoteMockMvc = MockMvcBuilders.standaloneSetup(voteResource)
+
+        when(startUpdateDateGenerationStrategy.generateStartDate()).thenReturn(UPDATED_ENTRY_DATE);
+
+        voteService = new VoteService(permittedRepository,
+                                      permittedSearchRepository,
+                                      voteRepository,
+                                      voteSearchRepository,
+                                      startUpdateDateGenerationStrategy);
+
+        VoteResource voteResourceMock = new VoteResource(voteResource, voteService);
+        this.restVoteMockMvc = MockMvcBuilders.standaloneSetup(voteResourceMock)
             .setCustomArgumentResolvers(pageableArgumentResolver)
             .setControllerAdvice(exceptionTranslator)
             .setMessageConverters(jacksonMessageConverter).build();
@@ -100,8 +140,9 @@ public class VoteResourceIntTest {
     }
 
     @After
+    @Override
     public void finalize() {
-        TenantContext.setCurrent("XM");
+        tenantContextHolder.getPrivilegedContext().destroyCurrentContext();
     }
 
     /**
@@ -152,7 +193,7 @@ public class VoteResourceIntTest {
         assertThat(testVote.getUserKey()).isEqualTo(DEFAULT_USER_KEY);
         assertThat(testVote.getValue()).isEqualTo(DEFAULT_VALUE);
         assertThat(testVote.getMessage()).isEqualTo(DEFAULT_MESSAGE);
-        assertThat(testVote.getEntryDate()).isEqualTo(DEFAULT_ENTRY_DATE);
+        assertThat(testVote.getEntryDate()).isEqualTo(UPDATED_ENTRY_DATE);
 
         // Validate the Vote in Elasticsearch
         Vote voteEs = voteSearchRepository.findOne(testVote.getId());
@@ -225,6 +266,7 @@ public class VoteResourceIntTest {
 
     @Test
     @Transactional
+    @Ignore("see TagResourceExtendedIntTest.checkStartDateIsNotRequired instead")
     public void checkEntryDateIsRequired() throws Exception {
         int databaseSizeBeforeTest = voteRepository.findAll().size();
         // set the field null
@@ -249,6 +291,7 @@ public class VoteResourceIntTest {
 
     @Test
     @Transactional
+    @WithMockUser(authorities = "SUPER-ADMIN")
     public void getAllVotes() throws Exception {
         // Initialize the database
         voteRepository.saveAndFlush(vote);

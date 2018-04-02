@@ -3,39 +3,53 @@ package com.icthh.xm.ms.entity.web.rest;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.notNullValue;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.icthh.xm.commons.errors.ExceptionTranslator;
+import com.icthh.xm.commons.exceptions.spring.web.ExceptionTranslator;
+import com.icthh.xm.commons.permission.repository.PermittedRepository;
+import com.icthh.xm.commons.tenant.TenantContextHolder;
+import com.icthh.xm.commons.tenant.TenantContextUtils;
 import com.icthh.xm.ms.entity.EntityApp;
 import com.icthh.xm.ms.entity.config.SecurityBeanOverrideConfiguration;
-import com.icthh.xm.ms.entity.config.tenant.TenantContext;
 import com.icthh.xm.ms.entity.config.tenant.WebappTenantOverrideConfiguration;
 import com.icthh.xm.ms.entity.domain.Rating;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.repository.RatingRepository;
+import com.icthh.xm.ms.entity.repository.search.PermittedSearchRepository;
 import com.icthh.xm.ms.entity.repository.search.RatingSearchRepository;
 import com.icthh.xm.ms.entity.service.RatingService;
+import com.icthh.xm.ms.entity.service.impl.StartUpdateDateGenerationStrategy;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.MockitoAnnotations;
+import org.mockito.Spy;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.context.transaction.BeforeTransaction;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.Validator;
 
-import javax.persistence.EntityManager;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
+import javax.persistence.EntityManager;
 
 /**
  * Test class for the RatingResource REST controller.
@@ -43,6 +57,7 @@ import java.util.List;
  * @see RatingResource
  */
 @RunWith(SpringRunner.class)
+@WithMockUser(authorities = {"SUPER-ADMIN"})
 @SpringBootTest(classes = {EntityApp.class, SecurityBeanOverrideConfiguration.class, WebappTenantOverrideConfiguration.class})
 public class RatingResourceIntTest {
 
@@ -59,13 +74,19 @@ public class RatingResourceIntTest {
     private static final Instant UPDATED_END_DATE = Instant.now().truncatedTo(ChronoUnit.MILLIS);
 
     @Autowired
+    private RatingResource ratingResource;
+
+    @Autowired
     private RatingRepository ratingRepository;
 
     @Autowired
-    private RatingService ratingService;
+    private RatingSearchRepository ratingSearchRepository;
 
     @Autowired
-    private RatingSearchRepository ratingSearchRepository;
+    private PermittedRepository permittedRepository;
+
+    @Autowired
+    private PermittedSearchRepository permittedSearchRepository;
 
     @Autowired
     private MappingJackson2HttpMessageConverter jacksonMessageConverter;
@@ -79,21 +100,40 @@ public class RatingResourceIntTest {
     @Autowired
     private EntityManager em;
 
+    @Autowired
+    private Validator validator;
+
+    @Autowired
+    private TenantContextHolder tenantContextHolder;
+
+    @Spy
+    private StartUpdateDateGenerationStrategy startUpdateDateGenerationStrategy;
+
+    private RatingService ratingService;
+
     private MockMvc restRatingMockMvc;
 
     private Rating rating;
 
-    @Autowired
-    private Validator validator;
+    @BeforeTransaction
+    public void beforeTransaction() {
+        TenantContextUtils.setTenant(tenantContextHolder, "RESINTTEST");
+    }
 
     @Before
     public void setup() {
-
-        TenantContext.setCurrent("RESINTTEST");
-
         MockitoAnnotations.initMocks(this);
-        RatingResource ratingResource = new RatingResource(ratingService);
-        this.restRatingMockMvc = MockMvcBuilders.standaloneSetup(ratingResource)
+
+        when(startUpdateDateGenerationStrategy.generateStartDate()).thenReturn(DEFAULT_START_DATE);
+
+        ratingService = new RatingService(ratingRepository,
+                                          ratingSearchRepository,
+                                          permittedRepository,
+                                          permittedSearchRepository,
+                                          startUpdateDateGenerationStrategy);
+
+        RatingResource ratingResourceMock = new RatingResource(ratingService, ratingResource);
+        this.restRatingMockMvc = MockMvcBuilders.standaloneSetup(ratingResourceMock)
             .setCustomArgumentResolvers(pageableArgumentResolver)
             .setControllerAdvice(exceptionTranslator)
             .setValidator(validator)
@@ -103,9 +143,15 @@ public class RatingResourceIntTest {
 
     }
 
+    @After
+    @Override
+    public void finalize() {
+        tenantContextHolder.getPrivilegedContext().destroyCurrentContext();
+    }
+
     /**
      * Create an entity for this test.
-     *
+     * <p>
      * This is a static method, as tests for other entities might also need it,
      * if they test an entity which requires the current entity.
      */
@@ -123,14 +169,9 @@ public class RatingResourceIntTest {
         return rating;
     }
 
-    @After
-    public void finalize() {
-        TenantContext.setCurrent("XM");
-    }
-
     @Before
     public void initTest() {
-  //      ratingSearchRepository.deleteAll();
+        //ratingSearchRepository.deleteAll();
     }
 
     @Test
@@ -140,8 +181,8 @@ public class RatingResourceIntTest {
 
         // Create the Rating
         restRatingMockMvc.perform(post("/api/ratings")
-            .contentType(TestUtil.APPLICATION_JSON_UTF8)
-            .content(TestUtil.convertObjectToJsonBytes(rating)))
+                                      .contentType(TestUtil.APPLICATION_JSON_UTF8)
+                                      .content(TestUtil.convertObjectToJsonBytes(rating)))
             .andExpect(status().isCreated());
 
         // Validate the Rating in the database
@@ -168,8 +209,8 @@ public class RatingResourceIntTest {
 
         // An entity with an existing ID cannot be created, so this API call must fail
         restRatingMockMvc.perform(post("/api/ratings")
-            .contentType(TestUtil.APPLICATION_JSON_UTF8)
-            .content(TestUtil.convertObjectToJsonBytes(rating)))
+                                      .contentType(TestUtil.APPLICATION_JSON_UTF8)
+                                      .content(TestUtil.convertObjectToJsonBytes(rating)))
             .andExpect(status().isBadRequest())
             .andExpect(jsonPath("$.error").value("error.business.idexists"))
             .andExpect(jsonPath("$.error_description").value(notNullValue()))
@@ -190,8 +231,8 @@ public class RatingResourceIntTest {
         // Create the Rating, which fails.
 
         restRatingMockMvc.perform(post("/api/ratings")
-            .contentType(TestUtil.APPLICATION_JSON_UTF8)
-            .content(TestUtil.convertObjectToJsonBytes(rating)))
+                                      .contentType(TestUtil.APPLICATION_JSON_UTF8)
+                                      .content(TestUtil.convertObjectToJsonBytes(rating)))
             .andExpect(status().isBadRequest())
             .andExpect(jsonPath("$.error").value("error.validation"))
             .andExpect(jsonPath("$.error_description").value(notNullValue()))
@@ -206,6 +247,7 @@ public class RatingResourceIntTest {
 
     @Test
     @Transactional
+    @Ignore("see RatingResourceExtendedIntTest.checkStartDateIsNotRequired instead")
     public void checkStartDateIsRequired() throws Exception {
         int databaseSizeBeforeTest = ratingRepository.findAll().size();
         // set the field null
@@ -214,8 +256,8 @@ public class RatingResourceIntTest {
         // Create the Rating, which fails.
 
         restRatingMockMvc.perform(post("/api/ratings")
-            .contentType(TestUtil.APPLICATION_JSON_UTF8)
-            .content(TestUtil.convertObjectToJsonBytes(rating)))
+                                      .contentType(TestUtil.APPLICATION_JSON_UTF8)
+                                      .content(TestUtil.convertObjectToJsonBytes(rating)))
             .andExpect(status().isBadRequest())
             .andExpect(jsonPath("$.error").value("error.validation"))
             .andExpect(jsonPath("$.error_description").value(notNullValue()))
@@ -230,6 +272,7 @@ public class RatingResourceIntTest {
 
     @Test
     @Transactional
+    @WithMockUser(authorities = "SUPER-ADMIN")
     public void getAllRatings() throws Exception {
         // Initialize the database
         ratingRepository.saveAndFlush(rating);
@@ -290,8 +333,8 @@ public class RatingResourceIntTest {
             .endDate(UPDATED_END_DATE);
 
         restRatingMockMvc.perform(put("/api/ratings")
-            .contentType(TestUtil.APPLICATION_JSON_UTF8)
-            .content(TestUtil.convertObjectToJsonBytes(updatedRating)))
+                                      .contentType(TestUtil.APPLICATION_JSON_UTF8)
+                                      .content(TestUtil.convertObjectToJsonBytes(updatedRating)))
             .andExpect(status().isOk());
 
         // Validate the Rating in the database
@@ -317,8 +360,8 @@ public class RatingResourceIntTest {
 
         // If the entity doesn't have an ID, it will be created instead of just being updated
         restRatingMockMvc.perform(put("/api/ratings")
-            .contentType(TestUtil.APPLICATION_JSON_UTF8)
-            .content(TestUtil.convertObjectToJsonBytes(rating)))
+                                      .contentType(TestUtil.APPLICATION_JSON_UTF8)
+                                      .content(TestUtil.convertObjectToJsonBytes(rating)))
             .andExpect(status().isCreated());
 
         // Validate the Rating in the database
@@ -336,7 +379,7 @@ public class RatingResourceIntTest {
 
         // Get the rating
         restRatingMockMvc.perform(delete("/api/ratings/{id}", rating.getId())
-            .accept(TestUtil.APPLICATION_JSON_UTF8))
+                                      .accept(TestUtil.APPLICATION_JSON_UTF8))
             .andExpect(status().isOk());
 
         // Validate Elasticsearch is empty

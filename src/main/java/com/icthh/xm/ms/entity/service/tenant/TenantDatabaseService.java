@@ -5,13 +5,15 @@ import static org.apache.commons.lang3.time.StopWatch.createStarted;
 
 import com.icthh.xm.commons.gen.model.Tenant;
 import com.icthh.xm.commons.logging.aop.IgnoreLogginAspect;
+import com.icthh.xm.commons.tenant.TenantContextHolder;
+import com.icthh.xm.commons.tenant.TenantContextUtils;
+import com.icthh.xm.ms.entity.config.Constants;
 import com.icthh.xm.ms.entity.config.tenant.SchemaDropResolver;
+import com.icthh.xm.ms.entity.domain.EntityState;
+import com.icthh.xm.ms.entity.domain.Profile;
+import com.icthh.xm.ms.entity.domain.XmEntity;
+import com.icthh.xm.ms.entity.service.ProfileService;
 import com.icthh.xm.ms.entity.util.DatabaseUtil;
-
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.sql.Statement;
-import javax.sql.DataSource;
 import liquibase.exception.LiquibaseException;
 import liquibase.integration.spring.SpringLiquibase;
 import lombok.AllArgsConstructor;
@@ -20,6 +22,12 @@ import org.apache.commons.lang3.time.StopWatch;
 import org.springframework.boot.autoconfigure.liquibase.LiquibaseProperties;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.stereotype.Service;
+
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.time.Instant;
+import javax.sql.DataSource;
 
 @Service
 @AllArgsConstructor
@@ -31,13 +39,15 @@ public class TenantDatabaseService {
     private LiquibaseProperties liquibaseProperties;
     private ResourceLoader resourceLoader;
     private SchemaDropResolver schemaDropResolver;
+    private TenantContextHolder tenantContextHolder;
+    private ProfileService profileService;
 
     /**
      * Create database schema for tenant.
      *
-     * @param tenant - the tenant
+     * @param tenant the tenant
      */
-    public void create(Tenant tenant) {
+    public void createSchema(Tenant tenant) {
         StopWatch stopWatch = createStarted();
         log.info("START - SETUP:CreateTenant:schema tenantKey={}", tenant.getTenantKey());
         DatabaseUtil.createSchema(dataSource, tenant.getTenantKey());
@@ -67,9 +77,9 @@ public class TenantDatabaseService {
     /**
      * Drop database schema for tenant.
      *
-     * @param tenantKey - the tenant key
+     * @param tenantKey the tenant key
      */
-    public void drop(String tenantKey) {
+    public void dropSchema(String tenantKey) {
         StopWatch stopWatch = createStarted();
         log.info("START - SETUP:DeleteTenant:liquibase tenantKey={}", tenantKey);
         try (Connection connection = dataSource.getConnection();
@@ -81,4 +91,42 @@ public class TenantDatabaseService {
         log.info("STOP - SETUP:DeleteTenant:liquibase tenantKey={}, time={}ms", tenantKey, stopWatch.getTime());
     }
 
+    /**
+     * Create profile for default user.
+     * @param tenantKey the tenant key
+     */
+    public void createProfile(String tenantKey) {
+        StopWatch stopWatch = createStarted();
+        log.info("START - SETUP:CreateTenant:default profile tenantKey={}", tenantKey);
+        String oldTenantKey = TenantContextUtils.getRequiredTenantKeyValue(tenantContextHolder);
+        try {
+            TenantContextUtils.setTenant(tenantContextHolder, tenantKey);
+            profileService.save(buildProfileForDefaultUser(tenantKey));
+            log.info("STOP - SETUP:CreateTenant:default profile tenantKey={}, time={}ms",
+                tenantKey, stopWatch.getTime());
+        } catch (Exception e) {
+            log.error("STOP  - SETUP:CreateTenant:default profile tenantKey: {}, result: FAIL, error: {}, time = {} ms",
+                tenantKey, e.getMessage(), stopWatch.getTime());
+            throw e;
+        } finally {
+            tenantContextHolder.getPrivilegedContext().destroyCurrentContext();
+            TenantContextUtils.setTenant(tenantContextHolder, oldTenantKey);
+        }
+    }
+
+    private Profile buildProfileForDefaultUser(String tenantKey) {
+        XmEntity entity = new XmEntity();
+        entity.setTypeKey("ACCOUNT.USER");
+        entity.setKey("ACCOUNT.USER-1");
+        entity.setName("Administrator");
+        entity.setStateKey(EntityState.NEW.name());
+        entity.setStartDate(Instant.now());
+        entity.setUpdateDate(Instant.now());
+        entity.setCreatedBy(Constants.SYSTEM_ACCOUNT);
+
+        Profile profile = new Profile();
+        profile.setXmentity(entity);
+        profile.setUserKey(tenantKey.toLowerCase());
+        return profile;
+    }
 }

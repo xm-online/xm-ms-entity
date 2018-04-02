@@ -1,30 +1,33 @@
 package com.icthh.xm.ms.entity.web.rest;
 
 import com.codahale.metrics.annotation.Timed;
-import com.icthh.xm.commons.errors.ErrorConstants;
-import com.icthh.xm.commons.errors.exception.BusinessException;
+import com.icthh.xm.commons.exceptions.BusinessException;
+import com.icthh.xm.commons.exceptions.ErrorConstants;
 import com.icthh.xm.ms.entity.domain.Location;
-
 import com.icthh.xm.ms.entity.repository.LocationRepository;
 import com.icthh.xm.ms.entity.repository.search.LocationSearchRepository;
+import com.icthh.xm.ms.entity.service.LocationService;
 import com.icthh.xm.ms.entity.web.rest.util.HeaderUtil;
 import com.icthh.xm.ms.entity.web.rest.util.RespContentUtil;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.security.access.prepost.PostAuthorize;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
-import javax.validation.Valid;
 import java.net.URI;
 import java.net.URISyntaxException;
-
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
-
-import static org.elasticsearch.index.query.QueryBuilders.*;
+import javax.validation.Valid;
 
 /**
  * REST controller for managing Location.
@@ -33,18 +36,24 @@ import static org.elasticsearch.index.query.QueryBuilders.*;
 @RequestMapping("/api")
 public class LocationResource {
 
-    private final Logger log = LoggerFactory.getLogger(LocationResource.class);
-
     private static final String ENTITY_NAME = "location";
 
     private final LocationRepository locationRepository;
-
     private final LocationSearchRepository locationSearchRepository;
+    private final LocationResource locationResource;
+    private final LocationService locationService;
 
-    public LocationResource(LocationRepository locationRepository, LocationSearchRepository locationSearchRepository) {
+    public LocationResource(
+                    LocationRepository locationRepository,
+                    LocationSearchRepository locationSearchRepository,
+                    @Lazy LocationResource locationResource,
+                    LocationService locationService) {
         this.locationRepository = locationRepository;
         this.locationSearchRepository = locationSearchRepository;
+        this.locationResource = locationResource;
+        this.locationService = locationService;
     }
+
 
     /**
      * POST  /locations : Create a new location.
@@ -55,11 +64,11 @@ public class LocationResource {
      */
     @PostMapping("/locations")
     @Timed
+    @PreAuthorize("hasPermission({'location': #location}, 'LOCATION.CREATE')")
     public ResponseEntity<Location> createLocation(@Valid @RequestBody Location location) throws URISyntaxException {
-        log.debug("REST request to save Location : {}", location);
         if (location.getId() != null) {
             throw new BusinessException(ErrorConstants.ERR_BUSINESS_IDEXISTS,
-                                              "A new location cannot already have an ID");
+                                        "A new location cannot already have an ID");
         }
         Location result = locationRepository.save(location);
         locationSearchRepository.save(result);
@@ -79,10 +88,11 @@ public class LocationResource {
      */
     @PutMapping("/locations")
     @Timed
+    @PreAuthorize("hasPermission({'id': #location.id, 'newLocation': #location}, 'location', 'LOCATION.UPDATE')")
     public ResponseEntity<Location> updateLocation(@Valid @RequestBody Location location) throws URISyntaxException {
-        log.debug("REST request to update Location : {}", location);
         if (location.getId() == null) {
-            return createLocation(location);
+            //in order to call method with permissions check
+            return this.locationResource.createLocation(location);
         }
         Location result = locationRepository.save(location);
         locationSearchRepository.save(result);
@@ -99,8 +109,7 @@ public class LocationResource {
     @GetMapping("/locations")
     @Timed
     public List<Location> getAllLocations() {
-        log.debug("REST request to get all Locations");
-        return locationRepository.findAll();
+        return locationService.findAll(null);
     }
 
     /**
@@ -111,8 +120,8 @@ public class LocationResource {
      */
     @GetMapping("/locations/{id}")
     @Timed
+    @PostAuthorize("hasPermission({'returnObject': returnObject.body}, 'LOCATION.GET_LIST.ITEM')")
     public ResponseEntity<Location> getLocation(@PathVariable Long id) {
-        log.debug("REST request to get Location : {}", id);
         Location location = locationRepository.findOne(id);
         return RespContentUtil.wrapOrNotFound(Optional.ofNullable(location));
     }
@@ -125,8 +134,8 @@ public class LocationResource {
      */
     @DeleteMapping("/locations/{id}")
     @Timed
+    @PreAuthorize("hasPermission({'id': #id}, 'location', 'LOCATION.DELETE')")
     public ResponseEntity<Void> deleteLocation(@PathVariable Long id) {
-        log.debug("REST request to delete Location : {}", id);
         locationRepository.delete(id);
         locationSearchRepository.delete(id);
         return ResponseEntity.ok().headers(HeaderUtil.createEntityDeletionAlert(ENTITY_NAME, id.toString())).build();
@@ -142,10 +151,7 @@ public class LocationResource {
     @GetMapping("/_search/locations")
     @Timed
     public List<Location> searchLocations(@RequestParam String query) {
-        log.debug("REST request to search Locations for query {}", query);
-        return StreamSupport
-            .stream(locationSearchRepository.search(queryStringQuery(query)).spliterator(), false)
-            .collect(Collectors.toList());
+        return locationService.search(query, null);
     }
 
 }

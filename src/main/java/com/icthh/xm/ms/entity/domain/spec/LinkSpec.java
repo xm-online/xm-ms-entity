@@ -9,9 +9,12 @@ import lombok.Data;
 import java.util.Map;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonPropertyOrder({ "key", "builderType", "name", "icon", "typeKey", "max" })
+@JsonPropertyOrder({ "key", "builderType", "name", "backName", "icon", "typeKey", "max" })
 @Data
 public class LinkSpec {
+
+    public static final String NEW_BUILDER_TYPE = "NEW";
+    public static final String SEARCH_BUILDER_TYPE = "SEARCH";
 
     @JsonProperty("key")
     private String key;
@@ -30,5 +33,8 @@ public class LinkSpec {
     private String typeKey;
     @JsonProperty("max")
     private Integer max;
+
+    @JsonProperty("backName")
+    private Map<String, String> backName;
 
 }

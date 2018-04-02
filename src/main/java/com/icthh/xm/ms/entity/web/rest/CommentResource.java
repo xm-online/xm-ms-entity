@@ -1,28 +1,37 @@
 package com.icthh.xm.ms.entity.web.rest;
 
 import com.codahale.metrics.annotation.Timed;
-import com.icthh.xm.commons.errors.ErrorConstants;
-import com.icthh.xm.commons.errors.exception.BusinessException;
+import com.icthh.xm.commons.exceptions.BusinessException;
+import com.icthh.xm.commons.exceptions.ErrorConstants;
 import com.icthh.xm.ms.entity.domain.Comment;
 import com.icthh.xm.ms.entity.service.CommentService;
 import com.icthh.xm.ms.entity.web.rest.util.HeaderUtil;
 import com.icthh.xm.ms.entity.web.rest.util.PaginationUtil;
 import com.icthh.xm.ms.entity.web.rest.util.RespContentUtil;
 import io.swagger.annotations.ApiParam;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.security.access.prepost.PostAuthorize;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
-import javax.validation.Valid;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Optional;
+import javax.validation.Valid;
 
 /**
  * REST controller for managing Comment.
@@ -31,14 +40,16 @@ import java.util.Optional;
 @RequestMapping("/api")
 public class CommentResource {
 
-    private final Logger log = LoggerFactory.getLogger(CommentResource.class);
-
     private static final String ENTITY_NAME = "comment";
 
     private final CommentService commentService;
+    private final CommentResource commentResource;
 
-    public CommentResource(CommentService commentService) {
+    public CommentResource(
+                    CommentService commentService,
+                    @Lazy CommentResource commentResource) {
         this.commentService = commentService;
+        this.commentResource = commentResource;
     }
 
     /**
@@ -50,11 +61,11 @@ public class CommentResource {
      */
     @PostMapping("/comments")
     @Timed
+    @PreAuthorize("hasPermission({'comment': #comment}, 'COMMENT.CREATE')")
     public ResponseEntity<Comment> createComment(@Valid @RequestBody Comment comment) throws URISyntaxException {
-        log.debug("REST request to save Comment : {}", comment);
         if (comment.getId() != null) {
             throw new BusinessException(ErrorConstants.ERR_BUSINESS_IDEXISTS,
-                                              "A new comment cannot already have an ID");
+                                        "A new comment cannot already have an ID");
         }
         Comment result = commentService.save(comment);
         return ResponseEntity.created(new URI("/api/comments/" + result.getId()))
@@ -73,10 +84,11 @@ public class CommentResource {
      */
     @PutMapping("/comments")
     @Timed
+    @PreAuthorize("hasPermission({'id': #comment.id, 'newComment': #comment}, 'comment', 'COMMENT.UPDATE')")
     public ResponseEntity<Comment> updateComment(@Valid @RequestBody Comment comment) throws URISyntaxException {
-        log.debug("REST request to update Comment : {}", comment);
         if (comment.getId() == null) {
-            return createComment(comment);
+            //in order to call method with permissions check
+            return this.commentResource.createComment(comment);
         }
         Comment result = commentService.save(comment);
         return ResponseEntity.ok()
@@ -93,8 +105,7 @@ public class CommentResource {
     @GetMapping("/comments")
     @Timed
     public ResponseEntity<List<Comment>> getAllComments(@ApiParam Pageable pageable) {
-        log.debug("REST request to get a page of Comments");
-        Page<Comment> page = commentService.findAll(pageable);
+        Page<Comment> page = commentService.findAll(pageable, null);
         HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(page, "/api/comments");
         return new ResponseEntity<>(page.getContent(), headers, HttpStatus.OK);
     }
@@ -107,8 +118,8 @@ public class CommentResource {
      */
     @GetMapping("/comments/{id}")
     @Timed
+    @PostAuthorize("hasPermission({'returnObject': returnObject.body}, 'COMMENT.GET_LIST.ITEM')")
     public ResponseEntity<Comment> getComment(@PathVariable Long id) {
-        log.debug("REST request to get Comment : {}", id);
         Comment comment = commentService.findOne(id);
         return RespContentUtil.wrapOrNotFound(Optional.ofNullable(comment));
     }
@@ -121,8 +132,8 @@ public class CommentResource {
      */
     @DeleteMapping("/comments/{id}")
     @Timed
+    @PreAuthorize("hasPermission({'id': #id}, 'comment', 'COMMENT.DELETE')")
     public ResponseEntity<Void> deleteComment(@PathVariable Long id) {
-        log.debug("REST request to delete Comment : {}", id);
         commentService.delete(id);
         return ResponseEntity.ok().headers(HeaderUtil.createEntityDeletionAlert(ENTITY_NAME, id.toString())).build();
     }
@@ -138,8 +149,7 @@ public class CommentResource {
     @GetMapping("/_search/comments")
     @Timed
     public ResponseEntity<List<Comment>> searchComments(@RequestParam String query, @ApiParam Pageable pageable) {
-        log.debug("REST request to search for a page of Comments for query {}", query);
-        Page<Comment> page = commentService.search(query, pageable);
+        Page<Comment> page = commentService.search(query, pageable, null);
         HttpHeaders headers = PaginationUtil.generateSearchPaginationHttpHeaders(query, page, "/api/_search/comments");
         return new ResponseEntity<>(page.getContent(), headers, HttpStatus.OK);
     }

@@ -13,6 +13,10 @@
 # http://docs.spring.io/spring-boot/docs/current/reference/html/common-application-properties.html
 # ===================================================================
 
+logging:
+    level:
+        com.hazelcast: INFO
+
 spring:
     profiles:
         active: dev
@@ -47,7 +51,7 @@ spring:
             hibernate.cache.use_second_level_cache: true
             hibernate.cache.use_query_cache: false
             hibernate.generate_statistics: true
-            hibernate.cache.region.factory_class: com.hazelcast.hibernate.HazelcastCacheRegionFactory
+            hibernate.cache.region.factory_class: com.hazelcast.hibernate.HazelcastLocalCacheRegionFactory
             hibernate.cache.hazelcast.instance_name: entity
             hibernate.cache.use_minimal_puts: true
             hibernate.cache.hazelcast.use_lite_member: true
@@ -64,10 +68,14 @@ spring:
     kafka:
         bootstrap-servers: localhost:9093
     mail:
-        host: localhost
-        port: 25
+        host:
+        port:
         username:
         password:
+        properties:
+            mail.smtp.starttls.enable:
+            ssl.trust:
+            mail.imap.ssl.enable:
     messages:
         cache-seconds: 1
     thymeleaf:
@@ -127,10 +135,10 @@ jhipster:
         client-authorization:
             access-token-uri: http://uaa/oauth/token
             token-service-id: uaa
-            client-id: internal
-            client-secret: internal
+            client-id:
+            client-secret:
     mail: # specific JHipster mail property, for standard properties see MailProperties
-        from: entity@localhost
+        from: <tenantname>@xm-online.com
         base-url: http://127.0.0.1:8081
     metrics: # DropWizard Metrics configuration, used by MetricsConfiguration
         jmx.enabled: true
@@ -164,13 +172,25 @@ jhipster:
 # https://jhipster.github.io/common-application-properties/
 # ===================================================================
 
+xm-config:
+    hazelcast:
+        consul-discovery-delay-ms: 0
+
 application:
+    kafka-enabled: false
     amazon:
         aws:
             endpoint:
             template:
-            region: eu-central-1
+            region:
             access-key-id:
             access-key-secret:
         s3:
             bucket: xm-avatar
+
+## ==================================================================
+##   uncomment to read LEPs from flocal file storage
+##   filestorage can be created as link to xm-sm-config-repository forlder using command:
+##   'ln -s <xm-sm-config-repository> ~/xm-online'
+#    lep:
+#        tenant-script-storage: FILE
