@@ -19,6 +19,7 @@ import java.net.URI;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Consumer;
 import javax.annotation.Nullable;
 
 public interface XmEntityService extends ResourceRepository {
@@ -31,6 +32,9 @@ public interface XmEntityService extends ResourceRepository {
 
     @LoggingAspectConfig(resultDetails = false)
     XmEntity findOne(IdOrKey idOrKey);
+
+    @LoggingAspectConfig(resultDetails = false)
+    XmEntity selectAndUpdate(IdOrKey idOrKey, Consumer<XmEntity> consumer);
 
     void delete(Long id);
 

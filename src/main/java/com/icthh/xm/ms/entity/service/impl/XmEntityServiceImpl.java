@@ -59,6 +59,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpEntity;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.ObjectUtils;
 import org.springframework.web.multipart.MultipartFile;
@@ -71,6 +72,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.Callable;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 /**
@@ -203,6 +206,22 @@ public class XmEntityServiceImpl implements XmEntityService {
             xmEntityId = idOrKey.getId();
         }
         return xmEntityRepository.findOneById(xmEntityId);
+    }
+
+    @Override
+    @Transactional
+    public XmEntity selectAndUpdate(IdOrKey idOrKey, Consumer<XmEntity> consumer) {
+        log.debug("Request to get XmEntity : {}", idOrKey);
+        Long xmEntityId;
+        if (idOrKey.isKey()) {
+            XmEntityIdKeyTypeKey projection = getXmEntityIdKeyTypeKey(idOrKey);
+            xmEntityId = projection.getId();
+        } else {
+            xmEntityId = idOrKey.getId();
+        }
+        XmEntity entity = xmEntityRepository.findOneByIdForUpdate(xmEntityId);
+        consumer.accept(entity);
+        return save(entity);
     }
 
     /**

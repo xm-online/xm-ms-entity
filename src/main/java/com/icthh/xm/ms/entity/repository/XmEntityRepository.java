@@ -9,9 +9,13 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Lock;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.Set;
+import javax.persistence.LockModeType;
 
 
 /**
@@ -20,6 +24,10 @@ import java.util.Set;
 @SuppressWarnings("unused")
 @Repository
 public interface XmEntityRepository extends JpaRepository<XmEntity, Long>, JpaSpecificationExecutor<XmEntity>, EntityGraphRepository<XmEntity, Long> {
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT e FROM XmEntity e WHERE e.id = :id")
+    XmEntity findOneByIdForUpdate(@Param("id") Long id);
 
     @EntityGraph(value = "xmEntityGraph", type = EntityGraph.EntityGraphType.LOAD)
     XmEntity findOneById(Long id);
