@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/xm-online/xm-ms-entity.svg?branch=master)](https://travis-ci.org/xm-online/xm-ms-entity) [![Quality Gate](https://sonarcloud.io/api/badges/gate?key=xm-online:xm-ms-entity)](https://sonarcloud.io/dashboard/index/xm-online:xm-ms-entity) [![Quality Gate](https://sonarcloud.io/api/badges/measure?key=xm-online:xm-ms-entity&metric=lines)](https://sonarcloud.io/dashboard/index/xm-online:xm-ms-entity) [![Quality Gate](https://sonarcloud.io/api/badges/measure?key=xm-online:xm-ms-entity&metric=coverage)](https://sonarcloud.io/dashboard/index/xm-online:xm-ms-entity)
+
 # entity
 This application was generated using JHipster 4.6.1, you can find documentation and help at [https://jhipster.github.io/documentation-archive/v4.6.1](https://jhipster.github.io/documentation-archive/v4.6.1).
 
