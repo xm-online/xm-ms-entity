@@ -476,7 +476,7 @@ public class XmEntityServiceImpl implements XmEntityService {
 
     @Override
     public Object findById(Object id) {
-        return findOne(IdOrKey.of((String) id));
+        return findOne(IdOrKey.of(String.valueOf(id)));
     }
 
     @LogicExtensionPoint("Export")
