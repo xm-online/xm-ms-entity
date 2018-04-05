@@ -157,6 +157,21 @@ public class XmTenantLifecycleServiceUnitTest {
         assertEquals(true, ((ServiceInfo) ((Map) xmEntity.getData().get(SERVICE_NAME)).get("create")).isSuccess());
     }
 
+    @Test
+    public void testServiceCallSuccessWithNullContext() {
+
+        when(applicationProperties.getTenantCreateServiceList()).thenReturn(Collections.singletonList(SERVICE_NAME));
+
+        XmEntity xmEntity = getEntity();
+        TenantClient client = new SuccessClient();
+        tenantClients.add(client);
+
+        xmTenantLifecycleService.changeState(xmEntity, EntityState.ACTIVE.name(), null);
+
+        assertEquals(1, xmEntity.getData().size());
+        assertEquals(true, ((ServiceInfo) ((Map) xmEntity.getData().get(SERVICE_NAME)).get("create")).isSuccess());
+    }
+
     private XmEntity getEntity() {
         return new XmEntity().typeKey(ENTITY_TYPE_KEY).stateKey(EntityState.NEW.name());
     }

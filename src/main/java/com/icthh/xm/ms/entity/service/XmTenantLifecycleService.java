@@ -1,5 +1,12 @@
 package com.icthh.xm.ms.entity.service;
 
+import static com.icthh.xm.ms.entity.domain.EntityState.ACTIVE;
+import static com.icthh.xm.ms.entity.domain.EntityState.DELETED;
+import static com.icthh.xm.ms.entity.domain.EntityState.ERROR;
+import static com.icthh.xm.ms.entity.domain.EntityState.NEW;
+import static com.icthh.xm.ms.entity.domain.EntityState.SUSPENDED;
+
+import com.google.common.collect.Sets;
 import com.icthh.xm.commons.gen.model.Tenant;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.ms.entity.config.ApplicationProperties;
@@ -16,6 +23,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -28,6 +37,8 @@ public class XmTenantLifecycleService {
     private static final String CREATE_ACTION = "create";
     private static final String DELETE_ACTION = "delete";
     private static final String MANAGE_ACTION = "manage";
+
+    private static final Set<String> CURRENT_STATE_CREATE_ALLOWED = Sets.newHashSet(NEW.name(), ERROR.name());
 
     private final List<TenantClient> clients;
     private final ApplicationProperties applicationProperties;
@@ -46,8 +57,9 @@ public class XmTenantLifecycleService {
         }
 
         // noinspection unchecked
-        List<String> services = (List<String>) context.getOrDefault(KEY_SERVICES,
-                        applicationProperties.getTenantCreateServiceList());
+        List<String> services = (List<String>) Optional.ofNullable(context)
+                                                       .map(c -> c.get(KEY_SERVICES))
+                                                       .orElse(applicationProperties.getTenantCreateServiceList());
         executeServices(services, xmEntity, nextStateKey);
     }
 
@@ -73,7 +85,7 @@ public class XmTenantLifecycleService {
                 manageClient(serviceName, xmEntity, nextStateKey);
 
             } catch (Exception e) {
-                log.error("Error during service {} call", serviceName, e);
+                log.error("Error during service {} call: {}", serviceName, e.toString());
                 success = false;
                 ex = e;
                 failed = true;
@@ -86,8 +98,8 @@ public class XmTenantLifecycleService {
     }
 
     private void setEntityState(XmEntity xmEntity, String nextStateKey, boolean failed) {
-        if (EntityState.ACTIVE.name().equals(nextStateKey) && failed) {
-            xmEntity.setStateKey(EntityState.ERROR.name());
+        if (ACTIVE.name().equals(nextStateKey) && failed) {
+            xmEntity.setStateKey(ERROR.name());
             return;
         }
         xmEntity.setStateKey(nextStateKey);
@@ -108,17 +120,14 @@ public class XmTenantLifecycleService {
     }
 
     private static String getAction(XmEntity xmEntity, String nextStateKey) {
-        if (EntityState.ACTIVE.name().equals(nextStateKey)
-            && (EntityState.NEW.name().equals(xmEntity.getStateKey())
-                || EntityState.ERROR.name().equals(xmEntity.getStateKey()))) {
+        String currStateKey = xmEntity.getStateKey();
+        if (ACTIVE.name().equals(nextStateKey) && CURRENT_STATE_CREATE_ALLOWED.contains(currStateKey)) {
             return CREATE_ACTION;
-        } else if (EntityState.ACTIVE.name().equals(nextStateKey)
-            && EntityState.SUSPENDED.name().equals(xmEntity.getStateKey())) {
+        } else if (ACTIVE.name().equals(nextStateKey) && SUSPENDED.name().equals(currStateKey)) {
             return MANAGE_ACTION;
-        } else if (EntityState.SUSPENDED.name().equals(nextStateKey)
-            && EntityState.ACTIVE.name().equals(xmEntity.getStateKey())) {
+        } else if (SUSPENDED.name().equals(nextStateKey) && ACTIVE.name().equals(currStateKey)) {
             return MANAGE_ACTION;
-        } else if (EntityState.DELETED.name().equals(nextStateKey)) {
+        } else if (DELETED.name().equals(nextStateKey)) {
             return DELETE_ACTION;
         }
         return null;
@@ -127,18 +136,16 @@ public class XmTenantLifecycleService {
     private void manageClient(String serviceName, XmEntity xmEntity, String nextStateKey) {
         if (StringUtils.isNotBlank(serviceName)) {
             TenantClient client = getClient(serviceName);
-            if (EntityState.ACTIVE.name().equals(nextStateKey)
-                && (EntityState.NEW.name().equals(xmEntity.getStateKey())
-                    || EntityState.ERROR.name().equals(xmEntity.getStateKey()))) {
-                client.addTenant(new Tenant().tenantKey(xmEntity.getName()).name(xmEntity.getName()));
-            } else if (EntityState.ACTIVE.name().equals(nextStateKey)
-                && EntityState.SUSPENDED.name().equals(xmEntity.getStateKey())) {
-                client.manageTenant(xmEntity.getName(), EntityState.ACTIVE.name());
-            } else if (EntityState.SUSPENDED.name().equals(nextStateKey)
-                && EntityState.ACTIVE.name().equals(xmEntity.getStateKey())) {
-                client.manageTenant(xmEntity.getName(), EntityState.SUSPENDED.name());
-            } else if (EntityState.DELETED.name().equals(nextStateKey)) {
-                client.deleteTenant(xmEntity.getName());
+            String tenantName = xmEntity.getName();
+            String currStateKey = xmEntity.getStateKey();
+            if (ACTIVE.name().equals(nextStateKey) && CURRENT_STATE_CREATE_ALLOWED.contains(currStateKey)) {
+                client.addTenant(new Tenant().tenantKey(tenantName).name(tenantName));
+            } else if (ACTIVE.name().equals(nextStateKey) && SUSPENDED.name().equals(currStateKey)) {
+                client.manageTenant(tenantName, ACTIVE.name());
+            } else if (SUSPENDED.name().equals(nextStateKey) && ACTIVE.name().equals(currStateKey)) {
+                client.manageTenant(tenantName, SUSPENDED.name());
+            } else if (DELETED.name().equals(nextStateKey)) {
+                client.deleteTenant(tenantName);
             }
         }
     }

@@ -433,7 +433,7 @@ public class XmEntityServiceImpl implements XmEntityService {
             LifecycleLepStrategy lifecycleLepStrategy = lifecycleLepStrategyFactory.getLifecycleLepStrategy();
             return lifecycleLepStrategy.changeState(idOrKey, entity.getTypeKey(), entity.getStateKey(), stateKey, context);
         } else {
-            throw new IllegalArgumentException("Entity " + entity + " can not go from ["
+            throw new BusinessException(ErrorConstants.ERR_VALIDATION, "Entity " + entity + " can not go from ["
                 + entity.getStateKey() + "] to [" + stateKey + "]");
         }
     }

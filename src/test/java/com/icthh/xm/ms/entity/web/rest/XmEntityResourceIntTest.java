@@ -688,7 +688,7 @@ public class XmEntityResourceIntTest {
             put("/api/xm-entities/{idOrKey}/states/{stateKey}", tenant.getId(),
                 "INVALID_NEXT_STATE").contentType(
                 TestUtil.APPLICATION_JSON_UTF8)).andExpect(
-            status().is5xxServerError());
+            status().is4xxClientError());
     }
 
     @Test
