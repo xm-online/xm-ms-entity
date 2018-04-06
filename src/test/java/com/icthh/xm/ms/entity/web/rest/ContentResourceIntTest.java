@@ -12,7 +12,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.icthh.xm.commons.exceptions.spring.web.ExceptionTranslator;
-import com.icthh.xm.commons.permission.repository.PermittedRepository;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
 import com.icthh.xm.ms.entity.EntityApp;
@@ -20,7 +19,6 @@ import com.icthh.xm.ms.entity.config.SecurityBeanOverrideConfiguration;
 import com.icthh.xm.ms.entity.config.tenant.WebappTenantOverrideConfiguration;
 import com.icthh.xm.ms.entity.domain.Content;
 import com.icthh.xm.ms.entity.repository.ContentRepository;
-import com.icthh.xm.ms.entity.repository.search.ContentSearchRepository;
 import com.icthh.xm.ms.entity.service.ContentService;
 import org.junit.After;
 import org.junit.Before;
@@ -63,9 +61,6 @@ public class ContentResourceIntTest {
     private ContentRepository contentRepository;
 
     @Autowired
-    private ContentSearchRepository contentSearchRepository;
-
-    @Autowired
     private MappingJackson2HttpMessageConverter jacksonMessageConverter;
 
     @Autowired
@@ -95,8 +90,7 @@ public class ContentResourceIntTest {
     @Before
     public void setup() {
         MockitoAnnotations.initMocks(this);
-        ContentResource contentResourceMock = new ContentResource(contentRepository,
-                        contentSearchRepository, contentService, contentResource);
+        ContentResource contentResourceMock = new ContentResource(contentRepository, contentService, contentResource);
         this.restContentMockMvc = MockMvcBuilders.standaloneSetup(contentResourceMock)
             .setCustomArgumentResolvers(pageableArgumentResolver)
             .setControllerAdvice(exceptionTranslator)
@@ -123,7 +117,6 @@ public class ContentResourceIntTest {
 
     @Before
     public void initTest() {
-      //  contentSearchRepository.deleteAll();
         content = createEntity(em);
     }
 
@@ -143,10 +136,6 @@ public class ContentResourceIntTest {
         assertThat(contentList).hasSize(databaseSizeBeforeCreate + 1);
         Content testContent = contentList.get(contentList.size() - 1);
         assertThat(testContent.getValue()).isEqualTo(DEFAULT_VALUE);
-
-        // Validate the Content in Elasticsearch
-        Content contentEs = contentSearchRepository.findOne(testContent.getId());
-        assertThat(contentEs).isEqualToComparingFieldByField(testContent);
     }
 
     @Test
@@ -240,7 +229,6 @@ public class ContentResourceIntTest {
     public void updateContent() throws Exception {
         // Initialize the database
         contentRepository.saveAndFlush(content);
-        contentSearchRepository.save(content);
         int databaseSizeBeforeUpdate = contentRepository.findAll().size();
 
         // Update the content
@@ -258,10 +246,6 @@ public class ContentResourceIntTest {
         assertThat(contentList).hasSize(databaseSizeBeforeUpdate);
         Content testContent = contentList.get(contentList.size() - 1);
         assertThat(testContent.getValue()).isEqualTo(UPDATED_VALUE);
-
-        // Validate the Content in Elasticsearch
-        Content contentEs = contentSearchRepository.findOne(testContent.getId());
-        assertThat(contentEs).isEqualToComparingFieldByField(testContent);
     }
 
     @Test
@@ -287,7 +271,6 @@ public class ContentResourceIntTest {
     public void deleteContent() throws Exception {
         // Initialize the database
         contentRepository.saveAndFlush(content);
-        contentSearchRepository.save(content);
         int databaseSizeBeforeDelete = contentRepository.findAll().size();
 
         // Get the content
@@ -295,28 +278,9 @@ public class ContentResourceIntTest {
             .accept(TestUtil.APPLICATION_JSON_UTF8))
             .andExpect(status().isOk());
 
-        // Validate Elasticsearch is empty
-        boolean contentExistsInEs = contentSearchRepository.exists(content.getId());
-        assertThat(contentExistsInEs).isFalse();
-
         // Validate the database is empty
         List<Content> contentList = contentRepository.findAll();
         assertThat(contentList).hasSize(databaseSizeBeforeDelete - 1);
-    }
-
-    @Test
-    @Transactional
-    public void searchContent() throws Exception {
-        // Initialize the database
-        contentRepository.saveAndFlush(content);
-        contentSearchRepository.save(content);
-
-        // Search the content
-        restContentMockMvc.perform(get("/api/_search/contents?query=id:" + content.getId()))
-            .andExpect(status().isOk())
-            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
-            .andExpect(jsonPath("$.[*].id").value(hasItem(content.getId().intValue())))
-            .andExpect(jsonPath("$.[*].value").value(hasItem(Base64Utils.encodeToString(DEFAULT_VALUE))));
     }
 
     @Test

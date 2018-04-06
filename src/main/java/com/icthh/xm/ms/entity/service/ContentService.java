@@ -24,15 +24,4 @@ public class ContentService {
         return permittedRepository.findAll(Content.class, privilegeKey);
     }
 
-    /**
-     * Search for the content corresponding to the query.
-     *
-     * @param query    the query of the search
-     * @return the list of entities
-     */
-    @Transactional(readOnly = true)
-    @FindWithPermission("CONTENT.SEARCH")
-    public List<Content> search(String query, String privilegeKey) {
-        return permittedSearchRepository.search(query, Content.class, privilegeKey);
-    }
 }
