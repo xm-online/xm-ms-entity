@@ -15,7 +15,6 @@ import java.util.Objects;
 @ApiModel(description = "Represents Attachment content. Content can be extracted separately from the attachment.")
 @Entity
 @Table(name = "content")
-@Document(indexName = "#{@indexName.prefix}content") // TODO - do we really need to add this entity to ES?
 public class Content implements Serializable {
 
     private static final long serialVersionUID = 1L;
