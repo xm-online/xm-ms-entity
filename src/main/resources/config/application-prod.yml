@@ -149,12 +149,3 @@ jhipster:
 # ===================================================================
 
 application:
-    amazon:
-        aws:
-            endpoint:
-            template:
-            region:
-            access-key-id:
-            access-key-secret:
-        s3:
-            bucket:

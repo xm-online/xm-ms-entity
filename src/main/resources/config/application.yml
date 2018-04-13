@@ -173,7 +173,22 @@ application:
         multiplier: 2
     lep:
         tenant-script-storage: XM_MS_CONFIG
-
+    amazon:
+        avatar:
+            # XmEntity.avatarUrl should match this pattern to persist only last part into DB, otherwise set to null
+            # Before persisting only last part of the URL (aka fileName) will be persisted
+            pre-persist-url-full-pattern: ^http(s)?:\/\/[a-zA-Z0-9-.]+[.]icthh[.][a-z]+(:\d+)?/[a-zA-Z0-9-.]+$
+            # XmEntity.avatarUrl should match this pattern to return from DB, otherwise set to null
+            # After retrieving from DB URL will be prepended with path prefix to be absolute.
+            post-load-url-part-pattern: ^[a-zA-Z0-9-.]+$
+        aws:
+            endpoint:
+            template:
+            region:
+            access-key-id:
+            access-key-secret:
+        s3:
+            bucket:
 # ===================================================================
 # Timeline specific properties
 #
