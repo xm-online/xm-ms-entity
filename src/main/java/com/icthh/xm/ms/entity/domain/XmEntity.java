@@ -6,7 +6,6 @@ import static javax.persistence.CascadeType.REMOVE;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.hazelcast.util.CollectionUtil;
 import com.icthh.xm.ms.entity.domain.converter.MapToStringConverter;
 import com.icthh.xm.ms.entity.domain.listener.AvatarUrlListener;
 import com.icthh.xm.ms.entity.validator.JsonData;
@@ -14,6 +13,7 @@ import com.icthh.xm.ms.entity.validator.StateKey;
 import com.icthh.xm.ms.entity.validator.TypeKey;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
+import org.apache.commons.collections4.CollectionUtils;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.springframework.data.elasticsearch.annotations.Document;
@@ -675,7 +675,7 @@ public class XmEntity implements Serializable {
     }
 
     public <T> void updateXmEntityReference(Collection<T> objects, BiConsumer<T, XmEntity> xmEntitySetter) {
-        if (CollectionUtil.isNotEmpty(objects)) {
+        if (CollectionUtils.isNotEmpty(objects)) {
             objects.forEach(object -> xmEntitySetter.accept(object, this));
         }
     }
