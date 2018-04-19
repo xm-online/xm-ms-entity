@@ -119,10 +119,6 @@ server:
 jhipster:
     http:
         version: V_1_1 # To use HTTP/2 you will need SSL support (see above the "server.ssl" configuration)
-    cache: # Cache configuration
-        hazelcast: # Hazelcast distributed cache
-            time-to-live-seconds: 3600
-            backup-count: 1
     # CORS is only enabled by default with the "dev" profile, so BrowserSync can access the API
     cors:
         allowed-origins: "*"
@@ -173,8 +169,6 @@ jhipster:
 # ===================================================================
 
 xm-config:
-    hazelcast:
-        consul-discovery-delay-ms: 0
 
 application:
     kafka-enabled: false

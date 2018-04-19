@@ -263,7 +263,6 @@ dependencies {
     compile "com.jayway.jsonpath:json-path"
     provided "com.elasticpath.json:json-unmarshaller:1.0.0"
     compile "com.mortennobel:java-image-scaling:0.8.6"
-    compile 'org.bitsofinfo:hazelcast-consul-discovery-spi:1.0-RC7'
     compile 'org.codehaus.groovy.modules.http-builder:http-builder:0.7.1'
 
     compile "com.icthh.xm.commons:xm-commons-ms-web:${xm_commons_version}"

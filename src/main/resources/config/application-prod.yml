@@ -104,9 +104,6 @@ jhipster:
         cache: # Used by the CachingHttpHeadersFilter
             timeToLiveInDays: 1461
     cache: # Cache configuration
-        hazelcast: # Hazelcast distributed cache
-            time-to-live-seconds: 3600
-            backup-count: 1
     security:
         client-authorization:
             access-token-uri: http://uaa/oauth/token
