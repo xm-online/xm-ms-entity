@@ -41,7 +41,7 @@ public class XmEntityObjectIdResolver implements ObjectIdResolver {
         if (_items == null) {
             _items = new HashMap<>();
         } else if (_items.containsKey(id)) {
-            log.warn("Already had POJO for id (" + id.key.getClass().getName() + ") [" + id + "]");
+            log.warn("Already had POJO for id (" + pojo.getClass().getName() + ") [" + id.key + "]");
         }
         _items.put(id, pojo);
     }
