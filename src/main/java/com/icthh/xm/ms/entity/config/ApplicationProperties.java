@@ -41,6 +41,9 @@ public class ApplicationProperties {
     private String specificationPathPattern;
     private String specificationName;
 
+    private String specificationTemplatesPathPattern;
+    private String specificationTemplatesName;
+
     private String specificationWebappName;
     private String webappName;
 

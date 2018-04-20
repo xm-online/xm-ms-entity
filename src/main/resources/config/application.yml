@@ -165,6 +165,8 @@ application:
     specification-webapp-name: settings-public.yml
     specification-name: xmentityspec.yml
     specification-path-pattern: /config/tenants/{tenantName}/entity/${application.specification-name}
+    specification-templates-name: search-templates.yml
+    specification-templates-path-pattern: /config/tenants/{tenantName}/entity/${application.specification-templates-name}
     kafka-system-topic: system_topic
     kafka-system-queue: system_queue
     retry:
