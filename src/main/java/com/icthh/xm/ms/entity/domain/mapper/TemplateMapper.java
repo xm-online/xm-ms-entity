@@ -22,7 +22,7 @@ public class TemplateMapper {
             Map<String, Template> map = mapper
                 .readValue(yml, new TypeReference<TreeMap<String, Template>>() {
                 });
-            map.forEach((roleKey, role) -> role.setKey(roleKey));
+            map.forEach((templateKey, template) -> template.setKey(templateKey));
             return map;
         } catch (Exception e) {
             log.error("Failed to create template collection from YML file, error: {}", e.getMessage(), e);

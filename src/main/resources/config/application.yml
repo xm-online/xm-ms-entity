@@ -150,7 +150,7 @@ xm-config:
         consul-service-tags: 'hazelcast'
         consul-discovery-delay-ms: 10000
         group-name: xm-tenant-config-hazelcast-cluster
-        group-pass:
+        group-pass: password
     xm-config-url: http://config
 
 application:

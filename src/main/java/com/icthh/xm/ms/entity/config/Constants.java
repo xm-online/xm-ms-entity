@@ -46,6 +46,7 @@ public final class Constants {
     public static final String DATA = "data";
 
     public static final String ENTITY_CONFIG_PATH = "config/specs/default-xmentityspec.yml";
+    public static final String TEMPLATES_CONFIG_PATH = "config/specs/default-search-templates.yml";
     public static final String WEBAPP_CONFIG_PATH = "config/webapp/default-settings-public.yml";
 
     public static final String PATH_SELF = "self";
