@@ -1222,4 +1222,31 @@ public class XmEntityResourceExtendedIntTest {
         return jacksonMessageConverter.getObjectMapper().readValue(r.getResponse().getContentAsString(), XmEntity.class);
     }
 
+    @Test
+    @Transactional
+    public void testJsonWithTwoPojoAndSameId() throws Exception {
+        int databaseSizeBeforeCreate = xmEntityRepository.findAll().size();
+        XmEntity target = xmEntityService.save(createEntity(em));
+
+        XmEntity entity = xmEntityIncoming;
+        entity.getTargets().add(new Link()
+            .typeKey(DEFAULT_LN_TARGET_KEY)
+            .name(DEFAULT_LN_TARGET_NAME)
+            .startDate(DEFAULT_LN_TARGET_START_DATE)
+            .target(target)
+        );
+        entity.getTargets().add(new Link()
+            .typeKey(DEFAULT_LN_TARGET_KEY)
+            .name(DEFAULT_LN_TARGET_NAME)
+            .startDate(DEFAULT_LN_TARGET_START_DATE)
+            .target(target)
+        );
+
+        MvcResult result = performPost("/api/xm-entities", entity)
+            .andExpect(status().isCreated())
+            .andExpect(jsonPath("$.key").value(DEFAULT_KEY))
+            .andReturn();
+
+        validateEntityInDB(databaseSizeBeforeCreate + 2);
+    }
 }

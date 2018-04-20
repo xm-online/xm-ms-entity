@@ -11,15 +11,19 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * XmEntity object ID resolver.
  * Resolves XmEntity object from database bi ID provided in JSON.
  * see https://stackoverflow.com/questions/41989906/jackson-referencing-an-object-as-a-property
  */
+@Slf4j
 @Component
 @Scope("prototype")
-@Slf4j
-public class XmEntityObjectIdResolver extends SimpleObjectIdResolver {
+public class XmEntityObjectIdResolver implements ObjectIdResolver {
+    protected Map<ObjectIdGenerator.IdKey,Object> _items;
 
     private XmEntityRepository repository;
 
@@ -30,6 +34,16 @@ public class XmEntityObjectIdResolver extends SimpleObjectIdResolver {
 
     public XmEntityObjectIdResolver() {
         log.debug("XmEntity object id resolver inited");
+    }
+
+    @Override
+    public void bindItem(ObjectIdGenerator.IdKey id, Object pojo) {
+        if (_items == null) {
+            _items = new HashMap<>();
+        } else if (_items.containsKey(id)) {
+            log.warn("Already had POJO for id (" + id.key.getClass().getName() + ") [" + id + "]");
+        }
+        _items.put(id, pojo);
     }
 
     /**
@@ -52,6 +66,11 @@ public class XmEntityObjectIdResolver extends SimpleObjectIdResolver {
     @Override
     public ObjectIdResolver newForDeserialization(final Object context) {
         return new XmEntityObjectIdResolver(repository);
+    }
+
+    @Override
+    public boolean canUseFor(ObjectIdResolver resolverType) {
+        return resolverType.getClass() == getClass();
     }
 
 }
