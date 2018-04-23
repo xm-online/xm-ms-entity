@@ -9,6 +9,7 @@ import java.util.Objects;
 import java.util.StringJoiner;
 
 import lombok.SneakyThrows;
+import lombok.experimental.UtilityClass;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.springframework.data.domain.Page;
@@ -21,17 +22,14 @@ import org.springframework.web.util.UriComponentsBuilder;
  * <p> Pagination uses the same principles as the <a href="https://developer.github.com/v3/#pagination">Github API</a>,
  * and follow <a href="http://tools.ietf.org/html/rfc5988">RFC 5988 (Link header)</a>.
  */
+@UtilityClass
 public final class PaginationUtil {
 
     private static final String QUERY_GET_PARAM = "&query=";
     private static final String TEMPLATE_GET_PARAM = "&template=";
     private static final String TEMPLATE_PARAMS_GET_PARAM = "&templateParams=";
 
-    private PaginationUtil() {
-    }
-
     public static HttpHeaders generatePaginationHttpHeaders(Page page, String baseUrl) {
-
         HttpHeaders headers = new HttpHeaders();
         headers.add("X-Total-Count", Long.toString(page.getTotalElements()));
         String link = "";
