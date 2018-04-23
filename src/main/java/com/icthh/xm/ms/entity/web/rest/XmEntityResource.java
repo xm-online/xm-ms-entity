@@ -222,7 +222,8 @@ public class XmEntityResource {
             page = xmEntityService.search(template, templateParams, pageable, null);
         }
         HttpHeaders headers = PaginationUtil
-            .generateSearchPaginationHttpHeaders(query, page, "/api/_search/xm-entities");
+            .generateSearchPaginationHttpHeaders(query, template, templateParams, page,
+                "/api/_search/xm-entities");
         return new ResponseEntity<>(page.getContent(), headers, HttpStatus.OK);
     }
 
@@ -242,7 +243,8 @@ public class XmEntityResource {
             page = xmEntityService.searchByQueryAndTypeKey(template, templateParams, typeKey, pageable, null);
         }
         HttpHeaders headers = PaginationUtil
-            .generateSearchPaginationHttpHeaders(typeKey, page, "/api/_search-with-typekey/xm-entities");
+            .generateSearchPaginationHttpHeaders(typeKey, template, templateParams, page,
+                "/api/_search-with-typekey/xm-entities");
         return new ResponseEntity<>(page.getContent(), headers, HttpStatus.OK);
     }
 
