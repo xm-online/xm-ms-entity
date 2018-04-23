@@ -225,6 +225,9 @@ public class XmEntityResourceExtendedIntTest {
     XmEntitySpecService xmEntitySpecService;
 
     @Autowired
+    XmEntityTemplatesSpecService xmEntityTemplatesSpecService;
+
+    @Autowired
     LifecycleLepStrategyFactory lifeCycleService;
 
     @Autowired
@@ -278,6 +281,7 @@ public class XmEntityResourceExtendedIntTest {
         when(startUpdateDateGenerationStrategy.generateUpdateDate()).thenReturn(MOCKED_UPDATE_DATE);
 
         XmEntityServiceImpl xmEntityService = new XmEntityServiceImpl(xmEntitySpecService,
+                                                   xmEntityTemplatesSpecService,
                                                    xmEntityRepository,
                                                    xmEntitySearchRepository,
                                                    lifeCycleService,

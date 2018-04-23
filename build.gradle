@@ -96,7 +96,7 @@ if (OperatingSystem.current().isWindows()) {
 }
 
 test {
-
+    systemProperty "spring.profiles.active", "test"
     mkdir("src/test/features")
     include '**/*UnitTest*'
     include '**/*IntTest*'

@@ -40,6 +40,8 @@ public interface XmEntityService extends ResourceRepository {
 
     Page<XmEntity> search(String query, Pageable pageable, String privilegeKey);
 
+    Page<XmEntity> search(String template, String[] templateParams, Pageable pageable, String privilegeKey);
+
     @Deprecated
     XmEntity profile();
 
@@ -70,6 +72,8 @@ public interface XmEntityService extends ResourceRepository {
     }
 
     Page<XmEntity> searchByQueryAndTypeKey(@Nullable String query, String typeKey, Pageable pageable, String privilegeKey);
+
+    Page<XmEntity> searchByQueryAndTypeKey(String template, String[] templateParams, String typeKey, Pageable pageable, String privilegeKey);
 
     XmEntity findOne(IdOrKey idOrKey, List<String> embed);
 

@@ -1,7 +1,10 @@
 package com.icthh.xm.ms.entity.web.rest;
 
 import static com.icthh.xm.ms.entity.web.rest.XmRestApiConstants.XM_HEADER_CONTENT_NAME;
+import static java.util.Collections.EMPTY_LIST;
+import static java.util.Collections.emptyList;
 import static org.apache.commons.collections.CollectionUtils.isEmpty;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import com.codahale.metrics.annotation.Timed;
 import com.icthh.xm.commons.exceptions.BusinessException;
@@ -22,6 +25,7 @@ import com.icthh.xm.ms.entity.web.rest.util.HeaderUtil;
 import com.icthh.xm.ms.entity.web.rest.util.PaginationUtil;
 import com.icthh.xm.ms.entity.web.rest.util.RespContentUtil;
 import io.swagger.annotations.ApiParam;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Page;
@@ -205,13 +209,40 @@ public class XmEntityResource {
      */
     @GetMapping("/_search/xm-entities")
     @Timed
-    public ResponseEntity<List<XmEntity>> searchXmEntities(@RequestParam String query, @ApiParam Pageable pageable) {
-        Page<XmEntity> page = xmEntityService.search(query, pageable, null);
+    public ResponseEntity<List<XmEntity>> searchXmEntities(
+            @RequestParam(required = false) String query,
+            @RequestParam(required = false) String template,
+            @RequestParam(required = false, defaultValue = StringUtils.EMPTY) String[] templateParams,
+            @ApiParam Pageable pageable) {
+        Page<XmEntity> page;
+        if (isBlank(template)) {
+            page = xmEntityService.search(query, pageable, null);
+        } else {
+            page = xmEntityService.search(template, templateParams, pageable, null);
+        }
         HttpHeaders headers = PaginationUtil
             .generateSearchPaginationHttpHeaders(query, page, "/api/_search/xm-entities");
         return new ResponseEntity<>(page.getContent(), headers, HttpStatus.OK);
     }
 
+    @GetMapping("/_search-with-typekey/xm-entities")
+    @Timed
+    public ResponseEntity<List<XmEntity>> searchByTypeKeyAndQuery(
+            @RequestParam String typeKey,
+            @RequestParam(required = false) String query,
+            @RequestParam(required = false) String template,
+            @RequestParam(required = false, defaultValue = StringUtils.EMPTY) String[] templateParams,
+            @ApiParam Pageable pageable) {
+        Page<XmEntity> page;
+        if (isBlank(template)) {
+            page = xmEntityService.searchByQueryAndTypeKey(query, typeKey, pageable, null);
+        } else {
+            page = xmEntityService.searchByQueryAndTypeKey(template, templateParams, typeKey, pageable, null);
+        }
+        HttpHeaders headers = PaginationUtil
+            .generateSearchPaginationHttpHeaders(typeKey, page, "/api/_search-with-typekey/xm-entities");
+        return new ResponseEntity<>(page.getContent(), headers, HttpStatus.OK);
+    }
 
     @Deprecated
     @GetMapping("/xm-entities/profile")
@@ -370,17 +401,6 @@ public class XmEntityResource {
             headers.setLocation(uri);
         }
         return new ResponseEntity<>(headers, HttpStatus.CREATED);
-    }
-
-    @GetMapping("/_search-with-typekey/xm-entities")
-    @Timed
-    public ResponseEntity<List<XmEntity>> searchByTypeKeyAndQuery(@RequestParam String typeKey,
-                                                                  @RequestParam(required = false) String query,
-                                                                  @ApiParam Pageable pageable) {
-        Page<XmEntity> page = xmEntityService.searchByQueryAndTypeKey(query, typeKey, pageable, null);
-        HttpHeaders headers = PaginationUtil
-            .generateSearchPaginationHttpHeaders(typeKey, page, "/api/_search-with-typekey/xm-entities");
-        return new ResponseEntity<>(page.getContent(), headers, HttpStatus.OK);
     }
 
     /**

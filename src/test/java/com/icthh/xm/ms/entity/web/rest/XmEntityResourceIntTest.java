@@ -166,6 +166,9 @@ public class XmEntityResourceIntTest {
     XmEntitySpecService xmEntitySpecService;
 
     @Autowired
+    XmEntityTemplatesSpecService xmEntityTemplatesSpecService;
+
+    @Autowired
     LifecycleLepStrategyFactory lifeCycleService;
 
     @Autowired
@@ -220,7 +223,9 @@ public class XmEntityResourceIntTest {
         when(startUpdateDateGenerationStrategy.generateStartDate()).thenReturn(MOCKED_START_DATE);
         when(startUpdateDateGenerationStrategy.generateUpdateDate()).thenReturn(MOCKED_UPDATE_DATE);
 
-        XmEntityServiceImpl xmEntityServiceImpl = new XmEntityServiceImpl(xmEntitySpecService, xmEntityRepository,
+        XmEntityServiceImpl xmEntityServiceImpl = new XmEntityServiceImpl(xmEntitySpecService,
+                                                      xmEntityTemplatesSpecService,
+                                                      xmEntityRepository,
                                                       xmEntitySearchRepository,
                                                       lifeCycleService,
                                                       xmEntityPermittedRepository,

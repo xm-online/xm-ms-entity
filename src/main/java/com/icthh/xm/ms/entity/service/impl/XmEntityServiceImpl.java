@@ -48,6 +48,7 @@ import com.icthh.xm.ms.entity.service.ProfileService;
 import com.icthh.xm.ms.entity.service.StorageService;
 import com.icthh.xm.ms.entity.service.XmEntityService;
 import com.icthh.xm.ms.entity.service.XmEntitySpecService;
+import com.icthh.xm.ms.entity.service.XmEntityTemplatesSpecService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -86,6 +87,7 @@ import java.util.stream.Collectors;
 public class XmEntityServiceImpl implements XmEntityService {
 
     private final XmEntitySpecService xmEntitySpecService;
+    private final XmEntityTemplatesSpecService xmEntityTemplatesSpecService;
     private final XmEntityRepository xmEntityRepository;
     private final XmEntitySearchRepository xmEntitySearchRepository;
     private final LifecycleLepStrategyFactory lifecycleLepStrategyFactory;
@@ -304,6 +306,35 @@ public class XmEntityServiceImpl implements XmEntityService {
         return xmEntityPermittedSearchRepository.search(query, pageable, XmEntity.class, privilegeKey);
     }
 
+    @LogicExtensionPoint("SearchByTemplate")
+    @Override
+    @Transactional(readOnly = true)
+    @FindWithPermission("XMENTITY.SEARCH")
+    public Page<XmEntity> search(String template, String[] templateParams, Pageable pageable, String privilegeKey) {
+        log.debug("Request to search for a page of XmEntities for template {}", template);
+        String query = getTemplateQuery(template, templateParams);
+        return xmEntityPermittedSearchRepository.search(query, pageable, XmEntity.class, privilegeKey);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    @FindWithPermission("XMENTITY.SEARCH")
+    public Page<XmEntity> searchByQueryAndTypeKey(String query, String typeKey, Pageable pageable, String privilegeKey) {
+        return xmEntityPermittedSearchRepository.searchByQueryAndTypeKey(query, typeKey, pageable, privilegeKey);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    @FindWithPermission("XMENTITY.SEARCH")
+    public Page<XmEntity> searchByQueryAndTypeKey(String template, String[] templateParams, String typeKey, Pageable pageable, String privilegeKey) {
+        String query = getTemplateQuery(template, templateParams);
+        return xmEntityPermittedSearchRepository.searchByQueryAndTypeKey(query, typeKey, pageable, privilegeKey);
+    }
+
+    private String getTemplateQuery(String template, String[] templateParams) {
+        return String.format(xmEntityTemplatesSpecService.findTemplate(template), templateParams);
+    }
+
     @Override
     @Transactional(readOnly = true)
     public XmEntity profile() {
@@ -450,15 +481,6 @@ public class XmEntityServiceImpl implements XmEntityService {
             projection = xmEntityRepository.findStateProjectionByKey(idOrKey.getKey());
         }
         return ofNullable(projection);
-    }
-
-
-
-    @Override
-    @Transactional(readOnly = true)
-    @FindWithPermission("XMENTITY.SEARCH")
-    public Page<XmEntity> searchByQueryAndTypeKey(String query, String typeKey, Pageable pageable, String privilegeKey) {
-        return xmEntityPermittedSearchRepository.searchByQueryAndTypeKey(query, typeKey, pageable, privilegeKey);
     }
 
     @Override

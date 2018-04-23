@@ -71,6 +71,9 @@ public class EntityServiceImplIntTest {
     private XmEntitySpecService xmEntitySpecService;
 
     @Autowired
+    private XmEntityTemplatesSpecService xmEntityTemplatesSpecService;
+
+    @Autowired
     private XmEntitySearchRepository xmEntitySearchRepository;
 
     @Autowired
@@ -129,6 +132,7 @@ public class EntityServiceImplIntTest {
 
         xmEntityService = new XmEntityServiceImpl(
             xmEntitySpecService,
+            xmEntityTemplatesSpecService,
             xmEntityRepository,
             xmEntitySearchRepository,
             lifecycleService,

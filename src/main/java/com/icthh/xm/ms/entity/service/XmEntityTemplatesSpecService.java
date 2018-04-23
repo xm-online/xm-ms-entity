@@ -1,8 +1,13 @@
 package com.icthh.xm.ms.entity.service;
 
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
+
 import com.icthh.xm.commons.config.client.api.RefreshableConfiguration;
+import com.icthh.xm.commons.tenant.TenantContextHolder;
+import com.icthh.xm.commons.tenant.TenantContextUtils;
 import com.icthh.xm.ms.entity.config.ApplicationProperties;
 import com.icthh.xm.ms.entity.domain.mapper.TemplateMapper;
+import com.icthh.xm.ms.entity.domain.spec.TypeSpec;
 import com.icthh.xm.ms.entity.domain.template.Template;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
@@ -13,6 +18,7 @@ import org.springframework.util.AntPathMatcher;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
@@ -24,14 +30,19 @@ public class XmEntityTemplatesSpecService implements RefreshableConfiguration {
     private final AntPathMatcher matcher = new AntPathMatcher();
     private ConcurrentHashMap<String, Map<String, Template>> templates = new ConcurrentHashMap<>();
     private final ApplicationProperties applicationProperties;
+    private final TenantContextHolder tenantContextHolder;
 
-    public Map<String, Template> getTemplates(String tenant) {
-        if (!templates.containsKey(tenant)) {
-            return new HashMap<>();
+    public String findTemplate(String key) {
+        Template template = getTemplates().get(key);
+        if (template != null) {
+            String query = template.getQuery();
+            if (isNotBlank(query)) {
+                return query;
+            }
         }
-        return templates.get(tenant);
+        throw new IllegalArgumentException("Template query not found: " + key);
     }
-    
+
     @Override
     @SneakyThrows
     public void onRefresh(String key, String config) {
@@ -62,4 +73,17 @@ public class XmEntityTemplatesSpecService implements RefreshableConfiguration {
             onRefresh(key, config);
         }
     }
+
+    private Map<String, Template> getTemplates() {
+        String tenantKeyValue = getTenantKeyValue();
+        if (!templates.containsKey(tenantKeyValue)) {
+            throw new IllegalArgumentException("Tenant configuration not found");
+        }
+        return templates.get(tenantKeyValue);
+    }
+
+    private String getTenantKeyValue() {
+        return TenantContextUtils.getRequiredTenantKeyValue(tenantContextHolder);
+    }
+
 }
