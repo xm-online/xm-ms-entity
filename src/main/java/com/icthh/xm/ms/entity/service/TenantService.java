@@ -59,7 +59,6 @@ public class TenantService {
             String tenantName = tenant.getTenantKey().toUpperCase();
             tenantListRepository.addTenant(tenantName);
             addEntitySpecification(tenantName);
-            addTemplatesSpecification(tenantName);
             addWebAppSpecification(tenantName);
             tenantDatabaseService.createSchema(tenant);
             tenantDatabaseService.createProfile(tenantName);
@@ -77,14 +76,6 @@ public class TenantService {
     private void addEntitySpecification(String tenantName) {
         String specificationName = applicationProperties.getSpecificationName();
         InputStream in = new ClassPathResource(Constants.ENTITY_CONFIG_PATH).getInputStream();
-        String specification = IOUtils.toString(in, UTF_8);
-        tenantConfigRepository.updateConfig(tenantName, "/" + specificationName, specification);
-    }
-
-    @SneakyThrows
-    private void addTemplatesSpecification(String tenantName) {
-        String specificationName = applicationProperties.getSpecificationTemplatesName();
-        InputStream in = new ClassPathResource(Constants.TEMPLATES_CONFIG_PATH).getInputStream();
         String specification = IOUtils.toString(in, UTF_8);
         tenantConfigRepository.updateConfig(tenantName, "/" + specificationName, specification);
     }
