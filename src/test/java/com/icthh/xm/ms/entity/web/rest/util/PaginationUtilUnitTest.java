@@ -55,8 +55,8 @@ public class PaginationUtilUnitTest {
         assertTrue(strHeaders.size() == 1);
         String headerData = strHeaders.get(0);
         assertTrue(headerData.split(",").length == 2);
-        String expectedData = "</api/_search/example?page=0&size=0&query=Test1%2C+test2&template=Test4&templateParams=%5BTest5%2C+Test6%5D>; rel=\"last\","
-                + "</api/_search/example?page=0&size=0&query=Test1%2C+test2&template=Test4&templateParams=%5BTest5%2C+Test6%5D>; rel=\"first\"";
+        String expectedData = "</api/_search/example?page=0&size=0&query=Test1%2C+test2&template=Test4&templateParams=Test5%2CTest6>; rel=\"last\","
+                + "</api/_search/example?page=0&size=0&query=Test1%2C+test2&template=Test4&templateParams=Test5%2CTest6>; rel=\"first\"";
         assertEquals(expectedData, headerData);
         List<String> xTotalCountHeaders = headers.get("X-Total-Count");
         assertTrue(xTotalCountHeaders.size() == 1);
@@ -101,9 +101,9 @@ public class PaginationUtilUnitTest {
         assertTrue(strHeaders.size() == 1);
         String headerData = strHeaders.get(0);
         assertTrue(headerData.split(",").length == 3);
-        String expectedData = "</api/_search/example?page=1&size=50&query=Test1%2C+test2&template=Test4&templateParams=%5BTest5%2C+Test6%5D>; rel=\"next\","
-                + "</api/_search/example?page=7&size=50&query=Test1%2C+test2&template=Test4&templateParams=%5BTest5%2C+Test6%5D>; rel=\"last\","
-                + "</api/_search/example?page=0&size=50&query=Test1%2C+test2&template=Test4&templateParams=%5BTest5%2C+Test6%5D>; rel=\"first\"";
+        String expectedData = "</api/_search/example?page=1&size=50&query=Test1%2C+test2&template=Test4&templateParams=Test5%2CTest6>; rel=\"next\","
+                + "</api/_search/example?page=7&size=50&query=Test1%2C+test2&template=Test4&templateParams=Test5%2CTest6>; rel=\"last\","
+                + "</api/_search/example?page=0&size=50&query=Test1%2C+test2&template=Test4&templateParams=Test5%2CTest6>; rel=\"first\"";
         assertEquals(expectedData, headerData);
         List<String> xTotalCountHeaders = headers.get("X-Total-Count");
         assertTrue(xTotalCountHeaders.size() == 1);
@@ -117,10 +117,10 @@ public class PaginationUtilUnitTest {
         assertTrue(strHeaders.size() == 1);
         headerData = strHeaders.get(0);
         assertTrue(headerData.split(",").length == 4);
-        expectedData = "</api/_search/example?page=2&size=50&query=Test1%2C+test2&template=Test4&templateParams=%5BTest5%2C+Test6%5D>; rel=\"next\","
-                + "</api/_search/example?page=0&size=50&query=Test1%2C+test2&template=Test4&templateParams=%5BTest5%2C+Test6%5D>; rel=\"prev\","
-                + "</api/_search/example?page=7&size=50&query=Test1%2C+test2&template=Test4&templateParams=%5BTest5%2C+Test6%5D>; rel=\"last\","
-                + "</api/_search/example?page=0&size=50&query=Test1%2C+test2&template=Test4&templateParams=%5BTest5%2C+Test6%5D>; rel=\"first\"";
+        expectedData = "</api/_search/example?page=2&size=50&query=Test1%2C+test2&template=Test4&templateParams=Test5%2CTest6>; rel=\"next\","
+                + "</api/_search/example?page=0&size=50&query=Test1%2C+test2&template=Test4&templateParams=Test5%2CTest6>; rel=\"prev\","
+                + "</api/_search/example?page=7&size=50&query=Test1%2C+test2&template=Test4&templateParams=Test5%2CTest6>; rel=\"last\","
+                + "</api/_search/example?page=0&size=50&query=Test1%2C+test2&template=Test4&templateParams=Test5%2CTest6>; rel=\"first\"";
         assertEquals(expectedData, headerData);
         xTotalCountHeaders = headers.get("X-Total-Count");
         assertTrue(xTotalCountHeaders.size() == 1);
@@ -134,10 +134,10 @@ public class PaginationUtilUnitTest {
         assertTrue(strHeaders.size() == 1);
         headerData = strHeaders.get(0);
         assertTrue(headerData.split(",").length == 4);
-        expectedData = "</api/_search/example?page=7&size=50&query=Test1%2C+test2&template=Test4&templateParams=%5BTest5%2C+Test6%5D>; rel=\"next\","
-                + "</api/_search/example?page=5&size=50&query=Test1%2C+test2&template=Test4&templateParams=%5BTest5%2C+Test6%5D>; rel=\"prev\","
-                + "</api/_search/example?page=7&size=50&query=Test1%2C+test2&template=Test4&templateParams=%5BTest5%2C+Test6%5D>; rel=\"last\","
-                + "</api/_search/example?page=0&size=50&query=Test1%2C+test2&template=Test4&templateParams=%5BTest5%2C+Test6%5D>; rel=\"first\"";
+        expectedData = "</api/_search/example?page=7&size=50&query=Test1%2C+test2&template=Test4&templateParams=Test5%2CTest6>; rel=\"next\","
+                + "</api/_search/example?page=5&size=50&query=Test1%2C+test2&template=Test4&templateParams=Test5%2CTest6>; rel=\"prev\","
+                + "</api/_search/example?page=7&size=50&query=Test1%2C+test2&template=Test4&templateParams=Test5%2CTest6>; rel=\"last\","
+                + "</api/_search/example?page=0&size=50&query=Test1%2C+test2&template=Test4&templateParams=Test5%2CTest6>; rel=\"first\"";
         assertEquals(expectedData, headerData);
         xTotalCountHeaders = headers.get("X-Total-Count");
         assertTrue(xTotalCountHeaders.size() == 1);
@@ -151,9 +151,9 @@ public class PaginationUtilUnitTest {
         assertTrue(strHeaders.size() == 1);
         headerData = strHeaders.get(0);
         assertTrue(headerData.split(",").length == 3);
-        expectedData = "</api/_search/example?page=6&size=50&query=Test1%2C+test2&template=Test4&templateParams=%5BTest5%2C+Test6%5D>; rel=\"prev\","
-                + "</api/_search/example?page=7&size=50&query=Test1%2C+test2&template=Test4&templateParams=%5BTest5%2C+Test6%5D>; rel=\"last\","
-                + "</api/_search/example?page=0&size=50&query=Test1%2C+test2&template=Test4&templateParams=%5BTest5%2C+Test6%5D>; rel=\"first\"";
+        expectedData = "</api/_search/example?page=6&size=50&query=Test1%2C+test2&template=Test4&templateParams=Test5%2CTest6>; rel=\"prev\","
+                + "</api/_search/example?page=7&size=50&query=Test1%2C+test2&template=Test4&templateParams=Test5%2CTest6>; rel=\"last\","
+                + "</api/_search/example?page=0&size=50&query=Test1%2C+test2&template=Test4&templateParams=Test5%2CTest6>; rel=\"first\"";
         assertEquals(expectedData, headerData);
     }
 
@@ -175,8 +175,8 @@ public class PaginationUtilUnitTest {
         assertTrue(linksData.length == 2);
         assertTrue(linksData[0].split(">;").length == 2);
         assertTrue(linksData[1].split(">;").length == 2);
-        String expectedData = "</api/_search/example?page=0&size=0&query=Test%3E%3Btest&template=Test4%3E&templateParams=%5BTest5%3E%2C+Test6%3E%5D>; rel=\"last\","
-                + "</api/_search/example?page=0&size=0&query=Test%3E%3Btest&template=Test4%3E&templateParams=%5BTest5%3E%2C+Test6%3E%5D>; rel=\"first\"";
+        String expectedData = "</api/_search/example?page=0&size=0&query=Test%3E%3Btest&template=Test4%3E&templateParams=Test5%3E%2CTest6%3E>; rel=\"last\","
+                + "</api/_search/example?page=0&size=0&query=Test%3E%3Btest&template=Test4%3E&templateParams=Test5%3E%2CTest6%3E>; rel=\"first\"";
         assertEquals(expectedData, headerData);
         List<String> xTotalCountHeaders = headers.get("X-Total-Count");
         assertTrue(xTotalCountHeaders.size() == 1);
