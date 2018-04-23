@@ -338,7 +338,7 @@ public class EntityServiceImplIntTest {
     public void searchByQuery() {
         XmEntity given = createEntity(101l, "ACCOUNT.USER");
         xmEntitySearchRepository.save(given);
-        Page<XmEntity> result = xmEntityService.search("typeKey:ACCOUNT.USER", null, null);
+        Page<XmEntity> result = xmEntityService.search("typeKey:ACCOUNT.USER AND id:101", null, null);
         assertThat(result.getContent().size()).isEqualTo(1);
         assertThat(result.getContent().get(0)).isEqualTo(given);
     }
@@ -349,7 +349,7 @@ public class EntityServiceImplIntTest {
     public void searchByTemplate() {
         XmEntity given = createEntity(102l, "ACCOUNT.USER");
         xmEntitySearchRepository.save(given);
-        Page<XmEntity> result = xmEntityService.search("BY_TYPEKEY", new String[] {"ACCOUNT.USER"}, null, null);
+        Page<XmEntity> result = xmEntityService.search("BY_TYPEKEY_AND_ID", new String[] {"ACCOUNT.USER", "102"}, null, null);
         assertThat(result.getContent().size()).isEqualTo(1);
         assertThat(result.getContent().get(0)).isEqualTo(given);
     }
@@ -360,7 +360,7 @@ public class EntityServiceImplIntTest {
     public void searchByQueryAndTypeKey() {
         XmEntity given = createEntity(103l, "ACCOUNT.USER");
         xmEntitySearchRepository.save(given);
-        Page<XmEntity> result = xmEntityService.searchByQueryAndTypeKey("Name", "ACCOUNT", null, null);
+        Page<XmEntity> result = xmEntityService.searchByQueryAndTypeKey("103", "ACCOUNT", null, null);
         assertThat(result.getContent().size()).isEqualTo(1);
         assertThat(result.getContent().get(0)).isEqualTo(given);
     }

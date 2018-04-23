@@ -1,6 +1,6 @@
 ---
-BY_TYPEKEY:
-    query: typeKey:%s
+BY_TYPEKEY_AND_ID:
+    query: typeKey:%s AND id:%s
 BY_NAME:
     query: '%s'
 UNIQ_DESCRIPTION:
