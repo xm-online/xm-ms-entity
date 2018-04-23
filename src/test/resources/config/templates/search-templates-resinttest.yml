@@ -1,0 +1,9 @@
+---
+BY_TYPEKEY:
+    query: typeKey:%s
+BY_NAME:
+    query: '%s'
+UNIQ_DESCRIPTION:
+    query: '%s'
+NOT_PRESENT_UNIQ_DESCRIPTION:
+    query: '%s'
