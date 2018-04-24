@@ -26,6 +26,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 public final class PaginationUtil {
 
     private static final String QUERY_GET_PARAM = "&query=";
+    private static final String TYPEKEY_GET_PARAM = "&typeKey=";
     private static final String TEMPLATE_GET_PARAM = "&template=";
     private static final String TEMPLATE_PARAMS_GET_PARAM = "&templateParams=";
 
@@ -57,22 +58,45 @@ public final class PaginationUtil {
     }
 
     @SneakyThrows
-    public static HttpHeaders generateSearchPaginationHttpHeaders(String query, String template, String[] templateParams, Page page, String baseUrl) {
+    public static HttpHeaders generateSearchPaginationHttpHeaders(String query, Page page, String baseUrl) {
         String escapedQuery = URLEncoder.encode(Objects.toString(query, EMPTY), "UTF-8");
+
+        String queryString = QUERY_GET_PARAM + escapedQuery;
+
+        return generatePagination(queryString, page, baseUrl);
+    }
+
+    @SneakyThrows
+    public static HttpHeaders generateSearchByTypeKeyPaginationHttpHeaders(String typeKey, String query, Page page, String baseUrl) {
+        String escapedTypeKey = URLEncoder.encode(Objects.toString(typeKey, EMPTY), "UTF-8");
+        String escapedQuery = URLEncoder.encode(Objects.toString(query, EMPTY), "UTF-8");
+
+        String queryString = TYPEKEY_GET_PARAM + escapedTypeKey
+            + QUERY_GET_PARAM + escapedQuery;
+
+        return generatePagination(queryString, page, baseUrl);
+    }
+
+    @SneakyThrows
+    public static HttpHeaders generateSearchWithTemplatePaginationHttpHeaders(String template, String[] templateParams, Page page, String baseUrl) {
         String escapedTemplate = URLEncoder.encode(Objects.toString(template, EMPTY), "UTF-8");
         String escapedTemplateParams = URLEncoder.encode(Objects.toString(StringUtils.join(templateParams, ","), EMPTY), "UTF-8");
 
-        String queryString = QUERY_GET_PARAM + escapedQuery
-            + TEMPLATE_GET_PARAM + escapedTemplate
+        String queryString = TEMPLATE_GET_PARAM + escapedTemplate
             + TEMPLATE_PARAMS_GET_PARAM + escapedTemplateParams;
 
         return generatePagination(queryString, page, baseUrl);
     }
 
     @SneakyThrows
-    public static HttpHeaders generateSearchPaginationHttpHeaders(String query, Page page, String baseUrl) {
-        String escapedQuery = URLEncoder.encode(Objects.toString(query, EMPTY), "UTF-8");
-        String queryString = QUERY_GET_PARAM + escapedQuery;
+    public static HttpHeaders generateSearchByTypeKeyWithTemplatePaginationHttpHeaders(String typeKey, String template, String[] templateParams, Page page, String baseUrl) {
+        String escapedTypeKey = URLEncoder.encode(Objects.toString(typeKey, EMPTY), "UTF-8");
+        String escapedTemplate = URLEncoder.encode(Objects.toString(template, EMPTY), "UTF-8");
+        String escapedTemplateParams = URLEncoder.encode(Objects.toString(StringUtils.join(templateParams, ","), EMPTY), "UTF-8");
+
+        String queryString = TYPEKEY_GET_PARAM + escapedTypeKey
+            + TEMPLATE_GET_PARAM + escapedTemplate
+            + TEMPLATE_PARAMS_GET_PARAM + escapedTemplateParams;
 
         return generatePagination(queryString, page, baseUrl);
     }

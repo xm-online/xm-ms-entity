@@ -7,6 +7,7 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toMap;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import com.icthh.xm.commons.exceptions.BusinessException;
 import com.icthh.xm.commons.exceptions.EntityNotFoundException;
@@ -303,7 +304,6 @@ public class XmEntityServiceImpl implements XmEntityService {
     @Transactional(readOnly = true)
     @FindWithPermission("XMENTITY.SEARCH")
     public Page<XmEntity> search(String query, Pageable pageable, String privilegeKey) {
-        log.debug("Request to search for a page of XmEntities for query {}", query);
         return xmEntityPermittedSearchRepository.search(query, pageable, XmEntity.class, privilegeKey);
     }
 
@@ -312,7 +312,6 @@ public class XmEntityServiceImpl implements XmEntityService {
     @Transactional(readOnly = true)
     @FindWithPermission("XMENTITY.SEARCH")
     public Page<XmEntity> search(String template, String[] templateParams, Pageable pageable, String privilegeKey) {
-        log.debug("Request to search for a page of XmEntities for template {}", template);
         String query = getTemplateQuery(template, templateParams);
         return xmEntityPermittedSearchRepository.search(query, pageable, XmEntity.class, privilegeKey);
     }
@@ -328,7 +327,7 @@ public class XmEntityServiceImpl implements XmEntityService {
     @Transactional(readOnly = true)
     @FindWithPermission("XMENTITY.SEARCH")
     public Page<XmEntity> searchByQueryAndTypeKey(String template, String[] templateParams, String typeKey, Pageable pageable, String privilegeKey) {
-        String query = getTemplateQuery(template, templateParams);
+        String query = isBlank(template) ? null : getTemplateQuery(template, templateParams);
         return xmEntityPermittedSearchRepository.searchByQueryAndTypeKey(query, typeKey, pageable, privilegeKey);
     }
 

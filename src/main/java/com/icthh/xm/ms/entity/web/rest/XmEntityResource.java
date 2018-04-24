@@ -1,10 +1,7 @@
 package com.icthh.xm.ms.entity.web.rest;
 
 import static com.icthh.xm.ms.entity.web.rest.XmRestApiConstants.XM_HEADER_CONTENT_NAME;
-import static java.util.Collections.EMPTY_LIST;
-import static java.util.Collections.emptyList;
 import static org.apache.commons.collections.CollectionUtils.isEmpty;
-import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import com.codahale.metrics.annotation.Timed;
 import com.icthh.xm.commons.exceptions.BusinessException;
@@ -209,42 +206,57 @@ public class XmEntityResource {
      */
     @GetMapping("/_search/xm-entities")
     @Timed
-    @PreAuthorize("hasPermission({'query': #query, 'template': #template}, 'XMENTITY.SEARCH.ALL')")
+    @PreAuthorize("hasPermission({'query': #query}, 'XMENTITY.SEARCH.QUERY')")
     public ResponseEntity<List<XmEntity>> searchXmEntities(
-            @RequestParam(required = false) String query,
-            @RequestParam(required = false) String template,
-            @RequestParam(required = false, defaultValue = StringUtils.EMPTY) String[] templateParams,
+            @RequestParam String query,
             @ApiParam Pageable pageable) {
-        Page<XmEntity> page;
-        if (isBlank(template)) {
-            page = xmEntityService.search(query, pageable, null);
-        } else {
-            page = xmEntityService.search(template, templateParams, pageable, null);
-        }
+        Page<XmEntity> page = xmEntityService.search(query, pageable, null);
         HttpHeaders headers = PaginationUtil
-            .generateSearchPaginationHttpHeaders(query, template, templateParams, page,
+            .generateSearchPaginationHttpHeaders(query, page,
                 "/api/_search/xm-entities");
+        return new ResponseEntity<>(page.getContent(), headers, HttpStatus.OK);
+    }
+
+    @GetMapping("/_search-with-template/xm-entities")
+    @Timed
+    @PreAuthorize("hasPermission({'template': #template}, 'XMENTITY.SEARCH.TEMPLATE')")
+    public ResponseEntity<List<XmEntity>> searchXmEntities(
+        @RequestParam String template,
+        @RequestParam(required = false, defaultValue = StringUtils.EMPTY) String[] templateParams,
+        @ApiParam Pageable pageable) {
+        Page<XmEntity> page = xmEntityService.search(template, templateParams, pageable, null);
+        HttpHeaders headers = PaginationUtil
+            .generateSearchWithTemplatePaginationHttpHeaders(template, templateParams, page,
+                "/api/_search-with-template/xm-entities");
         return new ResponseEntity<>(page.getContent(), headers, HttpStatus.OK);
     }
 
     @GetMapping("/_search-with-typekey/xm-entities")
     @Timed
-    @PreAuthorize("hasPermission({'typeKey': #typeKey, 'query': #query, 'template': #template}, 'XMENTITY.SEARCH.BY_TYPEKEY')")
+    @PreAuthorize("hasPermission({'typeKey': #typeKey, 'query': #query}, 'XMENTITY.SEARCH.TYPEKEY.QUERY')")
     public ResponseEntity<List<XmEntity>> searchByTypeKeyAndQuery(
             @RequestParam String typeKey,
             @RequestParam(required = false) String query,
-            @RequestParam(required = false) String template,
-            @RequestParam(required = false, defaultValue = StringUtils.EMPTY) String[] templateParams,
             @ApiParam Pageable pageable) {
-        Page<XmEntity> page;
-        if (isBlank(template)) {
-            page = xmEntityService.searchByQueryAndTypeKey(query, typeKey, pageable, null);
-        } else {
-            page = xmEntityService.searchByQueryAndTypeKey(template, templateParams, typeKey, pageable, null);
-        }
+        Page<XmEntity> page = xmEntityService.searchByQueryAndTypeKey(query, typeKey, pageable, null);
         HttpHeaders headers = PaginationUtil
-            .generateSearchPaginationHttpHeaders(typeKey, template, templateParams, page,
+            .generateSearchByTypeKeyPaginationHttpHeaders(typeKey, query, page,
                 "/api/_search-with-typekey/xm-entities");
+        return new ResponseEntity<>(page.getContent(), headers, HttpStatus.OK);
+    }
+
+    @GetMapping("/_search-with-typekey-and-template/xm-entities")
+    @Timed
+    @PreAuthorize("hasPermission({'typeKey': #typeKey, 'template': #template}, 'XMENTITY.SEARCH.TYPEKEY.TEMPLATE')")
+    public ResponseEntity<List<XmEntity>> searchByTypeKeyAndQuery(
+        @RequestParam String typeKey,
+        @RequestParam(required = false) String template,
+        @RequestParam(required = false, defaultValue = StringUtils.EMPTY) String[] templateParams,
+        @ApiParam Pageable pageable) {
+        Page<XmEntity> page = xmEntityService.searchByQueryAndTypeKey(template, templateParams, typeKey, pageable, null);
+        HttpHeaders headers = PaginationUtil
+            .generateSearchByTypeKeyWithTemplatePaginationHttpHeaders(typeKey, template, templateParams, page,
+                "/api/_search-with-typekey-and-template/xm-entities");
         return new ResponseEntity<>(page.getContent(), headers, HttpStatus.OK);
     }
 

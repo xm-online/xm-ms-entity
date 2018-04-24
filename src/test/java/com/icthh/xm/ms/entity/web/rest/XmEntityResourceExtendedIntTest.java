@@ -856,7 +856,7 @@ public class XmEntityResourceExtendedIntTest {
         xmEntityService.save(createEntityComplexIncoming(em).typeKey(UPDATED_TYPE_KEY).description(UNIQ_DESCRIPTION));
         xmEntityService.save(createEntityComplexIncoming(em).typeKey(SEARCH_TEST_KEY));
 
-        String urlTemplate = "/api/_search-with-typekey/xm-entities?typeKey=ACCOUNT&size=5";
+        String urlTemplate = "/api/_search-with-typekey-and-template/xm-entities?typeKey=ACCOUNT&size=5";
 
         performGet(urlTemplate)
             .andExpect(status().isOk())
