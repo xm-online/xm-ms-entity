@@ -2,12 +2,13 @@ package com.icthh.xm.ms.entity.service;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.icthh.xm.commons.config.client.api.RefreshableConfiguration;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
 import com.icthh.xm.ms.entity.config.ApplicationProperties;
-import com.icthh.xm.ms.entity.domain.mapper.TemplateMapper;
-import com.icthh.xm.ms.entity.domain.spec.TypeSpec;
 import com.icthh.xm.ms.entity.domain.template.Template;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
@@ -16,9 +17,9 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.util.AntPathMatcher;
 
-import java.util.HashMap;
+import java.util.Collections;
 import java.util.Map;
-import java.util.Optional;
+import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
@@ -27,8 +28,9 @@ import java.util.concurrent.ConcurrentHashMap;
 public class XmEntityTemplatesSpecService implements RefreshableConfiguration {
 
     private static final String TENANT_NAME = "tenantName";
+    private static final ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
     private final AntPathMatcher matcher = new AntPathMatcher();
-    private ConcurrentHashMap<String, Map<String, Template>> templates = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, Map<String, Template>> templates = new ConcurrentHashMap<>();
     private final ApplicationProperties applicationProperties;
     private final TenantContextHolder tenantContextHolder;
 
@@ -53,7 +55,7 @@ public class XmEntityTemplatesSpecService implements RefreshableConfiguration {
                 templates.remove(tenant);
                 log.info("Template specification for tenant {} was removed", tenant);
             } else {
-                templates.put(tenant, TemplateMapper.ymlToTemplates(config));
+                templates.put(tenant, ymlToTemplates(config));
                 log.info("Template specification for tenant {} was updated", tenant);
             }
         } catch (Exception e) {
@@ -86,4 +88,16 @@ public class XmEntityTemplatesSpecService implements RefreshableConfiguration {
         return TenantContextUtils.getRequiredTenantKeyValue(tenantContextHolder);
     }
 
+    private static Map<String, Template> ymlToTemplates(String yml) {
+        try {
+            Map<String, Template> map = mapper
+                .readValue(yml, new TypeReference<TreeMap<String, Template>>() {
+                });
+            map.forEach((templateKey, template) -> template.setKey(templateKey));
+            return map;
+        } catch (Exception e) {
+            log.error("Failed to create template collection from YML file, error: {}", e.getMessage(), e);
+        }
+        return Collections.emptyMap();
+    }
 }
