@@ -209,7 +209,7 @@ public class XmEntityResource {
      */
     @GetMapping("/_search/xm-entities")
     @Timed
-    @PreAuthorize("hasPermission({'query': #query, 'template': #template}, 'xmEntity', 'XMENTITY.SEARCH.ALL')")
+    @PreAuthorize("hasPermission({'query': #query, 'template': #template}, 'XMENTITY.SEARCH.ALL')")
     public ResponseEntity<List<XmEntity>> searchXmEntities(
             @RequestParam(required = false) String query,
             @RequestParam(required = false) String template,
@@ -229,7 +229,7 @@ public class XmEntityResource {
 
     @GetMapping("/_search-with-typekey/xm-entities")
     @Timed
-    @PreAuthorize("hasPermission({'typeKey': #typeKey, 'query': #query, 'template': #template}, 'xmEntity', 'XMENTITY.SEARCH.BY_TYPEKEY')")
+    @PreAuthorize("hasPermission({'typeKey': #typeKey, 'query': #query, 'template': #template}, 'XMENTITY.SEARCH.BY_TYPEKEY')")
     public ResponseEntity<List<XmEntity>> searchByTypeKeyAndQuery(
             @RequestParam String typeKey,
             @RequestParam(required = false) String query,
