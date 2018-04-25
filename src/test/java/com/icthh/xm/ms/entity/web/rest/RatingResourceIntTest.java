@@ -162,7 +162,7 @@ public class RatingResourceIntTest {
             .startDate(DEFAULT_START_DATE)
             .endDate(DEFAULT_END_DATE);
         // Add required entity
-        XmEntity xmEntity = XmEntityResourceIntTest.createEntity(em);
+        XmEntity xmEntity = XmEntityResourceIntTest.createEntity();
         em.persist(xmEntity);
         em.flush();
         rating.setXmEntity(xmEntity);

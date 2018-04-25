@@ -161,7 +161,7 @@ public class CalendarResourceIntTest {
      */
     public static Calendar createEntity(EntityManager em) {
         // Create required entity
-        XmEntity xmEntity = XmEntityResourceIntTest.createEntity(em);
+        XmEntity xmEntity = XmEntityResourceIntTest.createEntity();
         em.persist(xmEntity);
         em.flush();
 

@@ -54,36 +54,13 @@ public class EntityGraphRepositoryImpl<T, I extends Serializable>
 
         TypedQuery<T> query = entityManager
             .createQuery(criteriaQuery)
-            .setHint(QueryHints.HINT_LOADGRAPH, createEnitityGraph(embed));
+            .setHint(QueryHints.HINT_LOADGRAPH, createEntityGraph(embed));
 
         List<T> resultList = query.getResultList();
         if (CollectionUtils.isEmpty(resultList)) {
             return null;
         }
         return resultList.get(0);
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Page<T> findAll(Pageable pageable, Iterable<I> ids, List<String> embed) {
-        CriteriaBuilder builder = entityManager.getCriteriaBuilder();
-        CriteriaQuery<T> criteriaSelect = builder.createQuery(domainClass);
-        Root<T> rootSelect = criteriaSelect.from(domainClass);
-        criteriaSelect.where(builder.in(rootSelect.get("id")).value(ids));
-
-        CriteriaQuery<Long> criteriaCount = builder.createQuery(Long.class);
-        Root<T> rootCount = criteriaCount.from(domainClass);
-        criteriaCount.where(builder.in(rootCount.get("id")).value(ids));
-        criteriaCount.select(builder.count(rootCount));
-
-
-        TypedQuery<T> selectQuery = entityManager
-            .createQuery(criteriaSelect)
-            .setHint(QueryHints.HINT_LOADGRAPH, createEnitityGraph(embed));
-        TypedQuery<Long> countQuery = entityManager
-            .createQuery(criteriaCount);
-
-        return execute(pageable, countQuery, selectQuery);
     }
 
     protected <T> Page<T> execute(Pageable pageable, TypedQuery<Long> countQuery, TypedQuery<T> selectQuery) {
@@ -110,9 +87,11 @@ public class EntityGraphRepositoryImpl<T, I extends Serializable>
         return total;
     }
 
-    private EntityGraph<T> createEnitityGraph(List<String> embed) {
+    private EntityGraph<T> createEntityGraph(List<String> embed) {
         EntityGraph<T> graph = entityManager.createEntityGraph(domainClass);
-        embed.forEach(f -> addAttributeNodes(f, graph));
+        if (CollectionUtils.isNotEmpty(embed)) {
+            embed.forEach(f -> addAttributeNodes(f, graph));
+        }
         return graph;
     }
 

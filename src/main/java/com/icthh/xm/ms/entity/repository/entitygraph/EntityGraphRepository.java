@@ -12,7 +12,4 @@ import java.util.List;
 public interface EntityGraphRepository<T, ID extends Serializable> extends JpaRepository<T, ID> {
 
     T findOne(ID id, List<String> embed);
-
-    Page<T> findAll(Pageable pageable, Iterable<ID> ids, List<String> embed);
-
 }

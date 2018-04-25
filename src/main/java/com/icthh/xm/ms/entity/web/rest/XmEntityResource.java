@@ -55,6 +55,7 @@ import java.util.Optional;
 import java.util.Set;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
+import javax.validation.constraints.Min;
 
 /**
  * REST controller for managing XmEntity.
@@ -166,7 +167,7 @@ public class XmEntityResource {
     @Timed
     public ResponseEntity<List<XmEntity>> getXmEntitiesByIds(@ApiParam Pageable pageable,
                                                              @RequestParam Set<Long> ids,
-                                                             @RequestParam(required = false) List<String> embed) {
+                                                             @RequestParam(required = false) Set<String> embed) {
         Page<XmEntity> page = xmEntityService.findByIds(pageable, ids, embed, null);
         HttpHeaders headers = PaginationUtil.generateByIdsPaginationHttpHeaders(ids, embed, page, "/api/xm-entities-by-ids");
         return new ResponseEntity<>(page.getContent(), headers, HttpStatus.OK);

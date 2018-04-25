@@ -259,7 +259,7 @@ public class XmEntityResourceIntTest {
             .setValidator(validator)
             .setMessageConverters(jacksonMessageConverter).build();
 
-        xmEntity = createEntity(em);
+        xmEntity = createEntity();
     }
 
     @After
@@ -275,7 +275,7 @@ public class XmEntityResourceIntTest {
      * This is a static method, as tests for other entities might also need it,
      * if they test an entity which requires the current entity.
      */
-    public static XmEntity createEntity(EntityManager em) {
+    public static XmEntity createEntity() {
         return new XmEntity()
             .key(DEFAULT_KEY)
             .typeKey(DEFAULT_TYPE_KEY)
@@ -354,7 +354,7 @@ public class XmEntityResourceIntTest {
     public void createXmEntityTenantWithWhitespace() throws Exception {
         int databaseSizeBeforeCreate = xmEntityRepository.findAll().size();
 
-        XmEntity tenant = createEntity(em);
+        XmEntity tenant = createEntity();
         tenant.setTypeKey(Constants.TENANT_TYPE_KEY);
         tenant.setName("test name");
 
@@ -526,9 +526,9 @@ public class XmEntityResourceIntTest {
     @Transactional
     public void getXmEntitiesByIds() throws Exception {
         // Initialize the database
-        XmEntity en1 = xmEntityRepository.saveAndFlush(createEntity(em));
-        XmEntity en2 = xmEntityRepository.saveAndFlush(createEntity(em));
-        XmEntity en3 = xmEntityRepository.saveAndFlush(createEntity(em));
+        XmEntity en1 = xmEntityRepository.saveAndFlush(createEntity());
+        XmEntity en2 = xmEntityRepository.saveAndFlush(createEntity());
+        XmEntity en3 = xmEntityRepository.saveAndFlush(createEntity());
 
         // Get all the xmEntityList
         restXmEntityMockMvc.perform(get("/api/xm-entities-by-ids?ids={ids}&embed=tags&sort=id,desc", en1.getId() + "," + en3.getId()))
@@ -717,7 +717,7 @@ public class XmEntityResourceIntTest {
         when(xmEntitySpecService.nextStates(eq(DEFAULT_TYPE_KEY), eq(DEFAULT_STATE_KEY)))
             .thenReturn(Collections.singletonList(nextSpec));
 
-        XmEntity tenant = createEntity(em);
+        XmEntity tenant = createEntity();
         xmEntityServiceImpl.save(tenant);
 
         restXmEntityMockMvc.perform(

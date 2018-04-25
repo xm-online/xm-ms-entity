@@ -29,7 +29,7 @@ public interface XmEntityService extends ResourceRepository {
 
     Page<XmEntity> findAll(Pageable pageable, String typeGroup, String privilegeKey);
 
-    Page<XmEntity> findByIds(Pageable pageable, Set<Long> ids, List<String> embed, Object privilegeKey);
+    Page<XmEntity> findByIds(Pageable pageable, Set<Long> ids, Set<String> embed, String privilegeKey);
 
     List<XmEntity> findAll(Specification<XmEntity> spec);
 
