@@ -1,7 +1,10 @@
 package com.icthh.xm.ms.entity.web.rest.util;
 
+import static org.apache.commons.lang.StringUtils.EMPTY;
+
 import java.net.URLEncoder;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.StringJoiner;
 
@@ -51,8 +54,8 @@ public final class PaginationUtil {
 
     @SneakyThrows
     public static HttpHeaders generateByIdsPaginationHttpHeaders(Set<Long> ids, Set<String> embed, Page page, String baseUrl) {
-        String escapedIds = URLEncoder.encode(StringUtils.join(ids, ","), "UTF-8");
-        String escapedEmbed = URLEncoder.encode(StringUtils.join(embed, ","), "UTF-8");
+        String escapedIds = URLEncoder.encode(Objects.toString(StringUtils.join(ids, ","), EMPTY), "UTF-8");
+        String escapedEmbed = URLEncoder.encode(Objects.toString(StringUtils.join(embed, ","), EMPTY), "UTF-8");
 
         String queryString = IDS_GET_PARAM + escapedIds + EMBED_GET_PARAM + escapedEmbed;
 
