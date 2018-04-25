@@ -63,30 +63,6 @@ public class EntityGraphRepositoryImpl<T, I extends Serializable>
         return resultList.get(0);
     }
 
-    protected <T> Page<T> execute(Pageable pageable, TypedQuery<Long> countQuery, TypedQuery<T> selectQuery) {
-        return pageable == null ? new PageImpl<>(selectQuery.getResultList())
-            : readPage(pageable, countQuery, selectQuery);
-    }
-
-    private <T> Page<T> readPage(Pageable pageable, TypedQuery<Long> countQuery, TypedQuery<T> query) {
-        query.setFirstResult(pageable.getOffset());
-        query.setMaxResults(pageable.getPageSize());
-
-        return PageableExecutionUtils.getPage(query.getResultList(), pageable,
-            () -> executeCountQuery(countQuery));
-    }
-
-    private static Long executeCountQuery(TypedQuery<Long> query) {
-        List<Long> totals = query.getResultList();
-        Long total = 0L;
-
-        for (Long element : totals) {
-            total += element == null ? 0 : element;
-        }
-
-        return total;
-    }
-
     private EntityGraph<T> createEntityGraph(List<String> embed) {
         EntityGraph<T> graph = entityManager.createEntityGraph(domainClass);
         if (CollectionUtils.isNotEmpty(embed)) {
