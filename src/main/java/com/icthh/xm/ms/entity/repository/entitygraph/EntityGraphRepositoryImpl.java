@@ -3,8 +3,12 @@ package com.icthh.xm.ms.entity.repository.entitygraph;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.hibernate.jpa.QueryHints;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.support.JpaEntityInformation;
 import org.springframework.data.jpa.repository.support.SimpleJpaRepository;
+import org.springframework.data.repository.support.PageableExecutionUtils;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityGraph;
@@ -57,6 +61,53 @@ public class EntityGraphRepositoryImpl<T, I extends Serializable>
             return null;
         }
         return resultList.get(0);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<T> findAll(Pageable pageable, Iterable<I> ids, List<String> embed) {
+        CriteriaBuilder builder = entityManager.getCriteriaBuilder();
+        CriteriaQuery<T> criteriaSelect = builder.createQuery(domainClass);
+        Root<T> rootSelect = criteriaSelect.from(domainClass);
+        criteriaSelect.where(builder.in(rootSelect.get("id")).value(ids));
+
+        CriteriaQuery<Long> criteriaCount = builder.createQuery(Long.class);
+        Root<T> rootCount = criteriaCount.from(domainClass);
+        criteriaCount.where(builder.in(rootCount.get("id")).value(ids));
+        criteriaCount.select(builder.count(rootCount));
+
+
+        TypedQuery<T> selectQuery = entityManager
+            .createQuery(criteriaSelect)
+            .setHint(QueryHints.HINT_LOADGRAPH, createEnitityGraph(embed));
+        TypedQuery<Long> countQuery = entityManager
+            .createQuery(criteriaCount);
+
+        return execute(pageable, countQuery, selectQuery);
+    }
+
+    protected <T> Page<T> execute(Pageable pageable, TypedQuery<Long> countQuery, TypedQuery<T> selectQuery) {
+        return pageable == null ? new PageImpl<>(selectQuery.getResultList())
+            : readPage(pageable, countQuery, selectQuery);
+    }
+
+    private <T> Page<T> readPage(Pageable pageable, TypedQuery<Long> countQuery, TypedQuery<T> query) {
+        query.setFirstResult(pageable.getOffset());
+        query.setMaxResults(pageable.getPageSize());
+
+        return PageableExecutionUtils.getPage(query.getResultList(), pageable,
+            () -> executeCountQuery(countQuery));
+    }
+
+    private static Long executeCountQuery(TypedQuery<Long> query) {
+        List<Long> totals = query.getResultList();
+        Long total = 0L;
+
+        for (Long element : totals) {
+            total += element == null ? 0 : element;
+        }
+
+        return total;
     }
 
     private EntityGraph<T> createEnitityGraph(List<String> embed) {

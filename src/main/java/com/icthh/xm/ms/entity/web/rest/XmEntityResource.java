@@ -52,6 +52,7 @@ import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 
@@ -158,6 +159,16 @@ public class XmEntityResource {
                                                            @RequestParam(required = false) String typeKey) {
         Page<XmEntity> page = xmEntityService.findAll(pageable, typeKey, null);
         HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(page, "/api/xm-entities");
+        return new ResponseEntity<>(page.getContent(), headers, HttpStatus.OK);
+    }
+
+    @GetMapping("/xm-entities-by-ids")
+    @Timed
+    public ResponseEntity<List<XmEntity>> getXmEntitiesByIds(@ApiParam Pageable pageable,
+                                                             @RequestParam Set<Long> ids,
+                                                             @RequestParam(required = false) List<String> embed) {
+        Page<XmEntity> page = xmEntityService.findByIds(pageable, ids, embed, null);
+        HttpHeaders headers = PaginationUtil.generateByIdsPaginationHttpHeaders(ids, embed, page, "/api/xm-entities-by-ids");
         return new ResponseEntity<>(page.getContent(), headers, HttpStatus.OK);
     }
 

@@ -19,6 +19,7 @@ import java.net.URI;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Consumer;
 import javax.annotation.Nullable;
 
@@ -27,6 +28,8 @@ public interface XmEntityService extends ResourceRepository {
     XmEntity save(XmEntity xmEntity);
 
     Page<XmEntity> findAll(Pageable pageable, String typeGroup, String privilegeKey);
+
+    Page<XmEntity> findByIds(Pageable pageable, Set<Long> ids, List<String> embed, Object privilegeKey);
 
     List<XmEntity> findAll(Specification<XmEntity> spec);
 

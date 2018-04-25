@@ -181,6 +181,13 @@ public class XmEntityServiceImpl implements XmEntityService {
         }
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    @FindWithPermission("XMENTITY.GET_LIST_BY_IDS")
+    public Page<XmEntity> findByIds(Pageable pageable, Set<Long> ids, List<String> embed, Object privilegeKey) {
+        return xmEntityRepository.findAll(pageable, ids, embed);
+    }
+
     @Transactional(readOnly = true)
     @Override
     public List<XmEntity> findAll(Specification<XmEntity> spec) {
