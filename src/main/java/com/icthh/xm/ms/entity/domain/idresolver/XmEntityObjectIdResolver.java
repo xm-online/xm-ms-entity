@@ -50,7 +50,9 @@ public class XmEntityObjectIdResolver implements ObjectIdResolver {
      */
     @Override
     public Object resolveId(final ObjectIdGenerator.IdKey id) {
-        Object entity = repository.findOne((Long) id.key);
+        Object entity = (items != null && items.containsKey(id))
+            ? items.get(id)
+            : repository.findOne((Long) id.key);
 
         if (entity == null) {
             throw new BusinessException(ErrorConstants.ERR_NOTFOUND, "Can not resolve XmEntity by ID: " + id.key);
