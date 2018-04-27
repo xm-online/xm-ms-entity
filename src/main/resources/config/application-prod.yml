@@ -42,10 +42,10 @@ spring:
             hibernate.cache.use_second_level_cache: false
             hibernate.cache.use_query_cache: false
             hibernate.generate_statistics: false
-            hibernate.cache.region.factory_class: com.hazelcast.hibernate.HazelcastLocalCacheRegionFactory
-            hibernate.cache.hazelcast.instance_name: entity
+            #hibernate.cache.region.factory_class: com.hazelcast.hibernate.HazelcastLocalCacheRegionFactory
+            #hibernate.cache.hazelcast.instance_name: entity
             hibernate.cache.use_minimal_puts: true
-            hibernate.cache.hazelcast.use_lite_member: true
+            #hibernate.cache.hazelcast.use_lite_member: true
     data:
         elasticsearch:
             cluster-name:
