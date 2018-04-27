@@ -25,7 +25,6 @@ import com.icthh.xm.ms.entity.repository.XmEntityRepository;
 import com.icthh.xm.ms.entity.service.XmEntityService;
 import com.icthh.xm.ms.entity.web.rest.LinkResource;
 import com.icthh.xm.ms.entity.web.rest.TestUtil;
-import com.icthh.xm.ms.entity.web.rest.XmEntityResource;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.After;
