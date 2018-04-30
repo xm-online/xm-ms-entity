@@ -1,15 +1,15 @@
 package com.icthh.xm.ms.entity.web.rest.util;
 
 import static java.lang.String.format;
+import static java.util.stream.Collectors.joining;
 import static org.apache.commons.lang.StringUtils.EMPTY;
 
-import com.icthh.xm.ms.entity.domain.template.TemplateParams;
+import com.icthh.xm.ms.entity.domain.template.TemplateParamsHolder;
 import lombok.SneakyThrows;
 import lombok.experimental.UtilityClass;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpHeaders;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.io.UnsupportedEncodingException;
@@ -74,9 +74,9 @@ public final class PaginationUtil {
     }
 
     @SneakyThrows
-    public static HttpHeaders generateSearchWithTemplatePaginationHttpHeaders(String template, TemplateParams templateParams, Page page, String baseUrl) {
+    public static HttpHeaders generateSearchWithTemplatePaginationHttpHeaders(String template, TemplateParamsHolder templateParamsHolder, Page page, String baseUrl) {
         String escapedTemplate = URLEncoder.encode(Objects.toString(template, EMPTY), "UTF-8");
-        String escapedTemplateParams = encodeTemplateParams(templateParams);
+        String escapedTemplateParams = encodeTemplateParams(templateParamsHolder);
 
         String queryString = TEMPLATE_GET_PARAM + escapedTemplate + escapedTemplateParams;
 
@@ -84,10 +84,10 @@ public final class PaginationUtil {
     }
 
     @SneakyThrows
-    public static HttpHeaders generateSearchByTypeKeyWithTemplatePaginationHttpHeaders(String typeKey, String template, TemplateParams templateParams, Page page, String baseUrl) {
+    public static HttpHeaders generateSearchByTypeKeyWithTemplatePaginationHttpHeaders(String typeKey, String template, TemplateParamsHolder templateParamsHolder, Page page, String baseUrl) {
         String escapedTypeKey = URLEncoder.encode(Objects.toString(typeKey, EMPTY), "UTF-8");
         String escapedTemplate = URLEncoder.encode(Objects.toString(template, EMPTY), "UTF-8");
-        String escapedTemplateParams = encodeTemplateParams(templateParams);
+        String escapedTemplateParams = encodeTemplateParams(templateParamsHolder);
 
         String queryString = TYPEKEY_GET_PARAM + escapedTypeKey
             + TEMPLATE_GET_PARAM + escapedTemplate + escapedTemplateParams;
@@ -120,10 +120,10 @@ public final class PaginationUtil {
         return headers;
     }
 
-    private static String encodeTemplateParams(TemplateParams templateParams) {
-        return templateParams.getTemplateParams().entrySet().stream()
+    private static String encodeTemplateParams(TemplateParamsHolder templateParamsHolder) {
+        return templateParamsHolder.getTemplateParams().entrySet().stream()
             .map(PaginationUtil::encode)
-            .collect(Collectors.joining("&"));
+            .collect(joining("&"));
     }
 
     private static String encode(Map.Entry<String, String> entry) {

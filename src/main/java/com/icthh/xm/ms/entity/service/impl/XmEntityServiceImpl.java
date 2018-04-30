@@ -34,7 +34,7 @@ import com.icthh.xm.ms.entity.domain.ext.IdOrKey;
 import com.icthh.xm.ms.entity.domain.spec.LinkSpec;
 import com.icthh.xm.ms.entity.domain.spec.StateSpec;
 import com.icthh.xm.ms.entity.domain.spec.TypeSpec;
-import com.icthh.xm.ms.entity.domain.template.TemplateParams;
+import com.icthh.xm.ms.entity.domain.template.TemplateParamsHolder;
 import com.icthh.xm.ms.entity.lep.keyresolver.TemplateTypeKeyResolver;
 import com.icthh.xm.ms.entity.lep.keyresolver.XmEntityTypeKeyResolver;
 import com.icthh.xm.ms.entity.projection.XmEntityIdKeyTypeKey;
@@ -318,8 +318,8 @@ public class XmEntityServiceImpl implements XmEntityService {
     @Override
     @Transactional(readOnly = true)
     @FindWithPermission("XMENTITY.SEARCH")
-    public Page<XmEntity> search(String template, TemplateParams templateParams, Pageable pageable, String privilegeKey) {
-        String query = getTemplateQuery(template, templateParams);
+    public Page<XmEntity> search(String template, TemplateParamsHolder templateParamsHolder, Pageable pageable, String privilegeKey) {
+        String query = getTemplateQuery(template, templateParamsHolder);
         return xmEntityPermittedSearchRepository.search(query, pageable, XmEntity.class, privilegeKey);
     }
 
@@ -333,13 +333,13 @@ public class XmEntityServiceImpl implements XmEntityService {
     @Override
     @Transactional(readOnly = true)
     @FindWithPermission("XMENTITY.SEARCH")
-    public Page<XmEntity> searchByQueryAndTypeKey(String template, TemplateParams templateParams, String typeKey, Pageable pageable, String privilegeKey) {
-        String query = isBlank(template) ? StringUtils.EMPTY : getTemplateQuery(template, templateParams);
+    public Page<XmEntity> searchByQueryAndTypeKey(String template, TemplateParamsHolder templateParamsHolder, String typeKey, Pageable pageable, String privilegeKey) {
+        String query = isBlank(template) ? StringUtils.EMPTY : getTemplateQuery(template, templateParamsHolder);
         return xmEntityPermittedSearchRepository.searchByQueryAndTypeKey(query, typeKey, pageable, privilegeKey);
     }
 
-    private String getTemplateQuery(String template, TemplateParams templateParams) {
-        return StrSubstitutor.replace(xmEntityTemplatesSpecService.findTemplate(template), templateParams
+    private String getTemplateQuery(String template, TemplateParamsHolder templateParamsHolder) {
+        return StrSubstitutor.replace(xmEntityTemplatesSpecService.findTemplate(template), templateParamsHolder
                 .getTemplateParams());
     }
 

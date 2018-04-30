@@ -25,7 +25,7 @@ import com.icthh.xm.ms.entity.domain.Link;
 import com.icthh.xm.ms.entity.domain.Profile;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.domain.ext.IdOrKey;
-import com.icthh.xm.ms.entity.domain.template.TemplateParams;
+import com.icthh.xm.ms.entity.domain.template.TemplateParamsHolder;
 import com.icthh.xm.ms.entity.repository.LinkRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
 import com.icthh.xm.ms.entity.repository.search.XmEntityPermittedSearchRepository;
@@ -348,10 +348,10 @@ public class EntityServiceImplIntTest {
     public void searchByTemplate() {
         XmEntity given = createEntity(102l, "ACCOUNT.USER");
         xmEntitySearchRepository.save(given);
-        TemplateParams templateParams = new TemplateParams();
-        templateParams.getTemplateParams().put("typeKey", "ACCOUNT.USER");
-        templateParams.getTemplateParams().put("id", "102");
-        Page<XmEntity> result = xmEntityService.search("BY_TYPEKEY_AND_ID", templateParams, null, null);
+        TemplateParamsHolder templateParamsHolder = new TemplateParamsHolder();
+        templateParamsHolder.getTemplateParams().put("typeKey", "ACCOUNT.USER");
+        templateParamsHolder.getTemplateParams().put("id", "102");
+        Page<XmEntity> result = xmEntityService.search("BY_TYPEKEY_AND_ID", templateParamsHolder, null, null);
         assertThat(result.getContent().size()).isEqualTo(1);
         assertThat(result.getContent().get(0)).isEqualTo(given);
     }
@@ -373,9 +373,9 @@ public class EntityServiceImplIntTest {
     public void searchByTemplateAndTypeKey() {
         XmEntity given = createEntity(103l, "ACCOUNT.USER");
         xmEntitySearchRepository.save(given);
-        TemplateParams templateParams = new TemplateParams();
-        templateParams.getTemplateParams().put("typeKey", "ACCOUNT.USER");
-        Page<XmEntity> result = xmEntityService.searchByQueryAndTypeKey("BY_TYPEKEY", templateParams, "ACCOUNT", null, null);
+        TemplateParamsHolder templateParamsHolder = new TemplateParamsHolder();
+        templateParamsHolder.getTemplateParams().put("typeKey", "ACCOUNT.USER");
+        Page<XmEntity> result = xmEntityService.searchByQueryAndTypeKey("BY_TYPEKEY", templateParamsHolder, "ACCOUNT", null, null);
         assertThat(result.getContent().size()).isEqualTo(1);
         assertThat(result.getContent().get(0)).isEqualTo(given);
     }

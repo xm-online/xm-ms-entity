@@ -9,7 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-import com.icthh.xm.ms.entity.domain.template.TemplateParams;
+import com.icthh.xm.ms.entity.domain.template.TemplateParamsHolder;
 import org.junit.Test;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -28,6 +28,7 @@ public class PaginationUtilUnitTest {
         String baseUrl = "/api/_search/example";
         List<String> content = new ArrayList<>();
         Page<String> page = new PageImpl<>(content,new PageRequest(6, 50),400L);
+
         HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(page, baseUrl);
         List<String> strHeaders = headers.get(HttpHeaders.LINK);
         assertNotNull(strHeaders);
@@ -51,6 +52,7 @@ public class PaginationUtilUnitTest {
         Page<String> page = new PageImpl<>(content);
         Set<Long> ids = of(1L, 2L, 3L);
         Set<String> embed = of("one", "two.one");
+
         HttpHeaders headers = PaginationUtil.generateByIdsPaginationHttpHeaders(ids, embed, page, baseUrl);
         List<String> strHeaders = headers.get(HttpHeaders.LINK);
         assertNotNull(strHeaders);
@@ -71,6 +73,7 @@ public class PaginationUtilUnitTest {
         List<String> content = new ArrayList<>();
         Page<String> page = new PageImpl<>(content);
         String query = "Test1, test2";
+
         HttpHeaders headers = PaginationUtil.generateSearchPaginationHttpHeaders(query, page, baseUrl);
         List<String> strHeaders = headers.get(HttpHeaders.LINK);
         assertNotNull(strHeaders);
@@ -90,11 +93,12 @@ public class PaginationUtilUnitTest {
         String baseUrl = "/api/_search/example";
         List<String> content = new ArrayList<>();
         Page<String> page = new PageImpl<>(content);
-        TemplateParams templateParams = new TemplateParams();
         String template = "Test4";
-        templateParams.getTemplateParams().put("Test5", "Test6");
+        TemplateParamsHolder templateParamsHolder = new TemplateParamsHolder();
+        templateParamsHolder.getTemplateParams().put("Test5", "Test6");
 
-        HttpHeaders headers = PaginationUtil.generateSearchWithTemplatePaginationHttpHeaders(template, templateParams, page, baseUrl);
+        HttpHeaders headers = PaginationUtil.generateSearchWithTemplatePaginationHttpHeaders(template,
+            templateParamsHolder, page, baseUrl);
         List<String> strHeaders = headers.get(HttpHeaders.LINK);
         assertNotNull(strHeaders);
         assertTrue(strHeaders.size() == 1);
@@ -133,8 +137,8 @@ public class PaginationUtilUnitTest {
         String baseUrl = "/api/_search/example";
         List<String> content = new ArrayList<>();
         Page<String> page = new PageImpl<>(content);
-        TemplateParams templateParams = new TemplateParams();
-        HttpHeaders headers = PaginationUtil.generateSearchWithTemplatePaginationHttpHeaders(null, templateParams, page, baseUrl);
+        TemplateParamsHolder templateParamsHolder = new TemplateParamsHolder();
+        HttpHeaders headers = PaginationUtil.generateSearchWithTemplatePaginationHttpHeaders(null, templateParamsHolder, page, baseUrl);
         List<String> strHeaders = headers.get(HttpHeaders.LINK);
         assertNotNull(strHeaders);
         assertTrue(strHeaders.size() == 1);
@@ -225,10 +229,12 @@ public class PaginationUtilUnitTest {
 
         // Page 0
         Page<String> page = new PageImpl<>(content,new PageRequest(0, 50),400L);
-        TemplateParams templateParams = new TemplateParams();
         String template = "Test4";
-        templateParams.getTemplateParams().put("Test5", "Test6");
-        HttpHeaders headers = PaginationUtil.generateSearchWithTemplatePaginationHttpHeaders(template, templateParams, page, baseUrl);
+        TemplateParamsHolder templateParamsHolder = new TemplateParamsHolder();
+        templateParamsHolder.getTemplateParams().put("Test5", "Test6");
+
+        HttpHeaders headers = PaginationUtil.generateSearchWithTemplatePaginationHttpHeaders(template,
+            templateParamsHolder, page, baseUrl);
         List<String> strHeaders = headers.get(HttpHeaders.LINK);
         assertNotNull(strHeaders);
         assertTrue(strHeaders.size() == 1);
@@ -244,7 +250,7 @@ public class PaginationUtilUnitTest {
 
         // Page 1
         page = new PageImpl<>(content,new PageRequest(1, 50),400L);
-        headers = PaginationUtil.generateSearchWithTemplatePaginationHttpHeaders(template, templateParams, page, baseUrl);
+        headers = PaginationUtil.generateSearchWithTemplatePaginationHttpHeaders(template, templateParamsHolder, page, baseUrl);
         strHeaders = headers.get(HttpHeaders.LINK);
         assertNotNull(strHeaders);
         assertTrue(strHeaders.size() == 1);
@@ -261,7 +267,7 @@ public class PaginationUtilUnitTest {
 
         // Page 6
         page = new PageImpl<>(content,new PageRequest(6, 50),400L);
-        headers = PaginationUtil.generateSearchWithTemplatePaginationHttpHeaders(template, templateParams, page, baseUrl);
+        headers = PaginationUtil.generateSearchWithTemplatePaginationHttpHeaders(template, templateParamsHolder, page, baseUrl);
         strHeaders = headers.get(HttpHeaders.LINK);
         assertNotNull(strHeaders);
         assertTrue(strHeaders.size() == 1);
@@ -278,7 +284,7 @@ public class PaginationUtilUnitTest {
 
         // Page 7
         page = new PageImpl<>(content,new PageRequest(7, 50),400L);
-        headers = PaginationUtil.generateSearchWithTemplatePaginationHttpHeaders(template, templateParams, page, baseUrl);
+        headers = PaginationUtil.generateSearchWithTemplatePaginationHttpHeaders(template, templateParamsHolder, page, baseUrl);
         strHeaders = headers.get(HttpHeaders.LINK);
         assertNotNull(strHeaders);
         assertTrue(strHeaders.size() == 1);
@@ -296,8 +302,7 @@ public class PaginationUtilUnitTest {
         List<String> content = new ArrayList<>();
         Page<String> page = new PageImpl<>(content);
         String query = "Test>;test";
-        String template = "Test4>";
-        String[] templateParams = {"Test5>", "Test6>"};
+
         HttpHeaders headers = PaginationUtil.generateSearchPaginationHttpHeaders(query, page, baseUrl);
         List<String> strHeaders = headers.get(HttpHeaders.LINK);
         assertNotNull(strHeaders);
@@ -321,10 +326,12 @@ public class PaginationUtilUnitTest {
         String baseUrl = "/api/_search/example";
         List<String> content = new ArrayList<>();
         Page<String> page = new PageImpl<>(content);
-        TemplateParams templateParams = new TemplateParams();
         String template = "Test4>";
-        templateParams.getTemplateParams().put("Test5>", "Test6>");
-        HttpHeaders headers = PaginationUtil.generateSearchWithTemplatePaginationHttpHeaders(template, templateParams, page, baseUrl);
+        TemplateParamsHolder templateParamsHolder = new TemplateParamsHolder();
+        templateParamsHolder.getTemplateParams().put("Test5>", "Test6>");
+        
+        HttpHeaders headers = PaginationUtil.generateSearchWithTemplatePaginationHttpHeaders(template,
+            templateParamsHolder, page, baseUrl);
         List<String> strHeaders = headers.get(HttpHeaders.LINK);
         assertNotNull(strHeaders);
         assertTrue(strHeaders.size() == 1);
