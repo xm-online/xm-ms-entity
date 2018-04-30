@@ -102,7 +102,7 @@ public class ProfileServiceUnitTest {
         Profile profile = new Profile();
         profile.setId(1L);
         profile.setUserKey(USER_KEY);
-        XmEntity entity = XmEntityResourceIntTest.createEntity(null);
+        XmEntity entity = XmEntityResourceIntTest.createEntity();
         entity.setId(2L);
         profile.setXmentity(entity);
         when(profileRepository.findOneByXmentityId(entity.getId())).thenReturn(profile);

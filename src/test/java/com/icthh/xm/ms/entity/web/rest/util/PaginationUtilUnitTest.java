@@ -1,11 +1,13 @@
 package com.icthh.xm.ms.entity.web.rest.util;
 
+import static com.google.common.collect.ImmutableSet.of;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import org.junit.Test;
 import org.springframework.data.domain.Page;
@@ -39,6 +41,27 @@ public class PaginationUtilUnitTest {
         List<String> xTotalCountHeaders = headers.get("X-Total-Count");
         assertTrue(xTotalCountHeaders.size() == 1);
         assertTrue(Long.valueOf(xTotalCountHeaders.get(0)).equals(400L));
+    }
+
+    @Test
+    public void generateByIdPagination() {
+        String baseUrl = "/api/_search/example";
+        List<String> content = new ArrayList<>();
+        Page<String> page = new PageImpl<>(content);
+        Set<Long> ids = of(1L, 2L, 3L);
+        Set<String> embed = of("one", "two.one");
+        HttpHeaders headers = PaginationUtil.generateByIdsPaginationHttpHeaders(ids, embed, page, baseUrl);
+        List<String> strHeaders = headers.get(HttpHeaders.LINK);
+        assertNotNull(strHeaders);
+        assertTrue(strHeaders.size() == 1);
+        String headerData = strHeaders.get(0);
+        assertTrue(headerData.split(",").length == 2);
+        String expectedData = "</api/_search/example?page=0&size=0&ids=1%2C2%2C3&embed=one%2Ctwo.one>; rel=\"last\","
+            + "</api/_search/example?page=0&size=0&ids=1%2C2%2C3&embed=one%2Ctwo.one>; rel=\"first\"";
+        assertEquals(expectedData, headerData);
+        List<String> xTotalCountHeaders = headers.get("X-Total-Count");
+        assertTrue(xTotalCountHeaders.size() == 1);
+        assertTrue(Long.valueOf(xTotalCountHeaders.get(0)).equals(0L));
     }
 
     @Test

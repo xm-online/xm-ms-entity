@@ -157,7 +157,7 @@ public class CommentResourceIntTest {
             .message(DEFAULT_MESSAGE)
             .entryDate(DEFAULT_ENTRY_DATE);
         // Add required entity
-        XmEntity xmEntity = XmEntityResourceIntTest.createEntity(em);
+        XmEntity xmEntity = XmEntityResourceIntTest.createEntity();
         em.persist(xmEntity);
         em.flush();
         comment.setXmEntity(xmEntity);

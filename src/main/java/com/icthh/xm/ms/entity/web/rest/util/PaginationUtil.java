@@ -1,20 +1,17 @@
 package com.icthh.xm.ms.entity.web.rest.util;
 
-import static org.apache.commons.lang3.StringUtils.EMPTY;
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
-
-import java.net.URLEncoder;
-import java.util.Arrays;
-import java.util.Objects;
-import java.util.StringJoiner;
+import static org.apache.commons.lang.StringUtils.EMPTY;
 
 import lombok.SneakyThrows;
 import lombok.experimental.UtilityClass;
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang3.ArrayUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpHeaders;
 import org.springframework.web.util.UriComponentsBuilder;
+
+import java.net.URLEncoder;
+import java.util.Objects;
+import java.util.Set;
 
 /**
  * Utility class for handling pagination.
@@ -29,6 +26,8 @@ public final class PaginationUtil {
     private static final String TYPEKEY_GET_PARAM = "&typeKey=";
     private static final String TEMPLATE_GET_PARAM = "&template=";
     private static final String TEMPLATE_PARAMS_GET_PARAM = "&templateParams=";
+    private static final String IDS_GET_PARAM = "&ids=";
+    private static final String EMBED_GET_PARAM = "&embed=";
 
     public static HttpHeaders generatePaginationHttpHeaders(Page page, String baseUrl) {
         HttpHeaders headers = new HttpHeaders();
@@ -48,6 +47,37 @@ public final class PaginationUtil {
         }
         link += "<" + generateUri(baseUrl, lastPage, page.getSize()) + ">; rel=\"last\",";
         link += "<" + generateUri(baseUrl, 0, page.getSize()) + ">; rel=\"first\"";
+        headers.add(HttpHeaders.LINK, link);
+        return headers;
+    }
+
+    @SneakyThrows
+    public static HttpHeaders generateByIdsPaginationHttpHeaders(Set<Long> ids, Set<String> embed, Page page, String baseUrl) {
+        String escapedIds = URLEncoder.encode(Objects.toString(StringUtils.join(ids, ","), EMPTY), "UTF-8");
+        String escapedEmbed = URLEncoder.encode(Objects.toString(StringUtils.join(embed, ","), EMPTY), "UTF-8");
+
+        String queryString = IDS_GET_PARAM + escapedIds + EMBED_GET_PARAM + escapedEmbed;
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("X-Total-Count", Long.toString(page.getTotalElements()));
+        String link = "";
+        if ((page.getNumber() + 1) < page.getTotalPages()) {
+            link = "<" + generateUri(baseUrl, page.getNumber() + 1, page.getSize()) + queryString
+                + ">; rel=\"next\",";
+        }
+        // prev link
+        if ((page.getNumber()) > 0) {
+            link += "<" + generateUri(baseUrl, page.getNumber() - 1, page.getSize()) + queryString
+                + ">; rel=\"prev\",";
+        }
+        // last and first link
+        int lastPage = 0;
+        if (page.getTotalPages() > 0) {
+            lastPage = page.getTotalPages() - 1;
+        }
+        link +=
+            "<" + generateUri(baseUrl, lastPage, page.getSize()) + queryString + ">; rel=\"last\",";
+        link += "<" + generateUri(baseUrl, 0, page.getSize()) + queryString + ">; rel=\"first\"";
         headers.add(HttpHeaders.LINK, link);
         return headers;
     }

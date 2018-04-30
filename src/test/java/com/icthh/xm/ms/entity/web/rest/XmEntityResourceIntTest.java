@@ -8,6 +8,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.everyItem;
 import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.hasItems;
+import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.nullValue;
 import static org.mockito.Matchers.any;
@@ -19,6 +22,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -135,7 +139,7 @@ public class XmEntityResourceIntTest {
 
     @Autowired
     private ApplicationProperties applicationProperties;
-    
+
     @Autowired
     private XmEntityRepository xmEntityRepository;
 
@@ -270,7 +274,7 @@ public class XmEntityResourceIntTest {
             .setValidator(validator)
             .setMessageConverters(jacksonMessageConverter).build();
 
-        xmEntity = createEntity(em);
+        xmEntity = createEntity();
     }
 
     @After
@@ -286,7 +290,7 @@ public class XmEntityResourceIntTest {
      * This is a static method, as tests for other entities might also need it,
      * if they test an entity which requires the current entity.
      */
-    public static XmEntity createEntity(EntityManager em) {
+    public static XmEntity createEntity() {
         return new XmEntity()
             .key(DEFAULT_KEY)
             .typeKey(DEFAULT_TYPE_KEY)
@@ -365,7 +369,7 @@ public class XmEntityResourceIntTest {
     public void createXmEntityTenantWithWhitespace() throws Exception {
         int databaseSizeBeforeCreate = xmEntityRepository.findAll().size();
 
-        XmEntity tenant = createEntity(em);
+        XmEntity tenant = createEntity();
         tenant.setTypeKey(Constants.TENANT_TYPE_KEY);
         tenant.setName("test name");
 
@@ -528,6 +532,37 @@ public class XmEntityResourceIntTest {
             .andExpect(jsonPath("$.[*].description").value(hasItem(DEFAULT_DESCRIPTION.toString())))
             .andExpect(jsonPath("$.[*].data").value(hasItem(DEFAULT_DATA)))
             .andExpect(jsonPath("$.[*].removed").value(hasItem(DEFAULT_REMOVED.booleanValue())))
+
+            // check that tags are not returned foe XmEntities collection
+            .andExpect(jsonPath("$.[*].tags.id").value(everyItem(nullValue())));
+    }
+
+    @Test
+    @Transactional
+    public void getXmEntitiesByIds() throws Exception {
+        // Initialize the database
+        XmEntity en1 = xmEntityRepository.saveAndFlush(createEntity());
+        XmEntity en2 = xmEntityRepository.saveAndFlush(createEntity());
+        XmEntity en3 = xmEntityRepository.saveAndFlush(createEntity());
+
+        // Get all the xmEntityList
+        restXmEntityMockMvc.perform(get("/api/xm-entities-by-ids?ids={ids}&embed=tags&sort=id,desc", en1.getId() + "," + en3.getId()))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+            .andExpect(jsonPath("$").value(hasSize(2)))
+            .andExpect(header().longValue("X-Total-Count", 2))
+            .andExpect(jsonPath("$.[*].id").value(hasItems(en1.getId().intValue(), en3.getId().intValue())))
+            .andExpect(jsonPath("$.[*].key").value(everyItem(is(DEFAULT_KEY))))
+            .andExpect(jsonPath("$.[*].typeKey").value(everyItem(is(DEFAULT_TYPE_KEY))))
+            .andExpect(jsonPath("$.[*].stateKey").value(everyItem(is(DEFAULT_STATE_KEY))))
+            .andExpect(jsonPath("$.[*].name").value(everyItem(is(DEFAULT_NAME))))
+            .andExpect(jsonPath("$.[*].startDate").value(everyItem(is(DEFAULT_START_DATE.toString()))))
+            .andExpect(jsonPath("$.[*].updateDate").value(everyItem(is(DEFAULT_UPDATE_DATE.toString()))))
+            .andExpect(jsonPath("$.[*].endDate").value(everyItem(is(DEFAULT_END_DATE.toString()))))
+            .andExpect(jsonPath("$.[*].avatarUrl").value(everyItem(is(containsString("aaaaa.jpg")))))
+            .andExpect(jsonPath("$.[*].description").value(everyItem(is(DEFAULT_DESCRIPTION))))
+            .andExpect(jsonPath("$.[*].data").value(everyItem(is(DEFAULT_DATA))))
+            .andExpect(jsonPath("$.[*].removed").value(everyItem(is(DEFAULT_REMOVED.booleanValue()))))
 
             // check that tags are not returned foe XmEntities collection
             .andExpect(jsonPath("$.[*].tags.id").value(everyItem(nullValue())));
@@ -721,7 +756,7 @@ public class XmEntityResourceIntTest {
         when(xmEntitySpecService.nextStates(eq(DEFAULT_TYPE_KEY), eq(DEFAULT_STATE_KEY)))
             .thenReturn(Collections.singletonList(nextSpec));
 
-        XmEntity tenant = createEntity(em);
+        XmEntity tenant = createEntity();
         xmEntityServiceImpl.save(tenant);
 
         restXmEntityMockMvc.perform(
