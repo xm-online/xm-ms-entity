@@ -21,6 +21,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -745,6 +746,17 @@ public class XmEntityResourceIntTest {
             .andExpect(jsonPath("$.[*].description").value(hasItem(DEFAULT_DESCRIPTION.toString())))
             .andExpect(jsonPath("$.[*].data").value(hasItem(DEFAULT_DATA)))
             .andExpect(jsonPath("$.[*].removed").value(hasItem(DEFAULT_REMOVED.booleanValue())));
+    }
+
+    @Test
+    @Transactional
+    public void searchXmEntityWithoutTemplate() throws Exception {
+        // Initialize the database
+        xmEntityServiceImpl.save(xmEntity);
+        // Search the xmEntity
+        restXmEntityMockMvc.perform(get("/api/_search-with-template/xm-entities?template="))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$").isEmpty());
     }
 
     @Test

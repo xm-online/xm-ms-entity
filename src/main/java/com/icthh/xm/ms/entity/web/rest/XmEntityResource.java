@@ -12,7 +12,7 @@ import com.icthh.xm.ms.entity.domain.Link;
 import com.icthh.xm.ms.entity.domain.Profile;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.domain.ext.IdOrKey;
-import com.icthh.xm.ms.entity.domain.template.Templateable;
+import com.icthh.xm.ms.entity.domain.template.TemplateParams;
 import com.icthh.xm.ms.entity.repository.kafka.ProfileEventProducer;
 import com.icthh.xm.ms.entity.service.FunctionService;
 import com.icthh.xm.ms.entity.service.ProfileService;
@@ -23,7 +23,6 @@ import com.icthh.xm.ms.entity.web.rest.util.HeaderUtil;
 import com.icthh.xm.ms.entity.web.rest.util.PaginationUtil;
 import com.icthh.xm.ms.entity.web.rest.util.RespContentUtil;
 import io.swagger.annotations.ApiParam;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Page;
@@ -231,13 +230,14 @@ public class XmEntityResource {
 
     @GetMapping("/_search-with-template/xm-entities")
     @Timed
-    @PreAuthorize("hasPermission({'template': #templateable.template}, 'XMENTITY.SEARCH.TEMPLATE')")
+    @PreAuthorize("hasPermission({'template': #template}, 'XMENTITY.SEARCH.TEMPLATE')")
     public ResponseEntity<List<XmEntity>> searchXmEntities(
-        @ApiParam Templateable templateable,
+        @RequestParam String template,
+        @ApiParam TemplateParams templateParams,
         @ApiParam Pageable pageable) {
-        Page<XmEntity> page = xmEntityService.search(templateable, pageable, null);
+        Page<XmEntity> page = xmEntityService.search(template, templateParams, pageable, null);
         HttpHeaders headers = PaginationUtil
-            .generateSearchWithTemplatePaginationHttpHeaders(templateable, page,
+            .generateSearchWithTemplatePaginationHttpHeaders(template, templateParams, page,
                 "/api/_search-with-template/xm-entities");
         return new ResponseEntity<>(page.getContent(), headers, HttpStatus.OK);
     }
@@ -258,14 +258,15 @@ public class XmEntityResource {
 
     @GetMapping("/_search-with-typekey-and-template/xm-entities")
     @Timed
-    @PreAuthorize("hasPermission({'typeKey': #typeKey, 'template': #templateable.template}, 'XMENTITY.SEARCH.TYPEKEY.TEMPLATE')")
+    @PreAuthorize("hasPermission({'typeKey': #typeKey, 'template': #template}, 'XMENTITY.SEARCH.TYPEKEY.TEMPLATE')")
     public ResponseEntity<List<XmEntity>> searchByTypeKeyAndQuery(
         @RequestParam String typeKey,
-        @ApiParam Templateable templateable,
+        @RequestParam(required = false) String template,
+        @ApiParam TemplateParams templateParams,
         @ApiParam Pageable pageable) {
-        Page<XmEntity> page = xmEntityService.searchByQueryAndTypeKey(templateable, typeKey, pageable, null);
+        Page<XmEntity> page = xmEntityService.searchByQueryAndTypeKey(template, templateParams, typeKey, pageable, null);
         HttpHeaders headers = PaginationUtil
-            .generateSearchByTypeKeyWithTemplatePaginationHttpHeaders(typeKey, templateable, page,
+            .generateSearchByTypeKeyWithTemplatePaginationHttpHeaders(typeKey, template, templateParams, page,
                 "/api/_search-with-typekey-and-template/xm-entities");
         return new ResponseEntity<>(page.getContent(), headers, HttpStatus.OK);
     }

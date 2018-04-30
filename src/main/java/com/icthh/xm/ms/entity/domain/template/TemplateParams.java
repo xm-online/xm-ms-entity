@@ -6,7 +6,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Data
-public class Templateable {
-    private String template;
+public class TemplateParams {
     private Map<String, String> templateParams = new HashMap<>();
 }

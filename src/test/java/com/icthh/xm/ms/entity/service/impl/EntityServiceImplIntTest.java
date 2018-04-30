@@ -25,7 +25,7 @@ import com.icthh.xm.ms.entity.domain.Link;
 import com.icthh.xm.ms.entity.domain.Profile;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.domain.ext.IdOrKey;
-import com.icthh.xm.ms.entity.domain.template.Templateable;
+import com.icthh.xm.ms.entity.domain.template.TemplateParams;
 import com.icthh.xm.ms.entity.repository.LinkRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
 import com.icthh.xm.ms.entity.repository.search.XmEntityPermittedSearchRepository;
@@ -35,7 +35,6 @@ import com.icthh.xm.ms.entity.util.XmHttpEntityUtils;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.After;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
@@ -45,7 +44,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpEntity;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.test.context.support.WithMockUser;
@@ -350,11 +348,10 @@ public class EntityServiceImplIntTest {
     public void searchByTemplate() {
         XmEntity given = createEntity(102l, "ACCOUNT.USER");
         xmEntitySearchRepository.save(given);
-        Templateable templateable = new Templateable();
-        templateable.setTemplate("BY_TYPEKEY_AND_ID");
-        templateable.getTemplateParams().put("typeKey", "ACCOUNT.USER");
-        templateable.getTemplateParams().put("id", "102");
-        Page<XmEntity> result = xmEntityService.search(templateable, null, null);
+        TemplateParams templateParams = new TemplateParams();
+        templateParams.getTemplateParams().put("typeKey", "ACCOUNT.USER");
+        templateParams.getTemplateParams().put("id", "102");
+        Page<XmEntity> result = xmEntityService.search("BY_TYPEKEY_AND_ID", templateParams, null, null);
         assertThat(result.getContent().size()).isEqualTo(1);
         assertThat(result.getContent().get(0)).isEqualTo(given);
     }
@@ -376,10 +373,9 @@ public class EntityServiceImplIntTest {
     public void searchByTemplateAndTypeKey() {
         XmEntity given = createEntity(103l, "ACCOUNT.USER");
         xmEntitySearchRepository.save(given);
-        Templateable templateable = new Templateable();
-        templateable.setTemplate("BY_TYPEKEY");
-        templateable.getTemplateParams().put("typeKey", "ACCOUNT.USER");
-        Page<XmEntity> result = xmEntityService.searchByQueryAndTypeKey(templateable, "ACCOUNT", null, null);
+        TemplateParams templateParams = new TemplateParams();
+        templateParams.getTemplateParams().put("typeKey", "ACCOUNT.USER");
+        Page<XmEntity> result = xmEntityService.searchByQueryAndTypeKey("BY_TYPEKEY", templateParams, "ACCOUNT", null, null);
         assertThat(result.getContent().size()).isEqualTo(1);
         assertThat(result.getContent().get(0)).isEqualTo(given);
     }
