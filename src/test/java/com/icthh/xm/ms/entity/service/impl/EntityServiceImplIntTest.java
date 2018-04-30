@@ -25,6 +25,7 @@ import com.icthh.xm.ms.entity.domain.Link;
 import com.icthh.xm.ms.entity.domain.Profile;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.domain.ext.IdOrKey;
+import com.icthh.xm.ms.entity.domain.template.Templateable;
 import com.icthh.xm.ms.entity.repository.LinkRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
 import com.icthh.xm.ms.entity.repository.search.XmEntityPermittedSearchRepository;
@@ -349,7 +350,11 @@ public class EntityServiceImplIntTest {
     public void searchByTemplate() {
         XmEntity given = createEntity(102l, "ACCOUNT.USER");
         xmEntitySearchRepository.save(given);
-        Page<XmEntity> result = xmEntityService.search("BY_TYPEKEY_AND_ID", new String[] {"ACCOUNT.USER", "102"}, null, null);
+        Templateable templateable = new Templateable();
+        templateable.setTemplate("BY_TYPEKEY_AND_ID");
+        templateable.getTemplateParams().put("typeKey", "ACCOUNT.USER");
+        templateable.getTemplateParams().put("id", "102");
+        Page<XmEntity> result = xmEntityService.search(templateable, null, null);
         assertThat(result.getContent().size()).isEqualTo(1);
         assertThat(result.getContent().get(0)).isEqualTo(given);
     }
@@ -371,7 +376,10 @@ public class EntityServiceImplIntTest {
     public void searchByTemplateAndTypeKey() {
         XmEntity given = createEntity(103l, "ACCOUNT.USER");
         xmEntitySearchRepository.save(given);
-        Page<XmEntity> result = xmEntityService.searchByQueryAndTypeKey("BY_NAME", new String[] {"ACCOUNT.USER"}, "ACCOUNT", null, null);
+        Templateable templateable = new Templateable();
+        templateable.setTemplate("BY_TYPEKEY");
+        templateable.getTemplateParams().put("typeKey", "ACCOUNT.USER");
+        Page<XmEntity> result = xmEntityService.searchByQueryAndTypeKey(templateable, "ACCOUNT", null, null);
         assertThat(result.getContent().size()).isEqualTo(1);
         assertThat(result.getContent().get(0)).isEqualTo(given);
     }

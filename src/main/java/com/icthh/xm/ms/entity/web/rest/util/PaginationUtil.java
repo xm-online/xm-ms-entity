@@ -1,7 +1,9 @@
 package com.icthh.xm.ms.entity.web.rest.util;
 
+import static java.lang.String.format;
 import static org.apache.commons.lang.StringUtils.EMPTY;
 
+import com.icthh.xm.ms.entity.domain.template.Templateable;
 import lombok.SneakyThrows;
 import lombok.experimental.UtilityClass;
 import org.apache.commons.lang.StringUtils;
@@ -9,9 +11,12 @@ import org.springframework.data.domain.Page;
 import org.springframework.http.HttpHeaders;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Utility class for handling pagination.
@@ -25,7 +30,6 @@ public final class PaginationUtil {
     private static final String QUERY_GET_PARAM = "&query=";
     private static final String TYPEKEY_GET_PARAM = "&typeKey=";
     private static final String TEMPLATE_GET_PARAM = "&template=";
-    private static final String TEMPLATE_PARAMS_GET_PARAM = "&templateParams=";
     private static final String IDS_GET_PARAM = "&ids=";
     private static final String EMBED_GET_PARAM = "&embed=";
 
@@ -108,25 +112,23 @@ public final class PaginationUtil {
     }
 
     @SneakyThrows
-    public static HttpHeaders generateSearchWithTemplatePaginationHttpHeaders(String template, String[] templateParams, Page page, String baseUrl) {
-        String escapedTemplate = URLEncoder.encode(Objects.toString(template, EMPTY), "UTF-8");
-        String escapedTemplateParams = URLEncoder.encode(Objects.toString(StringUtils.join(templateParams, ","), EMPTY), "UTF-8");
+    public static HttpHeaders generateSearchWithTemplatePaginationHttpHeaders(Templateable templateable, Page page, String baseUrl) {
+        String escapedTemplate = URLEncoder.encode(Objects.toString(templateable.getTemplate(), EMPTY), "UTF-8");
+        String escapedTemplateParams = encodeTemplateParams(templateable);
 
-        String queryString = TEMPLATE_GET_PARAM + escapedTemplate
-            + TEMPLATE_PARAMS_GET_PARAM + escapedTemplateParams;
+        String queryString = TEMPLATE_GET_PARAM + escapedTemplate + escapedTemplateParams;
 
         return generatePagination(queryString, page, baseUrl);
     }
 
     @SneakyThrows
-    public static HttpHeaders generateSearchByTypeKeyWithTemplatePaginationHttpHeaders(String typeKey, String template, String[] templateParams, Page page, String baseUrl) {
+    public static HttpHeaders generateSearchByTypeKeyWithTemplatePaginationHttpHeaders(String typeKey, Templateable templateable, Page page, String baseUrl) {
         String escapedTypeKey = URLEncoder.encode(Objects.toString(typeKey, EMPTY), "UTF-8");
-        String escapedTemplate = URLEncoder.encode(Objects.toString(template, EMPTY), "UTF-8");
-        String escapedTemplateParams = URLEncoder.encode(Objects.toString(StringUtils.join(templateParams, ","), EMPTY), "UTF-8");
+        String escapedTemplate = URLEncoder.encode(Objects.toString(templateable.getTemplate(), EMPTY), "UTF-8");
+        String escapedTemplateParams = encodeTemplateParams(templateable);
 
         String queryString = TYPEKEY_GET_PARAM + escapedTypeKey
-            + TEMPLATE_GET_PARAM + escapedTemplate
-            + TEMPLATE_PARAMS_GET_PARAM + escapedTemplateParams;
+            + TEMPLATE_GET_PARAM + escapedTemplate + escapedTemplateParams;
 
         return generatePagination(queryString, page, baseUrl);
     }
@@ -154,5 +156,21 @@ public final class PaginationUtil {
         link += "<" + generateUri(baseUrl, 0, page.getSize()) + query + ">; rel=\"first\"";
         headers.add(HttpHeaders.LINK, link);
         return headers;
+    }
+
+    private static String encodeTemplateParams(Templateable templateable) {
+        return templateable.getTemplateParams().entrySet().stream()
+            .map(PaginationUtil::encode)
+            .collect(Collectors.joining("&"));
+    }
+
+    private static String encode(Map.Entry<String, String> entry) {
+        try {
+            return format("&templateParams[%s]=%s",
+                URLEncoder.encode(entry.getKey(), "UTF-8"),
+                URLEncoder.encode(entry.getValue(), "UTF-8"));
+        } catch (UnsupportedEncodingException e) {
+            throw new IllegalArgumentException(e);
+        }
     }
 }

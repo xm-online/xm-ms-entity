@@ -865,12 +865,12 @@ public class XmEntityResourceExtendedIntTest {
             .andExpect(jsonPath("$.[0].tags[0].name").value(DEFAULT_TAG_NAME))
             .andExpect(jsonPath("$.[1].tags[0].name").value(DEFAULT_TAG_NAME));
 
-        performGet(urlTemplate + "&template=UNIQ_DESCRIPTION&templateParams=" + UNIQ_DESCRIPTION)
+        performGet(urlTemplate + "&template=UNIQ_DESCRIPTION&templateParams[description]=" + UNIQ_DESCRIPTION)
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.length()").value(1))
             .andExpect(jsonPath("$.[0].tags[0].name").value(DEFAULT_TAG_NAME));
 
-        performGet(urlTemplate + "&template=NOT_PRESENT_UNIQ_DESCRIPTION&templateParams=" + NOT_PRESENT_UNIQ_DESCRIPTION)
+        performGet(urlTemplate + "&template=UNIQ_DESCRIPTION&templateParams[description]=" + NOT_PRESENT_UNIQ_DESCRIPTION)
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.length()").value(0));
 

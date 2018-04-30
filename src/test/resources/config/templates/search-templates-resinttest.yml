@@ -1,9 +1,7 @@
 ---
 BY_TYPEKEY_AND_ID:
-    query: typeKey:%s AND id:%s
-BY_NAME:
-    query: '%s'
+    query: typeKey:${typeKey} AND id:${id}
+BY_TYPEKEY:
+    query: ${typeKey}
 UNIQ_DESCRIPTION:
-    query: '%s'
-NOT_PRESENT_UNIQ_DESCRIPTION:
-    query: '%s'
+    query: ${description}

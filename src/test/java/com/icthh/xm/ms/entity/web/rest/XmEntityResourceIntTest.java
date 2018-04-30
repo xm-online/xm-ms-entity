@@ -730,7 +730,7 @@ public class XmEntityResourceIntTest {
         xmEntityServiceImpl.save(xmEntity);
 
         // Search the xmEntity
-        restXmEntityMockMvc.perform(get("/api/_search-with-template/xm-entities?template=BY_TYPEKEY_AND_ID&templateParams=" + xmEntity.getTypeKey() + "," + xmEntity.getId()))
+        restXmEntityMockMvc.perform(get("/api/_search-with-template/xm-entities?template=BY_TYPEKEY_AND_ID&templateParams[typeKey]=" + xmEntity.getTypeKey() + "&templateParams[id]=" + xmEntity.getId()))
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
             .andExpect(jsonPath("$.[*].id").value(hasItem(xmEntity.getId().intValue())))

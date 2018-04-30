@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
+import com.icthh.xm.ms.entity.domain.template.Templateable;
 import org.junit.Test;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -89,16 +90,18 @@ public class PaginationUtilUnitTest {
         String baseUrl = "/api/_search/example";
         List<String> content = new ArrayList<>();
         Page<String> page = new PageImpl<>(content);
-        String template = "Test4";
-        String[] templateParams = {"Test5", "Test6"};
-        HttpHeaders headers = PaginationUtil.generateSearchWithTemplatePaginationHttpHeaders(template, templateParams, page, baseUrl);
+        Templateable templateable = new Templateable();
+        templateable.setTemplate("Test4");
+        templateable.getTemplateParams().put("Test5", "Test6");
+
+        HttpHeaders headers = PaginationUtil.generateSearchWithTemplatePaginationHttpHeaders(templateable, page, baseUrl);
         List<String> strHeaders = headers.get(HttpHeaders.LINK);
         assertNotNull(strHeaders);
         assertTrue(strHeaders.size() == 1);
         String headerData = strHeaders.get(0);
         assertTrue(headerData.split(",").length == 2);
-        String expectedData = "</api/_search/example?page=0&size=0&template=Test4&templateParams=Test5%2CTest6>; rel=\"last\","
-            + "</api/_search/example?page=0&size=0&template=Test4&templateParams=Test5%2CTest6>; rel=\"first\"";
+        String expectedData = "</api/_search/example?page=0&size=0&template=Test4&templateParams[Test5]=Test6>; rel=\"last\","
+            + "</api/_search/example?page=0&size=0&template=Test4&templateParams[Test5]=Test6>; rel=\"first\"";
         assertEquals(expectedData, headerData);
         List<String> xTotalCountHeaders = headers.get("X-Total-Count");
         assertTrue(xTotalCountHeaders.size() == 1);
@@ -130,16 +133,15 @@ public class PaginationUtilUnitTest {
         String baseUrl = "/api/_search/example";
         List<String> content = new ArrayList<>();
         Page<String> page = new PageImpl<>(content);
-        String template = null;
-        String[] templateParams = null;
-        HttpHeaders headers = PaginationUtil.generateSearchWithTemplatePaginationHttpHeaders(template, templateParams, page, baseUrl);
+        Templateable templateable = new Templateable();
+        HttpHeaders headers = PaginationUtil.generateSearchWithTemplatePaginationHttpHeaders(templateable, page, baseUrl);
         List<String> strHeaders = headers.get(HttpHeaders.LINK);
         assertNotNull(strHeaders);
         assertTrue(strHeaders.size() == 1);
         String headerData = strHeaders.get(0);
         assertTrue(headerData.split(",").length == 2);
-        String expectedData = "</api/_search/example?page=0&size=0&template=&templateParams=>; rel=\"last\","
-            + "</api/_search/example?page=0&size=0&template=&templateParams=>; rel=\"first\"";
+        String expectedData = "</api/_search/example?page=0&size=0&template=>; rel=\"last\","
+            + "</api/_search/example?page=0&size=0&template=>; rel=\"first\"";
         assertEquals(expectedData, headerData);
         List<String> xTotalCountHeaders = headers.get("X-Total-Count");
         assertTrue(xTotalCountHeaders.size() == 1);
@@ -223,17 +225,18 @@ public class PaginationUtilUnitTest {
 
         // Page 0
         Page<String> page = new PageImpl<>(content,new PageRequest(0, 50),400L);
-        String template = "Test4";
-        String[] templateParams = {"Test5", "Test6"};
-        HttpHeaders headers = PaginationUtil.generateSearchWithTemplatePaginationHttpHeaders(template, templateParams, page, baseUrl);
+        Templateable templateable = new Templateable();
+        templateable.setTemplate("Test4");
+        templateable.getTemplateParams().put("Test5", "Test6");
+        HttpHeaders headers = PaginationUtil.generateSearchWithTemplatePaginationHttpHeaders(templateable, page, baseUrl);
         List<String> strHeaders = headers.get(HttpHeaders.LINK);
         assertNotNull(strHeaders);
         assertTrue(strHeaders.size() == 1);
         String headerData = strHeaders.get(0);
         assertTrue(headerData.split(",").length == 3);
-        String expectedData = "</api/_search/example?page=1&size=50&template=Test4&templateParams=Test5%2CTest6>; rel=\"next\","
-            + "</api/_search/example?page=7&size=50&template=Test4&templateParams=Test5%2CTest6>; rel=\"last\","
-            + "</api/_search/example?page=0&size=50&template=Test4&templateParams=Test5%2CTest6>; rel=\"first\"";
+        String expectedData = "</api/_search/example?page=1&size=50&template=Test4&templateParams[Test5]=Test6>; rel=\"next\","
+            + "</api/_search/example?page=7&size=50&template=Test4&templateParams[Test5]=Test6>; rel=\"last\","
+            + "</api/_search/example?page=0&size=50&template=Test4&templateParams[Test5]=Test6>; rel=\"first\"";
         assertEquals(expectedData, headerData);
         List<String> xTotalCountHeaders = headers.get("X-Total-Count");
         assertTrue(xTotalCountHeaders.size() == 1);
@@ -241,16 +244,16 @@ public class PaginationUtilUnitTest {
 
         // Page 1
         page = new PageImpl<>(content,new PageRequest(1, 50),400L);
-        headers = PaginationUtil.generateSearchWithTemplatePaginationHttpHeaders(template, templateParams, page, baseUrl);
+        headers = PaginationUtil.generateSearchWithTemplatePaginationHttpHeaders(templateable, page, baseUrl);
         strHeaders = headers.get(HttpHeaders.LINK);
         assertNotNull(strHeaders);
         assertTrue(strHeaders.size() == 1);
         headerData = strHeaders.get(0);
         assertTrue(headerData.split(",").length == 4);
-        expectedData = "</api/_search/example?page=2&size=50&template=Test4&templateParams=Test5%2CTest6>; rel=\"next\","
-            + "</api/_search/example?page=0&size=50&template=Test4&templateParams=Test5%2CTest6>; rel=\"prev\","
-            + "</api/_search/example?page=7&size=50&template=Test4&templateParams=Test5%2CTest6>; rel=\"last\","
-            + "</api/_search/example?page=0&size=50&template=Test4&templateParams=Test5%2CTest6>; rel=\"first\"";
+        expectedData = "</api/_search/example?page=2&size=50&template=Test4&templateParams[Test5]=Test6>; rel=\"next\","
+            + "</api/_search/example?page=0&size=50&template=Test4&templateParams[Test5]=Test6>; rel=\"prev\","
+            + "</api/_search/example?page=7&size=50&template=Test4&templateParams[Test5]=Test6>; rel=\"last\","
+            + "</api/_search/example?page=0&size=50&template=Test4&templateParams[Test5]=Test6>; rel=\"first\"";
         assertEquals(expectedData, headerData);
         xTotalCountHeaders = headers.get("X-Total-Count");
         assertTrue(xTotalCountHeaders.size() == 1);
@@ -258,16 +261,16 @@ public class PaginationUtilUnitTest {
 
         // Page 6
         page = new PageImpl<>(content,new PageRequest(6, 50),400L);
-        headers = PaginationUtil.generateSearchWithTemplatePaginationHttpHeaders(template, templateParams, page, baseUrl);
+        headers = PaginationUtil.generateSearchWithTemplatePaginationHttpHeaders(templateable, page, baseUrl);
         strHeaders = headers.get(HttpHeaders.LINK);
         assertNotNull(strHeaders);
         assertTrue(strHeaders.size() == 1);
         headerData = strHeaders.get(0);
         assertTrue(headerData.split(",").length == 4);
-        expectedData = "</api/_search/example?page=7&size=50&template=Test4&templateParams=Test5%2CTest6>; rel=\"next\","
-            + "</api/_search/example?page=5&size=50&template=Test4&templateParams=Test5%2CTest6>; rel=\"prev\","
-            + "</api/_search/example?page=7&size=50&template=Test4&templateParams=Test5%2CTest6>; rel=\"last\","
-            + "</api/_search/example?page=0&size=50&template=Test4&templateParams=Test5%2CTest6>; rel=\"first\"";
+        expectedData = "</api/_search/example?page=7&size=50&template=Test4&templateParams[Test5]=Test6>; rel=\"next\","
+            + "</api/_search/example?page=5&size=50&template=Test4&templateParams[Test5]=Test6>; rel=\"prev\","
+            + "</api/_search/example?page=7&size=50&template=Test4&templateParams[Test5]=Test6>; rel=\"last\","
+            + "</api/_search/example?page=0&size=50&template=Test4&templateParams[Test5]=Test6>; rel=\"first\"";
         assertEquals(expectedData, headerData);
         xTotalCountHeaders = headers.get("X-Total-Count");
         assertTrue(xTotalCountHeaders.size() == 1);
@@ -275,15 +278,15 @@ public class PaginationUtilUnitTest {
 
         // Page 7
         page = new PageImpl<>(content,new PageRequest(7, 50),400L);
-        headers = PaginationUtil.generateSearchWithTemplatePaginationHttpHeaders(template, templateParams, page, baseUrl);
+        headers = PaginationUtil.generateSearchWithTemplatePaginationHttpHeaders(templateable, page, baseUrl);
         strHeaders = headers.get(HttpHeaders.LINK);
         assertNotNull(strHeaders);
         assertTrue(strHeaders.size() == 1);
         headerData = strHeaders.get(0);
         assertTrue(headerData.split(",").length == 3);
-        expectedData = "</api/_search/example?page=6&size=50&template=Test4&templateParams=Test5%2CTest6>; rel=\"prev\","
-            + "</api/_search/example?page=7&size=50&template=Test4&templateParams=Test5%2CTest6>; rel=\"last\","
-            + "</api/_search/example?page=0&size=50&template=Test4&templateParams=Test5%2CTest6>; rel=\"first\"";
+        expectedData = "</api/_search/example?page=6&size=50&template=Test4&templateParams[Test5]=Test6>; rel=\"prev\","
+            + "</api/_search/example?page=7&size=50&template=Test4&templateParams[Test5]=Test6>; rel=\"last\","
+            + "</api/_search/example?page=0&size=50&template=Test4&templateParams[Test5]=Test6>; rel=\"first\"";
         assertEquals(expectedData, headerData);
     }
 
@@ -318,9 +321,10 @@ public class PaginationUtilUnitTest {
         String baseUrl = "/api/_search/example";
         List<String> content = new ArrayList<>();
         Page<String> page = new PageImpl<>(content);
-        String template = "Test4>";
-        String[] templateParams = {"Test5>", "Test6>"};
-        HttpHeaders headers = PaginationUtil.generateSearchWithTemplatePaginationHttpHeaders(template, templateParams, page, baseUrl);
+        Templateable templateable = new Templateable();
+        templateable.setTemplate("Test4>");
+        templateable.getTemplateParams().put("Test5>", "Test6>");
+        HttpHeaders headers = PaginationUtil.generateSearchWithTemplatePaginationHttpHeaders(templateable, page, baseUrl);
         List<String> strHeaders = headers.get(HttpHeaders.LINK);
         assertNotNull(strHeaders);
         assertTrue(strHeaders.size() == 1);
@@ -330,8 +334,8 @@ public class PaginationUtilUnitTest {
         assertTrue(linksData.length == 2);
         assertTrue(linksData[0].split(">;").length == 2);
         assertTrue(linksData[1].split(">;").length == 2);
-        String expectedData = "</api/_search/example?page=0&size=0&template=Test4%3E&templateParams=Test5%3E%2CTest6%3E>; rel=\"last\","
-            + "</api/_search/example?page=0&size=0&template=Test4%3E&templateParams=Test5%3E%2CTest6%3E>; rel=\"first\"";
+        String expectedData = "</api/_search/example?page=0&size=0&template=Test4%3E&templateParams[Test5%3E]=Test6%3E>; rel=\"last\","
+            + "</api/_search/example?page=0&size=0&template=Test4%3E&templateParams[Test5%3E]=Test6%3E>; rel=\"first\"";
         assertEquals(expectedData, headerData);
         List<String> xTotalCountHeaders = headers.get("X-Total-Count");
         assertTrue(xTotalCountHeaders.size() == 1);
