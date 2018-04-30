@@ -754,9 +754,18 @@ public class XmEntityResourceIntTest {
         // Initialize the database
         xmEntityServiceImpl.save(xmEntity);
         // Search the xmEntity
+        restXmEntityMockMvc.perform(get("/api/_search-with-template/xm-entities"))
+            .andExpect(status().is4xxClientError());
+    }
+
+    @Test
+    @Transactional
+    public void searchXmEntityWithEmptyTemplate() throws Exception {
+        // Initialize the database
+        xmEntityServiceImpl.save(xmEntity);
+        // Search the xmEntity
         restXmEntityMockMvc.perform(get("/api/_search-with-template/xm-entities?template="))
-            .andExpect(status().isOk())
-            .andExpect(jsonPath("$").isEmpty());
+            .andExpect(status().is5xxServerError());
     }
 
     @Test

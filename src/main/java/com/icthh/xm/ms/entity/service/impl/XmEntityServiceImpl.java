@@ -334,14 +334,12 @@ public class XmEntityServiceImpl implements XmEntityService {
     @Transactional(readOnly = true)
     @FindWithPermission("XMENTITY.SEARCH")
     public Page<XmEntity> searchByQueryAndTypeKey(String template, TemplateParams templateParams, String typeKey, Pageable pageable, String privilegeKey) {
-        String query = getTemplateQuery(template, templateParams);
+        String query = isBlank(template) ? StringUtils.EMPTY : getTemplateQuery(template, templateParams);
         return xmEntityPermittedSearchRepository.searchByQueryAndTypeKey(query, typeKey, pageable, privilegeKey);
     }
 
     private String getTemplateQuery(String template, TemplateParams templateParams) {
-        return isBlank(template)
-            ? StringUtils.EMPTY
-            : StrSubstitutor.replace(xmEntityTemplatesSpecService.findTemplate(template), templateParams
+        return StrSubstitutor.replace(xmEntityTemplatesSpecService.findTemplate(template), templateParams
                 .getTemplateParams());
     }
 
