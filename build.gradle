@@ -37,7 +37,6 @@ apply plugin: 'io.spring.dependency-management'
 apply plugin: 'checkstyle'
 apply plugin: 'findbugs'
 apply plugin: 'pmd'
-apply plugin: 'net.ltgt.apt'
 dependencyManagement {
     imports {
         mavenBom 'org.springframework.cloud:spring-cloud-dependencies:' + spring_cloud_version
@@ -56,6 +55,7 @@ war {
 springBoot {
     mainClass = 'com.icthh.xm.ms.entity.EntityApp'
     executable = true
+
     buildInfo() {
         additionalProperties = [
             currentBranch: gitInfo.currentBranch,

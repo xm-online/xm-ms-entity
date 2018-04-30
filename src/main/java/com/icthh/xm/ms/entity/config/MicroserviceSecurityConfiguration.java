@@ -74,13 +74,6 @@ public class MicroserviceSecurityConfiguration extends ResourceServerConfigurerA
         return converter;
     }
 
-    @Bean
-    public RestTemplate loadBalancedRestTemplate(RestTemplateCustomizer customizer) {
-        RestTemplate restTemplate = new RestTemplate();
-        customizer.customize(restTemplate);
-        return restTemplate;
-    }
-
     private String getKeyFromConfigServer(RestTemplate keyUriRestTemplate) throws CertificateException {
         // Load available UAA servers
         discoveryClient.getServices();
