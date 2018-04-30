@@ -96,7 +96,7 @@ if (OperatingSystem.current().isWindows()) {
 }
 
 test {
-
+    systemProperty "spring.profiles.active", "test"
     mkdir("src/test/features")
     include '**/*UnitTest*'
     include '**/*IntTest*'
@@ -169,6 +169,7 @@ configurations {
 }
 
 repositories {
+    mavenLocal()
     mavenCentral()
     jcenter()
     maven { url 'http://repo.spring.io/milestone' }

@@ -35,6 +35,15 @@ public class XmEntityPermittedRepository extends PermittedRepository {
         return findByCondition(whereCondition, conditionParams, pageable, getType(), privilegeKey);
     }
 
+    public Page<XmEntity> findAllByIdsWithEmbed(Pageable pageable, Set<Long> ids, Set<String> embed, String privilegeKey) {
+        String whereCondition = "id in (:ids)";
+
+        Map<String, Object> conditionParams = Collections.singletonMap("ids",
+            CollectionUtils.isEmpty(ids) ? null : ids);
+
+        return findByCondition(whereCondition, conditionParams, embed, pageable, getType(), privilegeKey);
+    }
+
     private Class<XmEntity> getType() {
         return XmEntity.class;
     }
