@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.annotation.Secured;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -28,7 +29,7 @@ public class ElasticsearchIndexResource {
      */
     @PostMapping("/elasticsearch/index")
     @Timed
-    @Secured(RoleConstant.SUPER_ADMIN)
+    @PreAuthorize("hasPermission(null, 'ELASTICSEARCH.INDEX')")
     public ResponseEntity<Void> reindexAll() {
         elasticsearchIndexService.reindexAll();
         return ResponseEntity.accepted()
