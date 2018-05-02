@@ -2,6 +2,8 @@ package com.icthh.xm.ms.entity.web.rest;
 
 import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_AUTH_CONTEXT;
 import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_TENANT_CONTEXT;
+import static com.icthh.xm.commons.tenant.TenantContextUtils.getRequiredTenantKeyValue;
+import static com.icthh.xm.ms.entity.config.TenantConfigMockConfiguration.getXmEntityTemplatesSpec;
 import static com.icthh.xm.ms.entity.web.rest.TestUtil.sameInstant;
 import static java.util.Collections.emptyMap;
 import static java.util.UUID.randomUUID;
@@ -38,6 +40,7 @@ import com.icthh.xm.commons.security.XmAuthenticationContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
 import com.icthh.xm.ms.entity.EntityApp;
+import com.icthh.xm.ms.entity.config.ApplicationProperties;
 import com.icthh.xm.ms.entity.config.Constants;
 import com.icthh.xm.ms.entity.config.LepConfiguration;
 import com.icthh.xm.ms.entity.config.SecurityBeanOverrideConfiguration;
@@ -170,6 +173,9 @@ public class XmEntityResourceExtendedIntTest {
     private static final Instant DEFAULT_LN_TARGET_START_DATE = Instant.now();
 
     @Autowired
+    private ApplicationProperties applicationProperties;
+
+    @Autowired
     private CalendarResource calendarResource;
 
     @Autowired
@@ -226,6 +232,9 @@ public class XmEntityResourceExtendedIntTest {
     XmEntitySpecService xmEntitySpecService;
 
     @Autowired
+    XmEntityTemplatesSpecService xmEntityTemplatesSpecService;
+
+    @Autowired
     LifecycleLepStrategyFactory lifeCycleService;
 
     @Autowired
@@ -278,7 +287,13 @@ public class XmEntityResourceExtendedIntTest {
         when(startUpdateDateGenerationStrategy.generateStartDate()).thenReturn(MOCKED_START_DATE);
         when(startUpdateDateGenerationStrategy.generateUpdateDate()).thenReturn(MOCKED_UPDATE_DATE);
 
+        String tenantName = getRequiredTenantKeyValue(tenantContextHolder);
+        String config = getXmEntityTemplatesSpec(tenantName);
+        String key = applicationProperties.getSpecificationTemplatesPathPattern().replace("{tenantName}", tenantName);
+        xmEntityTemplatesSpecService.onRefresh(key, config);
+
         XmEntityServiceImpl xmEntityService = new XmEntityServiceImpl(xmEntitySpecService,
+                                                   xmEntityTemplatesSpecService,
                                                    xmEntityRepository,
                                                    xmEntitySearchRepository,
                                                    lifeCycleService,
@@ -820,6 +835,42 @@ public class XmEntityResourceExtendedIntTest {
             .andExpect(jsonPath("$.[0].tags[0].name").value(DEFAULT_TAG_NAME));
 
         performGet(urlTemplate + "&query=" + NOT_PRESENT_UNIQ_DESCRIPTION)
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.length()").value(0));
+
+    }
+
+    @Test
+    @Transactional
+    @WithMockUser(authorities = "SUPER-ADMIN")
+    public void testSearchByTypeKeyAndTemplate() throws Exception {
+
+        // FIXME - fails if run test in Idea. But its needed for test running from console. need fix.
+        try {
+            xmEntitySearchRepository.deleteAll();
+        } catch (Exception e) {
+            log.warn("Suppress index deletion exception in tenant context: {}", String.valueOf(e));
+        }
+
+        // Initialize the database
+        xmEntityService.save(createEntityComplexIncoming(em).typeKey(DEFAULT_TYPE_KEY));
+        xmEntityService.save(createEntityComplexIncoming(em).typeKey(UPDATED_TYPE_KEY).description(UNIQ_DESCRIPTION));
+        xmEntityService.save(createEntityComplexIncoming(em).typeKey(SEARCH_TEST_KEY));
+
+        String urlTemplate = "/api/_search-with-typekey-and-template/xm-entities?typeKey=ACCOUNT&size=5";
+
+        performGet(urlTemplate)
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.length()").value(2))
+            .andExpect(jsonPath("$.[0].tags[0].name").value(DEFAULT_TAG_NAME))
+            .andExpect(jsonPath("$.[1].tags[0].name").value(DEFAULT_TAG_NAME));
+
+        performGet(urlTemplate + "&template=UNIQ_DESCRIPTION&templateParams[description]=" + UNIQ_DESCRIPTION)
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.length()").value(1))
+            .andExpect(jsonPath("$.[0].tags[0].name").value(DEFAULT_TAG_NAME));
+
+        performGet(urlTemplate + "&template=UNIQ_DESCRIPTION&templateParams[description]=" + NOT_PRESENT_UNIQ_DESCRIPTION)
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.length()").value(0));
 
