@@ -1,13 +1,10 @@
 package com.icthh.xm.ms.entity.web.rest;
 
 import com.codahale.metrics.annotation.Timed;
-import com.icthh.xm.commons.permission.constants.RoleConstant;
 import com.icthh.xm.ms.entity.service.ElasticsearchIndexService;
-import com.icthh.xm.ms.entity.web.rest.util.HeaderUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -32,8 +29,6 @@ public class ElasticsearchIndexResource {
     @PreAuthorize("hasPermission(null, 'ELASTICSEARCH.INDEX')")
     public ResponseEntity<Void> reindexAll() {
         elasticsearchIndexService.reindexAll();
-        return ResponseEntity.accepted()
-            .headers(HeaderUtil.createAlert("elasticsearch.reindex.accepted", null))
-            .build();
+        return ResponseEntity.accepted().build();
     }
 }
