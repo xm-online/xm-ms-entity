@@ -3,9 +3,6 @@ package com.icthh.xm.ms.entity.service;
 import com.codahale.metrics.annotation.Timed;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.icthh.xm.commons.logging.util.MdcUtils;
-import com.icthh.xm.commons.tenant.TenantContextHolder;
-import com.icthh.xm.commons.tenant.TenantContextUtils;
-import com.icthh.xm.commons.tenant.TenantKey;
 import com.icthh.xm.ms.entity.domain.Attachment;
 import com.icthh.xm.ms.entity.domain.Calendar;
 import com.icthh.xm.ms.entity.domain.Comment;
@@ -21,7 +18,6 @@ import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.repository.AttachmentRepository;
 import com.icthh.xm.ms.entity.repository.CalendarRepository;
 import com.icthh.xm.ms.entity.repository.CommentRepository;
-import com.icthh.xm.ms.entity.repository.ContentRepository;
 import com.icthh.xm.ms.entity.repository.EventRepository;
 import com.icthh.xm.ms.entity.repository.FunctionContextRepository;
 import com.icthh.xm.ms.entity.repository.LinkRepository;
@@ -102,16 +98,15 @@ public class ElasticsearchIndexService {
     private final XmEntityRepository xmEntityRepository;
     private final XmEntitySearchRepository xmEntitySearchRepository;
     private final ElasticsearchTemplate elasticsearchTemplate;
-    private final TenantContextHolder tenantContextHolder;
 
     public void reindexAll() {
-        reindexAllAsync(TenantContextUtils.getRequiredTenantKey(tenantContextHolder), MdcUtils.getRid());
+        reindexAllAsync(MdcUtils.getRid());
     }
 
     @Async
     @Timed
-    public void reindexAllAsync(TenantKey tenantKey, String rid) {
-        execForCustomRid(tenantKey, rid, () -> {
+    public void reindexAllAsync(String rid) {
+        execForCustomRid(rid, () -> {
             if (reindexLock.tryLock()) {
                 try {
                     reindexForClass(Attachment.class, attachmentRepository, attachmentSearchRepository);
@@ -189,10 +184,9 @@ public class ElasticsearchIndexService {
         log.info("Elasticsearch: Indexed all rows for {}", entityClass.getSimpleName());
     }
 
-    private void execForCustomRid(TenantKey tenantKey, String rid, Runnable runnable) {
+    private void execForCustomRid(String rid, Runnable runnable) {
         final String oldRid = MdcUtils.getRid();
         try {
-            TenantContextUtils.setTenant(tenantContextHolder, tenantKey);
             MdcUtils.putRid(rid);
             runnable.run();
         } finally {
@@ -201,7 +195,6 @@ public class ElasticsearchIndexService {
             } else {
                 MdcUtils.removeRid();
             }
-            tenantContextHolder.getPrivilegedContext().destroyCurrentContext();
         }
     }
 }
