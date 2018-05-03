@@ -133,6 +133,8 @@ public class ElasticsearchIndexServiceUnitTest {
 
     @Before
     public void before() {
+        service.setSelfReference(service);
+
         TenantContext tenantContext = mock(TenantContext.class);
         when(tenantContext.getTenantKey()).thenReturn(Optional.of(TenantKey.valueOf("XM")));
         when(tenantContextHolder.getContext()).thenReturn(tenantContext);

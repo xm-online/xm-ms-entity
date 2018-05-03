@@ -39,9 +39,12 @@ import com.icthh.xm.ms.entity.repository.search.RatingSearchRepository;
 import com.icthh.xm.ms.entity.repository.search.TagSearchRepository;
 import com.icthh.xm.ms.entity.repository.search.VoteSearchRepository;
 import com.icthh.xm.ms.entity.repository.search.XmEntitySearchRepository;
+import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.elasticsearch.indices.IndexAlreadyExistsException;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -63,6 +66,7 @@ import java.util.Set;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
+import javax.annotation.Resource;
 import javax.persistence.ManyToMany;
 import javax.persistence.OneToMany;
 
@@ -100,8 +104,13 @@ public class ElasticsearchIndexService {
     private final XmEntitySearchRepository xmEntitySearchRepository;
     private final ElasticsearchTemplate elasticsearchTemplate;
 
+    @Setter(AccessLevel.PACKAGE)
+    @Resource
+    @Lazy
+    private ElasticsearchIndexService selfReference;
+
     public void reindexAll() {
-        reindexAllAsync(MdcUtils.getRid());
+        selfReference.reindexAllAsync(MdcUtils.getRid());
     }
 
     @Async
