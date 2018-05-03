@@ -2,7 +2,6 @@ package com.icthh.xm.ms.entity.service;
 
 import com.codahale.metrics.annotation.Timed;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.icthh.xm.commons.logging.util.MdcUtils;
 import com.icthh.xm.ms.entity.domain.Attachment;
 import com.icthh.xm.ms.entity.domain.Calendar;
 import com.icthh.xm.ms.entity.domain.Comment;
@@ -39,19 +38,15 @@ import com.icthh.xm.ms.entity.repository.search.RatingSearchRepository;
 import com.icthh.xm.ms.entity.repository.search.TagSearchRepository;
 import com.icthh.xm.ms.entity.repository.search.VoteSearchRepository;
 import com.icthh.xm.ms.entity.repository.search.XmEntitySearchRepository;
-import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.elasticsearch.indices.IndexAlreadyExistsException;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
 import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -66,8 +61,6 @@ import java.util.Set;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
-import javax.annotation.Resource;
-import javax.persistence.ManyToMany;
 import javax.persistence.OneToMany;
 
 @Slf4j
@@ -104,45 +97,32 @@ public class ElasticsearchIndexService {
     private final XmEntitySearchRepository xmEntitySearchRepository;
     private final ElasticsearchTemplate elasticsearchTemplate;
 
-    @Setter(AccessLevel.PACKAGE)
-    @Resource
-    @Lazy
-    private ElasticsearchIndexService selfReference;
-
-    public void reindexAll() {
-        selfReference.reindexAllAsync(MdcUtils.getRid());
-    }
-
-    @Async
     @Timed
-    public void reindexAllAsync(String rid) {
-        execForCustomRid(rid, () -> {
-            if (reindexLock.tryLock()) {
-                try {
-                    reindexForClass(Attachment.class, attachmentRepository, attachmentSearchRepository);
-                    reindexForClass(Calendar.class, calendarRepository, calendarSearchRepository);
-                    reindexForClass(Comment.class, commentRepository, commentSearchRepository);
-                    reindexForClass(Event.class, eventRepository, eventSearchRepository);
-                    reindexForClass(FunctionContext.class, functionContextRepository, functionContextSearchRepository);
-                    reindexForClass(Link.class, linkRepository, linkSearchRepository);
-                    reindexForClass(Location.class, locationRepository, locationSearchRepository);
-                    reindexForClass(Profile.class, profileRepository, profileSearchRepository);
-                    reindexForClass(Rating.class, ratingRepository, ratingSearchRepository);
-                    reindexForClass(Tag.class, tagRepository, tagSearchRepository);
-                    reindexForClass(Vote.class, voteRepository, voteSearchRepository);
-                    reindexForClass(XmEntity.class, xmEntityRepository, xmEntitySearchRepository);
+    public void reindexAll() {
+        if (reindexLock.tryLock()) {
+            try {
+                reindexForClass(Attachment.class, attachmentRepository, attachmentSearchRepository);
+                reindexForClass(Calendar.class, calendarRepository, calendarSearchRepository);
+                reindexForClass(Comment.class, commentRepository, commentSearchRepository);
+                reindexForClass(Event.class, eventRepository, eventSearchRepository);
+                reindexForClass(FunctionContext.class, functionContextRepository, functionContextSearchRepository);
+                reindexForClass(Link.class, linkRepository, linkSearchRepository);
+                reindexForClass(Location.class, locationRepository, locationSearchRepository);
+                reindexForClass(Profile.class, profileRepository, profileSearchRepository);
+                reindexForClass(Rating.class, ratingRepository, ratingSearchRepository);
+                reindexForClass(Tag.class, tagRepository, tagSearchRepository);
+                reindexForClass(Vote.class, voteRepository, voteSearchRepository);
+                reindexForClass(XmEntity.class, xmEntityRepository, xmEntitySearchRepository);
 
-                    log.info("Elasticsearch: Successfully performed reindexing");
-                } finally {
-                    reindexLock.unlock();
-                }
-            } else {
-                log.info("Elasticsearch: concurrent reindexing attempt");
+                log.info("Elasticsearch: Successfully performed reindexing");
+            } finally {
+                reindexLock.unlock();
             }
-        });
+        } else {
+            log.info("Elasticsearch: concurrent reindexing attempt");
+        }
     }
 
-    @SuppressWarnings("unchecked")
     private <T, ID extends Serializable> void reindexForClass(Class<T> entityClass, JpaRepository<T, ID> jpaRepository,
                                                               ElasticsearchRepository<T, ID> elasticsearchRepository) {
         elasticsearchTemplate.deleteIndex(entityClass);
@@ -190,19 +170,5 @@ public class ElasticsearchIndexService {
             }
         }
         log.info("Elasticsearch: Indexed all rows for {}", entityClass.getSimpleName());
-    }
-
-    private void execForCustomRid(String rid, Runnable runnable) {
-        final String oldRid = MdcUtils.getRid();
-        try {
-            MdcUtils.putRid(rid);
-            runnable.run();
-        } finally {
-            if (oldRid != null) {
-                MdcUtils.putRid(oldRid);
-            } else {
-                MdcUtils.removeRid();
-            }
-        }
     }
 }
