@@ -83,8 +83,6 @@ public class ElasticsearchIndexResourceIntTest {
     @Autowired
     private LepManager lepManager;
 
-    private MockMvc restStorageMockMvc;
-
     @BeforeTransaction
     public void beforeTransaction() {
         TenantContextUtils.setTenant(tenantContextHolder, "RESINTTEST");
@@ -129,7 +127,7 @@ public class ElasticsearchIndexResourceIntTest {
 
         mockMvc.perform(post("/api/elasticsearch/index"))
             .andExpect(status().isAccepted());
-        
+
         Thread.sleep(2000);
 
         mockMvc.perform(get("/api/_search/xm-entities?query=id:{id}", saved.getId()))
