@@ -2,6 +2,10 @@ package com.icthh.xm.ms.entity.service;
 
 import com.codahale.metrics.annotation.Timed;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.icthh.xm.commons.logging.util.MdcUtils;
+import com.icthh.xm.commons.tenant.TenantContextHolder;
+import com.icthh.xm.commons.tenant.TenantContextUtils;
+import com.icthh.xm.commons.tenant.TenantKey;
 import com.icthh.xm.ms.entity.domain.Attachment;
 import com.icthh.xm.ms.entity.domain.Calendar;
 import com.icthh.xm.ms.entity.domain.Comment;
@@ -79,7 +83,6 @@ public class ElasticsearchIndexService {
     private final CalendarSearchRepository calendarSearchRepository;
     private final CommentRepository commentRepository;
     private final CommentSearchRepository commentSearchRepository;
-    private final ContentRepository contentRepository;
     private final EventRepository eventRepository;
     private final EventSearchRepository eventSearchRepository;
     private final FunctionContextRepository functionContextRepository;
@@ -99,32 +102,39 @@ public class ElasticsearchIndexService {
     private final XmEntityRepository xmEntityRepository;
     private final XmEntitySearchRepository xmEntitySearchRepository;
     private final ElasticsearchTemplate elasticsearchTemplate;
+    private final TenantContextHolder tenantContextHolder;
+
+    public void reindexAll() {
+        reindexAllAsync(TenantContextUtils.getRequiredTenantKey(tenantContextHolder), MdcUtils.getRid());
+    }
 
     @Async
     @Timed
-    public void reindexAll() {
-        if (reindexLock.tryLock()) {
-            try {
-                reindexForClass(Attachment.class, attachmentRepository, attachmentSearchRepository);
-                reindexForClass(Calendar.class, calendarRepository, calendarSearchRepository);
-                reindexForClass(Comment.class, commentRepository, commentSearchRepository);
-                reindexForClass(Event.class, eventRepository, eventSearchRepository);
-                reindexForClass(FunctionContext.class, functionContextRepository, functionContextSearchRepository);
-                reindexForClass(Link.class, linkRepository, linkSearchRepository);
-                reindexForClass(Location.class, locationRepository, locationSearchRepository);
-                reindexForClass(Profile.class, profileRepository, profileSearchRepository);
-                reindexForClass(Rating.class, ratingRepository, ratingSearchRepository);
-                reindexForClass(Tag.class, tagRepository, tagSearchRepository);
-                reindexForClass(Vote.class, voteRepository, voteSearchRepository);
-                reindexForClass(XmEntity.class, xmEntityRepository, xmEntitySearchRepository);
+    public void reindexAllAsync(TenantKey tenantKey, String rid) {
+        execForCustomRid(tenantKey, rid, () -> {
+            if (reindexLock.tryLock()) {
+                try {
+                    reindexForClass(Attachment.class, attachmentRepository, attachmentSearchRepository);
+                    reindexForClass(Calendar.class, calendarRepository, calendarSearchRepository);
+                    reindexForClass(Comment.class, commentRepository, commentSearchRepository);
+                    reindexForClass(Event.class, eventRepository, eventSearchRepository);
+                    reindexForClass(FunctionContext.class, functionContextRepository, functionContextSearchRepository);
+                    reindexForClass(Link.class, linkRepository, linkSearchRepository);
+                    reindexForClass(Location.class, locationRepository, locationSearchRepository);
+                    reindexForClass(Profile.class, profileRepository, profileSearchRepository);
+                    reindexForClass(Rating.class, ratingRepository, ratingSearchRepository);
+                    reindexForClass(Tag.class, tagRepository, tagSearchRepository);
+                    reindexForClass(Vote.class, voteRepository, voteSearchRepository);
+                    reindexForClass(XmEntity.class, xmEntityRepository, xmEntitySearchRepository);
 
-                log.info("Elasticsearch: Successfully performed reindexing");
-            } finally {
-                reindexLock.unlock();
+                    log.info("Elasticsearch: Successfully performed reindexing");
+                } finally {
+                    reindexLock.unlock();
+                }
+            } else {
+                log.info("Elasticsearch: concurrent reindexing attempt");
             }
-        } else {
-            log.info("Elasticsearch: concurrent reindexing attempt");
-        }
+        });
     }
 
     @SuppressWarnings("unchecked")
@@ -177,5 +187,21 @@ public class ElasticsearchIndexService {
             }
         }
         log.info("Elasticsearch: Indexed all rows for {}", entityClass.getSimpleName());
+    }
+
+    private void execForCustomRid(TenantKey tenantKey, String rid, Runnable runnable) {
+        final String oldRid = MdcUtils.getRid();
+        try {
+            TenantContextUtils.setTenant(tenantContextHolder, tenantKey);
+            MdcUtils.putRid(rid);
+            runnable.run();
+        } finally {
+            if (oldRid != null) {
+                MdcUtils.putRid(oldRid);
+            } else {
+                MdcUtils.removeRid();
+            }
+            tenantContextHolder.getPrivilegedContext().destroyCurrentContext();
+        }
     }
 }

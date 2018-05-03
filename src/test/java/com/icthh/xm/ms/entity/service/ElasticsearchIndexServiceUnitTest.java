@@ -1,10 +1,16 @@
 package com.icthh.xm.ms.entity.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.icthh.xm.commons.tenant.PrivilegedTenantContext;
+import com.icthh.xm.commons.tenant.TenantContext;
+import com.icthh.xm.commons.tenant.TenantContextHolder;
+import com.icthh.xm.commons.tenant.TenantContextUtils;
+import com.icthh.xm.commons.tenant.TenantKey;
 import com.icthh.xm.ms.entity.domain.Attachment;
 import com.icthh.xm.ms.entity.domain.Calendar;
 import com.icthh.xm.ms.entity.domain.Comment;
@@ -43,6 +49,8 @@ import com.icthh.xm.ms.entity.repository.search.TagSearchRepository;
 import com.icthh.xm.ms.entity.repository.search.VoteSearchRepository;
 import com.icthh.xm.ms.entity.repository.search.XmEntitySearchRepository;
 import lombok.SneakyThrows;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
@@ -54,12 +62,14 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
 import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.test.context.transaction.BeforeTransaction;
 import org.springframework.util.ReflectionUtils;
 
 import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 @RunWith(MockitoJUnitRunner.class)
 public class ElasticsearchIndexServiceUnitTest {
@@ -118,6 +128,18 @@ public class ElasticsearchIndexServiceUnitTest {
     private XmEntitySearchRepository xmEntitySearchRepository;
     @Mock
     private ElasticsearchTemplate elasticsearchTemplate;
+    @Mock
+    TenantContextHolder tenantContextHolder;
+
+    @Before
+    public void before() {
+        TenantContext tenantContext = mock(TenantContext.class);
+        when(tenantContext.getTenantKey()).thenReturn(Optional.of(TenantKey.valueOf("XM")));
+        when(tenantContextHolder.getContext()).thenReturn(tenantContext);
+        
+        PrivilegedTenantContext privilegedTenantContext = mock(PrivilegedTenantContext.class);
+        when(tenantContextHolder.getPrivilegedContext()).thenReturn(privilegedTenantContext);
+    }
 
     @Test
     public void reindexAll() {
