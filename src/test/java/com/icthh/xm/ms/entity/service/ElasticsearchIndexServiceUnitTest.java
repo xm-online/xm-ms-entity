@@ -136,7 +136,7 @@ public class ElasticsearchIndexServiceUnitTest {
         TenantContext tenantContext = mock(TenantContext.class);
         when(tenantContext.getTenantKey()).thenReturn(Optional.of(TenantKey.valueOf("XM")));
         when(tenantContextHolder.getContext()).thenReturn(tenantContext);
-        
+
         PrivilegedTenantContext privilegedTenantContext = mock(PrivilegedTenantContext.class);
         when(tenantContextHolder.getPrivilegedContext()).thenReturn(privilegedTenantContext);
     }
