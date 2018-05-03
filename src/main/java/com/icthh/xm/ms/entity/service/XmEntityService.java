@@ -5,6 +5,7 @@ import com.icthh.xm.commons.permission.access.repository.ResourceRepository;
 import com.icthh.xm.ms.entity.domain.Link;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.domain.ext.IdOrKey;
+import com.icthh.xm.ms.entity.domain.template.TemplateParamsHolder;
 import com.icthh.xm.ms.entity.projection.XmEntityIdKeyTypeKey;
 import com.icthh.xm.ms.entity.projection.XmEntityStateProjection;
 import org.apache.commons.lang3.NotImplementedException;
@@ -43,6 +44,8 @@ public interface XmEntityService extends ResourceRepository {
 
     Page<XmEntity> search(String query, Pageable pageable, String privilegeKey);
 
+    Page<XmEntity> search(String template, TemplateParamsHolder templateParamsHolder, Pageable pageable, String privilegeKey);
+
     @Deprecated
     XmEntity profile();
 
@@ -73,6 +76,8 @@ public interface XmEntityService extends ResourceRepository {
     }
 
     Page<XmEntity> searchByQueryAndTypeKey(@Nullable String query, String typeKey, Pageable pageable, String privilegeKey);
+
+    Page<XmEntity> searchByQueryAndTypeKey(String template, TemplateParamsHolder templateParamsHolder, String typeKey, Pageable pageable, String privilegeKey);
 
     XmEntity findOne(IdOrKey idOrKey, List<String> embed);
 

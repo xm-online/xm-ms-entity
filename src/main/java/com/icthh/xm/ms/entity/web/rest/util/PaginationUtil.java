@@ -1,18 +1,23 @@
 package com.icthh.xm.ms.entity.web.rest.util;
 
+import static java.lang.String.format;
+import static java.util.stream.Collectors.joining;
 import static org.apache.commons.lang.StringUtils.EMPTY;
 
-import java.net.URLEncoder;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
-import java.util.StringJoiner;
-
+import com.icthh.xm.ms.entity.domain.template.TemplateParamsHolder;
 import lombok.SneakyThrows;
+import lombok.experimental.UtilityClass;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpHeaders;
 import org.springframework.web.util.UriComponentsBuilder;
+
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Utility class for handling pagination.
@@ -20,36 +25,17 @@ import org.springframework.web.util.UriComponentsBuilder;
  * <p> Pagination uses the same principles as the <a href="https://developer.github.com/v3/#pagination">Github API</a>,
  * and follow <a href="http://tools.ietf.org/html/rfc5988">RFC 5988 (Link header)</a>.
  */
+@UtilityClass
 public final class PaginationUtil {
 
     private static final String QUERY_GET_PARAM = "&query=";
+    private static final String TYPEKEY_GET_PARAM = "&typeKey=";
+    private static final String TEMPLATE_GET_PARAM = "&template=";
     private static final String IDS_GET_PARAM = "&ids=";
     private static final String EMBED_GET_PARAM = "&embed=";
 
-    private PaginationUtil() {
-    }
-
     public static HttpHeaders generatePaginationHttpHeaders(Page page, String baseUrl) {
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.add("X-Total-Count", Long.toString(page.getTotalElements()));
-        String link = "";
-        if ((page.getNumber() + 1) < page.getTotalPages()) {
-            link = "<" + generateUri(baseUrl, page.getNumber() + 1, page.getSize()) + ">; rel=\"next\",";
-        }
-        // prev link
-        if ((page.getNumber()) > 0) {
-            link += "<" + generateUri(baseUrl, page.getNumber() - 1, page.getSize()) + ">; rel=\"prev\",";
-        }
-        // last and first link
-        int lastPage = 0;
-        if (page.getTotalPages() > 0) {
-            lastPage = page.getTotalPages() - 1;
-        }
-        link += "<" + generateUri(baseUrl, lastPage, page.getSize()) + ">; rel=\"last\",";
-        link += "<" + generateUri(baseUrl, 0, page.getSize()) + ">; rel=\"first\"";
-        headers.add(HttpHeaders.LINK, link);
-        return headers;
+        return generatePagination(EMPTY, page, baseUrl);
     }
 
     @SneakyThrows
@@ -59,28 +45,7 @@ public final class PaginationUtil {
 
         String queryString = IDS_GET_PARAM + escapedIds + EMBED_GET_PARAM + escapedEmbed;
 
-        HttpHeaders headers = new HttpHeaders();
-        headers.add("X-Total-Count", Long.toString(page.getTotalElements()));
-        String link = "";
-        if ((page.getNumber() + 1) < page.getTotalPages()) {
-            link = "<" + generateUri(baseUrl, page.getNumber() + 1, page.getSize()) + queryString
-                + ">; rel=\"next\",";
-        }
-        // prev link
-        if ((page.getNumber()) > 0) {
-            link += "<" + generateUri(baseUrl, page.getNumber() - 1, page.getSize()) + queryString
-                + ">; rel=\"prev\",";
-        }
-        // last and first link
-        int lastPage = 0;
-        if (page.getTotalPages() > 0) {
-            lastPage = page.getTotalPages() - 1;
-        }
-        link +=
-            "<" + generateUri(baseUrl, lastPage, page.getSize()) + queryString + ">; rel=\"last\",";
-        link += "<" + generateUri(baseUrl, 0, page.getSize()) + queryString + ">; rel=\"first\"";
-        headers.add(HttpHeaders.LINK, link);
-        return headers;
+        return generatePagination(queryString, page, baseUrl);
     }
 
     private static String generateUri(String baseUrl, int page, int size) {
@@ -90,18 +55,57 @@ public final class PaginationUtil {
 
     @SneakyThrows
     public static HttpHeaders generateSearchPaginationHttpHeaders(String query, Page page, String baseUrl) {
-        String escapedQuery = URLEncoder.encode(query, "UTF-8");
+        String escapedQuery = URLEncoder.encode(Objects.toString(query, EMPTY), "UTF-8");
 
+        String queryString = QUERY_GET_PARAM + escapedQuery;
+
+        return generatePagination(queryString, page, baseUrl);
+    }
+
+    @SneakyThrows
+    public static HttpHeaders generateSearchByTypeKeyPaginationHttpHeaders(String typeKey, String query, Page page, String baseUrl) {
+        String escapedTypeKey = URLEncoder.encode(Objects.toString(typeKey, EMPTY), "UTF-8");
+        String escapedQuery = URLEncoder.encode(Objects.toString(query, EMPTY), "UTF-8");
+
+        String queryString = TYPEKEY_GET_PARAM + escapedTypeKey
+            + QUERY_GET_PARAM + escapedQuery;
+
+        return generatePagination(queryString, page, baseUrl);
+    }
+
+    @SneakyThrows
+    public static HttpHeaders generateSearchWithTemplatePaginationHttpHeaders(String template, TemplateParamsHolder templateParamsHolder, Page page, String baseUrl) {
+        String escapedTemplate = URLEncoder.encode(Objects.toString(template, EMPTY), "UTF-8");
+        String escapedTemplateParams = encodeTemplateParams(templateParamsHolder);
+
+        String queryString = TEMPLATE_GET_PARAM + escapedTemplate + escapedTemplateParams;
+
+        return generatePagination(queryString, page, baseUrl);
+    }
+
+    @SneakyThrows
+    public static HttpHeaders generateSearchByTypeKeyWithTemplatePaginationHttpHeaders(String typeKey, String template, TemplateParamsHolder templateParamsHolder, Page page, String baseUrl) {
+        String escapedTypeKey = URLEncoder.encode(Objects.toString(typeKey, EMPTY), "UTF-8");
+        String escapedTemplate = URLEncoder.encode(Objects.toString(template, EMPTY), "UTF-8");
+        String escapedTemplateParams = encodeTemplateParams(templateParamsHolder);
+
+        String queryString = TYPEKEY_GET_PARAM + escapedTypeKey
+            + TEMPLATE_GET_PARAM + escapedTemplate + escapedTemplateParams;
+
+        return generatePagination(queryString, page, baseUrl);
+    }
+
+    private static HttpHeaders generatePagination(String query, Page page, String baseUrl) {
         HttpHeaders headers = new HttpHeaders();
         headers.add("X-Total-Count", Long.toString(page.getTotalElements()));
         String link = "";
         if ((page.getNumber() + 1) < page.getTotalPages()) {
-            link = "<" + generateUri(baseUrl, page.getNumber() + 1, page.getSize()) + QUERY_GET_PARAM + escapedQuery
+            link = "<" + generateUri(baseUrl, page.getNumber() + 1, page.getSize()) + query
                 + ">; rel=\"next\",";
         }
         // prev link
         if ((page.getNumber()) > 0) {
-            link += "<" + generateUri(baseUrl, page.getNumber() - 1, page.getSize()) + QUERY_GET_PARAM + escapedQuery
+            link += "<" + generateUri(baseUrl, page.getNumber() - 1, page.getSize()) + query
                 + ">; rel=\"prev\",";
         }
         // last and first link
@@ -110,9 +114,25 @@ public final class PaginationUtil {
             lastPage = page.getTotalPages() - 1;
         }
         link +=
-            "<" + generateUri(baseUrl, lastPage, page.getSize()) + QUERY_GET_PARAM + escapedQuery + ">; rel=\"last\",";
-        link += "<" + generateUri(baseUrl, 0, page.getSize()) + QUERY_GET_PARAM + escapedQuery + ">; rel=\"first\"";
+            "<" + generateUri(baseUrl, lastPage, page.getSize()) + query + ">; rel=\"last\",";
+        link += "<" + generateUri(baseUrl, 0, page.getSize()) + query + ">; rel=\"first\"";
         headers.add(HttpHeaders.LINK, link);
         return headers;
+    }
+
+    private static String encodeTemplateParams(TemplateParamsHolder templateParamsHolder) {
+        return templateParamsHolder.getTemplateParams().entrySet().stream()
+            .map(PaginationUtil::encode)
+            .collect(joining("&"));
+    }
+
+    private static String encode(Map.Entry<String, String> entry) {
+        try {
+            return format("&templateParams[%s]=%s",
+                URLEncoder.encode(entry.getKey(), "UTF-8"),
+                URLEncoder.encode(entry.getValue(), "UTF-8"));
+        } catch (UnsupportedEncodingException e) {
+            throw new IllegalArgumentException(e);
+        }
     }
 }
