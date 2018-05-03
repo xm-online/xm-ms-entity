@@ -64,6 +64,7 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 import javax.persistence.ManyToMany;
+import javax.persistence.OneToMany;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -143,11 +144,9 @@ public class ElasticsearchIndexService {
         }
         elasticsearchTemplate.putMapping(entityClass);
         if (jpaRepository.count() > 0) {
-            // if a JHipster entity field is the owner side of a many-to-many relationship, it should be loaded manually
             List<Method> relationshipGetters = Arrays.stream(entityClass.getDeclaredFields())
                 .filter(field -> field.getType().equals(Set.class))
-                .filter(field -> field.getAnnotation(ManyToMany.class) != null)
-                .filter(field -> field.getAnnotation(ManyToMany.class).mappedBy().isEmpty())
+                .filter(field -> field.getAnnotation(OneToMany.class) != null)
                 .filter(field -> field.getAnnotation(JsonIgnore.class) == null)
                 .map(field -> {
                     try {
