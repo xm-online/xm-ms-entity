@@ -331,7 +331,7 @@ public class XmEntityResourceExtendedIntTest {
             .setValidator(validator)
             .setMessageConverters(jacksonMessageConverter).build();
 
-        xmEntityIncoming = createEntityComplexIncoming(em);
+        xmEntityIncoming = createEntityComplexIncoming();
 
     }
 
@@ -348,7 +348,7 @@ public class XmEntityResourceExtendedIntTest {
      * This is a static method, as tests for other entities might also need it,
      * if they test an entity which requires the current entity.
      */
-    public static XmEntity createEntity(EntityManager em) {
+    public static XmEntity createEntity() {
         XmEntity xmEntity = new XmEntity()
             .key(DEFAULT_KEY)
             .typeKey(DEFAULT_TYPE_KEY)
@@ -369,11 +369,10 @@ public class XmEntityResourceExtendedIntTest {
      * Creates incoming Entity as from HTTP request.
      * Potentially cam be moved to DTO
      *
-     * @param em - Entity manager
      * @return XmEntity for incoming request
      */
-    public static XmEntity createEntityComplexIncoming(EntityManager em) {
-        XmEntity entity = createEntity(em);
+    public static XmEntity createEntityComplexIncoming() {
+        XmEntity entity = createEntity();
 
         entity.getTags().add(new Tag()
             .typeKey(DEFAULT_TAG_KEY)
@@ -407,7 +406,7 @@ public class XmEntityResourceExtendedIntTest {
      */
     public static XmEntity createEntityComplexPersisted(EntityManager em) {
 
-        XmEntity entity = createEntity(em);
+        XmEntity entity = createEntity();
         em.persist(entity);
         em.flush();
 
@@ -572,7 +571,7 @@ public class XmEntityResourceExtendedIntTest {
     @Transactional
     public void createXmEntityWithLinks() throws Exception {
 
-        XmEntity presaved = xmEntityService.save(createEntity(em));
+        XmEntity presaved = xmEntityService.save(createEntity());
 
         int databaseSizeBeforeCreate = xmEntityRepository.findAll().size();
 
@@ -628,7 +627,7 @@ public class XmEntityResourceExtendedIntTest {
     @Transactional
     public void createXmEntityWithSourceLinks() throws Exception {
 
-        XmEntity presaved = xmEntityService.save(createEntity(em));
+        XmEntity presaved = xmEntityService.save(createEntity());
 
         int databaseSizeBeforeCreate = xmEntityRepository.findAll().size();
 
@@ -817,9 +816,9 @@ public class XmEntityResourceExtendedIntTest {
         }
 
         // Initialize the database
-        xmEntityService.save(createEntityComplexIncoming(em).typeKey(DEFAULT_TYPE_KEY));
-        xmEntityService.save(createEntityComplexIncoming(em).typeKey(UPDATED_TYPE_KEY).description(UNIQ_DESCRIPTION));
-        xmEntityService.save(createEntityComplexIncoming(em).typeKey(SEARCH_TEST_KEY));
+        xmEntityService.save(createEntityComplexIncoming().typeKey(DEFAULT_TYPE_KEY));
+        xmEntityService.save(createEntityComplexIncoming().typeKey(UPDATED_TYPE_KEY).description(UNIQ_DESCRIPTION));
+        xmEntityService.save(createEntityComplexIncoming().typeKey(SEARCH_TEST_KEY));
 
         String urlTemplate = "/api/_search-with-typekey/xm-entities?typeKey=ACCOUNT&size=5";
 
@@ -853,9 +852,9 @@ public class XmEntityResourceExtendedIntTest {
         }
 
         // Initialize the database
-        xmEntityService.save(createEntityComplexIncoming(em).typeKey(DEFAULT_TYPE_KEY));
-        xmEntityService.save(createEntityComplexIncoming(em).typeKey(UPDATED_TYPE_KEY).description(UNIQ_DESCRIPTION));
-        xmEntityService.save(createEntityComplexIncoming(em).typeKey(SEARCH_TEST_KEY));
+        xmEntityService.save(createEntityComplexIncoming().typeKey(DEFAULT_TYPE_KEY));
+        xmEntityService.save(createEntityComplexIncoming().typeKey(UPDATED_TYPE_KEY).description(UNIQ_DESCRIPTION));
+        xmEntityService.save(createEntityComplexIncoming().typeKey(SEARCH_TEST_KEY));
 
         String urlTemplate = "/api/_search-with-typekey-and-template/xm-entities?typeKey=ACCOUNT&size=5";
 
@@ -1178,7 +1177,7 @@ public class XmEntityResourceExtendedIntTest {
     @Transactional
     public void updateTenantXmEntity() throws Exception {
         // Initialize the database
-        XmEntity tenantEntity = createEntity(em);
+        XmEntity tenantEntity = createEntity();
         tenantEntity.setTypeKey(Constants.TENANT_TYPE_KEY);
         tenantEntity.setStateKey(null);
         tenantEntity.setData(null);
@@ -1187,7 +1186,7 @@ public class XmEntityResourceExtendedIntTest {
         int databaseSizeBeforeUpdate = xmEntityRepository.findAll().size();
 
         // Update the xmEntity
-        XmEntity updatedTenantEntity = createEntity(em);
+        XmEntity updatedTenantEntity = createEntity();
         updatedTenantEntity.setId(tenantEntity.getId());
         updatedTenantEntity.setTypeKey(Constants.TENANT_TYPE_KEY);
         updatedTenantEntity.setStateKey(null);
@@ -1366,7 +1365,7 @@ public class XmEntityResourceExtendedIntTest {
     @Transactional
     public void testJsonWithTwoPojoAndSameId() throws Exception {
         int databaseSizeBeforeCreate = xmEntityRepository.findAll().size();
-        XmEntity target = xmEntityService.save(createEntity(em));
+        XmEntity target = xmEntityService.save(createEntity());
 
         XmEntity entity = xmEntityIncoming;
         entity.getTargets().add(new Link()
