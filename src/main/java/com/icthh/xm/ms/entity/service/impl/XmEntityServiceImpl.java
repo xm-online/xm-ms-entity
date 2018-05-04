@@ -7,6 +7,7 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toMap;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import com.icthh.xm.commons.exceptions.BusinessException;
 import com.icthh.xm.commons.exceptions.EntityNotFoundException;
@@ -33,6 +34,8 @@ import com.icthh.xm.ms.entity.domain.ext.IdOrKey;
 import com.icthh.xm.ms.entity.domain.spec.LinkSpec;
 import com.icthh.xm.ms.entity.domain.spec.StateSpec;
 import com.icthh.xm.ms.entity.domain.spec.TypeSpec;
+import com.icthh.xm.ms.entity.domain.template.TemplateParamsHolder;
+import com.icthh.xm.ms.entity.lep.keyresolver.TemplateTypeKeyResolver;
 import com.icthh.xm.ms.entity.lep.keyresolver.XmEntityTypeKeyResolver;
 import com.icthh.xm.ms.entity.projection.XmEntityIdKeyTypeKey;
 import com.icthh.xm.ms.entity.projection.XmEntityStateProjection;
@@ -48,9 +51,11 @@ import com.icthh.xm.ms.entity.service.ProfileService;
 import com.icthh.xm.ms.entity.service.StorageService;
 import com.icthh.xm.ms.entity.service.XmEntityService;
 import com.icthh.xm.ms.entity.service.XmEntitySpecService;
+import com.icthh.xm.ms.entity.service.XmEntityTemplatesSpecService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.text.StrSubstitutor;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
@@ -59,7 +64,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpEntity;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.ObjectUtils;
 import org.springframework.web.multipart.MultipartFile;
@@ -72,7 +76,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.Callable;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -86,6 +89,7 @@ import java.util.stream.Collectors;
 public class XmEntityServiceImpl implements XmEntityService {
 
     private final XmEntitySpecService xmEntitySpecService;
+    private final XmEntityTemplatesSpecService xmEntityTemplatesSpecService;
     private final XmEntityRepository xmEntityRepository;
     private final XmEntitySearchRepository xmEntitySearchRepository;
     private final LifecycleLepStrategyFactory lifecycleLepStrategyFactory;
@@ -179,6 +183,13 @@ public class XmEntityServiceImpl implements XmEntityService {
         } else {
             return xmEntityPermittedRepository.findAll(pageable, XmEntity.class, privilegeKey);
         }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    @FindWithPermission("XMENTITY.GET_LIST")
+    public Page<XmEntity> findByIds(Pageable pageable, Set<Long> ids, Set<String> embed, String privilegeKey) {
+        return xmEntityPermittedRepository.findAllByIdsWithEmbed(pageable, ids, embed, privilegeKey);
     }
 
     @Transactional(readOnly = true)
@@ -300,8 +311,36 @@ public class XmEntityServiceImpl implements XmEntityService {
     @Transactional(readOnly = true)
     @FindWithPermission("XMENTITY.SEARCH")
     public Page<XmEntity> search(String query, Pageable pageable, String privilegeKey) {
-        log.debug("Request to search for a page of XmEntities for query {}", query);
         return xmEntityPermittedSearchRepository.search(query, pageable, XmEntity.class, privilegeKey);
+    }
+
+    @LogicExtensionPoint(value = "SearchByTemplate", resolver = TemplateTypeKeyResolver.class)
+    @Override
+    @Transactional(readOnly = true)
+    @FindWithPermission("XMENTITY.SEARCH")
+    public Page<XmEntity> search(String template, TemplateParamsHolder templateParamsHolder, Pageable pageable, String privilegeKey) {
+        String query = getTemplateQuery(template, templateParamsHolder);
+        return xmEntityPermittedSearchRepository.search(query, pageable, XmEntity.class, privilegeKey);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    @FindWithPermission("XMENTITY.SEARCH")
+    public Page<XmEntity> searchByQueryAndTypeKey(String query, String typeKey, Pageable pageable, String privilegeKey) {
+        return xmEntityPermittedSearchRepository.searchByQueryAndTypeKey(query, typeKey, pageable, privilegeKey);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    @FindWithPermission("XMENTITY.SEARCH")
+    public Page<XmEntity> searchByQueryAndTypeKey(String template, TemplateParamsHolder templateParamsHolder, String typeKey, Pageable pageable, String privilegeKey) {
+        String query = isBlank(template) ? StringUtils.EMPTY : getTemplateQuery(template, templateParamsHolder);
+        return xmEntityPermittedSearchRepository.searchByQueryAndTypeKey(query, typeKey, pageable, privilegeKey);
+    }
+
+    private String getTemplateQuery(String template, TemplateParamsHolder templateParamsHolder) {
+        return StrSubstitutor.replace(xmEntityTemplatesSpecService.findTemplate(template), templateParamsHolder
+                .getTemplateParams());
     }
 
     @Override
@@ -450,15 +489,6 @@ public class XmEntityServiceImpl implements XmEntityService {
             projection = xmEntityRepository.findStateProjectionByKey(idOrKey.getKey());
         }
         return ofNullable(projection);
-    }
-
-
-
-    @Override
-    @Transactional(readOnly = true)
-    @FindWithPermission("XMENTITY.SEARCH")
-    public Page<XmEntity> searchByQueryAndTypeKey(String query, String typeKey, Pageable pageable, String privilegeKey) {
-        return xmEntityPermittedSearchRepository.searchByQueryAndTypeKey(query, typeKey, pageable, privilegeKey);
     }
 
     @Override

@@ -124,7 +124,7 @@ public class ProfileResourceIntTest {
             ctx.setValue(THREAD_CONTEXT_KEY_AUTH_CONTEXT, authContextHolder.getContext());
         });
 
-        entity = XmEntityResourceIntTest.createEntity(em);
+        entity = XmEntityResourceIntTest.createEntity();
         profile = createEntity(em, entity);
     }
 

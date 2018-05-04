@@ -66,6 +66,13 @@ public class TenantConfigMockConfiguration {
         return IOUtils.toString(cfgInputStream, UTF_8);
     }
 
+    @SneakyThrows
+    public static String getXmEntityTemplatesSpec(String tenantName) {
+        String configName = format("config/templates/search-templates-%s.yml", tenantName.toLowerCase());
+        InputStream cfgInputStream = new ClassPathResource(configName).getInputStream();
+        return IOUtils.toString(cfgInputStream, UTF_8);
+    }
+
     @Bean
     public TenantConfigService tenantContigService() {
         return mock(TenantConfigService.class);

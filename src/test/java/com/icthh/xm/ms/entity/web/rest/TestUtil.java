@@ -34,13 +34,24 @@ public class TestUtil {
      * @throws IOException
      */
     public static byte[] convertObjectToJsonBytes(Object object) throws IOException {
+        ObjectMapper mapper = getObjectMapper();
+
+        return mapper.writeValueAsBytes(object);
+    }
+
+    public static <T> T convertJsonBytesToObject(byte[] bytes, Class<T> clazz) throws IOException {
+        ObjectMapper mapper = getObjectMapper();
+
+        return mapper.readValue(bytes, clazz);
+    }
+
+    private static ObjectMapper getObjectMapper() {
         ObjectMapper mapper = new ObjectMapper();
         mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
 
         JavaTimeModule module = new JavaTimeModule();
         mapper.registerModule(module);
-
-        return mapper.writeValueAsBytes(object);
+        return mapper;
     }
 
     /**

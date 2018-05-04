@@ -206,7 +206,7 @@ public class AttachmentResourceIntTest {
             .valueContentType(DEFAULT_VALUE_CONTENT_TYPE)
             .valueContentSize(DEFAULT_VALUE_CONTENT_SIZE);
         // Add required entity
-        XmEntity xmEntity = XmEntityResourceIntTest.createEntity(em);
+        XmEntity xmEntity = XmEntityResourceIntTest.createEntity();
         em.persist(xmEntity);
         em.flush();
         attachment.setXmEntity(xmEntity);
