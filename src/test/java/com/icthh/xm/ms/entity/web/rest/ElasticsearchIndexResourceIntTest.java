@@ -6,6 +6,9 @@ import static com.icthh.xm.ms.entity.web.rest.TestUtil.sameInstant;
 import static com.icthh.xm.ms.entity.web.rest.XmEntityResourceExtendedIntTest.createEntityComplexIncoming;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.notNullValue;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -24,6 +27,7 @@ import com.icthh.xm.ms.entity.domain.Attachment;
 import com.icthh.xm.ms.entity.domain.Location;
 import com.icthh.xm.ms.entity.domain.Tag;
 import com.icthh.xm.ms.entity.domain.XmEntity;
+import com.icthh.xm.ms.entity.service.ElasticsearchIndexService;
 import com.icthh.xm.ms.entity.service.XmEntityService;
 import lombok.SneakyThrows;
 import org.junit.After;
@@ -32,6 +36,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
@@ -41,6 +46,8 @@ import org.springframework.test.context.transaction.BeforeTransaction;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.concurrent.Executor;
 
 /**
  * Test class for the ElasticsearchIndexResource REST controller.
@@ -63,6 +70,9 @@ public class ElasticsearchIndexResourceIntTest {
     private ElasticsearchIndexResource elasticsearchIndexResource;
 
     @Autowired
+    private ElasticsearchIndexService elasticsearchIndexService;
+
+    @Autowired
     private XmEntityResource xmEntityResource;
 
     @Autowired
@@ -83,6 +93,9 @@ public class ElasticsearchIndexResourceIntTest {
     @Autowired
     private LepManager lepManager;
 
+    @MockBean
+    private Executor executor;
+
     @BeforeTransaction
     public void beforeTransaction() {
         TenantContextUtils.setTenant(tenantContextHolder, "RESINTTEST");
@@ -99,6 +112,10 @@ public class ElasticsearchIndexResourceIntTest {
             .setCustomArgumentResolvers(pageableArgumentResolver)
             .setControllerAdvice(exceptionTranslator)
             .setMessageConverters(jacksonMessageConverter).build();
+        doAnswer(a -> {
+            ((Runnable)a.getArguments()[0]).run();
+            return null;
+        }).when(executor).execute(any(Runnable.class));
     }
 
     @After
@@ -127,8 +144,6 @@ public class ElasticsearchIndexResourceIntTest {
 
         mockMvc.perform(post("/api/elasticsearch/index"))
             .andExpect(status().isAccepted());
-
-        Thread.sleep(2000);
 
         mockMvc.perform(get("/api/_search/xm-entities?query=id:{id}", saved.getId()))
             .andExpect(status().isOk())

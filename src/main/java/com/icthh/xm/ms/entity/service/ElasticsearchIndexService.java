@@ -2,6 +2,10 @@ package com.icthh.xm.ms.entity.service;
 
 import com.codahale.metrics.annotation.Timed;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.icthh.xm.commons.logging.util.MdcUtils;
+import com.icthh.xm.commons.tenant.TenantContextHolder;
+import com.icthh.xm.commons.tenant.TenantContextUtils;
+import com.icthh.xm.commons.tenant.TenantKey;
 import com.icthh.xm.ms.entity.domain.Attachment;
 import com.icthh.xm.ms.entity.domain.Calendar;
 import com.icthh.xm.ms.entity.domain.Comment;
@@ -38,9 +42,12 @@ import com.icthh.xm.ms.entity.repository.search.RatingSearchRepository;
 import com.icthh.xm.ms.entity.repository.search.TagSearchRepository;
 import com.icthh.xm.ms.entity.repository.search.VoteSearchRepository;
 import com.icthh.xm.ms.entity.repository.search.XmEntitySearchRepository;
+import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.elasticsearch.indices.IndexAlreadyExistsException;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -58,15 +65,16 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.Executor;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
+import javax.annotation.Resource;
 import javax.persistence.OneToMany;
 
 @Slf4j
 @RequiredArgsConstructor
 @Service
-@Transactional(readOnly = true)
 public class ElasticsearchIndexService {
 
     private static final Lock reindexLock = new ReentrantLock();
@@ -95,10 +103,27 @@ public class ElasticsearchIndexService {
     private final VoteSearchRepository voteSearchRepository;
     private final XmEntityRepository xmEntityRepository;
     private final XmEntitySearchRepository xmEntitySearchRepository;
+
     private final ElasticsearchTemplate elasticsearchTemplate;
+
+    private final TenantContextHolder tenantContextHolder;
+    private final Executor executor;
+
+    @Setter(AccessLevel.PACKAGE)
+    @Resource
+    @Lazy
+    private ElasticsearchIndexService selfReference;
 
     @Timed
     public void reindexAll() {
+        TenantKey tenantKey = TenantContextUtils.getRequiredTenantKey(tenantContextHolder);
+        String rid = MdcUtils.getRid();
+        executor.execute(() -> execForCustomContext(tenantKey, rid, () -> selfReference.reindexAllAsync()));
+    }
+
+    @Timed
+    @Transactional(readOnly = true)
+    public void reindexAllAsync() {
         if (reindexLock.tryLock()) {
             try {
                 reindexForClass(Attachment.class, attachmentRepository, attachmentSearchRepository);
@@ -170,5 +195,20 @@ public class ElasticsearchIndexService {
             }
         }
         log.info("Elasticsearch: Indexed all rows for {}", entityClass.getSimpleName());
+    }
+
+    private void execForCustomContext(TenantKey tenantKey, String rid, Runnable runnable) {
+        final String oldRid = MdcUtils.getRid();
+        try {
+            TenantContextUtils.setTenant(tenantContextHolder, tenantKey);
+            MdcUtils.putRid(rid);
+            runnable.run();
+        } finally {
+            if (oldRid != null) {
+                MdcUtils.putRid(oldRid);
+            } else {
+                MdcUtils.removeRid();
+            }
+        }
     }
 }

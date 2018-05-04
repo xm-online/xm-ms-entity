@@ -9,7 +9,6 @@ import static org.mockito.Mockito.when;
 import com.icthh.xm.commons.tenant.PrivilegedTenantContext;
 import com.icthh.xm.commons.tenant.TenantContext;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
-import com.icthh.xm.commons.tenant.TenantContextUtils;
 import com.icthh.xm.commons.tenant.TenantKey;
 import com.icthh.xm.ms.entity.domain.Attachment;
 import com.icthh.xm.ms.entity.domain.Calendar;
@@ -49,7 +48,6 @@ import com.icthh.xm.ms.entity.repository.search.TagSearchRepository;
 import com.icthh.xm.ms.entity.repository.search.VoteSearchRepository;
 import com.icthh.xm.ms.entity.repository.search.XmEntitySearchRepository;
 import lombok.SneakyThrows;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -62,7 +60,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
 import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.test.context.transaction.BeforeTransaction;
 import org.springframework.util.ReflectionUtils;
 
 import java.io.Serializable;
@@ -70,6 +67,7 @@ import java.lang.reflect.Field;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.Executors;
 
 @RunWith(MockitoJUnitRunner.class)
 public class ElasticsearchIndexServiceUnitTest {
@@ -133,6 +131,8 @@ public class ElasticsearchIndexServiceUnitTest {
 
     @Before
     public void before() {
+        service.setSelfReference(service);
+
         TenantContext tenantContext = mock(TenantContext.class);
         when(tenantContext.getTenantKey()).thenReturn(Optional.of(TenantKey.valueOf("XM")));
         when(tenantContextHolder.getContext()).thenReturn(tenantContext);
@@ -156,7 +156,7 @@ public class ElasticsearchIndexServiceUnitTest {
         prepareInternal(Vote.class, voteRepository);
         prepareInternal(XmEntity.class, xmEntityRepository);
 
-        service.reindexAll();
+        service.reindexAllAsync();
 
         verifyInternal(Attachment.class, attachmentRepository, attachmentSearchRepository);
         verifyInternal(Calendar.class, calendarRepository, calendarSearchRepository);
