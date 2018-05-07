@@ -2,6 +2,7 @@ package com.icthh.xm.ms.entity.web.rest;
 
 import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_AUTH_CONTEXT;
 import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_TENANT_CONTEXT;
+import static com.icthh.xm.commons.lep.XmLepScriptConfigServerResourceLoader.XM_MS_CONFIG_URL_PREFIX;
 import static java.lang.String.format;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -15,6 +16,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.icthh.xm.commons.exceptions.spring.web.ExceptionTranslator;
+import com.icthh.xm.commons.lep.RouterResourceLoader;
+import com.icthh.xm.commons.lep.XmLepResourceService;
 import com.icthh.xm.commons.lep.XmLepScriptConfigServerResourceLoader;
 import com.icthh.xm.commons.security.XmAuthenticationContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
@@ -104,7 +107,6 @@ public class XmEntityLifeCycleSupportIntTest {
     @Autowired
     private TenantService tenantService;
 
-    @Autowired
     private XmLepScriptConfigServerResourceLoader leps;
 
     @BeforeTransaction
@@ -139,6 +141,10 @@ public class XmEntityLifeCycleSupportIntTest {
             .setValidator(validator)
             .setMessageConverters(jacksonMessageConverter).build();
 
+        leps = (XmLepScriptConfigServerResourceLoader)((RouterResourceLoader)((XmLepResourceService)lepManager
+            .getResourceService())
+            .getRouterResourceLoader())
+            .getResourceLoader(XM_MS_CONFIG_URL_PREFIX);
     }
 
     void initLeps() {
