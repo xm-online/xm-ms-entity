@@ -13,7 +13,7 @@ import java.util.Map;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({"key", "name", "actionName", "allowedStateKeys", "isShowFormWithoutData", "inputSpec", "inputForm",
-    "contextDataSpec", "contextDataForm"})
+    "contextDataSpec", "contextDataForm", "withEntityId"})
 @Data
 public class FunctionSpec {
 
