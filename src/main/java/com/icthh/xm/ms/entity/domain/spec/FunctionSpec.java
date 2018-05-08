@@ -71,6 +71,8 @@ public class FunctionSpec {
     @JsonProperty("saveFunctionContext")
     private Boolean saveFunctionContext;
 
+    private Boolean withEntityId = false;
+
     public Boolean getSaveFunctionContext() {
         return saveFunctionContext == null ? true : saveFunctionContext;
     }
