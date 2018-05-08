@@ -41,6 +41,9 @@ public class FunctionSpec {
     @JsonProperty("allowedStateKeys")
     private List<String> allowedStateKeys;
 
+    @JsonProperty("withEntityId")
+    private Boolean withEntityId = false;
+
     @JsonProperty("isShowFormWithoutData")
     private Boolean showFormWithoutData;
 
@@ -70,8 +73,6 @@ public class FunctionSpec {
 
     @JsonProperty("saveFunctionContext")
     private Boolean saveFunctionContext;
-
-    private Boolean withEntityId = false;
 
     public Boolean getSaveFunctionContext() {
         return saveFunctionContext == null ? true : saveFunctionContext;
