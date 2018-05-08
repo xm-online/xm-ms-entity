@@ -78,6 +78,13 @@ public class XmEntitySpecUnitTest {
         assertEquals(2, functionSpec.getAllowedStateKeys().size());
         assertEquals("{}", functionSpec.getInputSpec().trim());
         assertEquals("[]", functionSpec.getInputForm().trim());
+        assertEquals(false, functionSpec.getWithEntityId());
+        FunctionSpec functionSpec2 = xmEntitySpec.getTypes().get(1).getFunctions().get(1);
+        assertEquals("FUNCTION2", functionSpec2.getKey());
+        assertEquals("Function 2", functionSpec2.getName().get("en"));
+        assertEquals("Function Button 2", functionSpec2.getActionName().get("en"));
+        assertEquals(2, functionSpec2.getAllowedStateKeys().size());
+        assertEquals(true, functionSpec2.getWithEntityId());
     }
 
     @Test
