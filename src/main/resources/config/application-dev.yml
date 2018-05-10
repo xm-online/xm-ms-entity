@@ -164,7 +164,7 @@ jhipster:
 # ===================================================================
 
 application:
-    kafka-enabled: false
+    kafka-enabled: true
     amazon:
         aws:
             endpoint:
