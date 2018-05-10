@@ -12,7 +12,7 @@ import java.util.Map;
  * The {@link FunctionSpec} class.
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonPropertyOrder({"key", "name", "actionName", "allowedStateKeys", "isShowFormWithoutData", "inputSpec", "inputForm",
+@JsonPropertyOrder({"key", "name", "actionName", "allowedStateKeys", "withEntityId", "isShowFormWithoutData", "inputSpec", "inputForm",
     "contextDataSpec", "contextDataForm"})
 @Data
 public class FunctionSpec {
@@ -40,6 +40,9 @@ public class FunctionSpec {
      */
     @JsonProperty("allowedStateKeys")
     private List<String> allowedStateKeys;
+
+    @JsonProperty("withEntityId")
+    private Boolean withEntityId = false;
 
     @JsonProperty("isShowFormWithoutData")
     private Boolean showFormWithoutData;
