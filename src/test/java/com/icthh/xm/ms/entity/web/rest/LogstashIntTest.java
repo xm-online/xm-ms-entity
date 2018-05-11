@@ -18,18 +18,18 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 
 /**
- * The {@link LogstashInitTest} class.
+ * The {@link LogstashIntTest} class.
  */
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = {
     EntityApp.class,
     SecurityBeanOverrideConfiguration.class,
     WebappTenantOverrideConfiguration.class,
-    LogstashInitTest.class
+    LogstashIntTest.class
 })
 @Configuration
 @TestPropertySource("classpath:config/application-logstash.properties")
-public class LogstashInitTest {
+public class LogstashIntTest {
 
     @Test
     public void testLogstashAppender() {
