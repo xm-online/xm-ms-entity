@@ -22,6 +22,7 @@ import com.icthh.xm.ms.entity.domain.spec.RatingSpec;
 import com.icthh.xm.ms.entity.domain.spec.StateSpec;
 import com.icthh.xm.ms.entity.domain.spec.TagSpec;
 import com.icthh.xm.ms.entity.domain.spec.TypeSpec;
+import com.icthh.xm.ms.entity.domain.spec.UniqueFieldSpec;
 import lombok.SneakyThrows;
 import org.junit.Before;
 import org.junit.Test;
@@ -220,5 +221,29 @@ public class XmEntitySpecServiceUnitTest {
         assertEquals(1, keys.get("TYPE1").get("LinkSpec").size());
         assertEquals(3, keys.get("TYPE1").get("StateSpec").size());
     }
+
+    @Test
+    public void testUniqueField() {
+        TenantContext tenantContext = mock(TenantContext.class);
+        when(tenantContext.getTenantKey()).thenReturn(Optional.of(TenantKey.valueOf("RESINTTEST")));
+        tenantContextHolder = mock(TenantContextHolder.class);
+        when(tenantContextHolder.getContext()).thenReturn(tenantContext);
+        ApplicationProperties ap = new ApplicationProperties();
+        ap.setSpecificationPathPattern(URL);
+        xmEntitySpecService = createXmEntitySpecService(ap, tenantContextHolder);
+
+        for(TypeSpec typeSpec: xmEntitySpecService.getTypeSpecs().values()) {
+            if (typeSpec.getKey().equals("TEST_UNIQ_FIELDS")) {
+                assertEquals(typeSpec.getUniqueFields().size(), 4);
+                assertTrue(typeSpec.getUniqueFields().contains(new UniqueFieldSpec("$.uniqField")));
+                assertTrue(typeSpec.getUniqueFields().contains(new UniqueFieldSpec("$.notUniqObject.uniqueField")));
+                assertTrue(typeSpec.getUniqueFields().contains(new UniqueFieldSpec("$.uniqObject")));
+                assertTrue(typeSpec.getUniqueFields().contains(new UniqueFieldSpec("$.uniqObject.uniqueField")));
+            } else {
+                assertEquals(typeSpec.getUniqueFields().size(), 0);
+            }
+        }
+    }
+
 
 }

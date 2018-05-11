@@ -72,28 +72,6 @@ public class XmEntitySaveIntTest {
 
     @Autowired
     private XmEntityServiceImpl xmEntityServiceImpl;
-
-    @Autowired
-    private XmEntityRepository xmEntityRepository;
-
-    @Autowired
-    private FunctionService functionService;
-
-    @Autowired
-    private ProfileService profileService;
-
-    @Autowired
-    private ProfileEventProducer profileEventProducer;
-
-    @Autowired
-    private MappingJackson2HttpMessageConverter jacksonMessageConverter;
-
-    @Autowired
-    private PageableHandlerMethodArgumentResolver pageableArgumentResolver;
-
-    @Autowired
-    private ExceptionTranslator exceptionTranslator;
-
     @Autowired
     private TenantContextHolder tenantContextHolder;
 
@@ -102,15 +80,6 @@ public class XmEntitySaveIntTest {
 
     @Autowired
     private LepManager lepManager;
-
-    private MockMvc restXmEntityMockMvc;
-
-    @Autowired
-    private Validator validator;
-
-    @Autowired
-    private TenantService tenantService;
-
     @Autowired
     private XmLepScriptConfigServerResourceLoader leps;
 
@@ -118,8 +87,6 @@ public class XmEntitySaveIntTest {
     public void beforeTransaction() {
         TenantContextUtils.setTenant(tenantContextHolder, "RESINTTEST");
     }
-
-    private int updateState, updateByEntity, updateByTargetState, updateByTransition;
 
     @SneakyThrows
     @Before
@@ -130,21 +97,6 @@ public class XmEntitySaveIntTest {
             ctx.setValue(THREAD_CONTEXT_KEY_TENANT_CONTEXT, tenantContextHolder.getContext());
             ctx.setValue(THREAD_CONTEXT_KEY_AUTH_CONTEXT, authContextHolder.getContext());
         });
-
-        XmEntityResource resourceMock = mock(XmEntityResource.class);
-        when(resourceMock.createXmEntity(any())).thenReturn(ResponseEntity.created(new URI("")).build());
-        XmEntityResource xmEntityResourceMock = new XmEntityResource(xmEntityServiceImpl,
-            profileService,
-            profileEventProducer,
-            functionService,
-            tenantService,
-            resourceMock
-        );
-        this.restXmEntityMockMvc = MockMvcBuilders.standaloneSetup(xmEntityResourceMock)
-            .setCustomArgumentResolvers(pageableArgumentResolver)
-            .setControllerAdvice(exceptionTranslator)
-            .setValidator(validator)
-            .setMessageConverters(jacksonMessageConverter).build();
 
     }
 

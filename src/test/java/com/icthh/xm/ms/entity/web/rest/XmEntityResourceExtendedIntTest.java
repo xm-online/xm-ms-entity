@@ -250,6 +250,9 @@ public class XmEntityResourceExtendedIntTest {
     AttachmentService attachmentService;
 
     @Autowired
+    ObjectMapper objectMapper;
+
+    @Autowired
     XmEntityPermittedSearchRepository xmEntityPermittedSearchRepository;
 
     @Mock
@@ -304,7 +307,8 @@ public class XmEntityResourceExtendedIntTest {
                                                    attachmentService,
                                                    xmEntityPermittedSearchRepository,
                                                    startUpdateDateGenerationStrategy,
-                                                   authContextHolder);
+                                                   authContextHolder,
+                                                   objectMapper);
 
         xmEntityService.setSelf(xmEntityService);
         this.xmEntityService = xmEntityService;

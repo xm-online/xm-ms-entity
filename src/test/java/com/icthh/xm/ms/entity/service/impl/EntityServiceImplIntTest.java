@@ -7,6 +7,7 @@ import static com.icthh.xm.ms.entity.config.TenantConfigMockConfiguration.getXmE
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableMap;
 import com.icthh.xm.lep.api.LepManager;
 import com.icthh.xm.commons.exceptions.BusinessException;
@@ -126,6 +127,9 @@ public class EntityServiceImplIntTest {
 
     private static final String TARGET_TYPE_KEY = "ACCOUNT.USER";
 
+    @Autowired
+    private ObjectMapper objectMapper;
+
     @BeforeTransaction
     public void beforeTransaction() {
         TenantContextUtils.setTenant(tenantContextHolder, "RESINTTEST");
@@ -156,7 +160,8 @@ public class EntityServiceImplIntTest {
             attachmentService,
             permittedSearchRepository,
             startUpdateDateGenerationStrategy,
-            authContextHolder);
+            authContextHolder,
+            objectMapper);
         xmEntityService.setSelf(xmEntityService);
 
         lepManager.beginThreadContext(ctx -> {

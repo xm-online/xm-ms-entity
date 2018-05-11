@@ -56,4 +56,6 @@
     <!-- agorobey: add createdBy column to XmEntity -->
     <include file="classpath:config/liquibase/changelog/20171009145000_added_createdBy_XmEntity.xml" relativeToChangelogFile="false"/>
 
+    <include file="classpath:config/liquibase/changelog/20180511124100_added_entity_unique_fields.xml" relativeToChangelogFile="false"/>
+
 </databaseChangeLog>
