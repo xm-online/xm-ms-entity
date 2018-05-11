@@ -40,6 +40,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 @Slf4j
 @RunWith(MockitoJUnitRunner.class)
@@ -100,23 +101,19 @@ public class XmEntityServiceImplUnitTest {
 
         XmEntity actualXmEntity = xmEntityService.save(xmEntity);
 
-        XmEntity expectedXmEntity = new XmEntity().typeKey(TEST_TYPE_KEY).data(data);
-        expectedXmEntity.setUniqueFields(new HashSet<>(asList(
-            new UniqueField(null, "$.uniqueBlankField", "", TEST_TYPE_KEY, xmEntity),
-            new UniqueField(null, "$.uniqueObject", "{\"notUniqueField\":\"value2\"}", TEST_TYPE_KEY, xmEntity),
-            new UniqueField(null, "$.uniqueExistsField", "50", TEST_TYPE_KEY, xmEntity),
-            new UniqueField(null, "$.uniqueObjectWithUniqueField", "{\"uniqueField\":\"value3\"}", TEST_TYPE_KEY, xmEntity),
-            new UniqueField(null, "$.uniqueObjectWithUniqueField.uniqueField", "value3", TEST_TYPE_KEY, xmEntity),
-            new UniqueField(null, "$.simpleObject.uniqueSubField", "value1", TEST_TYPE_KEY, xmEntity),
-            new UniqueField(null, "$.otherUniqueExistsField", "25", TEST_TYPE_KEY, xmEntity)
-        )));
 
         ArgumentCaptor<XmEntity> argument = ArgumentCaptor.forClass(XmEntity.class);
         verify(xmEntityRepository).save(argument.capture());
-        assertEquals(argument.getValue().getUniqueFields().size(), expectedXmEntity.getUniqueFields().size());
-        log.info("{}", argument.getValue().getUniqueFields());
-        expectedXmEntity.getUniqueFields().forEach(it -> assertTrue("Not found " + it.toString(), argument.getValue().getUniqueFields().contains(it)));
-
+        Set<UniqueField> uniqueFields = argument.getValue().getUniqueFields();
+        assertEquals(uniqueFields.size(), 7);
+        log.info("{}", uniqueFields);
+        assertTrue(uniqueFields.contains(new UniqueField(null, "$.uniqueBlankField", "", TEST_TYPE_KEY, xmEntity)));
+        assertTrue(uniqueFields.contains(    new UniqueField(null, "$.uniqueObject", "{\"notUniqueField\":\"value2\"}", TEST_TYPE_KEY, xmEntity)));
+        assertTrue(uniqueFields.contains(new UniqueField(null, "$.uniqueExistsField", "50", TEST_TYPE_KEY, xmEntity)));
+        assertTrue(uniqueFields.contains(new UniqueField(null, "$.uniqueObjectWithUniqueField", "{\"uniqueField\":\"value3\"}", TEST_TYPE_KEY, xmEntity)));
+        assertTrue(uniqueFields.contains(new UniqueField(null, "$.uniqueObjectWithUniqueField.uniqueField", "value3", TEST_TYPE_KEY, xmEntity)));
+        assertTrue(uniqueFields.contains(new UniqueField(null, "$.otherUniqueExistsField", "25", TEST_TYPE_KEY, xmEntity)));
+        assertTrue(uniqueFields.contains(new UniqueField(null, "$.simpleObject.uniqueSubField", "value1", TEST_TYPE_KEY, xmEntity)));
     }
 
 }
