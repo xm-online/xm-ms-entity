@@ -336,3 +336,26 @@ types:
                     }
                   }
                 }
+    - key: TEST_UNIQUE_FIELD
+      isApp: false
+      isAbstract: false
+      dataSpec: |
+                {
+                  "type": "object",
+                  "properties": {
+                    "uniqueField": {
+                      "unique": true,
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "uniqueField2": {
+                      "unique": true,
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    }
+                  }
+                }

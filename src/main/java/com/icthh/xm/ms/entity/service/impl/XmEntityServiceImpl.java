@@ -215,7 +215,7 @@ public class XmEntityServiceImpl implements XmEntityService {
             return "";
         }
 
-        if (isSimpleValueType(value.getClass())) {
+        if (!isSimpleValueType(value.getClass())) {
             return objectMapper.writeValueAsString(value);
         }
 

@@ -4,6 +4,9 @@ import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_AUTH_CO
 import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_TENANT_CONTEXT;
 import static com.icthh.xm.commons.tenant.TenantContextUtils.getRequiredTenantKeyValue;
 import static com.icthh.xm.ms.entity.config.TenantConfigMockConfiguration.getXmEntityTemplatesSpec;
+import static java.time.Instant.now;
+import static java.util.Arrays.asList;
+import static java.util.UUID.randomUUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
@@ -21,10 +24,7 @@ import com.icthh.xm.ms.entity.config.ApplicationProperties;
 import com.icthh.xm.ms.entity.config.LepConfiguration;
 import com.icthh.xm.ms.entity.config.SecurityBeanOverrideConfiguration;
 import com.icthh.xm.ms.entity.config.tenant.WebappTenantOverrideConfiguration;
-import com.icthh.xm.ms.entity.domain.Attachment;
-import com.icthh.xm.ms.entity.domain.Link;
-import com.icthh.xm.ms.entity.domain.Profile;
-import com.icthh.xm.ms.entity.domain.XmEntity;
+import com.icthh.xm.ms.entity.domain.*;
 import com.icthh.xm.ms.entity.domain.ext.IdOrKey;
 import com.icthh.xm.ms.entity.domain.template.TemplateParamsHolder;
 import com.icthh.xm.ms.entity.repository.LinkRepository;
@@ -35,6 +35,8 @@ import com.icthh.xm.ms.entity.service.*;
 import com.icthh.xm.ms.entity.util.XmHttpEntityUtils;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.h2.jdbc.JdbcSQLException;
+import org.hibernate.exception.ConstraintViolationException;
 import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -44,6 +46,7 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.io.Resource;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpEntity;
 import org.springframework.mock.web.MockMultipartFile;
@@ -55,7 +58,9 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigInteger;
 import java.net.URI;
+import java.time.Instant;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 
 @Slf4j
@@ -416,4 +421,28 @@ public class EntityServiceImplIntTest {
 
         return link;
     }
+
+
+
+    @Test(expected = DataIntegrityViolationException.class)
+    @Transactional
+    public void testUniqueField() {
+
+        XmEntity entity = new XmEntity().typeKey("TEST_UNIQUE_FIELD").key(randomUUID())
+            .name("name").startDate(now()).updateDate(now());
+        entity.setUniqueFields(new HashSet<>(asList(
+            new UniqueField(null, "$.uniqueField", "value", entity.getTypeKey(), entity),
+            new UniqueField(null, "$.uniqueField2", "value2", entity.getTypeKey(), entity)
+        )));
+        xmEntityRepository.saveAndFlush(entity);
+
+        XmEntity entity2 = new XmEntity().typeKey("TEST_UNIQUE_FIELD").key(randomUUID())
+            .name("name").startDate(now()).updateDate(now());
+        entity2.setUniqueFields(new HashSet<>(asList(
+            new UniqueField(null, "$.uniqueField", "value", entity2.getTypeKey(), entity2),
+            new UniqueField(null, "$.uniqueField2", "value22", entity2.getTypeKey(), entity2)
+        )));
+        xmEntityRepository.saveAndFlush(entity2);
+    }
+
 }

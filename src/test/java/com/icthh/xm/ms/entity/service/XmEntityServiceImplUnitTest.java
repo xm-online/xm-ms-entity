@@ -99,16 +99,14 @@ public class XmEntityServiceImplUnitTest {
 
         XmEntity xmEntity = new XmEntity().typeKey(TEST_TYPE_KEY).data(data);
 
-        XmEntity actualXmEntity = xmEntityService.save(xmEntity);
-
+        xmEntityService.save(xmEntity);
 
         ArgumentCaptor<XmEntity> argument = ArgumentCaptor.forClass(XmEntity.class);
         verify(xmEntityRepository).save(argument.capture());
         Set<UniqueField> uniqueFields = argument.getValue().getUniqueFields();
-        assertEquals(uniqueFields.size(), 7);
-        log.info("{}", uniqueFields);
-        assertTrue(uniqueFields.contains(new UniqueField(null, "$.uniqueBlankField", "", TEST_TYPE_KEY, xmEntity)));
-        assertTrue(uniqueFields.contains(    new UniqueField(null, "$.uniqueObject", "{\"notUniqueField\":\"value2\"}", TEST_TYPE_KEY, xmEntity)));
+        assertEquals(uniqueFields.size(), 6);
+        log.info("{}", uniqueFields.stream().map(uf -> uf.getFieldJsonPath() + "|" + uf.getFieldValue()).collect(toList()));
+        assertTrue(uniqueFields.contains(new UniqueField(null, "$.uniqueObject", "{\"notUniqueField\":\"value2\"}", TEST_TYPE_KEY, xmEntity)));
         assertTrue(uniqueFields.contains(new UniqueField(null, "$.uniqueExistsField", "50", TEST_TYPE_KEY, xmEntity)));
         assertTrue(uniqueFields.contains(new UniqueField(null, "$.uniqueObjectWithUniqueField", "{\"uniqueField\":\"value3\"}", TEST_TYPE_KEY, xmEntity)));
         assertTrue(uniqueFields.contains(new UniqueField(null, "$.uniqueObjectWithUniqueField.uniqueField", "value3", TEST_TYPE_KEY, xmEntity)));
