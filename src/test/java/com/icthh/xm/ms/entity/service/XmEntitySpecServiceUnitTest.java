@@ -233,6 +233,9 @@ public class XmEntitySpecServiceUnitTest {
         xmEntitySpecService = createXmEntitySpecService(ap, tenantContextHolder);
 
         for(TypeSpec typeSpec: xmEntitySpecService.getTypeSpecs().values()) {
+            if (typeSpec.getKey().equals("TEST_UNIQUE_FIELD")) {
+                continue;
+            }
             if (typeSpec.getKey().equals("TEST_UNIQ_FIELDS")) {
                 assertEquals(typeSpec.getUniqueFields().size(), 4);
                 assertTrue(typeSpec.getUniqueFields().contains(new UniqueFieldSpec("$.uniqField")));
