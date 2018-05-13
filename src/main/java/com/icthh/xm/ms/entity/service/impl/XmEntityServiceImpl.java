@@ -4,7 +4,6 @@ import static com.icthh.xm.ms.entity.domain.spec.LinkSpec.NEW_BUILDER_TYPE;
 import static com.icthh.xm.ms.entity.domain.spec.LinkSpec.SEARCH_BUILDER_TYPE;
 import static com.icthh.xm.ms.entity.util.CustomCollectionUtils.nullSafe;
 import static com.jayway.jsonpath.Configuration.defaultConfiguration;
-import static com.jayway.jsonpath.Option.DEFAULT_PATH_LEAF_TO_NULL;
 import static com.jayway.jsonpath.Option.SUPPRESS_EXCEPTIONS;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
@@ -61,17 +60,14 @@ import com.icthh.xm.ms.entity.service.StorageService;
 import com.icthh.xm.ms.entity.service.XmEntityService;
 import com.icthh.xm.ms.entity.service.XmEntitySpecService;
 import com.icthh.xm.ms.entity.service.XmEntityTemplatesSpecService;
-import com.jayway.jsonpath.Configuration;
 import com.jayway.jsonpath.DocumentContext;
 import com.jayway.jsonpath.JsonPath;
-import com.jayway.jsonpath.Option;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.text.StrSubstitutor;
 import org.modelmapper.ModelMapper;
-import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Page;
@@ -195,7 +191,7 @@ public class XmEntityServiceImpl implements XmEntityService {
 
         for (UniqueFieldSpec uniqueFieldSpec: typeByKey.getUniqueFields()) {
             String jsonPath = uniqueFieldSpec.getJsonPath();
-            String value = toString(document.read(jsonPath));
+            String value = convertToString(document.read(jsonPath));
 
             if (isNoneBlank(value)) {
                 UniqueField uniqueField = UniqueField.builder()
@@ -210,7 +206,7 @@ public class XmEntityServiceImpl implements XmEntityService {
     }
 
     @SneakyThrows
-    private String toString(Object value) {
+    private String convertToString(Object value) {
         if (value == null) {
             return "";
         }

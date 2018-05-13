@@ -26,9 +26,4 @@ public class JacksonConfiguration {
         return new AfterburnerModule();
     }
 
-    @Bean
-    public JavaTimeModule javaTimeModule() {
-        return new JavaTimeModule();
-    }
-
 }
