@@ -29,7 +29,7 @@
     <changeSet id="20180511124100-2" author="ssenko">
         <addUniqueConstraint
             columnNames="field_json_path, field_value, entity_type_key"
-            constraintName="unique_field_xm_entity_constrain"
+            constraintName="unique_field_xm_entity_constraint"
             tableName="unique_field"
         />
     </changeSet>
