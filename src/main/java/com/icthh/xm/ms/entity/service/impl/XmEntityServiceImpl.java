@@ -3,12 +3,18 @@ package com.icthh.xm.ms.entity.service.impl;
 import static com.icthh.xm.ms.entity.domain.spec.LinkSpec.NEW_BUILDER_TYPE;
 import static com.icthh.xm.ms.entity.domain.spec.LinkSpec.SEARCH_BUILDER_TYPE;
 import static com.icthh.xm.ms.entity.util.CustomCollectionUtils.nullSafe;
+import static com.jayway.jsonpath.Configuration.defaultConfiguration;
+import static com.jayway.jsonpath.Option.SUPPRESS_EXCEPTIONS;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toMap;
+import static org.apache.commons.collections.MapUtils.isEmpty;
 import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.apache.commons.lang3.StringUtils.isNoneBlank;
+import static org.springframework.beans.BeanUtils.isSimpleValueType;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.icthh.xm.commons.exceptions.BusinessException;
 import com.icthh.xm.commons.exceptions.EntityNotFoundException;
 import com.icthh.xm.commons.exceptions.ErrorConstants;
@@ -26,6 +32,7 @@ import com.icthh.xm.ms.entity.domain.Location;
 import com.icthh.xm.ms.entity.domain.Rating;
 import com.icthh.xm.ms.entity.domain.SimpleExportXmEntityDto;
 import com.icthh.xm.ms.entity.domain.Tag;
+import com.icthh.xm.ms.entity.domain.UniqueField;
 import com.icthh.xm.ms.entity.domain.Vote;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.domain.converter.EntityToCsvConverterUtils;
@@ -34,6 +41,7 @@ import com.icthh.xm.ms.entity.domain.ext.IdOrKey;
 import com.icthh.xm.ms.entity.domain.spec.LinkSpec;
 import com.icthh.xm.ms.entity.domain.spec.StateSpec;
 import com.icthh.xm.ms.entity.domain.spec.TypeSpec;
+import com.icthh.xm.ms.entity.domain.spec.UniqueFieldSpec;
 import com.icthh.xm.ms.entity.domain.template.TemplateParamsHolder;
 import com.icthh.xm.ms.entity.lep.keyresolver.TemplateTypeKeyResolver;
 import com.icthh.xm.ms.entity.lep.keyresolver.XmEntityTypeKeyResolver;
@@ -52,7 +60,10 @@ import com.icthh.xm.ms.entity.service.StorageService;
 import com.icthh.xm.ms.entity.service.XmEntityService;
 import com.icthh.xm.ms.entity.service.XmEntitySpecService;
 import com.icthh.xm.ms.entity.service.XmEntityTemplatesSpecService;
+import com.jayway.jsonpath.DocumentContext;
+import com.jayway.jsonpath.JsonPath;
 import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.text.StrSubstitutor;
@@ -101,6 +112,7 @@ public class XmEntityServiceImpl implements XmEntityService {
     private final XmEntityPermittedSearchRepository xmEntityPermittedSearchRepository;
     private final StartUpdateDateGenerationStrategy startUpdateDateGenerationStrategy;
     private final XmAuthenticationContextHolder authContextHolder;
+    private final ObjectMapper objectMapper;
 
     private XmEntityServiceImpl self;
 
@@ -151,6 +163,7 @@ public class XmEntityServiceImpl implements XmEntityService {
         xmEntity.updateXmEntityReference(xmEntity.getTargets(), Link::setSource);
         xmEntity.updateXmEntityReference(xmEntity.getSources(), Link::setTarget);
         xmEntity.updateXmEntityReference(xmEntity.getVotes(), Vote::setXmEntity);
+        processUniqueField(xmEntity);
 
         XmEntity result = xmEntityRepository.save(xmEntity);
         xmEntitySearchRepository.save(result);
@@ -162,6 +175,47 @@ public class XmEntityServiceImpl implements XmEntityService {
             && !xmEntity.getName().equals(oldEntity.getName())) {
             xmEntity.setName(oldEntity.getName());
         }
+    }
+
+    @SneakyThrows
+    private void processUniqueField(XmEntity xmEntity) {
+        xmEntity.getUniqueFields().clear();
+        if (isEmpty(xmEntity.getData())) {
+            return;
+        }
+
+        String json = objectMapper.writeValueAsString(xmEntity.getData());
+        TypeSpec typeByKey = xmEntitySpecService.findTypeByKey(xmEntity.getTypeKey());
+
+        DocumentContext document = JsonPath.using(defaultConfiguration().addOptions(SUPPRESS_EXCEPTIONS)).parse(json);
+
+        for (UniqueFieldSpec uniqueFieldSpec: typeByKey.getUniqueFields()) {
+            String jsonPath = uniqueFieldSpec.getJsonPath();
+            String value = convertToString(document.read(jsonPath));
+
+            if (isNoneBlank(value)) {
+                UniqueField uniqueField = UniqueField.builder()
+                    .entityTypeKey(xmEntity.getTypeKey())
+                    .fieldJsonPath(jsonPath)
+                    .fieldValue(value)
+                    .xmEntity(xmEntity)
+                    .build();
+                xmEntity.getUniqueFields().add(uniqueField);
+            }
+        }
+    }
+
+    @SneakyThrows
+    private String convertToString(Object value) {
+        if (value == null) {
+            return "";
+        }
+
+        if (!isSimpleValueType(value.getClass())) {
+            return objectMapper.writeValueAsString(value);
+        }
+
+        return String.valueOf(value);
     }
 
     /**
