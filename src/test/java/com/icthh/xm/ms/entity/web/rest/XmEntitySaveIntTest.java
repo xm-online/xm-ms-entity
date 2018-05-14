@@ -3,19 +3,9 @@ package com.icthh.xm.ms.entity.web.rest;
 import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_AUTH_CONTEXT;
 import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_TENANT_CONTEXT;
 import static com.icthh.xm.commons.lep.XmLepScriptConfigServerResourceLoader.XM_MS_CONFIG_URL_PREFIX;
-import static java.lang.String.format;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.icthh.xm.commons.exceptions.spring.web.ExceptionTranslator;
 import com.icthh.xm.commons.lep.RouterResourceLoader;
 import com.icthh.xm.commons.lep.XmLepResourceService;
 import com.icthh.xm.commons.lep.XmLepScriptConfigServerResourceLoader;
@@ -28,15 +18,11 @@ import com.icthh.xm.ms.entity.config.LepConfiguration;
 import com.icthh.xm.ms.entity.config.SecurityBeanOverrideConfiguration;
 import com.icthh.xm.ms.entity.config.tenant.WebappTenantOverrideConfiguration;
 import com.icthh.xm.ms.entity.domain.XmEntity;
-import com.icthh.xm.ms.entity.repository.XmEntityRepository;
-import com.icthh.xm.ms.entity.repository.kafka.ProfileEventProducer;
-import com.icthh.xm.ms.entity.service.*;
 import com.icthh.xm.ms.entity.service.impl.XmEntityServiceImpl;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang.mutable.MutableLong;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -45,19 +31,12 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.io.ClassPathResource;
-import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
-import org.springframework.http.ResponseEntity;
-import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.context.transaction.BeforeTransaction;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.validation.Validator;
 
 import java.io.InputStream;
-import java.net.URI;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.UUID;
@@ -75,28 +54,6 @@ public class XmEntitySaveIntTest {
 
     @Autowired
     private XmEntityServiceImpl xmEntityServiceImpl;
-
-    @Autowired
-    private XmEntityRepository xmEntityRepository;
-
-    @Autowired
-    private FunctionService functionService;
-
-    @Autowired
-    private ProfileService profileService;
-
-    @Autowired
-    private ProfileEventProducer profileEventProducer;
-
-    @Autowired
-    private MappingJackson2HttpMessageConverter jacksonMessageConverter;
-
-    @Autowired
-    private PageableHandlerMethodArgumentResolver pageableArgumentResolver;
-
-    @Autowired
-    private ExceptionTranslator exceptionTranslator;
-
     @Autowired
     private TenantContextHolder tenantContextHolder;
 
@@ -106,22 +63,12 @@ public class XmEntitySaveIntTest {
     @Autowired
     private LepManager lepManager;
 
-    private MockMvc restXmEntityMockMvc;
-
-    @Autowired
-    private Validator validator;
-
-    @Autowired
-    private TenantService tenantService;
-
     private XmLepScriptConfigServerResourceLoader leps;
 
     @BeforeTransaction
     public void beforeTransaction() {
         TenantContextUtils.setTenant(tenantContextHolder, "RESINTTEST");
     }
-
-    private int updateState, updateByEntity, updateByTargetState, updateByTransition;
 
     @SneakyThrows
     @Before
@@ -133,20 +80,6 @@ public class XmEntitySaveIntTest {
             ctx.setValue(THREAD_CONTEXT_KEY_AUTH_CONTEXT, authContextHolder.getContext());
         });
 
-        XmEntityResource resourceMock = mock(XmEntityResource.class);
-        when(resourceMock.createXmEntity(any())).thenReturn(ResponseEntity.created(new URI("")).build());
-        XmEntityResource xmEntityResourceMock = new XmEntityResource(xmEntityServiceImpl,
-            profileService,
-            profileEventProducer,
-            functionService,
-            tenantService,
-            resourceMock
-        );
-        this.restXmEntityMockMvc = MockMvcBuilders.standaloneSetup(xmEntityResourceMock)
-            .setCustomArgumentResolvers(pageableArgumentResolver)
-            .setControllerAdvice(exceptionTranslator)
-            .setValidator(validator)
-            .setMessageConverters(jacksonMessageConverter).build();
         leps = (XmLepScriptConfigServerResourceLoader)((RouterResourceLoader)((XmLepResourceService)lepManager
             .getResourceService())
             .getRouterResourceLoader())
