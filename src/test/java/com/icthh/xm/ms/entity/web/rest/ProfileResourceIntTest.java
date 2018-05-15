@@ -167,6 +167,13 @@ public class ProfileResourceIntTest {
 
     @Test
     @Transactional
+    public void getProfileNotFound() throws Exception {
+        restProfileMockMvc.perform(get("/api/profile"))
+            .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @Transactional
     public void getProfileByXmEntityId() throws Exception {
         profileService.save(profile);
 
