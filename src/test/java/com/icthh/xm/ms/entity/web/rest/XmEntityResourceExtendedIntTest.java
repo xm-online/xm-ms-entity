@@ -26,7 +26,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.PropertyAccessor;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.google.common.collect.ImmutableMap;
@@ -1130,7 +1129,7 @@ public class XmEntityResourceExtendedIntTest {
         assertThat(xmEntityList).hasSize(databaseSizeBeforeTest + 1);
     }
 
-    @Test(expected = JsonMappingException.class)
+    @Test
     @Transactional
     public void testNoCycleJson() throws Exception {
         XmEntity target = new XmEntity().typeKey("TARGET");
@@ -1142,13 +1141,46 @@ public class XmEntityResourceExtendedIntTest {
         )).setId(1L);
         target.targets(Collections.singleton(
             new Link().typeKey("LINK2")
-                      .source(source)
-                      .target(target)
+                      .source(target)
+                      .target(source)
         )).setId(2L);
         String targetJson = jacksonMessageConverter.getObjectMapper().writeValueAsString(target);
+        log.info("Target JSON {}", targetJson);
         String sourceJson = jacksonMessageConverter.getObjectMapper().writeValueAsString(source);
-        assertEquals("1", JsonPath.read(targetJson, "$.targets[0].id"));
-        assertEquals("2", JsonPath.read(sourceJson, "$.targets[0].id"));
+        log.info("Source JSON {}", sourceJson);
+        assertEquals(Integer.valueOf(1), JsonPath.read(targetJson, "$.targets[0].target.id"));
+        assertEquals(Integer.valueOf(2), JsonPath.read(targetJson, "$.id"));
+        assertEquals(Integer.valueOf(2), JsonPath.read(sourceJson, "$.targets[0].target.id"));
+        assertEquals(Integer.valueOf(1), JsonPath.read(sourceJson, "$.id"));
+    }
+
+    @Test
+    @Transactional
+    public void testNoCycleErrorOnSave() throws Exception {
+        XmEntity target = new XmEntity().typeKey("TARGET");
+        XmEntity source = new XmEntity().typeKey("SOURCE");
+        source.targets(Collections.singleton(
+            new Link().typeKey("LINK1")
+                .source(source)
+                .target(target)
+        )).setId(1L);
+        target.targets(Collections.singleton(
+            new Link().typeKey("LINK2")
+                .source(source)
+                .target(target)
+        )).setId(2L);
+
+        restXmEntityMockMvc.perform(post("/api/xm-entities")
+            .contentType(TestUtil.APPLICATION_JSON_UTF8)
+            .content(TestUtil.convertObjectToJsonBytes(target)))
+            .andDo(r -> log.info(r.getResponse().getContentAsString()))
+            .andExpect(status().is2xxSuccessful());
+
+        restXmEntityMockMvc.perform(post("/api/xm-entities")
+            .contentType(TestUtil.APPLICATION_JSON_UTF8)
+            .content(TestUtil.convertObjectToJsonBytes(source)))
+            .andDo(r -> log.info(r.getResponse().getContentAsString()))
+            .andExpect(status().is2xxSuccessful());
     }
 
 
