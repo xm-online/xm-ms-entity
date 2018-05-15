@@ -124,7 +124,7 @@ public class ProfileResourceIntTest {
             ctx.setValue(THREAD_CONTEXT_KEY_AUTH_CONTEXT, authContextHolder.getContext());
         });
 
-        entity = XmEntityResourceIntTest.createEntity(em);
+        entity = XmEntityResourceIntTest.createEntity();
         profile = createEntity(em, entity);
     }
 
@@ -163,6 +163,13 @@ public class ProfileResourceIntTest {
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
             .andExpect(jsonPath("$.name").value(entity.getName()));
+    }
+
+    @Test
+    @Transactional
+    public void getProfileNotFound() throws Exception {
+        restProfileMockMvc.perform(get("/api/profile"))
+            .andExpect(status().isNotFound());
     }
 
     @Test

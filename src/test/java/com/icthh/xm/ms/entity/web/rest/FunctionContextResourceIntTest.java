@@ -179,7 +179,7 @@ public class FunctionContextResourceIntTest {
             .endDate(DEFAULT_END_DATE)
             .data(DEFAULT_DATA);
         // Add required entity
-        XmEntity xmEntity = XmEntityResourceIntTest.createEntity(em);
+        XmEntity xmEntity = XmEntityResourceIntTest.createEntity();
         em.persist(xmEntity);
         em.flush();
         functionContext.setXmEntity(xmEntity);

@@ -72,7 +72,10 @@ types:
       pluralName: { ru: "Типы 2" }
       isApp: true
       isAbstract: false
-      dataSpec: <Formly fields specification 2>
+      dataSpec: |
+            {
+                "speca": "Formly fields specification 2"
+            }
       access:
           - TYPE1.SUBTYPE1
       states:
@@ -112,6 +115,14 @@ types:
                         {}
             inputForm: |
                         []
+          - key: FUNCTION2
+            name: { en: "Function 2" }
+            actionName: { en: "Function Button 2" }
+            allowedStateKeys:
+                - STATE5
+                - STATE6
+            withEntityId: true
+
     - key: TYPE1.SUBTYPE1
       name: { en: "Subtype 1", ru: "Подтип 1" }
       isApp: false

@@ -2,6 +2,8 @@ package com.icthh.xm.ms.entity.web.rest;
 
 import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_AUTH_CONTEXT;
 import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_TENANT_CONTEXT;
+import static com.icthh.xm.commons.tenant.TenantContextUtils.getRequiredTenantKeyValue;
+import static com.icthh.xm.ms.entity.config.TenantConfigMockConfiguration.getXmEntityTemplatesSpec;
 import static com.icthh.xm.ms.entity.web.rest.TestUtil.sameInstant;
 import static java.util.Collections.emptyMap;
 import static java.util.UUID.randomUUID;
@@ -10,6 +12,7 @@ import static org.assertj.core.api.Assertions.fail;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.everyItem;
 import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.nullValue;
 import static org.hibernate.validator.internal.util.CollectionHelper.asSet;
@@ -36,6 +39,7 @@ import com.icthh.xm.commons.security.XmAuthenticationContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
 import com.icthh.xm.ms.entity.EntityApp;
+import com.icthh.xm.ms.entity.config.ApplicationProperties;
 import com.icthh.xm.ms.entity.config.Constants;
 import com.icthh.xm.ms.entity.config.LepConfiguration;
 import com.icthh.xm.ms.entity.config.SecurityBeanOverrideConfiguration;
@@ -168,6 +172,9 @@ public class XmEntityResourceExtendedIntTest {
     private static final Instant DEFAULT_LN_TARGET_START_DATE = Instant.now();
 
     @Autowired
+    private ApplicationProperties applicationProperties;
+
+    @Autowired
     private CalendarResource calendarResource;
 
     @Autowired
@@ -224,6 +231,9 @@ public class XmEntityResourceExtendedIntTest {
     XmEntitySpecService xmEntitySpecService;
 
     @Autowired
+    XmEntityTemplatesSpecService xmEntityTemplatesSpecService;
+
+    @Autowired
     LifecycleLepStrategyFactory lifeCycleService;
 
     @Autowired
@@ -237,6 +247,9 @@ public class XmEntityResourceExtendedIntTest {
 
     @Autowired
     AttachmentService attachmentService;
+
+    @Autowired
+    ObjectMapper objectMapper;
 
     @Autowired
     XmEntityPermittedSearchRepository xmEntityPermittedSearchRepository;
@@ -276,7 +289,13 @@ public class XmEntityResourceExtendedIntTest {
         when(startUpdateDateGenerationStrategy.generateStartDate()).thenReturn(MOCKED_START_DATE);
         when(startUpdateDateGenerationStrategy.generateUpdateDate()).thenReturn(MOCKED_UPDATE_DATE);
 
+        String tenantName = getRequiredTenantKeyValue(tenantContextHolder);
+        String config = getXmEntityTemplatesSpec(tenantName);
+        String key = applicationProperties.getSpecificationTemplatesPathPattern().replace("{tenantName}", tenantName);
+        xmEntityTemplatesSpecService.onRefresh(key, config);
+
         XmEntityServiceImpl xmEntityService = new XmEntityServiceImpl(xmEntitySpecService,
+                                                   xmEntityTemplatesSpecService,
                                                    xmEntityRepository,
                                                    xmEntitySearchRepository,
                                                    lifeCycleService,
@@ -287,7 +306,8 @@ public class XmEntityResourceExtendedIntTest {
                                                    attachmentService,
                                                    xmEntityPermittedSearchRepository,
                                                    startUpdateDateGenerationStrategy,
-                                                   authContextHolder);
+                                                   authContextHolder,
+                                                   objectMapper);
 
         xmEntityService.setSelf(xmEntityService);
         this.xmEntityService = xmEntityService;
@@ -314,7 +334,7 @@ public class XmEntityResourceExtendedIntTest {
             .setValidator(validator)
             .setMessageConverters(jacksonMessageConverter).build();
 
-        xmEntityIncoming = createEntityComplexIncoming(em);
+        xmEntityIncoming = createEntityComplexIncoming();
 
     }
 
@@ -331,7 +351,7 @@ public class XmEntityResourceExtendedIntTest {
      * This is a static method, as tests for other entities might also need it,
      * if they test an entity which requires the current entity.
      */
-    public static XmEntity createEntity(EntityManager em) {
+    public static XmEntity createEntity() {
         XmEntity xmEntity = new XmEntity()
             .key(DEFAULT_KEY)
             .typeKey(DEFAULT_TYPE_KEY)
@@ -352,11 +372,10 @@ public class XmEntityResourceExtendedIntTest {
      * Creates incoming Entity as from HTTP request.
      * Potentially cam be moved to DTO
      *
-     * @param em - Entity manager
      * @return XmEntity for incoming request
      */
-    public static XmEntity createEntityComplexIncoming(EntityManager em) {
-        XmEntity entity = createEntity(em);
+    public static XmEntity createEntityComplexIncoming() {
+        XmEntity entity = createEntity();
 
         entity.getTags().add(new Tag()
             .typeKey(DEFAULT_TAG_KEY)
@@ -390,7 +409,7 @@ public class XmEntityResourceExtendedIntTest {
      */
     public static XmEntity createEntityComplexPersisted(EntityManager em) {
 
-        XmEntity entity = createEntity(em);
+        XmEntity entity = createEntity();
         em.persist(entity);
         em.flush();
 
@@ -555,7 +574,7 @@ public class XmEntityResourceExtendedIntTest {
     @Transactional
     public void createXmEntityWithLinks() throws Exception {
 
-        XmEntity presaved = xmEntityService.save(createEntity(em));
+        XmEntity presaved = xmEntityService.save(createEntity());
 
         int databaseSizeBeforeCreate = xmEntityRepository.findAll().size();
 
@@ -611,7 +630,7 @@ public class XmEntityResourceExtendedIntTest {
     @Transactional
     public void createXmEntityWithSourceLinks() throws Exception {
 
-        XmEntity presaved = xmEntityService.save(createEntity(em));
+        XmEntity presaved = xmEntityService.save(createEntity());
 
         int databaseSizeBeforeCreate = xmEntityRepository.findAll().size();
 
@@ -800,9 +819,9 @@ public class XmEntityResourceExtendedIntTest {
         }
 
         // Initialize the database
-        xmEntityService.save(createEntityComplexIncoming(em).typeKey(DEFAULT_TYPE_KEY));
-        xmEntityService.save(createEntityComplexIncoming(em).typeKey(UPDATED_TYPE_KEY).description(UNIQ_DESCRIPTION));
-        xmEntityService.save(createEntityComplexIncoming(em).typeKey(SEARCH_TEST_KEY));
+        xmEntityService.save(createEntityComplexIncoming().typeKey(DEFAULT_TYPE_KEY));
+        xmEntityService.save(createEntityComplexIncoming().typeKey(UPDATED_TYPE_KEY).description(UNIQ_DESCRIPTION));
+        xmEntityService.save(createEntityComplexIncoming().typeKey(SEARCH_TEST_KEY));
 
         String urlTemplate = "/api/_search-with-typekey/xm-entities?typeKey=ACCOUNT&size=5";
 
@@ -825,7 +844,44 @@ public class XmEntityResourceExtendedIntTest {
 
     @Test
     @Transactional
-    public void xmEntityFildsNoRelationFields() throws Exception {
+    @WithMockUser(authorities = "SUPER-ADMIN")
+    public void testSearchByTypeKeyAndTemplate() throws Exception {
+
+        // FIXME - fails if run test in Idea. But its needed for test running from console. need fix.
+        try {
+            xmEntitySearchRepository.deleteAll();
+        } catch (Exception e) {
+            log.warn("Suppress index deletion exception in tenant context: {}", String.valueOf(e));
+        }
+
+        // Initialize the database
+        xmEntityService.save(createEntityComplexIncoming().typeKey(DEFAULT_TYPE_KEY));
+        xmEntityService.save(createEntityComplexIncoming().typeKey(UPDATED_TYPE_KEY).description(UNIQ_DESCRIPTION));
+        xmEntityService.save(createEntityComplexIncoming().typeKey(SEARCH_TEST_KEY));
+
+        String urlTemplate = "/api/_search-with-typekey-and-template/xm-entities?typeKey=ACCOUNT&size=5";
+
+        performGet(urlTemplate)
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.length()").value(2))
+            .andExpect(jsonPath("$.[0].tags[0].name").value(DEFAULT_TAG_NAME))
+            .andExpect(jsonPath("$.[1].tags[0].name").value(DEFAULT_TAG_NAME));
+
+        performGet(urlTemplate + "&template=UNIQ_DESCRIPTION&templateParams[description]=" + UNIQ_DESCRIPTION)
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.length()").value(1))
+            .andExpect(jsonPath("$.[0].tags[0].name").value(DEFAULT_TAG_NAME));
+
+        performGet(urlTemplate + "&template=UNIQ_DESCRIPTION&templateParams[description]=" + NOT_PRESENT_UNIQ_DESCRIPTION)
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.length()").value(0));
+
+    }
+
+    @Test
+    @Transactional
+    @WithMockUser(authorities = {"SUPER-ADMIN"})
+    public void xmEntityFieldsNoRelationFields() throws Exception {
 
         assertThat(xmEntityIncoming.getAttachments().size()).isGreaterThan(0);
         assertThat(xmEntityIncoming.getTags().size()).isGreaterThan(0);
@@ -861,11 +917,30 @@ public class XmEntityResourceExtendedIntTest {
             .andExpect(jsonPath("$.tags").value(nullValue()))
             .andExpect(jsonPath("$.locations").value(nullValue()));
 
+        performGet("/api/xm-entities-by-ids?ids={id}&embed=id", id)
+            .andExpect(status().isOk())
+            .andDo(this::printMvcResult)
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+            .andExpect(jsonPath("$").value(hasSize(1)))
+            .andExpect(jsonPath("$.[0].id").value(id))
+            .andExpect(jsonPath("$.[0].key").value(DEFAULT_KEY))
+            .andExpect(jsonPath("$.[0].typeKey").value(DEFAULT_TYPE_KEY))
+            .andExpect(jsonPath("$.[0].stateKey").value(DEFAULT_STATE_KEY))
+            .andExpect(jsonPath("$.[0].name").value(DEFAULT_NAME))
+            .andExpect(jsonPath("$.[0].startDate").value(sameInstant(MOCKED_START_DATE)))
+            .andExpect(jsonPath("$.[0].updateDate").value(sameInstant(MOCKED_UPDATE_DATE)))
+            .andExpect(jsonPath("$.[0].endDate").value(sameInstant(DEFAULT_END_DATE)))
+            .andExpect(jsonPath("$.[0].description").value(DEFAULT_DESCRIPTION))
+            .andExpect(jsonPath("$.[0].data.AAAAAAAAAA").value("BBBBBBBBBB"))
+            .andExpect(jsonPath("$.[0].attachments").value(nullValue()))
+            .andExpect(jsonPath("$.[0].tags").value(nullValue()))
+            .andExpect(jsonPath("$.[0].locations").value(nullValue()));
     }
 
     @Test
     @Transactional
-    public void xmEntityFildsTwoFields() throws Exception {
+    @WithMockUser(authorities = {"SUPER-ADMIN"})
+    public void xmEntityFieldsTwoFields() throws Exception {
 
         assertThat(xmEntityIncoming.getAttachments().size()).isGreaterThan(0);
         assertThat(xmEntityIncoming.getTags().size()).isGreaterThan(0);
@@ -901,11 +976,30 @@ public class XmEntityResourceExtendedIntTest {
             .andExpect(jsonPath("$.tags.length()").value(1))
             .andExpect(jsonPath("$.locations").value(nullValue()));
 
+        performGet("/api/xm-entities-by-ids?ids={id}&embed=id,attachments,tags", id)
+            .andExpect(status().isOk())
+            .andDo(this::printMvcResult)
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+            .andExpect(jsonPath("$").value(hasSize(1)))
+            .andExpect(jsonPath("$.[0].id").value(id))
+            .andExpect(jsonPath("$.[0].key").value(DEFAULT_KEY))
+            .andExpect(jsonPath("$.[0].typeKey").value(DEFAULT_TYPE_KEY))
+            .andExpect(jsonPath("$.[0].stateKey").value(DEFAULT_STATE_KEY))
+            .andExpect(jsonPath("$.[0].name").value(DEFAULT_NAME))
+            .andExpect(jsonPath("$.[0].startDate").value(sameInstant(MOCKED_START_DATE)))
+            .andExpect(jsonPath("$.[0].updateDate").value(sameInstant(MOCKED_UPDATE_DATE)))
+            .andExpect(jsonPath("$.[0].endDate").value(sameInstant(DEFAULT_END_DATE)))
+            .andExpect(jsonPath("$.[0].description").value(DEFAULT_DESCRIPTION))
+            .andExpect(jsonPath("$.[0].data.AAAAAAAAAA").value("BBBBBBBBBB"))
+            .andExpect(jsonPath("$.[0].attachments.length()").value(1))
+            .andExpect(jsonPath("$.[0].tags.length()").value(1))
+            .andExpect(jsonPath("$.[0].locations").value(nullValue()));
     }
 
     @Test
     @Transactional
-    public void xmEntityFildsDefaultFields() throws Exception {
+    @WithMockUser(authorities = {"SUPER-ADMIN"})
+    public void xmEntityFieldsDefaultFields() throws Exception {
 
         assertThat(xmEntityIncoming.getAttachments().size()).isGreaterThan(0);
         assertThat(xmEntityIncoming.getTags().size()).isGreaterThan(0);
@@ -941,6 +1035,24 @@ public class XmEntityResourceExtendedIntTest {
             .andExpect(jsonPath("$.tags.length()").value(1))
             .andExpect(jsonPath("$.locations.length()").value(1));
 
+        performGet("/api/xm-entities-by-ids?ids={id}", id)
+            .andExpect(status().isOk())
+            .andDo(this::printMvcResult)
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+            .andExpect(jsonPath("$").value(hasSize(1)))
+            .andExpect(jsonPath("$.[0].id").value(id))
+            .andExpect(jsonPath("$.[0].key").value(DEFAULT_KEY))
+            .andExpect(jsonPath("$.[0].typeKey").value(DEFAULT_TYPE_KEY))
+            .andExpect(jsonPath("$.[0].stateKey").value(DEFAULT_STATE_KEY))
+            .andExpect(jsonPath("$.[0].name").value(DEFAULT_NAME))
+            .andExpect(jsonPath("$.[0].startDate").value(sameInstant(MOCKED_START_DATE)))
+            .andExpect(jsonPath("$.[0].updateDate").value(sameInstant(MOCKED_UPDATE_DATE)))
+            .andExpect(jsonPath("$.[0].endDate").value(sameInstant(DEFAULT_END_DATE)))
+            .andExpect(jsonPath("$.[0].description").value(DEFAULT_DESCRIPTION))
+            .andExpect(jsonPath("$.[0].data.AAAAAAAAAA").value("BBBBBBBBBB"))
+            .andExpect(jsonPath("$.[0].attachments.length()").value(1))
+            .andExpect(jsonPath("$.[0].tags.length()").value(1))
+            .andExpect(jsonPath("$.[0].locations.length()").value(1));
     }
 
     @Test
@@ -964,10 +1076,25 @@ public class XmEntityResourceExtendedIntTest {
             .andExpect(jsonPath("$.description").value(DEFAULT_DESCRIPTION))
             .andExpect(jsonPath("$.data.AAAAAAAAAA").value("BBBBBBBBBB"))
             .andExpect(jsonPath("$.calendars.length()").value(1))
-            .andExpect(jsonPath("$.calendars[0].events").value(nullValue()))
+            .andExpect(jsonPath("$.calendars[0].events").value(nullValue()));
 
-        ;
-
+        performGet("/api/xm-entities-by-ids?ids={id}&embed=calendars", id)
+            .andExpect(status().isOk())
+            .andDo(this::printMvcResult)
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+            .andExpect(jsonPath("$").value(hasSize(1)))
+            .andExpect(jsonPath("$.[0].id").value(id))
+            .andExpect(jsonPath("$.[0].key").value(DEFAULT_KEY))
+            .andExpect(jsonPath("$.[0].typeKey").value(DEFAULT_TYPE_KEY))
+            .andExpect(jsonPath("$.[0].stateKey").value(DEFAULT_STATE_KEY))
+            .andExpect(jsonPath("$.[0].name").value(DEFAULT_NAME))
+            .andExpect(jsonPath("$.[0].startDate").value(sameInstant(MOCKED_START_DATE)))
+            .andExpect(jsonPath("$.[0].updateDate").value(sameInstant(MOCKED_UPDATE_DATE)))
+            .andExpect(jsonPath("$.[0].endDate").value(sameInstant(DEFAULT_END_DATE)))
+            .andExpect(jsonPath("$.[0].description").value(DEFAULT_DESCRIPTION))
+            .andExpect(jsonPath("$.[0].data.AAAAAAAAAA").value("BBBBBBBBBB"))
+            .andExpect(jsonPath("$.[0].calendars.length()").value(1))
+            .andExpect(jsonPath("$.[0].calendars[0].events").value(nullValue()));
     }
 
     private int prepareCalendar() throws Exception {
@@ -1010,8 +1137,7 @@ public class XmEntityResourceExtendedIntTest {
     @Test
     @Transactional
     @WithMockUser(authorities = "SUPER-ADMIN")
-    public void xmEntityFildsCalendarsWithEvents() throws Exception {
-
+    public void xmEntityFieldsCalendarsWithEvents() throws Exception {
         int id = prepareCalendar();
 
         performGet("/api/xm-entities/{id}?embed=calendars.events", id)
@@ -1031,13 +1157,30 @@ public class XmEntityResourceExtendedIntTest {
             .andExpect(jsonPath("$.calendars.length()").value(1))
             .andExpect(jsonPath("$.calendars[0].events.length()").value(1));
 
+        performGet("/api/xm-entities-by-ids?ids={id}&embed=calendars.events", id)
+            .andExpect(status().isOk())
+            .andDo(this::printMvcResult)
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+            .andExpect(jsonPath("$").value(hasSize(1)))
+            .andExpect(jsonPath("$.[0].id").value(id))
+            .andExpect(jsonPath("$.[0].key").value(DEFAULT_KEY))
+            .andExpect(jsonPath("$.[0].typeKey").value(DEFAULT_TYPE_KEY))
+            .andExpect(jsonPath("$.[0].stateKey").value(DEFAULT_STATE_KEY))
+            .andExpect(jsonPath("$.[0].name").value(DEFAULT_NAME))
+            .andExpect(jsonPath("$.[0].startDate").value(sameInstant(MOCKED_START_DATE)))
+            .andExpect(jsonPath("$.[0].updateDate").value(sameInstant(MOCKED_UPDATE_DATE)))
+            .andExpect(jsonPath("$.[0].endDate").value(sameInstant(DEFAULT_END_DATE)))
+            .andExpect(jsonPath("$.[0].description").value(DEFAULT_DESCRIPTION))
+            .andExpect(jsonPath("$.[0].data.AAAAAAAAAA").value("BBBBBBBBBB"))
+            .andExpect(jsonPath("$.[0].calendars.length()").value(1))
+            .andExpect(jsonPath("$.[0].calendars[0].events.length()").value(1));
     }
 
     @Test
     @Transactional
     public void updateTenantXmEntity() throws Exception {
         // Initialize the database
-        XmEntity tenantEntity = createEntity(em);
+        XmEntity tenantEntity = createEntity();
         tenantEntity.setTypeKey(Constants.TENANT_TYPE_KEY);
         tenantEntity.setStateKey(null);
         tenantEntity.setData(null);
@@ -1046,7 +1189,7 @@ public class XmEntityResourceExtendedIntTest {
         int databaseSizeBeforeUpdate = xmEntityRepository.findAll().size();
 
         // Update the xmEntity
-        XmEntity updatedTenantEntity = createEntity(em);
+        XmEntity updatedTenantEntity = createEntity();
         updatedTenantEntity.setId(tenantEntity.getId());
         updatedTenantEntity.setTypeKey(Constants.TENANT_TYPE_KEY);
         updatedTenantEntity.setStateKey(null);
@@ -1254,4 +1397,31 @@ public class XmEntityResourceExtendedIntTest {
         return jacksonMessageConverter.getObjectMapper().readValue(r.getResponse().getContentAsString(), XmEntity.class);
     }
 
+    @Test
+    @Transactional
+    public void testJsonWithTwoPojoAndSameId() throws Exception {
+        int databaseSizeBeforeCreate = xmEntityRepository.findAll().size();
+        XmEntity target = xmEntityService.save(createEntity());
+
+        XmEntity entity = xmEntityIncoming;
+        entity.getTargets().add(new Link()
+            .typeKey(DEFAULT_LN_TARGET_KEY)
+            .name(DEFAULT_LN_TARGET_NAME)
+            .startDate(DEFAULT_LN_TARGET_START_DATE)
+            .target(target)
+        );
+        entity.getTargets().add(new Link()
+            .typeKey(DEFAULT_LN_TARGET_KEY)
+            .name(DEFAULT_LN_TARGET_NAME)
+            .startDate(DEFAULT_LN_TARGET_START_DATE)
+            .target(target)
+        );
+
+        MvcResult result = performPost("/api/xm-entities", entity)
+            .andExpect(status().isCreated())
+            .andExpect(jsonPath("$.key").value(DEFAULT_KEY))
+            .andReturn();
+
+        validateEntityInDB(databaseSizeBeforeCreate + 2);
+    }
 }

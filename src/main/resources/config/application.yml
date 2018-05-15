@@ -70,6 +70,16 @@ spring:
         producer:
             key-serializer: org.apache.kafka.common.serialization.StringSerializer
             value-serializer: org.apache.kafka.common.serialization.StringSerializer
+    mail:
+        host: localhost
+        port: 25
+        protocol: smtp
+        properties:
+            mail:
+                smtp:
+                    starttls.enable: false
+                    auth: false
+                    starttls.required: false
 security:
     basic:
         enabled: false
@@ -140,7 +150,7 @@ xm-config:
         consul-service-tags: 'hazelcast'
         consul-discovery-delay-ms: 10000
         group-name: xm-tenant-config-hazelcast-cluster
-        group-pass:
+        group-pass: password
     xm-config-url: http://config
 
 application:
@@ -155,6 +165,8 @@ application:
     specification-webapp-name: settings-public.yml
     specification-name: xmentityspec.yml
     specification-path-pattern: /config/tenants/{tenantName}/entity/${application.specification-name}
+    specification-templates-name: search-templates.yml
+    specification-templates-path-pattern: /config/tenants/{tenantName}/entity/${application.specification-templates-name}
     kafka-system-topic: system_topic
     kafka-system-queue: system_queue
     retry:
@@ -163,7 +175,22 @@ application:
         multiplier: 2
     lep:
         tenant-script-storage: XM_MS_CONFIG
-
+    amazon:
+        avatar:
+            # XmEntity.avatarUrl should match this pattern to persist only last part into DB, otherwise set to null
+            # Before persisting only last part of the URL (aka fileName) will be persisted
+            pre-persist-url-full-pattern: ^http(s)?:\/\/[a-zA-Z0-9-.]+[.]icthh[.][a-z]+(:\d+)?/[a-zA-Z0-9-.]+$
+            # XmEntity.avatarUrl should match this pattern to return from DB, otherwise set to null
+            # After retrieving from DB URL will be prepended with path prefix to be absolute.
+            post-load-url-part-pattern: ^[a-zA-Z0-9-.]+$
+        aws:
+            endpoint:
+            template:
+            region:
+            access-key-id:
+            access-key-secret:
+        s3:
+            bucket:
 # ===================================================================
 # Timeline specific properties
 #

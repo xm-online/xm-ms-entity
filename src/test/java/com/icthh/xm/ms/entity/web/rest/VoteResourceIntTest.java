@@ -158,7 +158,7 @@ public class VoteResourceIntTest {
             .message(DEFAULT_MESSAGE)
             .entryDate(DEFAULT_ENTRY_DATE);
         // Add required entity
-        XmEntity xmEntity = XmEntityResourceIntTest.createEntity(em);
+        XmEntity xmEntity = XmEntityResourceIntTest.createEntity();
         em.persist(xmEntity);
         em.flush();
         vote.setXmEntity(xmEntity);

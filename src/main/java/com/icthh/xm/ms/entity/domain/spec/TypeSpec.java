@@ -1,12 +1,19 @@
 package com.icthh.xm.ms.entity.domain.spec;
 
+import static java.util.Collections.emptyList;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import lombok.Data;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder( {"key", "name", "pluralName", "isApp", "isAbstract", "fastSearch", "icon", "dataSpec", "dataForm",
@@ -52,7 +59,6 @@ public class TypeSpec {
     private List<TagSpec> tags = null;
     @JsonProperty("comments")
     private List<CommentSpec> comments = null;
-
-
-
+    @JsonIgnore
+    private Set<UniqueFieldSpec> uniqueFields = new HashSet<>();
 }

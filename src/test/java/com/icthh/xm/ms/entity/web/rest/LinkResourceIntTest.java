@@ -179,12 +179,12 @@ public class LinkResourceIntTest {
             .startDate(DEFAULT_START_DATE)
             .endDate(DEFAULT_END_DATE);
         // Add required entity
-        XmEntity target = XmEntityResourceIntTest.createEntity(em);
+        XmEntity target = XmEntityResourceIntTest.createEntity();
         em.persist(target);
         em.flush();
         link.setTarget(target);
         // Add required entity
-        XmEntity source = XmEntityResourceIntTest.createEntity(em);
+        XmEntity source = XmEntityResourceIntTest.createEntity();
         em.persist(source);
         em.flush();
         link.setSource(source);

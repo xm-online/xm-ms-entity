@@ -5,7 +5,6 @@ import com.icthh.xm.commons.exceptions.BusinessException;
 import com.icthh.xm.commons.exceptions.ErrorConstants;
 import com.icthh.xm.ms.entity.domain.Content;
 import com.icthh.xm.ms.entity.repository.ContentRepository;
-import com.icthh.xm.ms.entity.repository.search.ContentSearchRepository;
 import com.icthh.xm.ms.entity.service.ContentService;
 import com.icthh.xm.ms.entity.web.rest.util.HeaderUtil;
 import com.icthh.xm.ms.entity.web.rest.util.RespContentUtil;
@@ -39,17 +38,14 @@ public class ContentResource {
     private static final String ENTITY_NAME = "content";
 
     private final ContentRepository contentRepository;
-    private final ContentSearchRepository contentSearchRepository;
     private final ContentService contentService;
     private final ContentResource contentResource;
 
     public ContentResource(
                     ContentRepository contentRepository,
-                    ContentSearchRepository contentSearchRepository,
                     ContentService contentService,
                     @Lazy ContentResource contentResource) {
         this.contentRepository = contentRepository;
-        this.contentSearchRepository = contentSearchRepository;
         this.contentService = contentService;
         this.contentResource = contentResource;
     }
@@ -70,7 +66,6 @@ public class ContentResource {
                                         "A new content cannot already have an ID");
         }
         Content result = contentRepository.save(content);
-        contentSearchRepository.save(result);
         return ResponseEntity.created(new URI("/api/contents/" + result.getId()))
             .headers(HeaderUtil.createEntityCreationAlert(ENTITY_NAME, result.getId().toString()))
             .body(result);
@@ -94,7 +89,6 @@ public class ContentResource {
             return this.contentResource.createContent(content);
         }
         Content result = contentRepository.save(content);
-        contentSearchRepository.save(result);
         return ResponseEntity.ok()
             .headers(HeaderUtil.createEntityUpdateAlert(ENTITY_NAME, content.getId().toString()))
             .body(result);
@@ -136,21 +130,7 @@ public class ContentResource {
     @PreAuthorize("hasPermission({'id': #id}, 'content', 'CONTENT.DELETE')")
     public ResponseEntity<Void> deleteContent(@PathVariable Long id) {
         contentRepository.delete(id);
-        contentSearchRepository.delete(id);
         return ResponseEntity.ok().headers(HeaderUtil.createEntityDeletionAlert(ENTITY_NAME, id.toString())).build();
-    }
-
-    /**
-     * SEARCH  /_search/contents?query=:query : search for the content corresponding
-     * to the query.
-     *
-     * @param query the query of the content search
-     * @return the result of the search
-     */
-    @GetMapping("/_search/contents")
-    @Timed
-    public List<Content> searchContents(@RequestParam String query) {
-        return contentService.search(query, null);
     }
 
 }

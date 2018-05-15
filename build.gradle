@@ -96,7 +96,7 @@ if (OperatingSystem.current().isWindows()) {
 }
 
 test {
-
+    systemProperty "spring.profiles.active", "test"
     mkdir("src/test/features")
     include '**/*UnitTest*'
     include '**/*IntTest*'
@@ -169,6 +169,7 @@ configurations {
 }
 
 repositories {
+    mavenLocal()
     mavenCentral()
     jcenter()
     maven { url 'http://repo.spring.io/milestone' }
@@ -192,6 +193,7 @@ dependencies {
     compile ("net.logstash.logback:logstash-logback-encoder:${logstash_logback_encoder_version}") {
         exclude(group: 'ch.qos.logback')
     }
+    compile "com.fasterxml.jackson.dataformat:jackson-dataformat-csv:${jackson_dataformat_csv_version}"
     compile "com.fasterxml.jackson.datatype:jackson-datatype-json-org"
     compile "com.fasterxml.jackson.datatype:jackson-datatype-hppc"
     compile "com.fasterxml.jackson.datatype:jackson-datatype-jsr310"
@@ -278,7 +280,6 @@ dependencies {
     compile "com.icthh.xm.commons:xm-commons-permission:${xm_commons_version}"
 
     compile "org.freemarker:freemarker:${freemarker_version}"
-    compile "com.fasterxml.jackson.dataformat:jackson-dataformat-csv:${jackson_dataformat_csv_version}"
     compile "org.apache.poi:poi-ooxml:${apache_poi_version}"
     compile "org.modelmapper:modelmapper:${modelmapper_version}"
     //compile "org.springframework.boot:spring-boot-devtools"

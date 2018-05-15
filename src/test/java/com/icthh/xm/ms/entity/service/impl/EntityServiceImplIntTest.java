@@ -2,9 +2,15 @@ package com.icthh.xm.ms.entity.service.impl;
 
 import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_AUTH_CONTEXT;
 import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_TENANT_CONTEXT;
+import static com.icthh.xm.commons.tenant.TenantContextUtils.getRequiredTenantKeyValue;
+import static com.icthh.xm.ms.entity.config.TenantConfigMockConfiguration.getXmEntityTemplatesSpec;
+import static java.time.Instant.now;
+import static java.util.Arrays.asList;
+import static java.util.UUID.randomUUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableMap;
 import com.icthh.xm.lep.api.LepManager;
 import com.icthh.xm.commons.exceptions.BusinessException;
@@ -14,14 +20,13 @@ import com.icthh.xm.commons.security.XmAuthenticationContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
 import com.icthh.xm.ms.entity.EntityApp;
+import com.icthh.xm.ms.entity.config.ApplicationProperties;
 import com.icthh.xm.ms.entity.config.LepConfiguration;
 import com.icthh.xm.ms.entity.config.SecurityBeanOverrideConfiguration;
 import com.icthh.xm.ms.entity.config.tenant.WebappTenantOverrideConfiguration;
-import com.icthh.xm.ms.entity.domain.Attachment;
-import com.icthh.xm.ms.entity.domain.Link;
-import com.icthh.xm.ms.entity.domain.Profile;
-import com.icthh.xm.ms.entity.domain.XmEntity;
+import com.icthh.xm.ms.entity.domain.*;
 import com.icthh.xm.ms.entity.domain.ext.IdOrKey;
+import com.icthh.xm.ms.entity.domain.template.TemplateParamsHolder;
 import com.icthh.xm.ms.entity.repository.LinkRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
 import com.icthh.xm.ms.entity.repository.search.XmEntityPermittedSearchRepository;
@@ -30,6 +35,8 @@ import com.icthh.xm.ms.entity.service.*;
 import com.icthh.xm.ms.entity.util.XmHttpEntityUtils;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.h2.jdbc.JdbcSQLException;
+import org.hibernate.exception.ConstraintViolationException;
 import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -39,6 +46,8 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.io.Resource;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpEntity;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.test.context.support.WithMockUser;
@@ -49,7 +58,9 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigInteger;
 import java.net.URI;
+import java.time.Instant;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 
 @Slf4j
@@ -65,10 +76,16 @@ public class EntityServiceImplIntTest {
     private XmEntityServiceImpl xmEntityService;
 
     @Autowired
+    private ApplicationProperties applicationProperties;
+
+    @Autowired
     private XmEntityRepository xmEntityRepository;
 
     @Autowired
     private XmEntitySpecService xmEntitySpecService;
+
+    @Autowired
+    private XmEntityTemplatesSpecService xmEntityTemplatesSpecService;
 
     @Autowired
     private XmEntitySearchRepository xmEntitySearchRepository;
@@ -115,12 +132,20 @@ public class EntityServiceImplIntTest {
 
     private static final String TARGET_TYPE_KEY = "ACCOUNT.USER";
 
+    @Autowired
+    private ObjectMapper objectMapper;
+
     @BeforeTransaction
     public void beforeTransaction() {
         TenantContextUtils.setTenant(tenantContextHolder, "RESINTTEST");
         MockitoAnnotations.initMocks(this);
         when(authContextHolder.getContext()).thenReturn(context);
         when(context.getRequiredUserKey()).thenReturn("userKey");
+
+        String tenantName = getRequiredTenantKeyValue(tenantContextHolder);
+        String config = getXmEntityTemplatesSpec(tenantName);
+        String key = applicationProperties.getSpecificationTemplatesPathPattern().replace("{tenantName}", tenantName);
+        xmEntityTemplatesSpecService.onRefresh(key, config);
 
         XmEntity sourceEntity = xmEntityRepository.save(createEntity(1l, TARGET_TYPE_KEY));
         self = new Profile();
@@ -129,6 +154,7 @@ public class EntityServiceImplIntTest {
 
         xmEntityService = new XmEntityServiceImpl(
             xmEntitySpecService,
+            xmEntityTemplatesSpecService,
             xmEntityRepository,
             xmEntitySearchRepository,
             lifecycleService,
@@ -139,7 +165,8 @@ public class EntityServiceImplIntTest {
             attachmentService,
             permittedSearchRepository,
             startUpdateDateGenerationStrategy,
-            authContextHolder);
+            authContextHolder,
+            objectMapper);
         xmEntityService.setSelf(xmEntityService);
 
         lepManager.beginThreadContext(ctx -> {
@@ -314,6 +341,55 @@ public class EntityServiceImplIntTest {
         xmEntityService.deleteLinkTarget(IdOrKey.SELF, link.getId().toString());
     }
 
+    @Test
+    @Transactional
+    @WithMockUser(authorities = "SUPER-ADMIN")
+    public void searchByQuery() {
+        XmEntity given = createEntity(101l, "ACCOUNT.USER");
+        xmEntitySearchRepository.save(given);
+        Page<XmEntity> result = xmEntityService.search("typeKey:ACCOUNT.USER AND id:101", null, null);
+        assertThat(result.getContent().size()).isEqualTo(1);
+        assertThat(result.getContent().get(0)).isEqualTo(given);
+    }
+
+    @Test
+    @Transactional
+    @WithMockUser(authorities = "SUPER-ADMIN")
+    public void searchByTemplate() {
+        XmEntity given = createEntity(102l, "ACCOUNT.USER");
+        xmEntitySearchRepository.save(given);
+        TemplateParamsHolder templateParamsHolder = new TemplateParamsHolder();
+        templateParamsHolder.getTemplateParams().put("typeKey", "ACCOUNT.USER");
+        templateParamsHolder.getTemplateParams().put("id", "102");
+        Page<XmEntity> result = xmEntityService.search("BY_TYPEKEY_AND_ID", templateParamsHolder, null, null);
+        assertThat(result.getContent().size()).isEqualTo(1);
+        assertThat(result.getContent().get(0)).isEqualTo(given);
+    }
+
+    @Test
+    @Transactional
+    @WithMockUser(authorities = "SUPER-ADMIN")
+    public void searchByQueryAndTypeKey() {
+        XmEntity given = createEntity(103l, "ACCOUNT.USER");
+        xmEntitySearchRepository.save(given);
+        Page<XmEntity> result = xmEntityService.searchByQueryAndTypeKey("103", "ACCOUNT", null, null);
+        assertThat(result.getContent().size()).isEqualTo(1);
+        assertThat(result.getContent().get(0)).isEqualTo(given);
+    }
+
+    @Test
+    @Transactional
+    @WithMockUser(authorities = "SUPER-ADMIN")
+    public void searchByTemplateAndTypeKey() {
+        XmEntity given = createEntity(103l, "ACCOUNT.USER");
+        xmEntitySearchRepository.save(given);
+        TemplateParamsHolder templateParamsHolder = new TemplateParamsHolder();
+        templateParamsHolder.getTemplateParams().put("typeKey", "ACCOUNT.USER");
+        Page<XmEntity> result = xmEntityService.searchByQueryAndTypeKey("BY_TYPEKEY", templateParamsHolder, "ACCOUNT", null, null);
+        assertThat(result.getContent().size()).isEqualTo(1);
+        assertThat(result.getContent().get(0)).isEqualTo(given);
+    }
+
     private XmEntity createEntity(Long id, String typeKey) {
         XmEntity entity = new XmEntity();
         entity.setId(id);
@@ -345,4 +421,28 @@ public class EntityServiceImplIntTest {
 
         return link;
     }
+
+
+
+    @Test(expected = DataIntegrityViolationException.class)
+    @Transactional
+    public void testUniqueField() {
+
+        XmEntity entity = new XmEntity().typeKey("TEST_UNIQUE_FIELD").key(randomUUID())
+            .name("name").startDate(now()).updateDate(now());
+        entity.setUniqueFields(new HashSet<>(asList(
+            new UniqueField(null, "$.uniqueField", "value", entity.getTypeKey(), entity),
+            new UniqueField(null, "$.uniqueField2", "value2", entity.getTypeKey(), entity)
+        )));
+        xmEntityRepository.saveAndFlush(entity);
+
+        XmEntity entity2 = new XmEntity().typeKey("TEST_UNIQUE_FIELD").key(randomUUID())
+            .name("name").startDate(now()).updateDate(now());
+        entity2.setUniqueFields(new HashSet<>(asList(
+            new UniqueField(null, "$.uniqueField", "value", entity2.getTypeKey(), entity2),
+            new UniqueField(null, "$.uniqueField2", "value22", entity2.getTypeKey(), entity2)
+        )));
+        xmEntityRepository.saveAndFlush(entity2);
+    }
+
 }

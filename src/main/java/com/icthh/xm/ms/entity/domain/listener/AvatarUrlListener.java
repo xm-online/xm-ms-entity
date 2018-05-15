@@ -15,16 +15,16 @@ import javax.persistence.PreUpdate;
 @Slf4j
 public class AvatarUrlListener {
 
-    private static final String PATTERN_FULL = "^http(s)?:\\/\\/[a-zA-Z0-9-.]+[.]icthh[.][a-z]+(:\\d+)?/[a-zA-Z0-9-.]+$";
-    private static final String PATTERN_PART = "^[a-zA-Z0-9-.]+$";
     private String prefix;
+    private String patternFull;
+    private String patternPart;
 
     @PrePersist
     @PreUpdate
     public void prePersist(XmEntity obj) {
         String avatarUrl = obj.getAvatarUrl();
         if (StringUtils.isNoneBlank(avatarUrl)) {
-            if (avatarUrl.matches(PATTERN_FULL)) {
+            if (isUrlMatchesPattern(avatarUrl, getPatternFull())) {
                 obj.setAvatarUrl(FilenameUtils.getName(avatarUrl));
             } else {
                 obj.setAvatarUrl(null);
@@ -36,7 +36,7 @@ public class AvatarUrlListener {
     public void postLoad(XmEntity obj) {
         String avatarUrl = obj.getAvatarUrl();
         if (StringUtils.isNoneBlank(avatarUrl)) {
-            if (avatarUrl.matches(PATTERN_PART)) {
+            if (isUrlMatchesPattern(avatarUrl, getPatternPart())) {
                 obj.setAvatarUrl(getPrefix() + avatarUrl);
             } else {
                 obj.setAvatarUrl(null);
@@ -46,12 +46,33 @@ public class AvatarUrlListener {
 
     private String getPrefix() {
         if (prefix == null) {
-            ApplicationContext ctx = ApplicationContextHolder.getInstance().getApplicationContext();
-            ApplicationProperties applicationProperties = ctx
-                .getBean("applicationProperties", ApplicationProperties.class);
+            ApplicationProperties applicationProperties = getApplicationProperties();
             prefix = String.format(applicationProperties.getAmazon().getAws().getTemplate(),
                 applicationProperties.getAmazon().getS3().getBucket());
         }
         return prefix;
+    }
+
+    private boolean isUrlMatchesPattern(String avatarUrl, String pattern) {
+        return avatarUrl != null && pattern != null && avatarUrl.matches(pattern);
+    }
+
+    private String getPatternFull(){
+        if(patternFull == null){
+            patternFull = getApplicationProperties().getAmazon().getAvatar().getPrePersistUrlFullPattern();
+        }
+        return patternFull;
+    }
+
+    private String getPatternPart(){
+        if(patternPart == null){
+            patternPart = getApplicationProperties().getAmazon().getAvatar().getPostLoadUrlPartPattern();
+        }
+        return patternPart;
+    }
+
+    private ApplicationProperties getApplicationProperties() {
+        ApplicationContext ctx = ApplicationContextHolder.getInstance().getApplicationContext();
+        return ctx.getBean("applicationProperties", ApplicationProperties.class);
     }
 }

@@ -11,6 +11,7 @@ import com.github.fge.jsonschema.main.JsonSchemaFactory;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.domain.spec.TypeSpec;
 import com.icthh.xm.ms.entity.service.XmEntitySpecService;
+import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -21,16 +22,11 @@ import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
 
 @Slf4j
+@RequiredArgsConstructor
 public class JsonDataValidator implements ConstraintValidator<JsonData, XmEntity> {
 
-    @Autowired
-    private XmEntitySpecService xmEntitySpecService;
-
-    private final ObjectMapper objectMapper = new ObjectMapper();
-
-    public JsonDataValidator() {
-        super();
-    }
+    private final XmEntitySpecService xmEntitySpecService;
+    private final ObjectMapper objectMapper;
 
     @Override
     public void initialize(JsonData constraintAnnotation) {

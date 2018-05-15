@@ -41,6 +41,9 @@ public class ApplicationProperties {
     private String specificationPathPattern;
     private String specificationName;
 
+    private String specificationTemplatesPathPattern;
+    private String specificationTemplatesName;
+
     private String specificationWebappName;
     private String webappName;
 
@@ -48,8 +51,16 @@ public class ApplicationProperties {
     @Setter
     public static class Amazon {
 
+        private final Avatar avatar = new Avatar();
         private final Aws aws = new Aws();
         private final S3 s3 = new S3();
+
+        @Getter
+        @Setter
+        public static class Avatar {
+            private String prePersistUrlFullPattern;
+            private String postLoadUrlPartPattern;
+        }
 
         @Getter
         @Setter

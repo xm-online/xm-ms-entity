@@ -1,16 +1,25 @@
 package com.icthh.xm.ms.entity.service;
 
+import static com.github.fge.jackson.NodeType.OBJECT;
+import static com.github.fge.jackson.NodeType.getNodeType;
+import static java.util.Collections.emptyList;
 import static org.apache.commons.lang.StringUtils.isEmpty;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.springframework.util.CollectionUtils.isEmpty;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import com.github.fge.jackson.JsonLoader;
+import com.github.fge.jackson.NodeType;
 import com.icthh.xm.commons.config.client.api.RefreshableConfiguration;
 import com.icthh.xm.commons.config.client.repository.TenantConfigRepository;
 import com.icthh.xm.commons.logging.aop.IgnoreLogginAspect;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
 import com.icthh.xm.ms.entity.config.ApplicationProperties;
+import com.icthh.xm.ms.entity.domain.UniqueField;
+import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.domain.spec.*;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
@@ -19,6 +28,7 @@ import org.apache.commons.lang.StringUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.util.AntPathMatcher;
 
+import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
@@ -89,6 +99,7 @@ public class XmEntitySpecService implements RefreshableConfiguration {
 
             // add inheritance
             inheritance(result);
+            processUniqueFields(result);
 
             return result;
         }
@@ -274,7 +285,7 @@ public class XmEntitySpecService implements RefreshableConfiguration {
     }
 
     private <T> Iterable<T> nullSafe(Iterable<T> itr) {
-        return itr == null ? Collections.emptyList() : itr;
+        return itr == null ? emptyList() : itr;
     }
 
     private <T> Stream<T> streamOf(List<T> list) {
@@ -312,7 +323,7 @@ public class XmEntitySpecService implements RefreshableConfiguration {
      */
     public List<NextSpec> next(String key, String stateKey) {
         if (isEmpty(getTypeSpecs().get(key).getStates())) {
-            return Collections.emptyList();
+            return emptyList();
         }
 
         if (stateKey == null) {
@@ -322,9 +333,9 @@ public class XmEntitySpecService implements RefreshableConfiguration {
         Optional<StateSpec> state = findState(key, stateKey);
         if (state.isPresent()) {
             List<NextSpec> next = state.get().getNext();
-            return next != null ? next : Collections.emptyList();
+            return next != null ? next : emptyList();
         } else {
-            return Collections.emptyList();
+            return emptyList();
         }
     }
 
@@ -380,6 +391,37 @@ public class XmEntitySpecService implements RefreshableConfiguration {
         if (list != null) {
             subKeys.put(classInstance.getSimpleName(), list.stream().map(mapper).collect(Collectors.toSet()));
         }
+    }
+
+    @SneakyThrows
+    private void processUniqueFields(Map<String, TypeSpec> types) {
+        for (TypeSpec typeSpec: types.values()) {
+            if (isBlank(typeSpec.getDataSpec())) {
+                continue;
+            }
+
+            JsonNode node = JsonLoader.fromString(typeSpec.getDataSpec());
+            Set<UniqueFieldSpec> uniqueFields = new HashSet<>();
+            processNode(node, "$", uniqueFields);
+            typeSpec.setUniqueFields(uniqueFields);
+        }
+    }
+
+    private void processNode(JsonNode node, String jsonPath, Set<UniqueFieldSpec> uniqueFields) {
+        if (node.has("unique") && node.get("unique").asBoolean()) {
+            uniqueFields.add(new UniqueFieldSpec(jsonPath));
+        }
+
+        if (!isObject(node)) {
+            return;
+        }
+
+        JsonNode properties = node.get("properties");
+        properties.fieldNames().forEachRemaining(name -> processNode(properties.get(name), jsonPath + "." + name, uniqueFields));
+    }
+
+    private boolean isObject(JsonNode schemaNode) {
+        return getNodeType(schemaNode).equals(OBJECT) && schemaNode.has("properties");
     }
 
     @Override

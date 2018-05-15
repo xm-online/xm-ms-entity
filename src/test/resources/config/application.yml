@@ -31,7 +31,7 @@ spring:
         database-platform: io.github.jhipster.domain.util.FixedH2Dialect
         database: H2
         open-in-view: false
-        show-sql: false
+        show-sql: true
         hibernate:
             ddl-auto: none
             naming:
@@ -125,6 +125,9 @@ xm-config:
 application:
     kafka-enabled: false
     amazon:
+        avatar:
+            pre-persist-url-full-pattern: ^http(s)?:\/\/[a-zA-Z0-9-.]+[.]icthh[.][a-z]+(:\d+)?/[a-zA-Z0-9-.]+$
+            post-load-url-part-pattern: ^[a-zA-Z0-9-.]+$
         aws:
             template: http://%s.rgw.icthh.test:7480/
         s3:
@@ -133,6 +136,7 @@ application:
     tenant-client-connection-timeout: 10000
     tenant-client-read-timeout: 10000
     specification-path-pattern: /config/tenants/{tenantName}/entity/specs/xmentityspecs.yml
+    specification-templates-path-pattern: /config/tenants/{tenantName}/entity/templates/${application.specification-templates-name}
     kafka-system-topic: system_topic
     kafka-system-queue: system_queue
     lep:
