@@ -79,9 +79,6 @@ public class Link implements Serializable {
 
     @ManyToOne(optional = false)
     @NotNull
-    @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id", resolver =
-        XmEntityObjectIdResolver.class)
-    @JsonIdentityReference
     private XmEntity target;
 
     @ManyToOne(optional = false)
