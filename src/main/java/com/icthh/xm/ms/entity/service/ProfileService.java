@@ -69,12 +69,7 @@ public class ProfileService {
 
         String userKey = context.getRequiredUserKey();
         log.debug("Get profile for user key {}", userKey);
-        Profile profile = getProfile(userKey);
-        if (profile == null) {
-            throw new IllegalArgumentException("Profile not found for user key " + userKey);
-        }
-
-        return profile;
+        return getProfile(userKey);
     }
 
     @LogicExtensionPoint("UpdateProfile")
