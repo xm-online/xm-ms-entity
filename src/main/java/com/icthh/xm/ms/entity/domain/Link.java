@@ -3,7 +3,9 @@ package com.icthh.xm.ms.entity.domain;
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.JsonIdentityReference;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.icthh.xm.ms.entity.domain.idresolver.XmEntityObjectIdResolver;
+import com.icthh.xm.ms.entity.domain.serializer.SimpleXmEntitySerializer;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import org.hibernate.annotations.Cache;
@@ -79,6 +81,7 @@ public class Link implements Serializable {
 
     @ManyToOne(optional = false)
     @NotNull
+    @JsonSerialize(using = SimpleXmEntitySerializer.class)
     private XmEntity target;
 
     @ManyToOne(optional = false)

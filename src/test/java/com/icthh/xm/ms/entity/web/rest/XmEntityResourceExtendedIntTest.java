@@ -1,58 +1,24 @@
 package com.icthh.xm.ms.entity.web.rest;
 
-import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_AUTH_CONTEXT;
-import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_TENANT_CONTEXT;
-import static com.icthh.xm.commons.tenant.TenantContextUtils.getRequiredTenantKeyValue;
-import static com.icthh.xm.ms.entity.config.TenantConfigMockConfiguration.getXmEntityTemplatesSpec;
-import static com.icthh.xm.ms.entity.web.rest.TestUtil.sameInstant;
-import static java.util.Collections.emptyMap;
-import static java.util.UUID.randomUUID;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.fail;
-import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.everyItem;
-import static org.hamcrest.Matchers.hasItem;
-import static org.hamcrest.Matchers.hasSize;
-import static org.hamcrest.Matchers.notNullValue;
-import static org.hamcrest.Matchers.nullValue;
-import static org.hibernate.validator.internal.util.CollectionHelper.asSet;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.PropertyAccessor;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.google.common.collect.ImmutableMap;
-import com.icthh.xm.lep.api.LepManager;
 import com.icthh.xm.commons.exceptions.spring.web.ExceptionTranslator;
 import com.icthh.xm.commons.security.XmAuthenticationContext;
 import com.icthh.xm.commons.security.XmAuthenticationContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
+import com.icthh.xm.lep.api.LepManager;
 import com.icthh.xm.ms.entity.EntityApp;
 import com.icthh.xm.ms.entity.config.ApplicationProperties;
 import com.icthh.xm.ms.entity.config.Constants;
 import com.icthh.xm.ms.entity.config.LepConfiguration;
 import com.icthh.xm.ms.entity.config.SecurityBeanOverrideConfiguration;
 import com.icthh.xm.ms.entity.config.tenant.WebappTenantOverrideConfiguration;
-import com.icthh.xm.ms.entity.domain.Attachment;
-import com.icthh.xm.ms.entity.domain.Calendar;
-import com.icthh.xm.ms.entity.domain.Content;
-import com.icthh.xm.ms.entity.domain.Event;
-import com.icthh.xm.ms.entity.domain.Link;
-import com.icthh.xm.ms.entity.domain.Location;
-import com.icthh.xm.ms.entity.domain.Tag;
-import com.icthh.xm.ms.entity.domain.XmEntity;
+import com.icthh.xm.ms.entity.domain.*;
 import com.icthh.xm.ms.entity.domain.ext.IdOrKey;
 import com.icthh.xm.ms.entity.repository.XmEntityPermittedRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
@@ -91,6 +57,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.Validator;
 
+import javax.persistence.EntityManager;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.time.Instant;
@@ -98,7 +65,23 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import javax.persistence.EntityManager;
+
+import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_AUTH_CONTEXT;
+import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_TENANT_CONTEXT;
+import static com.icthh.xm.commons.tenant.TenantContextUtils.getRequiredTenantKeyValue;
+import static com.icthh.xm.ms.entity.config.TenantConfigMockConfiguration.getXmEntityTemplatesSpec;
+import static com.icthh.xm.ms.entity.web.rest.TestUtil.sameInstant;
+import static java.util.Collections.emptyMap;
+import static java.util.UUID.randomUUID;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.fail;
+import static org.hamcrest.Matchers.*;
+import static org.hibernate.validator.internal.util.CollectionHelper.asSet;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 /**
  * Extension Test class for the XmEntityResource REST controller. Contains additional test apart from Jhipster generated
@@ -1273,7 +1256,7 @@ public class XmEntityResourceExtendedIntTest {
         assertThat(xmEntityList).hasSize(databaseSizeBeforeTest + 1);
     }
 
-    @Test(expected = JsonMappingException.class)
+    @Test
     @Transactional
     public void testNoCycleJson() throws Exception {
         XmEntity target = new XmEntity().typeKey("TARGET");
@@ -1285,13 +1268,49 @@ public class XmEntityResourceExtendedIntTest {
         )).setId(1L);
         target.targets(Collections.singleton(
             new Link().typeKey("LINK2")
-                      .source(source)
-                      .target(target)
+                      .source(target)
+                      .target(source)
         )).setId(2L);
         String targetJson = jacksonMessageConverter.getObjectMapper().writeValueAsString(target);
+        log.info("Target JSON {}", targetJson);
         String sourceJson = jacksonMessageConverter.getObjectMapper().writeValueAsString(source);
-        assertEquals("1", JsonPath.read(targetJson, "$.targets[0].id"));
-        assertEquals("2", JsonPath.read(sourceJson, "$.targets[0].id"));
+        log.info("Source JSON {}", sourceJson);
+        assertEquals(Integer.valueOf(1), JsonPath.read(targetJson, "$.targets[0].target.id"));
+        assertEquals(Integer.valueOf(2), JsonPath.read(targetJson, "$.id"));
+        assertEquals(Integer.valueOf(2), JsonPath.read(sourceJson, "$.targets[0].target.id"));
+        assertEquals(Integer.valueOf(1), JsonPath.read(sourceJson, "$.id"));
+    }
+
+    @Test
+    @Transactional
+    public void testNoCycleErrorOnSave() throws Exception {
+        XmEntity target = xmEntityRepository.save(createEntity());
+        XmEntity source = xmEntityRepository.save(createEntity());
+        source.getTargets().clear();
+        source.getTargets().add(new Link().typeKey("LINK1")
+            .source(source)
+            .target(target));
+
+        target.getTargets().clear();
+        target.getTargets().add(new Link().typeKey("LINK2")
+            .source(target)
+            .target(source));
+
+        String targetJson = jacksonMessageConverter.getObjectMapper().writeValueAsString(target);
+        log.info("Target JSON {}", targetJson);
+        String sourceJson = jacksonMessageConverter.getObjectMapper().writeValueAsString(source);
+        log.info("Source JSON {}", sourceJson);
+        restXmEntityMockMvc.perform(put("/api/xm-entities")
+            .contentType(TestUtil.APPLICATION_JSON_UTF8)
+            .content(TestUtil.convertObjectToJsonBytes(target)))
+            .andDo(r -> log.info(r.getResponse().getContentAsString()))
+            .andExpect(status().is2xxSuccessful());
+
+        restXmEntityMockMvc.perform(put("/api/xm-entities")
+            .contentType(TestUtil.APPLICATION_JSON_UTF8)
+            .content(TestUtil.convertObjectToJsonBytes(source)))
+            .andDo(r -> log.info(r.getResponse().getContentAsString()))
+            .andExpect(status().is2xxSuccessful());
     }
 
 
