@@ -93,10 +93,7 @@ import org.springframework.validation.Validator;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.time.Instant;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import javax.persistence.EntityManager;
 
 /**
@@ -1300,26 +1297,30 @@ public class XmEntityResourceExtendedIntTest {
     @Test
     @Transactional
     public void testNoCycleErrorOnSave() throws Exception {
-        XmEntity target = new XmEntity().typeKey("TARGET");
-        XmEntity source = new XmEntity().typeKey("SOURCE");
+        XmEntity target = xmEntityRepository.save(createEntity());
+        XmEntity source = xmEntityRepository.save(createEntity());
         source.targets(Collections.singleton(
             new Link().typeKey("LINK1")
                 .source(source)
                 .target(target)
-        )).setId(1L);
+        ));
         target.targets(Collections.singleton(
             new Link().typeKey("LINK2")
-                .source(source)
-                .target(target)
-        )).setId(2L);
+                .source(target)
+                .target(source)
+        ));
 
-        restXmEntityMockMvc.perform(post("/api/xm-entities")
+        String targetJson = jacksonMessageConverter.getObjectMapper().writeValueAsString(target);
+        log.info("Target JSON {}", targetJson);
+        String sourceJson = jacksonMessageConverter.getObjectMapper().writeValueAsString(source);
+        log.info("Source JSON {}", sourceJson);
+        restXmEntityMockMvc.perform(put("/api/xm-entities")
             .contentType(TestUtil.APPLICATION_JSON_UTF8)
             .content(TestUtil.convertObjectToJsonBytes(target)))
             .andDo(r -> log.info(r.getResponse().getContentAsString()))
             .andExpect(status().is2xxSuccessful());
 
-        restXmEntityMockMvc.perform(post("/api/xm-entities")
+        restXmEntityMockMvc.perform(put("/api/xm-entities")
             .contentType(TestUtil.APPLICATION_JSON_UTF8)
             .content(TestUtil.convertObjectToJsonBytes(source)))
             .andDo(r -> log.info(r.getResponse().getContentAsString()))
