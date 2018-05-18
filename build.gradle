@@ -37,7 +37,6 @@ apply plugin: 'io.spring.dependency-management'
 apply plugin: 'checkstyle'
 apply plugin: 'findbugs'
 apply plugin: 'pmd'
-apply plugin: 'net.ltgt.apt'
 dependencyManagement {
     imports {
         mavenBom 'org.springframework.cloud:spring-cloud-dependencies:' + spring_cloud_version
@@ -56,6 +55,7 @@ war {
 springBoot {
     mainClass = 'com.icthh.xm.ms.entity.EntityApp'
     executable = true
+
     buildInfo() {
         additionalProperties = [
             currentBranch: gitInfo.currentBranch,
@@ -202,9 +202,6 @@ dependencies {
     compile "com.fasterxml.jackson.core:jackson-databind"
     compile "com.fasterxml.jackson.module:jackson-module-afterburner"
     compile("com.ryantenney.metrics:metrics-spring:${metrics_spring_version}")
-    compile "com.hazelcast:hazelcast"
-    compile "com.hazelcast:hazelcast-hibernate52:${hazelcast_hibernate52_version}"
-    compile "com.hazelcast:hazelcast-spring"
     compile "javax.cache:cache-api"
     compile "org.hibernate:hibernate-core:${hibernate_version}"
     compile("com.zaxxer:HikariCP:${hikaricp_version}")
@@ -268,7 +265,6 @@ dependencies {
     compile "com.jayway.jsonpath:json-path"
     provided "com.elasticpath.json:json-unmarshaller:1.0.0"
     compile "com.mortennobel:java-image-scaling:0.8.6"
-    compile 'org.bitsofinfo:hazelcast-consul-discovery-spi:1.0-RC7'
     compile 'org.codehaus.groovy.modules.http-builder:http-builder:0.7.1'
 
     compile "com.icthh.xm.commons:xm-commons-ms-web:${xm_commons_version}"

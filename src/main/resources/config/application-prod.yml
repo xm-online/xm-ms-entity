@@ -30,7 +30,7 @@ spring:
             port: 8500
     datasource:
         type: com.zaxxer.hikari.HikariDataSource
-        url: jdbc:postgresql://localhost:5433/entity
+        url: jdbc:postgresql://localhost:5432/entity
         username: entity
         password:
     jpa:
@@ -39,13 +39,13 @@ spring:
         show-sql: false
         properties:
             hibernate.id.new_generator_mappings: true
-            hibernate.cache.use_second_level_cache: true
+            hibernate.cache.use_second_level_cache: false
             hibernate.cache.use_query_cache: false
             hibernate.generate_statistics: false
-            hibernate.cache.region.factory_class: com.hazelcast.hibernate.HazelcastLocalCacheRegionFactory
-            hibernate.cache.hazelcast.instance_name: entity
+            #hibernate.cache.region.factory_class: com.hazelcast.hibernate.HazelcastLocalCacheRegionFactory
+            #hibernate.cache.hazelcast.instance_name: entity
             hibernate.cache.use_minimal_puts: true
-            hibernate.cache.hazelcast.use_lite_member: true
+            #hibernate.cache.hazelcast.use_lite_member: true
     data:
         elasticsearch:
             cluster-name:
@@ -103,10 +103,6 @@ jhipster:
         version: V_1_1 # To use HTTP/2 you will need SSL support (see above the "server.ssl" configuration)
         cache: # Used by the CachingHttpHeadersFilter
             timeToLiveInDays: 1461
-    cache: # Cache configuration
-        hazelcast: # Hazelcast distributed cache
-            time-to-live-seconds: 3600
-            backup-count: 1
     security:
         client-authorization:
             access-token-uri: http://uaa/oauth/token

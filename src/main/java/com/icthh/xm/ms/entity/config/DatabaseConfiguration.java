@@ -4,7 +4,6 @@ import static com.icthh.xm.ms.entity.config.Constants.CHANGE_LOG_PATH;
 import static org.hibernate.cfg.AvailableSettings.JPA_VALIDATION_FACTORY;
 
 import com.fasterxml.jackson.datatype.hibernate5.Hibernate5Module;
-import com.icthh.xm.commons.config.client.config.XmConfigAutoConfigration;
 import com.icthh.xm.commons.config.client.repository.TenantListRepository;
 import com.icthh.xm.commons.migration.db.XmMultiTenantSpringLiquibase;
 import com.icthh.xm.commons.migration.db.XmSpringLiquibase;
@@ -24,7 +23,6 @@ import org.springframework.boot.autoconfigure.orm.jpa.JpaProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.DependsOn;
-import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.Profile;
 import org.springframework.core.env.Environment;
 import org.springframework.data.elasticsearch.repository.config.EnableElasticsearchRepositories;
@@ -48,7 +46,6 @@ import javax.sql.DataSource;
 @EnableJpaAuditing(auditorAwareRef = "springSecurityAuditorAware")
 @EnableTransactionManagement
 @EnableElasticsearchRepositories("com.icthh.xm.ms.entity.repository.search")
-@Import({XmConfigAutoConfigration.class})
 public class DatabaseConfiguration {
 
     private final Logger log = LoggerFactory.getLogger(DatabaseConfiguration.class);

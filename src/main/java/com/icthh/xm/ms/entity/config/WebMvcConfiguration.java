@@ -19,15 +19,15 @@ import java.util.List;
 @Import( {
     XmMsWebConfiguration.class
 })
-public class WebMvcConfig extends XmWebMvcConfigurerAdapter {
+public class WebMvcConfiguration extends XmWebMvcConfigurerAdapter {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(WebMvcConfig.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(WebMvcConfiguration.class);
 
     private final ApplicationProperties applicationProperties;
     private final LepInterceptor lepInterceptor;
     private final TenantVerifyInterceptor tenantVerifyInterceptor;
 
-    public WebMvcConfig(
+    public WebMvcConfiguration(
                     TenantInterceptor tenantInterceptor,
                     XmLoggingInterceptor xmLoggingInterceptor,
                     ApplicationProperties applicationProperties,

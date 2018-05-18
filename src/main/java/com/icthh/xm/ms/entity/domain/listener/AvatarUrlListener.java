@@ -2,11 +2,11 @@ package com.icthh.xm.ms.entity.domain.listener;
 
 import com.icthh.xm.ms.entity.config.ApplicationProperties;
 import com.icthh.xm.ms.entity.domain.XmEntity;
-import com.icthh.xm.ms.entity.util.ApplicationContextHolder;
+import com.icthh.xm.ms.entity.util.AutowireHelper;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.context.ApplicationContext;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.persistence.PostLoad;
 import javax.persistence.PrePersist;
@@ -18,6 +18,9 @@ public class AvatarUrlListener {
     private String prefix;
     private String patternFull;
     private String patternPart;
+
+    @Autowired
+    private ApplicationProperties applicationProperties;
 
     @PrePersist
     @PreUpdate
@@ -72,7 +75,7 @@ public class AvatarUrlListener {
     }
 
     private ApplicationProperties getApplicationProperties() {
-        ApplicationContext ctx = ApplicationContextHolder.getInstance().getApplicationContext();
-        return ctx.getBean("applicationProperties", ApplicationProperties.class);
+        AutowireHelper.autowire(this, applicationProperties);
+        return applicationProperties;
     }
 }
