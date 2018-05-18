@@ -99,7 +99,6 @@ server:
 #
 # Full reference is available at: https://jhipster.github.io/common-application-properties/
 # ===================================================================
-
 jhipster:
     async:
         core-pool-size: 2
