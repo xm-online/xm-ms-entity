@@ -63,6 +63,7 @@ public class XmEntitySaveIntTest {
     @Autowired
     private LepManager lepManager;
 
+    @Autowired
     private XmLepScriptConfigServerResourceLoader leps;
 
     @BeforeTransaction
@@ -79,11 +80,6 @@ public class XmEntitySaveIntTest {
             ctx.setValue(THREAD_CONTEXT_KEY_TENANT_CONTEXT, tenantContextHolder.getContext());
             ctx.setValue(THREAD_CONTEXT_KEY_AUTH_CONTEXT, authContextHolder.getContext());
         });
-
-        leps = (XmLepScriptConfigServerResourceLoader)((RouterResourceLoader)((XmLepResourceService)lepManager
-            .getResourceService())
-            .getRouterResourceLoader())
-            .getResourceLoader(XM_MS_CONFIG_URL_PREFIX);
     }
 
     void initLeps() {
