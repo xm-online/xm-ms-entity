@@ -107,6 +107,7 @@ public class XmEntityLifeCycleSupportIntTest {
     @Autowired
     private TenantService tenantService;
 
+    @Autowired
     private XmLepScriptConfigServerResourceLoader leps;
 
     @BeforeTransaction
@@ -140,11 +141,6 @@ public class XmEntityLifeCycleSupportIntTest {
             .setControllerAdvice(exceptionTranslator)
             .setValidator(validator)
             .setMessageConverters(jacksonMessageConverter).build();
-
-        leps = (XmLepScriptConfigServerResourceLoader)((RouterResourceLoader)((XmLepResourceService)lepManager
-            .getResourceService())
-            .getRouterResourceLoader())
-            .getResourceLoader(XM_MS_CONFIG_URL_PREFIX);
     }
 
     void initLeps() {
