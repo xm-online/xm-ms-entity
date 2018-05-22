@@ -5,7 +5,9 @@ import com.icthh.xm.commons.lep.spring.LepService;
 import com.icthh.xm.commons.permission.annotation.FindWithPermission;
 import com.icthh.xm.commons.permission.repository.PermittedRepository;
 import com.icthh.xm.ms.entity.domain.Link;
+import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.repository.LinkRepository;
+import com.icthh.xm.ms.entity.repository.XmEntityRepository;
 import com.icthh.xm.ms.entity.repository.search.LinkSearchRepository;
 import com.icthh.xm.ms.entity.repository.search.PermittedSearchRepository;
 import com.icthh.xm.ms.entity.service.impl.StartUpdateDateGenerationStrategy;
@@ -39,6 +41,8 @@ public class LinkService {
 
     private final StartUpdateDateGenerationStrategy startUpdateDateGenerationStrategy;
 
+    private final XmEntityRepository xmEntityRepository;
+
     /**
      * Save a link.
      *
@@ -53,9 +57,19 @@ public class LinkService {
                                                               linkRepository,
                                                               Link::setStartDate,
                                                               Link::getStartDate);
+        link.setTarget(xmEntityRepository.getOne(entityId(link.getTarget())));
+        link.setSource(xmEntityRepository.getOne(entityId(link.getSource())));
         Link result = linkRepository.save(link);
         linkSearchRepository.save(result);
         return result;
+    }
+
+    private Long entityId(XmEntity entity) {
+        Long id = entity.getId();
+        if (id == null) {
+            id = xmEntityRepository.save(entity).getId();
+        }
+        return id;
     }
 
     /**

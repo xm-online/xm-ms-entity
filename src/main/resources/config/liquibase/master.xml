@@ -58,4 +58,6 @@
 
     <include file="classpath:config/liquibase/changelog/20180511124100_added_entity_unique_fields.xml" relativeToChangelogFile="false"/>
 
+    <include file="classpath:config/liquibase/changelog/20180521120200_add_version.xml" relativeToChangelogFile="false"/>
+
 </databaseChangeLog>

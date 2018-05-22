@@ -4,6 +4,7 @@ import com.icthh.xm.commons.permission.annotation.FindWithPermission;
 import com.icthh.xm.commons.permission.repository.PermittedRepository;
 import com.icthh.xm.ms.entity.domain.Tag;
 import com.icthh.xm.ms.entity.repository.TagRepository;
+import com.icthh.xm.ms.entity.repository.XmEntityRepository;
 import com.icthh.xm.ms.entity.repository.search.PermittedSearchRepository;
 import com.icthh.xm.ms.entity.repository.search.TagSearchRepository;
 import com.icthh.xm.ms.entity.service.impl.StartUpdateDateGenerationStrategy;
@@ -28,6 +29,8 @@ public class TagService {
 
     private final StartUpdateDateGenerationStrategy startUpdateDateGenerationStrategy;
 
+    private final XmEntityRepository xmEntityRepository;
+
     /**
      * Save a tag.
      *
@@ -41,6 +44,7 @@ public class TagService {
                                                               tagRepository,
                                                               Tag::setStartDate,
                                                               Tag::getStartDate);
+        tag.setXmEntity(xmEntityRepository.getOne(tag.getXmEntity().getId()));
         Tag result = tagRepository.save(tag);
         tagSearchRepository.save(result);
         return result;

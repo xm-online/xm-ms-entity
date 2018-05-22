@@ -4,6 +4,7 @@ import com.icthh.xm.commons.permission.annotation.FindWithPermission;
 import com.icthh.xm.commons.permission.repository.PermittedRepository;
 import com.icthh.xm.ms.entity.domain.Calendar;
 import com.icthh.xm.ms.entity.repository.CalendarRepository;
+import com.icthh.xm.ms.entity.repository.XmEntityRepository;
 import com.icthh.xm.ms.entity.repository.search.CalendarSearchRepository;
 import com.icthh.xm.ms.entity.repository.search.PermittedSearchRepository;
 import com.icthh.xm.ms.entity.service.impl.StartUpdateDateGenerationStrategy;
@@ -31,6 +32,8 @@ public class CalendarService {
 
     private final StartUpdateDateGenerationStrategy startUpdateDateGenerationStrategy;
 
+    private final XmEntityRepository xmEntityRepository;
+
     /**
      * Save a calendar.
      *
@@ -44,6 +47,7 @@ public class CalendarService {
                                                               calendarRepository,
                                                               Calendar::setStartDate,
                                                               Calendar::getStartDate);
+        calendar.setXmEntity(xmEntityRepository.getOne(calendar.getXmEntity().getId()));
         Calendar result = calendarRepository.save(calendar);
         calendarSearchRepository.save(result);
         return result;

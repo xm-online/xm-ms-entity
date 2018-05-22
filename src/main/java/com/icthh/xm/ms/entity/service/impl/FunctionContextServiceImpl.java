@@ -4,6 +4,7 @@ import com.icthh.xm.commons.permission.annotation.FindWithPermission;
 import com.icthh.xm.commons.permission.repository.PermittedRepository;
 import com.icthh.xm.ms.entity.domain.FunctionContext;
 import com.icthh.xm.ms.entity.repository.FunctionContextRepository;
+import com.icthh.xm.ms.entity.repository.XmEntityRepository;
 import com.icthh.xm.ms.entity.repository.search.FunctionContextSearchRepository;
 import com.icthh.xm.ms.entity.repository.search.PermittedSearchRepository;
 import com.icthh.xm.ms.entity.service.FunctionContextService;
@@ -31,6 +32,8 @@ public class FunctionContextServiceImpl implements FunctionContextService {
 
     private final StartUpdateDateGenerationStrategy startUpdateDateGenerationStrategy;
 
+    private final XmEntityRepository xmEntityRepository;
+
     /**
      * Save a functionContext.
      *
@@ -46,6 +49,7 @@ public class FunctionContextServiceImpl implements FunctionContextService {
                                                                      FunctionContext::getStartDate,
                                                                      FunctionContext::setUpdateDate);
 
+        functionContext.setXmEntity(xmEntityRepository.getOne(functionContext.getXmEntity().getId()));
         FunctionContext result = functionContextRepository.save(functionContext);
         functionContextSearchRepository.save(result);
         return result;

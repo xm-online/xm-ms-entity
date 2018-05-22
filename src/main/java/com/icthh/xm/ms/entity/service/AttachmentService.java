@@ -6,6 +6,7 @@ import com.icthh.xm.commons.permission.annotation.FindWithPermission;
 import com.icthh.xm.commons.permission.repository.PermittedRepository;
 import com.icthh.xm.ms.entity.domain.Attachment;
 import com.icthh.xm.ms.entity.repository.AttachmentRepository;
+import com.icthh.xm.ms.entity.repository.XmEntityRepository;
 import com.icthh.xm.ms.entity.repository.search.AttachmentSearchRepository;
 import com.icthh.xm.ms.entity.repository.search.PermittedSearchRepository;
 import com.icthh.xm.ms.entity.service.impl.StartUpdateDateGenerationStrategy;
@@ -35,6 +36,8 @@ public class AttachmentService {
 
     private final StartUpdateDateGenerationStrategy startUpdateDateGenerationStrategy;
 
+    private final XmEntityRepository xmEntityRepository;
+
     /**
      * Save a attachment.
      *
@@ -49,7 +52,7 @@ public class AttachmentService {
                                                               attachmentRepository,
                                                               Attachment::setStartDate,
                                                               Attachment::getStartDate);
-
+        attachment.setXmEntity(xmEntityRepository.getOne(attachment.getXmEntity().getId()));
         Attachment result = attachmentRepository.save(attachment);
         attachmentSearchRepository.save(result);
         return result;
