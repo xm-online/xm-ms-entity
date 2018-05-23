@@ -18,6 +18,8 @@ import lombok.Setter;
 import org.apache.commons.collections4.CollectionUtils;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.hibernate.annotations.OptimisticLockType;
+import org.hibernate.annotations.OptimisticLocking;
 import org.springframework.data.elasticsearch.annotations.Document;
 
 import javax.persistence.Column;
@@ -70,6 +72,7 @@ import java.util.function.BiConsumer;
         @NamedAttributeNode("functionContexts")
     })
 @EntityListeners(AvatarUrlListener.class)
+//@OptimisticLocking(type = OptimisticLockType.VERSION)
 public class XmEntity implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -185,7 +188,9 @@ public class XmEntity implements Serializable {
 
     @Column(name = "version")
     @Version
-    private Integer version;
+    @Getter
+    @Setter
+    private Integer version = 0;
 
     @OneToMany(mappedBy = "xmEntity", cascade = {PERSIST, MERGE, REMOVE})
     @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)

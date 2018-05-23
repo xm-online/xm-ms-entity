@@ -2,6 +2,8 @@ package com.icthh.xm.ms.entity.domain.idresolver;
 
 import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_AUTH_CONTEXT;
 import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_TENANT_CONTEXT;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.refEq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -21,7 +23,9 @@ import com.icthh.xm.ms.entity.config.SecurityBeanOverrideConfiguration;
 import com.icthh.xm.ms.entity.config.tenant.WebappTenantOverrideConfiguration;
 import com.icthh.xm.ms.entity.domain.Link;
 import com.icthh.xm.ms.entity.domain.XmEntity;
+import com.icthh.xm.ms.entity.repository.LinkRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
+import com.icthh.xm.ms.entity.service.LinkService;
 import com.icthh.xm.ms.entity.service.XmEntityService;
 import com.icthh.xm.ms.entity.web.rest.LinkResource;
 import com.icthh.xm.ms.entity.web.rest.TestUtil;
@@ -36,6 +40,7 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.security.test.context.support.WithMockUser;
@@ -94,6 +99,9 @@ public class XmEntityObjectIdResolverUnitTest {
     @MockBean
     private XmEntityRepository entityRepository;
 
+    @MockBean
+    private LinkRepository linkRepository;
+
     private MockMvc mockMvc;
 
     @BeforeTransaction
@@ -142,6 +150,14 @@ public class XmEntityObjectIdResolverUnitTest {
             .startDate(Instant.now())
             .source(source)
             .target(target);
+
+        Link any = any();
+        Link savedLink = new Link().typeKey(DEFAULT_TYPE_KEY)
+            .startDate(Instant.now())
+            .source(source)
+            .target(target);
+        savedLink.setId(1L);
+        when(linkRepository.save(any)).thenReturn(savedLink);
 
         for (int i = 0; i < 2; i++) {
             mockMvc.perform(post("/api/links")

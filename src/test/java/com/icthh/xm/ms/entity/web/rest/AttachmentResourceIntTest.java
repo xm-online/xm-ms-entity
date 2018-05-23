@@ -28,6 +28,7 @@ import com.icthh.xm.ms.entity.config.tenant.WebappTenantOverrideConfiguration;
 import com.icthh.xm.ms.entity.domain.Attachment;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.repository.AttachmentRepository;
+import com.icthh.xm.ms.entity.repository.XmEntityRepository;
 import com.icthh.xm.ms.entity.repository.search.AttachmentSearchRepository;
 import com.icthh.xm.ms.entity.repository.search.PermittedSearchRepository;
 import com.icthh.xm.ms.entity.service.AttachmentService;
@@ -124,6 +125,9 @@ public class AttachmentResourceIntTest {
     private ExceptionTranslator exceptionTranslator;
 
     @Autowired
+    private XmEntityRepository xmEntityRepository;
+
+    @Autowired
     private EntityManager em;
 
     private AttachmentService attachmentService;
@@ -165,7 +169,8 @@ public class AttachmentResourceIntTest {
                                                   attachmentSearchRepository,
                                                   permittedRepository,
                                                   permittedSearchRepository,
-                                                  startUpdateDateGenerationStrategy);
+                                                  startUpdateDateGenerationStrategy,
+                                                  xmEntityRepository);
 
         AttachmentResource attachmentResourceMock = new AttachmentResource(attachmentService, attachmentResource);
         this.restAttachmentMockMvc = MockMvcBuilders.standaloneSetup(attachmentResourceMock)

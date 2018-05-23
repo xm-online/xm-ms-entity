@@ -14,6 +14,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Set;
 import javax.persistence.LockModeType;
 
@@ -44,5 +45,18 @@ public interface XmEntityRepository extends JpaRepository<XmEntity, Long>, JpaSp
 
     // TODO Why we need this method? see org.springframework.data.repository.query.QueryByExampleExecutor.exists()
     boolean existsByTypeKeyAndNameIgnoreCase(String typeKey, String name);
+
+
+    @Lock(LockModeType.OPTIMISTIC_FORCE_INCREMENT)
+    @Override
+    <S extends XmEntity> List<S> save(Iterable<S> entities);
+
+    @Lock(LockModeType.OPTIMISTIC_FORCE_INCREMENT)
+    @Override
+    <S extends XmEntity> S saveAndFlush(S entity);
+
+    @Lock(LockModeType.OPTIMISTIC_FORCE_INCREMENT)
+    @Override
+    <S extends XmEntity> S save(S entity);
 
 }

@@ -28,6 +28,7 @@ import com.icthh.xm.ms.entity.repository.search.XmEntitySearchRepository;
 import com.icthh.xm.ms.entity.service.*;
 import com.icthh.xm.ms.entity.service.impl.StartUpdateDateGenerationStrategy;
 import com.icthh.xm.ms.entity.service.impl.XmEntityServiceImpl;
+import com.jayway.jsonpath.DocumentContext;
 import com.jayway.jsonpath.JsonPath;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -71,6 +72,9 @@ import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_TENANT_
 import static com.icthh.xm.commons.tenant.TenantContextUtils.getRequiredTenantKeyValue;
 import static com.icthh.xm.ms.entity.config.TenantConfigMockConfiguration.getXmEntityTemplatesSpec;
 import static com.icthh.xm.ms.entity.web.rest.TestUtil.sameInstant;
+import static com.jayway.jsonpath.Configuration.defaultConfiguration;
+import static com.jayway.jsonpath.Option.SUPPRESS_EXCEPTIONS;
+import static java.lang.Long.valueOf;
 import static java.util.Collections.emptyMap;
 import static java.util.UUID.randomUUID;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -81,6 +85,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 /**
@@ -549,7 +554,7 @@ public class XmEntityResourceExtendedIntTest {
         ;
 
         // Validate the XmEntity in Elasticsearch
-        XmEntity xmEntityEs = xmEntitySearchRepository.findOne(Long.valueOf(id.toString()));
+        XmEntity xmEntityEs = xmEntitySearchRepository.findOne(valueOf(id.toString()));
         assertThat(xmEntityEs).isEqualToComparingFieldByField(testXmEntity);
 
     }
@@ -605,7 +610,7 @@ public class XmEntityResourceExtendedIntTest {
             .andExpect(jsonPath("$.targets[0].target.typeKey").value(presaved.getTypeKey()));
 
         // Validate the XmEntity in Elasticsearch
-        XmEntity xmEntityEs = xmEntitySearchRepository.findOne(Long.valueOf(id.toString()));
+        XmEntity xmEntityEs = xmEntitySearchRepository.findOne(valueOf(id.toString()));
         assertThat(xmEntityEs).isEqualToComparingFieldByField(testXmEntity);
 
     }
@@ -664,7 +669,7 @@ public class XmEntityResourceExtendedIntTest {
             .andExpect(jsonPath("$.targets[0].target.id").value(id));
 
         // Validate the XmEntity in Elasticsearch
-        XmEntity xmEntityEs = xmEntitySearchRepository.findOne(Long.valueOf(id.toString()));
+        XmEntity xmEntityEs = xmEntitySearchRepository.findOne(valueOf(id.toString()));
         assertThat(xmEntityEs).isEqualToIgnoringGivenFields(testXmEntity, "sources", "avatarUrl");
     }
 
@@ -1162,13 +1167,14 @@ public class XmEntityResourceExtendedIntTest {
 
     @Test
     @Transactional
+    @WithMockUser(authorities = "SUPER-ADMIN")
     public void updateTenantXmEntity() throws Exception {
         // Initialize the database
         XmEntity tenantEntity = createEntity();
         tenantEntity.setTypeKey(Constants.TENANT_TYPE_KEY);
         tenantEntity.setStateKey(null);
         tenantEntity.setData(null);
-        xmEntityRepository.save(tenantEntity);
+        tenantEntity = xmEntityRepository.save(tenantEntity);
 
         int databaseSizeBeforeUpdate = xmEntityRepository.findAll().size();
 
@@ -1411,4 +1417,55 @@ public class XmEntityResourceExtendedIntTest {
 
         validateEntityInDB(databaseSizeBeforeCreate + 2);
     }
+
+    @Test
+    @Transactional
+    @WithMockUser(authorities = "SUPER-ADMIN")
+    public void versionXmEntity() throws Exception {
+
+        // Create the XmEntity
+        XmEntity entity = createEntity();
+
+        String response = restXmEntityMockMvc.perform(post("/api/xm-entities")
+            .contentType(TestUtil.APPLICATION_JSON_UTF8)
+            .content(TestUtil.convertObjectToJsonBytes(entity)))
+            .andExpect(status().isCreated()).andReturn().getResponse().getContentAsString();
+
+        Integer id = JsonPath.parse(response).read("$.id");
+        entity.setId(id.longValue());
+
+        restXmEntityMockMvc.perform(put("/api/xm-entities")
+            .contentType(TestUtil.APPLICATION_JSON_UTF8)
+            .content(TestUtil.convertObjectToJsonBytes(entity)))
+            .andExpect(jsonPath("$.version").value(0))
+            .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+
+        entity.setVersion(0);
+
+        restXmEntityMockMvc.perform(put("/api/xm-entities")
+            .contentType(TestUtil.APPLICATION_JSON_UTF8)
+            .content(TestUtil.convertObjectToJsonBytes(entity)))
+            .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+
+
+        restXmEntityMockMvc.perform(get("/api/xm-entities/{idOrKey}", id))
+            .andDo(print())
+            .andExpect(jsonPath("$.version").value(1))
+            .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+
+        entity.setVersion(1);
+
+        restXmEntityMockMvc.perform(put("/api/xm-entities")
+            .contentType(TestUtil.APPLICATION_JSON_UTF8)
+            .content(TestUtil.convertObjectToJsonBytes(entity)))
+            .andDo(print())
+            .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+
+
+        restXmEntityMockMvc.perform(get("/api/xm-entities/{idOrKey}", id))
+            .andExpect(jsonPath("$.version").value(2))
+            .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+
+    }
+
 }

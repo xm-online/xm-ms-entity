@@ -169,9 +169,9 @@ public class XmEntitySaveIntTest {
         XmEntity runSave = createEntity("TEST_DELETE_RUN");
         XmEntity runGeneralScript = createEntity("TEST_NOT_RUN_DELETE");
 
-        xmEntityServiceImpl.save(runSaveProceed);
-        xmEntityServiceImpl.save(runSave);
-        xmEntityServiceImpl.save(runGeneralScript);
+        runSaveProceed = xmEntityServiceImpl.save(runSaveProceed);
+        runSave = xmEntityServiceImpl.save(runSave);
+        runGeneralScript = xmEntityServiceImpl.save(runGeneralScript);
 
 
         xmEntityServiceImpl.delete(runSaveProceed.getId());
@@ -191,6 +191,5 @@ public class XmEntitySaveIntTest {
         assertThat(runGeneralScript.getData().get("runDeleteProceed")).isEqualTo(0);
         assertThat(runGeneralScript.getData().get("runDeleteRun")).isEqualTo(0);
     }
-
 
 }

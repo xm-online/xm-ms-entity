@@ -17,6 +17,7 @@ import com.icthh.xm.ms.entity.config.tenant.WebappTenantOverrideConfiguration;
 import com.icthh.xm.ms.entity.domain.Tag;
 import com.icthh.xm.ms.entity.domain.Vote;
 import com.icthh.xm.ms.entity.repository.VoteRepository;
+import com.icthh.xm.ms.entity.repository.XmEntityRepository;
 import com.icthh.xm.ms.entity.repository.search.PermittedSearchRepository;
 import com.icthh.xm.ms.entity.repository.search.VoteSearchRepository;
 import com.icthh.xm.ms.entity.service.VoteService;
@@ -89,6 +90,9 @@ public class VoteResourceExtendedIntTest {
     @Autowired
     private TenantContextHolder tenantContextHolder;
 
+    @Autowired
+    private XmEntityRepository xmEntityRepository;
+
     private VoteService voteService;
 
     @Spy
@@ -113,7 +117,8 @@ public class VoteResourceExtendedIntTest {
                                       permittedSearchRepository,
                                       voteRepository,
                                       voteSearchRepository,
-                                      startUpdateDateGenerationStrategy);
+                                      startUpdateDateGenerationStrategy,
+                                      xmEntityRepository);
 
         VoteResource voteResourceMock = new VoteResource(voteResource, voteService);
         this.restVoteMockMvc = MockMvcBuilders.standaloneSetup(voteResourceMock)
