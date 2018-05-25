@@ -33,6 +33,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
+import org.mockito.Matchers;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.Spy;
@@ -93,6 +94,9 @@ public class XmEntityServiceImplUnitTest {
         when(xmEntitySpecService.findTypeByKey(TEST_TYPE_KEY)).thenReturn(typeSpec);
 
         when(tenantConfigService.getConfig()).thenReturn(emptyMap());
+
+        XmEntity any = any();
+        when(xmEntityRepository.save(any)).then(args -> args.getArguments()[0]);
 
         Map<String, Object> data = new HashMap<>();
         data.put("uniqueExistsField", 50);

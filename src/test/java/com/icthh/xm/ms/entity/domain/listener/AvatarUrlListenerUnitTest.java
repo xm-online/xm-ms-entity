@@ -41,7 +41,7 @@ public class AvatarUrlListenerUnitTest {
 
         target.prePersist(entity);
 
-        assertEquals(null, entity.getAvatarUrl());
+        assertEquals("hello.jpg", entity.getAvatarUrl());
     }
 
     @Test
@@ -77,7 +77,7 @@ public class AvatarUrlListenerUnitTest {
 
         target.postLoad(entity);
 
-        assertEquals(null, entity.getAvatarUrl());
+        assertEquals("http://s3.hello.amazonaws.com/hello/hello.jpg", entity.getAvatarUrl());
     }
 
     @Ignore
