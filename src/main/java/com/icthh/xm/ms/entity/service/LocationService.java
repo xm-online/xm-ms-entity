@@ -6,6 +6,7 @@ import com.icthh.xm.commons.permission.repository.PermittedRepository;
 import com.icthh.xm.ms.entity.domain.Location;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.repository.LocationRepository;
+import com.icthh.xm.ms.entity.repository.XmEntityRepository;
 import com.icthh.xm.ms.entity.repository.search.LocationSearchRepository;
 import com.icthh.xm.ms.entity.repository.search.PermittedSearchRepository;
 import lombok.RequiredArgsConstructor;
@@ -28,6 +29,8 @@ public class LocationService {
     private final LocationRepository locationRepository;
 
     private final LocationSearchRepository locationSearchRepository;
+
+    private final XmEntityRepository xmEntityRepository;
 
     @FindWithPermission("LOCATION.GET_LIST")
     public List<Location> findAll(String privilegeKey) {
@@ -55,6 +58,7 @@ public class LocationService {
      */
     public Location save(Location location) {
         log.debug("Request to save location : {}", location);
+        location.setXmEntity(xmEntityRepository.getOne(location.getXmEntity().getId()));
         Location result = locationRepository.save(location);
         locationSearchRepository.save(location);
         return result;

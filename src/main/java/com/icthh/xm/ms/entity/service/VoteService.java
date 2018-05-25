@@ -3,7 +3,9 @@ package com.icthh.xm.ms.entity.service;
 import com.icthh.xm.commons.permission.annotation.FindWithPermission;
 import com.icthh.xm.commons.permission.repository.PermittedRepository;
 import com.icthh.xm.ms.entity.domain.Vote;
+import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.repository.VoteRepository;
+import com.icthh.xm.ms.entity.repository.XmEntityRepository;
 import com.icthh.xm.ms.entity.repository.search.PermittedSearchRepository;
 import com.icthh.xm.ms.entity.repository.search.VoteSearchRepository;
 import com.icthh.xm.ms.entity.service.impl.StartUpdateDateGenerationStrategy;
@@ -28,6 +30,7 @@ public class VoteService {
 
     private final StartUpdateDateGenerationStrategy startUpdateDateGenerationStrategy;
 
+    private final XmEntityRepository xmEntityRepository;
 
     /**
      * Save a vote.
@@ -41,7 +44,9 @@ public class VoteService {
                                                               vote.getId(),
                                                               voteRepository,
                                                               Vote::setEntryDate,
+
                                                               Vote::getEntryDate);
+        vote.setXmEntity(xmEntityRepository.getOne(vote.getXmEntity().getId()));
         Vote result = voteRepository.save(vote);
         voteSearchRepository.save(result);
         return result;

@@ -13,11 +13,12 @@ import com.icthh.xm.ms.entity.validator.StateKey;
 import com.icthh.xm.ms.entity.validator.TypeKey;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
-import org.apache.commons.collections4.CollectionUtils;
 import lombok.Getter;
 import lombok.Setter;
+import org.apache.commons.collections4.CollectionUtils;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.springframework.data.domain.Persistable;
 import org.springframework.data.elasticsearch.annotations.Document;
 
 import javax.persistence.Column;
@@ -32,6 +33,7 @@ import javax.persistence.NamedEntityGraph;
 import javax.persistence.OneToMany;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
+import javax.persistence.Version;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;
@@ -69,7 +71,7 @@ import java.util.function.BiConsumer;
         @NamedAttributeNode("functionContexts")
     })
 @EntityListeners(AvatarUrlListener.class)
-public class XmEntity implements Serializable {
+public class XmEntity implements Serializable, Persistable<Long> {
 
     private static final long serialVersionUID = 1L;
 
@@ -182,6 +184,12 @@ public class XmEntity implements Serializable {
     @Column(name = "created_by")
     private String createdBy;
 
+    @Column(name = "version")
+    @Version
+    @Getter
+    @Setter
+    private Integer version;
+
     @OneToMany(mappedBy = "xmEntity", cascade = {PERSIST, MERGE, REMOVE})
     @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
     private Set<Attachment> attachments = new HashSet<>();
@@ -238,6 +246,11 @@ public class XmEntity implements Serializable {
 
     public Long getId() {
         return id;
+    }
+
+    @Override
+    public boolean isNew() {
+        return id == null;
     }
 
     public void setId(Long id) {
@@ -724,6 +737,7 @@ public class XmEntity implements Serializable {
             ", data='" + getData() + "'" +
             ", removed='" + isRemoved() + "'" +
             ", createdBy='" + getCreatedBy() + "'" +
+            ", version='" + getVersion() + "'" +
             "}";
     }
 

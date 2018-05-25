@@ -297,5 +297,4 @@ public class DeleteEntityTest {
         xmEntityService.delete(otherEntity.getId());
     }
 
-
 }

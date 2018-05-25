@@ -4,6 +4,7 @@ import com.icthh.xm.commons.permission.annotation.FindWithPermission;
 import com.icthh.xm.commons.permission.repository.PermittedRepository;
 import com.icthh.xm.ms.entity.domain.Event;
 import com.icthh.xm.ms.entity.repository.EventRepository;
+import com.icthh.xm.ms.entity.repository.XmEntityRepository;
 import com.icthh.xm.ms.entity.repository.search.EventSearchRepository;
 import com.icthh.xm.ms.entity.repository.search.PermittedSearchRepository;
 import lombok.RequiredArgsConstructor;
@@ -28,6 +29,8 @@ public class EventService {
 
     private final PermittedSearchRepository permittedSearchRepository;
 
+    private final XmEntityRepository xmEntityRepository;
+
     /**
      * Save a event.
      *
@@ -35,6 +38,7 @@ public class EventService {
      * @return the persisted entity
      */
     public Event save(Event event) {
+        event.setAssigned(xmEntityRepository.getOne(event.getAssigned().getId()));
         Event result = eventRepository.save(event);
         eventSearchRepository.save(result);
         return result;

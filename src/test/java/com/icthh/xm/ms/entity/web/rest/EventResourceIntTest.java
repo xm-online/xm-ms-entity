@@ -1,5 +1,7 @@
 package com.icthh.xm.ms.entity.web.rest;
 
+import static java.time.Instant.now;
+import static java.util.UUID.randomUUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.notNullValue;
@@ -18,6 +20,7 @@ import com.icthh.xm.ms.entity.EntityApp;
 import com.icthh.xm.ms.entity.config.SecurityBeanOverrideConfiguration;
 import com.icthh.xm.ms.entity.config.tenant.WebappTenantOverrideConfiguration;
 import com.icthh.xm.ms.entity.domain.Event;
+import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.repository.EventRepository;
 import com.icthh.xm.ms.entity.repository.search.EventSearchRepository;
 import com.icthh.xm.ms.entity.service.EventService;
@@ -41,6 +44,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.UUID;
 import javax.persistence.EntityManager;
 
 /**
@@ -66,10 +70,10 @@ public class EventResourceIntTest {
     private static final String UPDATED_DESCRIPTION = "BBBBBBBBBB";
 
     private static final Instant DEFAULT_START_DATE = Instant.ofEpochMilli(0L);
-    private static final Instant UPDATED_START_DATE = Instant.now().truncatedTo(ChronoUnit.MILLIS);
+    private static final Instant UPDATED_START_DATE = now().truncatedTo(ChronoUnit.MILLIS);
 
     private static final Instant DEFAULT_END_DATE = Instant.ofEpochMilli(0L);
-    private static final Instant UPDATED_END_DATE = Instant.now().truncatedTo(ChronoUnit.MILLIS);
+    private static final Instant UPDATED_END_DATE = now().truncatedTo(ChronoUnit.MILLIS);
 
     @Autowired
     private EventResource eventResource;
@@ -130,13 +134,17 @@ public class EventResourceIntTest {
      * if they test an entity which requires the current entity.
      */
     public static Event createEntity(EntityManager em) {
+        XmEntity entity = new XmEntity().typeKey("TARGET_ENTITY").startDate(now()).updateDate(now()).name("name").key(randomUUID());
+        em.persist(entity);
         Event event = new Event()
             .typeKey(DEFAULT_TYPE_KEY)
             .repeatRuleKey(DEFAULT_REPEAT_RULE_KEY)
             .title(DEFAULT_TITLE)
             .description(DEFAULT_DESCRIPTION)
             .startDate(DEFAULT_START_DATE)
-            .endDate(DEFAULT_END_DATE);
+            .endDate(DEFAULT_END_DATE)
+            .assigned(entity);
+
         return event;
     }
 

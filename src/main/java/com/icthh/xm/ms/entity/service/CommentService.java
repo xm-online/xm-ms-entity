@@ -5,6 +5,7 @@ import com.icthh.xm.commons.permission.repository.PermittedRepository;
 import com.icthh.xm.commons.security.XmAuthenticationContextHolder;
 import com.icthh.xm.ms.entity.domain.Comment;
 import com.icthh.xm.ms.entity.repository.CommentRepository;
+import com.icthh.xm.ms.entity.repository.XmEntityRepository;
 import com.icthh.xm.ms.entity.repository.search.CommentSearchRepository;
 import com.icthh.xm.ms.entity.repository.search.PermittedSearchRepository;
 import lombok.RequiredArgsConstructor;
@@ -31,6 +32,8 @@ public class CommentService {
 
     private final PermittedSearchRepository permittedSearchRepository;
 
+    private final XmEntityRepository xmEntityRepository;
+
     private String getUserKey() {
         return authContextHolder.getContext().getUserKey()
             .orElseThrow(() -> new IllegalStateException("No authenticated user in context, can't get user key"));
@@ -43,6 +46,7 @@ public class CommentService {
      * @return the persisted entity
      */
     public Comment save(Comment comment) {
+        comment.setXmEntity(xmEntityRepository.getOne(comment.getXmEntity().getId()));
         comment.setUserKey(getUserKey());
         Comment result = commentRepository.save(comment);
         commentSearchRepository.save(result);

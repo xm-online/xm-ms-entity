@@ -22,6 +22,7 @@ import com.icthh.xm.ms.entity.config.tenant.WebappTenantOverrideConfiguration;
 import com.icthh.xm.ms.entity.domain.Rating;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.repository.RatingRepository;
+import com.icthh.xm.ms.entity.repository.XmEntityRepository;
 import com.icthh.xm.ms.entity.repository.search.PermittedSearchRepository;
 import com.icthh.xm.ms.entity.repository.search.RatingSearchRepository;
 import com.icthh.xm.ms.entity.service.RatingService;
@@ -106,6 +107,9 @@ public class RatingResourceIntTest {
     @Autowired
     private TenantContextHolder tenantContextHolder;
 
+    @Autowired
+    private XmEntityRepository xmEntityRepository;
+
     @Spy
     private StartUpdateDateGenerationStrategy startUpdateDateGenerationStrategy;
 
@@ -130,7 +134,8 @@ public class RatingResourceIntTest {
                                           ratingSearchRepository,
                                           permittedRepository,
                                           permittedSearchRepository,
-                                          startUpdateDateGenerationStrategy);
+                                          startUpdateDateGenerationStrategy,
+                                          xmEntityRepository);
 
         RatingResource ratingResourceMock = new RatingResource(ratingService, ratingResource);
         this.restRatingMockMvc = MockMvcBuilders.standaloneSetup(ratingResourceMock)

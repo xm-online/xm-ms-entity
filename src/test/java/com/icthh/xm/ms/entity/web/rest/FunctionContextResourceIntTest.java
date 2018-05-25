@@ -24,6 +24,7 @@ import com.icthh.xm.ms.entity.config.tenant.WebappTenantOverrideConfiguration;
 import com.icthh.xm.ms.entity.domain.FunctionContext;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.repository.FunctionContextRepository;
+import com.icthh.xm.ms.entity.repository.XmEntityRepository;
 import com.icthh.xm.ms.entity.repository.search.FunctionContextSearchRepository;
 import com.icthh.xm.ms.entity.repository.search.PermittedSearchRepository;
 import com.icthh.xm.ms.entity.service.FunctionContextService;
@@ -125,6 +126,9 @@ public class FunctionContextResourceIntTest {
     @Autowired
     private LepManager lepManager;
 
+    @Autowired
+    private XmEntityRepository xmEntityRepository;
+
     @Spy
     private StartUpdateDateGenerationStrategy startUpdateDateGenerationStrategy;
 
@@ -153,7 +157,8 @@ public class FunctionContextResourceIntTest {
                                                                 functionContextSearchRepository,
                                                                 permittedRepository,
                                                                 permittedSearchRepository,
-                                                                startUpdateDateGenerationStrategy);
+                                                                startUpdateDateGenerationStrategy,
+                                                                xmEntityRepository);
 
         FunctionContextResource functionContextResourceMock = new FunctionContextResource(
             functionContextService, functionContextResource);

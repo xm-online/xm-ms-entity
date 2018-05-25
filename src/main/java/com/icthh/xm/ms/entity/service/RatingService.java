@@ -4,6 +4,7 @@ import com.icthh.xm.commons.permission.annotation.FindWithPermission;
 import com.icthh.xm.commons.permission.repository.PermittedRepository;
 import com.icthh.xm.ms.entity.domain.Rating;
 import com.icthh.xm.ms.entity.repository.RatingRepository;
+import com.icthh.xm.ms.entity.repository.XmEntityRepository;
 import com.icthh.xm.ms.entity.repository.search.PermittedSearchRepository;
 import com.icthh.xm.ms.entity.repository.search.RatingSearchRepository;
 import com.icthh.xm.ms.entity.service.impl.StartUpdateDateGenerationStrategy;
@@ -31,6 +32,8 @@ public class RatingService {
 
     private final StartUpdateDateGenerationStrategy startUpdateDateGenerationStrategy;
 
+    private final XmEntityRepository xmEntityRepository;
+
     /**
      * Save a rating.
      *
@@ -44,7 +47,7 @@ public class RatingService {
                                                               ratingRepository,
                                                               Rating::setStartDate,
                                                               Rating::getStartDate);
-
+        rating.setXmEntity(xmEntityRepository.getOne(rating.getXmEntity().getId()));
         Rating result = ratingRepository.save(rating);
         ratingSearchRepository.save(result);
         return result;

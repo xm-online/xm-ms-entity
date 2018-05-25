@@ -29,6 +29,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableMap;
+import com.icthh.xm.commons.config.client.service.TenantConfigService;
 import com.icthh.xm.lep.api.LepManager;
 import com.icthh.xm.commons.exceptions.spring.web.ExceptionTranslator;
 import com.icthh.xm.commons.security.XmAuthenticationContext;
@@ -199,6 +200,9 @@ public class XmEntityResourceIntTest {
     XmEntityPermittedSearchRepository xmEntityPermittedSearchRepository;
 
     @Autowired
+    TenantConfigService tenantConfigService;
+
+    @Autowired
     ObjectMapper objectMapper;
 
     @Mock
@@ -256,7 +260,8 @@ public class XmEntityResourceIntTest {
                                                       xmEntityPermittedSearchRepository,
                                                       startUpdateDateGenerationStrategy,
                                                       authContextHolder,
-                                                      objectMapper);
+                                                      objectMapper,
+                                                      tenantConfigService);
         xmEntityServiceImpl.setSelf(xmEntityServiceImpl);
 
         this.xmEntityServiceImpl = xmEntityServiceImpl;
@@ -520,7 +525,7 @@ public class XmEntityResourceIntTest {
     @Transactional
     public void getAllXmEntities() throws Exception {
         // Initialize the database
-        xmEntityRepository.saveAndFlush(xmEntity);
+        xmEntity = xmEntityRepository.saveAndFlush(xmEntity);
 
         // Get all the xmEntityList
         restXmEntityMockMvc.perform(get("/api/xm-entities?sort=id,desc"))
@@ -579,7 +584,7 @@ public class XmEntityResourceIntTest {
     @Transactional
     public void getXmEntity() throws Exception {
         // Initialize the database
-        xmEntityRepository.saveAndFlush(xmEntity);
+        xmEntity = xmEntityRepository.saveAndFlush(xmEntity);
 
         // Get the xmEntity
         restXmEntityMockMvc.perform(get("/api/xm-entities/{id}", xmEntity.getId()))
@@ -614,7 +619,7 @@ public class XmEntityResourceIntTest {
     @Transactional
     public void updateXmEntity() throws Exception {
         // Initialize the database
-        xmEntityServiceImpl.save(xmEntity);
+        xmEntity = xmEntityServiceImpl.save(xmEntity);
 
         int databaseSizeBeforeUpdate = xmEntityRepository.findAll().size();
 
@@ -661,6 +666,7 @@ public class XmEntityResourceIntTest {
         XmEntity xmEntityEs = xmEntitySearchRepository.findOne(testXmEntity.getId());
         assertThat(xmEntityEs).isEqualToIgnoringGivenFields(testXmEntity,
                                                             "avatarUrl",
+                                                            "version",
                                                             "attachments",
                                                             "calendars",
                                                             "locations",
@@ -687,7 +693,7 @@ public class XmEntityResourceIntTest {
     @Transactional
     public void deleteXmEntity() throws Exception {
         // Initialize the database
-        xmEntityServiceImpl.save(xmEntity);
+        xmEntity = xmEntityServiceImpl.save(xmEntity);
 
         int databaseSizeBeforeDelete = xmEntityRepository.findAll().size();
 
@@ -709,7 +715,7 @@ public class XmEntityResourceIntTest {
     @Transactional
     public void searchXmEntity() throws Exception {
         // Initialize the database
-        xmEntityServiceImpl.save(xmEntity);
+        xmEntity = xmEntityServiceImpl.save(xmEntity);
 
         // Search the xmEntity
         restXmEntityMockMvc.perform(get("/api/_search/xm-entities?query=id:" + xmEntity.getId()))
@@ -733,7 +739,7 @@ public class XmEntityResourceIntTest {
     @Transactional
     public void searchXmEntityWithTemplate() throws Exception {
         // Initialize the database
-        xmEntityServiceImpl.save(xmEntity);
+        xmEntity = xmEntityServiceImpl.save(xmEntity);
 
         // Search the xmEntity
         restXmEntityMockMvc.perform(get("/api/_search-with-template/xm-entities?template=BY_TYPEKEY_AND_ID&templateParams[typeKey]=" + xmEntity.getTypeKey() + "&templateParams[id]=" + xmEntity.getId()))

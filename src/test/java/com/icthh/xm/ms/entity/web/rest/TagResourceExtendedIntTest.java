@@ -18,6 +18,7 @@ import com.icthh.xm.ms.entity.config.tenant.WebappTenantOverrideConfiguration;
 import com.icthh.xm.ms.entity.domain.Rating;
 import com.icthh.xm.ms.entity.domain.Tag;
 import com.icthh.xm.ms.entity.repository.TagRepository;
+import com.icthh.xm.ms.entity.repository.XmEntityRepository;
 import com.icthh.xm.ms.entity.repository.search.PermittedSearchRepository;
 import com.icthh.xm.ms.entity.repository.search.TagSearchRepository;
 import com.icthh.xm.ms.entity.service.TagService;
@@ -94,6 +95,9 @@ public class TagResourceExtendedIntTest {
     @Autowired
     private PermittedSearchRepository permittedSearchRepository;
 
+    @Autowired
+    private XmEntityRepository xmEntityRepository;
+
     @Spy
     private StartUpdateDateGenerationStrategy startUpdateDateGenerationStrategy;
 
@@ -119,7 +123,8 @@ public class TagResourceExtendedIntTest {
             tagSearchRepository,
             permittedRepository,
             permittedSearchRepository,
-            startUpdateDateGenerationStrategy);
+            startUpdateDateGenerationStrategy,
+            xmEntityRepository);
 
         TagResource tagResourceMock = new TagResource(tagResource, tagService);
         this.restTagMockMvc = MockMvcBuilders.standaloneSetup(tagResourceMock)

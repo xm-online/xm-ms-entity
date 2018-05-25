@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.PropertyAccessor;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.google.common.collect.ImmutableMap;
+import com.icthh.xm.commons.config.client.service.TenantConfigService;
 import com.icthh.xm.commons.exceptions.spring.web.ExceptionTranslator;
 import com.icthh.xm.commons.security.XmAuthenticationContext;
 import com.icthh.xm.commons.security.XmAuthenticationContextHolder;
@@ -28,6 +29,7 @@ import com.icthh.xm.ms.entity.repository.search.XmEntitySearchRepository;
 import com.icthh.xm.ms.entity.service.*;
 import com.icthh.xm.ms.entity.service.impl.StartUpdateDateGenerationStrategy;
 import com.icthh.xm.ms.entity.service.impl.XmEntityServiceImpl;
+import com.jayway.jsonpath.DocumentContext;
 import com.jayway.jsonpath.JsonPath;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -71,6 +73,9 @@ import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_TENANT_
 import static com.icthh.xm.commons.tenant.TenantContextUtils.getRequiredTenantKeyValue;
 import static com.icthh.xm.ms.entity.config.TenantConfigMockConfiguration.getXmEntityTemplatesSpec;
 import static com.icthh.xm.ms.entity.web.rest.TestUtil.sameInstant;
+import static com.jayway.jsonpath.Configuration.defaultConfiguration;
+import static com.jayway.jsonpath.Option.SUPPRESS_EXCEPTIONS;
+import static java.lang.Long.valueOf;
 import static java.util.Collections.emptyMap;
 import static java.util.UUID.randomUUID;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -81,6 +86,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 /**
@@ -236,6 +242,9 @@ public class XmEntityResourceExtendedIntTest {
     ObjectMapper objectMapper;
 
     @Autowired
+    TenantConfigService tenantConfigService;
+
+    @Autowired
     XmEntityPermittedSearchRepository xmEntityPermittedSearchRepository;
 
     @Mock
@@ -291,7 +300,8 @@ public class XmEntityResourceExtendedIntTest {
                                                    xmEntityPermittedSearchRepository,
                                                    startUpdateDateGenerationStrategy,
                                                    authContextHolder,
-                                                   objectMapper);
+                                                   objectMapper,
+                                                   tenantConfigService);
 
         xmEntityService.setSelf(xmEntityService);
         this.xmEntityService = xmEntityService;
@@ -549,7 +559,7 @@ public class XmEntityResourceExtendedIntTest {
         ;
 
         // Validate the XmEntity in Elasticsearch
-        XmEntity xmEntityEs = xmEntitySearchRepository.findOne(Long.valueOf(id.toString()));
+        XmEntity xmEntityEs = xmEntitySearchRepository.findOne(valueOf(id.toString()));
         assertThat(xmEntityEs).isEqualToComparingFieldByField(testXmEntity);
 
     }
@@ -605,7 +615,7 @@ public class XmEntityResourceExtendedIntTest {
             .andExpect(jsonPath("$.targets[0].target.typeKey").value(presaved.getTypeKey()));
 
         // Validate the XmEntity in Elasticsearch
-        XmEntity xmEntityEs = xmEntitySearchRepository.findOne(Long.valueOf(id.toString()));
+        XmEntity xmEntityEs = xmEntitySearchRepository.findOne(valueOf(id.toString()));
         assertThat(xmEntityEs).isEqualToComparingFieldByField(testXmEntity);
 
     }
@@ -664,7 +674,7 @@ public class XmEntityResourceExtendedIntTest {
             .andExpect(jsonPath("$.targets[0].target.id").value(id));
 
         // Validate the XmEntity in Elasticsearch
-        XmEntity xmEntityEs = xmEntitySearchRepository.findOne(Long.valueOf(id.toString()));
+        XmEntity xmEntityEs = xmEntitySearchRepository.findOne(valueOf(id.toString()));
         assertThat(xmEntityEs).isEqualToIgnoringGivenFields(testXmEntity, "sources", "avatarUrl");
     }
 
@@ -1162,13 +1172,14 @@ public class XmEntityResourceExtendedIntTest {
 
     @Test
     @Transactional
+    @WithMockUser(authorities = "SUPER-ADMIN")
     public void updateTenantXmEntity() throws Exception {
         // Initialize the database
         XmEntity tenantEntity = createEntity();
         tenantEntity.setTypeKey(Constants.TENANT_TYPE_KEY);
         tenantEntity.setStateKey(null);
         tenantEntity.setData(null);
-        xmEntityRepository.save(tenantEntity);
+        tenantEntity = xmEntityRepository.save(tenantEntity);
 
         int databaseSizeBeforeUpdate = xmEntityRepository.findAll().size();
 
@@ -1179,6 +1190,7 @@ public class XmEntityResourceExtendedIntTest {
         updatedTenantEntity.setStateKey(null);
         updatedTenantEntity.setData(null);
         updatedTenantEntity.setName("updatedName");
+        updatedTenantEntity.setVersion(null);
 
         restXmEntityMockMvc.perform(put("/api/xm-entities")
             .contentType(TestUtil.APPLICATION_JSON_UTF8)
@@ -1411,4 +1423,6 @@ public class XmEntityResourceExtendedIntTest {
 
         validateEntityInDB(databaseSizeBeforeCreate + 2);
     }
+
+
 }

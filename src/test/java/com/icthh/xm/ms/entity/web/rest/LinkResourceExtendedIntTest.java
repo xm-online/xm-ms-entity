@@ -16,6 +16,7 @@ import com.icthh.xm.ms.entity.config.SecurityBeanOverrideConfiguration;
 import com.icthh.xm.ms.entity.config.tenant.WebappTenantOverrideConfiguration;
 import com.icthh.xm.ms.entity.domain.Link;
 import com.icthh.xm.ms.entity.repository.LinkRepository;
+import com.icthh.xm.ms.entity.repository.XmEntityRepository;
 import com.icthh.xm.ms.entity.repository.search.LinkSearchRepository;
 import com.icthh.xm.ms.entity.repository.search.PermittedSearchRepository;
 import com.icthh.xm.ms.entity.service.LinkService;
@@ -93,6 +94,9 @@ public class LinkResourceExtendedIntTest {
     @Autowired
     private PermittedSearchRepository permittedSearchRepository;
 
+    @Autowired
+    private XmEntityRepository xmEntityRepository;
+
     @Spy
     private StartUpdateDateGenerationStrategy startUpdateDateGenerationStrategy;
 
@@ -118,7 +122,8 @@ public class LinkResourceExtendedIntTest {
             linkSearchRepository,
             permittedRepository,
             permittedSearchRepository,
-            startUpdateDateGenerationStrategy);
+            startUpdateDateGenerationStrategy,
+            xmEntityRepository);
 
         LinkResource linkResourceMock = new LinkResource(linkService, linkResource);
         this.restLinkMockMvc = MockMvcBuilders.standaloneSetup(linkResourceMock)

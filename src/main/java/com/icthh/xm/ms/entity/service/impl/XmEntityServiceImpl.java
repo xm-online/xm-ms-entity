@@ -15,6 +15,7 @@ import static org.apache.commons.lang3.StringUtils.isNoneBlank;
 import static org.springframework.beans.BeanUtils.isSimpleValueType;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.icthh.xm.commons.config.client.service.TenantConfigService;
 import com.icthh.xm.commons.exceptions.BusinessException;
 import com.icthh.xm.commons.exceptions.EntityNotFoundException;
 import com.icthh.xm.commons.exceptions.ErrorConstants;
@@ -113,6 +114,7 @@ public class XmEntityServiceImpl implements XmEntityService {
     private final StartUpdateDateGenerationStrategy startUpdateDateGenerationStrategy;
     private final XmAuthenticationContextHolder authContextHolder;
     private final ObjectMapper objectMapper;
+    private final TenantConfigService tenantConfigService;
 
     private XmEntityServiceImpl self;
 
@@ -163,11 +165,19 @@ public class XmEntityServiceImpl implements XmEntityService {
         xmEntity.updateXmEntityReference(xmEntity.getTargets(), Link::setSource);
         xmEntity.updateXmEntityReference(xmEntity.getSources(), Link::setTarget);
         xmEntity.updateXmEntityReference(xmEntity.getVotes(), Vote::setXmEntity);
+        xmEntity.getTargets().forEach(link -> link.setTarget(xmEntityRepository.getOne(link.getTarget().getId())));
         processUniqueField(xmEntity);
 
         XmEntity result = xmEntityRepository.save(xmEntity);
         xmEntitySearchRepository.save(result);
         return result;
+    }
+
+    private boolean isEntityVersionEnabled() {
+        log.debug("{}", tenantConfigService.getConfig());
+        return Optional.ofNullable(tenantConfigService.getConfig().get("entityVersionControl"))
+            .filter(it -> it instanceof Map).map(Map.class::cast)
+            .map(it -> it.get("enabled")).map(it -> (boolean)it).orElse(false);
     }
 
     private void preventRenameTenant(XmEntity xmEntity, XmEntity oldEntity) {

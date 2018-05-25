@@ -22,6 +22,7 @@ import com.icthh.xm.ms.entity.config.tenant.WebappTenantOverrideConfiguration;
 import com.icthh.xm.ms.entity.domain.Calendar;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.repository.CalendarRepository;
+import com.icthh.xm.ms.entity.repository.XmEntityRepository;
 import com.icthh.xm.ms.entity.repository.search.CalendarSearchRepository;
 import com.icthh.xm.ms.entity.repository.search.PermittedSearchRepository;
 import com.icthh.xm.ms.entity.service.CalendarService;
@@ -106,6 +107,9 @@ public class CalendarResourceIntTest {
     @Autowired
     private EntityManager em;
 
+    @Autowired
+    private XmEntityRepository xmEntityRepository;
+
     private CalendarService calendarService;
 
     private MockMvc restCalendarMockMvc;
@@ -134,7 +138,8 @@ public class CalendarResourceIntTest {
             calendarSearchRepository,
             permittedRepository,
             permittedSearchRepository,
-            startUpdateDateGenerationStrategy);
+            startUpdateDateGenerationStrategy,
+            xmEntityRepository);
 
         CalendarResource calendarResourceMock = new CalendarResource(calendarService, calendarResource);
         this.restCalendarMockMvc = MockMvcBuilders.standaloneSetup(calendarResourceMock)
