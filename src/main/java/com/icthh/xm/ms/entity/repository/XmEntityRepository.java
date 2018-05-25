@@ -179,12 +179,7 @@ public class XmEntityRepository implements SpringXmEntityRepository {
             entities.forEach(this::updateVersion);
         }
 
-        List<S> save = springXmEntityRepository.save(entities);
-
-        if (!isEntityVersionEnabled()) {
-            save.forEach(e -> e.setVersion(null));
-        }
-        return save;
+        return springXmEntityRepository.save(entities);
     }
 
     public <S extends XmEntity> S saveAndFlush(S entity) {
@@ -192,12 +187,7 @@ public class XmEntityRepository implements SpringXmEntityRepository {
             updateVersion(entity);
         }
 
-        S save = springXmEntityRepository.saveAndFlush(entity);
-
-        if (!isEntityVersionEnabled()) {
-            save.setVersion(null);
-        }
-        return save;
+        return springXmEntityRepository.saveAndFlush(entity);
     }
 
     private <S extends XmEntity> void updateVersion(S entity) {
@@ -211,12 +201,7 @@ public class XmEntityRepository implements SpringXmEntityRepository {
             updateVersion(entity);
         }
 
-        S save = springXmEntityRepository.save(entity);
-
-        if (!isEntityVersionEnabled()) {
-            save.setVersion(null);
-        }
-        return save;
+        return springXmEntityRepository.save(entity);
     }
 
     private boolean isEntityVersionEnabled() {
