@@ -3,6 +3,7 @@ package com.icthh.xm.ms.entity.service;
 import static com.google.common.collect.ImmutableMap.of;
 import static java.time.Instant.now;
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyMap;
 import static java.util.Optional.empty;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
@@ -16,6 +17,7 @@ import static org.mockito.Mockito.when;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.google.common.collect.ImmutableMap;
+import com.icthh.xm.commons.config.client.service.TenantConfigService;
 import com.icthh.xm.ms.entity.domain.UniqueField;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.domain.spec.TypeSpec;
@@ -36,6 +38,7 @@ import org.mockito.Mockito;
 import org.mockito.Spy;
 import org.mockito.runners.MockitoJUnitRunner;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -58,6 +61,8 @@ public class XmEntityServiceImplUnitTest {
     private XmEntitySearchRepository xmEntitySearchRepository;
     @Mock
     private StartUpdateDateGenerationStrategy startUpdateDateGenerationStrategy;
+    @Mock
+    TenantConfigService tenantConfigService;
 
     @Spy
     private ObjectMapper mapper = new ObjectMapper();
@@ -86,6 +91,8 @@ public class XmEntityServiceImplUnitTest {
             new UniqueFieldSpec("$.notExistsObjectWith.uniqueField")
         )));
         when(xmEntitySpecService.findTypeByKey(TEST_TYPE_KEY)).thenReturn(typeSpec);
+
+        when(tenantConfigService.getConfig()).thenReturn(emptyMap());
 
         Map<String, Object> data = new HashMap<>();
         data.put("uniqueExistsField", 50);

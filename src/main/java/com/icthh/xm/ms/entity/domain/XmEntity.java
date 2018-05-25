@@ -8,6 +8,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.icthh.xm.ms.entity.domain.converter.MapToStringConverter;
 import com.icthh.xm.ms.entity.domain.listener.AvatarUrlListener;
+import com.icthh.xm.ms.entity.domain.listener.VersionListener;
 import com.icthh.xm.ms.entity.validator.JsonData;
 import com.icthh.xm.ms.entity.validator.StateKey;
 import com.icthh.xm.ms.entity.validator.TypeKey;
@@ -18,8 +19,7 @@ import lombok.Setter;
 import org.apache.commons.collections4.CollectionUtils;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
-import org.hibernate.annotations.OptimisticLockType;
-import org.hibernate.annotations.OptimisticLocking;
+import org.springframework.data.domain.Persistable;
 import org.springframework.data.elasticsearch.annotations.Document;
 
 import javax.persistence.Column;
@@ -71,9 +71,8 @@ import java.util.function.BiConsumer;
         @NamedAttributeNode("ratings"),
         @NamedAttributeNode("functionContexts")
     })
-@EntityListeners(AvatarUrlListener.class)
-//@OptimisticLocking(type = OptimisticLockType.VERSION)
-public class XmEntity implements Serializable {
+@EntityListeners({AvatarUrlListener.class, VersionListener.class})
+public class XmEntity implements Serializable, Persistable<Long> {
 
     private static final long serialVersionUID = 1L;
 
@@ -190,7 +189,7 @@ public class XmEntity implements Serializable {
     @Version
     @Getter
     @Setter
-    private Integer version = 0;
+    private Integer version;
 
     @OneToMany(mappedBy = "xmEntity", cascade = {PERSIST, MERGE, REMOVE})
     @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
@@ -248,6 +247,11 @@ public class XmEntity implements Serializable {
 
     public Long getId() {
         return id;
+    }
+
+    @Override
+    public boolean isNew() {
+        return id == null;
     }
 
     public void setId(Long id) {
@@ -734,6 +738,7 @@ public class XmEntity implements Serializable {
             ", data='" + getData() + "'" +
             ", removed='" + isRemoved() + "'" +
             ", createdBy='" + getCreatedBy() + "'" +
+            ", version='" + getVersion() + "'" +
             "}";
     }
 

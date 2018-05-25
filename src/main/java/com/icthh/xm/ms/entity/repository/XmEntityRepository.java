@@ -2,6 +2,7 @@ package com.icthh.xm.ms.entity.repository;
 
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.projection.XmEntityStateProjection;
+import com.icthh.xm.ms.entity.projection.XmEntityVersion;
 import com.icthh.xm.ms.entity.repository.entitygraph.EntityGraphRepository;
 import com.icthh.xm.ms.entity.projection.XmEntityIdKeyTypeKey;
 import org.springframework.data.domain.Page;
@@ -15,6 +16,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import javax.persistence.LockModeType;
 
@@ -43,19 +45,21 @@ public interface XmEntityRepository extends JpaRepository<XmEntity, Long>, JpaSp
 
     XmEntityStateProjection findStateProjectionByKey(String key);
 
+    Optional<XmEntityVersion> findVersionById(Long id);
+
     // TODO Why we need this method? see org.springframework.data.repository.query.QueryByExampleExecutor.exists()
     boolean existsByTypeKeyAndNameIgnoreCase(String typeKey, String name);
 
 
-    @Lock(LockModeType.OPTIMISTIC_FORCE_INCREMENT)
+    @Lock(LockModeType.WRITE)
     @Override
     <S extends XmEntity> List<S> save(Iterable<S> entities);
 
-    @Lock(LockModeType.OPTIMISTIC_FORCE_INCREMENT)
+    @Lock(LockModeType.WRITE)
     @Override
     <S extends XmEntity> S saveAndFlush(S entity);
 
-    @Lock(LockModeType.OPTIMISTIC_FORCE_INCREMENT)
+    @Lock(LockModeType.WRITE)
     @Override
     <S extends XmEntity> S save(S entity);
 

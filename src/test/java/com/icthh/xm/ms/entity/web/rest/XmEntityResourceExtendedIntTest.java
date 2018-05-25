@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.PropertyAccessor;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.google.common.collect.ImmutableMap;
+import com.icthh.xm.commons.config.client.service.TenantConfigService;
 import com.icthh.xm.commons.exceptions.spring.web.ExceptionTranslator;
 import com.icthh.xm.commons.security.XmAuthenticationContext;
 import com.icthh.xm.commons.security.XmAuthenticationContextHolder;
@@ -241,6 +242,9 @@ public class XmEntityResourceExtendedIntTest {
     ObjectMapper objectMapper;
 
     @Autowired
+    TenantConfigService tenantConfigService;
+
+    @Autowired
     XmEntityPermittedSearchRepository xmEntityPermittedSearchRepository;
 
     @Mock
@@ -296,7 +300,8 @@ public class XmEntityResourceExtendedIntTest {
                                                    xmEntityPermittedSearchRepository,
                                                    startUpdateDateGenerationStrategy,
                                                    authContextHolder,
-                                                   objectMapper);
+                                                   objectMapper,
+                                                   tenantConfigService);
 
         xmEntityService.setSelf(xmEntityService);
         this.xmEntityService = xmEntityService;
@@ -1418,54 +1423,5 @@ public class XmEntityResourceExtendedIntTest {
         validateEntityInDB(databaseSizeBeforeCreate + 2);
     }
 
-    @Test
-    @Transactional
-    @WithMockUser(authorities = "SUPER-ADMIN")
-    public void versionXmEntity() throws Exception {
-
-        // Create the XmEntity
-        XmEntity entity = createEntity();
-
-        String response = restXmEntityMockMvc.perform(post("/api/xm-entities")
-            .contentType(TestUtil.APPLICATION_JSON_UTF8)
-            .content(TestUtil.convertObjectToJsonBytes(entity)))
-            .andExpect(status().isCreated()).andReturn().getResponse().getContentAsString();
-
-        Integer id = JsonPath.parse(response).read("$.id");
-        entity.setId(id.longValue());
-
-        restXmEntityMockMvc.perform(put("/api/xm-entities")
-            .contentType(TestUtil.APPLICATION_JSON_UTF8)
-            .content(TestUtil.convertObjectToJsonBytes(entity)))
-            .andExpect(jsonPath("$.version").value(0))
-            .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
-
-        entity.setVersion(0);
-
-        restXmEntityMockMvc.perform(put("/api/xm-entities")
-            .contentType(TestUtil.APPLICATION_JSON_UTF8)
-            .content(TestUtil.convertObjectToJsonBytes(entity)))
-            .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
-
-
-        restXmEntityMockMvc.perform(get("/api/xm-entities/{idOrKey}", id))
-            .andDo(print())
-            .andExpect(jsonPath("$.version").value(1))
-            .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
-
-        entity.setVersion(1);
-
-        restXmEntityMockMvc.perform(put("/api/xm-entities")
-            .contentType(TestUtil.APPLICATION_JSON_UTF8)
-            .content(TestUtil.convertObjectToJsonBytes(entity)))
-            .andDo(print())
-            .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
-
-
-        restXmEntityMockMvc.perform(get("/api/xm-entities/{idOrKey}", id))
-            .andExpect(jsonPath("$.version").value(2))
-            .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
-
-    }
 
 }

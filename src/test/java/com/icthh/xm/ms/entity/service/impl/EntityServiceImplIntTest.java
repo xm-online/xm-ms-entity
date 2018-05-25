@@ -12,6 +12,7 @@ import static org.mockito.Mockito.when;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableMap;
+import com.icthh.xm.commons.config.client.service.TenantConfigService;
 import com.icthh.xm.lep.api.LepManager;
 import com.icthh.xm.commons.exceptions.BusinessException;
 import com.icthh.xm.commons.exceptions.EntityNotFoundException;
@@ -38,6 +39,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.h2.jdbc.JdbcSQLException;
 import org.hibernate.exception.ConstraintViolationException;
 import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
@@ -114,6 +116,9 @@ public class EntityServiceImplIntTest {
     @Autowired
     private StartUpdateDateGenerationStrategy startUpdateDateGenerationStrategy;
 
+    @Autowired
+    private TenantConfigService tenantConfigService;
+
     @Mock
     private ProfileService profileService;
 
@@ -147,11 +152,6 @@ public class EntityServiceImplIntTest {
         String key = applicationProperties.getSpecificationTemplatesPathPattern().replace("{tenantName}", tenantName);
         xmEntityTemplatesSpecService.onRefresh(key, config);
 
-        XmEntity sourceEntity = xmEntityRepository.save(createEntity(1l, TARGET_TYPE_KEY));
-        self = new Profile();
-        self.setXmentity(sourceEntity);
-        when(profileService.getSelfProfile()).thenReturn(self);
-
         xmEntityService = new XmEntityServiceImpl(
             xmEntitySpecService,
             xmEntityTemplatesSpecService,
@@ -166,13 +166,22 @@ public class EntityServiceImplIntTest {
             permittedSearchRepository,
             startUpdateDateGenerationStrategy,
             authContextHolder,
-            objectMapper);
+            objectMapper,
+            tenantConfigService);
         xmEntityService.setSelf(xmEntityService);
 
         lepManager.beginThreadContext(ctx -> {
             ctx.setValue(THREAD_CONTEXT_KEY_TENANT_CONTEXT, tenantContextHolder.getContext());
             ctx.setValue(THREAD_CONTEXT_KEY_AUTH_CONTEXT, authContextHolder.getContext());
         });
+    }
+
+    @Before
+    public void before() {
+        XmEntity sourceEntity = xmEntityRepository.save(createEntity(1l, TARGET_TYPE_KEY));
+        self = new Profile();
+        self.setXmentity(sourceEntity);
+        when(profileService.getSelfProfile()).thenReturn(self);
     }
 
     @After
@@ -325,7 +334,6 @@ public class EntityServiceImplIntTest {
 
         xmEntityService.deleteLinkTarget(IdOrKey.SELF, link.getId().toString());
         assertThat(linkRepository.findAll()).hasSize(BigInteger.ZERO.intValue());
-
     }
 
     @Test(expected = BusinessException.class)

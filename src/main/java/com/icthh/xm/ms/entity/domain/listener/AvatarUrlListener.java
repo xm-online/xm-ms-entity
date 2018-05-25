@@ -30,7 +30,7 @@ public class AvatarUrlListener {
             if (isUrlMatchesPattern(avatarUrl, getPatternFull())) {
                 obj.setAvatarUrl(FilenameUtils.getName(avatarUrl));
             } else {
-                obj.setAvatarUrl(null);
+                obj.setAvatarUrl(avatarUrl);
             }
         }
     }
@@ -42,7 +42,7 @@ public class AvatarUrlListener {
             if (isUrlMatchesPattern(avatarUrl, getPatternPart())) {
                 obj.setAvatarUrl(getPrefix() + avatarUrl);
             } else {
-                obj.setAvatarUrl(null);
+                obj.setAvatarUrl(avatarUrl);
             }
         }
     }

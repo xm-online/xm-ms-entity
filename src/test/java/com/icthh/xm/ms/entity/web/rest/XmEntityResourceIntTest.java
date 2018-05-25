@@ -29,6 +29,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableMap;
+import com.icthh.xm.commons.config.client.service.TenantConfigService;
 import com.icthh.xm.lep.api.LepManager;
 import com.icthh.xm.commons.exceptions.spring.web.ExceptionTranslator;
 import com.icthh.xm.commons.security.XmAuthenticationContext;
@@ -199,6 +200,9 @@ public class XmEntityResourceIntTest {
     XmEntityPermittedSearchRepository xmEntityPermittedSearchRepository;
 
     @Autowired
+    TenantConfigService tenantConfigService;
+
+    @Autowired
     ObjectMapper objectMapper;
 
     @Mock
@@ -256,7 +260,8 @@ public class XmEntityResourceIntTest {
                                                       xmEntityPermittedSearchRepository,
                                                       startUpdateDateGenerationStrategy,
                                                       authContextHolder,
-                                                      objectMapper);
+                                                      objectMapper,
+                                                      tenantConfigService);
         xmEntityServiceImpl.setSelf(xmEntityServiceImpl);
 
         this.xmEntityServiceImpl = xmEntityServiceImpl;
