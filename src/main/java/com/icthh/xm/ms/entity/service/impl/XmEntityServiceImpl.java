@@ -169,10 +169,6 @@ public class XmEntityServiceImpl implements XmEntityService {
         processUniqueField(xmEntity);
 
         XmEntity result = xmEntityRepository.save(xmEntity);
-        if (!isEntityVersionEnabled()) {
-            result.setVersion(null);
-        }
-
         xmEntitySearchRepository.save(result);
         return result;
     }

@@ -1190,6 +1190,7 @@ public class XmEntityResourceExtendedIntTest {
         updatedTenantEntity.setStateKey(null);
         updatedTenantEntity.setData(null);
         updatedTenantEntity.setName("updatedName");
+        updatedTenantEntity.setVersion(null);
 
         restXmEntityMockMvc.perform(put("/api/xm-entities")
             .contentType(TestUtil.APPLICATION_JSON_UTF8)
