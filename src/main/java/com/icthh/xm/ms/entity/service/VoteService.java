@@ -46,8 +46,7 @@ public class VoteService {
                                                               Vote::setEntryDate,
 
                                                               Vote::getEntryDate);
-        XmEntity entity = xmEntityRepository.getOne(vote.getXmEntity().getId());
-        vote.setXmEntity(entity);
+        vote.setXmEntity(xmEntityRepository.getOne(vote.getXmEntity().getId()));
         Vote result = voteRepository.save(vote);
         voteSearchRepository.save(result);
         return result;

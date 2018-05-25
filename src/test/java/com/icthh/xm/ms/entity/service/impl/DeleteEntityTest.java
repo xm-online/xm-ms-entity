@@ -297,22 +297,4 @@ public class DeleteEntityTest {
         xmEntityService.delete(otherEntity.getId());
     }
 
-    @Test
-    @SneakyThrows
-    public void someTest() {
-
-        XmEntity entity1 = new XmEntity().name(" ").key(randomUUID()).typeKey("TARGET_ENTITY");
-        log.info("r={}",xmEntityService.save(entity1).getVersion());
-        log.info("{}", entity1.getVersion());
-        log.info("r={}",xmEntityService.save(entity1).getVersion());
-        log.info("{}", entity1.getVersion());
-        log.info("r={}",xmEntityService.save(entity1).getVersion());
-        log.info("{}", entity1.getVersion());
-        log.info("r={}",xmEntityService.save(entity1).getVersion());
-    }
-
-
-
-
-
 }
