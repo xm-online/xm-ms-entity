@@ -48,8 +48,9 @@ public class FunctionContextServiceImpl implements FunctionContextService {
                                                                      FunctionContext::setStartDate,
                                                                      FunctionContext::getStartDate,
                                                                      FunctionContext::setUpdateDate);
-
-        functionContext.setXmEntity(xmEntityRepository.getOne(functionContext.getXmEntity().getId()));
+        if (functionContext.getXmEntity() != null) {
+            functionContext.setXmEntity(xmEntityRepository.getOne(functionContext.getXmEntity().getId()));
+        }
         FunctionContext result = functionContextRepository.save(functionContext);
         functionContextSearchRepository.save(result);
         return result;
