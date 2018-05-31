@@ -15,6 +15,7 @@ import com.icthh.xm.ms.entity.EntityApp;
 import com.icthh.xm.ms.entity.config.SecurityBeanOverrideConfiguration;
 import com.icthh.xm.ms.entity.config.tenant.WebappTenantOverrideConfiguration;
 import com.icthh.xm.ms.entity.domain.Link;
+import com.icthh.xm.ms.entity.repository.LinkPermittedRepository;
 import com.icthh.xm.ms.entity.repository.LinkRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
 import com.icthh.xm.ms.entity.repository.search.LinkSearchRepository;
@@ -89,7 +90,7 @@ public class LinkResourceExtendedIntTest {
     private LinkSearchRepository linkSearchRepository;
 
     @Autowired
-    private PermittedRepository permittedRepository;
+    private LinkPermittedRepository permittedRepository;
 
     @Autowired
     private PermittedSearchRepository permittedSearchRepository;

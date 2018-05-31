@@ -8,6 +8,7 @@ import com.icthh.xm.ms.entity.domain.ext.IdOrKey;
 import com.icthh.xm.ms.entity.domain.template.TemplateParamsHolder;
 import com.icthh.xm.ms.entity.projection.XmEntityIdKeyTypeKey;
 import com.icthh.xm.ms.entity.projection.XmEntityStateProjection;
+import com.icthh.xm.ms.entity.service.dto.LinkSourceDto;
 import org.apache.commons.lang3.NotImplementedException;
 import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Page;
@@ -62,6 +63,9 @@ public interface XmEntityService extends ResourceRepository {
     List<Link> getLinkTargets(IdOrKey idOrKey, String typeKey);
 
     List<Link> getLinkSources(IdOrKey idOrKey, String typeKey);
+
+    Page<LinkSourceDto> getLinkSourcesExtended(Pageable pageable, IdOrKey idOrKey, Set<String> typeKey,
+                                               String privilegeKey);
 
     Link updateLinkTarget(IdOrKey idOrKey, String targetId, Link link, MultipartFile file);
 

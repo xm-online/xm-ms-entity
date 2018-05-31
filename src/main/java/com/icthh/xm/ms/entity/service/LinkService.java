@@ -3,9 +3,9 @@ package com.icthh.xm.ms.entity.service;
 import com.icthh.xm.commons.lep.LogicExtensionPoint;
 import com.icthh.xm.commons.lep.spring.LepService;
 import com.icthh.xm.commons.permission.annotation.FindWithPermission;
-import com.icthh.xm.commons.permission.repository.PermittedRepository;
 import com.icthh.xm.ms.entity.domain.Link;
 import com.icthh.xm.ms.entity.domain.XmEntity;
+import com.icthh.xm.ms.entity.repository.LinkPermittedRepository;
 import com.icthh.xm.ms.entity.repository.LinkRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
 import com.icthh.xm.ms.entity.repository.search.LinkSearchRepository;
@@ -20,6 +20,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Set;
 
 /**
  * Service Implementation for managing Link.
@@ -35,7 +36,7 @@ public class LinkService {
 
     private final LinkSearchRepository linkSearchRepository;
 
-    private final PermittedRepository permittedRepository;
+    private final LinkPermittedRepository permittedRepository;
 
     private final PermittedSearchRepository permittedSearchRepository;
 
@@ -120,6 +121,13 @@ public class LinkService {
     public List<Link> findByTargetIdAndTypeKey(Long id, String typeKey) {
         log.debug("Request to get link by targetId={} and typeKey={}", id, typeKey);
         return linkRepository.findByTargetIdAndTypeKey(id, typeKey);
+    }
+
+    @FindWithPermission("LINK.SOURCE.GET_LIST")
+    @Transactional(readOnly = true)
+    public Page<Link> findSourceByTargetIdAndTypeKey(Pageable pageable, Long id, Set<String> typeKey, String
+        privilegeKey) {
+        return permittedRepository.findAllByTargetIdAndTypeKeyIn(pageable, id, typeKey, privilegeKey);
     }
 
     /**

@@ -29,7 +29,6 @@ import com.icthh.xm.ms.entity.repository.search.XmEntitySearchRepository;
 import com.icthh.xm.ms.entity.service.*;
 import com.icthh.xm.ms.entity.service.impl.StartUpdateDateGenerationStrategy;
 import com.icthh.xm.ms.entity.service.impl.XmEntityServiceImpl;
-import com.jayway.jsonpath.DocumentContext;
 import com.jayway.jsonpath.JsonPath;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -73,8 +72,6 @@ import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_TENANT_
 import static com.icthh.xm.commons.tenant.TenantContextUtils.getRequiredTenantKeyValue;
 import static com.icthh.xm.ms.entity.config.TenantConfigMockConfiguration.getXmEntityTemplatesSpec;
 import static com.icthh.xm.ms.entity.web.rest.TestUtil.sameInstant;
-import static com.jayway.jsonpath.Configuration.defaultConfiguration;
-import static com.jayway.jsonpath.Option.SUPPRESS_EXCEPTIONS;
 import static java.lang.Long.valueOf;
 import static java.util.Collections.emptyMap;
 import static java.util.UUID.randomUUID;
@@ -86,7 +83,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 /**
@@ -676,6 +672,115 @@ public class XmEntityResourceExtendedIntTest {
         // Validate the XmEntity in Elasticsearch
         XmEntity xmEntityEs = xmEntitySearchRepository.findOne(valueOf(id.toString()));
         assertThat(xmEntityEs).isEqualToIgnoringGivenFields(testXmEntity, "sources", "avatarUrl");
+    }
+
+    @Test
+    @Transactional
+    @WithMockUser(authorities = "SUPER-ADMIN")
+    public void getXmEntitySourcesLinksByTypeKey() throws Exception {
+
+        XmEntity target = xmEntityService.save(createEntity().name("TARGET"));
+        XmEntity source1 = xmEntityService.save(createEntity().name("SOURCE1"));
+        XmEntity source2 = xmEntityService.save(createEntity()).name("SOURCE2");
+
+        // should not appear in output
+        XmEntity targetOther = xmEntityService.save(createEntity().name("TARGET_OTHER"));
+
+
+        source1.getTargets().clear();
+        source1.getTargets().add(new Link().typeKey("LINK1").source(source1).target(target));
+        source1.getTargets().add(new Link().typeKey("LINK1").source(source1).target(targetOther));
+
+        source2.getTargets().clear();
+        source2.getTargets().add(new Link().typeKey("LINK1").source(source2).target(target));
+        source2.getTargets().add(new Link().typeKey("LINK2").source(source2).target(target));
+
+        Integer targetId = target.getId().intValue();
+        Integer srcId1 = source1.getId().intValue();
+        Integer srcId2 = source2.getId().intValue();
+
+        // Get the xmEntityPersisted with tag by ID
+        performGet("/api/xm-entities/{id}/links/sources-extended?typeKeys={typeKeys}", targetId, "LINK1")
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+            .andExpect(jsonPath("$", hasSize(2)))
+            .andExpect(jsonPath("$.[*].typeKey").value(hasItem("LINK1")))
+            .andExpect(jsonPath("$.[*].target").value(containsInAnyOrder(targetId, targetId)))
+            .andExpect(jsonPath("$.[*].source.id").value(containsInAnyOrder(srcId1, srcId2)))
+            .andExpect(jsonPath("$.[*].source.name").value(containsInAnyOrder("SOURCE1", "SOURCE2")))
+            .andExpect(jsonPath("$.[*].source.targets").doesNotExist())
+        ;
+
+    }
+
+    @Test
+    @Transactional
+    @WithMockUser(authorities = "SUPER-ADMIN")
+    public void getXmEntitySourcesLinksByTypeKeysIn() throws Exception {
+
+        XmEntity target = xmEntityService.save(createEntity().name("TARGET"));
+        XmEntity source1 = xmEntityService.save(createEntity().name("SOURCE1"));
+        XmEntity source2 = xmEntityService.save(createEntity()).name("SOURCE2");
+
+        source1.getTargets().clear();
+        source1.getTargets().add(new Link().typeKey("LINK1").source(source1).target(target));
+
+        source2.getTargets().clear();
+        source2.getTargets().add(new Link().typeKey("LINK1").source(source2).target(target));
+        source2.getTargets().add(new Link().typeKey("LINK2").source(source2).target(target));
+        source2.getTargets().add(new Link().typeKey("LINK3").source(source2).target(target));
+
+        Integer targetId = target.getId().intValue();
+        Integer srcId1 = source1.getId().intValue();
+        Integer srcId2 = source2.getId().intValue();
+
+        // Get the xmEntityPersisted with tag by ID
+        performGet("/api/xm-entities/{id}/links/sources-extended?typeKeys={typeKeys}", target.getId(), "LINK1,LINK2")
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+            .andExpect(jsonPath("$", hasSize(3)))
+            .andExpect(jsonPath("$.[*].typeKey").value(containsInAnyOrder("LINK1", "LINK1", "LINK2")))
+            .andExpect(jsonPath("$.[*].target").value(containsInAnyOrder(targetId, targetId, targetId)))
+            .andExpect(jsonPath("$.[*].source.id").value(containsInAnyOrder(srcId1, srcId2, srcId2)))
+            .andExpect(jsonPath("$.[*].source.name").value(containsInAnyOrder("SOURCE1", "SOURCE2", "SOURCE2")))
+            .andExpect(jsonPath("$.[*].source.targets").doesNotExist())
+        ;
+
+    }
+
+
+
+    @Test
+    @Transactional
+    @WithMockUser(authorities = "SUPER-ADMIN")
+    public void getXmEntitySourcesLinksWithAnyTypeKay() throws Exception {
+
+        XmEntity target = xmEntityService.save(createEntity().name("TARGET"));
+        XmEntity source1 = xmEntityService.save(createEntity().name("SOURCE1"));
+        XmEntity source2 = xmEntityService.save(createEntity()).name("SOURCE2");
+
+        source1.getTargets().clear();
+        source1.getTargets().add(new Link().typeKey("LINK1").source(source1).target(target));
+
+        source2.getTargets().clear();
+        source2.getTargets().add(new Link().typeKey("LINK2").source(source2).target(target));
+
+        Integer targetId = target.getId().intValue();
+        Integer srcId1 = source1.getId().intValue();
+        Integer srcId2 = source2.getId().intValue();
+
+        // Get the xmEntityPersisted with tag by ID
+        performGet("/api/xm-entities/{id}/links/sources-extended", target.getId())
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+            .andExpect(jsonPath("$", hasSize(2)))
+            .andExpect(jsonPath("$.[*].typeKey").value(containsInAnyOrder("LINK1", "LINK2")))
+            .andExpect(jsonPath("$.[*].target").value(containsInAnyOrder(targetId, targetId)))
+            .andExpect(jsonPath("$.[*].source.id").value(containsInAnyOrder(srcId1, srcId2)))
+            .andExpect(jsonPath("$.[*].source.name").value(containsInAnyOrder("SOURCE1", "SOURCE2")))
+            .andExpect(jsonPath("$.[*].source.targets").doesNotExist())
+        ;
+
     }
 
     @Test
