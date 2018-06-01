@@ -746,6 +746,20 @@ public class XmEntityResourceExtendedIntTest {
             .andExpect(jsonPath("$.[*].source.targets").doesNotExist())
         ;
 
+        // Get the xmEntityPersisted with tag by ID
+        performGet("/api/xm-entities/{id}/links/sources-extended?typeKeys={typeKey}&typeKeys={typeKey}",
+                   target.getId(),
+                   "LINK1",
+                   "LINK2")
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+            .andExpect(jsonPath("$", hasSize(3)))
+            .andExpect(jsonPath("$.[*].typeKey").value(containsInAnyOrder("LINK1", "LINK1", "LINK2")))
+            .andExpect(jsonPath("$.[*].target").value(containsInAnyOrder(targetId, targetId, targetId)))
+            .andExpect(jsonPath("$.[*].source.id").value(containsInAnyOrder(srcId1, srcId2, srcId2)))
+            .andExpect(jsonPath("$.[*].source.name").value(containsInAnyOrder("SOURCE1", "SOURCE2", "SOURCE2")))
+            .andExpect(jsonPath("$.[*].source.targets").doesNotExist())
+        ;
     }
 
 
@@ -782,6 +796,52 @@ public class XmEntityResourceExtendedIntTest {
         ;
 
     }
+
+    @Test
+    @Transactional
+    @WithMockUser(authorities = "SUPER-ADMIN")
+    public void getXmEntitySourcesLinksWithAnyTypeKayAndSort() throws Exception {
+
+        XmEntity target = xmEntityService.save(createEntity().name("TARGET"));
+        XmEntity source1 = xmEntityService.save(createEntity().name("SOURCE1"));
+        XmEntity source2 = xmEntityService.save(createEntity()).name("SOURCE2");
+
+        source1.getTargets().clear();
+        source1.getTargets().add(new Link().typeKey("LINK1").source(source1).target(target));
+
+        source2.getTargets().clear();
+        source2.getTargets().add(new Link().typeKey("LINK2").source(source2).target(target));
+
+        Integer targetId = target.getId().intValue();
+        Integer srcId1 = source1.getId().intValue();
+        Integer srcId2 = source2.getId().intValue();
+
+        // Get the xmEntityPersisted with tag by ID
+        performGet("/api/xm-entities/{id}/links/sources-extended?sort=typeKey,asc", target.getId())
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+            .andExpect(jsonPath("$", hasSize(2)))
+            .andExpect(jsonPath("$.[*].typeKey").value(contains("LINK1", "LINK2")))
+            .andExpect(jsonPath("$.[*].target").value(contains(targetId, targetId)))
+            .andExpect(jsonPath("$.[*].source.id").value(contains(srcId1, srcId2)))
+            .andExpect(jsonPath("$.[*].source.name").value(contains("SOURCE1", "SOURCE2")))
+            .andExpect(jsonPath("$.[*].source.targets").doesNotExist())
+        ;
+
+        // Get the xmEntityPersisted with tag by ID
+        performGet("/api/xm-entities/{id}/links/sources-extended?sort=typeKey,desc", target.getId())
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+            .andExpect(jsonPath("$", hasSize(2)))
+            .andExpect(jsonPath("$.[*].typeKey").value(contains("LINK2", "LINK1")))
+            .andExpect(jsonPath("$.[*].target").value(contains(targetId, targetId)))
+            .andExpect(jsonPath("$.[*].source.id").value(contains(srcId2, srcId1)))
+            .andExpect(jsonPath("$.[*].source.name").value(contains("SOURCE2", "SOURCE1")))
+            .andExpect(jsonPath("$.[*].source.targets").doesNotExist())
+        ;
+
+    }
+
 
     @Test
     @Transactional
