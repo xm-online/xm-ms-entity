@@ -700,7 +700,7 @@ public class XmEntityResourceExtendedIntTest {
         Integer srcId2 = source2.getId().intValue();
 
         // Get the xmEntityPersisted with tag by ID
-        performGet("/api/xm-entities/{id}/links/sources-extended?typeKeys={typeKeys}", targetId, "LINK1")
+        performGet("/api/v2/xm-entities/{id}/links/sources?typeKeys={typeKeys}", targetId, "LINK1")
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
             .andExpect(jsonPath("$", hasSize(2)))
@@ -735,7 +735,7 @@ public class XmEntityResourceExtendedIntTest {
         Integer srcId2 = source2.getId().intValue();
 
         // Get the xmEntityPersisted with tag by ID
-        performGet("/api/xm-entities/{id}/links/sources-extended?typeKeys={typeKeys}", target.getId(), "LINK1,LINK2")
+        performGet("/api/v2/xm-entities/{id}/links/sources?typeKeys={typeKeys}", target.getId(), "LINK1,LINK2")
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
             .andExpect(jsonPath("$", hasSize(3)))
@@ -747,7 +747,7 @@ public class XmEntityResourceExtendedIntTest {
         ;
 
         // Get the xmEntityPersisted with tag by ID
-        performGet("/api/xm-entities/{id}/links/sources-extended?typeKeys={typeKey}&typeKeys={typeKey}",
+        performGet("/api/v2/xm-entities/{id}/links/sources?typeKeys={typeKey}&typeKeys={typeKey}",
                    target.getId(),
                    "LINK1",
                    "LINK2")
@@ -784,7 +784,7 @@ public class XmEntityResourceExtendedIntTest {
         Integer srcId2 = source2.getId().intValue();
 
         // Get the xmEntityPersisted with tag by ID
-        performGet("/api/xm-entities/{id}/links/sources-extended", target.getId())
+        performGet("/api/v2/xm-entities/{id}/links/sources", target.getId())
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
             .andExpect(jsonPath("$", hasSize(2)))
@@ -817,7 +817,7 @@ public class XmEntityResourceExtendedIntTest {
         Integer srcId2 = source2.getId().intValue();
 
         // Get the xmEntityPersisted with tag by ID
-        performGet("/api/xm-entities/{id}/links/sources-extended?sort=typeKey,asc", target.getId())
+        performGet("/api/v2/xm-entities/{id}/links/sources?sort=typeKey,asc", target.getId())
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
             .andExpect(jsonPath("$", hasSize(2)))
@@ -829,7 +829,7 @@ public class XmEntityResourceExtendedIntTest {
         ;
 
         // Get the xmEntityPersisted with tag by ID
-        performGet("/api/xm-entities/{id}/links/sources-extended?sort=typeKey,desc", target.getId())
+        performGet("/api/v2/xm-entities/{id}/links/sources?sort=typeKey,desc", target.getId())
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
             .andExpect(jsonPath("$", hasSize(2)))

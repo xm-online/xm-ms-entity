@@ -15,7 +15,6 @@ import com.icthh.xm.ms.entity.domain.ext.IdOrKey;
 import com.icthh.xm.ms.entity.domain.template.TemplateParamsHolder;
 import com.icthh.xm.ms.entity.repository.kafka.ProfileEventProducer;
 import com.icthh.xm.ms.entity.service.FunctionService;
-import com.icthh.xm.ms.entity.service.LinkService;
 import com.icthh.xm.ms.entity.service.ProfileService;
 import com.icthh.xm.ms.entity.service.TenantService;
 import com.icthh.xm.ms.entity.service.XmEntityService;
@@ -337,21 +336,21 @@ public class XmEntityResource {
         return xmEntityService.getLinkSources(IdOrKey.of(idOrKey), typeKey);
     }
 
-    @GetMapping("/xm-entities/{idOrKey}/links/sources-extended")
+    @GetMapping("/v2/xm-entities/{idOrKey}/links/sources")
     @Timed
-    public ResponseEntity<List<LinkSourceDto>> getLinkSourcesExtended(@PathVariable String idOrKey,
+    public ResponseEntity<List<LinkSourceDto>> getLinkSourcesInverted(@PathVariable String idOrKey,
                                                                       @RequestParam(required = false) Set<String>
                                                                           typeKeys,
                                                                       @ApiParam Pageable pageable) {
 
-        Page<LinkSourceDto> page = xmEntityService.getLinkSourcesExtended(pageable,
+        Page<LinkSourceDto> page = xmEntityService.getLinkSourcesInverted(pageable,
                                                                           IdOrKey.of(idOrKey),
                                                                           typeKeys,
                                                                           null);
 
         HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(page,
-                                                                           "/api/xm-entities/" + idOrKey
-                                                                           + "/links/sources-extended");
+                                                                           "/v2/api/xm-entities/" + idOrKey
+                                                                           + "/links/sources");
         return new ResponseEntity<>(page.getContent(), headers, HttpStatus.OK);
 
     }

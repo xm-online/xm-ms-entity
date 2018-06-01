@@ -64,7 +64,7 @@ public interface XmEntityService extends ResourceRepository {
 
     List<Link> getLinkSources(IdOrKey idOrKey, String typeKey);
 
-    Page<LinkSourceDto> getLinkSourcesExtended(Pageable pageable, IdOrKey idOrKey, Set<String> typeKey,
+    Page<LinkSourceDto> getLinkSourcesInverted(Pageable pageable, IdOrKey idOrKey, Set<String> typeKey,
                                                String privilegeKey);
 
     Link updateLinkTarget(IdOrKey idOrKey, String targetId, Link link, MultipartFile file);

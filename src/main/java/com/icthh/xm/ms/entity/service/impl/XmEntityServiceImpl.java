@@ -428,7 +428,7 @@ public class XmEntityServiceImpl implements XmEntityService {
     }
 
     @Override
-    public Page<LinkSourceDto> getLinkSourcesExtended(final Pageable pageable, final IdOrKey idOrKey,
+    public Page<LinkSourceDto> getLinkSourcesInverted(final Pageable pageable, final IdOrKey idOrKey,
                                                       final Set<String> typeKey,
                                                       final String privilegeKey) {
         XmEntity source = toSourceXmEntity(idOrKey);
