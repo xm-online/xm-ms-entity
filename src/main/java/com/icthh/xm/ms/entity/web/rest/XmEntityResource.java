@@ -18,6 +18,7 @@ import com.icthh.xm.ms.entity.service.FunctionService;
 import com.icthh.xm.ms.entity.service.ProfileService;
 import com.icthh.xm.ms.entity.service.TenantService;
 import com.icthh.xm.ms.entity.service.XmEntityService;
+import com.icthh.xm.ms.entity.service.dto.LinkSourceDto;
 import com.icthh.xm.ms.entity.util.XmHttpEntityUtils;
 import com.icthh.xm.ms.entity.web.rest.util.HeaderUtil;
 import com.icthh.xm.ms.entity.web.rest.util.PaginationUtil;
@@ -333,6 +334,25 @@ public class XmEntityResource {
     @PostFilter("hasPermission({'returnObject': filterObject, 'log': false}, 'XMENTITY.LINK.SOURCE.GET_LIST')")
     public List<Link> getLinkSources(@PathVariable String idOrKey, @RequestParam(required = false) String typeKey) {
         return xmEntityService.getLinkSources(IdOrKey.of(idOrKey), typeKey);
+    }
+
+    @GetMapping("/v2/xm-entities/{idOrKey}/links/sources")
+    @Timed
+    public ResponseEntity<List<LinkSourceDto>> getLinkSourcesInverted(@PathVariable String idOrKey,
+                                                                      @RequestParam(required = false) Set<String>
+                                                                          typeKeys,
+                                                                      @ApiParam Pageable pageable) {
+
+        Page<LinkSourceDto> page = xmEntityService.getLinkSourcesInverted(pageable,
+                                                                          IdOrKey.of(idOrKey),
+                                                                          typeKeys,
+                                                                          null);
+
+        HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(page,
+                                                                           "/v2/api/xm-entities/" + idOrKey
+                                                                           + "/links/sources");
+        return new ResponseEntity<>(page.getContent(), headers, HttpStatus.OK);
+
     }
 
     /**

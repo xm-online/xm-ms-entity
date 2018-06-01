@@ -61,6 +61,7 @@ import com.icthh.xm.ms.entity.service.StorageService;
 import com.icthh.xm.ms.entity.service.XmEntityService;
 import com.icthh.xm.ms.entity.service.XmEntitySpecService;
 import com.icthh.xm.ms.entity.service.XmEntityTemplatesSpecService;
+import com.icthh.xm.ms.entity.service.dto.LinkSourceDto;
 import com.jayway.jsonpath.DocumentContext;
 import com.jayway.jsonpath.JsonPath;
 import lombok.RequiredArgsConstructor;
@@ -424,6 +425,15 @@ public class XmEntityServiceImpl implements XmEntityService {
     public List<Link> getLinkSources(IdOrKey idOrKey, String typeKey) {
         XmEntity source = toSourceXmEntity(idOrKey);
         return linkService.findByTargetIdAndTypeKey(source.getId(), typeKey);
+    }
+
+    @Override
+    public Page<LinkSourceDto> getLinkSourcesInverted(final Pageable pageable, final IdOrKey idOrKey,
+                                                      final Set<String> typeKey,
+                                                      final String privilegeKey) {
+        XmEntity source = toSourceXmEntity(idOrKey);
+        return linkService.findSourceByTargetIdAndTypeKey(pageable, source.getId(), typeKey, privilegeKey)
+                          .map(LinkSourceDto::new);
     }
 
     @LogicExtensionPoint("SaveLinkTarget")
