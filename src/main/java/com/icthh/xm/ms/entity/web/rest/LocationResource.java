@@ -70,8 +70,7 @@ public class LocationResource {
             throw new BusinessException(ErrorConstants.ERR_BUSINESS_IDEXISTS,
                                         "A new location cannot already have an ID");
         }
-        Location result = locationRepository.save(location);
-        locationSearchRepository.save(result);
+        Location result = locationService.save(location);
         return ResponseEntity.created(new URI("/api/locations/" + result.getId()))
             .headers(HeaderUtil.createEntityCreationAlert(ENTITY_NAME, result.getId().toString()))
             .body(result);
