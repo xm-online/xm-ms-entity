@@ -93,8 +93,7 @@ public class LocationResource {
             //in order to call method with permissions check
             return this.locationResource.createLocation(location);
         }
-        Location result = locationRepository.save(location);
-        locationSearchRepository.save(result);
+        Location result = locationService.save(location);
         return ResponseEntity.ok()
             .headers(HeaderUtil.createEntityUpdateAlert(ENTITY_NAME, location.getId().toString()))
             .body(result);
