@@ -1,5 +1,7 @@
 package com.icthh.xm.ms.entity.web.rest;
 
+import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_AUTH_CONTEXT;
+import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_TENANT_CONTEXT;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.notNullValue;
@@ -9,15 +11,18 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.icthh.xm.commons.exceptions.spring.web.ExceptionTranslator;
+import com.icthh.xm.commons.lep.XmLepScriptConfigServerResourceLoader;
 import com.icthh.xm.commons.security.XmAuthenticationContext;
 import com.icthh.xm.commons.security.XmAuthenticationContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
+import com.icthh.xm.lep.api.LepManager;
 import com.icthh.xm.ms.entity.EntityApp;
 import com.icthh.xm.ms.entity.config.SecurityBeanOverrideConfiguration;
 import com.icthh.xm.ms.entity.config.tenant.WebappTenantOverrideConfiguration;
@@ -26,10 +31,12 @@ import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.repository.CommentRepository;
 import com.icthh.xm.ms.entity.repository.search.CommentSearchRepository;
 import com.icthh.xm.ms.entity.service.CommentService;
+import com.icthh.xm.ms.entity.service.TenantService;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -43,6 +50,7 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.context.transaction.BeforeTransaction;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.result.MockMvcResultHandlers;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -104,6 +112,18 @@ public class CommentResourceIntTest {
     @Autowired
     private TenantContextHolder tenantContextHolder;
 
+    @Mock
+    private XmAuthenticationContextHolder authContextHolder;
+
+    @Autowired
+    private LepManager lepManager;
+
+    @Autowired
+    private XmLepScriptConfigServerResourceLoader lepLoader;
+
+    @Mock
+    private XmAuthenticationContext context;
+
     private MockMvc restCommentMockMvc;
 
     private Comment comment;
@@ -137,6 +157,13 @@ public class CommentResourceIntTest {
             .setMessageConverters(jacksonMessageConverter).build();
 
         comment = createEntity(em);
+
+        when(authContextHolder.getContext()).thenReturn(context);
+        when(context.getUserKey()).thenReturn(Optional.of("userKey"));
+        lepManager.beginThreadContext(ctx -> {
+            ctx.setValue(THREAD_CONTEXT_KEY_TENANT_CONTEXT, tenantContextHolder.getContext());
+            ctx.setValue(THREAD_CONTEXT_KEY_AUTH_CONTEXT, authContextHolder.getContext());
+        });
     }
 
     @After
@@ -191,6 +218,24 @@ public class CommentResourceIntTest {
         // Validate the Comment in Elasticsearch
         Comment commentEs = commentSearchRepository.findOne(testComment.getId());
         assertThat(commentEs).isEqualToComparingFieldByField(testComment);
+    }
+
+    @Test
+    @Transactional
+    public void createCommentWithLep() throws Exception {
+        int databaseSizeBeforeCreate = commentRepository.findAll().size();
+
+        lepLoader.onRefresh("/config/tenants/RESINTTEST/entity/lep/service/comments/Save$$around.groovy",
+            "throw new com.icthh.xm.commons.exceptions.BusinessException('lep','comments')");
+
+        // Create the Comment
+        restCommentMockMvc.perform(post("/api/comments")
+            .contentType(TestUtil.APPLICATION_JSON_UTF8)
+            .content(TestUtil.convertObjectToJsonBytes(comment)))
+            .andDo(print())
+            .andExpect(jsonPath("$.error").value("lep"))
+            .andExpect(jsonPath("$.error_description").value("comments"))
+            .andExpect(status().isBadRequest());
     }
 
     @Test
