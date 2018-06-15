@@ -236,6 +236,9 @@ public class CommentResourceIntTest {
             .andExpect(jsonPath("$.error").value("lep"))
             .andExpect(jsonPath("$.error_description").value("comments"))
             .andExpect(status().isBadRequest());
+
+        lepLoader.onRefresh("/config/tenants/RESINTTEST/entity/lep/service/comments/Save$$around.groovy",
+            "lepContext.lep.proceed(lepContext.lep.getMethodArgValues())");
     }
 
     @Test
