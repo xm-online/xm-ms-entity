@@ -1,5 +1,7 @@
 package com.icthh.xm.ms.entity.service;
 
+import com.icthh.xm.commons.lep.LogicExtensionPoint;
+import com.icthh.xm.commons.lep.spring.LepService;
 import com.icthh.xm.commons.permission.annotation.FindWithPermission;
 import com.icthh.xm.commons.permission.repository.PermittedRepository;
 import com.icthh.xm.commons.security.XmAuthenticationContextHolder;
@@ -18,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
  * Service Implementation for managing Comment.
  */
 @Service
+@LepService(group = "service.comments")
 @Transactional
 @RequiredArgsConstructor
 public class CommentService {
@@ -45,6 +48,7 @@ public class CommentService {
      * @param comment the entity to save
      * @return the persisted entity
      */
+    @LogicExtensionPoint("Save")
     public Comment save(Comment comment) {
         comment.setXmEntity(xmEntityRepository.getOne(comment.getXmEntity().getId()));
         comment.setUserKey(getUserKey());
@@ -61,6 +65,7 @@ public class CommentService {
      */
     @Transactional(readOnly = true)
     @FindWithPermission("COMMENT.GET_LIST")
+    @LogicExtensionPoint("FindAll")
     public Page<Comment> findAll(Pageable pageable, String privilegeKey) {
         return permittedRepository.findAll(pageable, Comment.class, privilegeKey);
     }
@@ -72,6 +77,7 @@ public class CommentService {
      * @return the entity
      */
     @Transactional(readOnly = true)
+    @LogicExtensionPoint("FindOne")
     public Comment findOne(Long id) {
         return commentRepository.findOne(id);
     }
@@ -81,6 +87,7 @@ public class CommentService {
      *
      * @param id the id of the entity
      */
+    @LogicExtensionPoint("Delete")
     public void delete(Long id) {
         commentRepository.delete(id);
         commentSearchRepository.delete(id);
@@ -95,6 +102,7 @@ public class CommentService {
      */
     @Transactional(readOnly = true)
     @FindWithPermission("COMMENT.SEARCH")
+    @LogicExtensionPoint("Search")
     public Page<Comment> search(String query, Pageable pageable, String privilegeKey) {
         return permittedSearchRepository.search(query, pageable, Comment.class, privilegeKey);
     }

@@ -5,6 +5,7 @@ import com.icthh.xm.ms.entity.lep.XmEntityMsLepProcessingApplicationListener;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
 import com.icthh.xm.ms.entity.repository.kafka.ProfileEventProducer;
 import com.icthh.xm.ms.entity.service.AttachmentService;
+import com.icthh.xm.ms.entity.service.CommentService;
 import com.icthh.xm.ms.entity.service.LinkService;
 import com.icthh.xm.ms.entity.service.LocationService;
 import com.icthh.xm.ms.entity.service.ProfileService;
@@ -31,6 +32,7 @@ public class LepAppEventListenerConfiguration {
                     ProfileService profileService,
                     LinkService linkService,
                     MailService mailService,
+                    CommentService commentService,
                     TenantConfigService tenantConfigService,
                     AttachmentService attachmentService,
                     @Qualifier("loadBalancedRestTemplate") RestTemplate restTemplate,
@@ -41,7 +43,7 @@ public class LepAppEventListenerConfiguration {
         return new XmEntityMsLepProcessingApplicationListener(xmEntityService,
                         xmTenantLifecycleService, xmEntityRepository, profileService, linkService,
                         mailService, tenantConfigService, attachmentService, restTemplate,
-                        locationService, tagService, profileEventProducer);
+                        locationService, tagService, profileEventProducer, commentService);
     }
 
 }
