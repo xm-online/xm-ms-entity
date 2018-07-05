@@ -1,9 +1,12 @@
 package com.icthh.xm.ms.entity.config;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
+import com.icthh.xm.ms.entity.domain.Content;
 import org.elasticsearch.client.Client;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -44,12 +47,16 @@ public class ElasticsearchConfiguration {
 
     public static class CustomEntityMapper implements EntityMapper {
 
+        @JsonIgnoreProperties("value")
+        abstract static class ContentValueFilter {}
+
         private ObjectMapper objectMapper;
 
         public CustomEntityMapper(ObjectMapper objectMapper) {
             this.objectMapper = objectMapper;
             objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
             objectMapper.configure(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY, true);
+            objectMapper.addMixIn(Content.class, ContentValueFilter.class);
         }
 
         @Override
