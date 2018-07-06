@@ -28,6 +28,8 @@ import javax.validation.constraints.NotNull;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.springframework.data.elasticsearch.annotations.Document;
+import org.springframework.data.elasticsearch.annotations.Field;
+import org.springframework.data.elasticsearch.annotations.FieldType;
 
 /**
  * Represents any XM entity file attachment. It could be image, zip archive, pdf
@@ -113,6 +115,7 @@ public class Attachment implements Serializable {
 
     @OneToOne(cascade = ALL, fetch = FetchType.LAZY, orphanRemoval = true)
     @JoinColumn(unique = true)
+    @Field(ignoreFields = "value", type = FieldType.Object)
     private Content content;
 
     @ManyToOne(optional = false)
