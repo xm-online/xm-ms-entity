@@ -78,6 +78,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpEntity;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.ObjectUtils;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -168,7 +169,7 @@ public class XmEntityServiceImpl implements XmEntityService {
         xmEntity.updateXmEntityReference(xmEntity.getVotes(), Vote::setXmEntity);
         nullSafe(xmEntity.getTargets()).forEach(link -> link.setTarget(xmEntityRepository.getOne(link.getTarget().getId())));
         nullSafe(xmEntity.getSources()).forEach(link -> link.setSource(xmEntityRepository.getOne(link.getSource().getId())));
-        processUniqueField(xmEntity);
+        processUniqueField(xmEntity, oldEntity);
 
         XmEntity result = xmEntityRepository.save(xmEntity);
         xmEntitySearchRepository.save(result);
@@ -190,14 +191,20 @@ public class XmEntityServiceImpl implements XmEntityService {
     }
 
     @SneakyThrows
-    private void processUniqueField(XmEntity xmEntity) {
+    private void processUniqueField(XmEntity xmEntity, Optional<XmEntity> oldEntity) {
+        oldEntity.ifPresent(it -> it.getUniqueFields().clear());
         xmEntity.getUniqueFields().clear();
+
         if (isEmpty(xmEntity.getData())) {
             return;
         }
 
         String json = objectMapper.writeValueAsString(xmEntity.getData());
         TypeSpec typeByKey = xmEntitySpecService.findTypeByKey(xmEntity.getTypeKey());
+
+        if (CollectionUtils.isEmpty(typeByKey.getUniqueFields())) {
+            return;
+        }
 
         DocumentContext document = JsonPath.using(defaultConfiguration().addOptions(SUPPRESS_EXCEPTIONS)).parse(json);
 

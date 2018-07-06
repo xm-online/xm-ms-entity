@@ -125,4 +125,6 @@ public class XmEntityServiceImplUnitTest {
         assertTrue(uniqueFields.contains(new UniqueField(null, "$.simpleObject.uniqueSubField", "value1", TEST_TYPE_KEY, xmEntity)));
     }
 
+
+
 }

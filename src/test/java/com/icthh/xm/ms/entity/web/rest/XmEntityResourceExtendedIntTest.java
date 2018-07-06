@@ -63,16 +63,20 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.time.Instant;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import static com.google.common.collect.ImmutableMap.of;
 import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_AUTH_CONTEXT;
 import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_TENANT_CONTEXT;
 import static com.icthh.xm.commons.tenant.TenantContextUtils.getRequiredTenantKeyValue;
 import static com.icthh.xm.ms.entity.config.TenantConfigMockConfiguration.getXmEntityTemplatesSpec;
 import static com.icthh.xm.ms.entity.web.rest.TestUtil.sameInstant;
 import static java.lang.Long.valueOf;
+import static java.time.Instant.now;
+import static java.util.Arrays.asList;
 import static java.util.Collections.emptyMap;
 import static java.util.UUID.randomUUID;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -893,7 +897,7 @@ public class XmEntityResourceExtendedIntTest {
 
         XmEntity entity = xmEntityIncoming;
 
-        entity.setData(ImmutableMap.of("numberProperties", "5"));
+        entity.setData(of("numberProperties", "5"));
 
         performPut("/api/xm-entities", entity)
             .andExpect(status().isBadRequest())
@@ -902,7 +906,7 @@ public class XmEntityResourceExtendedIntTest {
         // Validate the XmEntity in the database
         validateEntityInDB(databaseSizeBeforeTest);
 
-        entity.setData(ImmutableMap.of("numberProperties", "testse"));
+        entity.setData(of("numberProperties", "testse"));
 
         performPut("/api/xm-entities", entity)
             .andExpect(status().isBadRequest())
@@ -911,7 +915,7 @@ public class XmEntityResourceExtendedIntTest {
         // Validate the XmEntity in the database
         validateEntityInDB(databaseSizeBeforeTest);
 
-        entity.setData(ImmutableMap.of("numberProperties", Boolean.FALSE));
+        entity.setData(of("numberProperties", Boolean.FALSE));
 
         performPut("/api/xm-entities", entity)
             .andExpect(status().isBadRequest())
@@ -1634,6 +1638,40 @@ public class XmEntityResourceExtendedIntTest {
         assertEquals(link.getTarget().getName(), "AAAAAAAAAA");
         assertEquals(link.getTarget().getKey(), "AAAAAAAAAA");
         assertEquals(link.getTarget().getTypeKey(), "TEST_SAVE_WITH_LINK_NEW_ENTITY");
+
+    }
+
+
+    @Test
+    @Transactional
+    @SneakyThrows
+    public void doubleSaveUniqueField() {
+
+        XmEntity entity = new XmEntity().typeKey("TEST_UNIQUE_FIELD").key(randomUUID())
+            .name("name").startDate(now()).updateDate(now()).data(of(
+                "uniqueField", "value",
+                "uniqueField2", "value2"
+            ));
+
+        MvcResult result = performPost("/api/xm-entities", entity)
+            .andExpect(status().isCreated())
+            .andReturn();
+
+
+        String contentAsString = result.getResponse().getContentAsString();
+
+        int id = JsonPath.read(contentAsString, "$.id");
+        Integer version = JsonPath.read(contentAsString, "$.version");
+
+        entity.setId((long) id);
+        entity.setVersion(version);
+
+        em.flush();
+
+        performPut("/api/xm-entities", entity)
+            .andExpect(status().is2xxSuccessful())
+            .andReturn();
+
 
     }
 
