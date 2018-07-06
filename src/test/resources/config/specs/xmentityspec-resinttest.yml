@@ -373,3 +373,11 @@ types:
             - key: en2en1
               builderType: SEARCH
               typeKey: ENTITY1
+    - key: TEST_SAVE_WITH_LINK_EXISTS_ENTITY
+      isAbstract: false
+      links:
+            - key: TEST_SAVE_WITH_LINK_LINK_KEY
+              builderType: NEW
+              typeKey: TEST_SAVE_WITH_LINK_NEW_ENTITY
+    - key: TEST_SAVE_WITH_LINK_NEW_ENTITY
+      isAbstract: false

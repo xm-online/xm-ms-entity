@@ -1589,5 +1589,53 @@ public class XmEntityResourceExtendedIntTest {
         validateEntityInDB(databaseSizeBeforeCreate + 2);
     }
 
+    @Test
+    @Transactional
+    @SneakyThrows
+    public void testSaveNewEntityWithLinkToExistsEntity() {
+        XmEntity entity = createEntity();
+        entity.setTypeKey("TEST_SAVE_WITH_LINK_EXISTS_ENTITY");
+        entity.setData(null);
+        entity.setStateKey(null);
+        Long id = xmEntityService.save(entity).getId();
+
+
+        String sourceLinkRequest = "{\n" +
+            "  \"key\": \"AAAAAAAAAA\",\n" +
+            "  \"typeKey\": \"TEST_SAVE_WITH_LINK_NEW_ENTITY\",\n" +
+            "  \"name\": \"AAAAAAAAAA\",\n" +
+            "  \"sources\": [\n" +
+            "    {\n" +
+            "      \"typeKey\": \"TEST_SAVE_WITH_LINK_LINK_KEY\",\n" +
+            "      \"name\": \"some link name\",\n" +
+            "      \"source\": {\n" +
+            "          \"id\": %d\n" +
+            "      }\n" +
+            "    }\n" +
+            "  ]\n" +
+            "}";
+
+        restXmEntityMockMvc.perform(post("/api/xm-entities")
+            .contentType(TestUtil.APPLICATION_JSON_UTF8)
+            .content(String.format(sourceLinkRequest, id)))
+            .andDo(this::printMvcResult)
+            .andExpect(status().isCreated());
+
+
+        em.flush();
+        em.refresh(entity);
+
+        //entity = xmEntityRepository.findOne(entity.getId());
+
+        assertEquals(1, entity.getTargets().size());
+        Link link = entity.getTargets().iterator().next();
+        assertEquals(link.getName(), "some link name");
+        assertEquals(link.getTypeKey(), "TEST_SAVE_WITH_LINK_LINK_KEY");
+        assertEquals(link.getTarget().getName(), "AAAAAAAAAA");
+        assertEquals(link.getTarget().getKey(), "AAAAAAAAAA");
+        assertEquals(link.getTarget().getTypeKey(), "TEST_SAVE_WITH_LINK_NEW_ENTITY");
+
+    }
+
 
 }

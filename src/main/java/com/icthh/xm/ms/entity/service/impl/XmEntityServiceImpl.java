@@ -166,7 +166,8 @@ public class XmEntityServiceImpl implements XmEntityService {
         xmEntity.updateXmEntityReference(xmEntity.getTargets(), Link::setSource);
         xmEntity.updateXmEntityReference(xmEntity.getSources(), Link::setTarget);
         xmEntity.updateXmEntityReference(xmEntity.getVotes(), Vote::setXmEntity);
-        xmEntity.getTargets().forEach(link -> link.setTarget(xmEntityRepository.getOne(link.getTarget().getId())));
+        nullSafe(xmEntity.getTargets()).forEach(link -> link.setTarget(xmEntityRepository.getOne(link.getTarget().getId())));
+        nullSafe(xmEntity.getSources()).forEach(link -> link.setSource(xmEntityRepository.getOne(link.getSource().getId())));
         processUniqueField(xmEntity);
 
         XmEntity result = xmEntityRepository.save(xmEntity);
