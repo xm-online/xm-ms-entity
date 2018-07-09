@@ -33,6 +33,7 @@ import com.jayway.jsonpath.JsonPath;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.mutable.MutableObject;
 import org.junit.After;
@@ -1575,20 +1576,10 @@ public class XmEntityResourceExtendedIntTest {
         Long id = xmEntityService.save(entity).getId();
 
 
-        String sourceLinkRequest = "{\n" +
-            "  \"key\": \"AAAAAAAAAA\",\n" +
-            "  \"typeKey\": \"TEST_SAVE_WITH_LINK_NEW_ENTITY\",\n" +
-            "  \"name\": \"AAAAAAAAAA\",\n" +
-            "  \"sources\": [\n" +
-            "    {\n" +
-            "      \"typeKey\": \"TEST_SAVE_WITH_LINK_LINK_KEY\",\n" +
-            "      \"name\": \"some link name\",\n" +
-            "      \"source\": {\n" +
-            "          \"id\": %d\n" +
-            "      }\n" +
-            "    }\n" +
-            "  ]\n" +
-            "}";
+        String sourceLinkRequest = IOUtils.toString(
+            this.getClass().getClassLoader().getResourceAsStream("testrequests/newEntityWithLinkToExistsEntity.json"),
+            "UTF-8"
+        );
 
         restXmEntityMockMvc.perform(post("/api/xm-entities")
             .contentType(TestUtil.APPLICATION_JSON_UTF8)
