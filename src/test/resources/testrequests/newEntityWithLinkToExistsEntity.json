@@ -1,0 +1,14 @@
+{
+  "key": "AAAAAAAAAA",
+  "typeKey": "TEST_SAVE_WITH_LINK_NEW_ENTITY",
+  "name": "AAAAAAAAAA",
+  "sources": [
+    {
+      "typeKey": "TEST_SAVE_WITH_LINK_LINK_KEY",
+      "name": "some link name",
+      "source": {
+          "id": %d
+      }
+    }
+  ]
+}
