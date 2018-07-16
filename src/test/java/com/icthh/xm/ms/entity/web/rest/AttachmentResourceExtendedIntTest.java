@@ -1,9 +1,25 @@
 package com.icthh.xm.ms.entity.web.rest;
 
+import static com.icthh.xm.ms.entity.web.rest.AttachmentResourceIntTest.DEFAULT_CONTENT_URL;
+import static com.icthh.xm.ms.entity.web.rest.AttachmentResourceIntTest.DEFAULT_DESCRIPTION;
+import static com.icthh.xm.ms.entity.web.rest.AttachmentResourceIntTest.DEFAULT_END_DATE;
+import static com.icthh.xm.ms.entity.web.rest.AttachmentResourceIntTest.DEFAULT_NAME;
+import static com.icthh.xm.ms.entity.web.rest.AttachmentResourceIntTest.DEFAULT_START_DATE;
+import static com.icthh.xm.ms.entity.web.rest.AttachmentResourceIntTest.DEFAULT_TYPE_KEY;
+import static com.icthh.xm.ms.entity.web.rest.AttachmentResourceIntTest.DEFAULT_VALUE_CONTENT_SIZE;
+import static com.icthh.xm.ms.entity.web.rest.AttachmentResourceIntTest.DEFAULT_VALUE_CONTENT_TYPE;
+import static java.time.temporal.ChronoUnit.MILLIS;
+import static java.time.temporal.ChronoUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
+import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.nullValue;
+import static org.mockito.Matchers.isNull;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -15,6 +31,8 @@ import com.icthh.xm.ms.entity.EntityApp;
 import com.icthh.xm.ms.entity.config.SecurityBeanOverrideConfiguration;
 import com.icthh.xm.ms.entity.config.tenant.WebappTenantOverrideConfiguration;
 import com.icthh.xm.ms.entity.domain.Attachment;
+import com.icthh.xm.ms.entity.domain.Content;
+import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.repository.AttachmentRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
 import com.icthh.xm.ms.entity.repository.search.AttachmentSearchRepository;
@@ -31,6 +49,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
+import org.springframework.http.MediaType;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.junit4.SpringRunner;
@@ -41,6 +60,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.Validator;
 
 import java.time.Instant;
+import java.time.temporal.TemporalUnit;
 import java.util.List;
 import javax.persistence.EntityManager;
 
@@ -59,6 +79,8 @@ import javax.persistence.EntityManager;
 public class AttachmentResourceExtendedIntTest {
 
     private static final Instant MOCKED_START_DATE = Instant.ofEpochMilli(42L);
+
+    private static final String CONTENT = "cXdlcnF3ZXJxd2Vydw==";
 
     @Autowired
     private MappingJackson2HttpMessageConverter jacksonMessageConverter;
@@ -131,7 +153,7 @@ public class AttachmentResourceExtendedIntTest {
                                                     .setValidator(validator)
                                                     .setMessageConverters(jacksonMessageConverter).build();
 
-        attachment = AttachmentResourceIntTest.createEntity(em);
+        attachment = createEntity(em);
 
     }
 
@@ -214,6 +236,77 @@ public class AttachmentResourceExtendedIntTest {
                 .containsIgnoringCase("NULL not allowed for column \"START_DATE\"");
         }
 
+    }
+
+    public static Attachment createEntity(EntityManager em) {
+        Attachment attachment = new Attachment()
+            .typeKey(DEFAULT_TYPE_KEY)
+            .name(DEFAULT_NAME)
+            .contentUrl(DEFAULT_CONTENT_URL)
+            .description(DEFAULT_DESCRIPTION)
+            .startDate(DEFAULT_START_DATE)
+            .endDate(DEFAULT_END_DATE)
+            .content(new Content().value(CONTENT.getBytes()))
+            .valueContentType(DEFAULT_VALUE_CONTENT_TYPE)
+            .valueContentSize((long) CONTENT.getBytes().length);
+        // Add required entity
+        XmEntity xmEntity = XmEntityResourceIntTest.createEntity();
+        em.persist(xmEntity);
+        em.flush();
+        attachment.setXmEntity(xmEntity);
+        return attachment;
+    }
+
+    @Test
+    @Transactional
+    public void createAttachment() throws Exception {
+        int databaseSizeBeforeCreate = attachmentRepository.findAll().size();
+
+        // Create the Attachment
+        restAttachmentMockMvc.perform(post("/api/attachments")
+            .contentType(TestUtil.APPLICATION_JSON_UTF8)
+            .content(TestUtil.convertObjectToJsonBytes(attachment)))
+            .andDo(print())
+            .andExpect(status().isCreated());
+
+        // Validate the Attachment in the database
+        List<Attachment> attachmentList = attachmentRepository.findAll();
+        assertThat(attachmentList).hasSize(databaseSizeBeforeCreate + 1);
+        Attachment testAttachment = attachmentList.get(attachmentList.size() - 1);
+        assertThat(testAttachment.getTypeKey()).isEqualTo(DEFAULT_TYPE_KEY);
+        assertThat(testAttachment.getName()).isEqualTo(DEFAULT_NAME);
+        assertThat(testAttachment.getContentUrl()).isEqualTo(DEFAULT_CONTENT_URL);
+        assertThat(testAttachment.getDescription()).isEqualTo(DEFAULT_DESCRIPTION);
+        assertThat(testAttachment.getEndDate()).isEqualTo(DEFAULT_END_DATE);
+        assertThat(testAttachment.getContent().getValue()).isEqualTo(CONTENT.getBytes());
+        assertThat(testAttachment.getValueContentType()).isEqualTo(DEFAULT_VALUE_CONTENT_TYPE);
+        assertThat(testAttachment.getValueContentSize()).isEqualTo((long) CONTENT.getBytes().length);
+
+        // Validate the Attachment in Elasticsearch
+        Attachment attachmentEs = attachmentSearchRepository.findOne(testAttachment.getId());
+        assertThat(attachmentEs).isEqualToComparingFieldByField(testAttachment);
+    }
+
+    @Test
+    @Transactional
+    public void searchAttachment() throws Exception {
+        // Initialize the database
+        attachmentService.save(attachment);
+
+        // Search the attachment
+        restAttachmentMockMvc.perform(get("/api/_search/attachments?query=id:" + attachment.getId()))
+            .andDo(print())
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+            .andExpect(jsonPath("$.[*].id").value(hasItem(attachment.getId().intValue())))
+            .andExpect(jsonPath("$.[*].typeKey").value(hasItem(DEFAULT_TYPE_KEY.toString())))
+            .andExpect(jsonPath("$.[*].name").value(hasItem(DEFAULT_NAME.toString())))
+            .andExpect(jsonPath("$.[*].contentUrl").value(hasItem(DEFAULT_CONTENT_URL.toString())))
+            .andExpect(jsonPath("$.[*].description").value(hasItem(DEFAULT_DESCRIPTION.toString())))
+            .andExpect(jsonPath("$.[*].endDate").value(hasItem(DEFAULT_END_DATE.toString())))
+            .andExpect(jsonPath("$.[*].content.value").value(hasItem(nullValue())))
+            .andExpect(jsonPath("$.[*].valueContentType").value(hasItem(DEFAULT_VALUE_CONTENT_TYPE.toString())))
+            .andExpect(jsonPath("$.[*].valueContentSize").value(hasItem(CONTENT.getBytes().length)));
     }
 
 }

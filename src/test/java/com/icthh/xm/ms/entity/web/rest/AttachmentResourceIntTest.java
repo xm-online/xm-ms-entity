@@ -73,29 +73,29 @@ import javax.persistence.EntityManager;
 @SpringBootTest(classes = {EntityApp.class, SecurityBeanOverrideConfiguration.class, WebappTenantOverrideConfiguration.class})
 public class AttachmentResourceIntTest {
 
-    private static final String DEFAULT_TYPE_KEY = "AAAAAAAAAA";
-    private static final String UPDATED_TYPE_KEY = "BBBBBBBBBB";
+    public static final String DEFAULT_TYPE_KEY = "AAAAAAAAAA";
+    public static final String UPDATED_TYPE_KEY = "BBBBBBBBBB";
 
-    private static final String DEFAULT_NAME = "AAAAAAAAAA";
-    private static final String UPDATED_NAME = "BBBBBBBBBB";
+    public static final String DEFAULT_NAME = "AAAAAAAAAA";
+    public static final String UPDATED_NAME = "BBBBBBBBBB";
 
-    private static final String DEFAULT_CONTENT_URL = "AAAAAAAAAA";
-    private static final String UPDATED_CONTENT_URL = "BBBBBBBBBB";
+    public static final String DEFAULT_CONTENT_URL = "AAAAAAAAAA";
+    public static final String UPDATED_CONTENT_URL = "BBBBBBBBBB";
 
-    private static final String DEFAULT_DESCRIPTION = "AAAAAAAAAA";
-    private static final String UPDATED_DESCRIPTION = "BBBBBBBBBB";
+    public static final String DEFAULT_DESCRIPTION = "AAAAAAAAAA";
+    public static final String UPDATED_DESCRIPTION = "BBBBBBBBBB";
 
-    private static final Instant DEFAULT_START_DATE = Instant.ofEpochMilli(0L);
-    private static final Instant UPDATED_START_DATE = Instant.now().truncatedTo(ChronoUnit.MILLIS);
+    public static final Instant DEFAULT_START_DATE = Instant.ofEpochMilli(0L);
+    public static final Instant UPDATED_START_DATE = Instant.now().truncatedTo(ChronoUnit.MILLIS);
 
-    private static final Instant DEFAULT_END_DATE = Instant.ofEpochMilli(0L);
-    private static final Instant UPDATED_END_DATE = Instant.now().truncatedTo(ChronoUnit.MILLIS);
+    public static final Instant DEFAULT_END_DATE = Instant.ofEpochMilli(0L);
+    public static final Instant UPDATED_END_DATE = Instant.now().truncatedTo(ChronoUnit.MILLIS);
 
-    private static final String DEFAULT_VALUE_CONTENT_TYPE = "image/jpg";
-    private static final String UPDATED_VALUE_CONTENT_TYPE = "image/png";
+    public static final String DEFAULT_VALUE_CONTENT_TYPE = "image/jpg";
+    public static final String UPDATED_VALUE_CONTENT_TYPE = "image/png";
 
-    private static final Long DEFAULT_VALUE_CONTENT_SIZE = 1L;
-    private static final Long UPDATED_VALUE_CONTENT_SIZE = 2L;
+    public static final Long DEFAULT_VALUE_CONTENT_SIZE = 1L;
+    public static final Long UPDATED_VALUE_CONTENT_SIZE = 2L;
 
     @Autowired
     private AttachmentResource attachmentResource;

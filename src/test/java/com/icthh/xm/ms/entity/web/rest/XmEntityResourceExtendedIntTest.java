@@ -33,6 +33,7 @@ import com.jayway.jsonpath.JsonPath;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.mutable.MutableObject;
 import org.junit.After;
@@ -63,16 +64,20 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.time.Instant;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import static com.google.common.collect.ImmutableMap.of;
 import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_AUTH_CONTEXT;
 import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_TENANT_CONTEXT;
 import static com.icthh.xm.commons.tenant.TenantContextUtils.getRequiredTenantKeyValue;
 import static com.icthh.xm.ms.entity.config.TenantConfigMockConfiguration.getXmEntityTemplatesSpec;
 import static com.icthh.xm.ms.entity.web.rest.TestUtil.sameInstant;
 import static java.lang.Long.valueOf;
+import static java.time.Instant.now;
+import static java.util.Arrays.asList;
 import static java.util.Collections.emptyMap;
 import static java.util.UUID.randomUUID;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -92,6 +97,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * @see XmEntityResource
  */
 @Slf4j
+@Transactional
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = {
     EntityApp.class,
@@ -493,7 +499,6 @@ public class XmEntityResourceExtendedIntTest {
     }
 
     @Test
-    @Transactional
     public void createXmEntityWithTagsAttachmentsLocations() throws Exception {
         int databaseSizeBeforeCreate = xmEntityRepository.findAll().size();
 
@@ -561,7 +566,6 @@ public class XmEntityResourceExtendedIntTest {
     }
 
     @Test
-    @Transactional
     public void createXmEntityWithLinks() throws Exception {
 
         XmEntity presaved = xmEntityService.save(createEntity());
@@ -617,7 +621,6 @@ public class XmEntityResourceExtendedIntTest {
     }
 
     @Test
-    @Transactional
     public void createXmEntityWithSourceLinks() throws Exception {
 
         XmEntity presaved = xmEntityService.save(createEntity());
@@ -675,7 +678,6 @@ public class XmEntityResourceExtendedIntTest {
     }
 
     @Test
-    @Transactional
     @WithMockUser(authorities = "SUPER-ADMIN")
     public void getXmEntitySourcesLinksByTypeKey() throws Exception {
 
@@ -714,7 +716,6 @@ public class XmEntityResourceExtendedIntTest {
     }
 
     @Test
-    @Transactional
     @WithMockUser(authorities = "SUPER-ADMIN")
     public void getXmEntitySourcesLinksByTypeKeysIn() throws Exception {
 
@@ -765,7 +766,6 @@ public class XmEntityResourceExtendedIntTest {
 
 
     @Test
-    @Transactional
     @WithMockUser(authorities = "SUPER-ADMIN")
     public void getXmEntitySourcesLinksWithAnyTypeKay() throws Exception {
 
@@ -798,7 +798,6 @@ public class XmEntityResourceExtendedIntTest {
     }
 
     @Test
-    @Transactional
     @WithMockUser(authorities = "SUPER-ADMIN")
     public void getXmEntitySourcesLinksWithAnyTypeKayAndSort() throws Exception {
 
@@ -844,7 +843,6 @@ public class XmEntityResourceExtendedIntTest {
 
 
     @Test
-    @Transactional
     public void createXmEntityWithLargeData() throws Exception {
         int databaseSizeBeforeCreate = xmEntityRepository.findAll().size();
 
@@ -886,14 +884,13 @@ public class XmEntityResourceExtendedIntTest {
     }
 
     @Test
-    @Transactional
     public void checkJsonShemeDateTypeProperties() throws Exception {
 
         int databaseSizeBeforeTest = xmEntityRepository.findAll().size();
 
         XmEntity entity = xmEntityIncoming;
 
-        entity.setData(ImmutableMap.of("numberProperties", "5"));
+        entity.setData(of("numberProperties", "5"));
 
         performPut("/api/xm-entities", entity)
             .andExpect(status().isBadRequest())
@@ -902,7 +899,7 @@ public class XmEntityResourceExtendedIntTest {
         // Validate the XmEntity in the database
         validateEntityInDB(databaseSizeBeforeTest);
 
-        entity.setData(ImmutableMap.of("numberProperties", "testse"));
+        entity.setData(of("numberProperties", "testse"));
 
         performPut("/api/xm-entities", entity)
             .andExpect(status().isBadRequest())
@@ -911,7 +908,7 @@ public class XmEntityResourceExtendedIntTest {
         // Validate the XmEntity in the database
         validateEntityInDB(databaseSizeBeforeTest);
 
-        entity.setData(ImmutableMap.of("numberProperties", Boolean.FALSE));
+        entity.setData(of("numberProperties", Boolean.FALSE));
 
         performPut("/api/xm-entities", entity)
             .andExpect(status().isBadRequest())
@@ -923,7 +920,6 @@ public class XmEntityResourceExtendedIntTest {
     }
 
     @Test
-    @Transactional
     public void checkJsonShemeDateIsRequired() throws Exception {
         int databaseSizeBeforeTest = xmEntityRepository.findAll().size();
 
@@ -937,7 +933,6 @@ public class XmEntityResourceExtendedIntTest {
     }
 
     @Test
-    @Transactional
     @WithMockUser(authorities = "SUPER-ADMIN")
     public void getAllXmEntitiesByTypeKey() throws Exception {
 
@@ -952,7 +947,6 @@ public class XmEntityResourceExtendedIntTest {
     }
 
     @Test
-    @Transactional
     @WithMockUser(authorities = "SUPER-ADMIN")
     public void getAllXmEntitiesByTypeKeyNo() throws Exception {
 
@@ -966,7 +960,6 @@ public class XmEntityResourceExtendedIntTest {
     }
 
     @Test
-    @Transactional
     @WithMockUser(authorities = "SUPER-ADMIN")
     public void testSearchByTypeKeyAndQuery() throws Exception {
 
@@ -1002,7 +995,6 @@ public class XmEntityResourceExtendedIntTest {
     }
 
     @Test
-    @Transactional
     @WithMockUser(authorities = "SUPER-ADMIN")
     public void testSearchByTypeKeyAndTemplate() throws Exception {
 
@@ -1038,7 +1030,6 @@ public class XmEntityResourceExtendedIntTest {
     }
 
     @Test
-    @Transactional
     @WithMockUser(authorities = {"SUPER-ADMIN"})
     public void xmEntityFieldsNoRelationFields() throws Exception {
 
@@ -1097,7 +1088,6 @@ public class XmEntityResourceExtendedIntTest {
     }
 
     @Test
-    @Transactional
     @WithMockUser(authorities = {"SUPER-ADMIN"})
     public void xmEntityFieldsTwoFields() throws Exception {
 
@@ -1156,7 +1146,6 @@ public class XmEntityResourceExtendedIntTest {
     }
 
     @Test
-    @Transactional
     @WithMockUser(authorities = {"SUPER-ADMIN"})
     public void xmEntityFieldsDefaultFields() throws Exception {
 
@@ -1215,7 +1204,6 @@ public class XmEntityResourceExtendedIntTest {
     }
 
     @Test
-    @Transactional
     @WithMockUser(authorities = "SUPER-ADMIN")
     public void xmEntityFildsCalendars() throws Exception {
         int id = prepareCalendar();
@@ -1294,7 +1282,6 @@ public class XmEntityResourceExtendedIntTest {
     }
 
     @Test
-    @Transactional
     @WithMockUser(authorities = "SUPER-ADMIN")
     public void xmEntityFieldsCalendarsWithEvents() throws Exception {
         int id = prepareCalendar();
@@ -1336,7 +1323,6 @@ public class XmEntityResourceExtendedIntTest {
     }
 
     @Test
-    @Transactional
     @WithMockUser(authorities = "SUPER-ADMIN")
     public void updateTenantXmEntity() throws Exception {
         // Initialize the database
@@ -1371,7 +1357,6 @@ public class XmEntityResourceExtendedIntTest {
 
 
     @Test
-    @Transactional
     public void checkUpdateDateIsRequiredInDb() throws Exception {
 
         // set the field null
@@ -1392,7 +1377,6 @@ public class XmEntityResourceExtendedIntTest {
 
 
     @Test
-    @Transactional
     public void checkStartDateIsNotRequired() throws Exception {
         int databaseSizeBeforeTest = xmEntityRepository.findAll().size();
         // set the field null
@@ -1413,7 +1397,6 @@ public class XmEntityResourceExtendedIntTest {
     }
 
     @Test
-    @Transactional
     public void checkUpdateDateIsNotRequired() throws Exception {
         int databaseSizeBeforeTest = xmEntityRepository.findAll().size();
         // set the field null
@@ -1434,7 +1417,6 @@ public class XmEntityResourceExtendedIntTest {
     }
 
     @Test
-    @Transactional
     public void testNoCycleJson() throws Exception {
         XmEntity target = new XmEntity().typeKey("TARGET");
         XmEntity source = new XmEntity().typeKey("SOURCE");
@@ -1459,7 +1441,6 @@ public class XmEntityResourceExtendedIntTest {
     }
 
     @Test
-    @Transactional
     public void testNoCycleErrorOnSave() throws Exception {
         XmEntity target = xmEntityRepository.save(createEntity());
         XmEntity source = xmEntityRepository.save(createEntity());
@@ -1492,7 +1473,6 @@ public class XmEntityResourceExtendedIntTest {
 
 
     @Test
-    @Transactional
     public void testAttachmentStartDate() throws Exception {
 
         Attachment attachment = new Attachment().typeKey("A").name("1");
@@ -1535,7 +1515,6 @@ public class XmEntityResourceExtendedIntTest {
     }
 
     @Test
-    @Transactional
     @WithMockUser(authorities = "SUPER-ADMIN")
     public void testExportCsvFile() throws Exception {
         createEntityComplexPersisted(em);
@@ -1545,7 +1524,6 @@ public class XmEntityResourceExtendedIntTest {
     }
 
     @Test
-    @Transactional
     @WithMockUser(authorities = "SUPER-ADMIN")
     public void testExportExcelFile() throws Exception {
         createEntityComplexPersisted(em);
@@ -1562,7 +1540,6 @@ public class XmEntityResourceExtendedIntTest {
     }
 
     @Test
-    @Transactional
     public void testJsonWithTwoPojoAndSameId() throws Exception {
         int databaseSizeBeforeCreate = xmEntityRepository.findAll().size();
         XmEntity target = xmEntityService.save(createEntity());
@@ -1587,6 +1564,74 @@ public class XmEntityResourceExtendedIntTest {
             .andReturn();
 
         validateEntityInDB(databaseSizeBeforeCreate + 2);
+    }
+
+    @Test
+    @SneakyThrows
+    public void testSaveNewEntityWithLinkToExistsEntity() {
+        XmEntity entity = createEntity();
+        entity.setTypeKey("TEST_SAVE_WITH_LINK_EXISTS_ENTITY");
+        entity.setData(null);
+        entity.setStateKey(null);
+        Long id = xmEntityService.save(entity).getId();
+
+
+        String sourceLinkRequest = IOUtils.toString(
+            this.getClass().getClassLoader().getResourceAsStream("testrequests/newEntityWithLinkToExistsEntity.json"),
+            "UTF-8"
+        );
+
+        restXmEntityMockMvc.perform(post("/api/xm-entities")
+            .contentType(TestUtil.APPLICATION_JSON_UTF8)
+            .content(String.format(sourceLinkRequest, id)))
+            .andDo(this::printMvcResult)
+            .andExpect(status().isCreated());
+
+
+        em.flush();
+        em.refresh(entity);
+
+        assertEquals(1, entity.getTargets().size());
+        Link link = entity.getTargets().iterator().next();
+        assertEquals(link.getName(), "some link name");
+        assertEquals(link.getTypeKey(), "TEST_SAVE_WITH_LINK_LINK_KEY");
+        assertEquals(link.getTarget().getName(), DEFAULT_NAME);
+        assertEquals(link.getTarget().getKey(), DEFAULT_KEY);
+        assertEquals(link.getTarget().getTypeKey(), "TEST_SAVE_WITH_LINK_NEW_ENTITY");
+
+    }
+
+
+    @Test
+    @SneakyThrows
+    public void doubleSaveUniqueField() {
+
+        XmEntity entity = new XmEntity().typeKey("TEST_UNIQUE_FIELD").key(randomUUID())
+            .name("name").startDate(now()).updateDate(now()).data(of(
+                "uniqueField", "value",
+                "uniqueField2", "value2"
+            ));
+
+        MvcResult result = performPost("/api/xm-entities", entity)
+            .andExpect(status().isCreated())
+            .andReturn();
+
+
+        String contentAsString = result.getResponse().getContentAsString();
+
+        int id = JsonPath.read(contentAsString, "$.id");
+        Integer version = JsonPath.read(contentAsString, "$.version");
+
+        entity.setId((long) id);
+        entity.setVersion(version);
+
+        em.flush();
+
+        performPut("/api/xm-entities", entity)
+            .andExpect(status().is2xxSuccessful())
+            .andReturn();
+
+
     }
 
 
