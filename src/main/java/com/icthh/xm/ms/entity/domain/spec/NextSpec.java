@@ -9,7 +9,7 @@ import lombok.Data;
 import java.util.Map;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonPropertyOrder({ "stateKey", "name" })
+@JsonPropertyOrder({ "stateKey", "name", "inputSpec", "inputForm", "actionName", "showResponse" })
 @Data
 @Builder
 public class NextSpec {
@@ -19,5 +19,17 @@ public class NextSpec {
     /** Localized action name via map where key is ISO 639-1 code */
     @JsonProperty("name")
     private Map<String, String> name;
+
+    @JsonProperty("inputSpec")
+    private String inputSpec;
+
+    @JsonProperty("inputForm")
+    private String inputForm;
+
+    @JsonProperty("actionName")
+    private Map<String, String>  actionName;
+
+    @JsonProperty("showResponse")
+    private Boolean showResponse;
 
 }
