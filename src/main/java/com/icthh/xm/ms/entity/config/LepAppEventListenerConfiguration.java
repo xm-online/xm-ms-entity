@@ -27,20 +27,20 @@ public class LepAppEventListenerConfiguration {
 
     @Bean
     XmEntityMsLepProcessingApplicationListener buildLepProcessingApplicationListener(
-        XmEntityService xmEntityService,
-        XmTenantLifecycleService xmTenantLifecycleService,
-        XmEntityRepository xmEntityRepository,
-        ProfileService profileService,
-        LinkService linkService,
-        MailService mailService,
-        CommentService commentService,
-        TenantConfigService tenantConfigService,
-        AttachmentService attachmentService,
-        @Qualifier("loadBalancedRestTemplate") RestTemplate restTemplate,
-        LocationService locationService,
-        TagService tagService,
-        ProfileEventProducer profileEventProducer,
-        CommonsService commonsService) {
+                    XmEntityService xmEntityService,
+                    XmTenantLifecycleService xmTenantLifecycleService,
+                    XmEntityRepository xmEntityRepository,
+                    ProfileService profileService,
+                    LinkService linkService,
+                    MailService mailService,
+                    CommentService commentService,
+                    TenantConfigService tenantConfigService,
+                    AttachmentService attachmentService,
+                    @Qualifier("loadBalancedRestTemplate") RestTemplate restTemplate,
+                    LocationService locationService,
+                    TagService tagService,
+                    ProfileEventProducer profileEventProducer,
+                    CommonsService commonsService) {
 
         return new XmEntityMsLepProcessingApplicationListener(xmEntityService,
                         xmTenantLifecycleService, xmEntityRepository, profileService, linkService,
