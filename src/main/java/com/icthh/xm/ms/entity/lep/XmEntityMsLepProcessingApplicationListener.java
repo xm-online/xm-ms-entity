@@ -56,6 +56,7 @@ public class XmEntityMsLepProcessingApplicationListener extends SpringLepProcess
     private final TagService tagService;
     private final ProfileEventProducer profileEventProducer;
     private final CommentService commentService;
+    private final CommonsService commonsService;
 
     @Override
     protected void bindExecutionContext(ScopedContext executionContext) {
@@ -72,6 +73,8 @@ public class XmEntityMsLepProcessingApplicationListener extends SpringLepProcess
         services.put(BINDING_SUB_KEY_SERVICE_TAG_SERVICE, tagService);
         services.put(BINDING_SUB_KEY_PROFILE_EVENT_PRODUCER_SERVICE, profileEventProducer);
         services.put(BINDING_SUB_KEY_COMMENT_SERVICE, commentService);
+
+        executionContext.setValue("commons", new CommonsExecutor(commonsService));
 
         executionContext.setValue(BINDING_KEY_SERVICES, services);
 
