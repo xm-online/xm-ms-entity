@@ -1,7 +1,7 @@
 package com.icthh.xm.ms.entity.config;
 
 import com.icthh.xm.commons.config.client.service.TenantConfigService;
-import com.icthh.xm.ms.entity.lep.CommonsService;
+import com.icthh.xm.commons.lep.commons.CommonsService;
 import com.icthh.xm.ms.entity.lep.XmEntityMsLepProcessingApplicationListener;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
 import com.icthh.xm.ms.entity.repository.kafka.ProfileEventProducer;

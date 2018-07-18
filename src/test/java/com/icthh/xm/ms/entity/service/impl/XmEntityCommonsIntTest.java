@@ -60,6 +60,7 @@ import org.springframework.validation.Validator;
 import java.io.InputStream;
 import java.net.URI;
 import java.util.HashMap;
+import java.util.Map;
 
 @Slf4j
 @RunWith(SpringRunner.class)
@@ -107,7 +108,7 @@ public class XmEntityCommonsIntTest {
 
     void initLeps() {
         leps.onRefresh("/config/tenants/RESINTTEST/entity/lep/function/Function$$NAME$$tenant.groovy", loadFile("config/testlep/Function$$NAME$$tenant.groovy"));
-
+        leps.onRefresh("/config/tenants/RESINTTEST/entity/lep/commons/xm/path/to/commons/Commons$$trololo$$around.groovy", loadFile("config/testlep/Commons$$trololo$$around.groovy"));
     }
 
     @SneakyThrows
@@ -128,7 +129,9 @@ public class XmEntityCommonsIntTest {
     @Transactional
     public void testCommons() throws Exception {
         initLeps();
-        functionService.execute("NAME", of());
+        Map<String, Object> name = functionService.execute("NAME", of());
+        log.info("RESULT {}", name);
+        assertThat(name.get("result")).isEqualTo("RESULT [1, 2, 5] | COMMON_ARGUMENT");
     }
 
 

@@ -6,5 +6,4 @@ Logger log = LoggerFactory.getLogger(getClass())
 
 log.info('COMMONS {}', lepContext.commons)
 
-lepContext.commons.xm.path.to.commons.trololo(1, 2, 5)
-
+return [result: lepContext.commons.xm.path.to.commons.trololo(1, 2, 5).myCommonFunction("COMMON_ARGUMENT")]
