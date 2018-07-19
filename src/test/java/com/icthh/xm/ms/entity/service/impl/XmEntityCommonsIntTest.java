@@ -127,7 +127,7 @@ public class XmEntityCommonsIntTest {
 
     @Test
     @Transactional
-    public void testCommons() throws Exception {
+    public void testCommons() {
         initLeps();
         Map<String, Object> name = functionService.execute("NAME", of());
         log.info("RESULT {}", name);

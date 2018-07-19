@@ -6,6 +6,6 @@ Logger log = LoggerFactory.getLogger(getClass())
 
 return [
     myCommonFunction: { funcArg ->
-        "RESULT ${lepContext.inArgs.args} | ${funcArg}"
+        "RESULT ${lepContext.inArgs.args} | ${funcArg}".toString()
     }
 ]
