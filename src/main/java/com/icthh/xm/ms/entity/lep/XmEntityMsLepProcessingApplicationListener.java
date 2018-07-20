@@ -1,5 +1,6 @@
 package com.icthh.xm.ms.entity.lep;
 
+import static com.icthh.xm.ms.entity.lep.LepXmEntityMsConstants.BINDING_KEY_COMMONS;
 import static com.icthh.xm.ms.entity.lep.LepXmEntityMsConstants.BINDING_KEY_REPOSITORIES;
 import static com.icthh.xm.ms.entity.lep.LepXmEntityMsConstants.BINDING_KEY_SERVICES;
 import static com.icthh.xm.ms.entity.lep.LepXmEntityMsConstants.BINDING_KEY_TEMPLATES;
@@ -19,6 +20,8 @@ import static com.icthh.xm.ms.entity.lep.LepXmEntityMsConstants.BINDING_SUB_KEY_
 
 import com.icthh.xm.commons.config.client.service.TenantConfigService;
 import com.icthh.xm.commons.lep.spring.SpringLepProcessingApplicationListener;
+import com.icthh.xm.commons.lep.commons.CommonsService;
+import com.icthh.xm.commons.lep.commons.CommonsExecutor;
 import com.icthh.xm.lep.api.ScopedContext;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
 import com.icthh.xm.ms.entity.repository.kafka.ProfileEventProducer;
@@ -56,6 +59,7 @@ public class XmEntityMsLepProcessingApplicationListener extends SpringLepProcess
     private final TagService tagService;
     private final ProfileEventProducer profileEventProducer;
     private final CommentService commentService;
+    private final CommonsService commonsService;
 
     @Override
     protected void bindExecutionContext(ScopedContext executionContext) {
@@ -72,6 +76,8 @@ public class XmEntityMsLepProcessingApplicationListener extends SpringLepProcess
         services.put(BINDING_SUB_KEY_SERVICE_TAG_SERVICE, tagService);
         services.put(BINDING_SUB_KEY_PROFILE_EVENT_PRODUCER_SERVICE, profileEventProducer);
         services.put(BINDING_SUB_KEY_COMMENT_SERVICE, commentService);
+
+        executionContext.setValue(BINDING_KEY_COMMONS, new CommonsExecutor(commonsService));
 
         executionContext.setValue(BINDING_KEY_SERVICES, services);
 
