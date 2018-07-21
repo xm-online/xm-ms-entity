@@ -5,6 +5,8 @@ import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_TENANT_
 import static com.icthh.xm.commons.tenant.TenantContextUtils.setTenant;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.hamcrest.Matchers.hasItem;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -39,6 +41,7 @@ import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.apache.commons.io.IOUtils;
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -112,6 +115,9 @@ public class XmEntitySearchIntTest {
 
     @Autowired
     private ExceptionTranslator exceptionTranslator;
+
+    @Autowired
+    private XmEntityRepository xmEntityRepository;
 
     private XmEntityGeneratorService xmEntityGeneratorService;
 
@@ -191,7 +197,8 @@ public class XmEntitySearchIntTest {
         objectMapper.registerModule(new JavaTimeModule());
         objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         List<XmEntity> readValue = objectMapper.readValue(contentAsString,  new TypeReference<List<XmEntity>>() { });
-        log.info("{}", xmEntityService.findOne(IdOrKey.of(String.valueOf(readValue.get(0).getId()))));
+
+        assertFalse(xmEntityRepository.exists(readValue.get(0).getId()));
     }
 
 }
