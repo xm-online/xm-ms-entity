@@ -289,7 +289,18 @@ public class XmEntityServiceImpl implements XmEntityService {
         } else {
             xmEntityId = idOrKey.getId();
         }
-        return xmEntityRepository.findOneById(xmEntityId);
+        return findOneById(xmEntityId);
+    }
+
+    private XmEntity findOneById(Long xmEntityId) {
+        XmEntity xmEntity = xmEntityRepository.findOneById(xmEntityId);
+        return getOneEntity(xmEntity);
+    }
+
+    // need for lep post processing with split script by typeKey
+    @LogicExtensionPoint(value = "FindOnePostProcessing", resolver = XmEntityTypeKeyResolver.class)
+    public XmEntity getOneEntity(XmEntity xmEntity) {
+        return xmEntity;
     }
 
     @Override

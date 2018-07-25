@@ -2,6 +2,7 @@ package com.icthh.xm.ms.entity.config;
 
 import com.icthh.xm.commons.config.client.service.TenantConfigService;
 import com.icthh.xm.commons.lep.commons.CommonsService;
+import com.icthh.xm.commons.permission.service.PermissionCheckService;
 import com.icthh.xm.ms.entity.lep.XmEntityMsLepProcessingApplicationListener;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
 import com.icthh.xm.ms.entity.repository.kafka.ProfileEventProducer;
@@ -40,12 +41,13 @@ public class LepAppEventListenerConfiguration {
                     LocationService locationService,
                     TagService tagService,
                     ProfileEventProducer profileEventProducer,
-                    CommonsService commonsService) {
+                    CommonsService commonsService,
+                    PermissionCheckService permissionCheckService) {
 
         return new XmEntityMsLepProcessingApplicationListener(xmEntityService,
                         xmTenantLifecycleService, xmEntityRepository, profileService, linkService,
                         mailService, tenantConfigService, attachmentService, restTemplate,
-                        locationService, tagService, profileEventProducer, commentService, commonsService);
+                        locationService, tagService, profileEventProducer, commentService, commonsService, permissionCheckService);
     }
 
 }
