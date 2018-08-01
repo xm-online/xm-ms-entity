@@ -85,7 +85,7 @@ public class EntityGraphRepositoryImpl<T, I extends Serializable>
 
         while (pos > 0) {
             subgraphName = nextFieldName.substring(0, pos);
-            subGraph = graph.addSubgraph(subgraphName);
+            subGraph = subGraph.addSubgraph(subgraphName);
             nextFieldName = nextFieldName.substring(pos + 1);
             pos = nextFieldName.indexOf(GRAPH_DELIMETER);
         }

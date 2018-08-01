@@ -38,7 +38,9 @@ public class EventService {
      * @return the persisted entity
      */
     public Event save(Event event) {
-        event.setAssigned(xmEntityRepository.getOne(event.getAssigned().getId()));
+        if (event.getAssigned() != null) {
+            event.setAssigned(xmEntityRepository.getOne(event.getAssigned().getId()));
+        }
         Event result = eventRepository.save(event);
         eventSearchRepository.save(result);
         return result;
