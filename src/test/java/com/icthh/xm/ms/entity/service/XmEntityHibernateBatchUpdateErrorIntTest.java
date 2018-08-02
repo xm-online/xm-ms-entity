@@ -24,8 +24,8 @@ import com.icthh.xm.ms.entity.repository.search.XmEntityPermittedSearchRepositor
 import com.icthh.xm.ms.entity.repository.search.XmEntitySearchRepository;
 import com.icthh.xm.ms.entity.service.impl.StartUpdateDateGenerationStrategy;
 import com.icthh.xm.ms.entity.service.impl.XmEntityServiceImpl;
+import java.time.Instant;
 import java.util.Collections;
-import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -221,7 +221,7 @@ public class XmEntityHibernateBatchUpdateErrorIntTest {
 
         xmEntityServiceImpl.updateState(IdOrKey.of(car.getId()), "IN_USE", Collections.emptyMap());
 
-        rentProduct.getData().put("startRentDate", String.valueOf(new Date().getTime()));
+        rentProduct.getData().put("startRentDate", Instant.now().toString());
     }
 
     private XmEntity getCarInRent(XmEntity rentProduct) {
