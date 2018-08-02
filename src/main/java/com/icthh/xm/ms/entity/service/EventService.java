@@ -1,5 +1,7 @@
 package com.icthh.xm.ms.entity.service;
 
+import com.icthh.xm.commons.lep.LogicExtensionPoint;
+import com.icthh.xm.commons.lep.spring.LepService;
 import com.icthh.xm.commons.permission.annotation.FindWithPermission;
 import com.icthh.xm.commons.permission.repository.PermittedRepository;
 import com.icthh.xm.ms.entity.domain.Event;
@@ -19,6 +21,7 @@ import java.util.List;
 @Service
 @Transactional
 @RequiredArgsConstructor
+@LepService(group = "service.event")
 public class EventService {
 
     private final EventRepository eventRepository;
@@ -37,6 +40,7 @@ public class EventService {
      * @param event the entity to save
      * @return the persisted entity
      */
+    @LogicExtensionPoint("Save")
     public Event save(Event event) {
         if (event.getAssigned() != null) {
             event.setAssigned(xmEntityRepository.getOne(event.getAssigned().getId()));
@@ -53,6 +57,7 @@ public class EventService {
      */
     @Transactional(readOnly = true)
     @FindWithPermission("EVENT.GET_LIST")
+    @LogicExtensionPoint("FindAll")
     public List<Event> findAll(String privilegeKey) {
         return permittedRepository.findAll(Event.class, privilegeKey);
     }
@@ -64,6 +69,7 @@ public class EventService {
      *  @return the entity
      */
     @Transactional(readOnly = true)
+    @LogicExtensionPoint("FindOne")
     public Event findOne(Long id) {
         return eventRepository.findOne(id);
     }
@@ -73,6 +79,7 @@ public class EventService {
      *
      *  @param id the id of the entity
      */
+    @LogicExtensionPoint("Delete")
     public void delete(Long id) {
         eventRepository.delete(id);
         eventSearchRepository.delete(id);
@@ -86,6 +93,7 @@ public class EventService {
      */
     @Transactional(readOnly = true)
     @FindWithPermission("EVENT.SEARCH")
+    @LogicExtensionPoint("Search")
     public List<Event> search(String query, String privilegeKey) {
         return permittedSearchRepository.search(query, Event.class, privilegeKey);
     }

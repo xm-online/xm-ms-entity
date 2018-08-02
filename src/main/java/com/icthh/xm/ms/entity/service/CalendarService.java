@@ -1,5 +1,7 @@
 package com.icthh.xm.ms.entity.service;
 
+import com.icthh.xm.commons.lep.LogicExtensionPoint;
+import com.icthh.xm.commons.lep.spring.LepService;
 import com.icthh.xm.commons.permission.annotation.FindWithPermission;
 import com.icthh.xm.commons.permission.repository.PermittedRepository;
 import com.icthh.xm.ms.entity.domain.Calendar;
@@ -20,6 +22,7 @@ import java.util.List;
 @Service
 @Transactional
 @RequiredArgsConstructor
+@LepService(group = "service.calendar")
 public class CalendarService {
 
     private final CalendarRepository calendarRepository;
@@ -40,6 +43,7 @@ public class CalendarService {
      * @param calendar the entity to save
      * @return the persisted entity
      */
+    @LogicExtensionPoint("Save")
     public Calendar save(Calendar calendar) {
 
         startUpdateDateGenerationStrategy.preProcessStartDate(calendar,
@@ -60,6 +64,7 @@ public class CalendarService {
      */
     @Transactional(readOnly = true)
     @FindWithPermission("CALENDAR.GET_LIST")
+    @LogicExtensionPoint("FindAll")
     public List<Calendar> findAll(String privilegeKey) {
         return permittedRepository.findAll(Calendar.class, privilegeKey);
     }
@@ -71,6 +76,7 @@ public class CalendarService {
      *  @return the entity
      */
     @Transactional(readOnly = true)
+    @LogicExtensionPoint("FindOne")
     public Calendar findOne(Long id) {
         return calendarRepository.findOne(id);
     }
@@ -80,6 +86,7 @@ public class CalendarService {
      *
      *  @param id the id of the entity
      */
+    @LogicExtensionPoint("Delete")
     public void delete(Long id) {
         calendarRepository.delete(id);
         calendarSearchRepository.delete(id);
@@ -93,6 +100,7 @@ public class CalendarService {
      */
     @Transactional(readOnly = true)
     @FindWithPermission("CALENDAR.SEARCH")
+    @LogicExtensionPoint("Search")
     public List<Calendar> search(String query, String privilegeKey) {
         return permittedSearchRepository.search(query, Calendar.class, privilegeKey);
     }
