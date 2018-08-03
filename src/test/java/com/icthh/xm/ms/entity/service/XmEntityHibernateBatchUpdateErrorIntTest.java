@@ -14,6 +14,7 @@ import com.icthh.xm.lep.api.LepManager;
 import com.icthh.xm.ms.entity.EntityApp;
 import com.icthh.xm.ms.entity.config.LepConfiguration;
 import com.icthh.xm.ms.entity.config.SecurityBeanOverrideConfiguration;
+import com.icthh.xm.ms.entity.config.TestConfigConstants;
 import com.icthh.xm.ms.entity.config.tenant.WebappTenantOverrideConfiguration;
 import com.icthh.xm.ms.entity.domain.Link;
 import com.icthh.xm.ms.entity.domain.XmEntity;
@@ -26,7 +27,9 @@ import com.icthh.xm.ms.entity.service.impl.StartUpdateDateGenerationStrategy;
 import com.icthh.xm.ms.entity.service.impl.XmEntityServiceImpl;
 import java.time.Instant;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import javax.persistence.EntityManager;
@@ -119,7 +122,7 @@ public class XmEntityHibernateBatchUpdateErrorIntTest {
 
     @BeforeTransaction
     public void beforeTransaction() {
-        TenantContextUtils.setTenant(tenantContextHolder, "RESINTTEST");
+        TenantContextUtils.setTenant(tenantContextHolder, TestConfigConstants.TENANT_AEBUGHBU);
     }
 
     @Before
@@ -192,6 +195,8 @@ public class XmEntityHibernateBatchUpdateErrorIntTest {
         car.setStateKey("RESERVED");
         car.setKey("resource-car-ae-0");
         car.setName("Car.AE.#0");
+        car.getData().put("vin", "win-win");
+        car.getData().put("registrationNumber", "AA1111AA");
         return car;
     }
 
@@ -235,7 +240,7 @@ public class XmEntityHibernateBatchUpdateErrorIntTest {
             );
         })).stream().map(Link::getTarget).collect(Collectors.toList());
 
-        if (!CollectionUtils.isEmpty(foundCars)) {
+        if (CollectionUtils.isEmpty(foundCars)) {
             throw new IllegalStateException("Car not found for rent ${rentProduct.id}");
         }
 

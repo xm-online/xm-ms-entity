@@ -34,6 +34,7 @@ public class TenantConfigMockConfiguration {
         tenants.add("DEMO");
         tenants.add("TEST");
         tenants.add("RESINTTEST");
+        tenants.add(TestConfigConstants.TENANT_AEBUGHBU);
     }
 
     @Bean

@@ -1,0 +1,1251 @@
+---
+types:
+    - key: ACCOUNT
+      name: { en: "Account", ru: "Учетная запись" }
+      isApp: true
+      isAbstract: true
+      icon: account_balance_wallet
+      functions:
+          - key: ACCOUNT.GET-CAR-CHARGE-PRICE
+            name: { en: "Get actual charging price for vehicle", ru: "Получить тариф зарядки для автомобиля" }
+            isShowFormWithoutData: true
+            inputSpec: |
+                             {
+                                 "type": "object",
+                                 "title": "inputContext",
+                                 "properties": {
+                                     "stationId": { "type": "string", "title": "Charging station ID" },
+                                     "carIds": {
+                                         "type": "array",
+                                         "title": "Car IDs list",
+                                         "items": {
+                                             "type": "string",
+                                             "title": "Car ID"
+                                         }
+                                     }
+                                 }
+                             }
+            contextDataSpec: |
+                                   {
+                                       "type": "object",
+                                       "title": "Data",
+                                       "properties": {
+                                           "carPriceInfo": {
+                                               "type": "array",
+                                               "title": "Prices by car",
+                                               "items": {
+                                                   "type": "object",
+                                                   "title": "",
+                                                   "properties": {
+                                                       "carId": { "type": "string", "title": "Car ID" },
+                                                       "prices": {
+                                                           "type": "array",
+                                                           "title": "Prices",
+                                                           "items": {
+                                                               "type": "object",
+                                                               "title": "Price",
+                                                               "properties": {
+                                                                   "name": { "type": "string", "title": "Name" },
+                                                                   "type": { "type": "string", "title": "Type" },
+                                                                   "unit": { "type": "string", "title": "Unit of measure" },
+                                                                   "price": { "type": "string", "title": "Price value" }
+                                                               }
+                                                           }
+                                                       }
+                                                   }
+                                               }
+                                           }
+                                       }
+                                   }
+            contextDataForm:
+          - key: ACCOUNT.CONFIRM
+            name: { en: "Confirm user", ru: "Подтвердить пользователя" }
+            isShowFormWithoutData: false
+            inputSpec:
+            contextDataSpec:
+            contextDataForm:
+          - key: ACCOUNT.ACTIVATE-CARSHARE
+            name: { en: "Activate Car sharing service", ru: "Активировать услугу каршеринг" }
+            isShowFormWithoutData: false
+            inputSpec: |
+                             {
+                                 "type": "object",
+                                 "title": "inputContext",
+                                 "properties": {
+                                     "isPaymentApproved": { "type": "boolean", "title": "Payment approved" },
+                                     "isDocumentsApproved": { "type": "boolean", "title": "Documents approved" }
+                                 }
+                             }
+            contextDataSpec:
+            contextDataForm:
+          - key: ACCOUNT.REJECT-CARSHARE
+            name: { en: "Reject car share service", ru: "Отказать в услуге аренды" }
+            isShowFormWithoutData: false
+            inputSpec:
+            contextDataSpec:
+            contextDataForm:
+          - key: ACCOUNT.SERVICE-MANAGEMENT
+            name: { en: "Service management", ru: "Управление услугами" }
+            isShowFormWithoutData: false
+            inputSpec: |
+                             {
+                                 "type": "object",
+                                 "title": "inputContext",
+                                 "properties": {
+                                     "carSharing": { "type": "boolean", "title": "Car sharing enabled" },
+                                     "carCharging": { "type": "boolean", "title": "Car charging anabled" }
+                                 }
+                             }
+            contextDataSpec:
+            contextDataForm:
+          - key: SYNC-CP
+            isShowFormWithoutData: false
+            inputSpec:
+            contextDataSpec:
+            contextDataForm:
+      states:
+          - key: NEW
+            name: { en: "New", ru: "Новый" }
+            icon: fiber_new
+            color: '#FFEB3B'
+            next:
+                - stateKey: ACTIVE
+                  name: { en: "Activate", ru: "Активировать" }
+          - key: ACTIVE
+            name: { en: "Active", ru: "Активен" }
+            icon: play_arrow
+            color: '#4CAF50'
+            next:
+                - stateKey: BLOCKED
+                  name: { en: "Block", ru: "Блокировать" }
+                - stateKey: RETIRED
+                  name: { en: "Retire", ru: "Удалить" }
+          - key: RETIRED
+            name: { en: "Retired", ru: "Удаленный" }
+            icon: stop
+            color: '#000000'
+          - key: BLOCKED
+            name: { en: "Blocked", ru: "Блокированный" }
+            icon: pause
+            color: '#795548'
+            next:
+                - stateKey: ACTIVE
+                  name: { en: "Activate", ru: "Активировать" }
+      links:
+          - key: LINK.FAVORITE.CHARGING-STATION
+            builderType: SEARCH
+            name: { en: "Favorite charing station", ru: "Любимая зарядная станция" }
+            icon : favorite
+            typeKey: RESOURCE.CHARGING-STATION
+            max: 10
+          - key: LINK.ACCOUNT.RESOURCE.CAR
+            builderType: SEARCH
+            name: { en: "Personal car", ru: "Личная машина" }
+            icon : drive_eta
+            typeKey: RESOURCE.CAR.PERSONAL
+            max: 10
+          - key: LINK.ACCOUNT.PRODUCT.AEPRODUCT.CAR-RENT
+            builderType: SEARCH
+            name: { en: "Rents", ru: "Аренды" }
+            icon : drive_eta
+            typeKey: PRODUCT.AEPRODUCT.CAR-RENT
+            max: 10
+          - key: LINK.ACCOUNT.PRODUCT.AEPRODUCT
+            builderType: SEARCH
+            name: { en: "All charges", ru: "Все зарядки" }
+            icon : ev_station
+            typeKey: PRODUCT.AEPRODUCT.CAR-CHARGE.AECHARGE
+            max: 10
+          - key: LINK.ACCOUNT.PRODUCT.SERVICE
+            builderType: SEARCH
+            name: { en: "Product service", ru: "Продукт сервиса" }
+            icon : local_offer
+            typeKey: PRODUCT.SERVICE
+            max: 10
+          - key: DOCUMENT
+            builderType: SEARCH
+            name: { en: "Product service", ru: "Продукт сервиса" }
+            icon : attachment
+            typeKey: AGREEMENT.GENERAL
+            name: { en: "General agreement", ru: "Договор" }
+            max: 10
+      dataSpec: |
+                {
+                    "type": "object",
+                    "properties": {
+                        "fullName": { "type": "string", "title": "Full name" },
+                        "countryID": { "type": "string", "title": "Country ID" },
+                        "city": { "type": "string", "title": "City" },
+                        "address": { "type": "string", "title": "Address" },
+                        "street": { "type": "string", "title": "Street" },
+                        "building": { "type": "string", "title": "Building" },
+                        "apartment": { "type": "string", "title": "Apartment" },
+                        "dateOfBirth": { "type": "string", "title": "Date of birth" },
+                        "phone": { "type": "string", "title": "Phone" },
+                        "email": { "type": "string", "title": "E-mail" },
+                        "locale": { "type": "string", "title": "Locale" },
+                        "secretWord": { "type": "string", "title": "Secret word" },
+                        "isPaymentApproved": { "type": "boolean", "title": "Payment approved" },
+                        "isDocumentsApproved": { "type": "boolean", "title": "Documents approved" },
+                        "balances": {
+                            "type": "array",
+                            "title": "Balances",
+                            "properties": {
+                                "amount": {
+                                  "type": "number",
+                                  "title": "Amount"
+                                },
+                                "unitOfMeasure": {
+                                    "type": "object",
+                                    "title": "Unit of measure",
+                                    "properties": {
+                                        "value": {
+                                            "type": "string",
+                                            "title": "Value"
+                                        },
+                                        "type": {
+                                            "type": "string",
+                                            "title": "Type"
+                                        }
+                                    }
+                                },
+                                "type": {
+                                    "type": "object",
+                                    "title": "Type",
+                                    "properties": {
+                                        "code": {
+                                            "type": "string",
+                                            "title": "Code"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+      dataForm: |
+                [
+                    "fullName",
+                    {
+                        "type": "flex",
+                        "flex-flow": "row wrap",
+                        "fxLayoutGap": "12px",
+                        "items": [ "phone", "email"]
+                    },
+                    {
+                        "type": "flex",
+                        "flex-flow": "row wrap",
+                        "fxLayoutGap": "12px",
+                        "items": [ "isDocumentsApproved", "isPaymentApproved"]
+                    },
+                    "locale",
+                    "secretWord"
+                ]
+    - key: ACCOUNT.ADMIN
+      name: { en: "Admin", ru: "Администратор" }
+      isApp: false
+      isAbstract: false
+    - key: ACCOUNT.USER
+      name: { en: "User",  ru: "Пользователь" }
+      isApp: false
+      isAbstract: false
+    - key: CHANNEL
+      name: { en: "Channel", ru: "Канал" }
+      isApp: false
+      isAbstract: false
+    - key: RESOURCE.CAR.AE
+      name: { en: "AE Car", ru: "Автомобиль" }
+      isApp: true
+      isAbstract: false
+      fastSearch:
+          - query: typeKey:RESOURCE.CAR.AE* AND data.registrationNumber:AA*
+            name: { en: "Registered in Kyiv", ru: "Зарегистрированные в Киеве" }
+      icon: directions_car
+      dataSpec: |
+                {
+                    "type": "object",
+                    "title": "Data",
+                    "properties": {
+                        "vin": {
+                            "title": "VIN",
+                            "type": "string"
+                        },
+                        "registrationNumber": {
+                            "title": "Registration Number",
+                            "type": "string"
+                        },
+                        "isMoving": {
+                            "title": "Is Moving",
+                            "type": "string"
+                        },
+                        "isDoorClosed": {
+                            "title": "Is Door Closed",
+                            "type": "string"
+                        },
+                        "isCharging": {
+                            "title": "Is Charging",
+                            "type": "string"
+                        },
+                        "batteryLevel": {
+                            "title": "Battery Level",
+                            "type": "string"
+                        },
+                        "modificationDate": {
+                            "title": "Modification Date",
+                            "type": "string"
+                        },
+                        "evColor": {
+                            "title": "Color",
+                            "type": "string",
+                            "enum": ["Pearl White", "Brilliant Silver", "Gun Metallic", "Super Black", "Coulis Red", "Glacier White", "Deep Blue Pearl", "Forged Bronze"]
+                        },
+                        "evModel": {
+                            "title": "Model",
+                            "type": "string",
+                            "enum": ["Leaf"]
+                        },
+                        "evBrand": {
+                            "title": "Brand",
+                            "type": "string",
+                            "enum": ["Nissan", "Tesla"]
+                        },
+                        "externalCleanness": {
+                            "title": "External cleanness",
+                            "type": "string"
+                        },
+                        "internalCleanness": {
+                            "title": "Internal cleanness",
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "vin",
+                        "registrationNumber"
+                    ]
+                }
+      dataForm: |
+                [
+                    "vin",
+                    "registrationNumber",
+                    {
+                        "type": "flex",
+                        "flex-flow": "row wrap",
+                        "fxLayoutGap": "12px",
+                        "items": [ "evBrand", "evModel", "evColor" ]
+                    },
+                    {
+                        "type": "flex",
+                        "flex-flow": "row wrap",
+                        "fxLayoutGap": "12px",
+                        "items": [ "isMoving", "isDoorClosed", "isCharging" ]
+                    },
+                    "batteryLevel",
+                    "modificationDate",
+                    {
+                        "type": "flex",
+                        "flex-flow": "row wrap",
+                        "fxLayoutGap": "12px",
+                        "items": [ "externalCleanness", "internalCleanness" ]
+                    },
+                    {
+                        "type": "submit",
+                        "style": "btn-primary",
+                        "title": "SAVE"
+                    }
+                ]
+      locations:
+          - key: CURRENT
+            name: { en: "Current location", ru: "Текущее местоположение" }
+            max: 1
+      states:
+          - key: NEW
+            name: { en: "New", ru: "Новый" }
+            icon: fiber_new
+            color: '#FFEB3B'
+            next:
+                - stateKey: AVAILABLE
+                  name: { en: "Make available", ru: "Сделать доступной" }
+                - stateKey: RETIRED
+                  name: { en: "Retire", ru: "Удалить" }
+          - key: AVAILABLE
+            name: { en: "Available", ru: "Доступный" }
+            icon: check_box_outline_blank
+            color: '#CDDC39'
+            next:
+                - stateKey: RESERVED
+                  name: { en: "Reserve", ru: "Зарезервировать" }
+                - stateKey: RETIRED
+                  name: { en: "Retire", ru: "Удалить" }
+                - stateKey: SERVICE-REQUIRED
+                  name: { en: "Service required", ru: "Требуется обслуживание" }
+          - key: RESERVED
+            name: { en: "Reserved", ru: "Зарезервированный" }
+            icon: check_box
+            color: '#8BC34A'
+            next:
+                - stateKey: AVAILABLE
+                  name: { en: "Make available", ru: "Сделать доступной" }
+                - stateKey: IN_USE
+                  name: { en: "Start to use", ru: "Начать использовать" }
+          - key: IN_USE
+            name: { en: "In use", ru: "В использовании" }
+            icon: play_arrow
+            color: '#4CAF50'
+            next:
+                - stateKey: AVAILABLE
+                  name: { en: "Make available", ru: "Сделать доступной" }
+          - key: RETIRED
+            name: { en: "Retired", ru: "Удаленный" }
+            icon: stop
+            color: '#000000'
+          - key: SERVICE-REQUIRED
+            name: { en: "Service required", ru: "Требуется обслуживание" }
+            icon: report
+            color: '#FF9800'
+            next:
+                - stateKey: AVAILABLE
+                  name: { en: "Make available", ru: "Сделать доступной" }
+                - stateKey: IN-SERVICE
+                  name: { en: "In service", ru: "На обслуживание" }
+          - key: IN-SERVICE
+            name: { en: "In service", ru: "На обслуживание" }
+            icon: report
+            color: '#FFC107'
+            next:
+                - stateKey: AVAILABLE
+                  name: { en: "Make available", ru: "Сделать доступной" }
+                - stateKey: RETIRED
+                  name: { en: "Retire", ru: "Удалить" }
+      tags:
+          - key: DEFAULT
+            name: { en: "", ru: "" }
+      functions:
+          - key: OPEN
+            name: { en: "Open", ru: "Открыть" }
+          - key: SET-CLEANNESS
+            name: { en: "Set cleanness", ru: "Оценить чистоту" }
+      links:
+          - key: DAMAGE
+            builderType: SEARCH
+            name: { en: "Damage", ru: "Повреждение" }
+            typeKey: RESOURCE.DAMAGE
+            icon : report_problem
+            max: 10
+          - key: RENTER
+            builderType: SEARCH
+            name: { en: "Renter", ru: "Арендатор" }
+            typeKey: ACCOUNT
+            icon: account_balance_wallet
+            max: 10
+    - key: RESOURCE.CAR.PERSONAL
+      name: { en: "Personal car", ru: "Персональный автомобиль" }
+      isApp: true
+      isAbstract: false
+      icon: directions_car
+      dataSpec: |
+              {
+                  "type": "object",
+                  "title": "Data",
+                  "properties": {
+                      "vin": {
+                          "title": "VIN",
+                          "type": "string"
+                      },
+                      "registrationNumber": {
+                          "title": "Registration Number",
+                          "type": "string"
+                      },
+                      "evBrand": {
+                          "title": "Brand",
+                          "type": "string"
+                      },
+                      "evModel": {
+                          "title": "Model",
+                          "type": "string"
+                      },
+                      "evColor": {
+                          "title": "Color",
+                          "type": "string"
+                      }
+                  },
+                  "required": [
+                      "vin",
+                      "registrationNumber"
+                  ]
+              }
+      states:
+          - key: AVAILABLE
+            name: { en: "Available", ru: "Доступен" }
+            color : '#8bc34a'
+            icon: play_arrow
+            next:
+                - stateKey: RETIRED
+                  name: { en: "Retired", ru: "Удален" }
+          - key: RETIRED
+            name: { en: "Retired", ru: "Удален" }
+            icon: delete
+            color: '#795548'
+    - key: RESOURCE.CHARGING-STATION
+      name: { en: "Charging point", ru: "Зарядная станция" }
+      isApp: true
+      isAbstract: false
+      fastSearch :
+            - query: typeKey:RESOURCE.CHARGING-STATION AND data.stationType:CHAdeMO
+              name: { en: "CHAdeMO", ru: "CHAdeMO" }
+            - query: typeKey:RESOURCE.CHARGING-STATION AND data.stationType:J1772
+              name: { en: "J1772", ru: "J1772" }
+            - query: typeKey:RESOURCE.CHARGING-STATION AND data.stationType:TSL2
+              name: { en: "TSL2", ru: "TSL2" }
+            - query: typeKey:RESOURCE.CHARGING-STATION AND data.stationType:No\\ control
+              name: { en: "Other", ru: "Other" }
+            - query: typeKey:RESOURCE.CHARGING-STATION AND data.ownerGroup:AE
+              name: { en: "АutoЕnterprise", ru: "АutoЕnterprise" }
+            - query: typeKey:RESOURCE.CHARGING-STATION AND data.ownerGroup:PARTNER
+              name: { en: "Partner", ru: "Партнёры" }
+      icon: ev_station
+      states:
+          - key: AVAILABLE
+            name: { en: "Available", ru: "Доступная" }
+            icon: check_box_outline_blank
+            color: '#CDDC39'
+            next:
+                - stateKey: DISABLED
+                  name: { en: "Disable", ru: "Сделать недоступной" }
+          - key: DISABLED
+            name: { en: "Disabled", ru: "Недоступная" }
+            icon: report
+            color: '#FFC107'
+            next:
+                - stateKey: AVAILABLE
+                  name: { en: "Enable", ru: "Сделать доступной" }
+      ratings:
+          - key: RATING2
+            name: { en: "5STARS rating", ru: "Рейтинг 5 звезд" }
+            style: 5STARS
+            votes: 1
+      calendars:
+          - key: RESOURCE.CHARGING-STATION.RESERVATION
+            name: { en: "Reservation", ru: "Резервация" }
+            events:
+                - key: EVENT1
+                  name: { en: "Reservation", ru: "Резервация" }
+      locations:
+          - key: CURRENT
+            name: { en: "Current", ru: "Текущее" }
+      dataSpec: |
+                {
+                   "type": "object",
+                   "title": "Data",
+                   "properties": {
+                      "activationType": {
+                         "title": "activationType",
+                         "type": "string"
+                      },
+                      "modificationDate": {
+                         "title": "modificationDate",
+                         "type": "string"
+                      },
+                      "stationLogicalId": {
+                         "title": "stationLogicalId",
+                         "type": "string"
+                      },
+                      "address": {
+                         "title": "address",
+                         "type": "string"
+                      },
+                      "stationNumber": {
+                         "title": "stationNumber",
+                         "type": "string"
+                      },
+                      "stationType": {
+                         "title": "stationType",
+                         "type": "string"
+                      },
+                      "slotsCount": {
+                         "title": "slotsCount",
+                         "type": "string"
+                      },
+                      "freeSlotsCount": {
+                         "title": "freeSlotsCount",
+                         "type": "string"
+                      },
+                      "ownerGroup": {
+                          "title": "ownerGroup",
+                          "type": "string"
+                      },
+                      "telemetryInfo": {
+                         "title": "Telemetry info",
+                            "type": "array",
+                            "items": {
+                               "title": "telemetryUnit",
+                               "type": "object",
+                               "properties": {
+                                  "id": {
+                                     "title": "id",
+                                     "type": "number"
+                                  },
+                                  "status": {
+                                     "title": "status",
+                                     "type": "string"
+                                  }
+                               }
+                           }
+                       },
+                      "pricesInfo":{
+                          "title": "Prices info",
+                          "type": "array",
+                          "items": {
+                              "title": "priceUnit",
+                              "type": "object",
+                              "properties": {
+                                    "name": {
+                                        "title": "name",
+                                        "type": "string"
+                                    },
+                                    "type": {
+                                        "title": "type",
+                                        "type": "string"
+                                    },
+                                    "unit": {
+                                        "title": "unit",
+                                        "type": "string"
+                                    },
+                                    "price": {
+                                        "title": "price",
+                                        "type": "string"
+                                    }
+                              }
+                          }
+                      }
+                   }
+                }
+      dataForm: |
+                [
+                    {
+                        "type": "flex",
+                        "flex-flow": "row wrap",
+                        "fxLayoutGap": "12px",
+                        "items": [ "stationType", "activationType", "ownerGroup" ]
+                    },
+                    {
+                        "type": "flex",
+                        "flex-flow": "row wrap",
+                        "fxLayoutGap": "12px",
+                        "items": [ "stationNumber", "stationLogicalId", "slotsCount", "freeSlotsCount"  ]
+                    },
+                    "address",
+                    {
+                        "key": "telemetryInfo",
+                        "type": "array",
+                        "items": [ {
+                                    "type": "div",
+                                    "displayFlex": true,
+                                    "flex-direction": "row",
+                                    "fxLayoutGap": "12px",
+                                    "items": [
+                                            { "key": "telemetryInfo[].id", "flex": "1 1 10px", "notitle": false, "required": false },
+                                            { "key": "telemetryInfo[].status", "flex": "4 4 100px", "notitle": false }
+                                            ]
+                                 } ]
+                    },
+                    {
+                        "key": "pricesInfo",
+                        "type": "array",
+                        "items": [ {
+                                    "type": "div",
+                                    "displayFlex": true,
+                                    "flex-direction": "row",
+                                    "fxLayoutGap": "12px",
+                                    "items": [
+                                            { "key": "pricesInfo[].name", "flex": "1 1 200px", "notitle": false, "required": false },
+                                            { "key": "pricesInfo[].type", "flex": "4 4 50px", "notitle": false },
+                                            { "key": "pricesInfo[].unit", "flex": "4 4 50px", "notitle": false },
+                                            { "key": "pricesInfo[].price", "flex": "4 4 50px", "notitle": false }
+                                            ]
+                                 } ]
+                    },
+                    {
+                        "type": "submit",
+                        "style": "btn-primary",
+                        "title": "SAVE"
+                    }
+                ]
+    - key: RESOURCE.DROPPOINT
+      name: { en: "Drop point", ru: "Точка возврата" }
+      isApp: true
+      isAbstract: false
+      icon: local_parking
+      locations:
+          - key: CURRENT
+            name: { en: "Current", ru: "Текущее" }
+      states:
+          - key: NEW
+            name: { en: "New", ru: "Новый" }
+          - key: ETS
+            name: { en: "Ets", ru: "Ets" }
+          - key: ORDERED
+            name: { en: "Ordered", ru: "Заказанный" }
+    - key: RESOURCE.RENT-FINISH-PHOTO
+      name: { en: "Rent finish photo", ru: "Фото окончания аренды" }
+      isApp: true
+      isAbstract: false
+      icon: info_outline
+      attachments:
+          - key: RENT-FINISH
+            name: { en: "Car photo", ru: "Фотография машины" }
+            contentTypes:
+                - 'image/gif'
+                - 'image/jpeg'
+                - 'image/png'
+                - 'image/tiff'
+      states:
+          - key: APPROVED
+            icon: check_circle
+            color: '#8bc34a'
+            name: { en: "Approved", ru: "Approved" }
+      tags:
+          - key: DEFAULT
+            name: { en: "Default", ru: "Default" }
+    - key: RESOURCE.DAMAGE
+      name: { en: "Damage", ru: "Фото повреждения" }
+      isApp: true
+      isAbstract: false
+      icon: warning
+      states:
+          - key: APPROVED
+            icon: check_circle
+            color: '#8bc34a'
+            name: { en: "Approved", ru: "Approved" }
+      tags:
+          - key: DEFAULT
+            name: { en: "Default", ru: "Default" }
+      attachments:
+          - key: DAMAGE
+            name: { en: "Damage photo", ru: "Фотография повреждения" }
+    - key: AGREEMENT.GENERAL
+      name: { en: "General agreement", ru: "Договор" }
+      isApp: true
+      isAbstract: false
+      icon: attachment
+      states:
+          - key: APPROVED
+            icon: check_circle
+            color: '#8bc34a'
+            name: { en: "Approved", ru: "Approved" }
+      tags:
+          - key: DEFAULT
+            name: { en: "Default", ru: "Default" }
+      attachments:
+          - key: DOCUMENT
+            name: { en: "Document photo", ru: "Фотография документа" }
+            contentTypes:
+                - 'image/gif'
+                - 'image/jpeg'
+                - 'image/png'
+                - 'image/tiff'
+    - key: ORDER.SERVICE
+      isApp: false
+      isAbstract: true
+    - key: ORDER.SERVICE.CAR-SHARING
+      isApp: false
+      isAbstract: false
+      links:
+          - key: LINK.ORDER.OFFERING
+            typeKey: OFFERING.SERVICE.CAR-SHARING
+            builderType: SEARCH
+            max: 1
+          - key: LINK.ORDER.PRODUCT
+            typeKey: OFFERING.SERVICE.CAR-SHARING
+            builderType: NEW
+            max: 1
+            # [data.birthday, data.city, data.address should be here]
+          - key: LINK.ORDER.CHANNEL
+            typeKey: CHANNEL
+            builderType: SEARCH
+            max: 1
+    - key: ORDER.SERVICE.CAR-CHARGING
+      isApp: false
+      isAbstract: false
+      links:
+          - key: LINK.ORDER.OFFERING
+            typeKey: OFFERING.SERVICE.CAR-CHARGING
+            builderType: SEARCH
+            max: 1
+          - key: LINK.ORDER.CHANNEL
+            typeKey: CHANNEL
+            builderType: SEARCH
+            max: 1
+    - key: ORDER.AEPRODUCT
+      isApp: false
+      isAbstract: true
+    - key: ORDER.AEPRODUCT.CAR-RENT
+      isApp: false
+      isAbstract: false
+      links:
+          - key: LINK.ORDER.OFFERING
+            typeKey: OFFERING.AEPRODUCT.CAR-RENT
+            builderType: SEARCH
+            max: 1
+          - key: LINK.ORDER.RESOURCE.CAR
+            typeKey: RESOURCE.CAR.AE
+            builderType: SEARCH
+            max: 1
+          - key: LINK.ORDER.CHANNEL
+            typeKey: CHANNEL
+            builderType: SEARCH
+            max: 1
+    - key: ORDER.AEPRODUCT.CAR-CHARGE
+      isApp: false
+      isAbstract: false
+      links:
+          - key: LINK.ORDER.OFFERING
+            typeKey: OFFERING.AEPRODUCT.CAR-CHARGE
+            builderType: SEARCH
+            max: 1
+          - key: LINK.ORDER.PRODUCT
+            typeKey: PRODUCT.AEPRODUCT.CAR-CHARGE.AECHARGE
+            builderType: NEW
+            max: 1
+            # [data.chargingStationConnector] should be here
+          - key: LINK.ORDER.RESOURCE.CHARGING-STATION
+            typeKey: RESOURCE.CHARGING-STATION
+            builderType: SEARCH
+            max: 1
+          - key: LINK.ORDER.RESOURCE.CAR
+            typeKey: RESOURCE.CAR.PERSONAL
+            builderType: SEARCH
+            max: 1
+          - key: LINK.ORDER.CHANNEL
+            typeKey: CHANNEL
+            builderType: SEARCH
+            max: 1
+    - key: OFFERING.SERVICE
+      isApp: false
+      isAbstract: true
+    - key: OFFERING.SERVICE.CAR-SHARING
+      isApp: false
+      isAbstract: true
+    - key: OFFERING.SERVICE.CAR-SHARING.DEFAULT-CARSHARE
+      isApp: false
+      isAbstract: false
+    - key: OFFERING.SERVICE.CAR-SHARING.TAXI-CARSHARE
+      isApp: false
+      isAbstract: false
+    - key: OFFERING.SERVICE.CAR-SHARING.VIP-TAXI-CARSHARE
+      isApp: false
+      isAbstract: false
+    - key: OFFERING.SERVICE.CAR-SHARING.COWORKER-CARSHARE
+      isApp: false
+      isAbstract: false
+    - key: OFFERING.SERVICE.CAR-CHARGING
+      isApp: false
+      isAbstract: true
+    - key: OFFERING.SERVICE.SUBSCRIBER-CHARGE100
+      isApp: false
+      isAbstract: false
+    - key: OFFERING.SERVICE.SUBSCRIBER-CHARGE50
+      isApp: false
+      isAbstract: false
+    - key: OFFERING.SERVICE.TAXI-CHARGE25
+      isApp: false
+      isAbstract: false
+    - key: OFFERING.SERVICE.SUBSCRIBER-CHARGE0
+      isApp: false
+      isAbstract: false
+    - key: OFFERING.SERVICE.COWORKER-CHARGE0
+      isApp: false
+      isAbstract: false
+    - key: OFFERING.AEPRODUCT
+      isApp: false
+      isAbstract: true
+    - key: OFFERING.AEPRODUCT.CAR-CHARGE
+      isApp: false
+      isAbstract: true
+    - key: OFFERING.AEPRODUCT.CAR-CHARGE.AECHARGE
+      isApp: false
+      isAbstract: false
+    - key: OFFERING.AEPRODUCT.CAR-RENT
+      isApp: false
+      isAbstract: true
+    - key: OFFERING.AEPRODUCT.CAR-RENT.PER-MIN-RENT
+      isApp: false
+      isAbstract: false
+    - key: OFFERING.AEPRODUCT.CAR-RENT.PER-HOUR-RENT
+      isApp: false
+      isAbstract: false
+    - key: OFFERING.AEPRODUCT.CAR-RENT.PER-12HOUR-RENT
+      isApp: false
+      isAbstract: false
+    - key: OFFERING.AEPRODUCT.CAR-RENT.PER-DAY-RENT
+      isApp: false
+      isAbstract: false
+    - key: OFFERING.AEPRODUCT.CAR-RENT.TAXI-HALF-DAY
+      isApp: false
+      isAbstract: false
+    - key: OFFERING.AEPRODUCT.CAR-RENT.TAXI-DAY
+      isApp: false
+      isAbstract: false
+    - key: PRODUCT.SERVICE
+      isApp: false
+      isAbstract: true
+    - key: PRODUCT.SERVICE.CAR-SHARING
+      isApp: true
+      isAbstract: true
+      name: { en: "Car share service", ru: "Услуга аренды автомобиля" }
+      icon: local_offer
+      dataSpec: |
+                {
+                    "type": "object",
+                    "properties": {
+                        "birthday": { "type": "string", "title": "Birthday" },
+                        "city": { "type": "string", "title": "City" },
+                        "address": { "type": "string", "title": "Address" }
+                    }
+                }
+      states:
+          - key: NEW
+            name: { en: "New", ru: "Новый" }
+            icon: add
+            color: '#ffeb3b'
+            next:
+                - stateKey: VERIFIED
+                  name: { en: "Verified", ru: "Проверен" }
+                - stateKey: REJECTED
+                  name: { en: "Rejected", ru: "Отклонен" }
+          - key: VERIFIED
+            name: { en: "Verified", ru: "Проверен" }
+            icon: verified_user
+            color: '#8bc34a'
+            next:
+                - stateKey: ACTIVE
+                  name: { en: "Active", ru: "Активен" }
+                - stateKey: REJECTED
+                  name: { en: "Rejected", ru: "Отклонен" }
+          - key: ACTIVE
+            name: { en: "Active", ru: "Активен" }
+            icon: play_arrow
+            color : "#4caf50"
+            next:
+                - stateKey: RETIRED
+                  name: { en: "Retaired", ru: "Удален" }
+          - key: REJECTED
+            name: { en: "Rejected", ru: "Отклонен" }
+            icon: close
+            color : "#00aeb9"
+            next:
+                - stateKey: VERIFIED
+                  name: { en: "Verified", ru: "Проверен" }
+          - key: RETIRED
+            name: { en: "Retaired", ru: "Удален" }
+            icon: delete
+            color : "#795548"
+    - key: PRODUCT.SERVICE.CAR-SHARING.DEFAULT-CARSHARE
+      isApp: false
+      isAbstract: false
+      name: { en: "Car share service", ru: "Услуга краткосрочной аренды электромобиля" }
+    - key: PRODUCT.SERVICE.CAR-CHARGING
+      isApp: true
+      isAbstract: true
+      name: { en: "Car charge service", ru: "Услуга зарядки автомобиля" }
+      icon: local_offer
+      states :
+            - key: ACTIVE
+              name: { en: "Active", ru: "Активен" }
+              icon: play_arrow
+              color: '#4CAF50'
+              next:
+                  - stateKey: RETIRED
+                    name: { en: "Retire", ru: "Удалить" }
+            - key: RETIRED
+              name: { en: "Retired", ru: "Удаленный" }
+              icon: delete
+              color: '#795548'
+      links:
+            - key: LINK.PRODUCT.ACCOUNT.SERVICE
+              builderType: SEARCH
+              name: { en: "Account ordered service", ru: "Аккаунт заказавший услугу" }
+              icon : account_balance_wallet
+              typeKey: ACCOUNT
+              max: 10
+    - key: PRODUCT.SERVICE.CAR-CHARGING.SUBSCRIBER-CHARGE100
+      isApp: false
+      isAbstract: false
+      name: { en: "Subscriber charge 100", ru: "Subscriber charge 100" }
+    - key: PRODUCT.AEPRODUCT
+      isApp: false
+      isAbstract: true
+    - key: PRODUCT.AEPRODUCT.CAR-RENT
+      isApp: true
+      isAbstract: true
+      icon: rv_hookup
+      name: { en: "Car share", ru: "Краткосрочная аренда электромобилей" }
+      dataSpec: |
+                {
+                    "type": "object",
+                    "properties": {
+                        "aeProductId": { "type": "string", "title": "AE product id" },
+                        "startCheckupDate": { "type": "string", "title": "Checkup started date" },
+                        "startRentDate": { "type": "string", "title": "Start rent date" },
+                        "endRentDate": { "type": "string", "title": "End rent date" },
+                        "quality": { "type": "string", "title": "Rent quality" }
+                    }
+                }
+      states:
+          - key: ACTIVE
+            icon: check_box
+            color: '#8bc34a'
+            name: { en: "Active", ru: "Активна" }
+            next:
+                - stateKey: CHECKUP_STARTED
+                  name: { en: "Checkup started", ru: "Начался осмотр" }
+                - stateKey: CANCELED
+                  name: { en: "Отменена", ru: "Canceled" }
+          - key: CHECKUP_STARTED
+            icon: visibility
+            color: '#ff9800'
+            name: { en: "Checkup started", ru: "Начался осмотр" }
+            next:
+                - stateKey: RENT_STARTED
+                  name: { en: "Rent started", ru: "Аренда начата" }
+                - stateKey: CANCELED
+                  name: { en: "Отменена", ru: "Canceled" }
+          - key: RENT_STARTED
+            icon: play_arrow
+            color: '#4caf50'
+            name: { en: "Rent started", ru: "Аренда начата" }
+            next:
+                - stateKey: RENT_PAUSED
+                  name: { en: "Rent paused", ru: "Аренда приостановлена" }
+                - stateKey: RENT_FINISHED
+                  name: { en: "Аренда завершена на зарядке", ru: "Rent finished on charging" }
+                - stateKey: RENT_FINISHED_OCCUPIED
+                  name: { en: "Аренда завершена на занятой зарядке", ru: "Rent finished on occupied charging" }
+                - stateKey: RENT_FINISHED_OTHER_PLACE
+                  name: { en: "Аренда завершена в другом месте", ru: "Rent finished at other place" }
+          - key: RENT_PAUSED
+            icon: pause
+            color: '#009687'
+            name: { en: "Rent paused", ru: "Аренда приостановлена" }
+            next:
+                - stateKey: RENT_STARTED
+                  name: { en: "Rent started", ru: "Аренда начата" }
+                - stateKey: RENT_FINISHED
+                  name: { en: "Аренда завершена на зарядке", ru: "Rent finished on charging" }
+                - stateKey: RENT_FINISHED_OCCUPIED
+                  name: { en: "Аренда завершена на занятой зарядке", ru: "Rent finished on occupied charging" }
+                - stateKey: RENT_FINISHED_OTHER_PLACE
+                  name: { en: "Аренда завершена в другом месте", ru: "Rent finished at other place" }
+          - key: RENT_FINISHED
+            icon: ev_station
+            color: '#00BCD4'
+            name: { en: "Аренда завершена на зарядке", ru: "Rent finished on charging" }
+          - key: RENT_FINISHED_OCCUPIED
+            icon: local_parking
+            color: '#03A9F4'
+            name: { en: "Аренда завершена на занятой зарядке", ru: "Rent finished on occupied charging" }
+          - key: RENT_FINISHED_OTHER_PLACE
+            icon: location_on
+            color: '#673AB7'
+            name: { en: "Аренда завершена в другом месте", ru: "Rent finished at other place" }
+          - key: CANCELED
+            icon: close
+            color: '#f44336'
+            name: { en: "Отменена", ru: "Canceled" }
+      links:
+          - key: LINK.PRODUCT.AEPRODUCT.RESOURCE.CAR
+            typeKey: RESOURCE.CAR.AE
+            builderType: SEARCH
+            name: { en: "Rented car", ru: "Арендованая машина" }
+            icon : drive_eta
+            max: 1
+      functions:
+          - key: SET-RENT-QUALITY
+            name: { en: "Rent quality", ru: "Оценить качество аренды" }
+    - key: PRODUCT.AEPRODUCT.CAR-RENT.PER-MIN-RENT
+      isApp: false
+      isAbstract: false
+      name: { en: "Per min rent", ru: "Поминутная аренда" }
+    - key: PRODUCT.AEPRODUCT.CAR-RENT.PER-HOUR-RENT
+      isApp: false
+      isAbstract: false
+    - key: PRODUCT.AEPRODUCT.CAR-RENT.PER-12HOUR-RENT
+      isApp: false
+      isAbstract: false
+    - key: PRODUCT.AEPRODUCT.CAR-RENT.PER-DAY-RENT
+      isApp: false
+      isAbstract: false
+    - key: PRODUCT.AEPRODUCT.CAR-RENT.TAXI-HALF-DAY
+      isApp: false
+      isAbstract: false
+    - key: PRODUCT.AEPRODUCT.CAR-RENT.TAXI-DAY
+      isApp: false
+      isAbstract: false
+    - key: PRODUCT.AEPRODUCT.CAR-CHARGE
+      isApp: false
+      isAbstract: true
+      states:
+          - key: ACTIVE
+            next:
+                - stateKey: FINISH_REQUESTED
+          - key: FINISH_REQUESTED
+            next:
+                - stateKey: RETIRED
+          - key: RETIRED
+      links:
+          - key: LINK.PRODUCT.AEPRODUCT.RESOURCE.CAR
+            typeKey: RESOURCE.CAR.PERSONAL
+            builderType: SEARCH
+            max: 1
+          - key: LINK.PRODUCT.AEPRODUCT.RESOURCE.CHARGING-STATION
+            typeKey: RESOURCE.CHARGING-STATION
+            builderType: SEARCH
+            max: 1
+      dataSpec: |
+                {
+                    "title": "Data",
+                    "type": "object",
+                    "properties": {
+                        "transactionId": {
+                            "title": "Transaction ID",
+                            "type": "string"
+                        },
+                        "chargingStationConnector": {
+                            "title": "Charging station connector",
+                            "type": "string"
+                        },
+                        "chargingParameters": {
+                            "title": "Charging parameters",
+                            "type": "object",
+                            "properties": {
+                                "voltage": {
+                                    "title": "Voltage",
+                                    "type": "object",
+                                    "properties": {
+                                        "amount": {
+                                            "title": "Amount",
+                                            "type": "number"
+                                        },
+                                        "unit": {
+                                            "title": "Unit",
+                                            "type": "string"
+                                        }
+                                    }
+                                },
+                                "amperage": {
+                                    "title": "Amperage",
+                                    "type": "object",
+                                    "properties": {
+                                        "amount": {
+                                            "title": "Amount",
+                                            "type": "number"
+                                        },
+                                        "unit": {
+                                            "title": "Unit",
+                                            "type": "string"
+                                        }
+                                    }
+                                },
+                                "powerConsumption": {
+                                    "title": "Power consumption",
+                                    "type": "object",
+                                    "properties": {
+                                        "amount": {
+                                            "title": "Amount",
+                                            "type": "number"
+                                        },
+                                        "unit": {
+                                            "title": "Unit",
+                                            "type": "string"
+                                        }
+                                    }
+                                },
+                                "consumedEnergy": {
+                                    "title": "Consumed energy",
+                                    "type": "object",
+                                    "properties": {
+                                        "amount": {
+                                            "title": "Amount",
+                                            "type": "number"
+                                        },
+                                        "unit": {
+                                            "title": "Unit",
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+    - key: PRODUCT.AEPRODUCT.CAR-CHARGE.AECHARGE
+      name: { en: "Car charge", ru: "Зарядка автомобиля" }
+      isApp: true
+      isAbstract: false
+      links:
+          - key: LINK.ACCOUNT.PRODUCT.AEPRODUCT
+            builderType: SEARCH
+            name: { en: "User", ru: "Пользователь" }
+            icon : account_circle
+            typeKey: ACCOUNT.USER
+            max: 10
+          - key: LINK.RESOURCE.CAR.PERSONAL.PRODUCT.AEPRODUCT
+            builderType: SEARCH
+            name: { en: "Car on charge", ru: "Машина на зарядке" }
+            icon : drive_eta
+            typeKey: RESOURCE.CAR.PERSONAL
+            max: 10
+          - key: LINK.RESOURCE.CHARGING-STATION.PRODUCT.AEPRODUCT
+            builderType: SEARCH
+            name: { en: "Charging point", ru: "Зарядная станция" }
+            icon : ev_station
+            typeKey: RESOURCE.CHARGING-STATION
+            max: 10
+      icon: ev_station
+      dataSpec: |
+                {
+                   "type": "object",
+                   "title": "Data",
+                   "properties": {
+                       "startDate": {
+                           "title": "Charge start date",
+                           "type": "string"
+                        },
+                       "transactionId": {
+                            "title": "Transaction Id",
+                            "type": "number"
+                        },
+                        "connectorNumber": {
+                            "title": "Connector number",
+                            "type": "number"
+                        }
+                    },
+                    "required": [
+                        "startDate",
+                        "transactionId",
+                        "connectorNumber"
+                    ]
+                }
+      states:
+          - key: ACTIVE
+            name: { en: "Active", ru: "Активный" }
+            icon: play_arrow
+            color: '#4caf50'
+            next:
+                - stateKey: RETIRED
+                  name: { en: "Retired", ru: "Удален" }
+                - stateKey: FINISH_REQUESTED
+                  name: { en: "Finish requested", ru: "Запрашивается завершение" }
+          - key: RETIRED
+            name: { en: "Retired", ru: "Удален" }
+            icon: delete
+            color: '#795548'
+          - key: FINISH_REQUESTED
+            name: { en: "Finish requested", ru: "Запрашивается завершение" }
+            icon: stop
+            color: '#00BCD4'
+            next:
+                - stateKey: FINISH_REQUESTED
+                  name: { en: "Finish requested", ru: "Запрашивается завершение" }
+            next:
+                - stateKey: RETIRED
+                  name: { en: "Retired", ru: "Удален" }
