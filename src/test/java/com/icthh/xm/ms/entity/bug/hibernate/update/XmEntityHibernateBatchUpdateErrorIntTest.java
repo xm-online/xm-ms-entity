@@ -2,10 +2,9 @@ package com.icthh.xm.ms.entity.bug.hibernate.update;
 
 import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_AUTH_CONTEXT;
 import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_TENANT_CONTEXT;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.icthh.xm.commons.config.client.service.TenantConfigService;
-import com.icthh.xm.commons.security.XmAuthenticationContext;
+import com.icthh.xm.commons.lep.XmLepScriptConfigServerResourceLoader;
 import com.icthh.xm.commons.security.XmAuthenticationContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
@@ -17,34 +16,24 @@ import com.icthh.xm.ms.entity.config.TestConfigConstants;
 import com.icthh.xm.ms.entity.config.tenant.WebappTenantOverrideConfiguration;
 import com.icthh.xm.ms.entity.domain.Link;
 import com.icthh.xm.ms.entity.domain.XmEntity;
-import com.icthh.xm.ms.entity.domain.ext.IdOrKey;
-import com.icthh.xm.ms.entity.repository.XmEntityPermittedRepository;
-import com.icthh.xm.ms.entity.repository.XmEntityRepository;
-import com.icthh.xm.ms.entity.repository.search.XmEntityPermittedSearchRepository;
-import com.icthh.xm.ms.entity.repository.search.XmEntitySearchRepository;
-import com.icthh.xm.ms.entity.service.AttachmentService;
-import com.icthh.xm.ms.entity.service.LifecycleLepStrategyFactory;
 import com.icthh.xm.ms.entity.service.LinkService;
-import com.icthh.xm.ms.entity.service.ProfileService;
-import com.icthh.xm.ms.entity.service.StorageService;
 import com.icthh.xm.ms.entity.service.XmEntityService;
-import com.icthh.xm.ms.entity.service.XmEntitySpecService;
-import com.icthh.xm.ms.entity.service.XmEntityTemplatesSpecService;
-import com.icthh.xm.ms.entity.service.impl.StartUpdateDateGenerationStrategy;
-import java.time.Instant;
-import java.util.Collections;
+import java.io.InputStream;
 import java.util.List;
 import java.util.stream.Collectors;
 import javax.persistence.EntityManager;
 import javax.persistence.criteria.Join;
 import javax.persistence.criteria.JoinType;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.IOUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.jpa.domain.Specifications;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.junit4.SpringRunner;
@@ -78,6 +67,9 @@ public class XmEntityHibernateBatchUpdateErrorIntTest {
 
     @Autowired
     private LepManager lepManager;
+
+    @Autowired
+    private XmLepScriptConfigServerResourceLoader leps;
 
     @Autowired
     private LinkService linkService;
@@ -120,6 +112,38 @@ public class XmEntityHibernateBatchUpdateErrorIntTest {
         tenantContextHolder.getPrivilegedContext().destroyCurrentContext();
     }
 
+    @Test
+    @Transactional
+    public void updateProductStateWithLinkedCarAndGetException() {
+        initLepScripts();
+
+        // only state key is used from XmEntity
+        XmEntity rentProduct = new XmEntity().stateKey("RENT_STARTED");
+        xmEntityServiceImpl.updateState(productKey, rentProduct);
+    }
+
+    private void initLepScripts() {
+        String pattern = "/config/tenants/" + TestConfigConstants.TENANT_AEBUGHBU + "/entity/lep/";
+
+        String[] testLeps = new String[]{
+            "lifecycle/ChangeState$$around.groovy",
+            "service/entity/Save$$around.groovy",
+        };
+
+        for (String lep : testLeps) {
+            leps.onRefresh(
+                pattern + lep,
+                loadFile("com/icthh/xm/ms/entity/bug/hibernate/update/" + lep)
+            );
+        }
+    }
+
+    @SneakyThrows
+    private static String loadFile(String path) {
+        InputStream cfgInputStream = new ClassPathResource(path).getInputStream();
+        return IOUtils.toString(cfgInputStream, UTF_8);
+    }
+
     private XmEntity buildProduct() {
         XmEntity product = new XmEntity();
         product.setTypeKey("PRODUCT.AEPRODUCT.CAR-RENT.PER-MIN-RENT");
@@ -148,49 +172,6 @@ public class XmEntityHibernateBatchUpdateErrorIntTest {
         car.addSources(link);
 
         return link;
-    }
-
-    @Test
-    @Transactional
-    public void updateProductStateWithLinkedCarAndGetException() {
-        IdOrKey productIdOrKey = IdOrKey.ofKey(productKey);
-        XmEntity rentProduct = xmEntityServiceImpl.findAll(
-            Specifications.where(
-                (root, query, cb) -> productIdOrKey.isId()
-                    ? cb.and(cb.equal(root.get("id"), productIdOrKey.getId()))
-                    : cb.and(cb.equal(root.get("key"), productIdOrKey.getKey()))
-            )
-        ).iterator().next();
-
-        XmEntity car = getCarInRent(rentProduct);
-
-        xmEntityServiceImpl.updateState(IdOrKey.of(car.getId()), "IN_USE", Collections.emptyMap());
-
-        rentProduct.getData().put("startRentDate", Instant.now().toString());
-    }
-
-    private XmEntity getCarInRent(XmEntity rentProduct) {
-        List<XmEntity> foundCars = linkService.findAll(Specifications.where((root, query, cb) -> {
-            Join<Object, Object> source = root.join("source", JoinType.INNER);
-            Join<Object, Object> target = root.join("target", JoinType.INNER);
-
-            return cb.and(
-                cb.equal(source.get("id"), rentProduct.getId()),
-                cb.equal(target.get("typeKey"), "RESOURCE.CAR.AE")
-            );
-        })).stream().map(Link::getTarget).collect(Collectors.toList());
-
-        if (CollectionUtils.isEmpty(foundCars)) {
-            throw new IllegalStateException("Car not found for rent ${rentProduct.id}");
-        }
-
-        if (foundCars.size() > 1) {
-            throw new IllegalStateException("More then one car (" +
-                foundCars.stream().map(XmEntity::getId).collect(Collectors.toList()) +
-                ") found for rent ${rentProduct.id}");
-        }
-
-        return foundCars.iterator().next();
     }
 
 }
