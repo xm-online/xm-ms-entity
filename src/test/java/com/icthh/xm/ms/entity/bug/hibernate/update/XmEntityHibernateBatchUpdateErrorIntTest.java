@@ -74,13 +74,10 @@ public class XmEntityHibernateBatchUpdateErrorIntTest {
     @Autowired
     private LinkService linkService;
 
-    @BeforeTransaction
-    public void beforeTransaction() {
-        TenantContextUtils.setTenant(tenantContextHolder, TestConfigConstants.TENANT_AEBUGHBU);
-    }
-
     @Before
     public void setup() {
+        TenantContextUtils.setTenant(tenantContextHolder, TestConfigConstants.TENANT_AEBUGHBU);
+
         lepManager.beginThreadContext(ctx -> {
             ctx.setValue(THREAD_CONTEXT_KEY_TENANT_CONTEXT, tenantContextHolder.getContext());
             ctx.setValue(THREAD_CONTEXT_KEY_AUTH_CONTEXT, authContextHolder.getContext());
@@ -93,16 +90,13 @@ public class XmEntityHibernateBatchUpdateErrorIntTest {
 
     private void buildTestData() {
         XmEntity car = xmEntityServiceImpl.save(buildAeCar());
-        em.flush();
 
         XmEntity product = buildProduct();
         product = xmEntityServiceImpl.save(product);
         productKey = product.getKey();
-        em.flush();
 
         Link link = linkProductToCar(product, car);
-        link = linkService.save(link);
-        em.flush();
+        linkService.save(link);
     }
 
     @After
@@ -113,7 +107,6 @@ public class XmEntityHibernateBatchUpdateErrorIntTest {
     }
 
     @Test
-    @Transactional
     public void updateProductStateWithLinkedCarAndGetException() {
         initLepScripts();
 
