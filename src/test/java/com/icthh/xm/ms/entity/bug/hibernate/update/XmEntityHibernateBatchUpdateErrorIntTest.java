@@ -1,8 +1,7 @@
-package com.icthh.xm.ms.entity.service;
+package com.icthh.xm.ms.entity.bug.hibernate.update;
 
 import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_AUTH_CONTEXT;
 import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_TENANT_CONTEXT;
-import static org.mockito.Mockito.when;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.icthh.xm.commons.config.client.service.TenantConfigService;
@@ -23,14 +22,18 @@ import com.icthh.xm.ms.entity.repository.XmEntityPermittedRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
 import com.icthh.xm.ms.entity.repository.search.XmEntityPermittedSearchRepository;
 import com.icthh.xm.ms.entity.repository.search.XmEntitySearchRepository;
+import com.icthh.xm.ms.entity.service.AttachmentService;
+import com.icthh.xm.ms.entity.service.LifecycleLepStrategyFactory;
+import com.icthh.xm.ms.entity.service.LinkService;
+import com.icthh.xm.ms.entity.service.ProfileService;
+import com.icthh.xm.ms.entity.service.StorageService;
+import com.icthh.xm.ms.entity.service.XmEntityService;
+import com.icthh.xm.ms.entity.service.XmEntitySpecService;
+import com.icthh.xm.ms.entity.service.XmEntityTemplatesSpecService;
 import com.icthh.xm.ms.entity.service.impl.StartUpdateDateGenerationStrategy;
-import com.icthh.xm.ms.entity.service.impl.XmEntityServiceImpl;
 import java.time.Instant;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Collectors;
 import javax.persistence.EntityManager;
 import javax.persistence.criteria.Join;
@@ -40,7 +43,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.jpa.domain.Specifications;
@@ -57,17 +59,13 @@ import org.springframework.util.CollectionUtils;
     EntityApp.class,
     SecurityBeanOverrideConfiguration.class,
     WebappTenantOverrideConfiguration.class,
+    XmEntityHibernateBatchUpdateErrorConfigOverride.class,
     LepConfiguration.class
 })
 public class XmEntityHibernateBatchUpdateErrorIntTest {
 
     @Autowired
-    private XmEntityRepository xmEntityRepository;
-
-    @Autowired
-    private XmEntitySearchRepository xmEntitySearchRepository;
-
-    private XmEntityServiceImpl xmEntityServiceImpl;
+    private XmEntityService xmEntityServiceImpl;
 
     @Autowired
     private EntityManager em;
@@ -76,49 +74,13 @@ public class XmEntityHibernateBatchUpdateErrorIntTest {
     private TenantContextHolder tenantContextHolder;
 
     @Autowired
-    private XmEntitySpecService xmEntitySpecService;
-
-    @Autowired
-    private XmEntityTemplatesSpecService xmEntityTemplatesSpecService;
-
-    @Autowired
-    private LifecycleLepStrategyFactory lifeCycleService;
-
-    @Autowired
-    private XmEntityPermittedRepository xmEntityPermittedRepository;
-
-    @Mock
     private XmAuthenticationContextHolder authContextHolder;
-
-    @Mock
-    private XmAuthenticationContext xmAuthContext;
 
     @Autowired
     private LepManager lepManager;
 
     @Autowired
-    private ProfileService profileService;
-
-    @Autowired
     private LinkService linkService;
-
-    @Autowired
-    private StorageService storageService;
-
-    @Autowired
-    private AttachmentService attachmentService;
-
-    @Autowired
-    private ObjectMapper objectMapper;
-
-    @Autowired
-    private TenantConfigService tenantConfigService;
-
-    @Autowired
-    private XmEntityPermittedSearchRepository xmEntityPermittedSearchRepository;
-
-    @Autowired
-    private StartUpdateDateGenerationStrategy startUpdateDateGenerationStrategy;
 
     @BeforeTransaction
     public void beforeTransaction() {
@@ -127,28 +89,6 @@ public class XmEntityHibernateBatchUpdateErrorIntTest {
 
     @Before
     public void setup() {
-        when(authContextHolder.getContext()).thenReturn(xmAuthContext);
-        when(xmAuthContext.getUserKey()).thenReturn(Optional.of("qa"));
-
-        XmEntityServiceImpl xmEntityServiceImpl = new XmEntityServiceImpl(xmEntitySpecService,
-            xmEntityTemplatesSpecService,
-            xmEntityRepository,
-            xmEntitySearchRepository,
-            lifeCycleService,
-            xmEntityPermittedRepository,
-            profileService,
-            linkService,
-            storageService,
-            attachmentService,
-            xmEntityPermittedSearchRepository,
-            startUpdateDateGenerationStrategy,
-            authContextHolder,
-            objectMapper,
-            tenantConfigService);
-        xmEntityServiceImpl.setSelf(xmEntityServiceImpl);
-
-        this.xmEntityServiceImpl = xmEntityServiceImpl;
-
         lepManager.beginThreadContext(ctx -> {
             ctx.setValue(THREAD_CONTEXT_KEY_TENANT_CONTEXT, tenantContextHolder.getContext());
             ctx.setValue(THREAD_CONTEXT_KEY_AUTH_CONTEXT, authContextHolder.getContext());
