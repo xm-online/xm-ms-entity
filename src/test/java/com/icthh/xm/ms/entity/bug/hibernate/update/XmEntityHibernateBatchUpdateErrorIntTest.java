@@ -152,7 +152,7 @@ public class XmEntityHibernateBatchUpdateErrorIntTest {
 
     @Test
     @Transactional
-    public void test() throws Exception {
+    public void updateProductStateWithLinkedCarAndGetException() {
         IdOrKey productIdOrKey = IdOrKey.ofKey(productKey);
         XmEntity rentProduct = xmEntityServiceImpl.findAll(
             Specifications.where(
