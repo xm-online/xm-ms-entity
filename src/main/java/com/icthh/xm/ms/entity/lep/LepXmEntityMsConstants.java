@@ -19,6 +19,9 @@ public final class LepXmEntityMsConstants {
     public static final String BINDING_SUB_KEY_PROFILE_EVENT_PRODUCER_SERVICE = "profileEventProducer";
     public static final String BINDING_SUB_KEY_COMMENT_SERVICE = "commentService";
     public static final String BINDING_SUB_KEY_PERMISSION_SERVICE = "permissionService";
+    public static final String BINDING_SUB_KEY_SERVICE_EVENT_SERVICE = "eventService";
+    public static final String BINDING_SUB_KEY_SERVICE_CALENDAR_SERVICE = "calendarService";
+    public static final String BINDING_SUB_KEY_SERVICE_LEP_RESOURCE = "lepResource";
 
     public static final String BINDING_KEY_REPOSITORIES = "repositories";
     public static final String BINDING_SUB_KEY_REPOSITORY_XM_ENTITY = "xmEntity";
