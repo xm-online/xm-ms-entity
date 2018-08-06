@@ -11,6 +11,7 @@ import static com.icthh.xm.ms.entity.lep.LepXmEntityMsConstants.BINDING_SUB_KEY_
 import static com.icthh.xm.ms.entity.lep.LepXmEntityMsConstants.BINDING_SUB_KEY_SERVICE_ATTACHMENT;
 import static com.icthh.xm.ms.entity.lep.LepXmEntityMsConstants.BINDING_SUB_KEY_SERVICE_CALENDAR_SERVICE;
 import static com.icthh.xm.ms.entity.lep.LepXmEntityMsConstants.BINDING_SUB_KEY_SERVICE_EVENT_SERVICE;
+import static com.icthh.xm.ms.entity.lep.LepXmEntityMsConstants.BINDING_SUB_KEY_SERVICE_LEP_RESOURCE;
 import static com.icthh.xm.ms.entity.lep.LepXmEntityMsConstants.BINDING_SUB_KEY_SERVICE_LINK;
 import static com.icthh.xm.ms.entity.lep.LepXmEntityMsConstants.BINDING_SUB_KEY_SERVICE_LOCATION_SERVICE;
 import static com.icthh.xm.ms.entity.lep.LepXmEntityMsConstants.BINDING_SUB_KEY_SERVICE_MAIL_SERVICE;
@@ -69,6 +70,7 @@ public class XmEntityMsLepProcessingApplicationListener extends SpringLepProcess
     private final PermissionCheckService permissionCheckService;
     private final EventService eventService;
     private final CalendarService calendarService;
+    private final TenantLepResource tenantLepResource;
 
     @Override
     protected void bindExecutionContext(ScopedContext executionContext) {
@@ -85,6 +87,7 @@ public class XmEntityMsLepProcessingApplicationListener extends SpringLepProcess
         services.put(BINDING_SUB_KEY_SERVICE_TAG_SERVICE, tagService);
         services.put(BINDING_SUB_KEY_SERVICE_EVENT_SERVICE, eventService);
         services.put(BINDING_SUB_KEY_SERVICE_CALENDAR_SERVICE, calendarService);
+        services.put(BINDING_SUB_KEY_SERVICE_LEP_RESOURCE, tenantLepResource);
         services.put(BINDING_SUB_KEY_PROFILE_EVENT_PRODUCER_SERVICE, profileEventProducer);
         services.put(BINDING_SUB_KEY_COMMENT_SERVICE, commentService);
         services.put(BINDING_SUB_KEY_PERMISSION_SERVICE, permissionCheckService);
