@@ -54,5 +54,6 @@ public class TenantLepResourceTest {
         when(applicationProperties.getLep()).thenReturn(lep);
         assertTrue(tenantLepResource.isListeningConfiguration("/config/tenants/TEST_TENANT/entity/lep/resources/test-template.ftl"));
         assertTrue(tenantLepResource.isListeningConfiguration("/config/tenants/TEST_TENANT/entity/lep/resources/folder/subfolder/test-template.ftl"));
+        assertFalse(tenantLepResource.isListeningConfiguration("/config/tenants/UNMATCH/test-template.ftl"));
     }
 }

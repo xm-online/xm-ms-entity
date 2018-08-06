@@ -33,16 +33,16 @@ public class TenantLepResource implements RefreshableConfiguration {
 
     public String getResource(String path) {
         TenantKey tenantKey = tenantContextHolder.getContext().getTenantKey().get();
-        if (!lepResources.containsKey(tenantKey)) {
+        if (!lepResources.containsKey(tenantKey.getValue())) {
             return null;
         }
-        return lepResources.get(tenantKey).get(path);
+        return lepResources.get(tenantKey.getValue()).get(path);
     }
 
     @Override
     public boolean isListeningConfiguration(String updatedKey) {
         String lepResourcePathPattern = applicationProperties.getLep().getLepResourcePathPattern();
-        return matcher.matchStart(lepResourcePathPattern, updatedKey);
+        return matcher.match(lepResourcePathPattern, updatedKey);
     }
 
     @Override
