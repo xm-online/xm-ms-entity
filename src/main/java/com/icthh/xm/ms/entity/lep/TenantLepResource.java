@@ -42,7 +42,7 @@ public class TenantLepResource implements RefreshableConfiguration {
     @Override
     public boolean isListeningConfiguration(String updatedKey) {
         String lepResourcePathPattern = applicationProperties.getLep().getLepResourcePathPattern();
-        return matcher.matchStart(lepResourcePathPattern, updatedKey);
+        return matcher.match(lepResourcePathPattern, updatedKey);
     }
 
     @Override
