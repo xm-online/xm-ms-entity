@@ -9,6 +9,8 @@ import static com.icthh.xm.ms.entity.lep.LepXmEntityMsConstants.BINDING_SUB_KEY_
 import static com.icthh.xm.ms.entity.lep.LepXmEntityMsConstants.BINDING_SUB_KEY_PROFILE_EVENT_PRODUCER_SERVICE;
 import static com.icthh.xm.ms.entity.lep.LepXmEntityMsConstants.BINDING_SUB_KEY_REPOSITORY_XM_ENTITY;
 import static com.icthh.xm.ms.entity.lep.LepXmEntityMsConstants.BINDING_SUB_KEY_SERVICE_ATTACHMENT;
+import static com.icthh.xm.ms.entity.lep.LepXmEntityMsConstants.BINDING_SUB_KEY_SERVICE_CALENDAR_SERVICE;
+import static com.icthh.xm.ms.entity.lep.LepXmEntityMsConstants.BINDING_SUB_KEY_SERVICE_EVENT_SERVICE;
 import static com.icthh.xm.ms.entity.lep.LepXmEntityMsConstants.BINDING_SUB_KEY_SERVICE_LINK;
 import static com.icthh.xm.ms.entity.lep.LepXmEntityMsConstants.BINDING_SUB_KEY_SERVICE_LOCATION_SERVICE;
 import static com.icthh.xm.ms.entity.lep.LepXmEntityMsConstants.BINDING_SUB_KEY_SERVICE_MAIL_SERVICE;
@@ -28,7 +30,9 @@ import com.icthh.xm.lep.api.ScopedContext;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
 import com.icthh.xm.ms.entity.repository.kafka.ProfileEventProducer;
 import com.icthh.xm.ms.entity.service.AttachmentService;
+import com.icthh.xm.ms.entity.service.CalendarService;
 import com.icthh.xm.ms.entity.service.CommentService;
+import com.icthh.xm.ms.entity.service.EventService;
 import com.icthh.xm.ms.entity.service.LinkService;
 import com.icthh.xm.ms.entity.service.LocationService;
 import com.icthh.xm.ms.entity.service.ProfileService;
@@ -63,6 +67,8 @@ public class XmEntityMsLepProcessingApplicationListener extends SpringLepProcess
     private final CommentService commentService;
     private final CommonsService commonsService;
     private final PermissionCheckService permissionCheckService;
+    private final EventService eventService;
+    private final CalendarService calendarService;
 
     @Override
     protected void bindExecutionContext(ScopedContext executionContext) {
@@ -77,6 +83,8 @@ public class XmEntityMsLepProcessingApplicationListener extends SpringLepProcess
         services.put(BINDING_SUB_KEY_SERVICE_ATTACHMENT, attachmentService);
         services.put(BINDING_SUB_KEY_SERVICE_LOCATION_SERVICE, locationService);
         services.put(BINDING_SUB_KEY_SERVICE_TAG_SERVICE, tagService);
+        services.put(BINDING_SUB_KEY_SERVICE_EVENT_SERVICE, eventService);
+        services.put(BINDING_SUB_KEY_SERVICE_CALENDAR_SERVICE, calendarService);
         services.put(BINDING_SUB_KEY_PROFILE_EVENT_PRODUCER_SERVICE, profileEventProducer);
         services.put(BINDING_SUB_KEY_COMMENT_SERVICE, commentService);
         services.put(BINDING_SUB_KEY_PERMISSION_SERVICE, permissionCheckService);

@@ -91,7 +91,8 @@ public class ApplicationProperties {
 
     @Getter
     @Setter
-    private static class Lep {
+    public static class Lep {
         private TenantScriptStorage tenantScriptStorage;
+        private String lepResourcePathPattern;
     }
 }
