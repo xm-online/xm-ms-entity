@@ -62,6 +62,7 @@ public class TenantService {
             addWebAppSpecification(tenantName);
             tenantDatabaseService.createSchema(tenant);
             tenantElasticService.create(tenant);
+
             tenantDatabaseService.createProfile(tenantName);
             log.info("STOP  - SETUP:CreateTenant: tenantKey: {}, result: OK, time = {} ms",
                 tenant, stopWatch.getTime());
