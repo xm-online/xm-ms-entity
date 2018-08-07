@@ -3,12 +3,9 @@ package com.icthh.xm.ms.entity.service.impl;
 import static com.google.common.collect.ImmutableMap.of;
 import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_AUTH_CONTEXT;
 import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_TENANT_CONTEXT;
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.when;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.collect.ImmutableMap;
 import com.icthh.xm.commons.security.XmAuthenticationContext;
 import com.icthh.xm.commons.security.XmAuthenticationContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
@@ -30,19 +27,13 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.scheduling.TaskScheduler;
-import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.junit4.SpringRunner;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Date;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
-import javax.persistence.EntityManager;
 
 @Slf4j
 @RunWith(SpringRunner.class)
@@ -52,7 +43,7 @@ import javax.persistence.EntityManager;
     WebappTenantOverrideConfiguration.class,
     TenantContextConfiguration.class
 })
-public class SelectForUpdateEntityTest {
+public class SelectForUpdateEntityIntTest {
 
     @Autowired
     private TenantContextHolder tenantContextHolder;
@@ -65,12 +56,6 @@ public class SelectForUpdateEntityTest {
 
     @Autowired
     private XmEntityRepository xmEntityRepository;
-
-    @Autowired
-    private ObjectMapper objectMapper;
-
-    @Autowired
-    private EntityManager em;
 
     @Mock
     private XmAuthenticationContextHolder authContextHolder;
@@ -97,6 +82,21 @@ public class SelectForUpdateEntityTest {
         tenantContextHolder.getPrivilegedContext().destroyCurrentContext();
     }
 
+    /**
+     * This test requires that LOCK_TIMEOUT in DB will be more than 10 seconds.
+     *
+     * In H2 default value is 1 second (http://h2database.com/html/grammar.html#set_lock_timeout)
+     *
+     * <p/> Timeout can be set in application.yml config as:
+     *
+     * <pre>
+     *  spring:
+     *     datasource:
+     *         url: jdbc:h2:mem:entity;DB_CLOSE_DELAY=-1;LOCK_TIMEOUT=20000
+     * </pre>
+     *
+     * @throws InterruptedException
+     */
     @Test
     //@Transactional
     @WithMockUser(authorities = "SUPER-ADMIN")

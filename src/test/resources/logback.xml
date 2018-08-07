@@ -11,6 +11,7 @@
     </appender>
 
     <logger name="com.icthh.xm.ms.entity" level="INFO"/>
+    <logger name="com.icthh.xm.commons.lep" level="INFO"/>
 
     <logger name="io.github.jhipster" level="WARN"/>
 

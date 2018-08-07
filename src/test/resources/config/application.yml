@@ -23,7 +23,7 @@ spring:
         type: none
     datasource:
         type: com.zaxxer.hikari.HikariDataSource
-        url: jdbc:h2:mem:entity;DB_CLOSE_DELAY=-1
+        url: jdbc:h2:mem:entity;DB_CLOSE_DELAY=-1;LOCK_TIMEOUT=20000
         name:
         username:
         password:

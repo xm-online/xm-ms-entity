@@ -31,7 +31,6 @@ import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.repository.CommentRepository;
 import com.icthh.xm.ms.entity.repository.search.CommentSearchRepository;
 import com.icthh.xm.ms.entity.service.CommentService;
-import com.icthh.xm.ms.entity.service.TenantService;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -50,7 +49,6 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.context.transaction.BeforeTransaction;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.result.MockMvcResultHandlers;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -169,6 +167,7 @@ public class CommentResourceIntTest {
     @After
     @Override
     public void finalize() {
+        lepManager.endThreadContext();
         tenantContextHolder.getPrivilegedContext().destroyCurrentContext();
     }
 
@@ -236,6 +235,10 @@ public class CommentResourceIntTest {
             .andExpect(jsonPath("$.error").value("lep"))
             .andExpect(jsonPath("$.error_description").value("comments"))
             .andExpect(status().isBadRequest());
+
+        // this sleep is needed because sometimes LEP script remains old as onRefresh() called within one millisecond
+        // alternative fix is delete LEP script with lepLoader.onRefresh(<path_to_script>, null) instead of update;
+        Thread.sleep(100L);
 
         lepLoader.onRefresh("/config/tenants/RESINTTEST/entity/lep/service/comments/Save$$around.groovy",
             "lepContext.lep.proceed(lepContext.lep.getMethodArgValues())");
