@@ -272,6 +272,8 @@ public class XmEntityResourceExtendedIntTest {
     @BeforeTransaction
     public void beforeTransaction() {
         TenantContextUtils.setTenant(tenantContextHolder, "RESINTTEST");
+        elasticsearchTemplate.createIndex(XmEntity.class);
+        elasticsearchTemplate.putMapping(XmEntity.class);
     }
 
     @Before
@@ -279,8 +281,6 @@ public class XmEntityResourceExtendedIntTest {
         log.info("Init setup");
 
         //xmEntitySearchRepository.deleteAll();
-//        elasticsearchTemplate.createIndex(XmEntity.class);
-//        elasticsearchTemplate.putMapping(XmEntity.class);
 
         MockitoAnnotations.initMocks(this);
 
