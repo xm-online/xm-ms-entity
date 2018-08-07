@@ -46,6 +46,7 @@ import org.mockito.Spy;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
 import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
@@ -249,6 +250,9 @@ public class XmEntityResourceExtendedIntTest {
     @Autowired
     XmEntityPermittedSearchRepository xmEntityPermittedSearchRepository;
 
+    @Autowired
+    ElasticsearchTemplate elasticsearchTemplate;
+
     @Mock
     private XmAuthenticationContextHolder authContextHolder;
 
@@ -275,6 +279,8 @@ public class XmEntityResourceExtendedIntTest {
         log.info("Init setup");
 
         //xmEntitySearchRepository.deleteAll();
+        elasticsearchTemplate.createIndex(XmEntity.class);
+        elasticsearchTemplate.putMapping(XmEntity.class);
 
         MockitoAnnotations.initMocks(this);
 
