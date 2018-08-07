@@ -251,7 +251,7 @@ public class XmEntityResourceExtendedIntTest {
     XmEntityPermittedSearchRepository xmEntityPermittedSearchRepository;
 
     @Autowired
-    ElasticsearchTemplate elasticsearchTemplate;
+    private ElasticsearchTemplate elasticsearchTemplate;
 
     @Mock
     private XmAuthenticationContextHolder authContextHolder;
