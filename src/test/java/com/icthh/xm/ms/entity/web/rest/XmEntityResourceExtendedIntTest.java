@@ -8,6 +8,7 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.google.common.collect.ImmutableMap;
 import com.icthh.xm.commons.config.client.service.TenantConfigService;
 import com.icthh.xm.commons.exceptions.spring.web.ExceptionTranslator;
+import com.icthh.xm.commons.gen.model.Tenant;
 import com.icthh.xm.commons.security.XmAuthenticationContext;
 import com.icthh.xm.commons.security.XmAuthenticationContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
@@ -29,6 +30,7 @@ import com.icthh.xm.ms.entity.repository.search.XmEntitySearchRepository;
 import com.icthh.xm.ms.entity.service.*;
 import com.icthh.xm.ms.entity.service.impl.StartUpdateDateGenerationStrategy;
 import com.icthh.xm.ms.entity.service.impl.XmEntityServiceImpl;
+import com.icthh.xm.ms.entity.service.tenant.TenantElasticService;
 import com.jayway.jsonpath.JsonPath;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -259,6 +261,9 @@ public class XmEntityResourceExtendedIntTest {
     @Autowired
     private TenantService tenantService;
 
+    @Autowired
+    private TenantElasticService tenantElasticService;
+
     @Mock
     private XmAuthenticationContext context;
 
@@ -269,18 +274,18 @@ public class XmEntityResourceExtendedIntTest {
 
     private XmEntity xmEntityIncoming;
 
+
     @BeforeTransaction
     public void beforeTransaction() {
         TenantContextUtils.setTenant(tenantContextHolder, "RESINTTEST");
-        elasticsearchTemplate.createIndex(XmEntity.class);
-        elasticsearchTemplate.putMapping(XmEntity.class);
-    }
+     }
 
     @Before
     public void setup() {
         log.info("Init setup");
 
         //xmEntitySearchRepository.deleteAll();
+        tenantElasticService.create(new Tenant().tenantKey("RESINTTEST"));
 
         MockitoAnnotations.initMocks(this);
 
