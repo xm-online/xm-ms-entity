@@ -8,7 +8,6 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.google.common.collect.ImmutableMap;
 import com.icthh.xm.commons.config.client.service.TenantConfigService;
 import com.icthh.xm.commons.exceptions.spring.web.ExceptionTranslator;
-import com.icthh.xm.commons.gen.model.Tenant;
 import com.icthh.xm.commons.security.XmAuthenticationContext;
 import com.icthh.xm.commons.security.XmAuthenticationContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
@@ -30,7 +29,6 @@ import com.icthh.xm.ms.entity.repository.search.XmEntitySearchRepository;
 import com.icthh.xm.ms.entity.service.*;
 import com.icthh.xm.ms.entity.service.impl.StartUpdateDateGenerationStrategy;
 import com.icthh.xm.ms.entity.service.impl.XmEntityServiceImpl;
-import com.icthh.xm.ms.entity.service.tenant.TenantElasticService;
 import com.jayway.jsonpath.JsonPath;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -67,7 +65,6 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.time.Instant;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -80,7 +77,6 @@ import static com.icthh.xm.ms.entity.config.TenantConfigMockConfiguration.getXmE
 import static com.icthh.xm.ms.entity.web.rest.TestUtil.sameInstant;
 import static java.lang.Long.valueOf;
 import static java.time.Instant.now;
-import static java.util.Arrays.asList;
 import static java.util.Collections.emptyMap;
 import static java.util.UUID.randomUUID;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -211,6 +207,9 @@ public class XmEntityResourceExtendedIntTest {
     private ExceptionTranslator exceptionTranslator;
 
     @Autowired
+    private ElasticsearchTemplate elasticsearchTemplate;
+
+    @Autowired
     private EntityManager em;
 
     @Autowired
@@ -252,17 +251,11 @@ public class XmEntityResourceExtendedIntTest {
     @Autowired
     XmEntityPermittedSearchRepository xmEntityPermittedSearchRepository;
 
-    @Autowired
-    private ElasticsearchTemplate elasticsearchTemplate;
-
     @Mock
     private XmAuthenticationContextHolder authContextHolder;
 
     @Autowired
     private TenantService tenantService;
-
-    @Autowired
-    private TenantElasticService tenantElasticService;
 
     @Mock
     private XmAuthenticationContext context;
@@ -285,7 +278,8 @@ public class XmEntityResourceExtendedIntTest {
         log.info("Init setup");
 
         //xmEntitySearchRepository.deleteAll();
-        tenantElasticService.create(new Tenant().tenantKey("RESINTTEST"));
+        elasticsearchTemplate.createIndex(XmEntity.class);
+        elasticsearchTemplate.putMapping(XmEntity.class);
 
         MockitoAnnotations.initMocks(this);
 
