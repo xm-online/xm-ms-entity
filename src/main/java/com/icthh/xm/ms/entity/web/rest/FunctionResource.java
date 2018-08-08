@@ -11,6 +11,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -40,6 +41,15 @@ public class FunctionResource {
     @PreAuthorize("hasPermission(null, 'FUNCTION.GET.CALL')")
     public ResponseEntity<FunctionContext> callGetFunction(@PathVariable("functionKey") String functionKey,
                                                            @RequestParam(required = false) Map<String, Object> functionInput) {
+        FunctionContext result = functionService.execute(functionKey, functionInput);
+        return ResponseEntity.ok().body(result);
+    }
+
+    @Timed
+    @PutMapping("/functions/{functionKey:.+}")
+    @PreAuthorize("hasPermission(null, 'FUNCTION.PUT.CALL')")
+    public ResponseEntity<FunctionContext> callPutFunction(@PathVariable("functionKey") String functionKey,
+                                                           @RequestBody(required = false) Map<String, Object> functionInput) {
         FunctionContext result = functionService.execute(functionKey, functionInput);
         return ResponseEntity.ok().body(result);
     }
