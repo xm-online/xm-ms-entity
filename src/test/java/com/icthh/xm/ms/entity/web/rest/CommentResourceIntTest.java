@@ -1,5 +1,6 @@
 package com.icthh.xm.ms.entity.web.rest;
 
+import static com.icthh.xm.commons.i18n.I18nConstants.LANGUAGE;
 import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_AUTH_CONTEXT;
 import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_TENANT_CONTEXT;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -16,7 +17,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.icthh.xm.commons.exceptions.spring.web.ExceptionTranslator;
+import com.icthh.xm.commons.i18n.error.web.ExceptionTranslator;
 import com.icthh.xm.commons.lep.XmLepScriptConfigServerResourceLoader;
 import com.icthh.xm.commons.security.XmAuthenticationContext;
 import com.icthh.xm.commons.security.XmAuthenticationContextHolder;
@@ -133,6 +134,7 @@ public class CommentResourceIntTest {
         when(context.hasAuthentication()).thenReturn(true);
         when(context.getLogin()).thenReturn(Optional.of("testLogin"));
         when(context.getUserKey()).thenReturn(Optional.of(DEFAULT_USER_KEY));
+        when(context.getDetailsValue(LANGUAGE)).thenReturn(Optional.of("en"));
 
         XmAuthenticationContextHolder holder = mock(XmAuthenticationContextHolder.class);
         when(holder.getContext()).thenReturn(context);

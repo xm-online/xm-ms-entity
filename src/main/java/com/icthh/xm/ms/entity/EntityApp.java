@@ -1,6 +1,6 @@
 package com.icthh.xm.ms.entity;
 
-import com.icthh.xm.commons.exceptions.spring.CommonMessageSourceConfiguration;
+import com.icthh.xm.commons.i18n.spring.config.CommonMessageSourceConfiguration;
 import com.icthh.xm.commons.logging.util.MdcUtils;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
