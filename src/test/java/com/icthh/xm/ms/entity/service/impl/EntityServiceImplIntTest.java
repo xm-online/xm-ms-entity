@@ -50,6 +50,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.io.Resource;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
+import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
 import org.springframework.http.HttpEntity;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.test.context.support.WithMockUser;
@@ -119,6 +120,9 @@ public class EntityServiceImplIntTest {
     @Autowired
     private TenantConfigService tenantConfigService;
 
+    @Autowired
+    private ElasticsearchTemplate elasticsearchTemplate;
+
     @Mock
     private ProfileService profileService;
 
@@ -143,6 +147,10 @@ public class EntityServiceImplIntTest {
     @BeforeTransaction
     public void beforeTransaction() {
         TenantContextUtils.setTenant(tenantContextHolder, "RESINTTEST");
+
+        elasticsearchTemplate.createIndex(XmEntity.class);
+        elasticsearchTemplate.putMapping(XmEntity.class);
+
         MockitoAnnotations.initMocks(this);
         when(authContextHolder.getContext()).thenReturn(context);
         when(context.getRequiredUserKey()).thenReturn("userKey");

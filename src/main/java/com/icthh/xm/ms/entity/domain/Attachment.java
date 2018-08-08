@@ -29,6 +29,7 @@ import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
+import org.springframework.data.elasticsearch.annotations.FieldIndex;
 import org.springframework.data.elasticsearch.annotations.FieldType;
 
 /**
@@ -61,6 +62,7 @@ public class Attachment implements Serializable {
     @NotNull
     @ApiModelProperty(value = "String typeKey with tree-like structure.", required = true)
     @Column(name = "type_key", nullable = false)
+    @Field(index = FieldIndex.not_analyzed, type = FieldType.String)
     private String typeKey;
 
     /**

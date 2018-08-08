@@ -11,6 +11,9 @@ import com.fasterxml.jackson.annotation.JsonIdentityReference;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import com.icthh.xm.ms.entity.domain.idresolver.XmEntityObjectIdResolver;
 import com.icthh.xm.ms.entity.validator.TypeKey;
+import org.springframework.data.elasticsearch.annotations.Field;
+import org.springframework.data.elasticsearch.annotations.FieldIndex;
+import org.springframework.data.elasticsearch.annotations.FieldType;
 
 import javax.persistence.*;
 import javax.validation.constraints.*;
@@ -42,6 +45,7 @@ public class Tag implements Serializable {
     @NotNull
     @ApiModelProperty(value = "String typeKey with tree-like structure.", required = true)
     @Column(name = "type_key", nullable = false)
+    @Field(index = FieldIndex.not_analyzed, type = FieldType.String)
     private String typeKey;
 
     /**

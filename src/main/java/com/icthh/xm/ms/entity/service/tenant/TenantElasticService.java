@@ -64,6 +64,7 @@ public class TenantElasticService {
             try {
                 Class<?> cl = Class.forName(beanDefinition.getBeanClassName());
                 elasticsearchTemplate.createIndex(cl);
+                elasticsearchTemplate.putMapping(cl);
             } catch (ClassNotFoundException e) {
                 log.error("Error while index {} creation for tenant {}",
                           beanDefinition.getBeanClassName(),

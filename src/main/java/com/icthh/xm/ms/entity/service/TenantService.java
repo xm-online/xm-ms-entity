@@ -61,8 +61,8 @@ public class TenantService {
             addEntitySpecification(tenantName);
             addWebAppSpecification(tenantName);
             tenantDatabaseService.createSchema(tenant);
-            tenantDatabaseService.createProfile(tenantName);
             tenantElasticService.create(tenant);
+            tenantDatabaseService.createProfile(tenantName);
             log.info("STOP  - SETUP:CreateTenant: tenantKey: {}, result: OK, time = {} ms",
                 tenant, stopWatch.getTime());
         } catch (Exception e) {

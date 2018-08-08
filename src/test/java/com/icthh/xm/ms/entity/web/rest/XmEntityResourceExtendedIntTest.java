@@ -46,6 +46,7 @@ import org.mockito.Spy;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
 import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
@@ -64,7 +65,6 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.time.Instant;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -77,7 +77,6 @@ import static com.icthh.xm.ms.entity.config.TenantConfigMockConfiguration.getXmE
 import static com.icthh.xm.ms.entity.web.rest.TestUtil.sameInstant;
 import static java.lang.Long.valueOf;
 import static java.time.Instant.now;
-import static java.util.Arrays.asList;
 import static java.util.Collections.emptyMap;
 import static java.util.UUID.randomUUID;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -208,6 +207,9 @@ public class XmEntityResourceExtendedIntTest {
     private ExceptionTranslator exceptionTranslator;
 
     @Autowired
+    private ElasticsearchTemplate elasticsearchTemplate;
+
+    @Autowired
     private EntityManager em;
 
     @Autowired
@@ -265,16 +267,22 @@ public class XmEntityResourceExtendedIntTest {
 
     private XmEntity xmEntityIncoming;
 
+
     @BeforeTransaction
     public void beforeTransaction() {
         TenantContextUtils.setTenant(tenantContextHolder, "RESINTTEST");
-    }
+     }
 
     @Before
     public void setup() {
         log.info("Init setup");
 
         //xmEntitySearchRepository.deleteAll();
+
+        //initialize index before test - put valid mapping
+        elasticsearchTemplate.deleteIndex(XmEntity.class);
+        elasticsearchTemplate.createIndex(XmEntity.class);
+        elasticsearchTemplate.putMapping(XmEntity.class);
 
         MockitoAnnotations.initMocks(this);
 

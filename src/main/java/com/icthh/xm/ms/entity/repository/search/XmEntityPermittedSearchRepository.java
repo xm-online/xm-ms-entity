@@ -44,11 +44,12 @@ public class XmEntityPermittedSearchRepository extends PermittedSearchRepository
                                                   String privilegeKey) {
         String permittedQuery = buildPermittedQuery(query, privilegeKey);
 
-        val prefix = (typeKey + ".").toLowerCase(); // TODO disable elastic analized to field "typeKey" and fix this
+        val prefix = typeKey + ".";
 
         val typeKeyQuery = boolQuery()
             .should(matchQuery(TYPE_KEY, typeKey))
-            .should(prefixQuery(TYPE_KEY, prefix)).minimumNumberShouldMatch(1);
+            .should(prefixQuery(TYPE_KEY, prefix))
+            .minimumNumberShouldMatch(1);
 
         val esQuery = isEmpty(permittedQuery)
             ? boolQuery().must(typeKeyQuery)
