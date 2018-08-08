@@ -2,13 +2,10 @@ package com.icthh.xm.ms.entity.service.impl;
 
 import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_AUTH_CONTEXT;
 import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_TENANT_CONTEXT;
-import static java.util.Arrays.asList;
 import static java.util.UUID.randomUUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.icthh.xm.commons.security.XmAuthenticationContext;
 import com.icthh.xm.commons.security.XmAuthenticationContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
@@ -29,7 +26,6 @@ import com.icthh.xm.ms.entity.domain.Rating;
 import com.icthh.xm.ms.entity.domain.Tag;
 import com.icthh.xm.ms.entity.domain.Vote;
 import com.icthh.xm.ms.entity.domain.XmEntity;
-import com.icthh.xm.ms.entity.domain.ext.IdOrKey;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -42,11 +38,7 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
-import org.springframework.transaction.annotation.Transactional;
 
-import javax.persistence.EntityManager;
-import java.time.Instant;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -58,7 +50,7 @@ import java.util.Set;
     WebappTenantOverrideConfiguration.class,
     TenantContextConfiguration.class
 })
-public class DeleteEntityTest {
+public class DeleteEntityIntTest {
 
     @Autowired
     private TenantContextHolder tenantContextHolder;
@@ -71,12 +63,6 @@ public class DeleteEntityTest {
 
     @Autowired
     private XmEntityRepository xmEntityRepository;
-
-    @Autowired
-    private ObjectMapper objectMapper;
-
-    @Autowired
-    private EntityManager em;
 
     @Mock
     private XmAuthenticationContextHolder authContextHolder;
