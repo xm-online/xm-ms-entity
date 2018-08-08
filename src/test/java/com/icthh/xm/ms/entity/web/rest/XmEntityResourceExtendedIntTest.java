@@ -278,6 +278,7 @@ public class XmEntityResourceExtendedIntTest {
         log.info("Init setup");
 
         //xmEntitySearchRepository.deleteAll();
+        elasticsearchTemplate.deleteIndex(XmEntity.class);
         elasticsearchTemplate.createIndex(XmEntity.class);
         elasticsearchTemplate.putMapping(XmEntity.class);
 
