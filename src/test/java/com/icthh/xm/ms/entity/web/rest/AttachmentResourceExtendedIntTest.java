@@ -6,15 +6,11 @@ import static com.icthh.xm.ms.entity.web.rest.AttachmentResourceIntTest.DEFAULT_
 import static com.icthh.xm.ms.entity.web.rest.AttachmentResourceIntTest.DEFAULT_NAME;
 import static com.icthh.xm.ms.entity.web.rest.AttachmentResourceIntTest.DEFAULT_START_DATE;
 import static com.icthh.xm.ms.entity.web.rest.AttachmentResourceIntTest.DEFAULT_TYPE_KEY;
-import static com.icthh.xm.ms.entity.web.rest.AttachmentResourceIntTest.DEFAULT_VALUE_CONTENT_SIZE;
 import static com.icthh.xm.ms.entity.web.rest.AttachmentResourceIntTest.DEFAULT_VALUE_CONTENT_TYPE;
-import static java.time.temporal.ChronoUnit.MILLIS;
-import static java.time.temporal.ChronoUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.nullValue;
-import static org.mockito.Matchers.isNull;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -23,7 +19,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.icthh.xm.commons.exceptions.spring.web.ExceptionTranslator;
+import com.icthh.xm.commons.i18n.error.web.ExceptionTranslator;
 import com.icthh.xm.commons.permission.repository.PermittedRepository;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
@@ -60,7 +56,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.Validator;
 
 import java.time.Instant;
-import java.time.temporal.TemporalUnit;
 import java.util.List;
 import javax.persistence.EntityManager;
 
