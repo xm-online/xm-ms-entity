@@ -72,7 +72,9 @@ public class FunctionResourceMvcIntTest {
     public void testCallPutFunction() {
         when(functionService.execute("SOME-FUNCTION_KEY.TROLOLO", of("var1", "val1", "var2", "val2")))
             .thenReturn(new FunctionContext().data(of("test", "result")));
-        mockMvc.perform(put("/api/functions/SOME-FUNCTION_KEY.TROLOLO").content("{\"var1\":\"val1\", \"var2\": \"val2\"}"))
+        mockMvc.perform(put("/api/functions/SOME-FUNCTION_KEY.TROLOLO")
+            .contentType(TestUtil.APPLICATION_JSON_UTF8)
+            .content("{\"var1\":\"val1\", \"var2\": \"val2\"}"))
             .andDo(print())
             .andExpect(jsonPath("$.data.test").value("result"))
             .andExpect(status().isOk());

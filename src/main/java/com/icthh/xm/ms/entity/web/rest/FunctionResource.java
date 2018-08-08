@@ -49,7 +49,7 @@ public class FunctionResource {
     @PutMapping("/functions/{functionKey:.+}")
     @PreAuthorize("hasPermission(null, 'FUNCTION.PUT.CALL')")
     public ResponseEntity<FunctionContext> callPutFunction(@PathVariable("functionKey") String functionKey,
-                                                           @RequestBody(required = false) Map<String, Object> functionInput) {
+                                                           @RequestBody Map<String, Object> functionInput) {
         FunctionContext result = functionService.execute(functionKey, functionInput);
         return ResponseEntity.ok().body(result);
     }
