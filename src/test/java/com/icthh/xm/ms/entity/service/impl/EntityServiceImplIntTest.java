@@ -36,8 +36,6 @@ import com.icthh.xm.ms.entity.service.*;
 import com.icthh.xm.ms.entity.util.XmHttpEntityUtils;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.h2.jdbc.JdbcSQLException;
-import org.hibernate.exception.ConstraintViolationException;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -148,6 +146,7 @@ public class EntityServiceImplIntTest {
     public void beforeTransaction() {
         TenantContextUtils.setTenant(tenantContextHolder, "RESINTTEST");
 
+        elasticsearchTemplate.deleteIndex(XmEntity.class);
         elasticsearchTemplate.createIndex(XmEntity.class);
         elasticsearchTemplate.putMapping(XmEntity.class);
 
@@ -194,6 +193,7 @@ public class EntityServiceImplIntTest {
 
     @After
     public void afterTest() {
+        elasticsearchTemplate.deleteIndex(XmEntity.class);
         tenantContextHolder.getPrivilegedContext().destroyCurrentContext();
     }
 
