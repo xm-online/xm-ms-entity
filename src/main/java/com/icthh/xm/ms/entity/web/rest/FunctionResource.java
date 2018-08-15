@@ -38,7 +38,7 @@ public class FunctionResource {
 
     @Timed
     @GetMapping("/functions/{functionKey:.+}")
-    @PreAuthorize("hasPermission(null, 'FUNCTION.GET.CALL')")
+    @PreAuthorize("hasPermission({'functionKey': #functionKey}, 'FUNCTION.GET.CALL')")
     public ResponseEntity<FunctionContext> callGetFunction(@PathVariable("functionKey") String functionKey,
                                                            @RequestParam(required = false) Map<String, Object> functionInput) {
         FunctionContext result = functionService.execute(functionKey, functionInput);
@@ -47,7 +47,7 @@ public class FunctionResource {
 
     @Timed
     @PutMapping("/functions/{functionKey:.+}")
-    @PreAuthorize("hasPermission(null, 'FUNCTION.PUT.CALL')")
+    @PreAuthorize("hasPermission({'functionKey': #functionKey}, 'FUNCTION.PUT.CALL')")
     public ResponseEntity<FunctionContext> callPutFunction(@PathVariable("functionKey") String functionKey,
                                                            @RequestBody Map<String, Object> functionInput) {
         FunctionContext result = functionService.execute(functionKey, functionInput);
@@ -64,7 +64,7 @@ public class FunctionResource {
      */
     @Timed
     @PostMapping("/functions/{functionKey:.+}")
-    @PreAuthorize("hasPermission(null, 'FUNCTION.CALL')")
+    @PreAuthorize("hasPermission({'functionKey': #functionKey}, 'FUNCTION.CALL')")
     public ResponseEntity<FunctionContext> callFunction(@PathVariable("functionKey") String functionKey,
                                                         @RequestBody Map<String, Object> functionInput) {
         FunctionContext result = functionService.execute(functionKey, functionInput);
@@ -82,7 +82,7 @@ public class FunctionResource {
      */
     @Timed
     @PostMapping("/functions/mvc/{functionKey:.+}")
-    @PreAuthorize("hasPermission(null, 'FUNCTION.MVC.CALL')")
+    @PreAuthorize("hasPermission({'functionKey': #functionKey}, 'FUNCTION.MVC.CALL')")
     public ModelAndView callMvcFunction(@PathVariable("functionKey") String functionKey,
                                         @RequestBody Map<String, Object> functionInput) {
         FunctionContext result = functionService.execute(functionKey, functionInput);
