@@ -83,6 +83,9 @@ import org.springframework.util.CollectionUtils;
 import org.springframework.util.ObjectUtils;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+import javax.persistence.Query;
 import java.net.URI;
 import java.time.Instant;
 import java.util.Collections;
@@ -119,6 +122,7 @@ public class XmEntityServiceImpl implements XmEntityService {
     private final ObjectMapper objectMapper;
     private final TenantConfigService tenantConfigService;
 
+    private EntityManager entityManager;
     private XmEntityServiceImpl self;
 
     /**
@@ -273,6 +277,22 @@ public class XmEntityServiceImpl implements XmEntityService {
         return xmEntityRepository.findAll(spec);
     }
 
+    /***
+     *
+     * Only for lep usage
+     *
+     * @param jpql
+     * @param args
+     * @return
+     */
+    @Transactional(readOnly = true)
+    @Override
+    public List<XmEntity> findAll(String jpql, Map<String, Object> args) {
+        Query query = entityManager.createQuery(jpql);
+        args.forEach(query::setParameter);
+        return query.getResultList();
+    }
+
     /**
      * Get one xmEntity by id or key.
      *
@@ -296,7 +316,7 @@ public class XmEntityServiceImpl implements XmEntityService {
 
     private XmEntity findOneById(Long xmEntityId) {
         XmEntity xmEntity = xmEntityRepository.findOneById(xmEntityId);
-        return getOneEntity(xmEntity);
+        return self.getOneEntity(xmEntity);
     }
 
     // need for lep post processing with split script by typeKey
@@ -678,4 +698,10 @@ public class XmEntityServiceImpl implements XmEntityService {
             this.self = self;
         }
     }
+
+    @PersistenceContext
+    public void setEntityManager(EntityManager entityManager) {
+        this.entityManager = entityManager;
+    }
+
 }

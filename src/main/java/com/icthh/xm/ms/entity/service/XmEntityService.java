@@ -15,6 +15,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.net.URI;
@@ -34,6 +35,17 @@ public interface XmEntityService extends ResourceRepository {
     Page<XmEntity> findByIds(Pageable pageable, Set<Long> ids, Set<String> embed, String privilegeKey);
 
     List<XmEntity> findAll(Specification<XmEntity> spec);
+
+    /***
+     *
+     * Only for lep usage
+     *
+     * @param jpql
+     * @param args
+     * @return
+     */
+    @Transactional(readOnly = true)
+    List<XmEntity> findAll(String jpql, Map<String, Object> args);
 
     @LoggingAspectConfig(resultDetails = false)
     XmEntity findOne(IdOrKey idOrKey);

@@ -61,6 +61,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.Validator;
 
 import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.time.Instant;
@@ -267,6 +268,9 @@ public class XmEntityResourceExtendedIntTest {
 
     private XmEntity xmEntityIncoming;
 
+    @PersistenceContext
+    private EntityManager entityManager;
+
 
     @BeforeTransaction
     public void beforeTransaction() {
@@ -315,6 +319,7 @@ public class XmEntityResourceExtendedIntTest {
 
         xmEntityService.setSelf(xmEntityService);
         this.xmEntityService = xmEntityService;
+        xmEntityService.setEntityManager(entityManager);
 
 
         lepManager.beginThreadContext(ctx -> {
@@ -999,6 +1004,28 @@ public class XmEntityResourceExtendedIntTest {
         performGet(urlTemplate + "&query=" + NOT_PRESENT_UNIQ_DESCRIPTION)
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.length()").value(0));
+
+    }
+
+    @Test
+    @WithMockUser(authorities = "SUPER-ADMIN")
+    public void testJpql() throws Exception {
+
+        // FIXME - fails if run test in Idea. But its needed for test running from console. need fix.
+        try {
+            xmEntitySearchRepository.deleteAll();
+        } catch (Exception e) {
+            log.warn("Suppress index deletion exception in tenant context: {}", String.valueOf(e));
+        }
+
+        // Initialize the database
+        xmEntityService.save(createEntityComplexIncoming().typeKey(DEFAULT_TYPE_KEY));
+        xmEntityService.save(createEntityComplexIncoming().typeKey(UPDATED_TYPE_KEY).description(UNIQ_DESCRIPTION));
+        xmEntityService.save(createEntityComplexIncoming().typeKey(SEARCH_TEST_KEY));
+
+
+        List<XmEntity> entities = xmEntityService.findAll("Select entity from XmEntity entity where entity.typeKey = :typeKey", of("typeKey", UPDATED_TYPE_KEY));
+        log.info("Entities {}", entities);
 
     }
 
