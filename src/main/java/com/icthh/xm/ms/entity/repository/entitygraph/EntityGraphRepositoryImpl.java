@@ -63,7 +63,6 @@ public class EntityGraphRepositoryImpl<T, I extends Serializable>
     }
 
     @Override
-    @Transactional(readOnly = true)
     public List<T> findAll(String jpql, Map<String, Object> args, List<String> embed) {
         Query query = entityManager.createQuery(jpql);
         args.forEach(query::setParameter);
