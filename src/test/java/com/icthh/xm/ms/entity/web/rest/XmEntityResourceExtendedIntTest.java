@@ -1009,28 +1009,6 @@ public class XmEntityResourceExtendedIntTest {
 
     @Test
     @WithMockUser(authorities = "SUPER-ADMIN")
-    public void testJpql() throws Exception {
-
-        // FIXME - fails if run test in Idea. But its needed for test running from console. need fix.
-        try {
-            xmEntitySearchRepository.deleteAll();
-        } catch (Exception e) {
-            log.warn("Suppress index deletion exception in tenant context: {}", String.valueOf(e));
-        }
-
-        // Initialize the database
-        xmEntityService.save(createEntityComplexIncoming().typeKey(DEFAULT_TYPE_KEY));
-        xmEntityService.save(createEntityComplexIncoming().typeKey(UPDATED_TYPE_KEY).description(UNIQ_DESCRIPTION));
-        xmEntityService.save(createEntityComplexIncoming().typeKey(SEARCH_TEST_KEY));
-
-
-        List<XmEntity> entities = xmEntityService.findAll("Select entity from XmEntity entity where entity.typeKey = :typeKey", of("typeKey", UPDATED_TYPE_KEY));
-        log.info("Entities {}", entities);
-
-    }
-
-    @Test
-    @WithMockUser(authorities = "SUPER-ADMIN")
     public void testSearchByTypeKeyAndTemplate() throws Exception {
 
         // FIXME - fails if run test in Idea. But its needed for test running from console. need fix.

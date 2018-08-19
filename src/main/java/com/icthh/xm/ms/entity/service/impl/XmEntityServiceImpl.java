@@ -2,6 +2,7 @@ package com.icthh.xm.ms.entity.service.impl;
 
 import static com.icthh.xm.ms.entity.domain.spec.LinkSpec.NEW_BUILDER_TYPE;
 import static com.icthh.xm.ms.entity.domain.spec.LinkSpec.SEARCH_BUILDER_TYPE;
+import static com.icthh.xm.ms.entity.repository.entitygraph.EntityGraphRepositoryImpl.createEntityGraph;
 import static com.icthh.xm.ms.entity.util.CustomCollectionUtils.nullSafe;
 import static com.jayway.jsonpath.Configuration.defaultConfiguration;
 import static com.jayway.jsonpath.Option.SUPPRESS_EXCEPTIONS;
@@ -12,6 +13,7 @@ import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.collections.MapUtils.isEmpty;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNoneBlank;
+import static org.hibernate.jpa.QueryHints.HINT_LOADGRAPH;
 import static org.springframework.beans.BeanUtils.isSimpleValueType;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -51,6 +53,7 @@ import com.icthh.xm.ms.entity.projection.XmEntityIdKeyTypeKey;
 import com.icthh.xm.ms.entity.projection.XmEntityStateProjection;
 import com.icthh.xm.ms.entity.repository.XmEntityPermittedRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
+import com.icthh.xm.ms.entity.repository.entitygraph.EntityGraphRepositoryImpl;
 import com.icthh.xm.ms.entity.repository.search.XmEntityPermittedSearchRepository;
 import com.icthh.xm.ms.entity.repository.search.XmEntitySearchRepository;
 import com.icthh.xm.ms.entity.service.AttachmentService;
@@ -70,6 +73,7 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.text.StrSubstitutor;
+import org.hibernate.jpa.QueryHints;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
@@ -287,9 +291,10 @@ public class XmEntityServiceImpl implements XmEntityService {
      */
     @Transactional(readOnly = true)
     @Override
-    public List<XmEntity> findAll(String jpql, Map<String, Object> args) {
+    public List<XmEntity> findAll(String jpql, Map<String, Object> args, List<String> embed) {
         Query query = entityManager.createQuery(jpql);
         args.forEach(query::setParameter);
+        query.setHint(HINT_LOADGRAPH, createEntityGraph(embed, entityManager, XmEntity.class));
         return query.getResultList();
     }
 

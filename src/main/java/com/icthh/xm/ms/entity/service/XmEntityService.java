@@ -45,7 +45,7 @@ public interface XmEntityService extends ResourceRepository {
      * @return
      */
     @Transactional(readOnly = true)
-    List<XmEntity> findAll(String jpql, Map<String, Object> args);
+    List<XmEntity> findAll(String jpql, Map<String, Object> args, List<String> embed);
 
     @LoggingAspectConfig(resultDetails = false)
     XmEntity findOne(IdOrKey idOrKey);

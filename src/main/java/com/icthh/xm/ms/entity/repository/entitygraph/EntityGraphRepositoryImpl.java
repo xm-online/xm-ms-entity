@@ -3,12 +3,8 @@ package com.icthh.xm.ms.entity.repository.entitygraph;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.hibernate.jpa.QueryHints;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.support.JpaEntityInformation;
 import org.springframework.data.jpa.repository.support.SimpleJpaRepository;
-import org.springframework.data.repository.support.PageableExecutionUtils;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityGraph;
@@ -54,7 +50,7 @@ public class EntityGraphRepositoryImpl<T, I extends Serializable>
 
         TypedQuery<T> query = entityManager
             .createQuery(criteriaQuery)
-            .setHint(QueryHints.HINT_LOADGRAPH, createEntityGraph(embed));
+            .setHint(QueryHints.HINT_LOADGRAPH, createEntityGraph(embed, entityManager, domainClass));
 
         List<T> resultList = query.getResultList();
         if (CollectionUtils.isEmpty(resultList)) {
@@ -63,7 +59,7 @@ public class EntityGraphRepositoryImpl<T, I extends Serializable>
         return resultList.get(0);
     }
 
-    private EntityGraph<T> createEntityGraph(List<String> embed) {
+    public static <T> EntityGraph<T> createEntityGraph(List<String> embed, EntityManager entityManager, Class<T> domainClass) {
         EntityGraph<T> graph = entityManager.createEntityGraph(domainClass);
         if (CollectionUtils.isNotEmpty(embed)) {
             embed.forEach(f -> addAttributeNodes(f, graph));

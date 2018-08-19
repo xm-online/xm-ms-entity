@@ -1,9 +1,12 @@
 package com.icthh.xm.ms.entity.service.impl;
 
+import static com.google.common.collect.ImmutableMap.of;
 import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_AUTH_CONTEXT;
 import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_TENANT_CONTEXT;
+import static java.util.Arrays.asList;
 import static java.util.UUID.randomUUID;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.when;
 
 import com.icthh.xm.commons.security.XmAuthenticationContext;
@@ -30,6 +33,7 @@ import com.icthh.xm.ms.entity.repository.XmEntityRepository;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -37,9 +41,12 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.junit4.SpringRunner;
 
+import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @Slf4j
@@ -50,7 +57,7 @@ import java.util.Set;
     WebappTenantOverrideConfiguration.class,
     TenantContextConfiguration.class
 })
-public class DeleteEntityIntTest {
+public class XmEntityServiceIntTest {
 
     @Autowired
     private TenantContextHolder tenantContextHolder;
@@ -281,6 +288,26 @@ public class DeleteEntityIntTest {
 
         xmEntityService.delete(sharedEntity.getId());
         xmEntityService.delete(otherEntity.getId());
+    }
+
+
+    @Test
+    @WithMockUser(authorities = "SUPER-ADMIN")
+    public void testJpql() throws Exception {
+
+        // Initialize the database
+        XmEntity entity1 = new XmEntity().typeKey("ENTITY1").name("###1").key(randomUUID());
+        xmEntityService.save(entity1);
+        XmEntity entity2 = new XmEntity().typeKey("ENTITY1").name("###2").key(randomUUID());
+        xmEntityService.save(entity2);
+        xmEntityService.save(new XmEntity().typeKey("ENTITY2").name("###3").key(randomUUID()));
+        xmEntityService.save(new XmEntity().typeKey("ACCOUNTING").name("###4").key(randomUUID()));
+
+        List<XmEntity> entities = xmEntityService.findAll("Select entity from XmEntity entity where entity.typeKey = :typeKey", of("typeKey", "ENTITY1"), asList("data"));
+        log.info("Entities {}", entities);
+
+        assertEquals(entities, asList(entity1, entity2));
+
     }
 
 }
