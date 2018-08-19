@@ -273,6 +273,15 @@ public class XmEntityServiceImpl implements XmEntityService {
         return xmEntityRepository.findAll(spec);
     }
 
+    /***
+     * Only for lep usage
+     */
+    @Transactional(readOnly = true)
+    @Override
+    public List<XmEntity> findAll(String jpql, Map<String, Object> args, List<String> embed) {
+        return xmEntityRepository.findAll(jpql, args, embed);
+    }
+
     /**
      * Get one xmEntity by id or key.
      *
@@ -296,7 +305,7 @@ public class XmEntityServiceImpl implements XmEntityService {
 
     private XmEntity findOneById(Long xmEntityId) {
         XmEntity xmEntity = xmEntityRepository.findOneById(xmEntityId);
-        return getOneEntity(xmEntity);
+        return self.getOneEntity(xmEntity);
     }
 
     // need for lep post processing with split script by typeKey
@@ -678,4 +687,5 @@ public class XmEntityServiceImpl implements XmEntityService {
             this.self = self;
         }
     }
+
 }
