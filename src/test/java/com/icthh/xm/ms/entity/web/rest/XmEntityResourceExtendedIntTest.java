@@ -268,7 +268,6 @@ public class XmEntityResourceExtendedIntTest {
     private XmEntity xmEntityIncoming;
 
 
-
     @BeforeTransaction
     public void beforeTransaction() {
         TenantContextUtils.setTenant(tenantContextHolder, "RESINTTEST");
