@@ -1,21 +1,5 @@
 package com.icthh.xm.ms.entity.service.impl;
 
-import static com.icthh.xm.ms.entity.domain.spec.LinkSpec.NEW_BUILDER_TYPE;
-import static com.icthh.xm.ms.entity.domain.spec.LinkSpec.SEARCH_BUILDER_TYPE;
-import static com.icthh.xm.ms.entity.repository.entitygraph.EntityGraphRepositoryImpl.createEntityGraph;
-import static com.icthh.xm.ms.entity.util.CustomCollectionUtils.nullSafe;
-import static com.jayway.jsonpath.Configuration.defaultConfiguration;
-import static com.jayway.jsonpath.Option.SUPPRESS_EXCEPTIONS;
-import static java.util.Arrays.asList;
-import static java.util.Collections.emptyList;
-import static java.util.Optional.ofNullable;
-import static java.util.stream.Collectors.toMap;
-import static org.apache.commons.collections.MapUtils.isEmpty;
-import static org.apache.commons.lang3.StringUtils.isBlank;
-import static org.apache.commons.lang3.StringUtils.isNoneBlank;
-import static org.hibernate.jpa.QueryHints.HINT_LOADGRAPH;
-import static org.springframework.beans.BeanUtils.isSimpleValueType;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.icthh.xm.commons.config.client.service.TenantConfigService;
 import com.icthh.xm.commons.exceptions.BusinessException;
@@ -26,18 +10,8 @@ import com.icthh.xm.commons.lep.spring.LepService;
 import com.icthh.xm.commons.permission.annotation.FindWithPermission;
 import com.icthh.xm.commons.security.XmAuthenticationContextHolder;
 import com.icthh.xm.ms.entity.config.Constants;
-import com.icthh.xm.ms.entity.domain.Attachment;
+import com.icthh.xm.ms.entity.domain.*;
 import com.icthh.xm.ms.entity.domain.Calendar;
-import com.icthh.xm.ms.entity.domain.Comment;
-import com.icthh.xm.ms.entity.domain.FileFormatEnum;
-import com.icthh.xm.ms.entity.domain.Link;
-import com.icthh.xm.ms.entity.domain.Location;
-import com.icthh.xm.ms.entity.domain.Rating;
-import com.icthh.xm.ms.entity.domain.SimpleExportXmEntityDto;
-import com.icthh.xm.ms.entity.domain.Tag;
-import com.icthh.xm.ms.entity.domain.UniqueField;
-import com.icthh.xm.ms.entity.domain.Vote;
-import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.domain.converter.EntityToCsvConverterUtils;
 import com.icthh.xm.ms.entity.domain.converter.EntityToExcelConverterUtils;
 import com.icthh.xm.ms.entity.domain.ext.IdOrKey;
@@ -53,18 +27,9 @@ import com.icthh.xm.ms.entity.projection.XmEntityIdKeyTypeKey;
 import com.icthh.xm.ms.entity.projection.XmEntityStateProjection;
 import com.icthh.xm.ms.entity.repository.XmEntityPermittedRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
-import com.icthh.xm.ms.entity.repository.entitygraph.EntityGraphRepositoryImpl;
 import com.icthh.xm.ms.entity.repository.search.XmEntityPermittedSearchRepository;
 import com.icthh.xm.ms.entity.repository.search.XmEntitySearchRepository;
-import com.icthh.xm.ms.entity.service.AttachmentService;
-import com.icthh.xm.ms.entity.service.LifecycleLepStrategy;
-import com.icthh.xm.ms.entity.service.LifecycleLepStrategyFactory;
-import com.icthh.xm.ms.entity.service.LinkService;
-import com.icthh.xm.ms.entity.service.ProfileService;
-import com.icthh.xm.ms.entity.service.StorageService;
-import com.icthh.xm.ms.entity.service.XmEntityService;
-import com.icthh.xm.ms.entity.service.XmEntitySpecService;
-import com.icthh.xm.ms.entity.service.XmEntityTemplatesSpecService;
+import com.icthh.xm.ms.entity.service.*;
 import com.icthh.xm.ms.entity.service.dto.LinkSourceDto;
 import com.jayway.jsonpath.DocumentContext;
 import com.jayway.jsonpath.JsonPath;
@@ -73,7 +38,6 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.text.StrSubstitutor;
-import org.hibernate.jpa.QueryHints;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
@@ -87,19 +51,27 @@ import org.springframework.util.CollectionUtils;
 import org.springframework.util.ObjectUtils;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
 import java.net.URI;
 import java.time.Instant;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
+
+import static com.icthh.xm.ms.entity.domain.spec.LinkSpec.NEW_BUILDER_TYPE;
+import static com.icthh.xm.ms.entity.domain.spec.LinkSpec.SEARCH_BUILDER_TYPE;
+import static com.icthh.xm.ms.entity.util.CustomCollectionUtils.nullSafe;
+import static com.jayway.jsonpath.Configuration.defaultConfiguration;
+import static com.jayway.jsonpath.Option.SUPPRESS_EXCEPTIONS;
+import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
+import static java.util.Optional.ofNullable;
+import static java.util.stream.Collectors.toMap;
+import static org.apache.commons.collections.MapUtils.isEmpty;
+import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.apache.commons.lang3.StringUtils.isNoneBlank;
+import static org.hibernate.jpa.QueryHints.HINT_LOADGRAPH;
+import static org.springframework.beans.BeanUtils.isSimpleValueType;
 
 /**
  * Service Implementation for managing XmEntity.
@@ -126,7 +98,6 @@ public class XmEntityServiceImpl implements XmEntityService {
     private final ObjectMapper objectMapper;
     private final TenantConfigService tenantConfigService;
 
-    private EntityManager entityManager;
     private XmEntityServiceImpl self;
 
     /**
@@ -282,20 +253,12 @@ public class XmEntityServiceImpl implements XmEntityService {
     }
 
     /***
-     *
      * Only for lep usage
-     *
-     * @param jpql
-     * @param args
-     * @return
      */
     @Transactional(readOnly = true)
     @Override
     public List<XmEntity> findAll(String jpql, Map<String, Object> args, List<String> embed) {
-        Query query = entityManager.createQuery(jpql);
-        args.forEach(query::setParameter);
-        query.setHint(HINT_LOADGRAPH, createEntityGraph(embed, entityManager, XmEntity.class));
-        return query.getResultList();
+        return xmEntityRepository.findAll(jpql, args, embed);
     }
 
     /**
@@ -702,11 +665,6 @@ public class XmEntityServiceImpl implements XmEntityService {
         if (this.self == null) {
             this.self = self;
         }
-    }
-
-    @PersistenceContext
-    public void setEntityManager(EntityManager entityManager) {
-        this.entityManager = entityManager;
     }
 
 }

@@ -1,5 +1,6 @@
 package com.icthh.xm.ms.entity.repository.entitygraph;
 
+import com.icthh.xm.ms.entity.domain.XmEntity;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.hibernate.jpa.QueryHints;
@@ -7,15 +8,15 @@ import org.springframework.data.jpa.repository.support.JpaEntityInformation;
 import org.springframework.data.jpa.repository.support.SimpleJpaRepository;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.persistence.EntityGraph;
-import javax.persistence.EntityManager;
-import javax.persistence.Subgraph;
-import javax.persistence.TypedQuery;
+import javax.persistence.*;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
 import java.io.Serializable;
 import java.util.List;
+import java.util.Map;
+
+import static org.hibernate.jpa.QueryHints.HINT_LOADGRAPH;
 
 @Slf4j
 public class EntityGraphRepositoryImpl<T, I extends Serializable>
@@ -50,7 +51,7 @@ public class EntityGraphRepositoryImpl<T, I extends Serializable>
 
         TypedQuery<T> query = entityManager
             .createQuery(criteriaQuery)
-            .setHint(QueryHints.HINT_LOADGRAPH, createEntityGraph(embed, entityManager, domainClass));
+            .setHint(HINT_LOADGRAPH, createEntityGraph(embed));
 
         List<T> resultList = query.getResultList();
         if (CollectionUtils.isEmpty(resultList)) {
@@ -59,7 +60,16 @@ public class EntityGraphRepositoryImpl<T, I extends Serializable>
         return resultList.get(0);
     }
 
-    public static <T> EntityGraph<T> createEntityGraph(List<String> embed, EntityManager entityManager, Class<T> domainClass) {
+    @Override
+    @Transactional(readOnly = true)
+    public List<T> findAll(String jpql, Map<String, Object> args, List<String> embed) {
+        Query query = entityManager.createQuery(jpql);
+        args.forEach(query::setParameter);
+        query.setHint(HINT_LOADGRAPH, createEntityGraph(embed));
+        return query.getResultList();
+    }
+
+    private EntityGraph<T> createEntityGraph(List<String> embed) {
         EntityGraph<T> graph = entityManager.createEntityGraph(domainClass);
         if (CollectionUtils.isNotEmpty(embed)) {
             embed.forEach(f -> addAttributeNodes(f, graph));
