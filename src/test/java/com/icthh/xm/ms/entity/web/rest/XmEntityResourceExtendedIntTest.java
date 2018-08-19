@@ -61,7 +61,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.Validator;
 
 import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.time.Instant;
@@ -268,8 +267,6 @@ public class XmEntityResourceExtendedIntTest {
 
     private XmEntity xmEntityIncoming;
 
-    @PersistenceContext
-    private EntityManager entityManager;
 
 
     @BeforeTransaction
@@ -319,7 +316,6 @@ public class XmEntityResourceExtendedIntTest {
 
         xmEntityService.setSelf(xmEntityService);
         this.xmEntityService = xmEntityService;
-        xmEntityService.setEntityManager(entityManager);
 
 
         lepManager.beginThreadContext(ctx -> {
