@@ -174,6 +174,11 @@ public class XmEntityRepository implements SpringXmEntityRepository {
         return springXmEntityRepository.findOne(aLong, embed);
     }
 
+    @Override
+    public List<XmEntity> findAll(String jpql, Map<String, Object> args, List<String> embed) {
+        return springXmEntityRepository.findAll(jpql, args, embed);
+    }
+
     public <S extends XmEntity> List<S> save(Iterable<S> entities) {
         if (!isEntityVersionEnabled()) {
             entities.forEach(this::updateVersion);
