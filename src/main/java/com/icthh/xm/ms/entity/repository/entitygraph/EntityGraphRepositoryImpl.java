@@ -44,7 +44,6 @@ public class EntityGraphRepositoryImpl<T, I extends Serializable>
     }
 
     @Override
-    @Transactional(readOnly = true)
     public T findOne(I id, List<String> embed) {
         CriteriaBuilder builder = entityManager.getCriteriaBuilder();
         CriteriaQuery<T> criteriaQuery = builder.createQuery(domainClass);
