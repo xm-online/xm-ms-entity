@@ -645,7 +645,7 @@ public class XmEntityServiceImpl implements XmEntityService {
         if (idOrKey.isKey()) {
             throw new IllegalArgumentException("Key mode is not supported yet");
         }
-        return xmEntityRepository.findOne(idOrKey.getId(), embed);
+        return self.getOneEntity(xmEntityRepository.findOne(idOrKey.getId(), embed));
     }
 
     @Transactional(readOnly = true)
