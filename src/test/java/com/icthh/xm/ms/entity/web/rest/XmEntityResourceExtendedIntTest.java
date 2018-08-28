@@ -632,7 +632,7 @@ public class XmEntityResourceExtendedIntTest {
 
         // Validate the XmEntity in Elasticsearch
         XmEntity xmEntityEs = xmEntitySearchRepository.findOne(valueOf(id.toString()));
-        assertThat(xmEntityEs).isEqualToIgnoringGivenFields(testXmEntity, "avatarUrlRelative", "avatarUrlFull");
+        assertThat(xmEntityEs).isEqualToIgnoringGivenFields(testXmEntity, "avatarUrlRelative");
 
     }
 

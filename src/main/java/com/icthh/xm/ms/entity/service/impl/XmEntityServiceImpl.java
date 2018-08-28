@@ -173,7 +173,7 @@ public class XmEntityServiceImpl implements XmEntityService {
         processUniqueField(xmEntity, oldEntity);
 
         // TODO: amedved: use saveAndFlash() here because old entity was returned if use save()
-        // as e result old data may got to elasticsearch
+        // as a result old data may be persisted to elasticsearch
         XmEntity result = xmEntityRepository.save(xmEntity);
         xmEntitySearchRepository.save(result);
         return result;
