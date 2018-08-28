@@ -9,6 +9,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.persistence.PostLoad;
+import javax.persistence.PostPersist;
+import javax.persistence.PostUpdate;
 import javax.persistence.PrePersist;
 import javax.persistence.PreUpdate;
 
@@ -25,24 +27,26 @@ public class AvatarUrlListener {
     @PrePersist
     @PreUpdate
     public void prePersist(XmEntity obj) {
-        String avatarUrl = obj.getAvatarUrl();
+        String avatarUrl = obj.getAvatarUrlRelative();
         if (StringUtils.isNoneBlank(avatarUrl)) {
             if (isUrlMatchesPattern(avatarUrl, getPatternFull())) {
-                obj.setAvatarUrl(FilenameUtils.getName(avatarUrl));
+                obj.setAvatarUrlRelative(FilenameUtils.getName(avatarUrl));
             } else {
-                obj.setAvatarUrl(avatarUrl);
+                obj.setAvatarUrlRelative(avatarUrl);
             }
         }
     }
 
     @PostLoad
+    @PostPersist
+    @PostUpdate
     public void postLoad(XmEntity obj) {
-        String avatarUrl = obj.getAvatarUrl();
+        String avatarUrl = obj.getAvatarUrlRelative();
         if (StringUtils.isNoneBlank(avatarUrl)) {
             if (isUrlMatchesPattern(avatarUrl, getPatternPart())) {
-                obj.setAvatarUrl(getPrefix() + avatarUrl);
+                obj.setAvatarUrlFull(getPrefix() + avatarUrl);
             } else {
-                obj.setAvatarUrl(avatarUrl);
+                obj.setAvatarUrlFull(avatarUrl);
             }
         }
     }
