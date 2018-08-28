@@ -159,7 +159,9 @@ public class XmEntity implements Serializable, Persistable<Long> {
     @Column(name = "avatar_url")
     private String avatarUrlRelative;
 
-    @JsonIgnore
+    /**
+     * Full link to the avatar image.
+     */
     @Transient
     private String avatarUrlFull;
 
@@ -373,14 +375,11 @@ public class XmEntity implements Serializable, Persistable<Long> {
         return this;
     }
 
-    @JsonProperty("avatarUrl")
     public void setAvatarUrl(String avatarUrl) {
         this.avatarUrlRelative = avatarUrl;
         this.avatarUrlFull = avatarUrl;
     }
 
-//    @JsonIgnore
-//    @JsonProperty("avatarUrl")
     public String getAvatarUrlRelative(){
         return this.avatarUrlRelative;
     }
