@@ -381,3 +381,6 @@ types:
               typeKey: TEST_SAVE_WITH_LINK_NEW_ENTITY
     - key: TEST_SAVE_WITH_LINK_NEW_ENTITY
       isAbstract: false
+    - key: ENTITY_WITH_AVATAR
+      isApp: false
+      isAbstract: false

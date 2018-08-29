@@ -36,6 +36,7 @@ import javax.persistence.NamedEntityGraph;
 import javax.persistence.OneToMany;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
+import javax.persistence.Transient;
 import javax.persistence.Version;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -153,9 +154,16 @@ public class XmEntity implements Serializable, Persistable<Long> {
      * Relative link to the avatar image. It should support to use additional parameters
      * to identify avatar size for different views.
      */
+    @JsonIgnore
     @ApiModelProperty(value = "Relative link to the avatar image. It should support to use additional parameters to identify avatar size for different views.")
     @Column(name = "avatar_url")
-    private String avatarUrl;
+    private String avatarUrlRelative;
+
+    /**
+     * Full link to the avatar image.
+     */
+    @Transient
+    private String avatarUrlFull;
 
     /**
      * This field describe instance of entity and is not i18n. It could be a big text.
@@ -357,17 +365,31 @@ public class XmEntity implements Serializable, Persistable<Long> {
         this.endDate = endDate;
     }
 
+    @JsonProperty("avatarUrl")
     public String getAvatarUrl() {
-        return avatarUrl;
+        return avatarUrlFull;
     }
 
     public XmEntity avatarUrl(String avatarUrl) {
-        this.avatarUrl = avatarUrl;
+        setAvatarUrl(avatarUrl);
         return this;
     }
 
     public void setAvatarUrl(String avatarUrl) {
-        this.avatarUrl = avatarUrl;
+        this.avatarUrlRelative = avatarUrl;
+        this.avatarUrlFull = avatarUrl;
+    }
+
+    public String getAvatarUrlRelative(){
+        return this.avatarUrlRelative;
+    }
+
+    public void setAvatarUrlRelative(String avatarUrlRelative) {
+        this.avatarUrlRelative = avatarUrlRelative;
+    }
+
+    public void setAvatarUrlFull(String avatarUrlFull) {
+        this.avatarUrlFull = avatarUrlFull;
     }
 
     public String getDescription() {

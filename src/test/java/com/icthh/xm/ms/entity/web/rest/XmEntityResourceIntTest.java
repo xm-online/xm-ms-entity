@@ -349,7 +349,7 @@ public class XmEntityResourceIntTest {
 
         // Validate the XmEntity in Elasticsearch
         XmEntity xmEntityEs = xmEntitySearchRepository.findOne(testXmEntity.getId());
-        assertThat(xmEntityEs).isEqualToComparingFieldByField(testXmEntity);
+        assertThat(xmEntityEs).isEqualToIgnoringGivenFields(testXmEntity, "avatarUrlRelative", "avatarUrlFull");
     }
 
     @Test
@@ -664,7 +664,7 @@ public class XmEntityResourceIntTest {
         // Validate the XmEntity in Elasticsearch
         XmEntity xmEntityEs = xmEntitySearchRepository.findOne(testXmEntity.getId());
         assertThat(xmEntityEs).isEqualToIgnoringGivenFields(testXmEntity,
-                                                            "avatarUrl",
+                                                            "avatarUrlRelative", "avatarUrlFull",
                                                             "version",
                                                             "attachments",
                                                             "calendars",

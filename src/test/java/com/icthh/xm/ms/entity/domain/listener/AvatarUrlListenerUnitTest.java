@@ -50,7 +50,7 @@ public class AvatarUrlListenerUnitTest {
 
         target.prePersist(entity);
 
-        assertEquals("hello.jpg", entity.getAvatarUrl());
+        assertEquals("hello.jpg", entity.getAvatarUrlRelative());
     }
 
     @Test
@@ -59,7 +59,7 @@ public class AvatarUrlListenerUnitTest {
 
         target.prePersist(entity);
 
-        assertEquals("hello.jpg", entity.getAvatarUrl());
+        assertEquals("hello.jpg", entity.getAvatarUrlRelative());
     }
 
     @Test
