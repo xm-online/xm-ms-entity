@@ -38,6 +38,7 @@ import com.icthh.xm.commons.tenant.TenantContextUtils;
 import com.icthh.xm.ms.entity.EntityApp;
 import com.icthh.xm.ms.entity.config.ApplicationProperties;
 import com.icthh.xm.ms.entity.config.Constants;
+import com.icthh.xm.ms.entity.config.InternalTransactionService;
 import com.icthh.xm.ms.entity.config.LepConfiguration;
 import com.icthh.xm.ms.entity.config.SecurityBeanOverrideConfiguration;
 import com.icthh.xm.ms.entity.config.tenant.WebappTenantOverrideConfiguration;
@@ -64,6 +65,7 @@ import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
 import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -204,6 +206,9 @@ public class XmEntityResourceIntTest {
     @Autowired
     ObjectMapper objectMapper;
 
+    @Autowired
+    private ElasticsearchTemplate elasticsearchTemplate;
+
     @Mock
     private XmAuthenticationContextHolder authContextHolder;
 
@@ -226,6 +231,9 @@ public class XmEntityResourceIntTest {
     @Autowired
     private TenantService tenantService;
 
+    @Autowired
+    private InternalTransactionService transactionService;
+
     @BeforeTransaction
     public void beforeTransaction() {
         TenantContextUtils.setTenant(tenantContextHolder, "RESINTTEST");
@@ -234,6 +242,14 @@ public class XmEntityResourceIntTest {
     @SneakyThrows
     @Before
     public void setup() {
+
+        TenantContextUtils.setTenant(tenantContextHolder, "RESINTTEST");
+
+        //initialize index before test - put valid mapping
+        elasticsearchTemplate.deleteIndex(XmEntity.class);
+        elasticsearchTemplate.createIndex(XmEntity.class);
+        elasticsearchTemplate.putMapping(XmEntity.class);
+
         MockitoAnnotations.initMocks(this);
         when(authContextHolder.getContext()).thenReturn(context);
         when(context.getUserKey()).thenReturn(Optional.of("userKey"));
@@ -323,33 +339,39 @@ public class XmEntityResourceIntTest {
     @Test
     @Transactional
     public void createXmEntity() throws Exception {
-        int databaseSizeBeforeCreate = xmEntityRepository.findAll().size();
 
-        // Create the XmEntity
-        restXmEntityMockMvc.perform(post("/api/xm-entities")
-            .contentType(TestUtil.APPLICATION_JSON_UTF8)
-            .content(TestUtil.convertObjectToJsonBytes(xmEntity)))
-            .andExpect(status().isCreated());
+        XmEntity dbXmEntity = transactionService.inNestedTransaction(() -> {
 
-        // Validate the XmEntity in the database
-        List<XmEntity> xmEntityList = xmEntityRepository.findAll();
-        assertThat(xmEntityList).hasSize(databaseSizeBeforeCreate + 1);
-        XmEntity testXmEntity = xmEntityList.get(xmEntityList.size() - 1);
-        assertThat(testXmEntity.getKey()).isEqualTo(DEFAULT_KEY);
-        assertThat(testXmEntity.getTypeKey()).isEqualTo(DEFAULT_TYPE_KEY);
-        assertThat(testXmEntity.getStateKey()).isEqualTo(DEFAULT_STATE_KEY);
-        assertThat(testXmEntity.getName()).isEqualTo(DEFAULT_NAME);
-        assertThat(testXmEntity.getStartDate()).isEqualTo(MOCKED_START_DATE);
-        assertThat(testXmEntity.getUpdateDate()).isEqualTo(MOCKED_UPDATE_DATE);
-        assertThat(testXmEntity.getEndDate()).isEqualTo(DEFAULT_END_DATE);
-        assertThat(testXmEntity.getAvatarUrl()).contains("aaaaa.jpg");
-        assertThat(testXmEntity.getDescription()).isEqualTo(DEFAULT_DESCRIPTION);
-        assertThat(testXmEntity.getData()).isEqualTo(DEFAULT_DATA);
-        assertThat(testXmEntity.isRemoved()).isEqualTo(DEFAULT_REMOVED);
+            int databaseSizeBeforeCreate = xmEntityRepository.findAll().size();
+
+            // Create the XmEntity
+            restXmEntityMockMvc.perform(post("/api/xm-entities")
+                .contentType(TestUtil.APPLICATION_JSON_UTF8)
+                .content(TestUtil.convertObjectToJsonBytes(xmEntity)))
+                .andExpect(status().isCreated());
+
+            // Validate the XmEntity in the database
+            List<XmEntity> xmEntityList = xmEntityRepository.findAll();
+            assertThat(xmEntityList).hasSize(databaseSizeBeforeCreate + 1);
+            XmEntity testXmEntity = xmEntityList.get(xmEntityList.size() - 1);
+            assertThat(testXmEntity.getKey()).isEqualTo(DEFAULT_KEY);
+            assertThat(testXmEntity.getTypeKey()).isEqualTo(DEFAULT_TYPE_KEY);
+            assertThat(testXmEntity.getStateKey()).isEqualTo(DEFAULT_STATE_KEY);
+            assertThat(testXmEntity.getName()).isEqualTo(DEFAULT_NAME);
+            assertThat(testXmEntity.getStartDate()).isEqualTo(MOCKED_START_DATE);
+            assertThat(testXmEntity.getUpdateDate()).isEqualTo(MOCKED_UPDATE_DATE);
+            assertThat(testXmEntity.getEndDate()).isEqualTo(DEFAULT_END_DATE);
+            assertThat(testXmEntity.getAvatarUrl()).contains("aaaaa.jpg");
+            assertThat(testXmEntity.getDescription()).isEqualTo(DEFAULT_DESCRIPTION);
+            assertThat(testXmEntity.getData()).isEqualTo(DEFAULT_DATA);
+            assertThat(testXmEntity.isRemoved()).isEqualTo(DEFAULT_REMOVED);
+
+            return testXmEntity;
+        }, this::setup);
 
         // Validate the XmEntity in Elasticsearch
-        XmEntity xmEntityEs = xmEntitySearchRepository.findOne(testXmEntity.getId());
-        assertThat(xmEntityEs).isEqualToIgnoringGivenFields(testXmEntity, "avatarUrlRelative", "avatarUrlFull");
+        XmEntity xmEntityEs = xmEntitySearchRepository.findOne(dbXmEntity.getId());
+        assertThat(xmEntityEs).isEqualToIgnoringGivenFields(dbXmEntity, "avatarUrlRelative", "avatarUrlFull");
     }
 
     @Test
@@ -617,59 +639,67 @@ public class XmEntityResourceIntTest {
     @Test
     @Transactional
     public void updateXmEntity() throws Exception {
-        // Initialize the database
-        xmEntity = xmEntityServiceImpl.save(xmEntity);
+        XmEntity dbXmEntity = transactionService.inNestedTransaction(() -> {
 
-        int databaseSizeBeforeUpdate = xmEntityRepository.findAll().size();
+            // Initialize the database
+            xmEntity = xmEntityServiceImpl.save(xmEntity);
 
-        // Update the xmEntity
-        XmEntity updatedXmEntity = xmEntityRepository.findOne(xmEntity.getId());
+            int databaseSizeBeforeUpdate = xmEntityRepository.findAll().size();
 
-        em.detach(updatedXmEntity);
+            // Update the xmEntity
+            XmEntity updatedXmEntity = xmEntityRepository.findOne(xmEntity.getId());
 
-        updatedXmEntity
-            .key(UPDATED_KEY)
-            .typeKey(UPDATED_TYPE_KEY)
-            .stateKey(UPDATED_STATE_KEY)
-            .name(UPDATED_NAME)
-            .startDate(UPDATED_START_DATE)
-            .updateDate(UPDATED_UPDATE_DATE)
-            .endDate(UPDATED_END_DATE)
-            .avatarUrl(UPDATED_AVATAR_URL)
-            .description(UPDATED_DESCRIPTION)
-            .data(UPDATED_DATA)
-            .removed(UPDATED_REMOVED);
+            em.detach(updatedXmEntity);
 
-        restXmEntityMockMvc.perform(put("/api/xm-entities")
-            .contentType(TestUtil.APPLICATION_JSON_UTF8)
-            .content(TestUtil.convertObjectToJsonBytes(updatedXmEntity)))
-            .andExpect(status().isOk());
+            updatedXmEntity
+                .key(UPDATED_KEY)
+                .typeKey(UPDATED_TYPE_KEY)
+                .stateKey(UPDATED_STATE_KEY)
+                .name(UPDATED_NAME)
+                .startDate(UPDATED_START_DATE)
+                .updateDate(UPDATED_UPDATE_DATE)
+                .endDate(UPDATED_END_DATE)
+                .avatarUrl(UPDATED_AVATAR_URL)
+                .description(UPDATED_DESCRIPTION)
+                .data(UPDATED_DATA)
+                .removed(UPDATED_REMOVED);
 
-        // Validate the XmEntity in the database
-        List<XmEntity> xmEntityList = xmEntityRepository.findAll();
-        assertThat(xmEntityList).hasSize(databaseSizeBeforeUpdate);
-        XmEntity testXmEntity = xmEntityList.get(xmEntityList.size() - 1);
-        assertThat(testXmEntity.getKey()).isEqualTo(UPDATED_KEY);
-        assertThat(testXmEntity.getTypeKey()).isEqualTo(UPDATED_TYPE_KEY);
-        assertThat(testXmEntity.getStateKey()).isEqualTo(UPDATED_STATE_KEY);
-        assertThat(testXmEntity.getName()).isEqualTo(UPDATED_NAME);
-        assertThat(testXmEntity.getStartDate()).isEqualTo(MOCKED_START_DATE);
-        assertThat(testXmEntity.getUpdateDate()).isEqualTo(MOCKED_UPDATE_DATE);
-        assertThat(testXmEntity.getEndDate()).isEqualTo(UPDATED_END_DATE);
-        assertThat(testXmEntity.getAvatarUrl()).contains("bbbbb.jpg");
-        assertThat(testXmEntity.getDescription()).isEqualTo(UPDATED_DESCRIPTION);
-        assertThat(testXmEntity.getData()).isEqualTo(UPDATED_DATA);
-        assertThat(testXmEntity.isRemoved()).isEqualTo(UPDATED_REMOVED);
+            restXmEntityMockMvc.perform(put("/api/xm-entities")
+                .contentType(TestUtil.APPLICATION_JSON_UTF8)
+                .content(TestUtil.convertObjectToJsonBytes(updatedXmEntity)))
+                .andExpect(status().isOk());
+
+            // Validate the XmEntity in the database
+            List<XmEntity> xmEntityList = xmEntityRepository.findAll();
+            assertThat(xmEntityList).hasSize(databaseSizeBeforeUpdate);
+            XmEntity testXmEntity = xmEntityList.get(xmEntityList.size() - 1);
+            assertThat(testXmEntity.getKey()).isEqualTo(UPDATED_KEY);
+            assertThat(testXmEntity.getTypeKey()).isEqualTo(UPDATED_TYPE_KEY);
+            assertThat(testXmEntity.getStateKey()).isEqualTo(UPDATED_STATE_KEY);
+            assertThat(testXmEntity.getName()).isEqualTo(UPDATED_NAME);
+            assertThat(testXmEntity.getStartDate()).isEqualTo(MOCKED_START_DATE);
+            assertThat(testXmEntity.getUpdateDate()).isEqualTo(MOCKED_UPDATE_DATE);
+            assertThat(testXmEntity.getEndDate()).isEqualTo(UPDATED_END_DATE);
+            assertThat(testXmEntity.getAvatarUrl()).contains("bbbbb.jpg");
+            assertThat(testXmEntity.getDescription()).isEqualTo(UPDATED_DESCRIPTION);
+            assertThat(testXmEntity.getData()).isEqualTo(UPDATED_DATA);
+            assertThat(testXmEntity.isRemoved()).isEqualTo(UPDATED_REMOVED);
+            return testXmEntity;
+        }, this::setup);
 
         // Validate the XmEntity in Elasticsearch
-        XmEntity xmEntityEs = xmEntitySearchRepository.findOne(testXmEntity.getId());
-        assertThat(xmEntityEs).isEqualToIgnoringGivenFields(testXmEntity,
+        XmEntity xmEntityEs = xmEntitySearchRepository.findOne(dbXmEntity.getId());
+        assertThat(xmEntityEs).isEqualToIgnoringGivenFields(dbXmEntity,
                                                             "avatarUrlRelative", "avatarUrlFull",
                                                             "version",
                                                             "attachments",
                                                             "calendars",
                                                             "locations",
                                                             "ratings",
+                                                            "votes",
+                                                            "events",
+                                                            "uniqueFields",
+                                                            "sources",
                                                             "tags",
                                                             "comments",
                                                             "targets",
@@ -691,16 +721,18 @@ public class XmEntityResourceIntTest {
     @Test
     @Transactional
     public void deleteXmEntity() throws Exception {
-        // Initialize the database
-        xmEntity = xmEntityServiceImpl.save(xmEntity);
+        int databaseSizeBeforeDelete = transactionService.inNestedTransaction(() -> {
+            // Initialize the database
+            xmEntity = xmEntityServiceImpl.save(xmEntity);
 
-        int databaseSizeBeforeDelete = xmEntityRepository.findAll().size();
+            int databaseSizeBeforeDeleteDb = xmEntityRepository.findAll().size();
 
-        // Get the xmEntity
-        restXmEntityMockMvc.perform(delete("/api/xm-entities/{id}", xmEntity.getId())
-            .accept(TestUtil.APPLICATION_JSON_UTF8))
-            .andExpect(status().isOk());
-
+            // Get the xmEntity
+            restXmEntityMockMvc.perform(delete("/api/xm-entities/{id}", xmEntity.getId())
+                .accept(TestUtil.APPLICATION_JSON_UTF8))
+                .andExpect(status().isOk());
+            return databaseSizeBeforeDeleteDb;
+        }, this::setup);
         // Validate Elasticsearch is empty
         boolean xmEntityExistsInEs = xmEntitySearchRepository.exists(xmEntity.getId());
         assertThat(xmEntityExistsInEs).isFalse();
@@ -713,8 +745,10 @@ public class XmEntityResourceIntTest {
     @Test
     @Transactional
     public void searchXmEntity() throws Exception {
-        // Initialize the database
-        xmEntity = xmEntityServiceImpl.save(xmEntity);
+        xmEntity = transactionService.inNestedTransaction(() -> {
+                // Initialize the database
+                return xmEntityServiceImpl.save(xmEntity);
+        }, this::setup);
 
         // Search the xmEntity
         restXmEntityMockMvc.perform(get("/api/_search/xm-entities?query=id:" + xmEntity.getId()))
@@ -737,8 +771,10 @@ public class XmEntityResourceIntTest {
     @Test
     @Transactional
     public void searchXmEntityWithTemplate() throws Exception {
-        // Initialize the database
-        xmEntity = xmEntityServiceImpl.save(xmEntity);
+        xmEntity = transactionService.inNestedTransaction(() -> {
+            // Initialize the database
+            return xmEntityServiceImpl.save(xmEntity);
+        }, this::setup);
 
         // Search the xmEntity
         restXmEntityMockMvc.perform(get("/api/_search-with-template/xm-entities?template=BY_TYPEKEY_AND_ID&templateParams[typeKey]=" + xmEntity.getTypeKey() + "&templateParams[id]=" + xmEntity.getId()))

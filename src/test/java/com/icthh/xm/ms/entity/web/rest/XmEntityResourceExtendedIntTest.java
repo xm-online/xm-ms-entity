@@ -17,6 +17,7 @@ import com.icthh.xm.lep.api.LepManager;
 import com.icthh.xm.ms.entity.EntityApp;
 import com.icthh.xm.ms.entity.config.ApplicationProperties;
 import com.icthh.xm.ms.entity.config.Constants;
+import com.icthh.xm.ms.entity.config.InternalTransactionService;
 import com.icthh.xm.ms.entity.config.LepConfiguration;
 import com.icthh.xm.ms.entity.config.SecurityBeanOverrideConfiguration;
 import com.icthh.xm.ms.entity.config.tenant.WebappTenantOverrideConfiguration;
@@ -79,6 +80,7 @@ import static com.icthh.xm.ms.entity.web.rest.TestUtil.sameInstant;
 import static java.lang.Long.valueOf;
 import static java.time.Instant.now;
 import static java.util.Collections.emptyMap;
+import static java.util.Collections.emptySet;
 import static java.util.UUID.randomUUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
@@ -260,6 +262,9 @@ public class XmEntityResourceExtendedIntTest {
     @Autowired
     private TenantService tenantService;
 
+    @Autowired
+    private InternalTransactionService transactionService;
+
     @Mock
     private XmAuthenticationContext context;
 
@@ -279,6 +284,7 @@ public class XmEntityResourceExtendedIntTest {
     public void setup() {
         log.info("Init setup");
 
+        TenantContextUtils.setTenant(tenantContextHolder, "RESINTTEST");
         //xmEntitySearchRepository.deleteAll();
 
         //initialize index before test - put valid mapping
@@ -978,17 +984,7 @@ public class XmEntityResourceExtendedIntTest {
     @WithMockUser(authorities = "SUPER-ADMIN")
     public void testSearchByTypeKeyAndQuery() throws Exception {
 
-        // FIXME - fails if run test in Idea. But its needed for test running from console. need fix.
-        try {
-            xmEntitySearchRepository.deleteAll();
-        } catch (Exception e) {
-            log.warn("Suppress index deletion exception in tenant context: {}", String.valueOf(e));
-        }
-
-        // Initialize the database
-        xmEntityService.save(createEntityComplexIncoming().typeKey(DEFAULT_TYPE_KEY));
-        xmEntityService.save(createEntityComplexIncoming().typeKey(UPDATED_TYPE_KEY).description(UNIQ_DESCRIPTION));
-        xmEntityService.save(createEntityComplexIncoming().typeKey(SEARCH_TEST_KEY));
+        prepareSearch();
 
         String urlTemplate = "/api/_search-with-typekey/xm-entities?typeKey=ACCOUNT&size=5";
 
@@ -1013,17 +1009,7 @@ public class XmEntityResourceExtendedIntTest {
     @WithMockUser(authorities = "SUPER-ADMIN")
     public void testSearchByTypeKeyAndTemplate() throws Exception {
 
-        // FIXME - fails if run test in Idea. But its needed for test running from console. need fix.
-        try {
-            xmEntitySearchRepository.deleteAll();
-        } catch (Exception e) {
-            log.warn("Suppress index deletion exception in tenant context: {}", String.valueOf(e));
-        }
-
-        // Initialize the database
-        xmEntityService.save(createEntityComplexIncoming().typeKey(DEFAULT_TYPE_KEY));
-        xmEntityService.save(createEntityComplexIncoming().typeKey(UPDATED_TYPE_KEY).description(UNIQ_DESCRIPTION));
-        xmEntityService.save(createEntityComplexIncoming().typeKey(SEARCH_TEST_KEY));
+        prepareSearch();
 
         String urlTemplate = "/api/_search-with-typekey-and-template/xm-entities?typeKey=ACCOUNT&size=5";
 
@@ -1043,6 +1029,24 @@ public class XmEntityResourceExtendedIntTest {
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.length()").value(0));
 
+    }
+
+    private void prepareSearch() {
+        transactionService.inNestedTransaction(() -> {
+            // FIXME - fails if run test in Idea. But its needed for test running from console. need fix.
+            try {
+                xmEntitySearchRepository.deleteAll();
+            } catch (Exception e) {
+                log.warn("Suppress index deletion exception in tenant context: {}", String.valueOf(e));
+            }
+
+            // Initialize the database
+            xmEntityService.save(createEntityComplexIncoming().typeKey(DEFAULT_TYPE_KEY).stateKey(DEFAULT_STATE_KEY));
+            xmEntityService.save(createEntityComplexIncoming().typeKey(UPDATED_TYPE_KEY).description(UNIQ_DESCRIPTION).stateKey(DEFAULT_STATE_KEY));
+            xmEntityService.save(createEntityComplexIncoming().typeKey(SEARCH_TEST_KEY).stateKey(null).data(null).attachments(emptySet()).tags(emptySet()).locations(emptySet()));
+
+            return null;
+        }, this::setup);
     }
 
     @Test
