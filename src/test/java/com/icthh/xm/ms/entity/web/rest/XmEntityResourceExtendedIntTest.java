@@ -108,7 +108,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
     WebappTenantOverrideConfiguration.class,
     LepConfiguration.class
 })
-@Ignore
 public class XmEntityResourceExtendedIntTest {
 
     private static final String DEFAULT_KEY = "AAAAAAAAAA";
@@ -1005,6 +1004,8 @@ public class XmEntityResourceExtendedIntTest {
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.length()").value(0));
 
+        xmEntityRepository.deleteAll();
+        xmEntitySearchRepository.deleteAll();
     }
 
     @Test
@@ -1030,6 +1031,9 @@ public class XmEntityResourceExtendedIntTest {
             urlTemplate + "&template=UNIQ_DESCRIPTION&templateParams[description]=" + NOT_PRESENT_UNIQ_DESCRIPTION)
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.length()").value(0));
+
+        xmEntityRepository.deleteAll();
+        xmEntitySearchRepository.deleteAll();
 
     }
 
