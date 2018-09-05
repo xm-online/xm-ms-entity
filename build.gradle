@@ -96,6 +96,8 @@ if (OperatingSystem.current().isWindows()) {
 }
 
 test {
+    dependsOn 'clean'
+    classes.mustRunAfter 'clean'
     systemProperty "spring.profiles.active", "test"
     mkdir("src/test/features")
     include '**/*UnitTest*'
