@@ -353,7 +353,7 @@ public class XmEntityResourceExtendedIntTest {
     @After
     @Override
     public void finalize() {
-        xmEntityRepository.findAll().forEach(it -> xmEntityService.delete(it.getId()));
+        xmEntityRepository.deleteAll();
         lepManager.endThreadContext();
         tenantContextHolder.getPrivilegedContext().destroyCurrentContext();
     }
@@ -1400,6 +1400,7 @@ public class XmEntityResourceExtendedIntTest {
                 .containsIgnoringCase("NULL not allowed for column \"UPDATE_DATE\"");
         }
 
+        xmEntityService.delete(xmEntityIncoming.getId());
     }
 
     @Test
@@ -1657,6 +1658,7 @@ public class XmEntityResourceExtendedIntTest {
             .andExpect(status().is2xxSuccessful())
             .andReturn();
 
+        xmEntityService.delete(entity.getId());
     }
 
     @Test
