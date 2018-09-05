@@ -353,6 +353,7 @@ public class XmEntityResourceExtendedIntTest {
     @After
     @Override
     public void finalize() {
+        xmEntityRepository.findAll().forEach(it -> xmEntityService.delete(it.getId()));
         lepManager.endThreadContext();
         tenantContextHolder.getPrivilegedContext().destroyCurrentContext();
     }
