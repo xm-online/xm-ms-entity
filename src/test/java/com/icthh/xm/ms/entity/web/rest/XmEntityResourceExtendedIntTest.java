@@ -66,6 +66,7 @@ import javax.persistence.EntityManager;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -984,7 +985,7 @@ public class XmEntityResourceExtendedIntTest {
     @WithMockUser(authorities = "SUPER-ADMIN")
     public void testSearchByTypeKeyAndQuery() throws Exception {
 
-        prepareSearch();
+        List<Long> ids = prepareSearch();
 
         String urlTemplate = "/api/_search-with-typekey/xm-entities?typeKey=ACCOUNT&size=5";
 
@@ -1003,13 +1004,14 @@ public class XmEntityResourceExtendedIntTest {
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.length()").value(0));
 
+        ids.forEach(xmEntityService::delete);
     }
 
     @Test
     @WithMockUser(authorities = "SUPER-ADMIN")
     public void testSearchByTypeKeyAndTemplate() throws Exception {
 
-        prepareSearch();
+        List<Long> ids = prepareSearch();
 
         String urlTemplate = "/api/_search-with-typekey-and-template/xm-entities?typeKey=ACCOUNT&size=5";
 
@@ -1029,9 +1031,12 @@ public class XmEntityResourceExtendedIntTest {
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.length()").value(0));
 
+        ids.forEach(xmEntityService::delete);
     }
 
-    private void prepareSearch() {
+    private List<Long> prepareSearch() {
+        List<Long> ids = new ArrayList<>();
+
         transactionService.inNestedTransaction(() -> {
             // FIXME - fails if run test in Idea. But its needed for test running from console. need fix.
             try {
@@ -1041,12 +1046,14 @@ public class XmEntityResourceExtendedIntTest {
             }
 
             // Initialize the database
-            xmEntityService.save(createEntityComplexIncoming().typeKey(DEFAULT_TYPE_KEY).stateKey(DEFAULT_STATE_KEY));
-            xmEntityService.save(createEntityComplexIncoming().typeKey(UPDATED_TYPE_KEY).description(UNIQ_DESCRIPTION).stateKey(DEFAULT_STATE_KEY));
-            xmEntityService.save(createEntityComplexIncoming().typeKey(SEARCH_TEST_KEY).stateKey(null).data(null).attachments(emptySet()).tags(emptySet()).locations(emptySet()));
+            ids.add(xmEntityService.save(createEntityComplexIncoming().typeKey(DEFAULT_TYPE_KEY).stateKey(DEFAULT_STATE_KEY)).getId());
+            ids.add(xmEntityService.save(createEntityComplexIncoming().typeKey(UPDATED_TYPE_KEY).description(UNIQ_DESCRIPTION).stateKey(DEFAULT_STATE_KEY)).getId());
+            ids.add(xmEntityService.save(createEntityComplexIncoming().typeKey(SEARCH_TEST_KEY).stateKey(null).data(null).attachments(emptySet()).tags(emptySet()).locations(emptySet())).getId());
 
             return null;
         }, this::setup);
+
+        return ids.
     }
 
     @Test
