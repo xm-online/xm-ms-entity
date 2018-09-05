@@ -1053,7 +1053,7 @@ public class XmEntityResourceExtendedIntTest {
             return null;
         }, this::setup);
 
-        return ids.
+        return ids;
     }
 
     @Test
