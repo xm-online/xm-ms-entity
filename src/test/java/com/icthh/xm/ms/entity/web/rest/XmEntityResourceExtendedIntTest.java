@@ -1400,7 +1400,7 @@ public class XmEntityResourceExtendedIntTest {
                 .containsIgnoringCase("NULL not allowed for column \"UPDATE_DATE\"");
         }
 
-        xmEntityService.delete(xmEntityIncoming.getId());
+        xmEntityRepository.delete(xmEntityIncoming);
     }
 
     @Test
@@ -1658,7 +1658,7 @@ public class XmEntityResourceExtendedIntTest {
             .andExpect(status().is2xxSuccessful())
             .andReturn();
 
-        xmEntityService.delete(entity.getId());
+        xmEntityRepository.delete(entity.getId());
     }
 
     @Test
