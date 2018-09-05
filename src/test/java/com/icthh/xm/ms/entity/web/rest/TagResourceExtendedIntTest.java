@@ -41,8 +41,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.Validator;
 
 import java.time.Instant;
-import java.time.temporal.ChronoUnit;
-import java.time.temporal.TemporalUnit;
 import java.util.List;
 import javax.persistence.EntityManager;
 
@@ -188,7 +186,7 @@ public class TagResourceExtendedIntTest {
         assertThat(voteList).hasSize(databaseSizeBeforeCreate + 1);
 
         Tag testTag = voteList.get(voteList.size() - 1);
-        assertThat(testTag.getStartDate().truncatedTo(ChronoUnit.SECONDS)).isEqualTo(MOCKED_START_DATE.truncatedTo(ChronoUnit.SECONDS));
+        assertThat(testTag.getStartDate()).isEqualTo(MOCKED_START_DATE);
 
         // Validate the Tag in Elasticsearch
         Tag tagEs = tagSearchRepository.findOne(testTag.getId());

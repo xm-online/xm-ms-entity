@@ -316,9 +316,9 @@ public class XmEntityServiceIntTest {
 
         // Initialize the database
         XmEntity entity1 = new XmEntity().typeKey("ENTITY1").name("###1").key(randomUUID());
-        entity1 = xmEntityService.save(entity1);
+        xmEntityService.save(entity1);
         XmEntity entity2 = new XmEntity().typeKey("ENTITY1").name("###2").key(randomUUID());
-        entity2 = xmEntityService.save(entity2);
+        xmEntityService.save(entity2);
         xmEntityService.save(new XmEntity().typeKey("ENTITY2").name("###3").key(randomUUID()));
         xmEntityService.save(new XmEntity().typeKey("ACCOUNTING").name("###4").key(randomUUID()));
 
@@ -327,8 +327,6 @@ public class XmEntityServiceIntTest {
 
         assertEquals(entities, asList(entity1, entity2));
 
-        xmEntityService.delete(entity1.getId());
-        xmEntityService.delete(entity2.getId());
     }
 
 }
