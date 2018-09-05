@@ -1585,6 +1585,7 @@ public class XmEntityResourceExtendedIntTest {
 
     @Test
     public void testJsonWithTwoPojoAndSameId() throws Exception {
+        XmEntity xmEntityIncoming = createEntityComplexIncoming();
         int databaseSizeBeforeCreate = xmEntityRepository.findAll().size();
         XmEntity target = xmEntityService.save(createEntity());
 
