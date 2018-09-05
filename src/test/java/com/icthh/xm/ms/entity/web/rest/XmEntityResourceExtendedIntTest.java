@@ -40,6 +40,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.mutable.MutableObject;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
@@ -107,6 +108,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
     WebappTenantOverrideConfiguration.class,
     LepConfiguration.class
 })
+@Ignore
 public class XmEntityResourceExtendedIntTest {
 
     private static final String DEFAULT_KEY = "AAAAAAAAAA";
