@@ -1281,6 +1281,8 @@ public class XmEntityResourceExtendedIntTest {
     }
 
     private int prepareCalendar() throws Exception {
+        XmEntity xmEntityIncoming = createEntityComplexIncoming();
+
         // Create the XmEntity with tag
         MvcResult result = performPost("/api/xm-entities", xmEntityIncoming)
             .andExpect(status().isCreated())
