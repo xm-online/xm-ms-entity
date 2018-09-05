@@ -274,8 +274,6 @@ public class XmEntityResourceExtendedIntTest {
 
     private MockMvc restXmEntityMockMvc;
 
-    private XmEntity xmEntityIncoming;
-
     @BeforeTransaction
     public void beforeTransaction() {
         TenantContextUtils.setTenant(tenantContextHolder, "RESINTTEST");
@@ -346,14 +344,13 @@ public class XmEntityResourceExtendedIntTest {
                                                   .setValidator(validator)
                                                   .setMessageConverters(jacksonMessageConverter).build();
 
-        xmEntityIncoming = createEntityComplexIncoming();
+
 
     }
 
     @After
     @Override
     public void finalize() {
-        xmEntityRepository.deleteAll();
         lepManager.endThreadContext();
         tenantContextHolder.getPrivilegedContext().destroyCurrentContext();
     }
@@ -522,6 +519,7 @@ public class XmEntityResourceExtendedIntTest {
 
     @Test
     public void createXmEntityWithTagsAttachmentsLocations() throws Exception {
+        XmEntity xmEntityIncoming = createEntityComplexIncoming();
         int databaseSizeBeforeCreate = xmEntityRepository.findAll().size();
 
         // Create the XmEntity with tag, attachment and location
@@ -590,6 +588,7 @@ public class XmEntityResourceExtendedIntTest {
 
     @Test
     public void createXmEntityWithLinks() throws Exception {
+        XmEntity xmEntityIncoming = createEntityComplexIncoming();
 
         XmEntity presaved = xmEntityService.save(createEntity());
 
@@ -646,6 +645,7 @@ public class XmEntityResourceExtendedIntTest {
 
     @Test
     public void createXmEntityWithSourceLinks() throws Exception {
+        XmEntity xmEntityIncoming = createEntityComplexIncoming();
 
         XmEntity presaved = xmEntityService.save(createEntity());
 
@@ -866,6 +866,8 @@ public class XmEntityResourceExtendedIntTest {
 
     @Test
     public void createXmEntityWithLargeData() throws Exception {
+        XmEntity xmEntityIncoming = createEntityComplexIncoming();
+
         int databaseSizeBeforeCreate = xmEntityRepository.findAll().size();
 
         xmEntityIncoming.setData(LARGE_DATA);
@@ -908,6 +910,7 @@ public class XmEntityResourceExtendedIntTest {
 
     @Test
     public void checkJsonShemeDateTypeProperties() throws Exception {
+        XmEntity xmEntityIncoming = createEntityComplexIncoming();
 
         int databaseSizeBeforeTest = xmEntityRepository.findAll().size();
 
@@ -944,6 +947,8 @@ public class XmEntityResourceExtendedIntTest {
 
     @Test
     public void checkJsonShemeDateIsRequired() throws Exception {
+        XmEntity xmEntityIncoming = createEntityComplexIncoming();
+
         int databaseSizeBeforeTest = xmEntityRepository.findAll().size();
 
         xmEntityIncoming.setData(emptyMap());
@@ -1060,6 +1065,7 @@ public class XmEntityResourceExtendedIntTest {
     @Test
     @WithMockUser(authorities = {"SUPER-ADMIN"})
     public void xmEntityFieldsNoRelationFields() throws Exception {
+        XmEntity xmEntityIncoming = createEntityComplexIncoming();
 
         assertThat(xmEntityIncoming.getAttachments().size()).isGreaterThan(0);
         assertThat(xmEntityIncoming.getTags().size()).isGreaterThan(0);
@@ -1118,6 +1124,7 @@ public class XmEntityResourceExtendedIntTest {
     @Test
     @WithMockUser(authorities = {"SUPER-ADMIN"})
     public void xmEntityFieldsTwoFields() throws Exception {
+        XmEntity xmEntityIncoming = createEntityComplexIncoming();
 
         assertThat(xmEntityIncoming.getAttachments().size()).isGreaterThan(0);
         assertThat(xmEntityIncoming.getTags().size()).isGreaterThan(0);
@@ -1176,6 +1183,7 @@ public class XmEntityResourceExtendedIntTest {
     @Test
     @WithMockUser(authorities = {"SUPER-ADMIN"})
     public void xmEntityFieldsDefaultFields() throws Exception {
+        XmEntity xmEntityIncoming = createEntityComplexIncoming();
 
         assertThat(xmEntityIncoming.getAttachments().size()).isGreaterThan(0);
         assertThat(xmEntityIncoming.getTags().size()).isGreaterThan(0);
@@ -1385,6 +1393,7 @@ public class XmEntityResourceExtendedIntTest {
 
     @Test
     public void checkUpdateDateIsRequiredInDb() throws Exception {
+        XmEntity xmEntityIncoming = createEntityComplexIncoming();
 
         // set the field null
         when(startUpdateDateGenerationStrategy.generateUpdateDate()).thenReturn(null);
@@ -1405,6 +1414,7 @@ public class XmEntityResourceExtendedIntTest {
 
     @Test
     public void checkStartDateIsNotRequired() throws Exception {
+        XmEntity xmEntityIncoming = createEntityComplexIncoming();
         int databaseSizeBeforeTest = xmEntityRepository.findAll().size();
         // set the field null
         xmEntityIncoming.setStartDate(null);
@@ -1425,6 +1435,7 @@ public class XmEntityResourceExtendedIntTest {
 
     @Test
     public void checkUpdateDateIsNotRequired() throws Exception {
+        XmEntity xmEntityIncoming = createEntityComplexIncoming();
         int databaseSizeBeforeTest = xmEntityRepository.findAll().size();
         // set the field null
         xmEntityIncoming.setUpdateDate(null);
@@ -1663,6 +1674,7 @@ public class XmEntityResourceExtendedIntTest {
 
     @Test
     public void manageXmEntityAvatarUrl() throws Exception {
+        XmEntity xmEntityIncoming = createEntityComplexIncoming();
 
         XmEntity presaved = xmEntityService.save(createEntity());
 
