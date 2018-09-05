@@ -987,6 +987,7 @@ public class XmEntityResourceExtendedIntTest {
 
         prepareSearch();
 
+
         String urlTemplate = "/api/_search-with-typekey/xm-entities?typeKey=ACCOUNT&size=5";
 
         performGet(urlTemplate)
