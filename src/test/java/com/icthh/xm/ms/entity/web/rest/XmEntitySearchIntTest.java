@@ -159,6 +159,10 @@ import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
          leps.onRefresh("/config/tenants/DEMO/entity/lep/service/entity/Save$$ACCOUNT$$around.groovy", loadFile("config/testlep/Save$$ACCOUNT$$around.groovy"));
      }
 
+     void destroyLeps() {
+         leps.onRefresh("/config/tenants/DEMO/entity/lep/service/entity/Save$$ACCOUNT$$around.groovy", null);
+     }
+
      @SneakyThrows
      public static String loadFile(String path) {
          return IOUtils.toString(new ClassPathResource(path).getInputStream(), UTF_8);
@@ -209,6 +213,8 @@ import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
          List<XmEntity> readValue = objectMapper.readValue(contentAsString,  new TypeReference<List<XmEntity>>() { });
 
          assertTrue(readValue.isEmpty());
+
+         destroyLeps();
      }
 
  }
