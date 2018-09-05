@@ -7,9 +7,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
 import com.icthh.xm.ms.entity.domain.Content;
+import lombok.extern.slf4j.Slf4j;
 import org.elasticsearch.client.Client;
+import org.springframework.boot.actuate.health.AbstractHealthIndicator;
+import org.springframework.boot.actuate.health.Health;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
 import org.springframework.data.elasticsearch.core.EntityMapper;
 import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
@@ -19,6 +23,25 @@ import java.io.IOException;
 
 @Configuration
 public class ElasticsearchConfiguration {
+
+    @Bean("elasticsearchHealthIndicator")
+    @Primary
+    public AbstractHealthIndicator elasticsearchHealthIndicator() {
+        return new XmCustomElasticsearchHealthIndicator();
+    }
+
+    @Slf4j
+    private static class XmCustomElasticsearchHealthIndicator extends AbstractHealthIndicator{
+
+        @Override
+        protected void doHealthCheck(final Health.Builder builder) throws Exception {
+            builder.withDetail("statusStub", "Mock health check status OK!");
+            builder.up();
+
+            log.info("Elasticsearch healthcheck stub");
+            // TODO - implement some meaningful check here
+        }
+    }
 
     @Bean
     public ElasticsearchTemplate elasticsearchTemplate(Client client,
