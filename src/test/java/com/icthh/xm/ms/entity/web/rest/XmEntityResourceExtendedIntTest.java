@@ -981,7 +981,6 @@ public class XmEntityResourceExtendedIntTest {
             .andExpect(jsonPath("$.[*].id").value(everyItem(nullValue())));
     }
 
-    @Ignore
     @Test
     @WithMockUser(authorities = "SUPER-ADMIN")
     public void testSearchByTypeKeyAndQuery() throws Exception {
@@ -1006,9 +1005,9 @@ public class XmEntityResourceExtendedIntTest {
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.length()").value(0));
 
+        deleteData();
     }
 
-    @Ignore
     @Test
     @WithMockUser(authorities = "SUPER-ADMIN")
     public void testSearchByTypeKeyAndTemplate() throws Exception {
@@ -1034,6 +1033,15 @@ public class XmEntityResourceExtendedIntTest {
             .andExpect(jsonPath("$.length()").value(0));
 
 
+        deleteData();
+    }
+
+    private void deleteData() {
+        transactionService.inNestedTransaction(() -> {
+            xmEntitySearchRepository.deleteAll();
+            xmEntityRepository.deleteAll();
+            return null;
+        }, this::setup);
     }
 
     private void prepareSearch() {
