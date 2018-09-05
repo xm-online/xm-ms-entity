@@ -23,6 +23,7 @@ import com.icthh.xm.ms.entity.config.SecurityBeanOverrideConfiguration;
 import com.icthh.xm.ms.entity.config.tenant.WebappTenantOverrideConfiguration;
 import com.icthh.xm.ms.entity.domain.*;
 import com.icthh.xm.ms.entity.domain.ext.IdOrKey;
+import com.icthh.xm.ms.entity.repository.AttachmentRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityPermittedRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
 import com.icthh.xm.ms.entity.repository.kafka.ProfileEventProducer;
@@ -274,6 +275,9 @@ public class XmEntityResourceExtendedIntTest {
 
     private MockMvc restXmEntityMockMvc;
 
+    @Autowired
+    private AttachmentRepository attachmentRepository;
+
     @BeforeTransaction
     public void beforeTransaction() {
         TenantContextUtils.setTenant(tenantContextHolder, "RESINTTEST");
@@ -351,6 +355,7 @@ public class XmEntityResourceExtendedIntTest {
     @After
     @Override
     public void finalize() {
+        attachmentRepository.deleteAll();
         lepManager.endThreadContext();
         tenantContextHolder.getPrivilegedContext().destroyCurrentContext();
     }
