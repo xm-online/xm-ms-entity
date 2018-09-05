@@ -215,6 +215,7 @@ public class AttachmentResourceIntTest {
     @Test
     @Transactional
     public void createAttachment() throws Exception {
+        attachmentRepository.deleteAll();
         int databaseSizeBeforeCreate = attachmentRepository.findAll().size();
 
         // Create the Attachment
