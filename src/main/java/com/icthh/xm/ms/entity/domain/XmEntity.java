@@ -8,6 +8,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.icthh.xm.ms.entity.domain.converter.MapToStringConverter;
 import com.icthh.xm.ms.entity.domain.listener.AvatarUrlListener;
+import com.icthh.xm.ms.entity.domain.listener.XmEntityElasticSearchListener;
 import com.icthh.xm.ms.entity.validator.JsonData;
 import com.icthh.xm.ms.entity.validator.StateKey;
 import com.icthh.xm.ms.entity.validator.TypeKey;
@@ -74,7 +75,7 @@ import java.util.function.BiConsumer;
         @NamedAttributeNode("ratings"),
         @NamedAttributeNode("functionContexts")
     })
-@EntityListeners(AvatarUrlListener.class)
+@EntityListeners({AvatarUrlListener.class, XmEntityElasticSearchListener.class})
 public class XmEntity implements Serializable, Persistable<Long> {
 
     private static final long serialVersionUID = 1L;

@@ -174,16 +174,8 @@ public class XmEntityServiceImpl implements XmEntityService {
 
         // TODO: amedved: use saveAndFlash() here because old entity was returned if use save()
         // as a result old data may be persisted to elasticsearch
-        XmEntity result = xmEntityRepository.save(xmEntity);
-        xmEntitySearchRepository.save(result);
-        return result;
-    }
 
-    private boolean isEntityVersionEnabled() {
-        log.debug("{}", tenantConfigService.getConfig());
-        return Optional.ofNullable(tenantConfigService.getConfig().get("entityVersionControl"))
-            .filter(it -> it instanceof Map).map(Map.class::cast)
-            .map(it -> it.get("enabled")).map(it -> (boolean)it).orElse(false);
+        return xmEntityRepository.save(xmEntity);
     }
 
     private void preventRenameTenant(XmEntity xmEntity, XmEntity oldEntity) {
@@ -379,7 +371,6 @@ public class XmEntityServiceImpl implements XmEntityService {
         }
 
         xmEntityRepository.delete(xmEntity.getId());
-        xmEntitySearchRepository.delete(xmEntity.getId());
     }
 
 
