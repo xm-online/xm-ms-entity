@@ -1,11 +1,16 @@
 package com.icthh.xm.ms.entity.service;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+import static org.apache.commons.codec.digest.DigestUtils.sha1Hex;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.icthh.xm.commons.config.client.repository.TenantConfigRepository;
@@ -24,9 +29,12 @@ import com.icthh.xm.ms.entity.domain.spec.TagSpec;
 import com.icthh.xm.ms.entity.domain.spec.TypeSpec;
 import com.icthh.xm.ms.entity.domain.spec.UniqueFieldSpec;
 import lombok.SneakyThrows;
+import org.apache.commons.io.IOUtils;
 import org.junit.Before;
 import org.junit.Test;
+import org.springframework.core.io.ClassPathResource;
 
+import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -57,6 +65,8 @@ public class XmEntitySpecServiceUnitTest {
 
     private TenantContextHolder tenantContextHolder;
 
+    private TenantConfigRepository tenantConfigRepository;
+
 
     @Before
     @SneakyThrows
@@ -72,11 +82,13 @@ public class XmEntitySpecServiceUnitTest {
         xmEntitySpecService = createXmEntitySpecService(ap, tenantContextHolder);
     }
 
-    private static XmEntitySpecService createXmEntitySpecService(ApplicationProperties applicationProperties,
+    private XmEntitySpecService createXmEntitySpecService(ApplicationProperties applicationProperties,
                                                                 TenantContextHolder tenantContextHolder) {
-        return new LocalXmEntitySpecService(mock(TenantConfigRepository.class),
+        tenantConfigRepository = mock(TenantConfigRepository.class);
+        return new LocalXmEntitySpecService(tenantConfigRepository,
                                             applicationProperties,
-                                            tenantContextHolder);
+                                            tenantContextHolder,
+                                            new EntityCustomPrivilegeService(tenantConfigRepository, tenantContextHolder));
     }
 
     @Test
@@ -246,6 +258,23 @@ public class XmEntitySpecServiceUnitTest {
                 assertEquals(typeSpec.getUniqueFields().size(), 0);
             }
         }
+    }
+
+    @Test
+    @SneakyThrows
+    public void testUpdateCustomerPrivileges() {
+        InputStream cfgInputStream = new ClassPathResource("config/specs/custom-privileges.yml").getInputStream();
+        String customPrivileges = IOUtils.toString(cfgInputStream, UTF_8);
+        InputStream expectedInputStream = new ClassPathResource("config/specs/expected-custom-privileges.yml").getInputStream();
+        String expectedCustomPrivileges = IOUtils.toString(expectedInputStream, UTF_8);
+
+        String privilegesPath = "/api/config/tenants/{tenantName}/custom-privileges.yml";
+        when(tenantConfigRepository.getConfigFullPath("TEST", privilegesPath)).thenReturn(customPrivileges);
+
+        xmEntitySpecService.getTypeSpecs();
+
+        verify(tenantConfigRepository).getConfigFullPath(eq("TEST"), eq(privilegesPath));
+        verify(tenantConfigRepository).updateConfigFullPath(eq("TEST"), eq(privilegesPath), eq(expectedCustomPrivileges), eq(sha1Hex(customPrivileges)));
     }
 
 
