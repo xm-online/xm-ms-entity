@@ -28,7 +28,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static com.google.common.collect.ImmutableBiMap.of;
+import static com.google.common.collect.ImmutableMap.of;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
 import static org.apache.commons.codec.digest.DigestUtils.sha1Hex;
@@ -272,10 +272,10 @@ public class XmEntitySpecServiceUnitTest {
     @Test
     @SneakyThrows
     public void testUpdateCustomerPrivileges() {
-        String customPrivileges = readFile("config/specs/custom-privileges.yml");
-        String expectedCustomPrivileges = readFile("config/specs/expected-custom-privileges.yml");
-        String permissions = readFile("config/specs/mock-privileges.yml");
-        String expectedPermissions = readFile("config/specs/mock-expected-privileges.yml");
+        String customPrivileges = readFile("config/privileges/custom-privileges.yml");
+        String expectedCustomPrivileges = readFile("config/privileges/expected-custom-privileges.yml");
+        String permissions = readFile("config/privileges/mock-privileges.yml");
+        String expectedPermissions = readFile("config/privileges/mock-expected-privileges.yml");
 
         String privilegesPath = PRIVILEGES_PATH;
         String permissionPath = PERMISSION_PATH;
@@ -296,7 +296,8 @@ public class XmEntitySpecServiceUnitTest {
     @Test
     @SneakyThrows
     public void testCreateCustomerPrivileges() {
-        String expectedPrivileges = readFile("config/specs/permissions.yml");
+        String permissions = readFile("config/privileges/new-permission.yml");
+        String privileges = readFile("config/privileges/new-privileges.yml");
 
         String privilegesPath = PRIVILEGES_PATH;
         String permissionPath = PERMISSION_PATH;
@@ -309,9 +310,35 @@ public class XmEntitySpecServiceUnitTest {
         xmEntitySpecService.getTypeSpecs();
 
         verify(commonConfigRepository).getConfig(isNull(String.class), eq(asList(privilegesPath, permissionPath)));
-        verify(commonConfigRepository).updateConfigFullPath(refEq(new Configuration(privilegesPath, "")), isNull(String.class));
-        verify(commonConfigRepository).updateConfigFullPath(refEq(new Configuration(permissionPath, "")), isNull(String.class));
+        verify(commonConfigRepository).updateConfigFullPath(refEq(new Configuration(privilegesPath, privileges)), isNull(String.class));
+        verify(commonConfigRepository).updateConfigFullPath(refEq(new Configuration(permissionPath, permissions)), isNull(String.class));
     }
+
+    @Test
+    @SneakyThrows
+    public void testupdateRealPermissionFile() {
+        String permissions = readFile("config/privileges/permissions.yml");
+        String privileges = readFile("config/privileges/new-privileges.yml");
+        String expectedPermissions = readFile("config/privileges/expected-permissions.yml");
+
+        String privilegesPath = PRIVILEGES_PATH;
+        String permissionPath = PERMISSION_PATH;
+        Map<String, Configuration> configs = of(
+            permissionPath, new Configuration(permissionPath, permissions)
+        );
+        when(commonConfigRepository.getConfig(isNull(String.class), eq(asList(privilegesPath, permissionPath)))).thenReturn(configs);
+        when(roleService.getRoles("TEST")).thenReturn(of(
+            "ROLE_ADMIN", new Role(),
+            "ROLE_AGENT", new Role()
+        ));
+
+        xmEntitySpecService.getTypeSpecs();
+
+        verify(commonConfigRepository).getConfig(isNull(String.class), eq(asList(privilegesPath, permissionPath)));
+        verify(commonConfigRepository).updateConfigFullPath(refEq(new Configuration(privilegesPath, privileges)), isNull(String.class));
+        verify(commonConfigRepository).updateConfigFullPath(refEq(new Configuration(permissionPath, expectedPermissions)), eq(sha1Hex(permissions)));
+    }
+
 
     private String readFile(String path1) throws IOException {
         InputStream cfgInputStream = new ClassPathResource(path1).getInputStream();

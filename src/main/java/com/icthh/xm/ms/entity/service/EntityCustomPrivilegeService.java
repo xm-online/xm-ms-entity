@@ -1,5 +1,11 @@
 package com.icthh.xm.ms.entity.service;
 
+import static com.google.common.collect.ImmutableMap.of;
+import static com.icthh.xm.commons.config.client.repository.TenantConfigRepository.TENANT_NAME;
+import static java.util.Arrays.asList;
+import static java.util.Optional.ofNullable;
+import static java.util.stream.Collectors.toList;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -19,15 +25,12 @@ import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
+import java.util.TreeSet;
 import java.util.function.Predicate;
-
-import static com.google.common.collect.ImmutableMap.of;
-import static com.icthh.xm.commons.config.client.repository.TenantConfigRepository.TENANT_NAME;
-import static com.icthh.xm.commons.config.client.repository.TenantConfigRepository.URL;
-import static java.util.Arrays.asList;
-import static java.util.Optional.ofNullable;
-import static java.util.stream.Collectors.toList;
 
 @Slf4j
 @Service
@@ -69,7 +72,6 @@ public class EntityCustomPrivilegeService {
             .map(TypeSpec::getKey).collect(toList());
         val permissions = addApplicationPermissions(permissionsSpec, applications, tenantKey);
         String permissionsYml = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(permissions);
-        log.info("Permissions {}", permissionsYml);
         commonConfigRepository.updateConfigFullPath(new Configuration(permissionsSpecPath, permissionsYml), sha1Hex(permissionsSpec));
     }
 
@@ -79,7 +81,6 @@ public class EntityCustomPrivilegeService {
             .map(this::toPrivilege).collect(toList());
         val privileges = addApplicationPrivileges(customPrivileges, applicationPrivileges);
         String content = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(privileges);
-        log.info("Privileges {}", content);
         commonConfigRepository.updateConfigFullPath(new Configuration(privilegesPath, content), sha1Hex(customPrivileges));
     }
 
@@ -144,6 +145,5 @@ public class EntityCustomPrivilegeService {
         permission.setDisabled(false);
         return permission;
     }
-
 
 }
