@@ -440,7 +440,7 @@ public class XmEntitySpecService implements RefreshableConfiguration {
             XmEntitySpec spec = mapper.readValue(config, XmEntitySpec.class);
             Map<String, TypeSpec> value = toTypeSpecsMap(spec);
             types.put(tenant, value);
-            entityCustomPrivilegeService.updateApplicationPermission(value);
+            entityCustomPrivilegeService.updateApplicationPermission(value, tenant);
             log.info("Specification was for tenant {} updated", tenant);
         } catch (Exception e) {
             log.error("Error read xm specification from path " + updatedKey, e);
