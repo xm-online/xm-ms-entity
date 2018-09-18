@@ -75,7 +75,7 @@ public class EntityCustomPrivilegeService {
                                                       Configuration permissionsSpec) {
 
         List<String> applications = specs.values().stream()
-            .filter(TypeSpec::getIsApp)
+            .filter(it -> TRUE.equals(it.getIsApp()))
             .map(TypeSpec::getKey).collect(toList());
         val permissions = addApplicationPermissions(permissionsSpec, applications, tenantKey);
         String permissionsYml = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(permissions);
