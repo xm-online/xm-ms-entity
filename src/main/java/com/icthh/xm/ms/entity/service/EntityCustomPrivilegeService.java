@@ -47,7 +47,6 @@ public class EntityCustomPrivilegeService {
     private final PermissionProperties permissionProperties;
     private final RoleService roleService;
 
-    @SneakyThrows
     public void updateApplicationPermission(Map<String, TypeSpec> specs, String tenantKey) {
 
         String privilegesPath = resolvePathWithTenant(tenantKey, CUSTOMER_PRIVILEGES_PATH);
@@ -55,7 +54,8 @@ public class EntityCustomPrivilegeService {
         String permissionsSpecPath = resolvePathWithTenant(tenantKey, specPath);
 
         log.info("Get config from {} and {}", privilegesPath, permissionsSpecPath);
-        Map<String, Configuration> configs = commonConfigRepository.getConfig(null, asList(privilegesPath, permissionsSpecPath));
+        List<String> paths = asList(privilegesPath, permissionsSpecPath);
+        Map<String, Configuration> configs = commonConfigRepository.getConfig(null, paths);
         configs = configs != null ? configs : new HashMap<>();
 
         updateApplicationPrivileges(specs, privilegesPath, configs.get(privilegesPath));
@@ -66,16 +66,26 @@ public class EntityCustomPrivilegeService {
         return specPath.replace("{" + TENANT_NAME + "}", tenantKey);
     }
 
-    private void enableApplicationPermissionByDefault(Map<String, TypeSpec> specs, String tenantKey, String permissionsSpecPath, Configuration permissionsSpec) throws JsonProcessingException {
+    @SneakyThrows
+    private void enableApplicationPermissionByDefault(Map<String, TypeSpec> specs,
+                                                      String tenantKey,
+                                                      String permissionsSpecPath,
+                                                      Configuration permissionsSpec) {
+
         List<String> applications = specs.values().stream()
             .filter(TypeSpec::getIsApp)
             .map(TypeSpec::getKey).collect(toList());
         val permissions = addApplicationPermissions(permissionsSpec, applications, tenantKey);
         String permissionsYml = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(permissions);
-        commonConfigRepository.updateConfigFullPath(new Configuration(permissionsSpecPath, permissionsYml), sha1Hex(permissionsSpec));
+        Configuration configuration = new Configuration(permissionsSpecPath, permissionsYml);
+        commonConfigRepository.updateConfigFullPath(configuration, sha1Hex(permissionsSpec));
     }
 
-    private void updateApplicationPrivileges(Map<String, TypeSpec> specs, String privilegesPath, Configuration customPrivileges) throws JsonProcessingException {
+    @SneakyThrows
+    private void updateApplicationPrivileges(Map<String, TypeSpec> specs,
+                                             String privilegesPath,
+                                             Configuration customPrivileges) {
+
         List<Map<String, Object>> applicationPrivileges = specs.values().stream()
             .filter(TypeSpec::getIsApp)
             .map(this::toPrivilege).collect(toList());
@@ -89,7 +99,9 @@ public class EntityCustomPrivilegeService {
     }
 
     @SneakyThrows
-    private Map<String, List<Map<String, Object>>> addApplicationPrivileges(Configuration customPrivileges, List<Map<String, Object>> applicationPrivileges) {
+    private Map<String, List<Map<String, Object>>> addApplicationPrivileges(Configuration customPrivileges,
+                                                                            List<Map<String, Object>> applicationPrivileges) {
+
         Map<String, List<Map<String, Object>>>  privileges = new HashMap<>();
         if (isConfigExists(customPrivileges)) {
             privileges = mapper.readValue(customPrivileges.getContent(), new TypeReference<Map<String, List<Object>>>() {
