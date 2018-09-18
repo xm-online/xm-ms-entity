@@ -2,6 +2,7 @@ package com.icthh.xm.ms.entity.service;
 
 import static com.google.common.collect.ImmutableMap.of;
 import static com.icthh.xm.commons.config.client.repository.TenantConfigRepository.TENANT_NAME;
+import static java.lang.Boolean.TRUE;
 import static java.util.Arrays.asList;
 import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toList;
@@ -28,6 +29,7 @@ import org.springframework.stereotype.Service;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.function.Predicate;
@@ -87,7 +89,7 @@ public class EntityCustomPrivilegeService {
                                              Configuration customPrivileges) {
 
         List<Map<String, Object>> applicationPrivileges = specs.values().stream()
-            .filter(TypeSpec::getIsApp)
+            .filter(it -> TRUE.equals(it.getIsApp()))
             .map(this::toPrivilege).collect(toList());
         val privileges = addApplicationPrivileges(customPrivileges, applicationPrivileges);
         String content = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(privileges);
