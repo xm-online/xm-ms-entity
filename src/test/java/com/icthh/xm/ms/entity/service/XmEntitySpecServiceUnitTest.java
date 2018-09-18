@@ -1,45 +1,42 @@
 package com.icthh.xm.ms.entity.service;
 
-import static java.nio.charset.StandardCharsets.UTF_8;
-import static org.apache.commons.codec.digest.DigestUtils.sha1Hex;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
+import com.icthh.xm.commons.config.client.repository.CommonConfigRepository;
 import com.icthh.xm.commons.config.client.repository.TenantConfigRepository;
+import com.icthh.xm.commons.config.domain.Configuration;
+import com.icthh.xm.commons.permission.config.PermissionProperties;
+import com.icthh.xm.commons.permission.domain.Role;
+import com.icthh.xm.commons.permission.service.RoleService;
 import com.icthh.xm.commons.tenant.TenantContext;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantKey;
 import com.icthh.xm.ms.entity.config.ApplicationProperties;
 import com.icthh.xm.ms.entity.config.tenant.LocalXmEntitySpecService;
-import com.icthh.xm.ms.entity.domain.spec.AttachmentSpec;
-import com.icthh.xm.ms.entity.domain.spec.LinkSpec;
-import com.icthh.xm.ms.entity.domain.spec.LocationSpec;
-import com.icthh.xm.ms.entity.domain.spec.NextSpec;
-import com.icthh.xm.ms.entity.domain.spec.RatingSpec;
-import com.icthh.xm.ms.entity.domain.spec.StateSpec;
-import com.icthh.xm.ms.entity.domain.spec.TagSpec;
-import com.icthh.xm.ms.entity.domain.spec.TypeSpec;
-import com.icthh.xm.ms.entity.domain.spec.UniqueFieldSpec;
+import com.icthh.xm.ms.entity.domain.spec.*;
 import lombok.SneakyThrows;
 import org.apache.commons.io.IOUtils;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 import org.springframework.core.io.ClassPathResource;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+
+import static com.google.common.collect.ImmutableBiMap.of;
+import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.Arrays.asList;
+import static org.apache.commons.codec.digest.DigestUtils.sha1Hex;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.*;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Matchers.isNull;
+import static org.mockito.Mockito.*;
 
 public class XmEntitySpecServiceUnitTest {
 
@@ -60,17 +57,26 @@ public class XmEntitySpecServiceUnitTest {
     private static final String KEY5 = "TYPE1-OTHER";
 
     private static final String KEY6 = "TYPE3";
+    public static final String PRIVILEGES_PATH = "/config/tenants/TEST/custom-privileges.yml";
+    public static final String PERMISSION_PATH = "/config/tenants/TEST/permissions.yml";
 
     private XmEntitySpecService xmEntitySpecService;
 
     private TenantContextHolder tenantContextHolder;
 
+    @Mock
+    private CommonConfigRepository commonConfigRepository;
+    private PermissionProperties permissionProperties = new PermissionProperties();
+    @Mock
+    private RoleService roleService;
+    @Mock
     private TenantConfigRepository tenantConfigRepository;
 
 
     @Before
     @SneakyThrows
     public void init() {
+        MockitoAnnotations.initMocks(this);
         TenantContext tenantContext = mock(TenantContext.class);
         when(tenantContext.getTenantKey()).thenReturn(Optional.of(TenantKey.valueOf(TENANT)));
 
@@ -84,11 +90,14 @@ public class XmEntitySpecServiceUnitTest {
 
     private XmEntitySpecService createXmEntitySpecService(ApplicationProperties applicationProperties,
                                                                 TenantContextHolder tenantContextHolder) {
-        tenantConfigRepository = mock(TenantConfigRepository.class);
         return new LocalXmEntitySpecService(tenantConfigRepository,
                                             applicationProperties,
                                             tenantContextHolder,
-                                            new EntityCustomPrivilegeService(tenantConfigRepository, tenantContextHolder));
+                                            new EntityCustomPrivilegeService(
+                                                commonConfigRepository,
+                                                permissionProperties,
+                                                roleService
+                                            ));
     }
 
     @Test
@@ -263,18 +272,50 @@ public class XmEntitySpecServiceUnitTest {
     @Test
     @SneakyThrows
     public void testUpdateCustomerPrivileges() {
-        InputStream cfgInputStream = new ClassPathResource("config/specs/custom-privileges.yml").getInputStream();
-        String customPrivileges = IOUtils.toString(cfgInputStream, UTF_8);
-        InputStream expectedInputStream = new ClassPathResource("config/specs/expected-custom-privileges.yml").getInputStream();
-        String expectedCustomPrivileges = IOUtils.toString(expectedInputStream, UTF_8);
+        String customPrivileges = readFile("config/specs/custom-privileges.yml");
+        String expectedCustomPrivileges = readFile("config/specs/expected-custom-privileges.yml");
+        String permissions = readFile("config/specs/mock-privileges.yml");
+        String expectedPermissions = readFile("config/specs/mock-expected-privileges.yml");
 
-        String privilegesPath = "/api/config/tenants/{tenantName}/custom-privileges.yml";
-        when(tenantConfigRepository.getConfigFullPath("TEST", privilegesPath)).thenReturn(customPrivileges);
+        String privilegesPath = PRIVILEGES_PATH;
+        String permissionPath = PERMISSION_PATH;
+        Map<String, Configuration> configs = of(
+            privilegesPath, new Configuration(privilegesPath, customPrivileges),
+            permissionPath, new Configuration(permissionPath, permissions)
+        );
+        when(commonConfigRepository.getConfig(isNull(String.class), eq(asList(privilegesPath, permissionPath)))).thenReturn(configs);
+        when(roleService.getRoles("TEST")).thenReturn(of("TEST_ROLE", new Role()));
 
         xmEntitySpecService.getTypeSpecs();
 
-        verify(tenantConfigRepository).getConfigFullPath(eq("TEST"), eq(privilegesPath));
-        verify(tenantConfigRepository).updateConfigFullPath(eq("TEST"), eq(privilegesPath), eq(expectedCustomPrivileges), eq(sha1Hex(customPrivileges)));
+        verify(commonConfigRepository).getConfig(isNull(String.class), eq(asList(privilegesPath, permissionPath)));
+        verify(commonConfigRepository).updateConfigFullPath(refEq(new Configuration(privilegesPath, expectedCustomPrivileges)), eq(sha1Hex(customPrivileges)));
+        verify(commonConfigRepository).updateConfigFullPath(refEq(new Configuration(permissionPath, expectedPermissions)), eq(sha1Hex(permissions)));
+    }
+
+    @Test
+    @SneakyThrows
+    public void testCreateCustomerPrivileges() {
+        String expectedPrivileges = readFile("config/specs/permissions.yml");
+
+        String privilegesPath = PRIVILEGES_PATH;
+        String permissionPath = PERMISSION_PATH;
+        when(commonConfigRepository.getConfig(isNull(String.class), eq(asList(privilegesPath, permissionPath)))).thenReturn(null);
+        when(roleService.getRoles("TEST")).thenReturn(of(
+            "ROLE_ADMIN", new Role(),
+            "ROLE_AGENT", new Role()
+        ));
+
+        xmEntitySpecService.getTypeSpecs();
+
+        verify(commonConfigRepository).getConfig(isNull(String.class), eq(asList(privilegesPath, permissionPath)));
+        verify(commonConfigRepository).updateConfigFullPath(refEq(new Configuration(privilegesPath, "")), isNull(String.class));
+        verify(commonConfigRepository).updateConfigFullPath(refEq(new Configuration(permissionPath, "")), isNull(String.class));
+    }
+
+    private String readFile(String path1) throws IOException {
+        InputStream cfgInputStream = new ClassPathResource(path1).getInputStream();
+        return IOUtils.toString(cfgInputStream, UTF_8);
     }
 
 
