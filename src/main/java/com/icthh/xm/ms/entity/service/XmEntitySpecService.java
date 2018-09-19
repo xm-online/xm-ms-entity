@@ -63,6 +63,9 @@ public class XmEntitySpecService implements RefreshableConfiguration {
 
     private final TenantContextHolder tenantContextHolder;
 
+    private final EntityCustomPrivilegeService entityCustomPrivilegeService;
+
+
     private String getTenantKeyValue() {
         return TenantContextUtils.getRequiredTenantKeyValue(tenantContextHolder);
     }
@@ -435,7 +438,9 @@ public class XmEntitySpecService implements RefreshableConfiguration {
                 return;
             }
             XmEntitySpec spec = mapper.readValue(config, XmEntitySpec.class);
-            types.put(tenant, toTypeSpecsMap(spec));
+            Map<String, TypeSpec> value = toTypeSpecsMap(spec);
+            types.put(tenant, value);
+            entityCustomPrivilegeService.updateApplicationPermission(value, tenant);
             log.info("Specification was for tenant {} updated", tenant);
         } catch (Exception e) {
             log.error("Error read xm specification from path " + updatedKey, e);
@@ -454,4 +459,5 @@ public class XmEntitySpecService implements RefreshableConfiguration {
             onRefresh(key, config);
         }
     }
+
 }

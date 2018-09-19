@@ -1,0 +1,15 @@
+---
+applications:
+  TEST_ROLE:
+  - privilegeKey: "APPLICATION.TYPE2"
+    disabled: true
+    deleted: false
+    envCondition: null
+    resourceCondition: null
+    reactionStrategy: null
+  - privilegeKey: "APPLICATION.TYPE5"
+    disabled: false
+    deleted: false
+    envCondition: null
+    resourceCondition: null
+    reactionStrategy: null

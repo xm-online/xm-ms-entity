@@ -7,12 +7,15 @@ import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import com.icthh.xm.commons.config.client.repository.CommonConfigRepository;
 import com.icthh.xm.commons.config.client.repository.TenantConfigRepository;
 import com.icthh.xm.commons.config.client.repository.TenantListRepository;
+import com.icthh.xm.commons.config.client.service.CommonConfigService;
 import com.icthh.xm.commons.config.client.service.TenantConfigService;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.web.spring.TenantVerifyInterceptor;
 import com.icthh.xm.ms.entity.config.tenant.LocalXmEntitySpecService;
+import com.icthh.xm.ms.entity.service.EntityCustomPrivilegeService;
 import com.icthh.xm.ms.entity.service.XmEntitySpecService;
 import lombok.SneakyThrows;
 import org.apache.commons.io.IOUtils;
@@ -38,10 +41,12 @@ public class TenantConfigMockConfiguration {
 
     @Bean
     public XmEntitySpecService xmEntitySpecService(ApplicationProperties applicationProperties,
-                                                   TenantContextHolder tenantContextHolder) {
+                                                   TenantContextHolder tenantContextHolder,
+                                                   EntityCustomPrivilegeService entityCustomPrivilegeService) {
         XmEntitySpecService xmEntitySpecService = new LocalXmEntitySpecService(tenantConfigRepository(),
                                                                                applicationProperties,
-                                                                               tenantContextHolder);
+                                                                               tenantContextHolder,
+                                                                               entityCustomPrivilegeService);
         return xmEntitySpecService;
     }
 
@@ -57,6 +62,11 @@ public class TenantConfigMockConfiguration {
     @Bean
     public TenantConfigRepository tenantConfigRepository() {
         return mock(TenantConfigRepository.class);
+    }
+
+    @Bean
+    public CommonConfigRepository commonConfigRepository() {
+        return mock(CommonConfigRepository.class);
     }
 
     @SneakyThrows

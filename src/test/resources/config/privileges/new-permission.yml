@@ -1,0 +1,40 @@
+---
+applications:
+  ROLE_ADMIN:
+  - privilegeKey: "APPLICATION.TYPE1"
+    disabled: false
+    deleted: false
+    envCondition: null
+    resourceCondition: null
+    reactionStrategy: null
+  - privilegeKey: "APPLICATION.TYPE2"
+    disabled: false
+    deleted: false
+    envCondition: null
+    resourceCondition: null
+    reactionStrategy: null
+  - privilegeKey: "APPLICATION.TYPE3"
+    disabled: false
+    deleted: false
+    envCondition: null
+    resourceCondition: null
+    reactionStrategy: null
+  ROLE_AGENT:
+  - privilegeKey: "APPLICATION.TYPE1"
+    disabled: false
+    deleted: false
+    envCondition: null
+    resourceCondition: null
+    reactionStrategy: null
+  - privilegeKey: "APPLICATION.TYPE2"
+    disabled: false
+    deleted: false
+    envCondition: null
+    resourceCondition: null
+    reactionStrategy: null
+  - privilegeKey: "APPLICATION.TYPE3"
+    disabled: false
+    deleted: false
+    envCondition: null
+    resourceCondition: null
+    reactionStrategy: null
