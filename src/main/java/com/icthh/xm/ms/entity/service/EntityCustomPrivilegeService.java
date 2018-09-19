@@ -78,6 +78,10 @@ public class EntityCustomPrivilegeService {
         val permissions = addApplicationPermissions(permissionsSpec, applications, tenantKey);
         String permissionsYml = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(permissions);
         Configuration configuration = new Configuration(permissionsSpecPath, permissionsYml);
+        if (sha1Hex(permissionsSpec).equals(DigestUtils.sha1Hex(permissionsYml))) {
+            log.info("Permissions configuration not changed");
+            return;
+        }
         commonConfigRepository.updateConfigFullPath(configuration, sha1Hex(permissionsSpec));
     }
 
@@ -91,6 +95,10 @@ public class EntityCustomPrivilegeService {
             .map(this::toPrivilege).collect(toList());
         val privileges = addApplicationPrivileges(customPrivileges, applicationPrivileges);
         String content = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(privileges);
+        if (sha1Hex(customPrivileges).equals(DigestUtils.sha1Hex(content))) {
+            log.info("Privileges configuration not changed");
+            return;
+        }
         commonConfigRepository.updateConfigFullPath(new Configuration(privilegesPath, content), sha1Hex(customPrivileges));
     }
 
