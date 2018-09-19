@@ -27,7 +27,6 @@ import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.repository.LinkPermittedRepository;
 import com.icthh.xm.ms.entity.repository.LinkRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
-import com.icthh.xm.ms.entity.repository.search.LinkSearchRepository;
 import com.icthh.xm.ms.entity.repository.search.PermittedSearchRepository;
 import com.icthh.xm.ms.entity.service.LinkService;
 import com.icthh.xm.ms.entity.service.impl.StartUpdateDateGenerationStrategy;
@@ -36,7 +35,6 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -86,9 +84,6 @@ public class LinkResourceIntTest {
 
     @Autowired
     private LinkRepository linkRepository;
-
-    @Autowired
-    private LinkSearchRepository linkSearchRepository;
 
     @Autowired
     private LinkPermittedRepository permittedRepository;
@@ -146,7 +141,6 @@ public class LinkResourceIntTest {
         when(startUpdateDateGenerationStrategy.generateStartDate()).thenReturn(DEFAULT_START_DATE);
 
         linkService = new LinkService(linkRepository,
-                                      linkSearchRepository,
                                       permittedRepository,
                                       permittedSearchRepository,
                                       startUpdateDateGenerationStrategy,
@@ -220,10 +214,6 @@ public class LinkResourceIntTest {
         assertThat(testLink.getDescription()).isEqualTo(DEFAULT_DESCRIPTION);
         assertThat(testLink.getStartDate()).isEqualTo(DEFAULT_START_DATE);
         assertThat(testLink.getEndDate()).isEqualTo(DEFAULT_END_DATE);
-
-        // Validate the Link in Elasticsearch
-        Link linkEs = linkSearchRepository.findOne(testLink.getId());
-        assertThat(linkEs).isEqualToComparingFieldByField(testLink);
     }
 
     @Test
@@ -376,10 +366,6 @@ public class LinkResourceIntTest {
         assertThat(testLink.getDescription()).isEqualTo(UPDATED_DESCRIPTION);
         assertThat(testLink.getStartDate()).isEqualTo(UPDATED_START_DATE);
         assertThat(testLink.getEndDate()).isEqualTo(UPDATED_END_DATE);
-
-        // Validate the Link in Elasticsearch
-        Link linkEs = linkSearchRepository.findOne(testLink.getId());
-        assertThat(linkEs).isEqualToComparingFieldByField(testLink);
     }
 
     @Test
@@ -413,31 +399,9 @@ public class LinkResourceIntTest {
             .accept(TestUtil.APPLICATION_JSON_UTF8))
             .andExpect(status().isOk());
 
-        // Validate Elasticsearch is empty
-        boolean linkExistsInEs = linkSearchRepository.exists(link.getId());
-        assertThat(linkExistsInEs).isFalse();
-
         // Validate the database is empty
         List<Link> linkList = linkRepository.findAll();
         assertThat(linkList).hasSize(databaseSizeBeforeDelete - 1);
-    }
-
-    @Test
-    @Transactional
-    public void searchLink() throws Exception {
-        // Initialize the database
-        linkService.save(link);
-
-        // Search the link
-        restLinkMockMvc.perform(get("/api/_search/links?query=id:" + link.getId()))
-            .andExpect(status().isOk())
-            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
-            .andExpect(jsonPath("$.[*].id").value(hasItem(link.getId().intValue())))
-            .andExpect(jsonPath("$.[*].typeKey").value(hasItem(DEFAULT_TYPE_KEY.toString())))
-            .andExpect(jsonPath("$.[*].name").value(hasItem(DEFAULT_NAME.toString())))
-            .andExpect(jsonPath("$.[*].description").value(hasItem(DEFAULT_DESCRIPTION.toString())))
-            .andExpect(jsonPath("$.[*].startDate").value(hasItem(DEFAULT_START_DATE.toString())))
-            .andExpect(jsonPath("$.[*].endDate").value(hasItem(DEFAULT_END_DATE.toString())));
     }
 
     @Test

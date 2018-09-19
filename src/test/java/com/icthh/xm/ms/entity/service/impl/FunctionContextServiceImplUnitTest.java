@@ -7,7 +7,6 @@ import static org.mockito.Mockito.when;
 
 import com.icthh.xm.ms.entity.domain.FunctionContext;
 import com.icthh.xm.ms.entity.repository.FunctionContextRepository;
-import com.icthh.xm.ms.entity.repository.search.FunctionContextSearchRepository;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
@@ -24,18 +23,13 @@ public class FunctionContextServiceImplUnitTest {
     private FunctionContextRepository functionContextRepository;
 
     @Mock
-    private FunctionContextSearchRepository functionContextSearchRepository;
-
-    @Mock
     private StartUpdateDateGenerationStrategy startUpdateDateGenerationStrategy;
 
     @Test
     public void saveFunctionContextWithNoEntity() {
         when(functionContextRepository.save(refEq(mockFunctionContext()))).thenReturn(mockFunctionContext());
-        when(functionContextSearchRepository.save(refEq(mockFunctionContext()))).thenReturn(mockFunctionContext());
         functionContextService.save(mockFunctionContext());
         verify(functionContextRepository).save(refEq(mockFunctionContext()));
-        verify(functionContextSearchRepository).save(refEq(mockFunctionContext()));
     }
 
     private FunctionContext mockFunctionContext() {

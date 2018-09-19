@@ -24,7 +24,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.net.URI;
@@ -137,21 +136,4 @@ public class VoteResource {
         voteService.delete(id);
         return ResponseEntity.ok().headers(HeaderUtil.createEntityDeletionAlert(ENTITY_NAME, id.toString())).build();
     }
-
-    /**
-     * SEARCH  /_search/votes?query=:query : search for the vote corresponding
-     * to the query.
-     *
-     * @param query the query of the vote search
-     * @param pageable the pagination information
-     * @return the result of the search
-     */
-    @GetMapping("/_search/votes")
-    @Timed
-    public ResponseEntity<List<Vote>> searchVotes(@RequestParam String query, @ApiParam Pageable pageable) {
-        Page<Vote> page = voteService.search(query, pageable, null);
-        HttpHeaders headers = PaginationUtil.generateSearchPaginationHttpHeaders(query, page, "/api/_search/votes");
-        return new ResponseEntity<>(page.getContent(), headers, HttpStatus.OK);
-    }
-
 }

@@ -21,7 +21,6 @@ import com.icthh.xm.ms.entity.config.tenant.WebappTenantOverrideConfiguration;
 import com.icthh.xm.ms.entity.domain.Calendar;
 import com.icthh.xm.ms.entity.repository.CalendarRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
-import com.icthh.xm.ms.entity.repository.search.CalendarSearchRepository;
 import com.icthh.xm.ms.entity.repository.search.PermittedSearchRepository;
 import com.icthh.xm.ms.entity.service.CalendarService;
 import com.icthh.xm.ms.entity.service.impl.StartUpdateDateGenerationStrategy;
@@ -90,9 +89,6 @@ public class CalendarResourceExtendedIntTest {
     private CalendarResource calendarResource;
 
     @Autowired
-    private CalendarSearchRepository calendarSearchRepository;
-
-    @Autowired
     private PermittedRepository permittedRepository;
 
     @Autowired
@@ -129,7 +125,6 @@ public class CalendarResourceExtendedIntTest {
 
         calendarService = new CalendarService(
             calendarRepository,
-            calendarSearchRepository,
             permittedRepository,
             permittedSearchRepository,
             startUpdateDateGenerationStrategy,
@@ -178,10 +173,6 @@ public class CalendarResourceExtendedIntTest {
 
         Calendar testCalendar = calendarList.get(calendarList.size() - 1);
         assertThat(testCalendar.getStartDate()).isEqualTo(MOCKED_START_DATE);
-
-        // Validate the Calendar in Elasticsearch
-        Calendar calendarEs = calendarSearchRepository.findOne(testCalendar.getId());
-        assertThat(calendarEs).isEqualToComparingFieldByField(testCalendar);
     }
 
     @Test
@@ -203,10 +194,6 @@ public class CalendarResourceExtendedIntTest {
 
         Calendar testCalendar = voteList.get(voteList.size() - 1);
         assertThat(testCalendar.getStartDate()).isEqualTo(MOCKED_START_DATE);
-
-        // Validate the Calendar in Elasticsearch
-        Calendar calendarEs = calendarSearchRepository.findOne(testCalendar.getId());
-        assertThat(calendarEs).isEqualToComparingFieldByField(testCalendar);
     }
 
     @Test

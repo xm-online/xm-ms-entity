@@ -25,7 +25,6 @@ import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.repository.VoteRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
 import com.icthh.xm.ms.entity.repository.search.PermittedSearchRepository;
-import com.icthh.xm.ms.entity.repository.search.VoteSearchRepository;
 import com.icthh.xm.ms.entity.service.VoteService;
 import com.icthh.xm.ms.entity.service.impl.StartUpdateDateGenerationStrategy;
 import org.junit.After;
@@ -81,9 +80,6 @@ public class VoteResourceIntTest {
     private VoteRepository voteRepository;
 
     @Autowired
-    private VoteSearchRepository voteSearchRepository;
-
-    @Autowired
     private MappingJackson2HttpMessageConverter jacksonMessageConverter;
 
     @Autowired
@@ -130,7 +126,6 @@ public class VoteResourceIntTest {
         voteService = new VoteService(permittedRepository,
                                       permittedSearchRepository,
                                       voteRepository,
-                                      voteSearchRepository,
                                       startUpdateDateGenerationStrategy,
                                       xmEntityRepository);
 
@@ -199,10 +194,6 @@ public class VoteResourceIntTest {
         assertThat(testVote.getValue()).isEqualTo(DEFAULT_VALUE);
         assertThat(testVote.getMessage()).isEqualTo(DEFAULT_MESSAGE);
         assertThat(testVote.getEntryDate()).isEqualTo(UPDATED_ENTRY_DATE);
-
-        // Validate the Vote in Elasticsearch
-        Vote voteEs = voteSearchRepository.findOne(testVote.getId());
-        assertThat(voteEs).isEqualToComparingFieldByField(testVote);
     }
 
     @Test
@@ -345,7 +336,6 @@ public class VoteResourceIntTest {
     public void updateVote() throws Exception {
         // Initialize the database
         voteRepository.saveAndFlush(vote);
-        voteSearchRepository.save(vote);
         int databaseSizeBeforeUpdate = voteRepository.findAll().size();
 
         // Update the vote
@@ -369,10 +359,6 @@ public class VoteResourceIntTest {
         assertThat(testVote.getValue()).isEqualTo(UPDATED_VALUE);
         assertThat(testVote.getMessage()).isEqualTo(UPDATED_MESSAGE);
         assertThat(testVote.getEntryDate()).isEqualTo(UPDATED_ENTRY_DATE);
-
-        // Validate the Vote in Elasticsearch
-        Vote voteEs = voteSearchRepository.findOne(testVote.getId());
-        assertThat(voteEs).isEqualToComparingFieldByField(testVote);
     }
 
     @Test
@@ -398,7 +384,6 @@ public class VoteResourceIntTest {
     public void deleteVote() throws Exception {
         // Initialize the database
         voteRepository.saveAndFlush(vote);
-        voteSearchRepository.save(vote);
         int databaseSizeBeforeDelete = voteRepository.findAll().size();
 
         // Get the vote
@@ -406,31 +391,9 @@ public class VoteResourceIntTest {
             .accept(TestUtil.APPLICATION_JSON_UTF8))
             .andExpect(status().isOk());
 
-        // Validate Elasticsearch is empty
-        boolean voteExistsInEs = voteSearchRepository.exists(vote.getId());
-        assertThat(voteExistsInEs).isFalse();
-
         // Validate the database is empty
         List<Vote> voteList = voteRepository.findAll();
         assertThat(voteList).hasSize(databaseSizeBeforeDelete - 1);
-    }
-
-    @Test
-    @Transactional
-    public void searchVote() throws Exception {
-        // Initialize the database
-        voteRepository.saveAndFlush(vote);
-        voteSearchRepository.save(vote);
-
-        // Search the vote
-        restVoteMockMvc.perform(get("/api/_search/votes?query=id:" + vote.getId()))
-            .andExpect(status().isOk())
-            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
-            .andExpect(jsonPath("$.[*].id").value(hasItem(vote.getId().intValue())))
-            .andExpect(jsonPath("$.[*].userKey").value(hasItem(DEFAULT_USER_KEY)))
-            .andExpect(jsonPath("$.[*].value").value(hasItem(DEFAULT_VALUE)))
-            .andExpect(jsonPath("$.[*].message").value(hasItem(DEFAULT_MESSAGE)))
-            .andExpect(jsonPath("$.[*].entryDate").value(hasItem(DEFAULT_ENTRY_DATE.toString())));
     }
 
     @Test

@@ -27,7 +27,6 @@ import com.icthh.xm.ms.entity.domain.Attachment;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.repository.AttachmentRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
-import com.icthh.xm.ms.entity.repository.search.AttachmentSearchRepository;
 import com.icthh.xm.ms.entity.repository.search.PermittedSearchRepository;
 import com.icthh.xm.ms.entity.service.AttachmentService;
 import com.icthh.xm.ms.entity.service.impl.StartUpdateDateGenerationStrategy;
@@ -98,9 +97,6 @@ public class AttachmentResourceIntTest {
     private AttachmentRepository attachmentRepository;
 
     @Autowired
-    private AttachmentSearchRepository attachmentSearchRepository;
-
-    @Autowired
     private PermittedRepository permittedRepository;
 
     @Autowired
@@ -160,7 +156,6 @@ public class AttachmentResourceIntTest {
         when(startUpdateDateGenerationStrategy.generateStartDate()).thenReturn(DEFAULT_START_DATE);
 
         attachmentService = new AttachmentService(attachmentRepository,
-                                                  attachmentSearchRepository,
                                                   permittedRepository,
                                                   permittedSearchRepository,
                                                   startUpdateDateGenerationStrategy,
@@ -235,10 +230,6 @@ public class AttachmentResourceIntTest {
         assertThat(testAttachment.getEndDate()).isEqualTo(DEFAULT_END_DATE);
         assertThat(testAttachment.getValueContentType()).isEqualTo(DEFAULT_VALUE_CONTENT_TYPE);
         assertThat(testAttachment.getValueContentSize()).isEqualTo(DEFAULT_VALUE_CONTENT_SIZE);
-
-        // Validate the Attachment in Elasticsearch
-        Attachment attachmentEs = attachmentSearchRepository.findOne(testAttachment.getId());
-        assertThat(attachmentEs).isEqualToComparingFieldByField(testAttachment);
     }
 
     @Test
@@ -452,10 +443,6 @@ public class AttachmentResourceIntTest {
         assertThat(testAttachment.getEndDate()).isEqualTo(UPDATED_END_DATE);
         assertThat(testAttachment.getValueContentType()).isEqualTo(UPDATED_VALUE_CONTENT_TYPE);
         assertThat(testAttachment.getValueContentSize()).isEqualTo(UPDATED_VALUE_CONTENT_SIZE);
-
-        // Validate the Attachment in Elasticsearch
-        Attachment attachmentEs = attachmentSearchRepository.findOne(testAttachment.getId());
-        assertThat(attachmentEs).isEqualToComparingFieldByField(testAttachment);
     }
 
     @Test
@@ -489,34 +476,9 @@ public class AttachmentResourceIntTest {
                                           .accept(TestUtil.APPLICATION_JSON_UTF8))
             .andExpect(status().isOk());
 
-        // Validate Elasticsearch is empty
-        boolean attachmentExistsInEs = attachmentSearchRepository.exists(attachment.getId());
-        assertThat(attachmentExistsInEs).isFalse();
-
         // Validate the database is empty
         List<Attachment> attachmentList = attachmentRepository.findAll();
         assertThat(attachmentList).hasSize(databaseSizeBeforeDelete - 1);
-    }
-
-    @Test
-    @Transactional
-    public void searchAttachment() throws Exception {
-        // Initialize the database
-        attachmentService.save(attachment);
-
-        // Search the attachment
-        restAttachmentMockMvc.perform(get("/api/_search/attachments?query=id:" + attachment.getId()))
-            .andExpect(status().isOk())
-            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
-            .andExpect(jsonPath("$.[*].id").value(hasItem(attachment.getId().intValue())))
-            .andExpect(jsonPath("$.[*].typeKey").value(hasItem(DEFAULT_TYPE_KEY.toString())))
-            .andExpect(jsonPath("$.[*].name").value(hasItem(DEFAULT_NAME.toString())))
-            .andExpect(jsonPath("$.[*].contentUrl").value(hasItem(DEFAULT_CONTENT_URL.toString())))
-            .andExpect(jsonPath("$.[*].description").value(hasItem(DEFAULT_DESCRIPTION.toString())))
-            .andExpect(jsonPath("$.[*].startDate").value(hasItem(DEFAULT_START_DATE.toString())))
-            .andExpect(jsonPath("$.[*].endDate").value(hasItem(DEFAULT_END_DATE.toString())))
-            .andExpect(jsonPath("$.[*].valueContentType").value(hasItem(DEFAULT_VALUE_CONTENT_TYPE.toString())))
-            .andExpect(jsonPath("$.[*].valueContentSize").value(hasItem(DEFAULT_VALUE_CONTENT_SIZE.intValue())));
     }
 
     @Test

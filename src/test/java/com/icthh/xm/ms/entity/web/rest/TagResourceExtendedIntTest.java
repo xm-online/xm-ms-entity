@@ -18,7 +18,6 @@ import com.icthh.xm.ms.entity.domain.Tag;
 import com.icthh.xm.ms.entity.repository.TagRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
 import com.icthh.xm.ms.entity.repository.search.PermittedSearchRepository;
-import com.icthh.xm.ms.entity.repository.search.TagSearchRepository;
 import com.icthh.xm.ms.entity.service.TagService;
 import com.icthh.xm.ms.entity.service.impl.StartUpdateDateGenerationStrategy;
 import org.junit.After;
@@ -85,9 +84,6 @@ public class TagResourceExtendedIntTest {
     private TagResource tagResource;
 
     @Autowired
-    private TagSearchRepository tagSearchRepository;
-
-    @Autowired
     private PermittedRepository permittedRepository;
 
     @Autowired
@@ -118,7 +114,6 @@ public class TagResourceExtendedIntTest {
 
         tagService = new TagService(
             tagRepository,
-            tagSearchRepository,
             permittedRepository,
             permittedSearchRepository,
             startUpdateDateGenerationStrategy,
@@ -162,10 +157,6 @@ public class TagResourceExtendedIntTest {
 
         Tag testTag = tagList.get(tagList.size() - 1);
         assertThat(testTag.getStartDate()).isEqualTo(MOCKED_START_DATE);
-
-        // Validate the Tag in Elasticsearch
-        Tag tagEs = tagSearchRepository.findOne(testTag.getId());
-        assertThat(tagEs).isEqualToComparingFieldByField(testTag);
     }
 
     @Test
@@ -187,10 +178,6 @@ public class TagResourceExtendedIntTest {
 
         Tag testTag = voteList.get(voteList.size() - 1);
         assertThat(testTag.getStartDate()).isEqualTo(MOCKED_START_DATE);
-
-        // Validate the Tag in Elasticsearch
-        Tag tagEs = tagSearchRepository.findOne(testTag.getId());
-        assertThat(tagEs).isEqualToComparingFieldByField(testTag);
     }
 
     @Test

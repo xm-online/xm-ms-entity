@@ -17,7 +17,6 @@ import com.icthh.xm.ms.entity.config.tenant.WebappTenantOverrideConfiguration;
 import com.icthh.xm.ms.entity.domain.FunctionContext;
 import com.icthh.xm.ms.entity.repository.FunctionContextRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
-import com.icthh.xm.ms.entity.repository.search.FunctionContextSearchRepository;
 import com.icthh.xm.ms.entity.repository.search.PermittedSearchRepository;
 import com.icthh.xm.ms.entity.service.FunctionContextService;
 import com.icthh.xm.ms.entity.service.impl.FunctionContextServiceImpl;
@@ -87,9 +86,6 @@ public class FunctionContextResourceExtendedIntTest {
     private FunctionContextResource functionContextResource;
 
     @Autowired
-    private FunctionContextSearchRepository functionContextSearchRepository;
-
-    @Autowired
     private PermittedRepository permittedRepository;
 
     @Autowired
@@ -121,7 +117,6 @@ public class FunctionContextResourceExtendedIntTest {
 
         functionContextService = new FunctionContextServiceImpl(
             functionContextRepository,
-            functionContextSearchRepository,
             permittedRepository,
             permittedSearchRepository,
             startUpdateDateGenerationStrategy,
@@ -168,10 +163,6 @@ public class FunctionContextResourceExtendedIntTest {
         FunctionContext testFunctionContext = functionContextList.get(functionContextList.size() - 1);
         assertThat(testFunctionContext.getStartDate()).isEqualTo(MOCKED_START_DATE);
         assertThat(testFunctionContext.getUpdateDate()).isEqualTo(MOCKED_UPDATE_DATE);
-
-        // Validate the FunctionContext in Elasticsearch
-        FunctionContext functionContextEs = functionContextSearchRepository.findOne(testFunctionContext.getId());
-        assertThat(functionContextEs).isEqualToComparingFieldByField(testFunctionContext);
     }
 
     @Test
@@ -196,10 +187,6 @@ public class FunctionContextResourceExtendedIntTest {
         FunctionContext testFunctionContext = voteList.get(voteList.size() - 1);
         assertThat(testFunctionContext.getStartDate()).isEqualTo(MOCKED_START_DATE);
         assertThat(testFunctionContext.getUpdateDate()).isEqualTo(MOCKED_UPDATE_DATE);
-
-        // Validate the FunctionContext in Elasticsearch
-        FunctionContext functionContextEs = functionContextSearchRepository.findOne(testFunctionContext.getId());
-        assertThat(functionContextEs).isEqualToComparingFieldByField(testFunctionContext);
     }
 
     @Test

@@ -18,10 +18,8 @@ import com.icthh.xm.ms.entity.domain.Rating;
 import com.icthh.xm.ms.entity.repository.RatingRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
 import com.icthh.xm.ms.entity.repository.search.PermittedSearchRepository;
-import com.icthh.xm.ms.entity.repository.search.RatingSearchRepository;
 import com.icthh.xm.ms.entity.service.RatingService;
 import com.icthh.xm.ms.entity.service.impl.StartUpdateDateGenerationStrategy;
-import lombok.val;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -86,9 +84,6 @@ public class RatingResourceExtendedIntTest {
     private RatingResource ratingResource;
 
     @Autowired
-    private RatingSearchRepository ratingSearchRepository;
-
-    @Autowired
     private PermittedRepository permittedRepository;
 
     @Autowired
@@ -119,7 +114,6 @@ public class RatingResourceExtendedIntTest {
 
         ratingService = new RatingService(
             ratingRepository,
-            ratingSearchRepository,
             permittedRepository,
             permittedSearchRepository,
             startUpdateDateGenerationStrategy,
@@ -163,10 +157,6 @@ public class RatingResourceExtendedIntTest {
 
         Rating testRating = ratingList.get(ratingList.size() - 1);
         assertThat(testRating.getStartDate()).isEqualTo(MOCKED_START_DATE);
-
-        // Validate the Rating in Elasticsearch
-        Rating ratingEs = ratingSearchRepository.findOne(testRating.getId());
-        assertThat(ratingEs).isEqualToComparingFieldByField(testRating);
     }
 
     @Test
@@ -188,10 +178,6 @@ public class RatingResourceExtendedIntTest {
 
         Rating testRating = voteList.get(voteList.size() - 1);
         assertThat(testRating.getStartDate()).isEqualTo(MOCKED_START_DATE);
-
-        // Validate the Rating in Elasticsearch
-        Rating ratingEs = ratingSearchRepository.findOne(testRating.getId());
-        assertThat(ratingEs).isEqualToComparingFieldByField(testRating);
     }
 
     @Test

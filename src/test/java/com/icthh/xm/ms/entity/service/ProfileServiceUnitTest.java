@@ -14,7 +14,6 @@ import com.icthh.xm.ms.entity.config.tenant.WebappTenantOverrideConfiguration;
 import com.icthh.xm.ms.entity.domain.Profile;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.repository.ProfileRepository;
-import com.icthh.xm.ms.entity.repository.search.ProfileSearchRepository;
 import com.icthh.xm.ms.entity.repository.search.XmEntitySearchRepository;
 import com.icthh.xm.ms.entity.web.rest.XmEntityResourceIntTest;
 import org.junit.After;
@@ -39,8 +38,6 @@ public class ProfileServiceUnitTest {
 
     private ProfileRepository profileRepository;
 
-    private ProfileSearchRepository profileSearchRepository;
-
     private XmEntitySearchRepository entitySearchRepository;
 
     private ProfileService service;
@@ -56,9 +53,8 @@ public class ProfileServiceUnitTest {
         TenantContextUtils.setTenant(tenantContextHolder, "TEST");
 
         profileRepository = mock(ProfileRepository.class);
-        profileSearchRepository = mock(ProfileSearchRepository.class);
         entitySearchRepository = mock(XmEntitySearchRepository.class);
-        service = new ProfileService(profileRepository, profileSearchRepository, entitySearchRepository, authContextHolder);
+        service = new ProfileService(profileRepository, entitySearchRepository, authContextHolder);
     }
 
     @After
@@ -75,12 +71,10 @@ public class ProfileServiceUnitTest {
         xmEntity.setId(ID);
         profile.setXmentity(xmEntity);
         when(profileRepository.save(profile)).thenReturn(profile);
-        when(profileSearchRepository.save(profile)).thenReturn(profile);
         when(entitySearchRepository.save(profile.getXmentity())).thenReturn(profile.getXmentity());
         service.save(profile);
 
         verify(profileRepository).save(profile);
-        verify(profileSearchRepository).save(profile);
         verify(entitySearchRepository).save(profile.getXmentity());
     }
 

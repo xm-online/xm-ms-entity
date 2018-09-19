@@ -27,7 +27,6 @@ import com.icthh.xm.ms.entity.domain.Calendar;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.repository.CalendarRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
-import com.icthh.xm.ms.entity.repository.search.CalendarSearchRepository;
 import com.icthh.xm.ms.entity.repository.search.PermittedSearchRepository;
 import com.icthh.xm.ms.entity.service.CalendarService;
 import com.icthh.xm.ms.entity.service.impl.StartUpdateDateGenerationStrategy;
@@ -89,9 +88,6 @@ public class CalendarResourceIntTest {
     private CalendarRepository calendarRepository;
 
     @Autowired
-    private CalendarSearchRepository calendarSearchRepository;
-
-    @Autowired
     private PermittedRepository permittedRepository;
 
     @Autowired
@@ -146,7 +142,6 @@ public class CalendarResourceIntTest {
 
         calendarService = new CalendarService(
             calendarRepository,
-            calendarSearchRepository,
             permittedRepository,
             permittedSearchRepository,
             startUpdateDateGenerationStrategy,
@@ -220,10 +215,6 @@ public class CalendarResourceIntTest {
         assertThat(testCalendar.getDescription()).isEqualTo(DEFAULT_DESCRIPTION);
         assertThat(testCalendar.getStartDate()).isEqualTo(DEFAULT_START_DATE);
         assertThat(testCalendar.getEndDate()).isEqualTo(DEFAULT_END_DATE);
-
-        // Validate the Calendar in Elasticsearch
-        Calendar calendarEs = calendarSearchRepository.findOne(testCalendar.getId());
-        assertThat(calendarEs).isEqualToComparingFieldByField(testCalendar);
     }
 
     @Test
@@ -400,10 +391,6 @@ public class CalendarResourceIntTest {
         assertThat(testCalendar.getDescription()).isEqualTo(UPDATED_DESCRIPTION);
         assertThat(testCalendar.getStartDate()).isEqualTo(UPDATED_START_DATE);
         assertThat(testCalendar.getEndDate()).isEqualTo(UPDATED_END_DATE);
-
-        // Validate the Calendar in Elasticsearch
-        Calendar calendarEs = calendarSearchRepository.findOne(testCalendar.getId());
-        assertThat(calendarEs).isEqualToComparingFieldByField(testCalendar);
     }
 
     @Test
@@ -437,31 +424,9 @@ public class CalendarResourceIntTest {
                                         .accept(TestUtil.APPLICATION_JSON_UTF8))
             .andExpect(status().isOk());
 
-        // Validate Elasticsearch is empty
-        boolean calendarExistsInEs = calendarSearchRepository.exists(calendar.getId());
-        assertThat(calendarExistsInEs).isFalse();
-
         // Validate the database is empty
         List<Calendar> calendarList = calendarRepository.findAll();
         assertThat(calendarList).hasSize(databaseSizeBeforeDelete - 1);
-    }
-
-    @Test
-    @Transactional
-    public void searchCalendar() throws Exception {
-        // Initialize the database
-        calendarService.save(calendar);
-
-        // Search the calendar
-        restCalendarMockMvc.perform(get("/api/_search/calendars?query=id:" + calendar.getId()))
-            .andExpect(status().isOk())
-            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
-            .andExpect(jsonPath("$.[*].id").value(hasItem(calendar.getId().intValue())))
-            .andExpect(jsonPath("$.[*].typeKey").value(hasItem(DEFAULT_TYPE_KEY.toString())))
-            .andExpect(jsonPath("$.[*].name").value(hasItem(DEFAULT_NAME.toString())))
-            .andExpect(jsonPath("$.[*].description").value(hasItem(DEFAULT_DESCRIPTION.toString())))
-            .andExpect(jsonPath("$.[*].startDate").value(hasItem(DEFAULT_START_DATE.toString())))
-            .andExpect(jsonPath("$.[*].endDate").value(hasItem(DEFAULT_END_DATE.toString())));
     }
 
     @Test

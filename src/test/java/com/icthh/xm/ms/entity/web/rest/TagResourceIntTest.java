@@ -24,7 +24,6 @@ import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.repository.TagRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
 import com.icthh.xm.ms.entity.repository.search.PermittedSearchRepository;
-import com.icthh.xm.ms.entity.repository.search.TagSearchRepository;
 import com.icthh.xm.ms.entity.service.TagService;
 import com.icthh.xm.ms.entity.service.impl.StartUpdateDateGenerationStrategy;
 import org.junit.After;
@@ -78,9 +77,6 @@ public class TagResourceIntTest {
     private TagRepository tagRepository;
 
     @Autowired
-    private TagSearchRepository tagSearchRepository;
-
-    @Autowired
     private MappingJackson2HttpMessageConverter jacksonMessageConverter;
 
     @Autowired
@@ -129,7 +125,6 @@ public class TagResourceIntTest {
 
         tagService = new TagService(
             tagRepository,
-            tagSearchRepository,
             permittedRepository,
             permittedSearchRepository,
             startUpdateDateGenerationStrategy,
@@ -194,10 +189,6 @@ public class TagResourceIntTest {
         assertThat(testTag.getTypeKey()).isEqualTo(DEFAULT_TYPE_KEY);
         assertThat(testTag.getName()).isEqualTo(DEFAULT_NAME);
         assertThat(testTag.getStartDate()).isEqualTo(DEFAULT_START_DATE);
-
-        // Validate the Tag in Elasticsearch
-        Tag tagEs = tagSearchRepository.findOne(testTag.getId());
-        assertThat(tagEs).isEqualToComparingFieldByField(testTag);
     }
 
     @Test
@@ -320,7 +311,6 @@ public class TagResourceIntTest {
     public void updateTag() throws Exception {
         // Initialize the database
         tagRepository.saveAndFlush(tag);
-        tagSearchRepository.save(tag);
         int databaseSizeBeforeUpdate = tagRepository.findAll().size();
 
         // Update the tag
@@ -342,10 +332,6 @@ public class TagResourceIntTest {
         assertThat(testTag.getTypeKey()).isEqualTo(UPDATED_TYPE_KEY);
         assertThat(testTag.getName()).isEqualTo(UPDATED_NAME);
         assertThat(testTag.getStartDate()).isEqualTo(UPDATED_START_DATE);
-
-        // Validate the Tag in Elasticsearch
-        Tag tagEs = tagSearchRepository.findOne(testTag.getId());
-        assertThat(tagEs).isEqualToComparingFieldByField(testTag);
     }
 
     @Test
@@ -371,7 +357,6 @@ public class TagResourceIntTest {
     public void deleteTag() throws Exception {
         // Initialize the database
         tagRepository.saveAndFlush(tag);
-        tagSearchRepository.save(tag);
         int databaseSizeBeforeDelete = tagRepository.findAll().size();
 
         // Get the tag
@@ -379,30 +364,9 @@ public class TagResourceIntTest {
                                    .accept(TestUtil.APPLICATION_JSON_UTF8))
             .andExpect(status().isOk());
 
-        // Validate Elasticsearch is empty
-        boolean tagExistsInEs = tagSearchRepository.exists(tag.getId());
-        assertThat(tagExistsInEs).isFalse();
-
         // Validate the database is empty
         List<Tag> tagList = tagRepository.findAll();
         assertThat(tagList).hasSize(databaseSizeBeforeDelete - 1);
-    }
-
-    @Test
-    @Transactional
-    public void searchTag() throws Exception {
-        // Initialize the database
-        tagRepository.saveAndFlush(tag);
-        tagSearchRepository.save(tag);
-
-        // Search the tag
-        restTagMockMvc.perform(get("/api/_search/tags?query=id:" + tag.getId()))
-            .andExpect(status().isOk())
-            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
-            .andExpect(jsonPath("$.[*].id").value(hasItem(tag.getId().intValue())))
-            .andExpect(jsonPath("$.[*].typeKey").value(hasItem(DEFAULT_TYPE_KEY.toString())))
-            .andExpect(jsonPath("$.[*].name").value(hasItem(DEFAULT_NAME.toString())))
-            .andExpect(jsonPath("$.[*].startDate").value(hasItem(DEFAULT_START_DATE.toString())));
     }
 
     @Test

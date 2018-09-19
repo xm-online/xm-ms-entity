@@ -18,7 +18,6 @@ import com.icthh.xm.ms.entity.domain.Vote;
 import com.icthh.xm.ms.entity.repository.VoteRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
 import com.icthh.xm.ms.entity.repository.search.PermittedSearchRepository;
-import com.icthh.xm.ms.entity.repository.search.VoteSearchRepository;
 import com.icthh.xm.ms.entity.service.VoteService;
 import com.icthh.xm.ms.entity.service.impl.StartUpdateDateGenerationStrategy;
 import org.junit.After;
@@ -64,9 +63,6 @@ public class VoteResourceExtendedIntTest {
 
     @Autowired
     private VoteRepository voteRepository;
-
-    @Autowired
-    private VoteSearchRepository voteSearchRepository;
 
     @Autowired
     private MappingJackson2HttpMessageConverter jacksonMessageConverter;
@@ -115,7 +111,6 @@ public class VoteResourceExtendedIntTest {
         voteService = new VoteService(permittedRepository,
                                       permittedSearchRepository,
                                       voteRepository,
-                                      voteSearchRepository,
                                       startUpdateDateGenerationStrategy,
                                       xmEntityRepository);
 
@@ -154,10 +149,6 @@ public class VoteResourceExtendedIntTest {
         assertThat(voteList).hasSize(databaseSizeBeforeTest + 1);
         Vote testVote = voteList.get(voteList.size() - 1);
         assertThat(testVote.getEntryDate()).isEqualTo(MOCKED_ENTRY_DATE);
-
-        // Validate the Vote in Elasticsearch
-        Vote voteEs = voteSearchRepository.findOne(testVote.getId());
-        assertThat(voteEs).isEqualToComparingFieldByField(testVote);
     }
 
     @Test
@@ -177,10 +168,6 @@ public class VoteResourceExtendedIntTest {
         assertThat(voteList).hasSize(databaseSizeBeforeCreate + 1);
         Vote testVote = voteList.get(voteList.size() - 1);
         assertThat(testVote.getEntryDate()).isEqualTo(MOCKED_ENTRY_DATE);
-
-        // Validate the Vote in Elasticsearch
-        Vote voteEs = voteSearchRepository.findOne(testVote.getId());
-        assertThat(voteEs).isEqualToComparingFieldByField(testVote);
     }
 
     @Test

@@ -26,7 +26,6 @@ import com.icthh.xm.ms.entity.config.tenant.WebappTenantOverrideConfiguration;
 import com.icthh.xm.ms.entity.domain.Event;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.repository.EventRepository;
-import com.icthh.xm.ms.entity.repository.search.EventSearchRepository;
 import com.icthh.xm.ms.entity.service.EventService;
 import org.junit.After;
 import org.junit.Before;
@@ -49,7 +48,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
-import java.util.UUID;
 import javax.persistence.EntityManager;
 
 /**
@@ -88,9 +86,6 @@ public class EventResourceIntTest {
 
     @Autowired
     private EventService eventService;
-
-    @Autowired
-    private EventSearchRepository eventSearchRepository;
 
     @Autowired
     private MappingJackson2HttpMessageConverter jacksonMessageConverter;
@@ -191,10 +186,6 @@ public class EventResourceIntTest {
         assertThat(testEvent.getDescription()).isEqualTo(DEFAULT_DESCRIPTION);
         assertThat(testEvent.getStartDate()).isEqualTo(DEFAULT_START_DATE);
         assertThat(testEvent.getEndDate()).isEqualTo(DEFAULT_END_DATE);
-
-        // Validate the Event in Elasticsearch
-        Event eventEs = eventSearchRepository.findOne(testEvent.getId());
-        assertThat(eventEs).isEqualToComparingFieldByField(testEvent);
     }
 
     @Test
@@ -326,10 +317,6 @@ public class EventResourceIntTest {
         assertThat(testEvent.getDescription()).isEqualTo(UPDATED_DESCRIPTION);
         assertThat(testEvent.getStartDate()).isEqualTo(UPDATED_START_DATE);
         assertThat(testEvent.getEndDate()).isEqualTo(UPDATED_END_DATE);
-
-        // Validate the Event in Elasticsearch
-        Event eventEs = eventSearchRepository.findOne(testEvent.getId());
-        assertThat(eventEs).isEqualToComparingFieldByField(testEvent);
     }
 
     @Test
@@ -363,32 +350,9 @@ public class EventResourceIntTest {
             .accept(TestUtil.APPLICATION_JSON_UTF8))
             .andExpect(status().isOk());
 
-        // Validate Elasticsearch is empty
-        boolean eventExistsInEs = eventSearchRepository.exists(event.getId());
-        assertThat(eventExistsInEs).isFalse();
-
         // Validate the database is empty
         List<Event> eventList = eventRepository.findAll();
         assertThat(eventList).hasSize(databaseSizeBeforeDelete - 1);
-    }
-
-    @Test
-    @Transactional
-    public void searchEvent() throws Exception {
-        // Initialize the database
-        eventService.save(event);
-
-        // Search the event
-        restEventMockMvc.perform(get("/api/_search/events?query=id:" + event.getId()))
-            .andExpect(status().isOk())
-            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
-            .andExpect(jsonPath("$.[*].id").value(hasItem(event.getId().intValue())))
-            .andExpect(jsonPath("$.[*].typeKey").value(hasItem(DEFAULT_TYPE_KEY.toString())))
-            .andExpect(jsonPath("$.[*].repeatRuleKey").value(hasItem(DEFAULT_REPEAT_RULE_KEY.toString())))
-            .andExpect(jsonPath("$.[*].title").value(hasItem(DEFAULT_TITLE.toString())))
-            .andExpect(jsonPath("$.[*].description").value(hasItem(DEFAULT_DESCRIPTION.toString())))
-            .andExpect(jsonPath("$.[*].startDate").value(hasItem(DEFAULT_START_DATE.toString())))
-            .andExpect(jsonPath("$.[*].endDate").value(hasItem(DEFAULT_END_DATE.toString())));
     }
 
     @Test

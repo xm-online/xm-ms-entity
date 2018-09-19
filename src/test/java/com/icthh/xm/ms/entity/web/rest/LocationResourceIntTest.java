@@ -20,7 +20,6 @@ import com.icthh.xm.ms.entity.config.tenant.WebappTenantOverrideConfiguration;
 import com.icthh.xm.ms.entity.domain.Location;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.repository.LocationRepository;
-import com.icthh.xm.ms.entity.repository.search.LocationSearchRepository;
 import com.icthh.xm.ms.entity.service.LocationService;
 import org.junit.After;
 import org.junit.Before;
@@ -90,9 +89,6 @@ public class LocationResourceIntTest {
     private LocationRepository locationRepository;
 
     @Autowired
-    private LocationSearchRepository locationSearchRepository;
-
-    @Autowired
     private MappingJackson2HttpMessageConverter jacksonMessageConverter;
 
     @Autowired
@@ -126,7 +122,7 @@ public class LocationResourceIntTest {
     public void setup() {
         MockitoAnnotations.initMocks(this);
         LocationResource locationResourceMock = new LocationResource(locationRepository,
-                        locationSearchRepository, locationResource, locationService);
+                        locationResource, locationService);
         this.restLocationMockMvc = MockMvcBuilders.standaloneSetup(locationResourceMock)
             .setCustomArgumentResolvers(pageableArgumentResolver)
             .setControllerAdvice(exceptionTranslator)
@@ -199,10 +195,6 @@ public class LocationResourceIntTest {
         assertThat(testLocation.getCity()).isEqualTo(DEFAULT_CITY);
         assertThat(testLocation.getRegion()).isEqualTo(DEFAULT_REGION);
         assertThat(testLocation.getZip()).isEqualTo(DEFAULT_ZIP);
-
-        // Validate the Location in Elasticsearch
-        Location locationEs = locationSearchRepository.findOne(testLocation.getId());
-        assertThat(locationEs).isEqualToComparingFieldByField(testLocation);
     }
 
     @Test
@@ -314,7 +306,6 @@ public class LocationResourceIntTest {
     public void updateLocation() throws Exception {
         // Initialize the database
         locationRepository.saveAndFlush(location);
-        locationSearchRepository.save(location);
         int databaseSizeBeforeUpdate = locationRepository.findAll().size();
 
         // Update the location
@@ -350,10 +341,6 @@ public class LocationResourceIntTest {
         assertThat(testLocation.getCity()).isEqualTo(UPDATED_CITY);
         assertThat(testLocation.getRegion()).isEqualTo(UPDATED_REGION);
         assertThat(testLocation.getZip()).isEqualTo(UPDATED_ZIP);
-
-        // Validate the Location in Elasticsearch
-        Location locationEs = locationSearchRepository.findOne(testLocation.getId());
-        assertThat(locationEs).isEqualToComparingFieldByField(testLocation);
     }
 
     @Test
@@ -379,7 +366,6 @@ public class LocationResourceIntTest {
     public void deleteLocation() throws Exception {
         // Initialize the database
         locationRepository.saveAndFlush(location);
-        locationSearchRepository.save(location);
         int databaseSizeBeforeDelete = locationRepository.findAll().size();
 
         // Get the location
@@ -387,37 +373,9 @@ public class LocationResourceIntTest {
             .accept(TestUtil.APPLICATION_JSON_UTF8))
             .andExpect(status().isOk());
 
-        // Validate Elasticsearch is empty
-        boolean locationExistsInEs = locationSearchRepository.exists(location.getId());
-        assertThat(locationExistsInEs).isFalse();
-
         // Validate the database is empty
         List<Location> locationList = locationRepository.findAll();
         assertThat(locationList).hasSize(databaseSizeBeforeDelete - 1);
-    }
-
-    @Test
-    @Transactional
-    public void searchLocation() throws Exception {
-        // Initialize the database
-        locationRepository.saveAndFlush(location);
-        locationSearchRepository.save(location);
-
-        // Search the location
-        restLocationMockMvc.perform(get("/api/_search/locations?query=id:" + location.getId()))
-            .andExpect(status().isOk())
-            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
-            .andExpect(jsonPath("$.[*].id").value(hasItem(location.getId().intValue())))
-            .andExpect(jsonPath("$.[*].typeKey").value(hasItem(DEFAULT_TYPE_KEY.toString())))
-            .andExpect(jsonPath("$.[*].countryKey").value(hasItem(DEFAULT_COUNTRY_KEY.toString())))
-            .andExpect(jsonPath("$.[*].longitude").value(hasItem(DEFAULT_LONGITUDE.doubleValue())))
-            .andExpect(jsonPath("$.[*].latitude").value(hasItem(DEFAULT_LATITUDE.doubleValue())))
-            .andExpect(jsonPath("$.[*].name").value(hasItem(DEFAULT_NAME.toString())))
-            .andExpect(jsonPath("$.[*].addressLine1").value(hasItem(DEFAULT_ADDRESS_LINE_1.toString())))
-            .andExpect(jsonPath("$.[*].addressLine2").value(hasItem(DEFAULT_ADDRESS_LINE_2.toString())))
-            .andExpect(jsonPath("$.[*].city").value(hasItem(DEFAULT_CITY.toString())))
-            .andExpect(jsonPath("$.[*].region").value(hasItem(DEFAULT_REGION.toString())))
-            .andExpect(jsonPath("$.[*].zip").value(hasItem(DEFAULT_ZIP.toString())));
     }
 
     @Test

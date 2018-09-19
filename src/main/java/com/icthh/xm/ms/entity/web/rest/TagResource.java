@@ -18,7 +18,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.net.URI;
@@ -128,18 +127,4 @@ public class TagResource {
         tagService.delete(id);
         return ResponseEntity.ok().headers(HeaderUtil.createEntityDeletionAlert(ENTITY_NAME, id.toString())).build();
     }
-
-    /**
-     * SEARCH  /_search/tags?query=:query : search for the tag corresponding
-     * to the query.
-     *
-     * @param query the query of the tag search
-     * @return the result of the search
-     */
-    @GetMapping("/_search/tags")
-    @Timed
-    public List<Tag> searchTags(@RequestParam String query) {
-        return tagService.search(query, null);
-    }
-
 }
