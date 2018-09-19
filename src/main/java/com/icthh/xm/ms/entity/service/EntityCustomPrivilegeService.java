@@ -7,7 +7,6 @@ import static java.util.Arrays.asList;
 import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toList;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
@@ -29,7 +28,6 @@ import org.springframework.stereotype.Service;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.function.Predicate;
@@ -80,6 +78,10 @@ public class EntityCustomPrivilegeService {
         val permissions = addApplicationPermissions(permissionsSpec, applications, tenantKey);
         String permissionsYml = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(permissions);
         Configuration configuration = new Configuration(permissionsSpecPath, permissionsYml);
+        if (DigestUtils.sha1Hex(permissionsYml).equals(sha1Hex(permissionsSpec))) {
+            log.info("Permissions configuration not changed");
+            return;
+        }
         commonConfigRepository.updateConfigFullPath(configuration, sha1Hex(permissionsSpec));
     }
 
@@ -93,6 +95,10 @@ public class EntityCustomPrivilegeService {
             .map(this::toPrivilege).collect(toList());
         val privileges = addApplicationPrivileges(customPrivileges, applicationPrivileges);
         String content = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(privileges);
+        if (DigestUtils.sha1Hex(content).equals(sha1Hex(customPrivileges))) {
+            log.info("Privileges configuration not changed");
+            return;
+        }
         commonConfigRepository.updateConfigFullPath(new Configuration(privilegesPath, content), sha1Hex(customPrivileges));
     }
 
@@ -114,7 +120,7 @@ public class EntityCustomPrivilegeService {
     }
 
     private Map<String, Object> toPrivilege(TypeSpec spec) {
-        return of("key", APPLICATION_PRIVILEGE_PREFIX + spec.getKey(), "description", "{}");
+        return of("key", APPLICATION_PRIVILEGE_PREFIX + spec.getKey());
     }
 
     private boolean isConfigExists(Configuration configuration) {
