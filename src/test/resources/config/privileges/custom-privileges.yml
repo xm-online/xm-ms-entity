@@ -32,4 +32,3 @@ entity:
   description: {}
 applications:
 - key: "APPLICATION.SOME_OTHER_TYPE"
-  description: "{}"

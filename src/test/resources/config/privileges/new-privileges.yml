@@ -1,8 +1,5 @@
 ---
 applications:
 - key: "APPLICATION.TYPE1"
-  description: "{}"
 - key: "APPLICATION.TYPE2"
-  description: "{}"
 - key: "APPLICATION.TYPE3"
-  description: "{}"
