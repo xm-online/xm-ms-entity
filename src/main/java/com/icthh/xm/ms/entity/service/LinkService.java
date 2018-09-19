@@ -8,7 +8,6 @@ import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.repository.LinkPermittedRepository;
 import com.icthh.xm.ms.entity.repository.LinkRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
-import com.icthh.xm.ms.entity.repository.search.LinkSearchRepository;
 import com.icthh.xm.ms.entity.repository.search.PermittedSearchRepository;
 import com.icthh.xm.ms.entity.service.impl.StartUpdateDateGenerationStrategy;
 import lombok.RequiredArgsConstructor;
@@ -33,8 +32,6 @@ import java.util.Set;
 public class LinkService {
 
     private final LinkRepository linkRepository;
-
-    private final LinkSearchRepository linkSearchRepository;
 
     private final LinkPermittedRepository permittedRepository;
 
@@ -61,7 +58,6 @@ public class LinkService {
         link.setTarget(xmEntityRepository.getOne(entityId(link.getTarget())));
         link.setSource(xmEntityRepository.getOne(entityId(link.getSource())));
         Link result = linkRepository.save(link);
-        linkSearchRepository.save(result);
         return result;
     }
 
@@ -138,7 +134,6 @@ public class LinkService {
     @LogicExtensionPoint("Delete")
     public void delete(Long id) {
         linkRepository.delete(id);
-        linkSearchRepository.delete(id);
     }
 
     /**

@@ -1,13 +1,10 @@
 package com.icthh.xm.ms.entity.service;
 
-import com.icthh.xm.commons.lep.LogicExtensionPoint;
 import com.icthh.xm.commons.permission.annotation.FindWithPermission;
 import com.icthh.xm.commons.permission.repository.PermittedRepository;
 import com.icthh.xm.ms.entity.domain.Location;
-import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.repository.LocationRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
-import com.icthh.xm.ms.entity.repository.search.LocationSearchRepository;
 import com.icthh.xm.ms.entity.repository.search.PermittedSearchRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -27,8 +24,6 @@ public class LocationService {
     private final PermittedSearchRepository permittedSearchRepository;
 
     private final LocationRepository locationRepository;
-
-    private final LocationSearchRepository locationSearchRepository;
 
     private final XmEntityRepository xmEntityRepository;
 
@@ -59,8 +54,6 @@ public class LocationService {
     public Location save(Location location) {
         log.debug("Request to save location : {}", location);
         location.setXmEntity(xmEntityRepository.getOne(location.getXmEntity().getId()));
-        Location result = locationRepository.save(location);
-        locationSearchRepository.save(location);
-        return result;
+        return locationRepository.save(location);
     }
 }

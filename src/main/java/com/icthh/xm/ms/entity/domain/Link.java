@@ -10,10 +10,6 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
-import org.springframework.data.elasticsearch.annotations.Document;
-import org.springframework.data.elasticsearch.annotations.Field;
-import org.springframework.data.elasticsearch.annotations.FieldIndex;
-import org.springframework.data.elasticsearch.annotations.FieldType;
 
 import java.io.Serializable;
 import java.time.Instant;
@@ -36,7 +32,6 @@ import javax.validation.constraints.NotNull;
 @Entity
 @Table(name = "link")
 @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
-@Document(indexName = "#{@indexName.prefix}link")
 public class Link implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -52,7 +47,6 @@ public class Link implements Serializable {
     @NotNull
     @ApiModelProperty(value = "String typeKey with tree-like structure.", required = true)
     @Column(name = "type_key", nullable = false)
-    @Field(index = FieldIndex.not_analyzed, type = FieldType.String)
     private String typeKey;
 
     /**

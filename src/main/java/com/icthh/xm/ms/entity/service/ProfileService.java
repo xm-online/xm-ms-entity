@@ -8,7 +8,6 @@ import com.icthh.xm.commons.security.XmAuthenticationContextHolder;
 import com.icthh.xm.ms.entity.domain.Profile;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.repository.ProfileRepository;
-import com.icthh.xm.ms.entity.repository.search.ProfileSearchRepository;
 import com.icthh.xm.ms.entity.repository.search.XmEntitySearchRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,8 +23,6 @@ public class ProfileService {
 
     private final ProfileRepository profileRepository;
 
-    private final ProfileSearchRepository profileSearchRepository;
-
     private final XmEntitySearchRepository entitySearchRepository;
 
     private final XmAuthenticationContextHolder authContextHolder;
@@ -37,9 +34,7 @@ public class ProfileService {
      * @return the persisted entity
      */
     public Profile save(Profile profile) {
-
         Profile result = profileRepository.save(profile);
-        profileSearchRepository.save(result);
         entitySearchRepository.save(result.getXmentity());
         return result;
     }

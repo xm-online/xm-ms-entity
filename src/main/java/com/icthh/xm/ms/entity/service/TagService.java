@@ -6,7 +6,6 @@ import com.icthh.xm.ms.entity.domain.Tag;
 import com.icthh.xm.ms.entity.repository.TagRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
 import com.icthh.xm.ms.entity.repository.search.PermittedSearchRepository;
-import com.icthh.xm.ms.entity.repository.search.TagSearchRepository;
 import com.icthh.xm.ms.entity.service.impl.StartUpdateDateGenerationStrategy;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -20,8 +19,6 @@ import java.util.List;
 public class TagService {
 
     private final TagRepository tagRepository;
-
-    private final TagSearchRepository tagSearchRepository;
 
     private final PermittedRepository permittedRepository;
 
@@ -45,9 +42,7 @@ public class TagService {
                                                               Tag::setStartDate,
                                                               Tag::getStartDate);
         tag.setXmEntity(xmEntityRepository.getOne(tag.getXmEntity().getId()));
-        Tag result = tagRepository.save(tag);
-        tagSearchRepository.save(result);
-        return result;
+        return tagRepository.save(tag);
     }
 
     /**
@@ -86,6 +81,5 @@ public class TagService {
      */
     public void delete(Long id) {
         tagRepository.delete(id);
-        tagSearchRepository.delete(id);
     }
 }

@@ -31,21 +31,19 @@ spring:
             port: 8500
     datasource:
         type: com.zaxxer.hikari.HikariDataSource
-        url: jdbc:h2:mem:entity;DB_CLOSE_DELAY=-1
-        username: entity
-        password:
-    h2:
-        console:
-            enabled: true
+        url: jdbc:postgresql://localhost:5432/xm_entity
+        username: postgres
+        password: postgres
     jpa:
-        database-platform: io.github.jhipster.domain.util.FixedH2Dialect
-        database: H2
+        database-platform: io.github.jhipster.domain.util.FixedPostgreSQL82Dialect
+        database: POSTGRESQL
         show-sql: true
         properties:
             hibernate.id.new_generator_mappings: true
             hibernate.cache.use_second_level_cache: false
             hibernate.cache.use_query_cache: false
             hibernate.generate_statistics: true
+            hibernate.show_sql: true
             #hibernate.cache.region.factory_class: com.hazelcast.hibernate.HazelcastLocalCacheRegionFactory
             #hibernate.cache.hazelcast.instance_name: entity
             hibernate.cache.use_minimal_puts: true
@@ -63,13 +61,13 @@ spring:
     kafka:
         bootstrap-servers: localhost:9093
     mail:
-        host:
-        port:
-        username:
-        password:
+        host: smtp.gmail.com
+        port: 587
+        username: vitaliy.v.kirichenko@gmail.com
+        password: mxvtauigkimgmobc
         properties:
-            mail.smtp.starttls.enable:
-            ssl.trust:
+            mail.smtp.starttls.enable: true
+            ssl.trust: true
             mail.imap.ssl.enable:
     messages:
         cache-seconds: 1
@@ -84,6 +82,7 @@ spring:
 
 liquibase:
     contexts: dev
+    enabled: false
 
 # ===================================================================
 # To enable SSL, generate a certificate using:
@@ -179,5 +178,5 @@ application:
 ##   uncomment to read LEPs from flocal file storage
 ##   filestorage can be created as link to xm-sm-config-repository forlder using command:
 ##   'ln -s <xm-sm-config-repository> ~/xm-online'
-#    lep:
-#        tenant-script-storage: FILE
+    lep:
+        tenant-script-storage: FILE

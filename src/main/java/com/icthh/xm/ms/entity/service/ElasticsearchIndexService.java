@@ -6,41 +6,8 @@ import com.icthh.xm.commons.logging.util.MdcUtils;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
 import com.icthh.xm.commons.tenant.TenantKey;
-import com.icthh.xm.ms.entity.domain.Attachment;
-import com.icthh.xm.ms.entity.domain.Calendar;
-import com.icthh.xm.ms.entity.domain.Comment;
-import com.icthh.xm.ms.entity.domain.Event;
-import com.icthh.xm.ms.entity.domain.FunctionContext;
-import com.icthh.xm.ms.entity.domain.Link;
-import com.icthh.xm.ms.entity.domain.Location;
-import com.icthh.xm.ms.entity.domain.Profile;
-import com.icthh.xm.ms.entity.domain.Rating;
-import com.icthh.xm.ms.entity.domain.Tag;
-import com.icthh.xm.ms.entity.domain.Vote;
 import com.icthh.xm.ms.entity.domain.XmEntity;
-import com.icthh.xm.ms.entity.repository.AttachmentRepository;
-import com.icthh.xm.ms.entity.repository.CalendarRepository;
-import com.icthh.xm.ms.entity.repository.CommentRepository;
-import com.icthh.xm.ms.entity.repository.EventRepository;
-import com.icthh.xm.ms.entity.repository.FunctionContextRepository;
-import com.icthh.xm.ms.entity.repository.LinkRepository;
-import com.icthh.xm.ms.entity.repository.LocationRepository;
-import com.icthh.xm.ms.entity.repository.ProfileRepository;
-import com.icthh.xm.ms.entity.repository.RatingRepository;
-import com.icthh.xm.ms.entity.repository.TagRepository;
-import com.icthh.xm.ms.entity.repository.VoteRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
-import com.icthh.xm.ms.entity.repository.search.AttachmentSearchRepository;
-import com.icthh.xm.ms.entity.repository.search.CalendarSearchRepository;
-import com.icthh.xm.ms.entity.repository.search.CommentSearchRepository;
-import com.icthh.xm.ms.entity.repository.search.EventSearchRepository;
-import com.icthh.xm.ms.entity.repository.search.FunctionContextSearchRepository;
-import com.icthh.xm.ms.entity.repository.search.LinkSearchRepository;
-import com.icthh.xm.ms.entity.repository.search.LocationSearchRepository;
-import com.icthh.xm.ms.entity.repository.search.ProfileSearchRepository;
-import com.icthh.xm.ms.entity.repository.search.RatingSearchRepository;
-import com.icthh.xm.ms.entity.repository.search.TagSearchRepository;
-import com.icthh.xm.ms.entity.repository.search.VoteSearchRepository;
 import com.icthh.xm.ms.entity.repository.search.XmEntitySearchRepository;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -79,28 +46,6 @@ public class ElasticsearchIndexService {
 
     private static final Lock reindexLock = new ReentrantLock();
 
-    private final AttachmentRepository attachmentRepository;
-    private final AttachmentSearchRepository attachmentSearchRepository;
-    private final CalendarRepository calendarRepository;
-    private final CalendarSearchRepository calendarSearchRepository;
-    private final CommentRepository commentRepository;
-    private final CommentSearchRepository commentSearchRepository;
-    private final EventRepository eventRepository;
-    private final EventSearchRepository eventSearchRepository;
-    private final FunctionContextRepository functionContextRepository;
-    private final FunctionContextSearchRepository functionContextSearchRepository;
-    private final LinkRepository linkRepository;
-    private final LinkSearchRepository linkSearchRepository;
-    private final LocationRepository locationRepository;
-    private final LocationSearchRepository locationSearchRepository;
-    private final ProfileRepository profileRepository;
-    private final ProfileSearchRepository profileSearchRepository;
-    private final RatingRepository ratingRepository;
-    private final RatingSearchRepository ratingSearchRepository;
-    private final TagRepository tagRepository;
-    private final TagSearchRepository tagSearchRepository;
-    private final VoteRepository voteRepository;
-    private final VoteSearchRepository voteSearchRepository;
     private final XmEntityRepository xmEntityRepository;
     private final XmEntitySearchRepository xmEntitySearchRepository;
 
@@ -126,17 +71,6 @@ public class ElasticsearchIndexService {
     public void reindexAllAsync() {
         if (reindexLock.tryLock()) {
             try {
-                reindexForClass(Attachment.class, attachmentRepository, attachmentSearchRepository);
-                reindexForClass(Calendar.class, calendarRepository, calendarSearchRepository);
-                reindexForClass(Comment.class, commentRepository, commentSearchRepository);
-                reindexForClass(Event.class, eventRepository, eventSearchRepository);
-                reindexForClass(FunctionContext.class, functionContextRepository, functionContextSearchRepository);
-                reindexForClass(Link.class, linkRepository, linkSearchRepository);
-                reindexForClass(Location.class, locationRepository, locationSearchRepository);
-                reindexForClass(Profile.class, profileRepository, profileSearchRepository);
-                reindexForClass(Rating.class, ratingRepository, ratingSearchRepository);
-                reindexForClass(Tag.class, tagRepository, tagSearchRepository);
-                reindexForClass(Vote.class, voteRepository, voteSearchRepository);
                 reindexForClass(XmEntity.class, xmEntityRepository, xmEntitySearchRepository);
 
                 log.info("Elasticsearch: Successfully performed reindexing");

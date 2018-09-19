@@ -27,10 +27,6 @@ import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
-import org.springframework.data.elasticsearch.annotations.Document;
-import org.springframework.data.elasticsearch.annotations.Field;
-import org.springframework.data.elasticsearch.annotations.FieldIndex;
-import org.springframework.data.elasticsearch.annotations.FieldType;
 
 /**
  * Represents any XM entity file attachment. It could be image, zip archive, pdf
@@ -45,7 +41,6 @@ import org.springframework.data.elasticsearch.annotations.FieldType;
 @Entity
 @Table(name = "attachment")
 @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
-@Document(indexName = "#{@indexName.prefix}attachment")
 @TypeKey
 public class Attachment implements Serializable {
 
@@ -62,7 +57,6 @@ public class Attachment implements Serializable {
     @NotNull
     @ApiModelProperty(value = "String typeKey with tree-like structure.", required = true)
     @Column(name = "type_key", nullable = false)
-    @Field(index = FieldIndex.not_analyzed, type = FieldType.String)
     private String typeKey;
 
     /**
@@ -117,7 +111,6 @@ public class Attachment implements Serializable {
 
     @OneToOne(cascade = ALL, fetch = FetchType.LAZY, orphanRemoval = true)
     @JoinColumn(unique = true)
-    @Field(ignoreFields = "value", type = FieldType.Object)
     private Content content;
 
     @ManyToOne(optional = false)
