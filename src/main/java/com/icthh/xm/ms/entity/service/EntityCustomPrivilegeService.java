@@ -120,7 +120,7 @@ public class EntityCustomPrivilegeService {
     }
 
     private Map<String, Object> toPrivilege(TypeSpec spec) {
-        return of("key", APPLICATION_PRIVILEGE_PREFIX + spec.getKey(), "description", "{}");
+        return of("key", APPLICATION_PRIVILEGE_PREFIX + spec.getKey());
     }
 
     private boolean isConfigExists(Configuration configuration) {
