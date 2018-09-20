@@ -56,9 +56,10 @@ public class AttachmentService {
         attachment.setXmEntity(xmEntityRepository.getOne(attachment.getXmEntity().getId()));
 
         //calculate content checksum
-        byte[] content = attachment.getContent().getValue();
-        attachment.setContentChecksum(DigestUtils.sha256Hex(content));
-
+        if (attachment.getContent() != null) {
+            byte[] content = attachment.getContent().getValue();
+            attachment.setContentChecksum(DigestUtils.sha256Hex(content));
+        }
         Attachment result = attachmentRepository.save(attachment);
         attachmentSearchRepository.save(result);
         return result;
