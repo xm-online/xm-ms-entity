@@ -35,6 +35,7 @@ import com.icthh.xm.ms.entity.repository.search.AttachmentSearchRepository;
 import com.icthh.xm.ms.entity.repository.search.PermittedSearchRepository;
 import com.icthh.xm.ms.entity.service.AttachmentService;
 import com.icthh.xm.ms.entity.service.impl.StartUpdateDateGenerationStrategy;
+import org.apache.commons.codec.digest.DigestUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -76,6 +77,8 @@ public class AttachmentResourceExtendedIntTest {
     private static final Instant MOCKED_START_DATE = Instant.ofEpochMilli(42L);
 
     private static final String CONTENT = "cXdlcnF3ZXJxd2Vydw==";
+
+    private static final String CONTENT_CHECKSUM = DigestUtils.sha256Hex(CONTENT);
 
     @Autowired
     private MappingJackson2HttpMessageConverter jacksonMessageConverter;
@@ -276,6 +279,7 @@ public class AttachmentResourceExtendedIntTest {
         assertThat(testAttachment.getContent().getValue()).isEqualTo(CONTENT.getBytes());
         assertThat(testAttachment.getValueContentType()).isEqualTo(DEFAULT_VALUE_CONTENT_TYPE);
         assertThat(testAttachment.getValueContentSize()).isEqualTo((long) CONTENT.getBytes().length);
+        assertThat(testAttachment.getContentChecksum()).isEqualTo(CONTENT_CHECKSUM);
 
         // Validate the Attachment in Elasticsearch
         Attachment attachmentEs = attachmentSearchRepository.findOne(testAttachment.getId());

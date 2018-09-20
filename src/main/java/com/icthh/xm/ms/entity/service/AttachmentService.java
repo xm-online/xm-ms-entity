@@ -11,6 +11,7 @@ import com.icthh.xm.ms.entity.repository.search.AttachmentSearchRepository;
 import com.icthh.xm.ms.entity.repository.search.PermittedSearchRepository;
 import com.icthh.xm.ms.entity.service.impl.StartUpdateDateGenerationStrategy;
 import lombok.RequiredArgsConstructor;
+import org.apache.commons.codec.digest.DigestUtils;
 import org.hibernate.Hibernate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -48,11 +49,16 @@ public class AttachmentService {
     public Attachment save(Attachment attachment) {
 
         startUpdateDateGenerationStrategy.preProcessStartDate(attachment,
-                                                              attachment.getId(),
-                                                              attachmentRepository,
-                                                              Attachment::setStartDate,
-                                                              Attachment::getStartDate);
+            attachment.getId(),
+            attachmentRepository,
+            Attachment::setStartDate,
+            Attachment::getStartDate);
         attachment.setXmEntity(xmEntityRepository.getOne(attachment.getXmEntity().getId()));
+
+        //calculate content checksum
+        byte[] content = attachment.getContent().getValue();
+        attachment.setContentChecksum(DigestUtils.sha256Hex(content));
+
         Attachment result = attachmentRepository.save(attachment);
         attachmentSearchRepository.save(result);
         return result;
