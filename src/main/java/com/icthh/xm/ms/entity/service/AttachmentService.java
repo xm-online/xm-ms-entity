@@ -55,7 +55,6 @@ public class AttachmentService {
                                                               Attachment::getStartDate);
         attachment.setXmEntity(xmEntityRepository.getOne(attachment.getXmEntity().getId()));
 
-        //calculate content checksum
         if (attachment.getContent() != null) {
             byte[] content = attachment.getContent().getValue();
             attachment.setContentChecksum(DigestUtils.sha256Hex(content));
