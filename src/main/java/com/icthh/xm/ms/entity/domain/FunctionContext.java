@@ -243,7 +243,7 @@ public class FunctionContext implements Serializable {
         return Objects.equals(getId(), functionContext.getId());
     }
 
-    public Object getFunctionResult() {
+    public Object functionResult() {
         if (onlyData) {
             return data.get("data");
         }

@@ -4,7 +4,6 @@ import com.codahale.metrics.annotation.Timed;
 import com.icthh.xm.ms.entity.domain.FunctionContext;
 import com.icthh.xm.ms.entity.service.FunctionService;
 import com.icthh.xm.ms.entity.web.rest.util.HeaderUtil;
-import com.icthh.xm.ms.entity.web.rest.util.RespContentUtil;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -15,13 +14,10 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.ModelAndView;
 
-import javax.servlet.http.HttpServletResponse;
 import java.net.URI;
-import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -45,7 +41,7 @@ public class FunctionResource {
     public ResponseEntity<Object> callGetFunction(@PathVariable("functionKey") String functionKey,
                                                            @RequestParam(required = false) Map<String, Object> functionInput) {
         FunctionContext result = functionService.execute(functionKey, functionInput);
-        return ResponseEntity.ok().body(result.getFunctionResult());
+        return ResponseEntity.ok().body(result.functionResult());
     }
 
     @Timed
@@ -54,7 +50,7 @@ public class FunctionResource {
     public ResponseEntity<Object> callPutFunction(@PathVariable("functionKey") String functionKey,
                                                            @RequestBody(required = false) Map<String, Object> functionInput) {
         FunctionContext result = functionService.execute(functionKey, functionInput);
-        return ResponseEntity.ok().body(result.getFunctionResult());
+        return ResponseEntity.ok().body(result.functionResult());
     }
 
     /**
@@ -73,7 +69,7 @@ public class FunctionResource {
         FunctionContext result = functionService.execute(functionKey, functionInput);
         return ResponseEntity.created(URI.create("/api/function-contexts/" + result.getId()))
             .headers(HeaderUtil.createEntityCreationAlert(ENTITY_NAME_FUNCTION_CONTEXT, String.valueOf(result.getId())))
-            .body(result.getFunctionResult());
+            .body(result.functionResult());
     }
 
     /**
