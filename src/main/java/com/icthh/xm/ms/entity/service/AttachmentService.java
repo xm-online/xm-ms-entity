@@ -10,6 +10,7 @@ import com.icthh.xm.ms.entity.repository.XmEntityRepository;
 import com.icthh.xm.ms.entity.repository.search.PermittedSearchRepository;
 import com.icthh.xm.ms.entity.service.impl.StartUpdateDateGenerationStrategy;
 import lombok.RequiredArgsConstructor;
+import org.apache.commons.codec.digest.DigestUtils;
 import org.hibernate.Hibernate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -50,6 +51,11 @@ public class AttachmentService {
                                                               Attachment::setStartDate,
                                                               Attachment::getStartDate);
         attachment.setXmEntity(xmEntityRepository.getOne(attachment.getXmEntity().getId()));
+
+        if (attachment.getContent() != null) {
+            byte[] content = attachment.getContent().getValue();
+            attachment.setContentChecksum(DigestUtils.sha256Hex(content));
+        }
         return attachmentRepository.save(attachment);
     }
 

@@ -109,6 +109,13 @@ public class Attachment implements Serializable {
     @Column(name = "value_content_size")
     private Long valueContentSize;
 
+    /**
+     * Content checksum
+     */
+    @ApiModelProperty(value = "Content checksum")
+    @Column(name = "content_checksum")
+    private String contentChecksum;
+
     @OneToOne(cascade = ALL, fetch = FetchType.LAZY, orphanRemoval = true)
     @JoinColumn(unique = true)
     private Content content;
@@ -230,6 +237,14 @@ public class Attachment implements Serializable {
 
     public void setValueContentSize(Long valueContentSize) {
         this.valueContentSize = valueContentSize;
+    }
+
+    public String getContentChecksum() {
+        return contentChecksum;
+    }
+
+    public void setContentChecksum(String contentChecksum) {
+        this.contentChecksum = contentChecksum;
     }
 
     public Content getContent() {

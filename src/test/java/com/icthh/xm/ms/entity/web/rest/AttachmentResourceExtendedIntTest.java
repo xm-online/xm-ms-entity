@@ -30,6 +30,7 @@ import com.icthh.xm.ms.entity.repository.XmEntityRepository;
 import com.icthh.xm.ms.entity.repository.search.PermittedSearchRepository;
 import com.icthh.xm.ms.entity.service.AttachmentService;
 import com.icthh.xm.ms.entity.service.impl.StartUpdateDateGenerationStrategy;
+import org.apache.commons.codec.digest.DigestUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -40,7 +41,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
-import org.springframework.http.MediaType;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.junit4.SpringRunner;
@@ -71,6 +71,8 @@ public class AttachmentResourceExtendedIntTest {
     private static final Instant MOCKED_START_DATE = Instant.ofEpochMilli(42L);
 
     private static final String CONTENT = "cXdlcnF3ZXJxd2Vydw==";
+
+    private static final String CONTENT_CHECKSUM = DigestUtils.sha256Hex(CONTENT);
 
     @Autowired
     private MappingJackson2HttpMessageConverter jacksonMessageConverter;
@@ -259,6 +261,6 @@ public class AttachmentResourceExtendedIntTest {
         assertThat(testAttachment.getContent().getValue()).isEqualTo(CONTENT.getBytes());
         assertThat(testAttachment.getValueContentType()).isEqualTo(DEFAULT_VALUE_CONTENT_TYPE);
         assertThat(testAttachment.getValueContentSize()).isEqualTo((long) CONTENT.getBytes().length);
+        assertThat(testAttachment.getContentChecksum()).isEqualTo(CONTENT_CHECKSUM);
     }
-
 }

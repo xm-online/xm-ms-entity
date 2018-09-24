@@ -60,4 +60,6 @@
 
     <include file="classpath:config/liquibase/changelog/20180521120200_add_version.xml" relativeToChangelogFile="false"/>
 
+    <include file="classpath:config/liquibase/changelog/20180920120200_add_attachment_checksum.xml" relativeToChangelogFile="false"/>
+
 </databaseChangeLog>
