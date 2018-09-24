@@ -7,7 +7,6 @@ import com.icthh.xm.commons.permission.repository.PermittedRepository;
 import com.icthh.xm.ms.entity.domain.Event;
 import com.icthh.xm.ms.entity.repository.EventRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
-import com.icthh.xm.ms.entity.repository.search.EventSearchRepository;
 import com.icthh.xm.ms.entity.repository.search.PermittedSearchRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -26,8 +25,6 @@ public class EventService {
 
     private final EventRepository eventRepository;
 
-    private final EventSearchRepository eventSearchRepository;
-
     private final PermittedRepository permittedRepository;
 
     private final PermittedSearchRepository permittedSearchRepository;
@@ -45,9 +42,7 @@ public class EventService {
         if (event.getAssigned() != null) {
             event.setAssigned(xmEntityRepository.getOne(event.getAssigned().getId()));
         }
-        Event result = eventRepository.save(event);
-        eventSearchRepository.save(result);
-        return result;
+        return eventRepository.save(event);
     }
 
     /**
@@ -82,7 +77,6 @@ public class EventService {
     @LogicExtensionPoint("Delete")
     public void delete(Long id) {
         eventRepository.delete(id);
-        eventSearchRepository.delete(id);
     }
 
     /**

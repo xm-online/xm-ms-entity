@@ -137,21 +137,4 @@ public class LinkResource {
         linkService.delete(id);
         return ResponseEntity.ok().headers(HeaderUtil.createEntityDeletionAlert(ENTITY_NAME, id.toString())).build();
     }
-
-    /**
-     * SEARCH  /_search/links?query=:query : search for the link corresponding
-     * to the query.
-     *
-     * @param query the query of the link search
-     * @param pageable the pagination information
-     * @return the result of the search
-     */
-    @GetMapping("/_search/links")
-    @Timed
-    public ResponseEntity<List<Link>> searchLinks(@RequestParam String query, @ApiParam Pageable pageable) {
-        Page<Link> page = linkService.search(query, pageable, null);
-        HttpHeaders headers = PaginationUtil.generateSearchPaginationHttpHeaders(query, page, "/api/_search/links");
-        return new ResponseEntity<>(page.getContent(), headers, HttpStatus.OK);
-    }
-
 }

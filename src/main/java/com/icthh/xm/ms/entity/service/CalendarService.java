@@ -7,7 +7,6 @@ import com.icthh.xm.commons.permission.repository.PermittedRepository;
 import com.icthh.xm.ms.entity.domain.Calendar;
 import com.icthh.xm.ms.entity.repository.CalendarRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
-import com.icthh.xm.ms.entity.repository.search.CalendarSearchRepository;
 import com.icthh.xm.ms.entity.repository.search.PermittedSearchRepository;
 import com.icthh.xm.ms.entity.service.impl.StartUpdateDateGenerationStrategy;
 import lombok.RequiredArgsConstructor;
@@ -26,8 +25,6 @@ import java.util.List;
 public class CalendarService {
 
     private final CalendarRepository calendarRepository;
-
-    private final CalendarSearchRepository calendarSearchRepository;
 
     private final PermittedRepository permittedRepository;
 
@@ -52,9 +49,7 @@ public class CalendarService {
                                                               Calendar::setStartDate,
                                                               Calendar::getStartDate);
         calendar.setXmEntity(xmEntityRepository.getOne(calendar.getXmEntity().getId()));
-        Calendar result = calendarRepository.save(calendar);
-        calendarSearchRepository.save(result);
-        return result;
+        return calendarRepository.save(calendar);
     }
 
     /**
@@ -89,7 +84,6 @@ public class CalendarService {
     @LogicExtensionPoint("Delete")
     public void delete(Long id) {
         calendarRepository.delete(id);
-        calendarSearchRepository.delete(id);
     }
 
     /**

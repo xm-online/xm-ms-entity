@@ -6,7 +6,6 @@ import com.icthh.xm.ms.entity.domain.Rating;
 import com.icthh.xm.ms.entity.repository.RatingRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
 import com.icthh.xm.ms.entity.repository.search.PermittedSearchRepository;
-import com.icthh.xm.ms.entity.repository.search.RatingSearchRepository;
 import com.icthh.xm.ms.entity.service.impl.StartUpdateDateGenerationStrategy;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -23,8 +22,6 @@ import java.util.List;
 public class RatingService {
 
     private final RatingRepository ratingRepository;
-
-    private final RatingSearchRepository ratingSearchRepository;
 
     private final PermittedRepository permittedRepository;
 
@@ -48,9 +45,7 @@ public class RatingService {
                                                               Rating::setStartDate,
                                                               Rating::getStartDate);
         rating.setXmEntity(xmEntityRepository.getOne(rating.getXmEntity().getId()));
-        Rating result = ratingRepository.save(rating);
-        ratingSearchRepository.save(result);
-        return result;
+        return ratingRepository.save(rating);
     }
 
     /**
@@ -82,7 +77,6 @@ public class RatingService {
      */
     public void delete(Long id) {
         ratingRepository.delete(id);
-        ratingSearchRepository.delete(id);
     }
 
     /**

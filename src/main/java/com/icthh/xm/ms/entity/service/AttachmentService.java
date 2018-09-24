@@ -7,7 +7,6 @@ import com.icthh.xm.commons.permission.repository.PermittedRepository;
 import com.icthh.xm.ms.entity.domain.Attachment;
 import com.icthh.xm.ms.entity.repository.AttachmentRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
-import com.icthh.xm.ms.entity.repository.search.AttachmentSearchRepository;
 import com.icthh.xm.ms.entity.repository.search.PermittedSearchRepository;
 import com.icthh.xm.ms.entity.service.impl.StartUpdateDateGenerationStrategy;
 import lombok.RequiredArgsConstructor;
@@ -28,8 +27,6 @@ import java.util.List;
 public class AttachmentService {
 
     private final AttachmentRepository attachmentRepository;
-
-    private final AttachmentSearchRepository attachmentSearchRepository;
 
     private final PermittedRepository permittedRepository;
 
@@ -59,9 +56,7 @@ public class AttachmentService {
             byte[] content = attachment.getContent().getValue();
             attachment.setContentChecksum(DigestUtils.sha256Hex(content));
         }
-        Attachment result = attachmentRepository.save(attachment);
-        attachmentSearchRepository.save(result);
-        return result;
+        return attachmentRepository.save(attachment);
     }
 
     /**
@@ -109,7 +104,6 @@ public class AttachmentService {
     @LogicExtensionPoint("Delete")
     public void delete(Long id) {
         attachmentRepository.delete(id);
-        attachmentSearchRepository.delete(id);
     }
 
     /**

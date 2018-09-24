@@ -9,13 +9,9 @@ import static com.icthh.xm.ms.entity.web.rest.AttachmentResourceIntTest.DEFAULT_
 import static com.icthh.xm.ms.entity.web.rest.AttachmentResourceIntTest.DEFAULT_VALUE_CONTENT_TYPE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
-import static org.hamcrest.Matchers.hasItem;
-import static org.hamcrest.Matchers.nullValue;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -31,7 +27,6 @@ import com.icthh.xm.ms.entity.domain.Content;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.repository.AttachmentRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
-import com.icthh.xm.ms.entity.repository.search.AttachmentSearchRepository;
 import com.icthh.xm.ms.entity.repository.search.PermittedSearchRepository;
 import com.icthh.xm.ms.entity.service.AttachmentService;
 import com.icthh.xm.ms.entity.service.impl.StartUpdateDateGenerationStrategy;
@@ -46,7 +41,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
-import org.springframework.http.MediaType;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.junit4.SpringRunner;
@@ -105,9 +99,6 @@ public class AttachmentResourceExtendedIntTest {
     private AttachmentResource attachmentResource;
 
     @Autowired
-    private AttachmentSearchRepository attachmentSearchRepository;
-
-    @Autowired
     private PermittedRepository permittedRepository;
 
     @Autowired
@@ -138,7 +129,6 @@ public class AttachmentResourceExtendedIntTest {
 
         attachmentService = new AttachmentService(
             attachmentRepository,
-            attachmentSearchRepository,
             permittedRepository,
             permittedSearchRepository,
             startUpdateDateGenerationStrategy,
@@ -182,10 +172,6 @@ public class AttachmentResourceExtendedIntTest {
 
         Attachment testAttachment = attachmentList.get(attachmentList.size() - 1);
         assertThat(testAttachment.getStartDate()).isEqualTo(MOCKED_START_DATE);
-
-        // Validate the Attachment in Elasticsearch
-        Attachment attachmentEs = attachmentSearchRepository.findOne(testAttachment.getId());
-        assertThat(attachmentEs).isEqualToComparingFieldByField(testAttachment);
     }
 
     @Test
@@ -207,10 +193,6 @@ public class AttachmentResourceExtendedIntTest {
 
         Attachment testAttachment = voteList.get(voteList.size() - 1);
         assertThat(testAttachment.getStartDate()).isEqualTo(MOCKED_START_DATE);
-
-        // Validate the Attachment in Elasticsearch
-        Attachment attachmentEs = attachmentSearchRepository.findOne(testAttachment.getId());
-        assertThat(attachmentEs).isEqualToComparingFieldByField(testAttachment);
     }
 
     @Test
@@ -280,32 +262,5 @@ public class AttachmentResourceExtendedIntTest {
         assertThat(testAttachment.getValueContentType()).isEqualTo(DEFAULT_VALUE_CONTENT_TYPE);
         assertThat(testAttachment.getValueContentSize()).isEqualTo((long) CONTENT.getBytes().length);
         assertThat(testAttachment.getContentChecksum()).isEqualTo(CONTENT_CHECKSUM);
-
-        // Validate the Attachment in Elasticsearch
-        Attachment attachmentEs = attachmentSearchRepository.findOne(testAttachment.getId());
-        assertThat(attachmentEs).isEqualToComparingFieldByField(testAttachment);
     }
-
-    @Test
-    @Transactional
-    public void searchAttachment() throws Exception {
-        // Initialize the database
-        attachmentService.save(attachment);
-
-        // Search the attachment
-        restAttachmentMockMvc.perform(get("/api/_search/attachments?query=id:" + attachment.getId()))
-            .andDo(print())
-            .andExpect(status().isOk())
-            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
-            .andExpect(jsonPath("$.[*].id").value(hasItem(attachment.getId().intValue())))
-            .andExpect(jsonPath("$.[*].typeKey").value(hasItem(DEFAULT_TYPE_KEY.toString())))
-            .andExpect(jsonPath("$.[*].name").value(hasItem(DEFAULT_NAME.toString())))
-            .andExpect(jsonPath("$.[*].contentUrl").value(hasItem(DEFAULT_CONTENT_URL.toString())))
-            .andExpect(jsonPath("$.[*].description").value(hasItem(DEFAULT_DESCRIPTION.toString())))
-            .andExpect(jsonPath("$.[*].endDate").value(hasItem(DEFAULT_END_DATE.toString())))
-            .andExpect(jsonPath("$.[*].content.value").value(hasItem(nullValue())))
-            .andExpect(jsonPath("$.[*].valueContentType").value(hasItem(DEFAULT_VALUE_CONTENT_TYPE.toString())))
-            .andExpect(jsonPath("$.[*].valueContentSize").value(hasItem(CONTENT.getBytes().length)));
-    }
-
 }

@@ -17,7 +17,6 @@ import com.icthh.xm.ms.entity.domain.Link;
 import com.icthh.xm.ms.entity.repository.LinkPermittedRepository;
 import com.icthh.xm.ms.entity.repository.LinkRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
-import com.icthh.xm.ms.entity.repository.search.LinkSearchRepository;
 import com.icthh.xm.ms.entity.repository.search.PermittedSearchRepository;
 import com.icthh.xm.ms.entity.service.LinkService;
 import com.icthh.xm.ms.entity.service.impl.StartUpdateDateGenerationStrategy;
@@ -85,9 +84,6 @@ public class LinkResourceExtendedIntTest {
     private LinkResource linkResource;
 
     @Autowired
-    private LinkSearchRepository linkSearchRepository;
-
-    @Autowired
     private LinkPermittedRepository permittedRepository;
 
     @Autowired
@@ -118,7 +114,6 @@ public class LinkResourceExtendedIntTest {
 
         linkService = new LinkService(
             linkRepository,
-            linkSearchRepository,
             permittedRepository,
             permittedSearchRepository,
             startUpdateDateGenerationStrategy,
@@ -162,10 +157,6 @@ public class LinkResourceExtendedIntTest {
 
         Link testLink = linkList.get(linkList.size() - 1);
         assertThat(testLink.getStartDate()).isEqualTo(MOCKED_START_DATE);
-
-        // Validate the Link in Elasticsearch
-        Link linkEs = linkSearchRepository.findOne(testLink.getId());
-        assertThat(linkEs).isEqualToComparingFieldByField(testLink);
     }
 
     @Test
@@ -187,10 +178,6 @@ public class LinkResourceExtendedIntTest {
 
         Link testLink = voteList.get(voteList.size() - 1);
         assertThat(testLink.getStartDate()).isEqualTo(MOCKED_START_DATE);
-
-        // Validate the Link in Elasticsearch
-        Link linkEs = linkSearchRepository.findOne(testLink.getId());
-        assertThat(linkEs).isEqualToComparingFieldByField(testLink);
     }
 
     @Test

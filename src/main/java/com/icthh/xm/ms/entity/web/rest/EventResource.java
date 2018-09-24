@@ -18,7 +18,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.net.URI;
@@ -128,18 +127,4 @@ public class EventResource {
         eventService.delete(id);
         return ResponseEntity.ok().headers(HeaderUtil.createEntityDeletionAlert(ENTITY_NAME, id.toString())).build();
     }
-
-    /**
-     * SEARCH  /_search/events?query=:query : search for the event corresponding
-     * to the query.
-     *
-     * @param query the query of the event search
-     * @return the result of the search
-     */
-    @GetMapping("/_search/events")
-    @Timed
-    public List<Event> searchEvents(@RequestParam String query) {
-        return eventService.search(query, null);
-    }
-
 }

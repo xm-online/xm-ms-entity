@@ -8,7 +8,6 @@ import com.icthh.xm.commons.security.XmAuthenticationContextHolder;
 import com.icthh.xm.ms.entity.domain.Comment;
 import com.icthh.xm.ms.entity.repository.CommentRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
-import com.icthh.xm.ms.entity.repository.search.CommentSearchRepository;
 import com.icthh.xm.ms.entity.repository.search.PermittedSearchRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -26,8 +25,6 @@ import org.springframework.transaction.annotation.Transactional;
 public class CommentService {
 
     private final CommentRepository commentRepository;
-
-    private final CommentSearchRepository commentSearchRepository;
 
     private final XmAuthenticationContextHolder authContextHolder;
 
@@ -52,9 +49,7 @@ public class CommentService {
     public Comment save(Comment comment) {
         comment.setXmEntity(xmEntityRepository.getOne(comment.getXmEntity().getId()));
         comment.setUserKey(getUserKey());
-        Comment result = commentRepository.save(comment);
-        commentSearchRepository.save(result);
-        return result;
+        return commentRepository.save(comment);
     }
 
     /**
@@ -90,7 +85,6 @@ public class CommentService {
     @LogicExtensionPoint("Delete")
     public void delete(Long id) {
         commentRepository.delete(id);
-        commentSearchRepository.delete(id);
     }
 
     /**

@@ -30,7 +30,6 @@ import com.icthh.xm.ms.entity.config.tenant.WebappTenantOverrideConfiguration;
 import com.icthh.xm.ms.entity.domain.Comment;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.repository.CommentRepository;
-import com.icthh.xm.ms.entity.repository.search.CommentSearchRepository;
 import com.icthh.xm.ms.entity.service.CommentService;
 import org.junit.After;
 import org.junit.Before;
@@ -92,9 +91,6 @@ public class CommentResourceIntTest {
 
     @Autowired
     private CommentService commentService;
-
-    @Autowired
-    private CommentSearchRepository commentSearchRepository;
 
     @Autowired
     private MappingJackson2HttpMessageConverter jacksonMessageConverter;
@@ -215,10 +211,6 @@ public class CommentResourceIntTest {
         assertThat(testComment.getUserKey()).isEqualTo(DEFAULT_USER_KEY);
         assertThat(testComment.getMessage()).isEqualTo(DEFAULT_MESSAGE);
         assertThat(testComment.getEntryDate()).isEqualTo(DEFAULT_ENTRY_DATE);
-
-        // Validate the Comment in Elasticsearch
-        Comment commentEs = commentSearchRepository.findOne(testComment.getId());
-        assertThat(commentEs).isEqualToComparingFieldByField(testComment);
     }
 
     @Test
@@ -357,10 +349,6 @@ public class CommentResourceIntTest {
         assertThat(testComment.getUserKey()).isEqualTo(DEFAULT_USER_KEY);
         assertThat(testComment.getMessage()).isEqualTo(UPDATED_MESSAGE);
         assertThat(testComment.getEntryDate()).isEqualTo(UPDATED_ENTRY_DATE);
-
-        // Validate the Comment in Elasticsearch
-        Comment commentEs = commentSearchRepository.findOne(testComment.getId());
-        assertThat(commentEs).isEqualToComparingFieldByField(testComment);
     }
 
     @Test
@@ -394,29 +382,9 @@ public class CommentResourceIntTest {
             .accept(TestUtil.APPLICATION_JSON_UTF8))
             .andExpect(status().isOk());
 
-        // Validate Elasticsearch is empty
-        boolean commentExistsInEs = commentSearchRepository.exists(comment.getId());
-        assertThat(commentExistsInEs).isFalse();
-
         // Validate the database is empty
         List<Comment> commentList = commentRepository.findAll();
         assertThat(commentList).hasSize(databaseSizeBeforeDelete - 1);
-    }
-
-    @Test
-    @Transactional
-    public void searchComment() throws Exception {
-        // Initialize the database
-        commentService.save(comment);
-
-        // Search the comment
-        restCommentMockMvc.perform(get("/api/_search/comments?query=id:" + comment.getId()))
-            .andExpect(status().isOk())
-            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
-            .andExpect(jsonPath("$.[*].id").value(hasItem(comment.getId().intValue())))
-            .andExpect(jsonPath("$.[*].userKey").value(hasItem(DEFAULT_USER_KEY)))
-            .andExpect(jsonPath("$.[*].message").value(hasItem(DEFAULT_MESSAGE)))
-            .andExpect(jsonPath("$.[*].entryDate").value(hasItem(DEFAULT_ENTRY_DATE.toString())));
     }
 
     @Test

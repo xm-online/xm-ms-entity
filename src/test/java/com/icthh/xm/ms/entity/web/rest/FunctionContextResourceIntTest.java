@@ -25,7 +25,6 @@ import com.icthh.xm.ms.entity.domain.FunctionContext;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.repository.FunctionContextRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
-import com.icthh.xm.ms.entity.repository.search.FunctionContextSearchRepository;
 import com.icthh.xm.ms.entity.repository.search.PermittedSearchRepository;
 import com.icthh.xm.ms.entity.service.FunctionContextService;
 import com.icthh.xm.ms.entity.service.impl.FunctionContextServiceImpl;
@@ -99,9 +98,6 @@ public class FunctionContextResourceIntTest {
     private FunctionContextRepository functionContextRepository;
 
     @Autowired
-    private FunctionContextSearchRepository functionContextSearchRepository;
-
-    @Autowired
     private PermittedRepository permittedRepository;
 
     @Autowired
@@ -154,7 +150,6 @@ public class FunctionContextResourceIntTest {
         when(startUpdateDateGenerationStrategy.generateUpdateDate()).thenReturn(DEFAULT_UPDATE_DATE);
 
         functionContextService = new FunctionContextServiceImpl(functionContextRepository,
-                                                                functionContextSearchRepository,
                                                                 permittedRepository,
                                                                 permittedSearchRepository,
                                                                 startUpdateDateGenerationStrategy,
@@ -226,10 +221,6 @@ public class FunctionContextResourceIntTest {
         assertThat(testFunctionContext.getUpdateDate()).isEqualTo(DEFAULT_UPDATE_DATE);
         assertThat(testFunctionContext.getEndDate()).isEqualTo(DEFAULT_END_DATE);
         assertThat(testFunctionContext.getData()).isEqualTo(DEFAULT_DATA);
-
-        // Validate the FunctionContext in Elasticsearch
-        FunctionContext functionContextEs = functionContextSearchRepository.findOne(testFunctionContext.getId());
-        assertThat(functionContextEs).isEqualToComparingFieldByField(testFunctionContext);
     }
 
     @Test
@@ -393,10 +384,6 @@ public class FunctionContextResourceIntTest {
         assertThat(testFunctionContext.getUpdateDate()).isEqualTo(DEFAULT_UPDATE_DATE);
         assertThat(testFunctionContext.getEndDate()).isEqualTo(UPDATED_END_DATE);
         assertThat(testFunctionContext.getData()).isEqualTo(UPDATED_DATA);
-
-        // Validate the FunctionContext in Elasticsearch
-        FunctionContext functionContextEs = functionContextSearchRepository.findOne(testFunctionContext.getId());
-        assertThat(functionContextEs).isEqualToComparingFieldByField(testFunctionContext);
     }
 
     @Test
@@ -430,33 +417,9 @@ public class FunctionContextResourceIntTest {
             .accept(TestUtil.APPLICATION_JSON_UTF8))
             .andExpect(status().isOk());
 
-        // Validate Elasticsearch is empty
-        boolean functionContextExistsInEs = functionContextSearchRepository.exists(functionContext.getId());
-        assertThat(functionContextExistsInEs).isFalse();
-
         // Validate the database is empty
         List<FunctionContext> functionContextList = functionContextRepository.findAll();
         assertThat(functionContextList).hasSize(databaseSizeBeforeDelete - 1);
-    }
-
-    @Test
-    @Transactional
-    public void searchFunctionContext() throws Exception {
-        // Initialize the database
-        functionContextService.save(functionContext);
-
-        // Search the functionContext
-        restFunctionContextMockMvc.perform(get("/api/_search/function-contexts?query=id:" + functionContext.getId()))
-            .andExpect(status().isOk())
-            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
-            .andExpect(jsonPath("$.[*].id").value(hasItem(functionContext.getId().intValue())))
-            .andExpect(jsonPath("$.[*].key").value(hasItem(DEFAULT_KEY.toString())))
-            .andExpect(jsonPath("$.[*].typeKey").value(hasItem(DEFAULT_TYPE_KEY.toString())))
-            .andExpect(jsonPath("$.[*].description").value(hasItem(DEFAULT_DESCRIPTION.toString())))
-            .andExpect(jsonPath("$.[*].startDate").value(hasItem(DEFAULT_START_DATE.toString())))
-            .andExpect(jsonPath("$.[*].updateDate").value(hasItem(DEFAULT_UPDATE_DATE.toString())))
-            .andExpect(jsonPath("$.[*].endDate").value(hasItem(DEFAULT_END_DATE.toString())))
-            .andExpect(jsonPath("$.[*].data").value(hasItem(DEFAULT_DATA)));
     }
 
     @Test

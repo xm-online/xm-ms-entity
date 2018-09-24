@@ -24,7 +24,6 @@ import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.repository.RatingRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
 import com.icthh.xm.ms.entity.repository.search.PermittedSearchRepository;
-import com.icthh.xm.ms.entity.repository.search.RatingSearchRepository;
 import com.icthh.xm.ms.entity.service.RatingService;
 import com.icthh.xm.ms.entity.service.impl.StartUpdateDateGenerationStrategy;
 import org.junit.After;
@@ -81,9 +80,6 @@ public class RatingResourceIntTest {
     private RatingRepository ratingRepository;
 
     @Autowired
-    private RatingSearchRepository ratingSearchRepository;
-
-    @Autowired
     private PermittedRepository permittedRepository;
 
     @Autowired
@@ -131,7 +127,6 @@ public class RatingResourceIntTest {
         when(startUpdateDateGenerationStrategy.generateStartDate()).thenReturn(DEFAULT_START_DATE);
 
         ratingService = new RatingService(ratingRepository,
-                                          ratingSearchRepository,
                                           permittedRepository,
                                           permittedSearchRepository,
                                           startUpdateDateGenerationStrategy,
@@ -198,10 +193,6 @@ public class RatingResourceIntTest {
         assertThat(testRating.getValue()).isEqualTo(DEFAULT_VALUE);
         assertThat(testRating.getStartDate()).isEqualTo(DEFAULT_START_DATE);
         assertThat(testRating.getEndDate()).isEqualTo(DEFAULT_END_DATE);
-
-        // Validate the Rating in Elasticsearch
-        Rating ratingEs = ratingSearchRepository.findOne(testRating.getId());
-        assertThat(ratingEs).isEqualToComparingFieldByField(testRating);
     }
 
     @Test
@@ -350,10 +341,6 @@ public class RatingResourceIntTest {
         assertThat(testRating.getValue()).isEqualTo(UPDATED_VALUE);
         assertThat(testRating.getStartDate()).isEqualTo(UPDATED_START_DATE);
         assertThat(testRating.getEndDate()).isEqualTo(UPDATED_END_DATE);
-
-        // Validate the Rating in Elasticsearch
-        Rating ratingEs = ratingSearchRepository.findOne(testRating.getId());
-        assertThat(ratingEs).isEqualToComparingFieldByField(testRating);
     }
 
     @Test
@@ -387,30 +374,9 @@ public class RatingResourceIntTest {
                                       .accept(TestUtil.APPLICATION_JSON_UTF8))
             .andExpect(status().isOk());
 
-        // Validate Elasticsearch is empty
-        boolean ratingExistsInEs = ratingSearchRepository.exists(rating.getId());
-        assertThat(ratingExistsInEs).isFalse();
-
         // Validate the database is empty
         List<Rating> ratingList = ratingRepository.findAll();
         assertThat(ratingList).hasSize(databaseSizeBeforeDelete - 1);
-    }
-
-    @Test
-    @Transactional
-    public void searchRating() throws Exception {
-        // Initialize the database
-        ratingService.save(rating);
-
-        // Search the rating
-        restRatingMockMvc.perform(get("/api/_search/ratings?query=id:" + rating.getId()))
-            .andExpect(status().isOk())
-            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
-            .andExpect(jsonPath("$.[*].id").value(hasItem(rating.getId().intValue())))
-            .andExpect(jsonPath("$.[*].typeKey").value(hasItem(DEFAULT_TYPE_KEY.toString())))
-            .andExpect(jsonPath("$.[*].value").value(hasItem(DEFAULT_VALUE.doubleValue())))
-            .andExpect(jsonPath("$.[*].startDate").value(hasItem(DEFAULT_START_DATE.toString())))
-            .andExpect(jsonPath("$.[*].endDate").value(hasItem(DEFAULT_END_DATE.toString())));
     }
 
     @Test

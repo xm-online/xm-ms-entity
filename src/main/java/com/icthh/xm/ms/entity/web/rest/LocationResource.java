@@ -5,7 +5,6 @@ import com.icthh.xm.commons.exceptions.BusinessException;
 import com.icthh.xm.commons.exceptions.ErrorConstants;
 import com.icthh.xm.ms.entity.domain.Location;
 import com.icthh.xm.ms.entity.repository.LocationRepository;
-import com.icthh.xm.ms.entity.repository.search.LocationSearchRepository;
 import com.icthh.xm.ms.entity.service.LocationService;
 import com.icthh.xm.ms.entity.web.rest.util.HeaderUtil;
 import com.icthh.xm.ms.entity.web.rest.util.RespContentUtil;
@@ -20,7 +19,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.net.URI;
@@ -39,17 +37,14 @@ public class LocationResource {
     private static final String ENTITY_NAME = "location";
 
     private final LocationRepository locationRepository;
-    private final LocationSearchRepository locationSearchRepository;
     private final LocationResource locationResource;
     private final LocationService locationService;
 
     public LocationResource(
                     LocationRepository locationRepository,
-                    LocationSearchRepository locationSearchRepository,
                     @Lazy LocationResource locationResource,
                     LocationService locationService) {
         this.locationRepository = locationRepository;
-        this.locationSearchRepository = locationSearchRepository;
         this.locationResource = locationResource;
         this.locationService = locationService;
     }
@@ -135,21 +130,6 @@ public class LocationResource {
     @PreAuthorize("hasPermission({'id': #id}, 'location', 'LOCATION.DELETE')")
     public ResponseEntity<Void> deleteLocation(@PathVariable Long id) {
         locationRepository.delete(id);
-        locationSearchRepository.delete(id);
         return ResponseEntity.ok().headers(HeaderUtil.createEntityDeletionAlert(ENTITY_NAME, id.toString())).build();
     }
-
-    /**
-     * SEARCH  /_search/locations?query=:query : search for the location corresponding
-     * to the query.
-     *
-     * @param query the query of the location search
-     * @return the result of the search
-     */
-    @GetMapping("/_search/locations")
-    @Timed
-    public List<Location> searchLocations(@RequestParam String query) {
-        return locationService.search(query, null);
-    }
-
 }

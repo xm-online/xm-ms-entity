@@ -3,11 +3,9 @@ package com.icthh.xm.ms.entity.service;
 import com.icthh.xm.commons.permission.annotation.FindWithPermission;
 import com.icthh.xm.commons.permission.repository.PermittedRepository;
 import com.icthh.xm.ms.entity.domain.Vote;
-import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.repository.VoteRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
 import com.icthh.xm.ms.entity.repository.search.PermittedSearchRepository;
-import com.icthh.xm.ms.entity.repository.search.VoteSearchRepository;
 import com.icthh.xm.ms.entity.service.impl.StartUpdateDateGenerationStrategy;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -25,8 +23,6 @@ public class VoteService {
     private final PermittedSearchRepository permittedSearchRepository;
 
     private final VoteRepository voteRepository;
-
-    private final VoteSearchRepository voteSearchRepository;
 
     private final StartUpdateDateGenerationStrategy startUpdateDateGenerationStrategy;
 
@@ -47,9 +43,7 @@ public class VoteService {
 
                                                               Vote::getEntryDate);
         vote.setXmEntity(xmEntityRepository.getOne(vote.getXmEntity().getId()));
-        Vote result = voteRepository.save(vote);
-        voteSearchRepository.save(result);
-        return result;
+        return voteRepository.save(vote);
     }
 
     /**
@@ -87,6 +81,5 @@ public class VoteService {
      */
     public void delete(Long id) {
         voteRepository.delete(id);
-        voteSearchRepository.delete(id);
     }
 }
