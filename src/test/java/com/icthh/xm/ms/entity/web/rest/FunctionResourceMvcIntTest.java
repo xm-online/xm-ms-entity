@@ -90,9 +90,11 @@ public class FunctionResourceMvcIntTest {
     public void testCallStreamFunction() {
         when(functionService.execute(eq("SOME-FUNCTION_KEY.TROLOLO"), any()))
             .then((method) -> {
-                return new FunctionContext().data(of("data", new byte[]{101, 102, 103, 104, 42}));
+                FunctionContext data = new FunctionContext().data(of("data", new byte[]{101, 102, 103, 104, 42}));
+                data.setOnlyData(true);
+                return data;
             });
-        byte[] response = mockMvc.perform(get("/api/functions/data/SOME-FUNCTION_KEY.TROLOLO?var1=val1&var2=val2"))
+        byte[] response = mockMvc.perform(get("/api/functions/SOME-FUNCTION_KEY.TROLOLO?var1=val1&var2=val2"))
             .andDo(print())
             .andExpect(status().isOk()).andReturn().getResponse().getContentAsByteArray();
 

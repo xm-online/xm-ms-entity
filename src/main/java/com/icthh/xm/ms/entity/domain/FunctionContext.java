@@ -7,6 +7,7 @@ import com.icthh.xm.ms.entity.domain.converter.MapToStringConverter;
 import com.icthh.xm.ms.entity.domain.idresolver.XmEntityObjectIdResolver;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
+import lombok.Setter;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 
@@ -25,6 +26,7 @@ import javax.persistence.ManyToOne;
 import javax.persistence.PrePersist;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
+import javax.persistence.Transient;
 import javax.validation.constraints.NotNull;
 
 /**
@@ -101,6 +103,10 @@ public class FunctionContext implements Serializable {
     @JsonIdentityReference(alwaysAsId = true)
     @ManyToOne
     private XmEntity xmEntity;
+
+    @Transient
+    @Setter
+    private transient boolean onlyData;
 
     public Long getId() {
         return id;
@@ -235,6 +241,13 @@ public class FunctionContext implements Serializable {
             return false;
         }
         return Objects.equals(getId(), functionContext.getId());
+    }
+
+    public Object getFunctionResult() {
+        if (onlyData) {
+            return data.get("data");
+        }
+        return this;
     }
 
     @Override

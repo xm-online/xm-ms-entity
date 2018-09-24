@@ -42,34 +42,19 @@ public class FunctionResource {
     @Timed
     @GetMapping("/functions/{functionKey:.+}")
     @PreAuthorize("hasPermission({'functionKey': #functionKey}, 'FUNCTION.GET.CALL')")
-    public ResponseEntity<FunctionContext> callGetFunction(@PathVariable("functionKey") String functionKey,
+    public ResponseEntity<Object> callGetFunction(@PathVariable("functionKey") String functionKey,
                                                            @RequestParam(required = false) Map<String, Object> functionInput) {
         FunctionContext result = functionService.execute(functionKey, functionInput);
-        return ResponseEntity.ok().body(result);
-    }
-
-    @Timed
-    @GetMapping("/functions/data/{functionKey:.+}")
-    @PreAuthorize("hasPermission({'functionKey': #functionKey}, 'FUNCTION.GET.CALL')")
-    @ResponseBody
-    public ResponseEntity<Object> callStreamFunctionWithCustomerResponse(@PathVariable("functionKey") String functionKey,
-                                                    @RequestParam(required = false) Map<String, Object> functionInput,
-                                                    HttpServletResponse httpServletResponse) {
-        if (functionInput == null) {
-            functionInput = new HashMap<>();
-        }
-        functionInput.put("response", httpServletResponse);
-        FunctionContext result = functionService.execute(functionKey, functionInput);
-        return ResponseEntity.ok().body(result.getData().get("data"));
+        return ResponseEntity.ok().body(result.getFunctionResult());
     }
 
     @Timed
     @PutMapping("/functions/{functionKey:.+}")
     @PreAuthorize("hasPermission({'functionKey': #functionKey}, 'FUNCTION.PUT.CALL')")
-    public ResponseEntity<FunctionContext> callPutFunction(@PathVariable("functionKey") String functionKey,
+    public ResponseEntity<Object> callPutFunction(@PathVariable("functionKey") String functionKey,
                                                            @RequestBody(required = false) Map<String, Object> functionInput) {
         FunctionContext result = functionService.execute(functionKey, functionInput);
-        return ResponseEntity.ok().body(result);
+        return ResponseEntity.ok().body(result.getFunctionResult());
     }
 
     /**
@@ -83,12 +68,12 @@ public class FunctionResource {
     @Timed
     @PostMapping("/functions/{functionKey:.+}")
     @PreAuthorize("hasPermission({'functionKey': #functionKey}, 'FUNCTION.CALL')")
-    public ResponseEntity<FunctionContext> callFunction(@PathVariable("functionKey") String functionKey,
+    public ResponseEntity<Object> callFunction(@PathVariable("functionKey") String functionKey,
                                                         @RequestBody(required = false) Map<String, Object> functionInput) {
         FunctionContext result = functionService.execute(functionKey, functionInput);
         return ResponseEntity.created(URI.create("/api/function-contexts/" + result.getId()))
             .headers(HeaderUtil.createEntityCreationAlert(ENTITY_NAME_FUNCTION_CONTEXT, String.valueOf(result.getId())))
-            .body(result);
+            .body(result.getFunctionResult());
     }
 
     /**
