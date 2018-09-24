@@ -1,6 +1,8 @@
 package com.icthh.xm.ms.entity.web.rest;
 
 import static com.google.common.collect.ImmutableMap.of;
+import static org.junit.Assert.assertArrayEquals;
+import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -27,6 +29,12 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
+
+import javax.servlet.ServletOutputStream;
+import javax.servlet.ServletResponse;
+import java.util.Map;
 
 @Slf4j
 @RunWith(SpringRunner.class)
@@ -75,6 +83,20 @@ public class FunctionResourceMvcIntTest {
             .andExpect(jsonPath("$.data.test").value("result"))
             .andExpect(status().isOk());
         verify(functionService).execute(eq("SOME-FUNCTION_KEY.TROLOLO"), eq(of("var1", "val1", "var2", "val2")));
+    }
+
+    @Test
+    @SneakyThrows
+    public void testCallStreamFunction() {
+        when(functionService.execute(eq("SOME-FUNCTION_KEY.TROLOLO"), any()))
+            .then((method) -> {
+                return new FunctionContext().data(of("data", new byte[]{101, 102, 103, 104, 42}));
+            });
+        byte[] response = mockMvc.perform(get("/api/functions/data/SOME-FUNCTION_KEY.TROLOLO?var1=val1&var2=val2"))
+            .andDo(print())
+            .andExpect(status().isOk()).andReturn().getResponse().getContentAsByteArray();
+
+        assertArrayEquals(new byte[]{101, 102, 103, 104, 42}, response);
     }
 
 }
