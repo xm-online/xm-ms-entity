@@ -50,6 +50,8 @@ public final class Constants {
 
     public static final String PATH_SELF = "self";
 
+    public static final String TRANSLATION_KEY = "trKey";
+
     private Constants() {
     }
 }
