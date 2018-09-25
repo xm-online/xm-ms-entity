@@ -13,7 +13,7 @@ import java.util.Map;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({"key", "name", "actionName", "allowedStateKeys", "withEntityId", "isShowFormWithoutData", "inputSpec", "inputForm",
-    "contextDataSpec", "contextDataForm", "showResponse"})
+    "contextDataSpec", "contextDataForm", "showResponse", "onlyData"})
 @Data
 public class FunctionSpec {
 
@@ -77,8 +77,15 @@ public class FunctionSpec {
     @JsonProperty("showResponse")
     private Boolean showResponse;
 
+    @JsonProperty("onlyData")
+    private Boolean onlyData;
+
     public Boolean getSaveFunctionContext() {
         return saveFunctionContext == null ? false : saveFunctionContext;
+    }
+
+    public Boolean getOnlyData() {
+        return onlyData == null ? false : onlyData;
     }
 
 }

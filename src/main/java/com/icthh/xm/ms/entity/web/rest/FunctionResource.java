@@ -4,7 +4,6 @@ import com.codahale.metrics.annotation.Timed;
 import com.icthh.xm.ms.entity.domain.FunctionContext;
 import com.icthh.xm.ms.entity.service.FunctionService;
 import com.icthh.xm.ms.entity.web.rest.util.HeaderUtil;
-import com.icthh.xm.ms.entity.web.rest.util.RespContentUtil;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -39,19 +38,19 @@ public class FunctionResource {
     @Timed
     @GetMapping("/functions/{functionKey:.+}")
     @PreAuthorize("hasPermission({'functionKey': #functionKey}, 'FUNCTION.GET.CALL')")
-    public ResponseEntity<FunctionContext> callGetFunction(@PathVariable("functionKey") String functionKey,
+    public ResponseEntity<Object> callGetFunction(@PathVariable("functionKey") String functionKey,
                                                            @RequestParam(required = false) Map<String, Object> functionInput) {
         FunctionContext result = functionService.execute(functionKey, functionInput);
-        return ResponseEntity.ok().body(result);
+        return ResponseEntity.ok().body(result.functionResult());
     }
 
     @Timed
     @PutMapping("/functions/{functionKey:.+}")
     @PreAuthorize("hasPermission({'functionKey': #functionKey}, 'FUNCTION.PUT.CALL')")
-    public ResponseEntity<FunctionContext> callPutFunction(@PathVariable("functionKey") String functionKey,
-                                                           @RequestBody Map<String, Object> functionInput) {
+    public ResponseEntity<Object> callPutFunction(@PathVariable("functionKey") String functionKey,
+                                                           @RequestBody(required = false) Map<String, Object> functionInput) {
         FunctionContext result = functionService.execute(functionKey, functionInput);
-        return ResponseEntity.ok().body(result);
+        return ResponseEntity.ok().body(result.functionResult());
     }
 
     /**
@@ -65,12 +64,12 @@ public class FunctionResource {
     @Timed
     @PostMapping("/functions/{functionKey:.+}")
     @PreAuthorize("hasPermission({'functionKey': #functionKey}, 'FUNCTION.CALL')")
-    public ResponseEntity<FunctionContext> callFunction(@PathVariable("functionKey") String functionKey,
-                                                        @RequestBody Map<String, Object> functionInput) {
+    public ResponseEntity<Object> callFunction(@PathVariable("functionKey") String functionKey,
+                                                        @RequestBody(required = false) Map<String, Object> functionInput) {
         FunctionContext result = functionService.execute(functionKey, functionInput);
         return ResponseEntity.created(URI.create("/api/function-contexts/" + result.getId()))
             .headers(HeaderUtil.createEntityCreationAlert(ENTITY_NAME_FUNCTION_CONTEXT, String.valueOf(result.getId())))
-            .body(result);
+            .body(result.functionResult());
     }
 
     /**
@@ -84,7 +83,7 @@ public class FunctionResource {
     @PostMapping("/functions/mvc/{functionKey:.+}")
     @PreAuthorize("hasPermission({'functionKey': #functionKey}, 'FUNCTION.MVC.CALL')")
     public ModelAndView callMvcFunction(@PathVariable("functionKey") String functionKey,
-                                        @RequestBody Map<String, Object> functionInput) {
+                                        @RequestBody(required = false) Map<String, Object> functionInput) {
         FunctionContext result = functionService.execute(functionKey, functionInput);
         Object data = result.getData().get("modelAndView");
         if (data instanceof ModelAndView) {

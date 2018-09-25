@@ -60,9 +60,9 @@ public class FunctionServiceImpl implements FunctionService {
 
         // save result in FunctionContext
         if (functionSpec.get().getSaveFunctionContext()) {
-            return saveResult(functionKey, null, data);
+            return saveResult(functionKey, null, data, functionSpec.get());
         } else {
-            return toFunctionContext(functionKey, null, data);
+            return toFunctionContext(functionKey, null, data, functionSpec.get());
         }
     }
 
@@ -99,9 +99,9 @@ public class FunctionServiceImpl implements FunctionService {
 
         // save result in FunctionContext
         if (functionSpec.get().getSaveFunctionContext()) {
-            return saveResult(functionKey, idOrKey, data);
+            return saveResult(functionKey, idOrKey, data, functionSpec.get());
         } else {
-            return toFunctionContext(functionKey, idOrKey, data);
+            return toFunctionContext(functionKey, idOrKey, data, functionSpec.get());
         }
     }
 
@@ -114,12 +114,15 @@ public class FunctionServiceImpl implements FunctionService {
      */
     private FunctionContext saveResult(String functionKey,
                                        IdOrKey idOrKey,
-                                       Map<String, Object> data) {
-        FunctionContext functionResult = toFunctionContext(functionKey, idOrKey, data);
+                                       Map<String, Object> data,
+                                       FunctionSpec functionSpec) {
+        FunctionContext functionResult = toFunctionContext(functionKey, idOrKey, data, functionSpec);
         return functionContextService.save(functionResult);
     }
 
-    private FunctionContext toFunctionContext(String functionKey, IdOrKey idOrKey, Map<String, Object> data) {
+    private FunctionContext toFunctionContext(String functionKey, IdOrKey idOrKey,
+                                              Map<String, Object> data,
+                                              FunctionSpec functionSpec) {
         XmEntity xmEntity = (idOrKey != null) ? xmEntityService.findOne(idOrKey) : null;
 
         FunctionContext functionResult = new FunctionContext();
@@ -130,6 +133,7 @@ public class FunctionServiceImpl implements FunctionService {
         functionResult.setStartDate(Instant.now());
         functionResult.setUpdateDate(functionResult.getStartDate());
         functionResult.setXmEntity(xmEntity);
+        functionResult.setOnlyData(functionSpec.getOnlyData());
         return functionResult;
     }
 
