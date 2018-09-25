@@ -57,8 +57,7 @@ public class LinkService {
                                                               Link::getStartDate);
         link.setTarget(xmEntityRepository.getOne(entityId(link.getTarget())));
         link.setSource(xmEntityRepository.getOne(entityId(link.getSource())));
-        Link result = linkRepository.save(link);
-        return result;
+        return linkRepository.save(link);
     }
 
     private Long entityId(XmEntity entity) {
