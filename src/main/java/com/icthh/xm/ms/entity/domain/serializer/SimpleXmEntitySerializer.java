@@ -3,6 +3,7 @@ package com.icthh.xm.ms.entity.domain.serializer;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.icthh.xm.ms.entity.domain.XmEntity;
+import org.hibernate.Hibernate;
 import org.springframework.boot.jackson.JsonObjectSerializer;
 
 import java.io.IOException;
@@ -25,6 +26,10 @@ public class SimpleXmEntitySerializer extends JsonObjectSerializer<XmEntity> {
 
     @Override
     protected void serializeObject(XmEntity value, JsonGenerator jsonGenerator, SerializerProvider provider) throws IOException {
+        if (!Hibernate.isInitialized(value)) {
+            return;
+        }
+
         write(jsonGenerator, "id", value.getId());
         write(jsonGenerator, "key", value.getKey());
         write(jsonGenerator, "typeKey", value.getTypeKey());
