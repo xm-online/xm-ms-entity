@@ -34,9 +34,7 @@ public class ProfileService {
      * @return the persisted entity
      */
     public Profile save(Profile profile) {
-        Profile result = profileRepository.save(profile);
-        entitySearchRepository.save(result.getXmentity());
-        return result;
+        return profileRepository.save(profile);
     }
 
     /**

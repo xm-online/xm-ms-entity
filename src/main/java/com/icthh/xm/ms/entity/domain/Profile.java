@@ -1,5 +1,6 @@
 package com.icthh.xm.ms.entity.domain;
 
+import com.icthh.xm.ms.entity.domain.listener.ProfileElasticSearchListener;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import org.hibernate.annotations.Cache;
@@ -18,6 +19,7 @@ import java.util.Objects;
 @Entity
 @Table(name = "profile")
 @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
+@EntityListeners(ProfileElasticSearchListener.class)
 public class Profile implements Serializable {
 
     private static final long serialVersionUID = 1L;

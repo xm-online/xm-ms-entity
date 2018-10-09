@@ -2,6 +2,7 @@ package com.icthh.xm.ms.entity.service;
 
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import com.icthh.xm.commons.security.XmAuthenticationContextHolder;
@@ -71,11 +72,10 @@ public class ProfileServiceUnitTest {
         xmEntity.setId(ID);
         profile.setXmentity(xmEntity);
         when(profileRepository.save(profile)).thenReturn(profile);
-        when(entitySearchRepository.save(profile.getXmentity())).thenReturn(profile.getXmentity());
         service.save(profile);
 
         verify(profileRepository).save(profile);
-        verify(entitySearchRepository).save(profile.getXmentity());
+        verifyNoMoreInteractions(entitySearchRepository);
     }
 
     @Test
