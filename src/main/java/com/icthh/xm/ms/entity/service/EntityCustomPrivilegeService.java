@@ -12,6 +12,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.icthh.xm.commons.config.client.repository.CommonConfigRepository;
 import com.icthh.xm.commons.config.domain.Configuration;
+import com.icthh.xm.commons.logging.aop.IgnoreLogginAspect;
 import com.icthh.xm.commons.permission.config.PermissionProperties;
 import com.icthh.xm.commons.permission.domain.Permission;
 import com.icthh.xm.commons.permission.domain.Role;
@@ -47,6 +48,7 @@ public class EntityCustomPrivilegeService {
     private final PermissionProperties permissionProperties;
     private final RoleService roleService;
 
+    @IgnoreLogginAspect
     public void updateApplicationPermission(Map<String, TypeSpec> specs, String tenantKey) {
 
         String privilegesPath = resolvePathWithTenant(tenantKey, CUSTOMER_PRIVILEGES_PATH);
