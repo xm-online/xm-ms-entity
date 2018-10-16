@@ -429,6 +429,7 @@ public class XmEntitySpecService implements RefreshableConfiguration {
 
     @Override
     @SneakyThrows
+    @IgnoreLogginAspect
     public void onRefresh(String updatedKey, String config) {
         String specificationPathPattern = applicationProperties.getSpecificationPathPattern();
         try {
