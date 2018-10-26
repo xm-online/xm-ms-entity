@@ -285,11 +285,11 @@ public class XmEntityResource {
     @PostMapping("/xm-entities/{idOrKey}/functions/{functionKey}")
     @PreAuthorize("hasPermission({'idOrKey': #idOrKey, 'id': #functionKey, 'context': #context}, "
         + "'xmEntity.function', 'XMENTITY.FUNCTION.EXECUTE')")
-    public ResponseEntity<FunctionContext> executeFunction(@PathVariable String idOrKey,
+    public ResponseEntity<Object> executeFunction(@PathVariable String idOrKey,
                                                            @PathVariable String functionKey,
                                                            @RequestBody(required = false) Map<String, Object> functionInput) {
         FunctionContext result = functionService.execute(functionKey, IdOrKey.of(idOrKey), functionInput);
-        return ResponseEntity.ok().body(result);
+        return ResponseEntity.ok().body(result.functionResult());
     }
 
     @GetMapping("/xm-entities/{idOrKey}/links/targets")
