@@ -123,7 +123,6 @@ public class FunctionServiceImpl implements FunctionService {
     private FunctionContext toFunctionContext(String functionKey, IdOrKey idOrKey,
                                               Map<String, Object> data,
                                               FunctionSpec functionSpec) {
-        XmEntity xmEntity = (idOrKey != null) ? xmEntityService.findOne(idOrKey) : null;
 
         FunctionContext functionResult = new FunctionContext();
         // TODO review key & typeKey ...
@@ -132,7 +131,10 @@ public class FunctionServiceImpl implements FunctionService {
         functionResult.setData(data);
         functionResult.setStartDate(Instant.now());
         functionResult.setUpdateDate(functionResult.getStartDate());
-        functionResult.setXmEntity(xmEntity);
+        if (functionSpec.getSaveFunctionContext()) {
+            XmEntity xmEntity = (idOrKey != null) ? xmEntityService.findOne(idOrKey) : null;
+            functionResult.setXmEntity(xmEntity);
+        }
         functionResult.setOnlyData(functionSpec.getOnlyData());
         return functionResult;
     }
