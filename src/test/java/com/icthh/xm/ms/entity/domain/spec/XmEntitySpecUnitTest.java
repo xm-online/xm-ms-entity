@@ -60,6 +60,7 @@ public class XmEntitySpecUnitTest {
         assertEquals(1, xmEntitySpec.getTypes().get(1).getPluralName().size());
         assertEquals(2, xmEntitySpec.getTypes().get(2).getName().size());
         assertEquals(2, xmEntitySpec.getTypes().get(3).getName().size());
+        assertEquals(true, xmEntitySpec.getTypes().get(0).getIsAvatarEnabled());
         assertNotNull(xmEntitySpec.getTypes().get(0).getDataSpec());
         assertNotNull(xmEntitySpec.getTypes().get(0).getDataForm());
         assertNotNull(xmEntitySpec.getTypes().get(0).getFastSearch());
