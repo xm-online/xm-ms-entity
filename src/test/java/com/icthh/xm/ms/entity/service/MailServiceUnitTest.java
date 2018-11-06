@@ -13,6 +13,8 @@ import static org.mockito.Mockito.when;
 
 import com.icthh.xm.commons.config.client.service.TenantConfigService;
 import com.icthh.xm.commons.i18n.spring.service.LocalizationMessageService;
+import com.icthh.xm.commons.tenant.PrivilegedTenantContext;
+import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantKey;
 import com.icthh.xm.ms.entity.service.mail.MailService;
 import com.icthh.xm.ms.entity.service.mail.TenantEmailTemplateService;
@@ -59,6 +61,8 @@ public class MailServiceUnitTest {
     private TenantConfigService tenantConfigService;
     @Mock
     private LocalizationMessageService localizationMessageService;
+    @Mock
+    private TenantContextHolder tenantContextHolder;
 
     @Test
     @SneakyThrows
@@ -89,6 +93,7 @@ public class MailServiceUnitTest {
     }
 
     private MimeMessage sendEmail() {
+        when(tenantContextHolder.getPrivilegedContext()).thenReturn(mock(PrivilegedTenantContext.class));
         when(tenantEmailTemplateService.getEmailTemplate(TENANT_KEY + "/" + FRANCE.getLanguage() + "/" + EMAIL_TEMPLATE)).thenReturn(TEST_TEMPLATE_CONTENT);
         MimeMessage mock = mock(MimeMessage.class);
         when(javaMailSender.createMimeMessage()).thenReturn(mock);

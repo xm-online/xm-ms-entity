@@ -11,6 +11,7 @@ import com.icthh.xm.commons.config.client.service.TenantConfigService;
 import com.icthh.xm.commons.i18n.spring.service.LocalizationMessageService;
 import com.icthh.xm.commons.logging.aop.IgnoreLogginAspect;
 import com.icthh.xm.commons.logging.util.MdcUtils;
+import com.icthh.xm.commons.tenant.PlainTenant;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
 import com.icthh.xm.commons.tenant.TenantKey;
@@ -160,6 +161,8 @@ public class MailService {
             String emailTemplate = tenantEmailTemplateService.getEmailTemplate(templateKey);
 
             try {
+                tenantContextHolder.getPrivilegedContext().setTenant(new PlainTenant(tenantKey));
+
                 Template mailTemplate = new Template(templateKey, emailTemplate, freeMarkerConfiguration);
                 String content = FreeMarkerTemplateUtils.processTemplateIntoString(mailTemplate, objectModel);
                 sendEmail(
@@ -172,6 +175,8 @@ public class MailService {
                 throw new IllegalStateException("Mail template rendering failed");
             } catch (IOException e) {
                 throw new IllegalStateException("Error while reading mail template");
+            } finally {
+                tenantContextHolder.getPrivilegedContext().destroyCurrentContext();
             }
         });
     }
