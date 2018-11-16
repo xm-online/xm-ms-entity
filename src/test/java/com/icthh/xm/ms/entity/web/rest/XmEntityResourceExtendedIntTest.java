@@ -970,6 +970,21 @@ public class XmEntityResourceExtendedIntTest {
     }
 
     @Test
+    public void checkValidationNotRequiredNameAndKey() throws Exception {
+        int databaseSizeBeforeTest = xmEntityRepository.findAll().size();
+
+        XmEntity entity = createEntity();
+        entity.setTypeKey("ENTITY1");
+        entity.setName(null);
+        entity.setKey(null);
+
+        performPut("/api/xm-entities", entity)
+            .andExpect(status().isOk());
+
+        validateEntityInDB(databaseSizeBeforeTest);
+    }
+
+    @Test
     @WithMockUser(authorities = "SUPER-ADMIN")
     public void getAllXmEntitiesByTypeKey() throws Exception {
 

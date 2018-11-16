@@ -362,6 +362,8 @@ types:
     - key: ENTITY1
       isApp: false
       isAbstract: false
+      isNameRequired: false
+      isKeyRequired: false
       links:
             - key: en1en2
               builderType: SEARCH
