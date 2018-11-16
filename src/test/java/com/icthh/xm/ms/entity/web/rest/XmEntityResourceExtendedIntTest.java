@@ -1000,7 +1000,7 @@ public class XmEntityResourceExtendedIntTest {
             .andDo(print())
             .andExpect(status().is2xxSuccessful());
 
-        validateEntityInDB(databaseSizeBeforeTest);
+        validateEntityInDB(databaseSizeBeforeTest + 1);
     }
 
     @Test
