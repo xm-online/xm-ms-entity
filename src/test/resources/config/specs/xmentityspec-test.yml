@@ -5,6 +5,8 @@ types:
       isApp: true
       isAbstract: true
       isAvatarEnabled: true
+      isKeyRequired: false
+      isNameRequired: false
       fastSearch:
           - query: typeKey:TYPE1*
             name: { en: "Fast search" }
