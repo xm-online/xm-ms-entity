@@ -59,6 +59,7 @@ import org.springframework.test.context.transaction.BeforeTransaction;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.ResultActions;
+import org.springframework.test.web.servlet.result.MockMvcResultHandlers;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.Validator;
@@ -91,6 +92,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 /**
@@ -955,14 +957,27 @@ public class XmEntityResourceExtendedIntTest {
     }
 
     @Test
+    @WithMockUser(authorities = "SUPER-ADMIN")
     public void checkValidationNameAndKey() throws Exception {
         int databaseSizeBeforeTest = xmEntityRepository.findAll().size();
 
         XmEntity entity = createEntity();
+        entity.setTypeKey("ACCOUNT");
         entity.setName(null);
         entity.setKey(null);
 
         performPut("/api/xm-entities", entity)
+            .andDo(print())
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.error").value("error.validation"));
+
+        XmEntity entity2 = createEntity();
+        entity2.setTypeKey("ENTITY2");
+        entity2.setName(null);
+        entity2.setKey(null);
+
+        performPut("/api/xm-entities", entity2)
+            .andDo(print())
             .andExpect(status().isBadRequest())
             .andExpect(jsonPath("$.error").value("error.validation"));
 
@@ -970,6 +985,7 @@ public class XmEntityResourceExtendedIntTest {
     }
 
     @Test
+    @WithMockUser(authorities = "SUPER-ADMIN")
     public void checkValidationNotRequiredNameAndKey() throws Exception {
         int databaseSizeBeforeTest = xmEntityRepository.findAll().size();
 
@@ -977,9 +993,12 @@ public class XmEntityResourceExtendedIntTest {
         entity.setTypeKey("ENTITY1");
         entity.setName(null);
         entity.setKey(null);
+        entity.setData(null);
+        entity.setStateKey(null);
 
         performPut("/api/xm-entities", entity)
-            .andExpect(status().isOk());
+            .andDo(print())
+            .andExpect(status().is2xxSuccessful());
 
         validateEntityInDB(databaseSizeBeforeTest);
     }
