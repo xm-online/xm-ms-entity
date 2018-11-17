@@ -966,7 +966,7 @@ public class XmEntityResourceExtendedIntTest {
         entity.setName(null);
         entity.setKey(null);
 
-        performPut("/api/xm-entities", entity)
+        performPost("/api/xm-entities", entity)
             .andDo(print())
             .andExpect(status().isBadRequest())
             .andExpect(jsonPath("$.error").value("error.validation"));
@@ -975,8 +975,10 @@ public class XmEntityResourceExtendedIntTest {
         entity2.setTypeKey("ENTITY2");
         entity2.setName(null);
         entity2.setKey(null);
+        entity2.setData(null);
+        entity.setStateKey(null);
 
-        performPut("/api/xm-entities", entity2)
+        performPost("/api/xm-entities", entity2)
             .andDo(print())
             .andExpect(status().isBadRequest())
             .andExpect(jsonPath("$.error").value("error.validation"));
@@ -996,7 +998,7 @@ public class XmEntityResourceExtendedIntTest {
         entity.setData(null);
         entity.setStateKey(null);
 
-        performPut("/api/xm-entities", entity)
+        performPost("/api/xm-entities", entity)
             .andDo(print())
             .andExpect(status().is2xxSuccessful());
 
