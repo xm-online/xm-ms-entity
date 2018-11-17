@@ -987,7 +987,7 @@ public class XmEntityResourceExtendedIntTest {
     @Test
     @WithMockUser(authorities = "SUPER-ADMIN")
     public void checkValidationNotRequiredNameAndKey() throws Exception {
-        int databaseSizeBeforeTest = xmEntityRepository.findAll().size();
+        long databaseSizeBeforeTest = xmEntityRepository.count();
 
         XmEntity entity = createEntity();
         entity.setTypeKey("ENTITY1");
@@ -1000,7 +1000,7 @@ public class XmEntityResourceExtendedIntTest {
             .andDo(print())
             .andExpect(status().is2xxSuccessful());
 
-        validateEntityInDB(databaseSizeBeforeTest + 1);
+        assertThat(xmEntityRepository.count()).isEqualTo(databaseSizeBeforeTest + 1);
     }
 
     @Test
