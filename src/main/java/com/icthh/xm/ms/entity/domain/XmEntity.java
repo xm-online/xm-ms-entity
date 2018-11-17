@@ -12,6 +12,7 @@ import com.icthh.xm.ms.entity.domain.listener.XmEntityElasticSearchListener;
 import com.icthh.xm.ms.entity.validator.JsonData;
 import com.icthh.xm.ms.entity.validator.StateKey;
 import com.icthh.xm.ms.entity.validator.TypeKey;
+import com.icthh.xm.ms.entity.validator.NotNull;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Getter;
@@ -40,7 +41,6 @@ import javax.persistence.Table;
 import javax.persistence.Transient;
 import javax.persistence.Version;
 import javax.validation.Valid;
-import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.time.Instant;
 import java.util.Collection;
@@ -76,6 +76,8 @@ import java.util.function.BiConsumer;
         @NamedAttributeNode("functionContexts")
     })
 @EntityListeners({AvatarUrlListener.class, XmEntityElasticSearchListener.class})
+@NotNull(fieldName = "name")
+@NotNull(fieldName = "key")
 public class XmEntity implements Serializable, Persistable<Long> {
 
     private static final long serialVersionUID = 1L;
@@ -93,7 +95,6 @@ public class XmEntity implements Serializable, Persistable<Long> {
      * but only one entity could be addressable at one time, as other should be ended
      * by endDate property.
      */
-    @NotNull
     @ApiModelProperty(value = "Additional lateral identification for this entity could be defined by template Example: PO-1 for Product Offering, e-Mail or MSISDN for account, external Id for Order etc). Key is not full unique entity identification. Few entities could have one key, but only one entity could be addressable at one time, as other should be ended by endDate property.", required = true)
     @Column(name = "jhi_key", nullable = false)
     private String key;
@@ -106,7 +107,7 @@ public class XmEntity implements Serializable, Persistable<Long> {
      * Example: ACCOUNT.ADMIN, ACCOUNT.USER, ACCOUNT.PARTNER for type ACCOUNT or
      * PRODUCT-OFFERING.CAMPAIGN, PRODUCT-OFFERING.RATE-PLAN etc.
      */
-    @NotNull
+    @javax.validation.constraints.NotNull
     @ApiModelProperty(value = "Key reference to the configured Entity Type. Convention is capital letter with dash '-'. Example: ACCOUNT, PRODUCT-OFFERING, PRICE etc. Entity Sub Types could be separated by dot '.'. Convention is same as for Type. Example: ACCOUNT.ADMIN, ACCOUNT.USER, ACCOUNT.PARTNER for type ACCOUNT or PRODUCT-OFFERING.CAMPAIGN, PRODUCT-OFFERING.RATE-PLAN etc.", required = true)
     @Column(name = "type_key", nullable = false)
     @Field(index = FieldIndex.not_analyzed, type = FieldType.String)
@@ -125,7 +126,6 @@ public class XmEntity implements Serializable, Persistable<Long> {
      * This is i18n name of Entity.
      * TODO: change data type
      */
-    @NotNull
     @ApiModelProperty(value = "This is i18n name of Entity. TODO: change data type", required = true)
     @Column(name = "name", nullable = false)
     private String name;

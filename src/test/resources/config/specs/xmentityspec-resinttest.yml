@@ -362,6 +362,8 @@ types:
     - key: ENTITY1
       isApp: false
       isAbstract: false
+      isNameRequired: false
+      isKeyRequired: false
       links:
             - key: en1en2
               builderType: SEARCH
@@ -369,6 +371,8 @@ types:
     - key: ENTITY2
       isApp: false
       isAbstract: false
+      isNameRequired: true
+      isKeyRequired: true
       links:
             - key: en2en1
               builderType: SEARCH

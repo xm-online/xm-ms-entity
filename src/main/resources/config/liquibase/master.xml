@@ -62,4 +62,6 @@
 
     <include file="classpath:config/liquibase/changelog/20180920120200_add_attachment_checksum.xml" relativeToChangelogFile="false"/>
 
+    <include file="classpath:config/liquibase/changelog/20181115175400_make_key_not_required.xml" relativeToChangelogFile="false"/>
+
 </databaseChangeLog>
