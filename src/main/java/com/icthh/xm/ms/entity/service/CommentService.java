@@ -108,6 +108,6 @@ public class CommentService {
     @FindWithPermission("COMMENT.GET_LIST.BY_XM_ENTITY")
     @LogicExtensionPoint("FindByXmEntity")
     public Page<Comment> findByXmEntity(Long id, Pageable pageable, String privilegeKey) {
-        return permittedRepository.findByCondition("returnObject.id = :id", of("id", id), pageable, Comment.class, privilegeKey);
+        return permittedRepository.findByCondition("returnObject.xmEntity.id = :id", of("id", id), pageable, Comment.class, privilegeKey);
     }
 }

@@ -305,6 +305,7 @@ public class CommentResourceIntTest {
         // Get all the commentList
         restCommentMockMvc.perform(get("/api/xm-entities/" + comment.getXmEntity().getId() + "/comments?sort=id,desc"))
             .andExpect(status().isOk())
+            .andDo(print())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
             .andExpect(jsonPath("$.[*].id").value(hasItem(comment.getId().intValue())))
             .andExpect(jsonPath("$.[*].userKey").value(hasItem(DEFAULT_USER_KEY)))
