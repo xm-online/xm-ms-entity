@@ -137,4 +137,11 @@ public class CommentResource {
         return ResponseEntity.ok().headers(HeaderUtil.createEntityDeletionAlert(ENTITY_NAME, id.toString())).build();
     }
 
+    @GetMapping("/xm-entities/{id}/comments")
+    @Timed
+    public ResponseEntity<List<Comment>> getCommentsByXmEntity(@PathVariable Long id, @ApiParam Pageable pageable) {
+        Page<Comment> page = commentService.findByXmEntity(id, pageable, null);
+        HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(page, "/xm-entities/" + id + "/comments");
+        return new ResponseEntity<>(page.getContent(), headers, HttpStatus.OK);
+    }
 }
