@@ -1,5 +1,8 @@
 package com.icthh.xm.ms.entity.service;
 
+import static com.google.common.collect.ImmutableMap.of;
+
+import com.google.common.collect.ImmutableMap;
 import com.icthh.xm.commons.lep.LogicExtensionPoint;
 import com.icthh.xm.commons.lep.spring.LepService;
 import com.icthh.xm.commons.permission.annotation.FindWithPermission;
@@ -101,4 +104,10 @@ public class CommentService {
         return permittedSearchRepository.search(query, pageable, Comment.class, privilegeKey);
     }
 
+    @Transactional(readOnly = true)
+    @FindWithPermission("COMMENT.GET_LIST.BY_XM_ENTITY")
+    @LogicExtensionPoint("FindByXmEntity")
+    public Page<Comment> findByXmEntity(Long id, Pageable pageable, String privilegeKey) {
+        return permittedRepository.findByCondition("returnObject.id = :id", of("id", id), pageable, Comment.class, privilegeKey);
+    }
 }
