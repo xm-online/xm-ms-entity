@@ -262,6 +262,7 @@ public class XmEntity implements Serializable, Persistable<Long> {
     }
 
     @Override
+    @JsonIgnore
     public boolean isNew() {
         return id == null;
     }

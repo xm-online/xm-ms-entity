@@ -154,6 +154,9 @@ public class XmEntityServiceImpl implements XmEntityService {
 
         if (oldEntity.isPresent()) {
             preventRenameTenant(xmEntity, oldEntity.get());
+            if (xmEntity.getStateKey() == null) {
+                xmEntity.setStateKey(oldEntity.get().getStateKey());
+            }
         } else if (xmEntity.getCreatedBy() == null) {
             xmEntity.setCreatedBy(authContextHolder.getContext().getUserKey().orElse(null));
         }

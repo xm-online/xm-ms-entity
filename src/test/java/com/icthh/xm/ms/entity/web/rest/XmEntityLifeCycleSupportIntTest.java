@@ -9,6 +9,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -210,6 +211,50 @@ public class XmEntityLifeCycleSupportIntTest {
         changeState(id, "STATE5", updateStateCalled(), updateByEntityCalled(),updateByTargetStateNotCalled(),updateByTransitionNotCalled());
         changeState(id, "STATE6", updateStateCalled(), updateByEntityCalled(),updateByTargetStateNotCalled(),updateByTransitionCalled());
         changeState(id, "STATE7", updateStateCalled(), updateByEntityCalled(),updateByTargetStateCalled(),updateByTransitionCalled());
+    }
+
+    @Test
+    @Transactional
+    public void setCreateEntityWithoutState() throws Exception {
+
+        // Create the XmEntity
+        restXmEntityMockMvc.perform(post("/api/xm-entities")
+            .contentType(TestUtil.APPLICATION_JSON_UTF8)
+            .content(TestUtil.convertObjectToJsonBytes(createEntity("KEY1").stateKey(null))))
+            .andExpect(status().isBadRequest());
+    }
+
+
+    @Test
+    @Transactional
+    public void setUpdateEntityWithoutState() throws Exception {
+
+        MutableLong id = new MutableLong();
+
+        // Create the XmEntity
+        restXmEntityMockMvc.perform(post("/api/xm-entities")
+            .contentType(TestUtil.APPLICATION_JSON_UTF8)
+            .content(TestUtil.convertObjectToJsonBytes(createEntity("KEY1"))))
+            .andDo(r -> {
+                log.info(r.getResponse().getContentAsString());
+                final ObjectNode node = new ObjectMapper().readValue(r.getResponse().getContentAsString(), ObjectNode.class);
+                id.setValue(node.get("id").longValue());
+            })
+            .andExpect(status().isCreated());
+
+        // Create the XmEntity
+        XmEntity entity = createEntity("KEY1");
+        entity.setId(id.toLong());
+        restXmEntityMockMvc.perform(put("/api/xm-entities")
+            .contentType(TestUtil.APPLICATION_JSON_UTF8)
+            .content(TestUtil.convertObjectToJsonBytes(entity.stateKey("STATE2"))))
+            .andExpect(status().isOk());
+
+        restXmEntityMockMvc.perform(put("/api/xm-entities")
+            .contentType(TestUtil.APPLICATION_JSON_UTF8)
+            .content(TestUtil.convertObjectToJsonBytes(entity.stateKey(null))))
+            .andExpect(jsonPath("$.stateKey").value("STATE2"))
+            .andExpect(status().isOk());
     }
 
     private void changeState(MutableLong id, String state, Integer updateState, Integer updateByEntity, Integer updateByTargetState, Integer updateByTransition) throws Exception {
