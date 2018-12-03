@@ -3,6 +3,7 @@ package com.icthh.xm.ms.entity.service;
 import static com.github.fge.jackson.NodeType.OBJECT;
 import static com.github.fge.jackson.NodeType.getNodeType;
 import static java.util.Collections.emptyList;
+import static java.util.Optional.ofNullable;
 import static org.apache.commons.lang.StringUtils.isEmpty;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.springframework.util.CollectionUtils.isEmpty;
@@ -24,10 +25,12 @@ import com.icthh.xm.ms.entity.domain.spec.*;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.util.AntPathMatcher;
 
+import javax.annotation.Nullable;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -459,6 +462,16 @@ public class XmEntitySpecService implements RefreshableConfiguration {
         if (isListeningConfiguration(key)) {
             onRefresh(key, config);
         }
+    }
+
+    @Nullable
+    public String findFirstStateForTypeKey(String typeKey) {
+        return ofNullable(findTypeByKey(typeKey))
+            .map(TypeSpec::getStates)
+            .filter(CollectionUtils::isNotEmpty)
+            .map(it -> it.get(0))
+            .map(StateSpec::getKey)
+            .orElse(null);
     }
 
 }

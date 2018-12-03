@@ -221,7 +221,8 @@ public class XmEntityLifeCycleSupportIntTest {
         restXmEntityMockMvc.perform(post("/api/xm-entities")
             .contentType(TestUtil.APPLICATION_JSON_UTF8)
             .content(TestUtil.convertObjectToJsonBytes(createEntity("KEY1").stateKey(null))))
-            .andExpect(status().isBadRequest());
+            .andExpect(jsonPath("$.stateKey").value("STATE1"))
+            .andExpect(status().isOk());
     }
 
 
