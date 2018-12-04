@@ -222,7 +222,7 @@ public class XmEntityLifeCycleSupportIntTest {
             .contentType(TestUtil.APPLICATION_JSON_UTF8)
             .content(TestUtil.convertObjectToJsonBytes(createEntity("KEY1").stateKey(null))))
             .andExpect(jsonPath("$.stateKey").value("STATE1"))
-            .andExpect(status().isOk());
+            .andExpect(status().isCreated());
     }
 
 
