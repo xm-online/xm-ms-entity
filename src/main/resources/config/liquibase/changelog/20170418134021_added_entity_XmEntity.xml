@@ -53,11 +53,11 @@
                 <constraints nullable="true" />
             </column>
 
-            <column name="description" type="varchar">
+            <column name="description" type="text">
                 <constraints nullable="true" />
             </column>
 
-            <column name="data" type="varchar">
+            <column name="data" type="text">
                 <constraints nullable="true" />
             </column>
 

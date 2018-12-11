@@ -45,7 +45,7 @@
                 <constraints nullable="true" />
             </column>
 
-            <column name="data" type="varchar">
+            <column name="data" type="text">
                 <constraints nullable="true" />
             </column>
 
