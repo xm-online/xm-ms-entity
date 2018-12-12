@@ -6,7 +6,6 @@
                         http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd">
 
     <changeSet id="20170717110001-1" author="amedvedchuk">
-        <dropNotNullConstraint tableName="attachment" columnName="content_url" columnDataType="varchar(255)"/>
         <addNotNullConstraint tableName="attachment" columnName="xm_entity_id" columnDataType="bigint"/>
     </changeSet>
 

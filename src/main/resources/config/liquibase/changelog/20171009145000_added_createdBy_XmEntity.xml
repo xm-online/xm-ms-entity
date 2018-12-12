@@ -5,7 +5,7 @@
 
     <changeSet id="20171009145000" author="agorobey">
         <addColumn tableName="xm_entity">
-            <column name="created_by" type="varchar">
+            <column name="created_by" type="varchar(255)">
                 <constraints nullable="true"/>
             </column>
         </addColumn>

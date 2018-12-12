@@ -7,10 +7,10 @@
         Added the constraints for entity FunctionContext.
     -->
     <changeSet id="20170918112702-2" author="jhipster">
-        
+
         <addForeignKeyConstraint baseColumnNames="xm_entity_id"
                                  baseTableName="function_context"
-                                 constraintName="fk_function_context_xm_entity_id"
+                                 constraintName="fk_fc_xm_entity_id"
                                  referencedColumnNames="id"
                                  referencedTableName="xm_entity"/>
 
