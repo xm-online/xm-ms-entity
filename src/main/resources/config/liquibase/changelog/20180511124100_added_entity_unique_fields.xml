@@ -6,7 +6,7 @@
     xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd
                         http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd">
 
-    <property name="max_length" value="varchar(10485760)" dbms="postgresql"/>
+    <property name="max_length" value="varchar(10485760)" dbms="postgresql, h2"/>
     <property name="max_length" value="varchar(4000)" dbms="oracle"/>
 
     <changeSet id="20180511124100-1" author="ssenko">
