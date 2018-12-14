@@ -21,7 +21,7 @@ import java.util.Objects;
  * A Comment.
  */
 @Entity
-@Table(name = "comment")
+@Table(name = "xm_comment")
 @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
 public class Comment implements Serializable {
 
