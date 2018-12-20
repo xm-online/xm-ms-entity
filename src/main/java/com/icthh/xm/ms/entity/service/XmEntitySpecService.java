@@ -241,7 +241,7 @@ public class XmEntitySpecService implements RefreshableConfiguration {
      * @return entity Attachment if present
      */
     public Optional<AttachmentSpec> findAttachment(String key, String attachmentKey) {
-        return getTypeSpecs().get(key).getAttachments().stream().filter(l -> l.getKey().contains(attachmentKey))
+        return getTypeSpecs().get(key).getAttachments().stream().filter(l -> l.getKey().equals(attachmentKey))
             .findFirst();
     }
 
@@ -253,7 +253,7 @@ public class XmEntitySpecService implements RefreshableConfiguration {
      * @return entity Link if present
      */
     public Optional<LinkSpec> findLink(String key, String linkKey) {
-        return getTypeSpecs().get(key).getLinks().stream().filter(l -> l.getKey().contains(linkKey)).findFirst();
+        return getTypeSpecs().get(key).getLinks().stream().filter(l -> l.getKey().equals(linkKey)).findFirst();
     }
 
     /**
@@ -264,7 +264,7 @@ public class XmEntitySpecService implements RefreshableConfiguration {
      * @return entity Location if present
      */
     public Optional<LocationSpec> findLocation(String key, String locationKey) {
-        return getTypeSpecs().get(key).getLocations().stream().filter(l -> l.getKey().contains(locationKey))
+        return getTypeSpecs().get(key).getLocations().stream().filter(l -> l.getKey().equals(locationKey))
             .findFirst();
     }
 
@@ -276,7 +276,7 @@ public class XmEntitySpecService implements RefreshableConfiguration {
      * @return entity Rating if present
      */
     public Optional<RatingSpec> findRating(String key, String ratingKey) {
-        return getTypeSpecs().get(key).getRatings().stream().filter(l -> l.getKey().contains(ratingKey)).findFirst();
+        return getTypeSpecs().get(key).getRatings().stream().filter(l -> l.getKey().equals(ratingKey)).findFirst();
     }
 
     /**
@@ -287,7 +287,7 @@ public class XmEntitySpecService implements RefreshableConfiguration {
      * @return entity State if present
      */
     public Optional<StateSpec> findState(String key, String stateKey) {
-        return getTypeSpecs().get(key).getStates().stream().filter(s -> s.getKey().contains(stateKey)).findFirst();
+        return getTypeSpecs().get(key).getStates().stream().filter(s -> s.getKey().equals(stateKey)).findFirst();
     }
 
     private <T> Iterable<T> nullSafe(Iterable<T> itr) {
@@ -366,7 +366,7 @@ public class XmEntitySpecService implements RefreshableConfiguration {
      * @return entity Tag if present
      */
     public Optional<TagSpec> findTag(String key, String tagKey) {
-        return getTypeSpecs().get(key).getTags().stream().filter(l -> l.getKey().contains(tagKey)).findFirst();
+        return getTypeSpecs().get(key).getTags().stream().filter(l -> l.getKey().equals(tagKey)).findFirst();
     }
 
     /**
