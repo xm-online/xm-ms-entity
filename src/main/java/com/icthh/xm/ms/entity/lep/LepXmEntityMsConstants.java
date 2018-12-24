@@ -17,6 +17,7 @@ public final class LepXmEntityMsConstants {
     public static final String BINDING_SUB_KEY_SERVICE_LOCATION_SERVICE = "locationService";
     public static final String BINDING_SUB_KEY_SERVICE_TAG_SERVICE = "tagService";
     public static final String BINDING_SUB_KEY_PROFILE_EVENT_PRODUCER_SERVICE = "profileEventProducer";
+    public static final String BINDING_SUB_KEY_SYSTEM_TOPIC_EVENT_PRODUCER_SERVICE = "systemTopicEventProducer";
     public static final String BINDING_SUB_KEY_COMMENT_SERVICE = "commentService";
     public static final String BINDING_SUB_KEY_PERMISSION_SERVICE = "permissionService";
     public static final String BINDING_SUB_KEY_SERVICE_EVENT_SERVICE = "eventService";

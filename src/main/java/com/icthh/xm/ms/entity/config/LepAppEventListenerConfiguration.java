@@ -7,6 +7,7 @@ import com.icthh.xm.ms.entity.lep.TenantLepResource;
 import com.icthh.xm.ms.entity.lep.XmEntityMsLepProcessingApplicationListener;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
 import com.icthh.xm.ms.entity.repository.kafka.ProfileEventProducer;
+import com.icthh.xm.ms.entity.repository.kafka.SystemTopicEventProducer;
 import com.icthh.xm.ms.entity.repository.search.PermittedSearchRepository;
 import com.icthh.xm.ms.entity.service.AttachmentService;
 import com.icthh.xm.ms.entity.service.CalendarService;
@@ -47,6 +48,7 @@ public class LepAppEventListenerConfiguration {
                     LocationService locationService,
                     TagService tagService,
                     ProfileEventProducer profileEventProducer,
+                    SystemTopicEventProducer systemTopicEventProducer,
                     CommonsService commonsService,
                     PermissionCheckService permissionCheckService,
                     TenantLepResource tenantLepResource,
@@ -55,7 +57,7 @@ public class LepAppEventListenerConfiguration {
         return new XmEntityMsLepProcessingApplicationListener(xmEntityService,
                         xmTenantLifecycleService, xmEntityRepository, profileService, linkService,
                         mailService, tenantConfigService, attachmentService, restTemplate,
-                        locationService, tagService, profileEventProducer, commentService, commonsService,
+                        locationService, tagService, profileEventProducer, systemTopicEventProducer, commentService, commonsService,
                         permissionCheckService, eventService, calendarService, tenantLepResource, permittedSearchRepository);
     }
 

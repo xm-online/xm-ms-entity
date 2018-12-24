@@ -22,6 +22,7 @@ import static com.icthh.xm.ms.entity.lep.LepXmEntityMsConstants.BINDING_SUB_KEY_
 import static com.icthh.xm.ms.entity.lep.LepXmEntityMsConstants.BINDING_SUB_KEY_SERVICE_XM_ENTITY;
 import static com.icthh.xm.ms.entity.lep.LepXmEntityMsConstants.BINDING_SUB_KEY_SERVICE_XM_TENANT_LC;
 import static com.icthh.xm.ms.entity.lep.LepXmEntityMsConstants.BINDING_SUB_KEY_TEMPLATE_REST;
+import static com.icthh.xm.ms.entity.lep.LepXmEntityMsConstants.BINDING_SUB_KEY_SYSTEM_TOPIC_EVENT_PRODUCER_SERVICE;
 
 import com.icthh.xm.commons.config.client.service.TenantConfigService;
 import com.icthh.xm.commons.lep.spring.SpringLepProcessingApplicationListener;
@@ -31,6 +32,7 @@ import com.icthh.xm.commons.permission.service.PermissionCheckService;
 import com.icthh.xm.lep.api.ScopedContext;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
 import com.icthh.xm.ms.entity.repository.kafka.ProfileEventProducer;
+import com.icthh.xm.ms.entity.repository.kafka.SystemTopicEventProducer;
 import com.icthh.xm.ms.entity.repository.search.PermittedSearchRepository;
 import com.icthh.xm.ms.entity.service.AttachmentService;
 import com.icthh.xm.ms.entity.service.CalendarService;
@@ -67,6 +69,7 @@ public class XmEntityMsLepProcessingApplicationListener extends SpringLepProcess
     private final LocationService locationService;
     private final TagService tagService;
     private final ProfileEventProducer profileEventProducer;
+    private final SystemTopicEventProducer systemTopicEventProducer;
     private final CommentService commentService;
     private final CommonsService commonsService;
     private final PermissionCheckService permissionCheckService;
@@ -92,6 +95,7 @@ public class XmEntityMsLepProcessingApplicationListener extends SpringLepProcess
         services.put(BINDING_SUB_KEY_SERVICE_CALENDAR_SERVICE, calendarService);
         services.put(BINDING_SUB_KEY_SERVICE_LEP_RESOURCE, tenantLepResource);
         services.put(BINDING_SUB_KEY_PROFILE_EVENT_PRODUCER_SERVICE, profileEventProducer);
+        services.put(BINDING_SUB_KEY_SYSTEM_TOPIC_EVENT_PRODUCER_SERVICE, systemTopicEventProducer);
         services.put(BINDING_SUB_KEY_COMMENT_SERVICE, commentService);
         services.put(BINDING_SUB_KEY_PERMISSION_SERVICE, permissionCheckService);
 
