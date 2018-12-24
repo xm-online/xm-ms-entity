@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component;
 import javax.persistence.CascadeType;
 
 @Slf4j
-@LepService(group = "listener.handler")
+@LepService(group = "listener.entity")
 @Component
 public class XmEntityPersistenceEventHandler {
 
