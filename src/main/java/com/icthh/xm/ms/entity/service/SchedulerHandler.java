@@ -10,7 +10,7 @@ import org.springframework.stereotype.Component;
 public class SchedulerHandler implements SchedulerEventHandler {
 
     @Override
-    public void onEvent(ScheduledEvent scheduledEvent) {
-        log.info("Receive event {}", scheduledEvent);
+    public void onEvent(ScheduledEvent scheduledEvent, String tenant) {
+        log.info("Receive event {} {}", scheduledEvent, tenant);
     }
 }

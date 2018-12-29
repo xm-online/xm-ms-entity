@@ -61,7 +61,7 @@ spring:
                     logs: build/elasticsearch/log
                     data: build/elasticsearch/data
     kafka:
-        bootstrap-servers: localhost:9093
+        bootstrap-servers: localhost:9092
     mail:
         host:
         port:
