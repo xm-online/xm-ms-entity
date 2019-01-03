@@ -285,6 +285,7 @@ dependencies {
     //compile "org.springframework.boot:spring-boot-devtools"
     // XM custom dependencies end
 
+    testCompile "org.springframework.cloud:spring-cloud-stream-test-support"
     testCompile "org.awaitility:awaitility:${awaitility_version}"
     testCompile "info.cukes:cucumber-junit:${cucumber_version}"
     testCompile "info.cukes:cucumber-spring:${cucumber_version}"
