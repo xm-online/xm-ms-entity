@@ -10,10 +10,10 @@ import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
 import com.icthh.xm.ms.entity.repository.search.XmEntitySearchRepository;
 import lombok.AccessLevel;
-import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.elasticsearch.indices.IndexAlreadyExistsException;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -40,7 +40,6 @@ import javax.annotation.Resource;
 import javax.persistence.OneToMany;
 
 @Slf4j
-@RequiredArgsConstructor
 @Service
 public class ElasticsearchIndexService {
 
@@ -58,6 +57,18 @@ public class ElasticsearchIndexService {
     @Resource
     @Lazy
     private ElasticsearchIndexService selfReference;
+
+    public ElasticsearchIndexService(XmEntityRepository xmEntityRepository,
+                                     XmEntitySearchRepository xmEntitySearchRepository,
+                                     ElasticsearchTemplate elasticsearchTemplate,
+                                     TenantContextHolder tenantContextHolder,
+                                     @Qualifier("taskExecutor") Executor executor) {
+        this.xmEntityRepository = xmEntityRepository;
+        this.xmEntitySearchRepository = xmEntitySearchRepository;
+        this.elasticsearchTemplate = elasticsearchTemplate;
+        this.tenantContextHolder = tenantContextHolder;
+        this.executor = executor;
+    }
 
     @Timed
     public void reindexAll() {

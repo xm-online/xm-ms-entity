@@ -29,6 +29,11 @@ spring:
                prefer-ip-address: true
             host: localhost
             port: 8500
+        stream:
+            kafka:
+                binder:
+                    brokers: localhost
+                    defaultBrokerPort: 9092
     datasource:
         type: com.zaxxer.hikari.HikariDataSource
         url: jdbc:h2:mem:entity;DB_CLOSE_DELAY=-1
