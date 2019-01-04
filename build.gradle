@@ -2,7 +2,6 @@ import org.gradle.internal.os.OperatingSystem
 
 buildscript {
     repositories {
-        mavenLocal()
         mavenCentral()
         jcenter()
         maven { url "http://repo.spring.io/plugins-release" }
@@ -172,7 +171,7 @@ configurations {
 }
 
 repositories {
-    // mavenLocal()
+    mavenLocal()
     mavenCentral()
     jcenter()
     maven { url 'http://repo.spring.io/milestone' }
