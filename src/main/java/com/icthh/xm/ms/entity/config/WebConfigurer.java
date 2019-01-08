@@ -3,10 +3,11 @@ package com.icthh.xm.ms.entity.config;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.servlet.InstrumentedFilter;
 import com.codahale.metrics.servlets.MetricsServlet;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.hibernate5.Hibernate5Module;
 import io.github.jhipster.config.JHipsterConstants;
 import io.github.jhipster.config.JHipsterProperties;
 import io.undertow.UndertowOptions;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.embedded.ConfigurableEmbeddedServletContainer;
@@ -32,13 +33,22 @@ import javax.servlet.ServletRegistration;
  * Configuration of web application with Servlet 3.0 APIs.
  */
 @Slf4j
-@RequiredArgsConstructor
 @Configuration
 public class WebConfigurer implements ServletContextInitializer, EmbeddedServletContainerCustomizer {
 
     private final Environment env;
     private final JHipsterProperties jHipsterProperties;
     private MetricRegistry metricRegistry;
+
+    public WebConfigurer(Environment env, JHipsterProperties jHipsterProperties,
+                         ObjectMapper objectMapper, Hibernate5Module hibernate5Module) {
+        this.env = env;
+        this.jHipsterProperties = jHipsterProperties;
+
+        // TODO FIXME temporary fix lazy init exception before spring version update
+        objectMapper.registerModule(hibernate5Module);
+    }
+
 
     @Override
     public void onStartup(ServletContext servletContext) throws ServletException {
