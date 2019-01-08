@@ -142,7 +142,7 @@ xm-config:
     kafka-config-topic: config_topic
 
 application:
-    scheduler-enabled: true
+    scheduler-enabled: false
     tenant-ignored-path-list: /v2/api-docs, /api/profile-info, /swagger-resources/configuration/ui, /management/health
     timelines-enabled: true
     kafka-enabled: true
