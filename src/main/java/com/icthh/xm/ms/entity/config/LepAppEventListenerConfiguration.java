@@ -3,6 +3,7 @@ package com.icthh.xm.ms.entity.config;
 import com.icthh.xm.commons.config.client.service.TenantConfigService;
 import com.icthh.xm.commons.lep.commons.CommonsService;
 import com.icthh.xm.commons.permission.service.PermissionCheckService;
+import com.icthh.xm.ms.entity.config.amazon.AmazonS3Template;
 import com.icthh.xm.ms.entity.lep.TenantLepResource;
 import com.icthh.xm.ms.entity.lep.XmEntityMsLepProcessingApplicationListener;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
@@ -11,6 +12,7 @@ import com.icthh.xm.ms.entity.service.AttachmentService;
 import com.icthh.xm.ms.entity.service.CalendarService;
 import com.icthh.xm.ms.entity.service.CommentService;
 import com.icthh.xm.ms.entity.service.EventService;
+import com.icthh.xm.ms.entity.service.FunctionService;
 import com.icthh.xm.ms.entity.service.LinkService;
 import com.icthh.xm.ms.entity.service.LocationService;
 import com.icthh.xm.ms.entity.service.ProfileService;
@@ -48,13 +50,14 @@ public class LepAppEventListenerConfiguration {
                     ProfileEventProducer profileEventProducer,
                     CommonsService commonsService,
                     PermissionCheckService permissionCheckService,
-                    TenantLepResource tenantLepResource) {
-
+                    TenantLepResource tenantLepResource,
+                    AmazonS3Template amazonS3Template,
+                    FunctionService functionService) {
         return new XmEntityMsLepProcessingApplicationListener(xmEntityService,
                         xmTenantLifecycleService, xmEntityRepository, profileService, linkService,
                         mailService, tenantConfigService, attachmentService, restTemplate,
                         locationService, tagService, profileEventProducer, commentService, commonsService,
-                        permissionCheckService, eventService, calendarService, tenantLepResource);
+                        permissionCheckService, eventService, calendarService, tenantLepResource, amazonS3Template, functionService);
     }
 
 }

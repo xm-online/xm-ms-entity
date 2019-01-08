@@ -70,6 +70,10 @@ public class AmazonS3Template {
         return getAmazonS3Client().getObject(bucket, key);
     }
 
+    public S3Object getWithBucket(String bucket, String key) {
+        return getAmazonS3Client().getObject(bucket, key);
+    }
+
     /**
      * Gets an Amazon S3 client from basic session credentials.
      *

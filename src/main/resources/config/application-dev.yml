@@ -167,11 +167,11 @@ application:
     kafka-enabled: true
     amazon:
         aws:
-            endpoint:
-            template:
-            region:
-            access-key-id:
-            access-key-secret:
+            endpoint: http://rgw.icthh.com:7480
+            template: https://%s-rgw.icthh.com/
+            region: eu-central-1
+            access-key-id: ZEK1Q69ECG1DVCPTD35H
+            access-key-secret: opTZXi4wMXMQFTwfSsBkgw0t2jlvvEqvSN1oOuLN
         s3:
             bucket: xm-avatar
 
