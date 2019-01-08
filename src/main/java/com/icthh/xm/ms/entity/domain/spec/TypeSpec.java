@@ -13,7 +13,7 @@ import java.util.Set;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({"key", "name", "nameValidationPattern", "descriptionPattern", "pluralName", "isApp", "isAbstract",
-    "isAvatarEnabled", "fastSearch", "icon", "dataSpec", "dataForm", "functions", "access", "attachments", "calendars",
+    "isAvatarEnabled", "isKeyRequired", "isNameRequired", "fastSearch", "icon", "dataSpec", "dataForm", "functions", "access", "attachments", "calendars",
     "links", "locations", "ratings", "states", "tags"})
 @Data
 public class TypeSpec {
@@ -34,6 +34,10 @@ public class TypeSpec {
     private Boolean isAbstract;
     @JsonProperty("isAvatarEnabled")
     private Boolean isAvatarEnabled;
+    @JsonProperty("isKeyRequired")
+    private Boolean isKeyRequired = true;
+    @JsonProperty("isNameRequired")
+    private Boolean isNameRequired = true;
     @JsonProperty("fastSearch")
     private List<FastSearchSpec> fastSearch = null;
     @JsonProperty("icon")

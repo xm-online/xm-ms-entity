@@ -276,6 +276,8 @@ dependencies {
     compile "com.icthh.xm.commons:xm-commons-timeline:${xm_commons_version}"
     compile "com.icthh.xm.commons:xm-commons-migration-db:${xm_commons_version}"
     compile "com.icthh.xm.commons:xm-commons-permission:${xm_commons_version}"
+    // TODO make all commons version the same
+    compile "com.icthh.xm.commons:xm-commons-scheduler:1.2.21"
 
     compile "org.freemarker:freemarker:${freemarker_version}"
     compile "org.apache.poi:poi-ooxml:${apache_poi_version}"
@@ -283,6 +285,7 @@ dependencies {
     //compile "org.springframework.boot:spring-boot-devtools"
     // XM custom dependencies end
 
+    testCompile "org.springframework.cloud:spring-cloud-stream-test-support"
     testCompile "org.awaitility:awaitility:${awaitility_version}"
     testCompile "info.cukes:cucumber-junit:${cucumber_version}"
     testCompile "info.cukes:cucumber-spring:${cucumber_version}"
@@ -330,7 +333,7 @@ task cleanResources(type: Delete) {
 }
 
 task wrapper(type: Wrapper) {
-    gradleVersion = '4.0'
+    gradleVersion = '4.9'
 }
 
 task stage(dependsOn: 'bootRepackage') {

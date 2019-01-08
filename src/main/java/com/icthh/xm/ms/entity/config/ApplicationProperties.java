@@ -31,6 +31,7 @@ public class ApplicationProperties {
     private long maxAvatarSize = 1024 * 1024;
     private boolean timelinesEnabled;
     private boolean kafkaEnabled;
+    private boolean schedulerEnabled;
     private List<String> tenantCreateServiceList;
     private Integer tenantClientConnectionTimeout;
     private Integer tenantClientReadTimeout;
@@ -46,6 +47,7 @@ public class ApplicationProperties {
 
     private String specificationWebappName;
     private String webappName;
+    private String dbSchemaSuffix;
 
     @Getter
     @Setter

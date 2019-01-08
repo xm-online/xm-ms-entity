@@ -7,6 +7,7 @@ import static com.icthh.xm.ms.entity.lep.LepXmEntityMsConstants.BINDING_KEY_TEMP
 import static com.icthh.xm.ms.entity.lep.LepXmEntityMsConstants.BINDING_SUB_KEY_COMMENT_SERVICE;
 import static com.icthh.xm.ms.entity.lep.LepXmEntityMsConstants.BINDING_SUB_KEY_PERMISSION_SERVICE;
 import static com.icthh.xm.ms.entity.lep.LepXmEntityMsConstants.BINDING_SUB_KEY_PROFILE_EVENT_PRODUCER_SERVICE;
+import static com.icthh.xm.ms.entity.lep.LepXmEntityMsConstants.BINDING_SUB_KEY_REPOSITORY_SEARCH;
 import static com.icthh.xm.ms.entity.lep.LepXmEntityMsConstants.BINDING_SUB_KEY_REPOSITORY_XM_ENTITY;
 import static com.icthh.xm.ms.entity.lep.LepXmEntityMsConstants.BINDING_SUB_KEY_SERVICE_ATTACHMENT;
 import static com.icthh.xm.ms.entity.lep.LepXmEntityMsConstants.BINDING_SUB_KEY_SERVICE_CALENDAR_SERVICE;
@@ -32,6 +33,7 @@ import com.icthh.xm.lep.api.ScopedContext;
 import com.icthh.xm.ms.entity.config.amazon.AmazonS3Template;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
 import com.icthh.xm.ms.entity.repository.kafka.ProfileEventProducer;
+import com.icthh.xm.ms.entity.repository.search.PermittedSearchRepository;
 import com.icthh.xm.ms.entity.service.AttachmentService;
 import com.icthh.xm.ms.entity.service.CalendarService;
 import com.icthh.xm.ms.entity.service.CommentService;
@@ -74,6 +76,7 @@ public class XmEntityMsLepProcessingApplicationListener extends SpringLepProcess
     private final CalendarService calendarService;
     private final TenantLepResource tenantLepResource;
     private final AmazonS3Template s3Template;
+    private final PermittedSearchRepository permittedSearchRepository;
 
     @Override
     protected void bindExecutionContext(ScopedContext executionContext) {
@@ -102,6 +105,7 @@ public class XmEntityMsLepProcessingApplicationListener extends SpringLepProcess
         // repositories
         Map<String, Object> repositories = new HashMap<>();
         repositories.put(BINDING_SUB_KEY_REPOSITORY_XM_ENTITY, xmEntityRepository);
+        repositories.put(BINDING_SUB_KEY_REPOSITORY_SEARCH, permittedSearchRepository);
 
         executionContext.setValue(BINDING_KEY_REPOSITORIES, repositories);
 

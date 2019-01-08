@@ -154,8 +154,14 @@ public class XmEntityServiceImpl implements XmEntityService {
 
         if (oldEntity.isPresent()) {
             preventRenameTenant(xmEntity, oldEntity.get());
+            if (xmEntity.getStateKey() == null) {
+                xmEntity.setStateKey(oldEntity.get().getStateKey());
+            }
         } else if (xmEntity.getCreatedBy() == null) {
             xmEntity.setCreatedBy(authContextHolder.getContext().getUserKey().orElse(null));
+            if (xmEntity.getStateKey() == null) {
+                xmEntity.setStateKey(xmEntitySpecService.findFirstStateForTypeKey(xmEntity.getTypeKey()));
+            }
         }
 
         // FIXME It is hack to link each tag with entity before persisting. may be there is more elegant solution.

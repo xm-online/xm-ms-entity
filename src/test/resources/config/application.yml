@@ -123,6 +123,7 @@ xm-config:
     enabled: false
 
 application:
+    scheduler-enabled: false
     kafka-enabled: false
     amazon:
         avatar:

@@ -1,6 +1,7 @@
 package com.icthh.xm.ms.entity.config;
 
 import static com.icthh.xm.ms.entity.config.Constants.CHANGE_LOG_PATH;
+import static com.icthh.xm.ms.entity.config.Constants.DB_SCHEMA_CREATION_ENABLED;
 import static org.hibernate.cfg.AvailableSettings.JPA_VALIDATION_FACTORY;
 
 import com.fasterxml.jackson.datatype.hibernate5.Hibernate5Module;
@@ -12,6 +13,8 @@ import com.icthh.xm.ms.entity.util.DatabaseUtil;
 import io.github.jhipster.config.JHipsterConstants;
 import liquibase.integration.spring.MultiTenantSpringLiquibase;
 import liquibase.integration.spring.SpringLiquibase;
+import lombok.RequiredArgsConstructor;
+import org.apache.commons.lang.StringUtils;
 import org.h2.tools.Server;
 import org.hibernate.MultiTenancyStrategy;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
@@ -39,6 +42,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import javax.sql.DataSource;
 
 @Configuration
@@ -46,6 +50,7 @@ import javax.sql.DataSource;
 @EnableJpaAuditing(auditorAwareRef = "springSecurityAuditorAware")
 @EnableTransactionManagement
 @EnableElasticsearchRepositories("com.icthh.xm.ms.entity.repository.search")
+@RequiredArgsConstructor
 public class DatabaseConfiguration {
 
     private final Logger log = LoggerFactory.getLogger(DatabaseConfiguration.class);
@@ -55,12 +60,7 @@ public class DatabaseConfiguration {
     private final Environment env;
     private final JpaProperties jpaProperties;
     private final TenantListRepository tenantListRepository;
-
-    public DatabaseConfiguration(Environment env, JpaProperties jpaProperties, TenantListRepository tenantListRepository) {
-        this.env = env;
-        this.jpaProperties = jpaProperties;
-        this.tenantListRepository = tenantListRepository;
-    }
+    private final ApplicationProperties applicationProperties;
 
     /**
      * Open the TCP port for the H2 database, so it is available remotely.
@@ -114,6 +114,11 @@ public class DatabaseConfiguration {
     }
 
     private void createSchemas(DataSource dataSource) {
+        if (jpaProperties.getProperties().containsKey(DB_SCHEMA_CREATION_ENABLED)
+            && !Boolean.valueOf(jpaProperties.getProperties().get(DB_SCHEMA_CREATION_ENABLED))) {
+            log.info("Schema creation for {} jpa provider is disabled", jpaProperties.getDatabase());
+            return;
+        }
         for (String schema : getSchemas()) {
             try {
                 DatabaseUtil.createSchema(dataSource, schema);
@@ -124,7 +129,14 @@ public class DatabaseConfiguration {
     }
 
     private List<String> getSchemas() {
-        return new ArrayList<>(tenantListRepository.getTenants());
+        String suffix = applicationProperties.getDbSchemaSuffix();
+        List<String> schemas = new ArrayList<>(tenantListRepository.getTenants());
+
+        if (StringUtils.isNotBlank(suffix)) {
+            return schemas.stream().map((schema) -> (schema.concat(suffix)))
+                .collect(Collectors.toList());
+        }
+        return schemas;
     }
 
     @Bean

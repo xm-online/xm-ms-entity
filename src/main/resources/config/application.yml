@@ -142,10 +142,11 @@ xm-config:
     kafka-config-topic: config_topic
 
 application:
+    scheduler-enabled: true
     tenant-ignored-path-list: /v2/api-docs, /api/profile-info, /swagger-resources/configuration/ui, /management/health
     timelines-enabled: true
     kafka-enabled: true
-    tenant-create-service-list: uaa, gate, timeline, entity, dashboard, balance
+    tenant-create-service-list: uaa, gate, timeline, entity, dashboard, balance, scheduler
     tenant-client-connection-timeout: 2000
     tenant-client-read-timeout: 40000
     email-path-pattern: /config/tenants/{tenantName}/entity/emails/{langKey}/{fileName}.ftl
@@ -157,6 +158,7 @@ application:
     specification-templates-path-pattern: /config/tenants/{tenantName}/entity/${application.specification-templates-name}
     kafka-system-topic: system_topic
     kafka-system-queue: system_queue
+    db-schema-suffix:
     retry:
         max-attempts: 3
         delay: 1000 #in milliseconds

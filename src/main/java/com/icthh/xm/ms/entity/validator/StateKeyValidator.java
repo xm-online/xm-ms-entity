@@ -36,6 +36,10 @@ public class StateKeyValidator implements ConstraintValidator<StateKey, XmEntity
             return true;
         }
 
+        if (value.getStateKey() == null) {
+            return true;
+        }
+
         if (isEmpty(typeSpec.getStates()) && value.getStateKey() == null) {
             return true;
         }

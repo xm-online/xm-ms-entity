@@ -13,6 +13,9 @@
     <property name="floatType" value="float4" dbms="postgresql, h2"/>
     <property name="floatType" value="float" dbms="mysql, oracle, mssql"/>
 
+    <property name="textType" value="varchar" dbms="postgresql, h2"/>
+    <property name="textType" value="text" dbms="oracle"/>
+
     <!--
         Added the entity FunctionContext.
     -->
@@ -45,7 +48,7 @@
                 <constraints nullable="true" />
             </column>
 
-            <column name="data" type="varchar">
+            <column name="data" type="${textType}">
                 <constraints nullable="true" />
             </column>
 

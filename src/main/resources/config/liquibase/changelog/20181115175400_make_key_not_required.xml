@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
 <databaseChangeLog
     xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
     xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
@@ -5,8 +6,9 @@
     xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd
                         http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd">
 
-    <changeSet id="20170717110001-1" author="amedvedchuk">
-        <addNotNullConstraint tableName="attachment" columnName="xm_entity_id" columnDataType="bigint"/>
+    <changeSet id="20181115175400" author="ssenko">
+        <dropNotNullConstraint tableName="xm_entity" columnName="jhi_key" columnDataType="varchar(255)"/>
+        <dropNotNullConstraint tableName="xm_entity" columnName="name" columnDataType="varchar(255)"/>
     </changeSet>
 
 </databaseChangeLog>

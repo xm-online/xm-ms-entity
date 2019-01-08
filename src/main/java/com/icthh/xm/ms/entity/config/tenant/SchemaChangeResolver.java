@@ -16,10 +16,11 @@ public class SchemaChangeResolver {
 
     private static final String DEFAULT_COMMAND = "USE %s";
 
-    private static final Map<String, String> DBCOMMANDS = new HashMap<String, String>();
+    private static final Map<String, String> DBCOMMANDS = new HashMap<>();
 
     static {
         DBCOMMANDS.put("POSTGRESQL", "SET search_path TO %s");
+        DBCOMMANDS.put("ORACLE", "ALTER SESSION SET CURRENT_SCHEMA = %s_ENTITY");
         DBCOMMANDS.put("H2", DEFAULT_COMMAND);
     }
 

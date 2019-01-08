@@ -83,7 +83,8 @@ public class PermittedSearchRepository {
             spelToElasticTranslator);
     }
 
-    ElasticsearchTemplate getElasticsearchTemplate() {
+    // do not renamed! called from lep for not simple string query
+    public ElasticsearchTemplate getElasticsearchTemplate() {
         return elasticsearchTemplate;
     }
 }

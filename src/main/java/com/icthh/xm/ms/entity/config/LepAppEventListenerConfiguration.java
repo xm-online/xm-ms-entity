@@ -8,6 +8,7 @@ import com.icthh.xm.ms.entity.lep.TenantLepResource;
 import com.icthh.xm.ms.entity.lep.XmEntityMsLepProcessingApplicationListener;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
 import com.icthh.xm.ms.entity.repository.kafka.ProfileEventProducer;
+import com.icthh.xm.ms.entity.repository.search.PermittedSearchRepository;
 import com.icthh.xm.ms.entity.service.AttachmentService;
 import com.icthh.xm.ms.entity.service.CalendarService;
 import com.icthh.xm.ms.entity.service.CommentService;
@@ -50,12 +51,16 @@ public class LepAppEventListenerConfiguration {
                     CommonsService commonsService,
                     PermissionCheckService permissionCheckService,
                     TenantLepResource tenantLepResource,
-                    AmazonS3Template amazonS3Template) {
+                    AmazonS3Template amazonS3Template,
+                    PermittedSearchRepository permittedSearchRepository) {
+
         return new XmEntityMsLepProcessingApplicationListener(xmEntityService,
                         xmTenantLifecycleService, xmEntityRepository, profileService, linkService,
                         mailService, tenantConfigService, attachmentService, restTemplate,
                         locationService, tagService, profileEventProducer, commentService, commonsService,
-                        permissionCheckService, eventService, calendarService, tenantLepResource, amazonS3Template);
+                        permissionCheckService, eventService, calendarService, tenantLepResource, amazonS3Template,
+                        permittedSearchRepository);
+
     }
 
 }

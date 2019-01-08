@@ -15,6 +15,7 @@ public final class Constants {
     public static final String AUTH_LOGINS_KEY = "logins";
 
     public static final String DDL_CREATE_SCHEMA = "CREATE SCHEMA IF NOT EXISTS %s";
+    public static final String DB_SCHEMA_CREATION_ENABLED = "db.schema.creation.enabled";
     public static final String CHANGE_LOG_PATH = "classpath:config/liquibase/master.xml";
     public static final String TENANT_XM = "XM";
     public static final String HEADER_CONTENT_TRANSFER_ENCODING = "Content-Transfer-Encoding";

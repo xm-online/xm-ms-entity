@@ -297,6 +297,24 @@ public class CommentResourceIntTest {
 
     @Test
     @Transactional
+    @WithMockUser(authorities = "SUPER-ADMIN")
+    public void getCommentsByEntity() throws Exception {
+        // Initialize the database
+        commentRepository.saveAndFlush(comment);
+
+        // Get all the commentList
+        restCommentMockMvc.perform(get("/api/xm-entities/" + comment.getXmEntity().getId() + "/comments?sort=id,desc"))
+            .andExpect(status().isOk())
+            .andDo(print())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+            .andExpect(jsonPath("$.[*].id").value(hasItem(comment.getId().intValue())))
+            .andExpect(jsonPath("$.[*].userKey").value(hasItem(DEFAULT_USER_KEY)))
+            .andExpect(jsonPath("$.[*].message").value(hasItem(DEFAULT_MESSAGE)))
+            .andExpect(jsonPath("$.[*].entryDate").value(hasItem(DEFAULT_ENTRY_DATE.toString())));
+    }
+
+    @Test
+    @Transactional
     public void getComment() throws Exception {
         // Initialize the database
         commentRepository.saveAndFlush(comment);
