@@ -276,6 +276,7 @@ dependencies {
     compile "com.icthh.xm.commons:xm-commons-timeline:${xm_commons_version}"
     compile "com.icthh.xm.commons:xm-commons-migration-db:${xm_commons_version}"
     compile "com.icthh.xm.commons:xm-commons-permission:${xm_commons_version}"
+
     // TODO make all commons version the same
     compile "com.icthh.xm.commons:xm-commons-scheduler:1.2.22"
 
