@@ -12,7 +12,6 @@ import com.icthh.xm.ms.entity.service.AttachmentService;
 import com.icthh.xm.ms.entity.service.CalendarService;
 import com.icthh.xm.ms.entity.service.CommentService;
 import com.icthh.xm.ms.entity.service.EventService;
-import com.icthh.xm.ms.entity.service.FunctionService;
 import com.icthh.xm.ms.entity.service.LinkService;
 import com.icthh.xm.ms.entity.service.LocationService;
 import com.icthh.xm.ms.entity.service.ProfileService;
@@ -51,13 +50,12 @@ public class LepAppEventListenerConfiguration {
                     CommonsService commonsService,
                     PermissionCheckService permissionCheckService,
                     TenantLepResource tenantLepResource,
-                    AmazonS3Template amazonS3Template,
-                    FunctionService functionService) {
+                    AmazonS3Template amazonS3Template) {
         return new XmEntityMsLepProcessingApplicationListener(xmEntityService,
                         xmTenantLifecycleService, xmEntityRepository, profileService, linkService,
                         mailService, tenantConfigService, attachmentService, restTemplate,
                         locationService, tagService, profileEventProducer, commentService, commonsService,
-                        permissionCheckService, eventService, calendarService, tenantLepResource, amazonS3Template, functionService);
+                        permissionCheckService, eventService, calendarService, tenantLepResource, amazonS3Template);
     }
 
 }

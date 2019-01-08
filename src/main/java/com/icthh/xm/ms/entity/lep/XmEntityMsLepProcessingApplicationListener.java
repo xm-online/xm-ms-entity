@@ -22,7 +22,6 @@ import static com.icthh.xm.ms.entity.lep.LepXmEntityMsConstants.BINDING_SUB_KEY_
 import static com.icthh.xm.ms.entity.lep.LepXmEntityMsConstants.BINDING_SUB_KEY_SERVICE_XM_TENANT_LC;
 import static com.icthh.xm.ms.entity.lep.LepXmEntityMsConstants.BINDING_SUB_KEY_TEMPLATE_REST;
 import static com.icthh.xm.ms.entity.lep.LepXmEntityMsConstants.BINDING_SUB_KEY_TEMPLATE_S3;
-import static com.icthh.xm.ms.entity.lep.LepXmEntityMsConstants.BIND_KEY_FUNCTION_SERVICE;
 
 import com.icthh.xm.commons.config.client.service.TenantConfigService;
 import com.icthh.xm.commons.lep.spring.SpringLepProcessingApplicationListener;
@@ -37,7 +36,6 @@ import com.icthh.xm.ms.entity.service.AttachmentService;
 import com.icthh.xm.ms.entity.service.CalendarService;
 import com.icthh.xm.ms.entity.service.CommentService;
 import com.icthh.xm.ms.entity.service.EventService;
-import com.icthh.xm.ms.entity.service.FunctionService;
 import com.icthh.xm.ms.entity.service.LinkService;
 import com.icthh.xm.ms.entity.service.LocationService;
 import com.icthh.xm.ms.entity.service.ProfileService;
@@ -76,7 +74,6 @@ public class XmEntityMsLepProcessingApplicationListener extends SpringLepProcess
     private final CalendarService calendarService;
     private final TenantLepResource tenantLepResource;
     private final AmazonS3Template s3Template;
-    private final FunctionService functionService;
 
     @Override
     protected void bindExecutionContext(ScopedContext executionContext) {
@@ -97,7 +94,6 @@ public class XmEntityMsLepProcessingApplicationListener extends SpringLepProcess
         services.put(BINDING_SUB_KEY_PROFILE_EVENT_PRODUCER_SERVICE, profileEventProducer);
         services.put(BINDING_SUB_KEY_COMMENT_SERVICE, commentService);
         services.put(BINDING_SUB_KEY_PERMISSION_SERVICE, permissionCheckService);
-        services.put(BIND_KEY_FUNCTION_SERVICE, functionService);
 
         executionContext.setValue(BINDING_KEY_COMMONS, new CommonsExecutor(commonsService));
 
