@@ -70,7 +70,7 @@ public class AmazonS3Template {
         return getAmazonS3Client().getObject(bucket, key);
     }
 
-    public S3Object getWithBucket(String bucket, String key) {
+    public S3Object get(String bucket, String key) {
         return getAmazonS3Client().getObject(bucket, key);
     }
 
