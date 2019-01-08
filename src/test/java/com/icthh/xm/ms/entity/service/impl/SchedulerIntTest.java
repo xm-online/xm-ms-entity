@@ -103,7 +103,7 @@ public class SchedulerIntTest {
         Map<String, Object> data =  new HashMap<>();
         data.put("countCallEventHandler", 0);
         scheduledEvent.setData(data);
-        schedulerHandler.onEvent(scheduledEvent, "OTEHR_TENANT_RESINTTEST");
+        schedulerHandler.onEvent(scheduledEvent, "TEST");
 
         assertThat(scheduledEvent.getData().get("countCallEventHandler")).isEqualTo(0);
         assertThat(scheduledEvent.getData().get("scheduledEvent")).isNull();
