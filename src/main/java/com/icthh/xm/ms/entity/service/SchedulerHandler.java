@@ -43,17 +43,11 @@ public class SchedulerHandler implements SchedulerEventHandler {
             threadContext.setValue(THREAD_CONTEXT_KEY_TENANT_CONTEXT, tenantContextHolder.getContext());
             threadContext.setValue(THREAD_CONTEXT_KEY_AUTH_CONTEXT, authContextHolder.getContext());
         });
-
-        String newRid = MdcUtils.getRid()
-            + ":" + StringUtils.defaultIfBlank(login, "")
-            + ":" + StringUtils.defaultIfBlank(tenantKey, "");
-        MdcUtils.putRid(newRid);
     }
 
     private void destroy() {
         lepManager.endThreadContext();
         tenantContextHolder.getPrivilegedContext().destroyCurrentContext();
-        MdcUtils.removeRid();
     }
 
 }
