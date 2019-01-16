@@ -268,6 +268,7 @@ dependencies {
     provided "com.elasticpath.json:json-unmarshaller:1.0.0"
     compile "com.mortennobel:java-image-scaling:0.8.6"
     compile 'org.codehaus.groovy.modules.http-builder:http-builder:0.7.1'
+    compile "com.auth0:java-jwt:${jwt_version}"
 
     compile "com.icthh.xm.commons:xm-commons-ms-web:${xm_commons_version}"
     compile "com.icthh.xm.commons:xm-commons-lep:${xm_commons_version}"
