@@ -116,11 +116,6 @@ public class XmEntitySearchIntTest {
     @Before
     @SneakyThrows
     public void setup() {
-        //initialize index before test - put valid mapping
-        elasticsearchTemplate.deleteIndex(XmEntity.class);
-        elasticsearchTemplate.createIndex(XmEntity.class);
-        elasticsearchTemplate.putMapping(XmEntity.class);
-
         MockitoAnnotations.initMocks(this);
         when(authContextHolder.getContext()).thenReturn(context);
         when(context.getRequiredUserKey()).thenReturn("userKey");
