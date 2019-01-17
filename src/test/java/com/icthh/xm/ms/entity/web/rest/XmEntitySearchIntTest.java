@@ -211,7 +211,7 @@ public class XmEntitySearchIntTest {
     public void testSearchByKeyInElastic() throws Exception {
         XmEntity account = createEntity("ACCOUNT", KEY2, null);
         xmEntityRepository.save(account);
-        assertEquals(xmEntityRepository.findAll().size(), 1);
+        assertEquals(1, xmEntityRepository.findAll().size());
 
         //partial match
         List<XmEntity> partialMatchResult = searchEntityByKey(KEY1);
@@ -220,6 +220,9 @@ public class XmEntitySearchIntTest {
         //full match
         List<XmEntity> fullMatchResult = searchEntityByKey(KEY2);
         assertEquals(1, fullMatchResult.size());
+
+        xmEntityRepository.delete(account.getId());
+        assertEquals(0, xmEntityRepository.findAll().size());
     }
 
     @Test
@@ -228,7 +231,7 @@ public class XmEntitySearchIntTest {
     public void testSearchByStateKeyInElastic() throws Exception {
         XmEntity account = createEntity("ACCOUNT", KEY2, STATE_KEY2);
         xmEntityRepository.save(account);
-        assertEquals(xmEntityRepository.findAll().size(), 1);
+        assertEquals(1, xmEntityRepository.findAll().size());
 
         //partial match
         List<XmEntity> partialMatchResult = searchEntityByStateKey(STATE_KEY1);
@@ -237,6 +240,9 @@ public class XmEntitySearchIntTest {
         //full match
         List<XmEntity> fullMatchResult = searchEntityByStateKey(STATE_KEY2);
         assertEquals(1, fullMatchResult.size());
+
+        xmEntityRepository.delete(account.getId());
+        assertEquals(0, xmEntityRepository.findAll().size());
     }
 
     @SneakyThrows
