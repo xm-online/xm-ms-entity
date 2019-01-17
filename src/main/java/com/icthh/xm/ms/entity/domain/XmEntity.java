@@ -97,6 +97,7 @@ public class XmEntity implements Serializable, Persistable<Long> {
      */
     @ApiModelProperty(value = "Additional lateral identification for this entity could be defined by template Example: PO-1 for Product Offering, e-Mail or MSISDN for account, external Id for Order etc). Key is not full unique entity identification. Few entities could have one key, but only one entity could be addressable at one time, as other should be ended by endDate property.", required = true)
     @Column(name = "jhi_key", nullable = false)
+    @Field(index = FieldIndex.not_analyzed, type = FieldType.String)
     private String key;
 
     /**
@@ -120,6 +121,7 @@ public class XmEntity implements Serializable, Persistable<Long> {
      */
     @ApiModelProperty(value = "Key reference to the configured Entity State. Entity State matrix related to the pair of Entity Type. Convention is same as for type (ACTIVE, ORDERED, PRODUCTION, CANCELED, CANCELED.MANUAL etc).")
     @Column(name = "state_key")
+    @Field(index = FieldIndex.not_analyzed, type = FieldType.String)
     private String stateKey;
 
     /**
