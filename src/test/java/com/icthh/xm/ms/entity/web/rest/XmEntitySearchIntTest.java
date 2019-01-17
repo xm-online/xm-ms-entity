@@ -209,9 +209,11 @@ public class XmEntitySearchIntTest {
     @SneakyThrows
     @WithMockUser(authorities = "SUPER-ADMIN")
     public void testSearchByKeyInElastic() throws Exception {
+        int databaseSizeBeforeCreate = xmEntityRepository.findAll().size();
+
         XmEntity account = createEntity("ACCOUNT", KEY2, null);
         xmEntityRepository.save(account);
-        assertEquals(1, xmEntityRepository.findAll().size());
+        assertEquals(databaseSizeBeforeCreate + 1, xmEntityRepository.findAll().size());
 
         //partial match
         List<XmEntity> partialMatchResult = searchEntityByKey(KEY1);
@@ -222,16 +224,18 @@ public class XmEntitySearchIntTest {
         assertEquals(1, fullMatchResult.size());
 
         xmEntityRepository.delete(account.getId());
-        assertEquals(0, xmEntityRepository.findAll().size());
+        assertEquals(databaseSizeBeforeCreate, xmEntityRepository.findAll().size());
     }
 
     @Test
     @SneakyThrows
     @WithMockUser(authorities = "SUPER-ADMIN")
     public void testSearchByStateKeyInElastic() throws Exception {
+        int databaseSizeBeforeCreate = xmEntityRepository.findAll().size();
+
         XmEntity account = createEntity("ACCOUNT", KEY2, STATE_KEY2);
         xmEntityRepository.save(account);
-        assertEquals(1, xmEntityRepository.findAll().size());
+        assertEquals(databaseSizeBeforeCreate + 1, xmEntityRepository.findAll().size());
 
         //partial match
         List<XmEntity> partialMatchResult = searchEntityByStateKey(STATE_KEY1);
@@ -242,7 +246,7 @@ public class XmEntitySearchIntTest {
         assertEquals(1, fullMatchResult.size());
 
         xmEntityRepository.delete(account.getId());
-        assertEquals(0, xmEntityRepository.findAll().size());
+        assertEquals(databaseSizeBeforeCreate, xmEntityRepository.findAll().size());
     }
 
     @SneakyThrows
