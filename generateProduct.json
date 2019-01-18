@@ -1,0 +1,94 @@
+{
+    "took": 13,
+    "timed_out": false,
+    "_shards": {
+        "total": 5,
+        "successful": 5,
+        "failed": 0
+    },
+    "hits": {
+        "total": 1,
+        "max_score": 1,
+        "hits": [
+            {
+                "_index": "compass_xmentity",
+                "_type": "xmentity",
+                "_id": "3001",
+                "_score": 1,
+                "_source": {
+                    "id": 3001,
+                    "key": "29290151827",
+                    "typeKey": "RESOURCE.PRODUCT",
+                    "name": "TBD",
+                    "startDate": "2019-01-18T09:55:00.320Z",
+                    "updateDate": "2019-01-18T09:55:00.320Z",
+                    "data": {
+                        "line": "SCN",
+                        "model": "TBD",
+                        "serialNumber": "29290151827",
+                        "componentIds": [
+                            "TBD"
+                        ]
+                    },
+                    "version": 0,
+                    "targets": [
+                        {
+                            "id": 3051,
+                            "typeKey": "OWNER",
+                            "startDate": "2019-01-18T09:55:00.361Z",
+                            "target": {
+                                "id": 960,
+                                "key": "test123456",
+                                "typeKey": "CUSTOMER-ACCOUNT",
+                                "stateKey": "ACTIVE",
+                                "name": "test123456",
+                                "startDate": "2019-01-09T10:31:58.412Z",
+                                "updateDate": "2019-01-09T10:32:06.037Z",
+                                "description": "",
+                                "data": {
+                                    "customerAccountName": "test123456",
+                                    "companyName": "test123456",
+                                    "currencyList": [
+                                        "AED",
+                                        "AFN"
+                                    ],
+                                    "salesChannel": [
+                                        "Transport"
+                                    ],
+                                    "adminKey": "f064139c-bccb-402a-bd93-bd9d8309bdfb",
+                                    "parentCurrencyList": [
+                                        "AED",
+                                        "AFN"
+                                    ],
+                                    "customerType": "Distributor",
+                                    "tier": 1,
+                                    "parentCustomerType": "Distributor",
+                                    "isMaster": true,
+                                    "parentProductList": [
+                                        "BNR"
+                                    ],
+                                    "sapCustomerId": "test123456",
+                                    "tierPath": "",
+                                    "representative": {
+                                        "email": "hete2@mailapps.online",
+                                        "firstName": "Test",
+                                        "lastName": "Test",
+                                        "phone": "380639325732",
+                                        "address": "hete@mailapps.online",
+                                        "autologout": false
+                                    },
+                                    "productList": [
+                                        "BNR"
+                                    ]
+                                },
+                                "removed": false,
+                                "createdBy": "compass"
+                            },
+                            "source": 3001
+                        }
+                    ]
+                }
+            }
+        ]
+    }
+}
