@@ -37,6 +37,7 @@ public class ApplicationProperties {
     private Integer tenantClientReadTimeout;
     private String kafkaSystemTopic;
     private String kafkaSystemQueue;
+    private Integer kafkaMetadataMaxAge;
     private String emailPathPattern;
 
     private String specificationPathPattern;

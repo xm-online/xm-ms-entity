@@ -58,6 +58,7 @@ public class ApplicationStartup implements ApplicationListener<ApplicationReadyE
         if (name.equals(applicationProperties.getKafkaSystemTopic())) {
             props.put(ConsumerConfig.GROUP_ID_CONFIG, UUID.randomUUID().toString());
         }
+        props.put(ConsumerConfig.METADATA_MAX_AGE_CONFIG, applicationProperties.getKafkaMetadataMaxAge());
         ConsumerFactory<String, String> factory = new DefaultKafkaConsumerFactory<>(props);
 
         ConcurrentMessageListenerContainer<String, String> container =
