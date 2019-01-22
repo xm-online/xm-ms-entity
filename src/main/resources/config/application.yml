@@ -34,6 +34,10 @@ spring:
     application:
         name: entity
     cloud:
+        inetutils:
+            preferredNetworks:
+                - 192.168.
+                - 10.
         consul:
             discovery:
                 healthCheckPath: /management/health
