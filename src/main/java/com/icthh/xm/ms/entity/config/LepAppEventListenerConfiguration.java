@@ -23,6 +23,7 @@ import com.icthh.xm.ms.entity.service.mail.MailService;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
 import org.springframework.web.client.RestTemplate;
 
 /**
@@ -52,6 +53,7 @@ public class LepAppEventListenerConfiguration {
                     PermissionCheckService permissionCheckService,
                     TenantLepResource tenantLepResource,
                     AmazonS3Template amazonS3Template,
+                    ElasticsearchTemplate elasticsearchTemplate,
                     PermittedSearchRepository permittedSearchRepository) {
 
         return new XmEntityMsLepProcessingApplicationListener(xmEntityService,
@@ -59,7 +61,7 @@ public class LepAppEventListenerConfiguration {
                         mailService, tenantConfigService, attachmentService, restTemplate,
                         locationService, tagService, profileEventProducer, commentService, commonsService,
                         permissionCheckService, eventService, calendarService, tenantLepResource, amazonS3Template,
-                        permittedSearchRepository);
+                        elasticsearchTemplate, permittedSearchRepository);
 
     }
 
