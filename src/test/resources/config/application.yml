@@ -3,8 +3,8 @@
 #
 # This configuration is used for unit/integration tests.
 #
-# More information on profiles: https://jhipster.github.io/profiles/
-# More information on configuration properties: https://jhipster.github.io/common-application-properties/
+# More information on profiles: https://www.jhipster.tech/profiles/
+# More information on configuration properties: https://www.jhipster.tech/common-application-properties/
 # ===================================================================
 
 # ===================================================================
@@ -23,7 +23,7 @@ spring:
         type: none
     datasource:
         type: com.zaxxer.hikari.HikariDataSource
-        url: jdbc:h2:mem:entity;DB_CLOSE_DELAY=-1;LOCK_TIMEOUT=20000
+        url: jdbc:h2:mem:entity;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;LOCK_TIMEOUT=20000
         name:
         username:
         password:
@@ -45,15 +45,10 @@ spring:
             hibernate.hbm2ddl.auto: validate
     data:
         elasticsearch:
-            cluster-name:
-            cluster-nodes:
             properties:
                 path:
-                    logs: build/elasticsearch/log
+                    home: build/elasticsearch
                     data: build/elasticsearch/data
-                cluster.routing.allocation.disk.threshold_enabled: false
-                cluster.routing.allocation.disk.watermark.low: 500mb
-                cluster.routing.allocation.disk.watermark.high: 600mb
     mail:
         host: localhost
     messages:
@@ -63,13 +58,8 @@ spring:
             enabled: false
     thymeleaf:
         mode: XHTML
-
-liquibase:
-    contexts: test
-
-security:
-    basic:
-        enabled: false
+    liquibase:
+        contexts: test
 
 server:
     port: 10344
@@ -78,7 +68,7 @@ server:
 # ===================================================================
 # JHipster specific properties
 #
-# Full reference is available at: https://jhipster.github.io/common-application-properties/
+# Full reference is available at: https://www.jhipster.tech/common-application-properties/
 # ===================================================================
 
 jhipster:
@@ -96,7 +86,8 @@ jhipster:
     security:
         authentication:
             jwt:
-                secret: b5838c74b2228da2189310693b41bac7c3162d51
+                # This token must be encoded using Base64 (you can type `echo 'secret-key'|base64` on your command line)
+                base64-secret: b5838c74b2228da2189310693b41bac7c3162d51
                 # Token is valid 24 hours
                 token-validity-in-seconds: 86400
         client-authorization:
@@ -116,7 +107,7 @@ jhipster:
 # to have type-safe configuration, like in the JHipsterProperties above
 #
 # More documentation is available at:
-# https://jhipster.github.io/common-application-properties/
+# https://www.jhipster.tech/common-application-properties/
 # ===================================================================
 
 xm-config:

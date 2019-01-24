@@ -1,11 +1,10 @@
 package com.icthh.xm.ms.entity.repository;
 
-import com.icthh.xm.commons.permission.access.repository.ResourceRepository;
+// TODO: 14-Jan-19 Use commons ResourceRepository after fix
+//import com.icthh.xm.commons.permission.access.repository.ResourceRepository;
 import com.icthh.xm.ms.entity.domain.Comment;
-import org.springframework.data.repository.query.Param;
+import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
-
-import org.springframework.data.jpa.repository.*;
 
 
 /**
@@ -16,5 +15,5 @@ import org.springframework.data.jpa.repository.*;
 public interface CommentRepository extends JpaRepository<Comment,Long>, ResourceRepository {
 
     @Override
-    Comment findById(Object id);
+    Comment findResourceById(Object id);
 }

@@ -339,7 +339,8 @@ public class VoteResourceIntTest {
         int databaseSizeBeforeUpdate = voteRepository.findAll().size();
 
         // Update the vote
-        Vote updatedVote = voteRepository.findOne(vote.getId());
+        Vote updatedVote = voteRepository.findById(vote.getId())
+            .orElseThrow(NullPointerException::new);
         updatedVote
             .userKey(UPDATED_USER_KEY)
             .value(UPDATED_VALUE)

@@ -1,13 +1,15 @@
 package com.icthh.xm.ms.entity.service;
 
 import com.icthh.xm.commons.logging.LoggingAspectConfig;
-import com.icthh.xm.commons.permission.access.repository.ResourceRepository;
+// TODO: 14-Jan-19 Use commons ResourceRepository after fix
+//import com.icthh.xm.commons.permission.access.repository.ResourceRepository;
 import com.icthh.xm.ms.entity.domain.Link;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.domain.ext.IdOrKey;
 import com.icthh.xm.ms.entity.domain.template.TemplateParamsHolder;
 import com.icthh.xm.ms.entity.projection.XmEntityIdKeyTypeKey;
 import com.icthh.xm.ms.entity.projection.XmEntityStateProjection;
+import com.icthh.xm.ms.entity.repository.ResourceRepository;
 import com.icthh.xm.ms.entity.service.dto.LinkSourceDto;
 import org.apache.commons.lang3.NotImplementedException;
 import org.springframework.core.io.Resource;
@@ -104,7 +106,7 @@ public interface XmEntityService extends ResourceRepository {
     boolean existsByTypeKeyIgnoreCase(String typeKey, String name);
 
     @Override
-    Object findById(Object id);
+    Object findResourceById(Object id);
 
     byte[] exportEntities(String fileFormat, String typeKey);
 }

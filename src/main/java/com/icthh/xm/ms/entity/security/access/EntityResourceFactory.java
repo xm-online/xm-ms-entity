@@ -1,7 +1,8 @@
 package com.icthh.xm.ms.entity.security.access;
 
 import com.icthh.xm.commons.permission.access.ResourceFactory;
-import com.icthh.xm.commons.permission.access.repository.ResourceRepository;
+// TODO: 14-Jan-19 Use commons ResourceRepository after fix
+//import com.icthh.xm.commons.permission.access.repository.ResourceRepository;
 import com.icthh.xm.ms.entity.repository.AttachmentRepository;
 import com.icthh.xm.ms.entity.repository.CalendarRepository;
 import com.icthh.xm.ms.entity.repository.CommentRepository;
@@ -10,15 +11,15 @@ import com.icthh.xm.ms.entity.repository.EventRepository;
 import com.icthh.xm.ms.entity.repository.LinkRepository;
 import com.icthh.xm.ms.entity.repository.LocationRepository;
 import com.icthh.xm.ms.entity.repository.RatingRepository;
+import com.icthh.xm.ms.entity.repository.ResourceRepository;
 import com.icthh.xm.ms.entity.repository.TagRepository;
 import com.icthh.xm.ms.entity.repository.VoteRepository;
 import com.icthh.xm.ms.entity.service.XmEntityService;
-import org.springframework.context.annotation.Lazy;
-import org.springframework.stereotype.Component;
-
 import java.util.HashMap;
 import java.util.Map;
 import javax.annotation.PostConstruct;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.stereotype.Component;
 
 @Component
 public class EntityResourceFactory implements ResourceFactory {
@@ -76,7 +77,7 @@ public class EntityResourceFactory implements ResourceFactory {
         Object result = null;
         ResourceRepository resourceRepository = repositories.get(objectType);
         if (resourceRepository != null) {
-            result = resourceRepository.findById(resourceId);
+            result = resourceRepository.findResourceById(resourceId);
         }
         return result;
     }

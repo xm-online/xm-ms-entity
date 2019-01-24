@@ -1,4 +1,4 @@
-package com.icthh.xm.ms.entity.config;
+package com.icthh.xm.ms.entity.config.elasticsearch;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.DeserializationFeature;

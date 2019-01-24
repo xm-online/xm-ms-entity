@@ -49,7 +49,7 @@ public class XmEntityPermittedSearchRepository extends PermittedSearchRepository
         val typeKeyQuery = boolQuery()
             .should(matchQuery(TYPE_KEY, typeKey))
             .should(prefixQuery(TYPE_KEY, prefix))
-            .minimumNumberShouldMatch(1);
+            .minimumShouldMatch(1);
 
         val esQuery = isEmpty(permittedQuery)
             ? boolQuery().must(typeKeyQuery)

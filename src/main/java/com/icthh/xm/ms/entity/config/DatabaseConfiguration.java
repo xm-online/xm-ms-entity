@@ -8,6 +8,7 @@ import com.fasterxml.jackson.datatype.hibernate5.Hibernate5Module;
 import com.icthh.xm.commons.config.client.repository.TenantListRepository;
 import com.icthh.xm.commons.migration.db.XmMultiTenantSpringLiquibase;
 import com.icthh.xm.commons.migration.db.XmSpringLiquibase;
+import com.icthh.xm.ms.entity.config.elasticsearch.CustomElasticsearchRepositoryFactoryBean;
 import com.icthh.xm.ms.entity.repository.entitygraph.EntityGraphRepositoryImpl;
 import com.icthh.xm.ms.entity.util.DatabaseUtil;
 import io.github.jhipster.config.JHipsterConstants;
@@ -22,6 +23,7 @@ import org.hibernate.engine.jdbc.connections.spi.MultiTenantConnectionProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.liquibase.LiquibaseProperties;
+import org.springframework.boot.autoconfigure.orm.jpa.HibernateSettings;
 import org.springframework.boot.autoconfigure.orm.jpa.JpaProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -49,7 +51,8 @@ import javax.sql.DataSource;
 @EnableJpaRepositories(value = "com.icthh.xm.ms.entity.repository", repositoryBaseClass = EntityGraphRepositoryImpl.class)
 @EnableJpaAuditing(auditorAwareRef = "springSecurityAuditorAware")
 @EnableTransactionManagement
-@EnableElasticsearchRepositories("com.icthh.xm.ms.entity.repository.search")
+@EnableElasticsearchRepositories(value = "com.icthh.xm.ms.entity.repository.search",
+    repositoryFactoryBeanClass = CustomElasticsearchRepositoryFactoryBean.class)
 @RequiredArgsConstructor
 public class DatabaseConfiguration {
 
@@ -155,7 +158,7 @@ public class DatabaseConfiguration {
                                                                        CurrentTenantIdentifierResolver currentTenantIdentifierResolverImpl,
                                                                        LocalValidatorFactoryBean localValidatorFactoryBean) {
         Map<String, Object> properties = new HashMap<>();
-        properties.putAll(jpaProperties.getHibernateProperties(dataSource));
+        properties.putAll(jpaProperties.getHibernateProperties(new HibernateSettings()));
         properties.put(org.hibernate.cfg.Environment.MULTI_TENANT, MultiTenancyStrategy.SCHEMA);
         properties
             .put(org.hibernate.cfg.Environment.MULTI_TENANT_CONNECTION_PROVIDER, multiTenantConnectionProviderImpl);

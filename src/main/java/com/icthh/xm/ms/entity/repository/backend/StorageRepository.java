@@ -9,7 +9,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FilenameUtils;
-import org.apache.commons.io.IOUtils;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpEntity;
 import org.springframework.stereotype.Component;
@@ -45,7 +44,13 @@ public class StorageRepository {
             }
             String filename = UUID.randomUUID().toString() + "." + FilenameUtils.getExtension(name);
             amazonS3Template.save(filename, stream);
-            IOUtils.closeQuietly(stream);
+
+            try {
+                if (stream != null) {
+                    stream.close();
+                }
+            } catch (IOException ignore) {
+            }
 
             String prefix = String.format(applicationProperties.getAmazon().getAws().getTemplate(),
                 applicationProperties.getAmazon().getS3().getBucket());

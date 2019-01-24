@@ -3,15 +3,18 @@ package com.icthh.xm.ms.entity.domain.spec;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import java.util.Map;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-
-import java.util.Map;
+import lombok.NoArgsConstructor;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({ "stateKey", "name", "inputSpec", "inputForm", "actionName", "showResponse" })
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class NextSpec {
 
     @JsonProperty("stateKey")

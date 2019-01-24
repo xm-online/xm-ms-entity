@@ -1,5 +1,7 @@
 package com.icthh.xm.ms.entity.config;
 
+import static org.mockito.Mockito.mock;
+
 import org.springframework.cloud.client.loadbalancer.RestTemplateCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -18,18 +20,18 @@ public class SecurityBeanOverrideConfiguration {
     @Bean
     @Primary
     public TokenStore tokenStore() {
-        return null;
+        return mock(TokenStore.class);
     }
 
     @Bean
     @Primary
     public JwtAccessTokenConverter jwtAccessTokenConverter() {
-        return null;
+        return mock(JwtAccessTokenConverter.class);
     }
 
     @Bean
     @Primary
     public RestTemplate loadBalancedRestTemplate(RestTemplateCustomizer customizer) {
-        return null;
+        return mock(RestTemplate.class);
     }
 }

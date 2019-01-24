@@ -18,6 +18,7 @@ import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
 import com.icthh.xm.ms.entity.EntityApp;
 import com.icthh.xm.ms.entity.config.SecurityBeanOverrideConfiguration;
+import com.icthh.xm.ms.entity.config.elasticsearch.EmbeddedElasticsearchConfig;
 import com.icthh.xm.ms.entity.config.tenant.WebappTenantOverrideConfiguration;
 import com.icthh.xm.ms.entity.domain.Rating;
 import com.icthh.xm.ms.entity.domain.XmEntity;
@@ -58,7 +59,12 @@ import javax.persistence.EntityManager;
  */
 @RunWith(SpringRunner.class)
 @WithMockUser(authorities = {"SUPER-ADMIN"})
-@SpringBootTest(classes = {EntityApp.class, SecurityBeanOverrideConfiguration.class, WebappTenantOverrideConfiguration.class})
+@SpringBootTest(classes = {
+    EntityApp.class,
+    SecurityBeanOverrideConfiguration.class,
+    WebappTenantOverrideConfiguration.class,
+    EmbeddedElasticsearchConfig.class
+})
 public class RatingResourceIntTest {
 
     private static final String DEFAULT_TYPE_KEY = "AAAAAAAAAA";
@@ -321,7 +327,8 @@ public class RatingResourceIntTest {
         int databaseSizeBeforeUpdate = ratingRepository.findAll().size();
 
         // Update the rating
-        Rating updatedRating = ratingRepository.findOne(rating.getId());
+        Rating updatedRating = ratingRepository.findById(rating.getId())
+            .orElseThrow(NullPointerException::new);
         updatedRating
             .typeKey(UPDATED_TYPE_KEY)
             .value(UPDATED_VALUE)

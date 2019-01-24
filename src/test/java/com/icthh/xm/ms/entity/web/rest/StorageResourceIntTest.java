@@ -1,9 +1,10 @@
 package com.icthh.xm.ms.entity.web.rest;
 
-import static org.mockito.Matchers.eq;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.fileUpload;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.icthh.xm.commons.i18n.error.web.ExceptionTranslator;
@@ -86,7 +87,7 @@ public class StorageResourceIntTest {
     public void storeObjectSuccess() throws Exception {
         MockMultipartFile file =
             new MockMultipartFile("file", "test.txt", "text/plain", "TE".getBytes());
-        restStorageMockMvc.perform(fileUpload("/api/storage/objects")
+        restStorageMockMvc.perform(multipart("/api/storage/objects")
             .file(file))
             .andDo(result -> System.out.println(result.getResponse().getContentAsString()))
             .andExpect(status().isOk());
@@ -98,7 +99,7 @@ public class StorageResourceIntTest {
     public void storeImageSuccess() throws Exception {
         MockMultipartFile file =
             new MockMultipartFile("file", "test.txt", "image/plain", "TE".getBytes());
-        restStorageMockMvc.perform(fileUpload("/api/storage/objects?size=100")
+        restStorageMockMvc.perform(multipart("/api/storage/objects?size=100")
             .file(file))
             .andDo(result -> System.out.println(result.getResponse().getContentAsString()))
             .andExpect(status().isOk());
@@ -110,7 +111,7 @@ public class StorageResourceIntTest {
     public void storeObjectFileTooBig() throws Exception {
         MockMultipartFile file =
             new MockMultipartFile("file", "test.txt", "text/plain", "TEST".getBytes());
-        restStorageMockMvc.perform(fileUpload("/api/storage/objects")
+        restStorageMockMvc.perform(multipart("/api/storage/objects")
             .file(file))
             .andDo(result -> System.out.println(result.getResponse().getContentAsString()))
             .andExpect(status().isBadRequest());

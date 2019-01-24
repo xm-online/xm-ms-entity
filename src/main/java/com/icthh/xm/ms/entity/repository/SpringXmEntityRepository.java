@@ -52,7 +52,7 @@ public interface SpringXmEntityRepository extends JpaRepository<XmEntity, Long>,
 
     @Lock(LockModeType.WRITE)
     @Override
-    <S extends XmEntity> List<S> save(Iterable<S> entities);
+    <S extends XmEntity> List<S> saveAll(Iterable<S> entities);
 
     @Lock(LockModeType.WRITE)
     @Override

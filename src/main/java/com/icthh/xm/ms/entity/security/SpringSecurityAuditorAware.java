@@ -2,6 +2,8 @@ package com.icthh.xm.ms.entity.security;
 
 import com.icthh.xm.ms.entity.config.Constants;
 
+import java.util.Optional;
+
 import org.springframework.data.domain.AuditorAware;
 import org.springframework.stereotype.Component;
 
@@ -12,8 +14,7 @@ import org.springframework.stereotype.Component;
 public class SpringSecurityAuditorAware implements AuditorAware<String> {
 
     @Override
-    public String getCurrentAuditor() {
-        String userName = SecurityUtils.getCurrentUserLogin();
-        return userName != null ? userName : Constants.SYSTEM_ACCOUNT;
+    public Optional<String> getCurrentAuditor() {
+        return Optional.of(SecurityUtils.getCurrentUserLogin().orElse(Constants.SYSTEM_ACCOUNT));
     }
 }

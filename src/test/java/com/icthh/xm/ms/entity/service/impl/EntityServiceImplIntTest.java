@@ -24,6 +24,7 @@ import com.icthh.xm.ms.entity.EntityApp;
 import com.icthh.xm.ms.entity.config.ApplicationProperties;
 import com.icthh.xm.ms.entity.config.LepConfiguration;
 import com.icthh.xm.ms.entity.config.SecurityBeanOverrideConfiguration;
+import com.icthh.xm.ms.entity.config.elasticsearch.EmbeddedElasticsearchConfig;
 import com.icthh.xm.ms.entity.config.tenant.WebappTenantOverrideConfiguration;
 import com.icthh.xm.ms.entity.domain.*;
 import com.icthh.xm.ms.entity.domain.ext.IdOrKey;
@@ -48,6 +49,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.io.Resource;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
 import org.springframework.http.HttpEntity;
 import org.springframework.mock.web.MockMultipartFile;
@@ -70,7 +72,8 @@ import java.util.List;
     EntityApp.class,
     SecurityBeanOverrideConfiguration.class,
     WebappTenantOverrideConfiguration.class,
-    LepConfiguration.class
+    LepConfiguration.class,
+    EmbeddedElasticsearchConfig.class
 })
 public class EntityServiceImplIntTest {
 
@@ -361,9 +364,10 @@ public class EntityServiceImplIntTest {
     @Transactional
     @WithMockUser(authorities = "SUPER-ADMIN")
     public void searchByQuery() {
-        XmEntity given = createEntity(101l, "ACCOUNT.USER");
+        XmEntity given = createEntity(101L, "ACCOUNT.USER");
         xmEntitySearchRepository.save(given);
-        Page<XmEntity> result = xmEntityService.search("typeKey:ACCOUNT.USER AND id:101", null, null);
+        xmEntitySearchRepository.refresh();
+        Page<XmEntity> result = xmEntityService.search("typeKey:ACCOUNT.USER AND id:101", Pageable.unpaged(), null);
         assertThat(result.getContent().size()).isEqualTo(1);
         assertThat(result.getContent().get(0)).isEqualTo(given);
     }
@@ -372,12 +376,13 @@ public class EntityServiceImplIntTest {
     @Transactional
     @WithMockUser(authorities = "SUPER-ADMIN")
     public void searchByTemplate() {
-        XmEntity given = createEntity(102l, "ACCOUNT.USER");
+        XmEntity given = createEntity(102L, "ACCOUNT.USER");
         xmEntitySearchRepository.save(given);
+        xmEntitySearchRepository.refresh();
         TemplateParamsHolder templateParamsHolder = new TemplateParamsHolder();
         templateParamsHolder.getTemplateParams().put("typeKey", "ACCOUNT.USER");
         templateParamsHolder.getTemplateParams().put("id", "102");
-        Page<XmEntity> result = xmEntityService.search("BY_TYPEKEY_AND_ID", templateParamsHolder, null, null);
+        Page<XmEntity> result = xmEntityService.search("BY_TYPEKEY_AND_ID", templateParamsHolder, Pageable.unpaged(), null);
         assertThat(result.getContent().size()).isEqualTo(1);
         assertThat(result.getContent().get(0)).isEqualTo(given);
     }
@@ -386,9 +391,10 @@ public class EntityServiceImplIntTest {
     @Transactional
     @WithMockUser(authorities = "SUPER-ADMIN")
     public void searchByQueryAndTypeKey() {
-        XmEntity given = createEntity(103l, "ACCOUNT.USER");
+        XmEntity given = createEntity(103L, "ACCOUNT.USER");
         xmEntitySearchRepository.save(given);
-        Page<XmEntity> result = xmEntityService.searchByQueryAndTypeKey("103", "ACCOUNT", null, null);
+        xmEntitySearchRepository.refresh();
+        Page<XmEntity> result = xmEntityService.searchByQueryAndTypeKey("103", "ACCOUNT", Pageable.unpaged(), null);
         assertThat(result.getContent().size()).isEqualTo(1);
         assertThat(result.getContent().get(0)).isEqualTo(given);
     }
@@ -397,11 +403,12 @@ public class EntityServiceImplIntTest {
     @Transactional
     @WithMockUser(authorities = "SUPER-ADMIN")
     public void searchByTemplateAndTypeKey() {
-        XmEntity given = createEntity(103l, "ACCOUNT.USER");
+        XmEntity given = createEntity(103L, "ACCOUNT.USER");
         xmEntitySearchRepository.save(given);
+        xmEntitySearchRepository.refresh();
         TemplateParamsHolder templateParamsHolder = new TemplateParamsHolder();
         templateParamsHolder.getTemplateParams().put("typeKey", "ACCOUNT.USER");
-        Page<XmEntity> result = xmEntityService.searchByQueryAndTypeKey("BY_TYPEKEY", templateParamsHolder, "ACCOUNT", null, null);
+        Page<XmEntity> result = xmEntityService.searchByQueryAndTypeKey("BY_TYPEKEY", templateParamsHolder, "ACCOUNT", Pageable.unpaged(), null);
         assertThat(result.getContent().size()).isEqualTo(1);
         assertThat(result.getContent().get(0)).isEqualTo(given);
     }

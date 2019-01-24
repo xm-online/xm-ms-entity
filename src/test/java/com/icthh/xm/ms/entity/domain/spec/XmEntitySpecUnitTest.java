@@ -1,22 +1,12 @@
 package com.icthh.xm.ms.entity.domain.spec;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-import lombok.SneakyThrows;
-import lombok.extern.slf4j.Slf4j;
-import lombok.val;
-import net.sf.cglib.proxy.Enhancer;
-import net.sf.cglib.proxy.MethodInterceptor;
-import net.sf.cglib.proxy.MethodProxy;
-import org.apache.commons.lang3.mutable.MutableInt;
-import org.junit.Test;
-import org.mockito.internal.util.Primitives;
-import org.reflections.Reflections;
-import org.reflections.scanners.ResourcesScanner;
-import org.springframework.core.io.ClassPathResource;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -24,8 +14,25 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.regex.Pattern;
+import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
+import lombok.val;
+import org.apache.commons.lang3.mutable.MutableInt;
+import org.junit.Test;
+import org.mockito.internal.util.Primitives;
+import org.reflections.Reflections;
+import org.reflections.scanners.ResourcesScanner;
+import org.springframework.cglib.proxy.Enhancer;
+import org.springframework.cglib.proxy.MethodInterceptor;
+import org.springframework.cglib.proxy.MethodProxy;
+import org.springframework.core.io.ClassPathResource;
 
 @Slf4j
 public class XmEntitySpecUnitTest {
@@ -174,7 +181,9 @@ public class XmEntitySpecUnitTest {
             this.object = object;
         }
 
-        public Object intercept(Object o, Method method, Object[] args, MethodProxy methodProxy) throws Throwable {
+        @Override
+        public Object intercept(Object o, Method method, Object[] args, MethodProxy methodProxy)
+            throws Throwable {
             if(firstCall) {
                 firstCall = false;
                 return null;

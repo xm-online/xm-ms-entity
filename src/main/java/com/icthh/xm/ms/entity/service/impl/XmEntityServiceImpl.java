@@ -65,11 +65,21 @@ import com.icthh.xm.ms.entity.service.XmEntityTemplatesSpecService;
 import com.icthh.xm.ms.entity.service.dto.LinkSourceDto;
 import com.jayway.jsonpath.DocumentContext;
 import com.jayway.jsonpath.JsonPath;
+import java.net.URI;
+import java.time.Instant;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.function.Consumer;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang.text.StrSubstitutor;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.text.StrSubstitutor;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
@@ -82,17 +92,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.ObjectUtils;
 import org.springframework.web.multipart.MultipartFile;
-
-import java.net.URI;
-import java.time.Instant;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
 /**
  * Service Implementation for managing XmEntity.
@@ -376,7 +375,7 @@ public class XmEntityServiceImpl implements XmEntityService {
             }
         }
 
-        xmEntityRepository.delete(xmEntity.getId());
+        xmEntityRepository.deleteById(xmEntity.getId());
     }
 
 
@@ -608,7 +607,7 @@ public class XmEntityServiceImpl implements XmEntityService {
     }
 
     @Override
-    public Object findById(Object id) {
+    public Object findResourceById(Object id) {
         return findOne(IdOrKey.of(String.valueOf(id)));
     }
 
@@ -618,7 +617,7 @@ public class XmEntityServiceImpl implements XmEntityService {
         Set<String> typeKeys = xmEntitySpecService.findNonAbstractTypesByPrefix(typeKey).stream()
                         .map(TypeSpec::getKey).collect(Collectors.toSet());
         List<XmEntity> xmEntities = xmEntityRepository.findAllByTypeKeyIn(
-                        new PageRequest(0, Integer.MAX_VALUE), typeKeys).getContent();
+                        PageRequest.of(0, Integer.MAX_VALUE), typeKeys).getContent();
 
         ModelMapper modelMapper = new ModelMapper();
 

@@ -6,7 +6,7 @@ import static com.icthh.xm.ms.entity.web.rest.TestUtil.sameInstant;
 import static com.icthh.xm.ms.entity.web.rest.XmEntityResourceExtendedIntTest.createEntityComplexIncoming;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.notNullValue;
-import static org.mockito.Matchers.any;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doAnswer;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -21,13 +21,16 @@ import com.icthh.xm.commons.tenant.TenantContextUtils;
 import com.icthh.xm.lep.api.LepManager;
 import com.icthh.xm.ms.entity.EntityApp;
 import com.icthh.xm.ms.entity.config.SecurityBeanOverrideConfiguration;
+import com.icthh.xm.ms.entity.config.elasticsearch.EmbeddedElasticsearchConfig;
 import com.icthh.xm.ms.entity.config.tenant.WebappTenantOverrideConfiguration;
 import com.icthh.xm.ms.entity.domain.Attachment;
 import com.icthh.xm.ms.entity.domain.Location;
 import com.icthh.xm.ms.entity.domain.Tag;
 import com.icthh.xm.ms.entity.domain.XmEntity;
+import com.icthh.xm.ms.entity.repository.search.XmEntitySearchRepository;
 import com.icthh.xm.ms.entity.service.ElasticsearchIndexService;
 import com.icthh.xm.ms.entity.service.XmEntityService;
+import java.util.concurrent.Executor;
 import lombok.SneakyThrows;
 import org.junit.After;
 import org.junit.Before;
@@ -55,7 +58,12 @@ import java.util.concurrent.Executor;
  */
 @RunWith(SpringRunner.class)
 @WithMockUser(authorities = {"SUPER-ADMIN"})
-@SpringBootTest(classes = {EntityApp.class, SecurityBeanOverrideConfiguration.class, WebappTenantOverrideConfiguration.class})
+@SpringBootTest(classes = {
+    EntityApp.class,
+    SecurityBeanOverrideConfiguration.class,
+    WebappTenantOverrideConfiguration.class,
+    EmbeddedElasticsearchConfig.class
+})
 public class ElasticsearchIndexResourceIntTest {
 
     private static final String DEFAULT_TYPE_KEY = "ACCOUNT.ADMIN";
@@ -92,7 +100,10 @@ public class ElasticsearchIndexResourceIntTest {
     @Autowired
     private LepManager lepManager;
 
-    @MockBean
+    @Autowired
+    private XmEntitySearchRepository searchRepository;
+
+    @MockBean(name = "taskExecutor")
     private Executor executor;
 
     @BeforeTransaction
@@ -143,6 +154,8 @@ public class ElasticsearchIndexResourceIntTest {
 
         mockMvc.perform(post("/api/elasticsearch/index"))
             .andExpect(status().isAccepted());
+
+        searchRepository.refresh();
 
         mockMvc.perform(get("/api/_search/xm-entities?query=id:{id}", saved.getId()))
             .andExpect(status().isOk())

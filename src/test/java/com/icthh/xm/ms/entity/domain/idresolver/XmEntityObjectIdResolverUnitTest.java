@@ -140,8 +140,8 @@ public class XmEntityObjectIdResolverUnitTest {
         XmEntity source = createRef(1L);
         XmEntity target = createRef(2L);
 
-        when(entityRepository.findOne(1L)).thenReturn(source);
-        when(entityRepository.findOne(2L)).thenReturn(target);
+        when(entityRepository.findById(1L)).thenReturn(Optional.ofNullable(source));
+        when(entityRepository.findById(2L)).thenReturn(Optional.ofNullable(target));
 
         Link link = new Link().typeKey(DEFAULT_TYPE_KEY)
             .startDate(Instant.now())
@@ -164,7 +164,7 @@ public class XmEntityObjectIdResolverUnitTest {
                 .andExpect(jsonPath("$.source").value(1L))
                 .andExpect(jsonPath("$.target.id").value(2L));
         }
-        verify(entityRepository, times(2)).findOne(1L);
+        verify(entityRepository, times(2)).findById(1L);
     }
 
     private XmEntity createRef(Long id) {

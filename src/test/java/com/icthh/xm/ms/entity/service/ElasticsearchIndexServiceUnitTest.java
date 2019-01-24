@@ -9,7 +9,6 @@ import static org.mockito.Mockito.when;
 import com.icthh.xm.commons.tenant.PrivilegedTenantContext;
 import com.icthh.xm.commons.tenant.TenantContext;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
-import com.icthh.xm.commons.tenant.TenantKey;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
 import com.icthh.xm.ms.entity.repository.search.XmEntitySearchRepository;
@@ -20,7 +19,7 @@ import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
@@ -53,11 +52,8 @@ public class ElasticsearchIndexServiceUnitTest {
         service.setSelfReference(service);
 
         TenantContext tenantContext = mock(TenantContext.class);
-        when(tenantContext.getTenantKey()).thenReturn(Optional.of(TenantKey.valueOf("XM")));
-        when(tenantContextHolder.getContext()).thenReturn(tenantContext);
 
         PrivilegedTenantContext privilegedTenantContext = mock(PrivilegedTenantContext.class);
-        when(tenantContextHolder.getPrivilegedContext()).thenReturn(privilegedTenantContext);
     }
 
     @Test
@@ -73,7 +69,7 @@ public class ElasticsearchIndexServiceUnitTest {
     private <T, ID extends Serializable> void prepareInternal(Class<T> entityClass,
         JpaRepository<T, ID> jpaRepository) {
         when(jpaRepository.count()).thenReturn(10L);
-        when(jpaRepository.findAll(new PageRequest(0, 100))).thenReturn(
+        when(jpaRepository.findAll(PageRequest.of(0, 100))).thenReturn(
             new PageImpl<>(Collections.singletonList(createObject(entityClass))));
     }
 
@@ -87,7 +83,7 @@ public class ElasticsearchIndexServiceUnitTest {
         verify(jpaRepository, times(4)).count();
 
         ArgumentCaptor<List> list = ArgumentCaptor.forClass(List.class);
-        verify(elasticsearchRepository).save(list.capture());
+        verify(elasticsearchRepository).saveAll(list.capture());
 
         assertThat(list.getValue()).containsExactly(createObject(entityClass));
     }

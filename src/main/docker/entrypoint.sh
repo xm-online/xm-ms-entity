@@ -15,7 +15,7 @@ if [ -n "${APPLICATION_EXTERNAL_CLASSPATH}" ]; then
     "
     mkdir /tmp/app
     unzip -qq app.war -d /tmp/app
-    cp -vR ${APPLICATION_EXTERNAL_CLASSPATH}/* /tmp/app/WEB-INF/lib
+    cp ${APPLICATION_DATASOURCE_EXTERNAL_DRIVER} /tmp/app/WEB-INF/lib
     cd /tmp/app
     zip -r -0 -q - . > /app.war
     rm -rf /tmp/app

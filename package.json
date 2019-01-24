@@ -1,5 +1,8 @@
 {
   "devDependencies": {
-    "generator-jhipster": "4.6.1"
+    "generator-jhipster": "5.7.0"
+  },
+  "engines": {
+    "node": ">=8.9.0"
   }
 }
