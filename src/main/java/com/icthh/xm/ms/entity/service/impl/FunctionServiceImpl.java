@@ -50,20 +50,21 @@ public class FunctionServiceImpl implements FunctionService {
      * {@inheritDoc}
      */
     @Override
-    public FunctionContext execute(String functionKey, Map<String, Object> functionInput) {
-        Optional<FunctionSpec> functionSpec = xmEntitySpecService.findFunction(functionKey);
-        if (!functionSpec.isPresent()) {
-            throw new IllegalArgumentException("Function not found, function key: " + functionKey);
-        }
+    public FunctionContext execute(final String functionKey, final Map<String, Object> functionInput) {
+
+        Map<String, Object> copyMap =  functionInput == null ? Maps.newHashMap() : Maps.newHashMap(functionInput);
+
+        FunctionSpec functionSpec = xmEntitySpecService.findFunction(functionKey).orElseThrow(
+            () -> new IllegalArgumentException("Function not found, function key: " + functionKey));
 
         // execute function
-        Map<String, Object> data = functionExecutorService.execute(functionKey, functionInput);
+        Map<String, Object> data = functionExecutorService.execute(functionKey, copyMap);
 
         // save result in FunctionContext
-        if (functionSpec.get().getSaveFunctionContext()) {
-            return saveResult(functionKey, null, data, functionSpec.get());
+        if (functionSpec.getSaveFunctionContext()) {
+            return saveResult(functionKey, null, data, functionSpec);
         } else {
-            return toFunctionContext(functionKey, null, data, functionSpec.get());
+            return toFunctionContext(functionKey, null, data, functionSpec);
         }
     }
 
