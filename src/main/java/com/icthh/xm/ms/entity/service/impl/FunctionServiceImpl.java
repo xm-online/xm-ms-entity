@@ -1,5 +1,6 @@
 package com.icthh.xm.ms.entity.service.impl;
 
+import com.google.common.collect.Maps;
 import com.icthh.xm.ms.entity.domain.FunctionContext;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.domain.ext.IdOrKey;
@@ -70,38 +71,33 @@ public class FunctionServiceImpl implements FunctionService {
      * {@inheritDoc}
      */
     @Override
-    public FunctionContext execute(String functionKey,
-                                   IdOrKey idOrKey,
-                                   Map<String, Object> functionInput) {
+    public FunctionContext execute(final String functionKey,
+                                   final IdOrKey idOrKey,
+                                   final Map<String, Object> functionInput) {
         Objects.requireNonNull(functionKey, "functionKey can't be null");
         Objects.requireNonNull(idOrKey, "idOrKey can't be null");
+
+        //make defence copy, to prevent input modification in LEP
+        Map<String, Object> copyMap =  functionInput == null ? Maps.newHashMap() : Maps.newHashMap(functionInput);
 
         // get type key
         XmEntityIdKeyTypeKey projection = xmEntityService.getXmEntityIdKeyTypeKey(idOrKey);
         String xmEntityTypeKey = projection.getTypeKey();
 
         // validate that current XmEntity has function
-        Optional<FunctionSpec> functionSpec = xmEntitySpecService.findFunction(xmEntityTypeKey, functionKey);
-        if (!functionSpec.isPresent()) {
-            throw new IllegalArgumentException("Function not found for entity type key " + xmEntityTypeKey
-                                                   + " and function key: " + functionKey);
-        }
-
-        if (functionInput == null) {
-            functionInput = Collections.emptyMap();
-        }
+        FunctionSpec functionSpec = xmEntitySpecService.findFunction(xmEntityTypeKey, functionKey).orElseThrow(
+            () -> new IllegalArgumentException("Function not found for entity type key " + xmEntityTypeKey
+            + " and function key: " + functionKey)
+        );
 
         // execute function
-        Map<String, Object> data = functionExecutorService.execute(functionKey,
-                                                                   idOrKey,
-                                                                   xmEntityTypeKey,
-                                                                   functionInput);
+        Map<String, Object> data = functionExecutorService.execute(functionKey, idOrKey, xmEntityTypeKey, copyMap);
 
         // save result in FunctionContext
-        if (functionSpec.get().getSaveFunctionContext()) {
-            return saveResult(functionKey, idOrKey, data, functionSpec.get());
+        if (functionSpec.getSaveFunctionContext()) {
+            return saveResult(functionKey, idOrKey, data, functionSpec);
         } else {
-            return toFunctionContext(functionKey, idOrKey, data, functionSpec.get());
+            return toFunctionContext(functionKey, idOrKey, data, functionSpec);
         }
     }
 
