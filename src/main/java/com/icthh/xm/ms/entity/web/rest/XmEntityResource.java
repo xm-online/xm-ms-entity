@@ -301,7 +301,7 @@ public class XmEntityResource {
      * @return any object
      */
     @Timed
-    @GetMapping("/xm-entities/{idOrKey}/functions/{functionKey}")
+    @GetMapping("/xm-entities/{idOrKey}/functions/{functionKey:.+}")
     @PreAuthorize("hasPermission({'idOrKey': #idOrKey, 'id': #functionKey, 'context': #context}, "
         + "'xmEntity.function', 'XMENTITY.FUNCTION.GET')")
     public ResponseEntity<Object> executeGetFunction(@PathVariable String idOrKey,
