@@ -304,8 +304,6 @@ dependencies {
     optional("org.springframework.boot:spring-boot-configuration-processor:${spring_boot_version}") {
         exclude group: 'com.vaadin.external.google', module: 'android-json'
     }
-    compile group: 'com.auth0', name: 'java-jwt', version: '3.5.0'
-    compile files("libs/ojdbc8-18.3.0.0.jar")
     //jhipster-needle-gradle-dependency - JHipster will add additional dependencies here
 }
 
