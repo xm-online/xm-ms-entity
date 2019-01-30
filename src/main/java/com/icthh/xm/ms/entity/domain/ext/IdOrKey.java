@@ -1,5 +1,4 @@
 package com.icthh.xm.ms.entity.domain.ext;
-
 import java.util.Objects;
 
 /**
@@ -16,10 +15,6 @@ public final class IdOrKey {
     private String key;
     private Boolean isKey;
 
-    private IdOrKey(String value) {
-        this(value, false);
-    }
-
     private IdOrKey(String value, boolean forceKey) {
         if (forceKey) {
             this.isKey = true;
@@ -35,16 +30,19 @@ public final class IdOrKey {
     }
 
     public static IdOrKey of(String value) {
-        return new IdOrKey(value);
+        final String vValue = Objects.requireNonNull(value, "value can't be null");
+        return new IdOrKey(vValue, false);
     }
 
 
     public static IdOrKey ofKey(String value) {
-        return new IdOrKey(value, true);
+        final String vValue = Objects.requireNonNull(value, "key can't be null");
+        return new IdOrKey(vValue, true);
     }
 
     public static IdOrKey of(Long id) {
-        return new IdOrKey(id);
+        final Long vId = Objects.requireNonNull(id, "id can't be null");
+        return new IdOrKey(vId);
     }
 
     private void lazyInit() {
@@ -98,4 +96,20 @@ public final class IdOrKey {
         return isId() ? String.valueOf(getId()) : String.valueOf(getKey());
     }
 
+    @Override
+    public int hashCode() {
+        return Objects.hash(getKey(), getId());
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final IdOrKey other = (IdOrKey) obj;
+        return Objects.equals(this.getKey(), other.getKey()) && Objects.equals(this.getId(), other.getId());
+    }
 }
