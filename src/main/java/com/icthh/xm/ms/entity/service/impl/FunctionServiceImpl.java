@@ -52,7 +52,8 @@ public class FunctionServiceImpl implements FunctionService {
     @Override
     public FunctionContext execute(final String functionKey, final Map<String, Object> functionInput) {
 
-        Map<String, Object> copyMap =  functionInput == null ? Maps.newHashMap() : Maps.newHashMap(functionInput);
+        Objects.requireNonNull(functionKey, "functionKey can't be null");
+        Map<String, Object> copyMap =  functionInput == null ? Maps.newHashMap() : functionInput;
 
         FunctionSpec functionSpec = xmEntitySpecService.findFunction(functionKey).orElseThrow(
             () -> new IllegalArgumentException("Function not found, function key: " + functionKey));
