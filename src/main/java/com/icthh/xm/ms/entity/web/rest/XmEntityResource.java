@@ -4,6 +4,7 @@ import static com.icthh.xm.ms.entity.web.rest.XmRestApiConstants.XM_HEADER_CONTE
 import static org.apache.commons.collections.CollectionUtils.isEmpty;
 
 import com.codahale.metrics.annotation.Timed;
+import com.google.common.collect.Maps;
 import com.icthh.xm.commons.exceptions.BusinessException;
 import com.icthh.xm.commons.exceptions.ErrorConstants;
 import com.icthh.xm.ms.entity.config.Constants;
@@ -281,14 +282,32 @@ public class XmEntityResource {
         return RespContentUtil.wrapOrNotFound(Optional.ofNullable(xmEntity));
     }
 
+    /**
+     * Call XM entity relayed function via GET method. Used in xm-entity related flows
+     * @param idOrKey entity ID or Key
+     * @param functionKey function key
+     * @param functionInput - optional input
+     * @return any object
+     */
     @Timed
-    @PostMapping("/xm-entities/{idOrKey}/functions/{functionKey}")
+    @GetMapping("/xm-entities/{idOrKey}/functions/{functionKey:.+}")
+    @PreAuthorize("hasPermission({'idOrKey': #idOrKey, 'id': #functionKey, 'context': #context}, "
+        + "'xmEntity.function', 'XMENTITY.FUNCTION.GET')")
+    public ResponseEntity<Object> executeGetFunction(@PathVariable String idOrKey,
+                                                     @PathVariable String functionKey,
+                                                     @RequestParam(required = false) Map<String, Object> functionInput) {
+        return executeFunction(idOrKey, functionKey, functionInput);
+    }
+
+    @Timed
+    @PostMapping("/xm-entities/{idOrKey}/functions/{functionKey:.+}")
     @PreAuthorize("hasPermission({'idOrKey': #idOrKey, 'id': #functionKey, 'context': #context}, "
         + "'xmEntity.function', 'XMENTITY.FUNCTION.EXECUTE')")
     public ResponseEntity<Object> executeFunction(@PathVariable String idOrKey,
                                                            @PathVariable String functionKey,
                                                            @RequestBody(required = false) Map<String, Object> functionInput) {
-        FunctionContext result = functionService.execute(functionKey, IdOrKey.of(idOrKey), functionInput);
+        Map<String, Object> fContext = functionInput != null ? functionInput : Maps.newHashMap();
+        FunctionContext result = functionService.execute(functionKey, IdOrKey.of(idOrKey), fContext);
         return ResponseEntity.ok().body(result.functionResult());
     }
 
