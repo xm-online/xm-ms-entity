@@ -13,6 +13,7 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+import org.mockito.AdditionalAnswers;
 import org.mockito.Mockito;
 import org.mockito.stubbing.Answer;
 
@@ -210,10 +211,7 @@ public class FunctionServiceImplUnitTest {
         when(functionExecutorService.execute(functionName, key, xmEntityTypeKey, context))
             .thenReturn(data);
 
-        when(functionContextService.save(any())).thenAnswer((Answer<FunctionContext>) invocation -> {
-            Object[] args = invocation.getArguments();
-            return (FunctionContext) args[0];
-        });
+        when(functionContextService.save(any())).then(AdditionalAnswers.returnsFirstArg());
 
         FunctionContext fc = functionService.execute(functionName, key, context);
         assertThat(fc.getTypeKey()).isEqualTo(functionName);
