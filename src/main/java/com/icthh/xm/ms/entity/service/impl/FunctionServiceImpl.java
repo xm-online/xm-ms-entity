@@ -1,6 +1,5 @@
 package com.icthh.xm.ms.entity.service.impl;
 
-import com.google.common.collect.Maps;
 import com.icthh.xm.ms.entity.domain.FunctionContext;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.domain.ext.IdOrKey;
@@ -11,17 +10,15 @@ import com.icthh.xm.ms.entity.service.FunctionExecutorService;
 import com.icthh.xm.ms.entity.service.FunctionService;
 import com.icthh.xm.ms.entity.service.XmEntityService;
 import com.icthh.xm.ms.entity.service.XmEntitySpecService;
+import com.icthh.xm.ms.entity.util.CustomCollectionUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
-import java.util.Collections;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.UUID;
-
 
 /**
  * The {@link FunctionServiceImpl} class.
@@ -52,13 +49,14 @@ public class FunctionServiceImpl implements FunctionService {
     @Override
     public FunctionContext execute(final String functionKey, final Map<String, Object> functionInput) {
 
-        Map<String, Object> copyMap =  functionInput == null ? Maps.newHashMap() : Maps.newHashMap(functionInput);
+        Objects.requireNonNull(functionKey, "functionKey can't be null");
+        Map<String, Object> vInput = CustomCollectionUtils.emptyIfNull(functionInput);
 
         FunctionSpec functionSpec = xmEntitySpecService.findFunction(functionKey).orElseThrow(
             () -> new IllegalArgumentException("Function not found, function key: " + functionKey));
 
         // execute function
-        Map<String, Object> data = functionExecutorService.execute(functionKey, copyMap);
+        Map<String, Object> data = functionExecutorService.execute(functionKey, vInput);
 
         // save result in FunctionContext
         if (functionSpec.getSaveFunctionContext()) {
@@ -78,8 +76,7 @@ public class FunctionServiceImpl implements FunctionService {
         Objects.requireNonNull(functionKey, "functionKey can't be null");
         Objects.requireNonNull(idOrKey, "idOrKey can't be null");
 
-        //make defence copy, to prevent input modification in LEP
-        Map<String, Object> copyMap =  functionInput == null ? Maps.newHashMap() : Maps.newHashMap(functionInput);
+        Map<String, Object> vInput =  CustomCollectionUtils.emptyIfNull(functionInput);
 
         // get type key
         XmEntityIdKeyTypeKey projection = xmEntityService.getXmEntityIdKeyTypeKey(idOrKey);
@@ -92,7 +89,7 @@ public class FunctionServiceImpl implements FunctionService {
         );
 
         // execute function
-        Map<String, Object> data = functionExecutorService.execute(functionKey, idOrKey, xmEntityTypeKey, copyMap);
+        Map<String, Object> data = functionExecutorService.execute(functionKey, idOrKey, xmEntityTypeKey, vInput);
 
         // save result in FunctionContext
         if (functionSpec.getSaveFunctionContext()) {
