@@ -578,7 +578,7 @@ public class XmEntityServiceImpl implements XmEntityService {
     @Override
     public void assertStateTransition(String stateKey, XmEntityStateProjection entity) {
         List<StateSpec> stateSpecs = xmEntitySpecService.nextStates(entity.getTypeKey(), entity.getStateKey());
-        if (stateSpecs.stream().map(StateSpec::getKey).noneMatch(stateKey::equals)) {
+        if (stateSpecs == null || stateSpecs.stream().map(StateSpec::getKey).noneMatch(stateKey::equals)) {
             throw new BusinessException(ErrorConstants.ERR_VALIDATION,
                                         "Entity " + entity + " can not go from [" + entity.getStateKey() + "] to ["
                                         + stateKey + "]");
