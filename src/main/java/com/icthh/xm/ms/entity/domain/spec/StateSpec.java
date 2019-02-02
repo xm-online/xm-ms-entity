@@ -8,6 +8,7 @@ import lombok.Data;
 
 import java.util.List;
 import java.util.Map;
+import lombok.experimental.Accessors;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({ "key", "name", "icon", "color", "next" })
@@ -24,5 +25,10 @@ public class StateSpec {
     private Object color;
     @JsonProperty("next")
     private List<NextSpec> next = null;
+
+    public StateSpec key(String key) {
+        this.key = key;
+        return this;
+    }
 
 }

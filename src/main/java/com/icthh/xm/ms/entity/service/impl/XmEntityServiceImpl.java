@@ -569,14 +569,19 @@ public class XmEntityServiceImpl implements XmEntityService {
         XmEntityStateProjection entity = findStateProjectionById(idOrKey)
             .orElseThrow(() -> new EntityNotFoundException("XmEntity with key [" + idOrKey.getKey() + "] not found"));
 
-        List<StateSpec> stateSpecs = xmEntitySpecService.nextStates(entity.getTypeKey(), entity.getStateKey());
-        if (stateSpecs.stream().map(StateSpec::getKey).anyMatch(stateKey::equals)) {
+        assertStateTransition(stateKey, entity);
 
-            LifecycleLepStrategy lifecycleLepStrategy = lifecycleLepStrategyFactory.getLifecycleLepStrategy();
-            return lifecycleLepStrategy.changeState(idOrKey, entity.getTypeKey(), entity.getStateKey(), stateKey, context);
-        } else {
-            throw new BusinessException(ErrorConstants.ERR_VALIDATION, "Entity " + entity + " can not go from ["
-                + entity.getStateKey() + "] to [" + stateKey + "]");
+        LifecycleLepStrategy lifecycleLepStrategy = lifecycleLepStrategyFactory.getLifecycleLepStrategy();
+        return lifecycleLepStrategy.changeState(idOrKey, entity.getTypeKey(), entity.getStateKey(), stateKey, context);
+    }
+
+    @Override
+    public void assertStateTransition(String stateKey, XmEntityStateProjection entity) {
+        List<StateSpec> stateSpecs = xmEntitySpecService.nextStates(entity.getTypeKey(), entity.getStateKey());
+        if (stateSpecs == null || stateSpecs.stream().map(StateSpec::getKey).noneMatch(stateKey::equals)) {
+            throw new BusinessException(ErrorConstants.ERR_VALIDATION,
+                                        "Entity " + entity + " can not go from [" + entity.getStateKey() + "] to ["
+                                        + stateKey + "]");
         }
     }
 
