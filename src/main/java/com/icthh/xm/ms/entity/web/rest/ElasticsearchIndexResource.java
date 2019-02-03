@@ -28,7 +28,7 @@ public class ElasticsearchIndexResource {
     @Timed
     @PreAuthorize("hasPermission(null, 'ELASTICSEARCH.INDEX')")
     public ResponseEntity<Void> reindexAll() {
-        elasticsearchIndexService.reindexAll();
+        elasticsearchIndexService.reindexAllAsync();
         return ResponseEntity.accepted().build();
     }
 }

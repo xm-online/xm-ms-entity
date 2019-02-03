@@ -388,3 +388,15 @@ types:
     - key: ENTITY_WITH_AVATAR
       isApp: false
       isAbstract: false
+    - key: TEST_SEARCH
+      isApp: false
+      isAbstract: false
+      dataSpec: |
+          {
+            "type": "object",
+            "properties": {
+              "targetField": {
+                "type": "string"
+              }
+            }
+          }

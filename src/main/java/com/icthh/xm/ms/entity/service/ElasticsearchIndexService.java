@@ -6,6 +6,7 @@ import com.icthh.xm.commons.logging.util.MdcUtils;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
 import com.icthh.xm.commons.tenant.TenantKey;
+import com.icthh.xm.ms.entity.config.MappingConfiguration;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
 import com.icthh.xm.ms.entity.repository.search.XmEntitySearchRepository;
@@ -47,10 +48,9 @@ public class ElasticsearchIndexService {
 
     private final XmEntityRepository xmEntityRepository;
     private final XmEntitySearchRepository xmEntitySearchRepository;
-
     private final ElasticsearchTemplate elasticsearchTemplate;
-
     private final TenantContextHolder tenantContextHolder;
+    private final MappingConfiguration mappingConfiguration;
     private final Executor executor;
 
     @Setter(AccessLevel.PACKAGE)
@@ -62,27 +62,29 @@ public class ElasticsearchIndexService {
                                      XmEntitySearchRepository xmEntitySearchRepository,
                                      ElasticsearchTemplate elasticsearchTemplate,
                                      TenantContextHolder tenantContextHolder,
+                                     MappingConfiguration mappingConfiguration,
                                      @Qualifier("taskExecutor") Executor executor) {
         this.xmEntityRepository = xmEntityRepository;
         this.xmEntitySearchRepository = xmEntitySearchRepository;
         this.elasticsearchTemplate = elasticsearchTemplate;
         this.tenantContextHolder = tenantContextHolder;
+        this.mappingConfiguration = mappingConfiguration;
         this.executor = executor;
     }
 
     @Timed
-    public void reindexAll() {
+    public void reindexAllAsync() {
         TenantKey tenantKey = TenantContextUtils.getRequiredTenantKey(tenantContextHolder);
         String rid = MdcUtils.getRid();
-        executor.execute(() -> execForCustomContext(tenantKey, rid, () -> selfReference.reindexAllAsync()));
+        executor.execute(() -> execForCustomContext(tenantKey, rid, () -> selfReference.reindexAll()));
     }
 
     @Timed
     @Transactional(readOnly = true)
-    public void reindexAllAsync() {
+    public void reindexAll() {
         if (reindexLock.tryLock()) {
             try {
-                reindexForClass(XmEntity.class, xmEntityRepository, xmEntitySearchRepository);
+                reindexForClass(xmEntityRepository, xmEntitySearchRepository);
 
                 log.info("Elasticsearch: Successfully performed reindexing");
             } finally {
@@ -93,26 +95,29 @@ public class ElasticsearchIndexService {
         }
     }
 
-    private <T, ID extends Serializable> void reindexForClass(Class<T> entityClass, JpaRepository<T, ID> jpaRepository,
+    private <T, ID extends Serializable> void reindexForClass(JpaRepository<T, ID> jpaRepository,
                                                               ElasticsearchRepository<T, ID> elasticsearchRepository) {
-        elasticsearchTemplate.deleteIndex(entityClass);
+        elasticsearchTemplate.deleteIndex(XmEntity.class);
         try {
-            elasticsearchTemplate.createIndex(entityClass);
+            elasticsearchTemplate.createIndex(XmEntity.class);
         } catch (IndexAlreadyExistsException e) {
             // Do nothing. Index was already concurrently recreated by some other service.
         }
-        elasticsearchTemplate.putMapping(entityClass);
+        elasticsearchTemplate.putMapping(XmEntity.class);
+        if (mappingConfiguration.isMappingExists()) {
+            elasticsearchTemplate.putMapping(XmEntity.class, mappingConfiguration.getMapping());
+        }
         if (jpaRepository.count() > 0) {
-            List<Method> relationshipGetters = Arrays.stream(entityClass.getDeclaredFields())
+            List<Method> relationshipGetters = Arrays.stream(XmEntity.class.getDeclaredFields())
                 .filter(field -> field.getType().equals(Set.class))
                 .filter(field -> field.getAnnotation(OneToMany.class) != null)
                 .filter(field -> field.getAnnotation(JsonIgnore.class) == null)
                 .map(field -> {
                     try {
-                        return new PropertyDescriptor(field.getName(), entityClass).getReadMethod();
+                        return new PropertyDescriptor(field.getName(), XmEntity.class).getReadMethod();
                     } catch (IntrospectionException e) {
                         log.error("Error retrieving getter for class {}, field {}. Field will NOT be indexed",
-                            entityClass.getSimpleName(), field.getName(), e);
+                                  XmEntity.class.getSimpleName(), field.getName(), e);
                         return null;
                     }
                 })
@@ -139,7 +144,7 @@ public class ElasticsearchIndexService {
                 elasticsearchRepository.save(results.getContent());
             }
         }
-        log.info("Elasticsearch: Indexed all rows for {}", entityClass.getSimpleName());
+        log.info("Elasticsearch: Indexed all rows for {}", XmEntity.class.getSimpleName());
     }
 
     private void execForCustomContext(TenantKey tenantKey, String rid, Runnable runnable) {
