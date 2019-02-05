@@ -138,7 +138,7 @@ import org.springframework.validation.Validator;
     EmbeddedElasticsearchConfig.class
 })
 // FIXME: 18-Jan-19 cannot find XmEntity in elasticsearch (nullpointer) when executing with other tests
-public class XmEntityResourceZExtendedIntTest {
+public class XmEntityResourceExtendedIntTest {
 
     private static final String DEFAULT_KEY = "AAAAAAAAAA";
 
