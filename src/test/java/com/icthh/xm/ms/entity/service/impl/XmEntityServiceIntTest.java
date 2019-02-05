@@ -339,7 +339,7 @@ public class XmEntityServiceIntTest {
             .data(of("targetField", "D-C"));
         xmEntityService.save(entity1);
         xmEntityService.save(entity2);
-        PageRequest page = new PageRequest(0, 10, new Sort("key"));
+        PageRequest page = PageRequest.of(0, 10, Sort.by("key"));
         Page<XmEntity> search = xmEntityService.search("data.targetField: C-D", page, null);
         assertEquals(search.getContent(), asList(entity1, entity2));
         Page<XmEntity> searchByKey = xmEntityService.search("key: F-E", page, null);
