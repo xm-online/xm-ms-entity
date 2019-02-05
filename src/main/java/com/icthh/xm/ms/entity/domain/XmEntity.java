@@ -1,5 +1,7 @@
 package com.icthh.xm.ms.entity.domain;
 
+import static javax.persistence.CascadeType.ALL;
+import static javax.persistence.CascadeType.DETACH;
 import static javax.persistence.CascadeType.MERGE;
 import static javax.persistence.CascadeType.PERSIST;
 import static javax.persistence.CascadeType.REMOVE;
@@ -15,6 +17,7 @@ import com.icthh.xm.ms.entity.validator.TypeKey;
 import com.icthh.xm.ms.entity.validator.NotNull;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
+import javax.persistence.ElementCollection;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.commons.collections4.CollectionUtils;
@@ -253,7 +256,7 @@ public class XmEntity implements Serializable, Persistable<Long> {
     @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
     private Set<Event> events = new HashSet<>();
 
-    @OneToMany(mappedBy = "xmEntity", cascade = {PERSIST, MERGE, REMOVE})
+    @OneToMany(mappedBy = "xmEntity", cascade = ALL)
     @JsonIgnore
     @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
     @Getter @Setter

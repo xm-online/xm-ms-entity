@@ -22,6 +22,7 @@ import com.icthh.xm.ms.entity.domain.spec.StateSpec;
 import com.icthh.xm.ms.entity.domain.spec.TypeSpec;
 import com.icthh.xm.ms.entity.domain.spec.UniqueFieldSpec;
 import com.icthh.xm.ms.entity.projection.XmEntityStateProjection;
+import com.icthh.xm.ms.entity.repository.UniqueFieldRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
 import com.icthh.xm.ms.entity.repository.search.XmEntitySearchRepository;
 import com.icthh.xm.ms.entity.service.impl.StartUpdateDateGenerationStrategy;
@@ -61,6 +62,8 @@ public class XmEntityServiceImplUnitTest {
     private StartUpdateDateGenerationStrategy startUpdateDateGenerationStrategy;
     @Mock
     TenantConfigService tenantConfigService;
+    @Mock
+    UniqueFieldRepository uniqueFieldRepository;
 
     @Spy
     private ObjectMapper mapper = new ObjectMapper();

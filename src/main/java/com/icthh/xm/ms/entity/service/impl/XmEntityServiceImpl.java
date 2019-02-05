@@ -49,6 +49,7 @@ import com.icthh.xm.ms.entity.lep.keyresolver.TypeKeyResolver;
 import com.icthh.xm.ms.entity.lep.keyresolver.XmEntityTypeKeyResolver;
 import com.icthh.xm.ms.entity.projection.XmEntityIdKeyTypeKey;
 import com.icthh.xm.ms.entity.projection.XmEntityStateProjection;
+import com.icthh.xm.ms.entity.repository.UniqueFieldRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityPermittedRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
 import com.icthh.xm.ms.entity.repository.search.XmEntityPermittedSearchRepository;
@@ -118,6 +119,7 @@ public class XmEntityServiceImpl implements XmEntityService {
     private final XmAuthenticationContextHolder authContextHolder;
     private final ObjectMapper objectMapper;
     private final TenantConfigService tenantConfigService;
+    private final UniqueFieldRepository uniqueFieldRepository;
 
     private XmEntityServiceImpl self;
 
@@ -194,6 +196,7 @@ public class XmEntityServiceImpl implements XmEntityService {
     @SneakyThrows
     private void processUniqueField(XmEntity xmEntity, Optional<XmEntity> oldEntity) {
         oldEntity.ifPresent(it -> it.getUniqueFields().clear());
+        oldEntity.ifPresent(uniqueFieldRepository::deleteByXmEntity);
         xmEntity.getUniqueFields().clear();
 
         if (isEmpty(xmEntity.getData())) {
