@@ -1,7 +1,6 @@
 package com.icthh.xm.ms.entity.web.rest;
 
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -32,6 +31,6 @@ public class ElasticsearchIndexResourceUnitTest {
         mockMvc.perform(post("/api/elasticsearch/index"))
             .andExpect(status().isAccepted());
 
-        verify(service).reindexAll();
+        verify(service).reindexAllAsync();
     }
 }

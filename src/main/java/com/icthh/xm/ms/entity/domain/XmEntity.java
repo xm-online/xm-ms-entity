@@ -1,5 +1,6 @@
 package com.icthh.xm.ms.entity.domain;
 
+import static javax.persistence.CascadeType.ALL;
 import static javax.persistence.CascadeType.MERGE;
 import static javax.persistence.CascadeType.PERSIST;
 import static javax.persistence.CascadeType.REMOVE;
@@ -252,7 +253,7 @@ public class XmEntity implements Serializable, Persistable<Long> {
     @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
     private Set<Event> events = new HashSet<>();
 
-    @OneToMany(mappedBy = "xmEntity", cascade = {PERSIST, MERGE, REMOVE})
+    @OneToMany(mappedBy = "xmEntity", cascade = ALL)
     @JsonIgnore
     @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
     @Getter @Setter

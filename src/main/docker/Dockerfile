@@ -1,4 +1,4 @@
-FROM jbsukraine/oracle-jre:8
+FROM jbsukraine/oracle-jre:8.202
 
 ENV XMX=1024m \
     SPRING_OUTPUT_ANSI_ENABLED=ALWAYS \

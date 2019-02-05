@@ -25,4 +25,9 @@ public class StateSpec {
     @JsonProperty("next")
     private List<NextSpec> next = null;
 
+    public StateSpec key(String key) {
+        this.key = key;
+        return this;
+    }
+
 }

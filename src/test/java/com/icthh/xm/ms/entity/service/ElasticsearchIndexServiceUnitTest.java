@@ -9,6 +9,7 @@ import static org.mockito.Mockito.when;
 import com.icthh.xm.commons.tenant.PrivilegedTenantContext;
 import com.icthh.xm.commons.tenant.TenantContext;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
+import com.icthh.xm.ms.entity.config.MappingConfiguration;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
 import com.icthh.xm.ms.entity.repository.search.XmEntitySearchRepository;
@@ -19,6 +20,7 @@ import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -46,6 +48,8 @@ public class ElasticsearchIndexServiceUnitTest {
     private ElasticsearchTemplate elasticsearchTemplate;
     @Mock
     TenantContextHolder tenantContextHolder;
+    @Mock
+    MappingConfiguration mappingConfiguration;
 
     @Before
     public void before() {
@@ -60,7 +64,7 @@ public class ElasticsearchIndexServiceUnitTest {
     public void reindexAll() {
         prepareInternal(XmEntity.class, xmEntityRepository);
 
-        service.reindexAllAsync();
+        service.reindexAll();
 
         verifyInternal(XmEntity.class, xmEntityRepository, xmEntitySearchRepository);
     }

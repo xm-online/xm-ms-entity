@@ -11,12 +11,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.icthh.xm.commons.lep.XmLepScriptConfigServerResourceLoader;
 import com.icthh.xm.commons.security.XmAuthenticationContext;
 import com.icthh.xm.commons.security.XmAuthenticationContextHolder;
@@ -25,6 +20,7 @@ import com.icthh.xm.commons.tenant.TenantContextUtils;
 import com.icthh.xm.commons.tenant.spring.config.TenantContextConfiguration;
 import com.icthh.xm.lep.api.LepManager;
 import com.icthh.xm.ms.entity.EntityApp;
+import com.icthh.xm.ms.entity.config.MappingConfiguration;
 import com.icthh.xm.ms.entity.config.SecurityBeanOverrideConfiguration;
 import com.icthh.xm.ms.entity.config.tenant.WebappTenantOverrideConfiguration;
 import com.icthh.xm.ms.entity.domain.Attachment;
@@ -39,13 +35,12 @@ import com.icthh.xm.ms.entity.domain.Tag;
 import com.icthh.xm.ms.entity.domain.Vote;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
-import com.icthh.xm.ms.entity.web.rest.TestUtil;
+import com.icthh.xm.ms.entity.service.ElasticsearchIndexService;
+import java.io.InputStream;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import lombok.val;
 import org.apache.commons.io.IOUtils;
 import org.junit.After;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -54,16 +49,15 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import java.time.Instant;
-import java.util.Arrays;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.UUID;
 
 @Slf4j
 @RunWith(SpringRunner.class)
@@ -89,6 +83,12 @@ public class XmEntityServiceIntTest {
 
     @Autowired
     private XmLepScriptConfigServerResourceLoader leps;
+
+    @Autowired
+    private ElasticsearchIndexService elasticsearchIndexService;
+
+    @Autowired
+    private MappingConfiguration mappingConfiguration;
 
     @Mock
     private XmAuthenticationContextHolder authContextHolder;
@@ -327,6 +327,38 @@ public class XmEntityServiceIntTest {
 
         assertEquals(entities, asList(entity1, entity2));
 
+    }
+
+    @Test
+    @WithMockUser(authorities = "SUPER-ADMIN")
+    public void testAdditionalMapping() {
+        elasticsearchIndexService.reindexAll();
+        XmEntity entity1 = new XmEntity().typeKey("TEST_SEARCH").name("A-B").key("E-F")
+            .data(of("targetField", "C-D"));
+        XmEntity entity2 = new XmEntity().typeKey("TEST_SEARCH").name("B-A").key("F-E")
+            .data(of("targetField", "D-C"));
+        xmEntityService.save(entity1);
+        xmEntityService.save(entity2);
+        PageRequest page = new PageRequest(0, 10, new Sort("key"));
+        Page<XmEntity> search = xmEntityService.search("data.targetField: C-D", page, null);
+        assertEquals(search.getContent(), asList(entity1, entity2));
+        Page<XmEntity> searchByKey = xmEntityService.search("key: F-E", page, null);
+        assertEquals(searchByKey.getContent(), asList(entity2));
+
+        String mapping = loadFile("config/test-mapping.json");
+        mappingConfiguration.onRefresh("/config/tenants/RESINTTEST/entity/mapping.json", mapping);
+        elasticsearchIndexService.reindexAll();
+
+        Page<XmEntity> searchWithMapping = xmEntityService.search("data.targetField: C-D", page, null);
+        assertEquals(searchWithMapping.getContent(), asList(entity1));
+        Page<XmEntity> searchByKeyWithMapping = xmEntityService.search("key: F-E", page, null);
+        assertEquals(searchByKeyWithMapping.getContent(), asList(entity2));
+    }
+
+    @SneakyThrows
+    public static String loadFile(String path) {
+        InputStream cfgInputStream = new ClassPathResource(path).getInputStream();
+        return IOUtils.toString(cfgInputStream, UTF_8);
     }
 
 }

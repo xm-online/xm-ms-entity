@@ -24,6 +24,7 @@ import static org.hamcrest.Matchers.nullValue;
 import static org.hibernate.validator.internal.util.CollectionHelper.asSet;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -63,6 +64,7 @@ import com.icthh.xm.ms.entity.domain.Location;
 import com.icthh.xm.ms.entity.domain.Tag;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.domain.ext.IdOrKey;
+import com.icthh.xm.ms.entity.repository.UniqueFieldRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityPermittedRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
 import com.icthh.xm.ms.entity.repository.kafka.ProfileEventProducer;
@@ -350,7 +352,8 @@ public class XmEntityResourceExtendedIntTest {
                                                                       startUpdateDateGenerationStrategy,
                                                                       authContextHolder,
                                                                       objectMapper,
-                                                                      tenantConfigService);
+                                                                      tenantConfigService,
+                                                                      mock(UniqueFieldRepository.class));
 
         xmEntityService.setSelf(xmEntityService);
         this.xmEntityService = xmEntityService;

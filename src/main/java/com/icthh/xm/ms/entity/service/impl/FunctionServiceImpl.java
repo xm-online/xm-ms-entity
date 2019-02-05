@@ -10,17 +10,15 @@ import com.icthh.xm.ms.entity.service.FunctionExecutorService;
 import com.icthh.xm.ms.entity.service.FunctionService;
 import com.icthh.xm.ms.entity.service.XmEntityService;
 import com.icthh.xm.ms.entity.service.XmEntitySpecService;
+import com.icthh.xm.ms.entity.util.CustomCollectionUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
-import java.util.Collections;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.UUID;
-
 
 /**
  * The {@link FunctionServiceImpl} class.
@@ -49,20 +47,22 @@ public class FunctionServiceImpl implements FunctionService {
      * {@inheritDoc}
      */
     @Override
-    public FunctionContext execute(String functionKey, Map<String, Object> functionInput) {
-        Optional<FunctionSpec> functionSpec = xmEntitySpecService.findFunction(functionKey);
-        if (!functionSpec.isPresent()) {
-            throw new IllegalArgumentException("Function not found, function key: " + functionKey);
-        }
+    public FunctionContext execute(final String functionKey, final Map<String, Object> functionInput) {
+
+        Objects.requireNonNull(functionKey, "functionKey can't be null");
+        Map<String, Object> vInput = CustomCollectionUtils.emptyIfNull(functionInput);
+
+        FunctionSpec functionSpec = xmEntitySpecService.findFunction(functionKey).orElseThrow(
+            () -> new IllegalArgumentException("Function not found, function key: " + functionKey));
 
         // execute function
-        Map<String, Object> data = functionExecutorService.execute(functionKey, functionInput);
+        Map<String, Object> data = functionExecutorService.execute(functionKey, vInput);
 
         // save result in FunctionContext
-        if (functionSpec.get().getSaveFunctionContext()) {
-            return saveResult(functionKey, null, data, functionSpec.get());
+        if (functionSpec.getSaveFunctionContext()) {
+            return saveResult(functionKey, null, data, functionSpec);
         } else {
-            return toFunctionContext(functionKey, null, data, functionSpec.get());
+            return toFunctionContext(functionKey, null, data, functionSpec);
         }
     }
 
@@ -70,38 +70,32 @@ public class FunctionServiceImpl implements FunctionService {
      * {@inheritDoc}
      */
     @Override
-    public FunctionContext execute(String functionKey,
-                                   IdOrKey idOrKey,
-                                   Map<String, Object> functionInput) {
+    public FunctionContext execute(final String functionKey,
+                                   final IdOrKey idOrKey,
+                                   final Map<String, Object> functionInput) {
         Objects.requireNonNull(functionKey, "functionKey can't be null");
         Objects.requireNonNull(idOrKey, "idOrKey can't be null");
+
+        Map<String, Object> vInput =  CustomCollectionUtils.emptyIfNull(functionInput);
 
         // get type key
         XmEntityIdKeyTypeKey projection = xmEntityService.getXmEntityIdKeyTypeKey(idOrKey);
         String xmEntityTypeKey = projection.getTypeKey();
 
         // validate that current XmEntity has function
-        Optional<FunctionSpec> functionSpec = xmEntitySpecService.findFunction(xmEntityTypeKey, functionKey);
-        if (!functionSpec.isPresent()) {
-            throw new IllegalArgumentException("Function not found for entity type key " + xmEntityTypeKey
-                                                   + " and function key: " + functionKey);
-        }
-
-        if (functionInput == null) {
-            functionInput = Collections.emptyMap();
-        }
+        FunctionSpec functionSpec = xmEntitySpecService.findFunction(xmEntityTypeKey, functionKey).orElseThrow(
+            () -> new IllegalArgumentException("Function not found for entity type key " + xmEntityTypeKey
+            + " and function key: " + functionKey)
+        );
 
         // execute function
-        Map<String, Object> data = functionExecutorService.execute(functionKey,
-                                                                   idOrKey,
-                                                                   xmEntityTypeKey,
-                                                                   functionInput);
+        Map<String, Object> data = functionExecutorService.execute(functionKey, idOrKey, xmEntityTypeKey, vInput);
 
         // save result in FunctionContext
-        if (functionSpec.get().getSaveFunctionContext()) {
-            return saveResult(functionKey, idOrKey, data, functionSpec.get());
+        if (functionSpec.getSaveFunctionContext()) {
+            return saveResult(functionKey, idOrKey, data, functionSpec);
         } else {
-            return toFunctionContext(functionKey, idOrKey, data, functionSpec.get());
+            return toFunctionContext(functionKey, idOrKey, data, functionSpec);
         }
     }
 

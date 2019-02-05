@@ -21,6 +21,7 @@ import static com.icthh.xm.ms.entity.lep.LepXmEntityMsConstants.BINDING_SUB_KEY_
 import static com.icthh.xm.ms.entity.lep.LepXmEntityMsConstants.BINDING_SUB_KEY_SERVICE_TENANT_CONFIG_SERICE;
 import static com.icthh.xm.ms.entity.lep.LepXmEntityMsConstants.BINDING_SUB_KEY_SERVICE_XM_ENTITY;
 import static com.icthh.xm.ms.entity.lep.LepXmEntityMsConstants.BINDING_SUB_KEY_SERVICE_XM_TENANT_LC;
+import static com.icthh.xm.ms.entity.lep.LepXmEntityMsConstants.BINDING_SUB_KEY_TEMPLATE_ELASTIC;
 import static com.icthh.xm.ms.entity.lep.LepXmEntityMsConstants.BINDING_SUB_KEY_TEMPLATE_REST;
 import static com.icthh.xm.ms.entity.lep.LepXmEntityMsConstants.BINDING_SUB_KEY_TEMPLATE_S3;
 
@@ -46,6 +47,7 @@ import com.icthh.xm.ms.entity.service.XmEntityService;
 import com.icthh.xm.ms.entity.service.XmTenantLifecycleService;
 import com.icthh.xm.ms.entity.service.mail.MailService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.HashMap;
@@ -76,6 +78,7 @@ public class XmEntityMsLepProcessingApplicationListener extends SpringLepProcess
     private final CalendarService calendarService;
     private final TenantLepResource tenantLepResource;
     private final AmazonS3Template s3Template;
+    private final ElasticsearchTemplate elasticsearchTemplate;
     private final PermittedSearchRepository permittedSearchRepository;
 
     @Override
@@ -113,6 +116,7 @@ public class XmEntityMsLepProcessingApplicationListener extends SpringLepProcess
         Map<String, Object> templates = new HashMap<>();
         templates.put(BINDING_SUB_KEY_TEMPLATE_REST, restTemplate);
         templates.put(BINDING_SUB_KEY_TEMPLATE_S3, s3Template);
+        templates.put(BINDING_SUB_KEY_TEMPLATE_ELASTIC, elasticsearchTemplate);
 
         executionContext.setValue(BINDING_KEY_TEMPLATES, templates);
     }

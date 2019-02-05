@@ -49,6 +49,7 @@ import com.icthh.xm.ms.entity.lep.keyresolver.TypeKeyResolver;
 import com.icthh.xm.ms.entity.lep.keyresolver.XmEntityTypeKeyResolver;
 import com.icthh.xm.ms.entity.projection.XmEntityIdKeyTypeKey;
 import com.icthh.xm.ms.entity.projection.XmEntityStateProjection;
+import com.icthh.xm.ms.entity.repository.UniqueFieldRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityPermittedRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
 import com.icthh.xm.ms.entity.repository.search.XmEntityPermittedSearchRepository;
@@ -117,6 +118,7 @@ public class XmEntityServiceImpl implements XmEntityService {
     private final XmAuthenticationContextHolder authContextHolder;
     private final ObjectMapper objectMapper;
     private final TenantConfigService tenantConfigService;
+    private final UniqueFieldRepository uniqueFieldRepository;
 
     private XmEntityServiceImpl self;
 
@@ -193,6 +195,7 @@ public class XmEntityServiceImpl implements XmEntityService {
     @SneakyThrows
     private void processUniqueField(XmEntity xmEntity, Optional<XmEntity> oldEntity) {
         oldEntity.ifPresent(it -> it.getUniqueFields().clear());
+        oldEntity.ifPresent(uniqueFieldRepository::deleteByXmEntity);
         xmEntity.getUniqueFields().clear();
 
         if (isEmpty(xmEntity.getData())) {
@@ -568,14 +571,19 @@ public class XmEntityServiceImpl implements XmEntityService {
         XmEntityStateProjection entity = findStateProjectionById(idOrKey)
             .orElseThrow(() -> new EntityNotFoundException("XmEntity with key [" + idOrKey.getKey() + "] not found"));
 
-        List<StateSpec> stateSpecs = xmEntitySpecService.nextStates(entity.getTypeKey(), entity.getStateKey());
-        if (stateSpecs.stream().map(StateSpec::getKey).anyMatch(stateKey::equals)) {
+        assertStateTransition(stateKey, entity);
 
-            LifecycleLepStrategy lifecycleLepStrategy = lifecycleLepStrategyFactory.getLifecycleLepStrategy();
-            return lifecycleLepStrategy.changeState(idOrKey, entity.getTypeKey(), entity.getStateKey(), stateKey, context);
-        } else {
-            throw new BusinessException(ErrorConstants.ERR_VALIDATION, "Entity " + entity + " can not go from ["
-                + entity.getStateKey() + "] to [" + stateKey + "]");
+        LifecycleLepStrategy lifecycleLepStrategy = lifecycleLepStrategyFactory.getLifecycleLepStrategy();
+        return lifecycleLepStrategy.changeState(idOrKey, entity.getTypeKey(), entity.getStateKey(), stateKey, context);
+    }
+
+    @Override
+    public void assertStateTransition(String stateKey, XmEntityStateProjection entity) {
+        List<StateSpec> stateSpecs = xmEntitySpecService.nextStates(entity.getTypeKey(), entity.getStateKey());
+        if (stateSpecs == null || stateSpecs.stream().map(StateSpec::getKey).noneMatch(stateKey::equals)) {
+            throw new BusinessException(ErrorConstants.ERR_VALIDATION,
+                                        "Entity " + entity + " can not go from [" + entity.getStateKey() + "] to ["
+                                        + stateKey + "]");
         }
     }
 

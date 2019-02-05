@@ -89,6 +89,8 @@ public interface XmEntityService extends ResourceRepository {
 
     XmEntity addFileAttachment(XmEntity entity, MultipartFile file);
 
+    void assertStateTransition(String stateKey, XmEntityStateProjection entity);
+
     default Optional<XmEntityStateProjection> findStateProjectionById(IdOrKey idOrKey) {
         throw new NotImplementedException("Method findStateProjectionById not implemented");
     }
