@@ -25,7 +25,7 @@
 
 management:
     security:
-        roles: ADMIN
+        roles: SUPER-ADMIN
     context-path: /management
     health:
         mail:
