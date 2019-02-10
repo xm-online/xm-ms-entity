@@ -1,0 +1,72 @@
+---
+types:
+    - key: TYPE1
+      name: { en: "Type 1" }
+      isApp: true
+      isAbstract: true
+      isAvatarEnabled: true
+      isKeyRequired: false
+      isNameRequired: false
+      fastSearch:
+          - query: typeKey:TYPE1*
+            name: { en: "Fast search" }
+      icon: account_circle
+      dataSpec: |
+          {
+              "type": "object",
+              "title": "Data",
+              "properties": {
+                  "booleanProperties": {
+                      "title": "booleanProperties title",
+                      "type": "boolean"
+                  },
+                  "numberProperties": {
+                      "title": "numberProperties title",
+                      "type": "number"
+                  },
+                  "stringProperties": {
+                      "title": "stringProperties title",
+                      "type": "string"
+                  }
+              }
+          }
+      dataForm: <From scecification for data>
+      access:
+          - TYPE1.SUBTYPE1
+      attachments:
+          - key: IMAGE
+            contentTypes:
+                - image/gif
+                - image/jpeg
+                - image/png
+            max: null
+            size: 1Mb
+      links:
+          - key: LINK1
+            builderType: NEW
+            name: { en: "Link 1", ru: "Связь 1" }
+            icon: local_offer
+            typeKey: TYPE 2
+            backName: { en: "Link to me", ru: "Линка на меня" }
+            max: 10
+      states:
+          - key: STATE1
+            name: { en: "State 1", ru: "Состояние 1" }
+            icon: null
+            color: null
+            next:
+                - stateKey: STATE2
+                  name: { en: "Action name for STATE2" }
+          - key: STATE2
+            name: { en: "State 2", ru: "Состояние 2" }
+            icon: null
+            color: null
+            next:
+                - stateKey: STATE1
+                  name: { en: "Action name for STATE1" }
+                - stateKey: STATE3
+                  name: { en: "Action name for STATE3" }
+          - key: STATE3
+            name: { en: "State 3", ru: "Состояние 3" }
+            icon: highlight_off
+            color: null

@@ -1,11 +1,14 @@
 package com.icthh.xm.ms.entity.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.icthh.xm.commons.config.client.repository.CommonConfigRepository;
 import com.icthh.xm.commons.config.client.repository.TenantConfigRepository;
 import com.icthh.xm.commons.config.domain.Configuration;
 import com.icthh.xm.commons.permission.config.PermissionProperties;
 import com.icthh.xm.commons.permission.domain.Role;
 import com.icthh.xm.commons.permission.service.RoleService;
+import com.icthh.xm.commons.tenant.Tenant;
 import com.icthh.xm.commons.tenant.TenantContext;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantKey;
@@ -13,6 +16,8 @@ import com.icthh.xm.ms.entity.config.ApplicationProperties;
 import com.icthh.xm.ms.entity.config.tenant.LocalXmEntitySpecService;
 import com.icthh.xm.ms.entity.domain.spec.*;
 import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
+import lombok.val;
 import org.apache.commons.io.IOUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -27,8 +32,10 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+import org.springframework.util.AntPathMatcher;
 
 import static com.google.common.collect.ImmutableMap.of;
+import static com.icthh.xm.ms.entity.config.TenantConfigMockConfiguration.getXmEntitySpec;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
 import static org.apache.commons.codec.digest.DigestUtils.sha1Hex;
@@ -38,11 +45,13 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Matchers.isNull;
 import static org.mockito.Mockito.*;
 
+@Slf4j
 public class XmEntitySpecServiceUnitTest {
 
     private static final String TENANT = "TEST";
 
     private static final String URL = "/config/tenants/{tenantName}/entity/specs/xmentityspecs.yml";
+    private static final String MULTIFILES_URL = "/config/tenants/{tenantName}/entity/specs/xmentityspecs-{contextName}.yml";
 
     private static final String ROOT_KEY = "";
 
@@ -85,6 +94,7 @@ public class XmEntitySpecServiceUnitTest {
 
         ApplicationProperties ap = new ApplicationProperties();
         ap.setSpecificationPathPattern(URL);
+        ap.setMultifilesSpecificationPathPattern(MULTIFILES_URL);
         xmEntitySpecService = createXmEntitySpecService(ap, tenantContextHolder);
     }
 
@@ -251,6 +261,7 @@ public class XmEntitySpecServiceUnitTest {
         when(tenantContextHolder.getContext()).thenReturn(tenantContext);
         ApplicationProperties ap = new ApplicationProperties();
         ap.setSpecificationPathPattern(URL);
+        ap.setMultifilesSpecificationPathPattern(MULTIFILES_URL);
         xmEntitySpecService = createXmEntitySpecService(ap, tenantContextHolder);
 
         for(TypeSpec typeSpec: xmEntitySpecService.getTypeSpecs().values()) {
@@ -339,11 +350,164 @@ public class XmEntitySpecServiceUnitTest {
         verify(commonConfigRepository).updateConfigFullPath(refEq(new Configuration(permissionPath, expectedPermissions)), eq(sha1Hex(permissions)));
     }
 
-
     private String readFile(String path1) throws IOException {
         InputStream cfgInputStream = new ClassPathResource(path1).getInputStream();
         return IOUtils.toString(cfgInputStream, UTF_8);
     }
 
+
+
+    public class MockTenantContext implements TenantContext {
+        public String tenantKey;
+        @Override
+        public boolean isInitialized() {
+            return true;
+        }
+
+        @Override
+        public Optional<Tenant> getTenant() {
+            return Optional.of(new Tenant() {
+                @Override
+                public TenantKey getTenantKey() {
+                    return TenantKey.valueOf(tenantKey);
+                }
+
+                @Override
+                public boolean isSuper() {
+                    return false;
+                }
+            });
+        }
+    }
+
+    @Test
+    @SneakyThrows
+    public void testMultifilesSpec() {
+        MockTenantContext tenantContext = new MockTenantContext();
+
+        prepareMocksForMiltifilesSpecTest(tenantContext);
+
+        xmEntitySpecService.onRefresh("/config/TENANT1/entity/xmentityspec.yml", getXmEntitySpec("base"));
+        xmEntitySpecService.onRefresh("/config/TENANT1/entity/xmentityspec-secondfile.yml", getXmEntitySpec("secondfile"));
+        xmEntitySpecService.onRefresh("/config/TENANT1/entity/xmentityspec-nextfile.yml", getXmEntitySpec("nextfile"));
+
+        xmEntitySpecService.onRefresh("/config/TENANT2/entity/xmentityspec.yml", getXmEntitySpec("test"));
+
+        assertSpecs(tenantContext);
+    }
+
+    @Test
+    @SneakyThrows
+    public void testMultifilesWithMixOrderSpec() {
+        MockTenantContext tenantContext = new MockTenantContext();
+
+        prepareMocksForMiltifilesSpecTest(tenantContext);
+
+        xmEntitySpecService.onRefresh("/config/TENANT1/entity/xmentityspec-secondfile.yml", getXmEntitySpec("secondfile"));
+        xmEntitySpecService.onRefresh("/config/TENANT1/entity/xmentityspec.yml", getXmEntitySpec("base"));
+        xmEntitySpecService.onRefresh("/config/TENANT1/entity/xmentityspec-nextfile.yml", getXmEntitySpec("nextfile"));
+
+        xmEntitySpecService.onRefresh("/config/TENANT2/entity/xmentityspec.yml", getXmEntitySpec("test"));
+
+        assertSpecs(tenantContext);
+    }
+
+    @Test
+    @SneakyThrows
+    public void testMultifilesDeleteSpec() {
+        MockTenantContext tenantContext = new MockTenantContext();
+
+        prepareMocksForMiltifilesSpecTest(tenantContext);
+
+        xmEntitySpecService.onRefresh("/config/TENANT1/entity/xmentityspec-secondfile.yml", getXmEntitySpec("secondfile"));
+        xmEntitySpecService.onRefresh("/config/TENANT1/entity/xmentityspec.yml", getXmEntitySpec("base"));
+        xmEntitySpecService.onRefresh("/config/TENANT1/entity/xmentityspec-nextfile.yml", getXmEntitySpec("nextfile"));
+
+        xmEntitySpecService.onRefresh("/config/TENANT2/entity/xmentityspec.yml", getXmEntitySpec("test"));
+        assertSpecs(tenantContext);
+
+        xmEntitySpecService.onRefresh("/config/TENANT1/entity/xmentityspec-secondfile.yml", null);
+        assertFalseSpecs(tenantContext);
+
+        xmEntitySpecService.onRefresh("/config/TENANT1/entity/xmentityspec-nextfile.yml", getXmEntitySpec("nextfile"));
+        assertFalseSpecs(tenantContext);
+
+        xmEntitySpecService.onRefresh("/config/TENANT1/entity/xmentityspec-secondfile.yml", getXmEntitySpec("secondfile"));
+        assertSpecs(tenantContext);
+
+        xmEntitySpecService.onRefresh("/config/TENANT1/entity/xmentityspec-secondfile.yml", null);
+        assertFalseSpecs(tenantContext);
+        xmEntitySpecService.onRefresh("/config/TENANT1/entity/xmentityspec.yml", null);
+        assertFalseSpecs(tenantContext);
+        xmEntitySpecService.onRefresh("/config/TENANT1/entity/xmentityspec-nextfile.yml", null);
+    }
+
+
+    @Test(expected = IllegalArgumentException.class)
+    @SneakyThrows
+    public void testMultifilesDeleteAllTenantsSpec() {
+        MockTenantContext tenantContext = new MockTenantContext();
+
+        prepareMocksForMiltifilesSpecTest(tenantContext);
+
+        xmEntitySpecService.onRefresh("/config/TENANT1/entity/xmentityspec-secondfile.yml", getXmEntitySpec("secondfile"));
+        xmEntitySpecService.onRefresh("/config/TENANT1/entity/xmentityspec.yml", getXmEntitySpec("base"));
+        xmEntitySpecService.onRefresh("/config/TENANT1/entity/xmentityspec-nextfile.yml", getXmEntitySpec("nextfile"));
+
+        xmEntitySpecService.onRefresh("/config/TENANT2/entity/xmentityspec.yml", getXmEntitySpec("test"));
+        assertSpecs(tenantContext);
+
+        xmEntitySpecService.onRefresh("/config/TENANT1/entity/xmentityspec-secondfile.yml", null);
+        assertFalseSpecs(tenantContext);
+        xmEntitySpecService.onRefresh("/config/TENANT1/entity/xmentityspec.yml", null);
+        assertFalseSpecs(tenantContext);
+        xmEntitySpecService.onRefresh("/config/TENANT1/entity/xmentityspec-nextfile.yml", null);
+        tenantContext.tenantKey = "TENANT1";
+        xmEntitySpecService.getTypeSpecs();
+    }
+
+
+
+    private void prepareMocksForMiltifilesSpecTest(MockTenantContext tenantContext) {
+        tenantContextHolder = mock(TenantContextHolder.class);
+        when(tenantContextHolder.getContext()).thenReturn(tenantContext);
+        ApplicationProperties ap = new ApplicationProperties();
+        ap.setSpecificationPathPattern("/config/{tenantName}/entity/xmentityspec.yml");
+        ap.setMultifilesSpecificationPathPattern("/config/{tenantName}/entity/xmentityspec-{contextName}.yml");
+        xmEntitySpecService = buildXmEntitySpecService(ap);
+    }
+
+    private void assertSpecs(MockTenantContext tenantContext) throws JsonProcessingException {
+        tenantContext.tenantKey = "TENANT1";
+        Map<String, TypeSpec> typeSpecsTenant1 = xmEntitySpecService.getTypeSpecs();
+
+        tenantContext.tenantKey = "TENANT2";
+        Map<String, TypeSpec> typeSpecsTenant2 = xmEntitySpecService.getTypeSpecs();
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        assertNotSame(typeSpecsTenant1, typeSpecsTenant2);
+        assertEquals(objectMapper.writeValueAsString(typeSpecsTenant1), objectMapper.writeValueAsString(typeSpecsTenant2));
+    }
+
+    private void assertFalseSpecs(MockTenantContext tenantContext) throws JsonProcessingException {
+        tenantContext.tenantKey = "TENANT1";
+        Map<String, TypeSpec> typeSpecsTenant1 = xmEntitySpecService.getTypeSpecs();
+
+        tenantContext.tenantKey = "TENANT2";
+        Map<String, TypeSpec> typeSpecsTenant2 = xmEntitySpecService.getTypeSpecs();
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        assertNotSame(typeSpecsTenant1, typeSpecsTenant2);
+        assertNotEquals(objectMapper.writeValueAsString(typeSpecsTenant1), objectMapper.writeValueAsString(typeSpecsTenant2));
+    }
+
+    private XmEntitySpecService buildXmEntitySpecService(ApplicationProperties ap) {
+        return new XmEntitySpecService(tenantConfigRepository, ap, tenantContextHolder,
+                                       new EntityCustomPrivilegeService(
+                                           commonConfigRepository,
+                                           permissionProperties,
+                                           roleService
+                                       ));
+    }
 
 }

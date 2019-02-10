@@ -3,6 +3,7 @@ package com.icthh.xm.ms.entity.service;
 import static com.github.fge.jackson.NodeType.OBJECT;
 import static com.github.fge.jackson.NodeType.getNodeType;
 import static java.util.Collections.emptyList;
+import static java.util.Comparator.comparing;
 import static java.util.Optional.ofNullable;
 import static org.apache.commons.lang.StringUtils.isEmpty;
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -12,16 +13,42 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.github.fge.jackson.JsonLoader;
-import com.github.fge.jackson.NodeType;
 import com.icthh.xm.commons.config.client.api.RefreshableConfiguration;
 import com.icthh.xm.commons.config.client.repository.TenantConfigRepository;
 import com.icthh.xm.commons.logging.aop.IgnoreLogginAspect;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
 import com.icthh.xm.ms.entity.config.ApplicationProperties;
-import com.icthh.xm.ms.entity.domain.UniqueField;
-import com.icthh.xm.ms.entity.domain.XmEntity;
-import com.icthh.xm.ms.entity.domain.spec.*;
+import com.icthh.xm.ms.entity.domain.spec.AttachmentSpec;
+import com.icthh.xm.ms.entity.domain.spec.CalendarSpec;
+import com.icthh.xm.ms.entity.domain.spec.FunctionSpec;
+import com.icthh.xm.ms.entity.domain.spec.LinkSpec;
+import com.icthh.xm.ms.entity.domain.spec.LocationSpec;
+import com.icthh.xm.ms.entity.domain.spec.NextSpec;
+import com.icthh.xm.ms.entity.domain.spec.RatingSpec;
+import com.icthh.xm.ms.entity.domain.spec.StateSpec;
+import com.icthh.xm.ms.entity.domain.spec.TagSpec;
+import com.icthh.xm.ms.entity.domain.spec.TypeSpec;
+import com.icthh.xm.ms.entity.domain.spec.UniqueFieldSpec;
+import com.icthh.xm.ms.entity.domain.spec.XmEntitySpec;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.TreeSet;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+import javax.annotation.Nullable;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -29,15 +56,6 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.util.AntPathMatcher;
-
-import javax.annotation.Nullable;
-import java.io.IOException;
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Function;
-import java.util.function.Predicate;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * XM Entity Specification service, that provides extra possibilities to
@@ -53,12 +71,16 @@ public class XmEntitySpecService implements RefreshableConfiguration {
     private static final String TYPE_SEPARATOR = ".";
 
     private static final String TENANT_NAME = "tenantName";
+    private static final String CONTEXT_NAME = "contextName";
+    private static final String DEFAULT = "DEFAULT";
 
     private final AntPathMatcher matcher = new AntPathMatcher();
 
     private ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
 
-    private ConcurrentHashMap<String, Map<String, TypeSpec>> types = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, Map<String, TypeSpec>> types = new ConcurrentHashMap<>();
+
+    private final ConcurrentHashMap<String, Map<String, List<TypeSpec>>> originalContextSpecs = new ConcurrentHashMap<>();
 
     private final TenantConfigRepository tenantConfigRepository;
 
@@ -91,8 +113,7 @@ public class XmEntitySpecService implements RefreshableConfiguration {
         return types.get(tenantKeyValue);
     }
 
-    private Map<String, TypeSpec> toTypeSpecsMap(XmEntitySpec xmEntitySpec) {
-        List<TypeSpec> typeSpecs = xmEntitySpec.getTypes();
+    private Map<String, TypeSpec> toTypeSpecsMap(Collection<TypeSpec> typeSpecs) {
         if (isEmpty(typeSpecs)) {
             return Collections.emptyMap();
         } else {
@@ -434,15 +455,35 @@ public class XmEntitySpecService implements RefreshableConfiguration {
     @SneakyThrows
     @IgnoreLogginAspect
     public void onRefresh(String updatedKey, String config) {
-        String specificationPathPattern = applicationProperties.getSpecificationPathPattern();
+        String specPathPattern = applicationProperties.getSpecificationPathPattern();
+        String contextName = DEFAULT;
         try {
-            String tenant = matcher.extractUriTemplateVariables(specificationPathPattern, updatedKey).get(TENANT_NAME);
-            if (org.apache.commons.lang3.StringUtils.isBlank(config)) {
-                types.remove(tenant);
-                return;
+            if (isMultifileFileSpec(updatedKey)) {
+                specPathPattern = applicationProperties.getMultifilesSpecificationPathPattern();
+                contextName = matcher.extractUriTemplateVariables(specPathPattern, updatedKey).get(CONTEXT_NAME);
             }
-            XmEntitySpec spec = mapper.readValue(config, XmEntitySpec.class);
-            Map<String, TypeSpec> value = toTypeSpecsMap(spec);
+
+            String tenant = matcher.extractUriTemplateVariables(specPathPattern, updatedKey).get(TENANT_NAME);
+            originalContextSpecs.putIfAbsent(tenant, new ConcurrentHashMap<>());
+            if (org.apache.commons.lang3.StringUtils.isBlank(config)) {
+                originalContextSpecs.get(tenant).remove(contextName);
+                if (originalContextSpecs.get(tenant).isEmpty()) {
+                    types.remove(tenant);
+                    return;
+                }
+            }
+
+            Set<TypeSpec> typeSpecs = new TreeSet<>(comparing(TypeSpec::getKey));
+            originalContextSpecs.get(tenant).values().forEach(typeSpecs::addAll);
+
+            if (org.apache.commons.lang3.StringUtils.isNotBlank(config)) {
+                XmEntitySpec spec = mapper.readValue(config, XmEntitySpec.class);
+                typeSpecs.addAll(spec.getTypes());
+                originalContextSpecs.get(tenant).put(contextName, spec.getTypes());
+            }
+
+
+            Map<String, TypeSpec> value = toTypeSpecsMap(typeSpecs);
             types.put(tenant, value);
             entityCustomPrivilegeService.updateApplicationPermission(value, tenant);
             log.info("Specification was for tenant {} updated", tenant);
@@ -453,7 +494,16 @@ public class XmEntitySpecService implements RefreshableConfiguration {
 
     @Override
     public boolean isListeningConfiguration(String updatedKey) {
+        return isOneFileSpec(updatedKey) || isMultifileFileSpec(updatedKey);
+    }
+
+    private boolean isOneFileSpec(String updatedKey) {
         String specificationPathPattern = applicationProperties.getSpecificationPathPattern();
+        return matcher.match(specificationPathPattern, updatedKey);
+    }
+
+    private boolean isMultifileFileSpec(String updatedKey) {
+        String specificationPathPattern = applicationProperties.getMultifilesSpecificationPathPattern();
         return matcher.match(specificationPathPattern, updatedKey);
     }
 

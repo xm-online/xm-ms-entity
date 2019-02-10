@@ -1,0 +1,57 @@
+---
+types:
+    - key: TYPE2
+      name: { ru: "Тип 2" }
+      pluralName: { ru: "Типы 2" }
+      isApp: true
+      isAbstract: false
+      dataSpec: |
+          {
+              "speca": "Formly fields specification 2"
+          }
+      access:
+          - TYPE1.SUBTYPE1
+      states:
+          - key: STATE4
+            name: { en: "State 4", ru: "Состояние 4" }
+            icon: null
+            color: null
+            next:
+                - stateKey: STATE5
+                  name: { en: "Action name for STATE5" }
+          - key: STATE5
+            name: { en: "State 5", ru: "Состояние 5" }
+            icon: null
+            color: null
+            next:
+                - stateKey: STATE6
+                  name: { en: "Action name for STATE6" }
+          - key: STATE6
+            name: { en: "State 6", ru: "Состояние 6" }
+            icon: null
+            color: null
+            next:
+                - stateKey: STATE4
+                  name: { en: "Action name for STATE4" }
+      locations:
+          - key: LOCATION1
+            name: { en: "Location 1", ru:  "Адрес 1" }
+            max: 2
+      functions:
+          - key: FUNCTION1
+            name: { en: "Function 1" }
+            actionName: { en: "Function Button 1" }
+            allowedStateKeys:
+                - STATE5
+                - STATE6
+            inputSpec: |
+                {}
+            inputForm: |
+                []
+          - key: FUNCTION2
+            name: { en: "Function 2" }
+            actionName: { en: "Function Button 2" }
+            allowedStateKeys:
+                - STATE5
+                - STATE6
+            withEntityId: true

@@ -1,0 +1,103 @@
+---
+types:
+    - key: TYPE1.SUBTYPE1
+      name: { en: "Subtype 1", ru: "Подтип 1" }
+      isApp: false
+      isAbstract: false
+      attachments:
+          - key: PDF
+            name: { en: "PDF 1", ru: PDF 1}
+            contentTypes:
+                - application/pdf
+            max: 1
+            size: 5Mb
+      tags:
+          - key: TAG1
+            name: { en: "Tag 1", ru: "Метка 1" }
+      calendars:
+          - key: DEFAULT
+            events:
+                - key: EVENT1
+                  name: { en: "Event 1", ru: "Событие 1" }
+      ratings:
+          - key: RATING1
+            name: { en: "Rating 1", ru: "Рейтинг 1" }
+            style: 5STARS
+            votes: 1
+      locations:
+          - key: LOCATION1
+            name: { en: "Location 1", ru:  "Адрес 1" }
+            max: 2
+          - key: LOCATION2
+            name: { en: "Location 2", ru:  "Адрес 2" }
+            max: 4
+          - key: LOCATION3
+            name: { en: "Location 3", ru:  "Адрес 3" }
+            max: 1
+    - key: TYPE1-OTHER
+      name: { en: "Type 1 other", ru: "Тип 1 другая" }
+      isApp: false
+      isAbstract: false
+      attachments:
+          - key: PDF
+            name: { en: "PDF 1", ru: PDF 1}
+            contentTypes:
+                - application/pdf
+            max: 1
+            size: 5Mb
+      tags:
+          - key: TAG1OTHER
+            name: { en: "Tag 1", ru: "Метка 1" }
+      calendars:
+          - key: DEFAULT
+            events:
+                - key: EVENT1
+                  name: { en: "Event 1", ru: "Событие 1" }
+      ratings:
+          - key: RATING1
+            name: { en: "Rating 1", ru: "Рейтинг 1" }
+            style: 5STARS
+            votes: 1
+    - key: TYPE3
+      name: { en: "Type 3" }
+      isApp: true
+      isAbstract: false
+      icon: account_circle
+      dataSpec: |
+          {
+              "type": "object",
+              "title": "Data",
+              "properties": {
+                  "booleanProperties": {
+                      "title": "booleanProperties title",
+                      "type": "boolean"
+                  },
+                  "numberProperties": {
+                      "title": "numberProperties title",
+                      "type": "number"
+                  },
+                  "stringProperties": {
+                      "title": "stringProperties title",
+                      "type": "string"
+                  },
+                  "objectProperties": {
+                      "title": "objectProperties title",
+                      "type": "object",
+                      "properties": {
+                          "subNumberProperties": {
+                              "title": "numberProperties title",
+                              "type": "number"
+                          }
+                      },
+                      "required": [
+                          "subNumberProperties"
+                      ]
+                  }
+              },
+              "required": [
+                  "booleanProperties",
+                  "numberProperties",
+                  "stringProperties",
+                  "objectProperties"
+              ]
+          }

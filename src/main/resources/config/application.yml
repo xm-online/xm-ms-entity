@@ -158,6 +158,7 @@ application:
     specification-webapp-name: settings-public.yml
     specification-name: xmentityspec.yml
     specification-path-pattern: /config/tenants/{tenantName}/entity/${application.specification-name}
+    multifiles-specification-path-pattern: /config/tenants/{tenantName}/entity/xmentityspec-{contextName}.yml
     specification-templates-name: search-templates.yml
     specification-templates-path-pattern: /config/tenants/{tenantName}/entity/${application.specification-templates-name}
     kafka-system-topic: system_topic
