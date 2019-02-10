@@ -1,5 +1,6 @@
 package com.icthh.xm.ms.entity.web.rest;
 
+import static com.icthh.xm.ms.entity.web.rest.FunctionResource.getFunctionKey;
 import static com.icthh.xm.ms.entity.web.rest.XmRestApiConstants.XM_HEADER_CONTENT_NAME;
 import static org.apache.commons.collections.CollectionUtils.isEmpty;
 
@@ -309,6 +310,22 @@ public class XmEntityResource {
         Map<String, Object> fContext = functionInput != null ? functionInput : Maps.newHashMap();
         FunctionContext result = functionService.execute(functionKey, IdOrKey.of(idOrKey), fContext);
         return ResponseEntity.ok().body(result.functionResult());
+    }
+
+    @Timed
+    @GetMapping("/xm-entities/{idOrKey}/functions/**")
+    public ResponseEntity<Object> executeGetFunction(@PathVariable String idOrKey,
+                                                     HttpServletRequest request,
+                                                     @RequestParam(required = false) Map<String, Object> functionInput) {
+        return xmEntityResource.executeGetFunction(idOrKey, getFunctionKey(request), functionInput);
+    }
+
+    @Timed
+    @PostMapping("/xm-entities/{idOrKey}/functions/**")
+    public ResponseEntity<Object> executeFunction(@PathVariable String idOrKey,
+                                                  HttpServletRequest request,
+                                                  @RequestBody(required = false) Map<String, Object> functionInput) {
+        return xmEntityResource.executeFunction(idOrKey, getFunctionKey(request), functionInput);
     }
 
     @GetMapping("/xm-entities/{idOrKey}/links/targets")

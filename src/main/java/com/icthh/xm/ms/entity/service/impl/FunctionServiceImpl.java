@@ -52,8 +52,8 @@ public class FunctionServiceImpl implements FunctionService {
         Objects.requireNonNull(functionKey, "functionKey can't be null");
         Map<String, Object> vInput = CustomCollectionUtils.emptyIfNull(functionInput);
 
-        FunctionSpec functionSpec = xmEntitySpecService.findFunction(functionKey).orElseThrow(
-            () -> new IllegalArgumentException("Function not found, function key: " + functionKey));
+        FunctionSpec functionSpec = null; /*xmEntitySpecService.findFunction(functionKey).orElseThrow(
+            () -> new IllegalArgumentException("Function not found, function key: " + functionKey));*/
 
         // execute function
         Map<String, Object> data = functionExecutorService.execute(functionKey, vInput);

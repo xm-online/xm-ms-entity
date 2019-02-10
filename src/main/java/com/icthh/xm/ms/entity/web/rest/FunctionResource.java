@@ -1,12 +1,19 @@
 package com.icthh.xm.ms.entity.web.rest;
 
+import static org.springframework.web.servlet.HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE;
+import static org.springframework.web.servlet.HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE;
+
 import com.codahale.metrics.annotation.Timed;
 import com.icthh.xm.ms.entity.domain.FunctionContext;
 import com.icthh.xm.ms.entity.service.FunctionService;
 import com.icthh.xm.ms.entity.web.rest.util.HeaderUtil;
+import javax.servlet.http.HttpServletRequest;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.util.AntPathMatcher;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -31,8 +38,15 @@ public class FunctionResource {
 
     private final FunctionService functionService;
 
+    private FunctionResource self;
+
     public FunctionResource(@Qualifier("functionService") FunctionService functionService) {
         this.functionService = functionService;
+    }
+
+    @Autowired
+    public void setSelf(@Lazy FunctionResource self) {
+        this.self = self;
     }
 
     @Timed
@@ -90,5 +104,40 @@ public class FunctionResource {
             return (ModelAndView) data;
         }
         return null;
+    }
+
+
+    @Timed
+    @GetMapping("/functions/**")
+    public ResponseEntity<Object> callGetFunction(HttpServletRequest request,
+                                  @RequestParam(required = false) Map<String, Object> functionInput) {
+        return self.callGetFunction(getFunctionKey(request), functionInput);
+    }
+
+    @Timed
+    @PostMapping("/functions/**")
+    public ResponseEntity<Object> callFunction(HttpServletRequest request,
+                                               @RequestParam(required = false) Map<String, Object> functionInput) {
+        return self.callFunction(getFunctionKey(request), functionInput);
+    }
+
+    @Timed
+    @PutMapping("/functions/**")
+    public ResponseEntity<Object> callPutFunction(HttpServletRequest request,
+                                                  @RequestParam(required = false) Map<String, Object> functionInput) {
+        return self.callPutFunction(getFunctionKey(request), functionInput);
+    }
+
+    @Timed
+    @PostMapping("/functions/mvc/**")
+    public ModelAndView callMvcFunction(HttpServletRequest request,
+                                        @RequestBody(required = false) Map<String, Object> functionInput) {
+        return self.callMvcFunction(getFunctionKey(request), functionInput);
+    }
+
+    public static String getFunctionKey(HttpServletRequest request) {
+        String path = request.getAttribute(PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE).toString();
+        String bestMatchingPattern = request.getAttribute(BEST_MATCHING_PATTERN_ATTRIBUTE).toString();
+        return new AntPathMatcher().extractPathWithinPattern(bestMatchingPattern, path);
     }
 }
