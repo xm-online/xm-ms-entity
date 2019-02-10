@@ -97,8 +97,8 @@ if (OperatingSystem.current().isWindows()) {
 
 test {
 
-    useJUnitPlatform()
-    
+    //useJUnitPlatform()
+
     dependsOn 'clean'
     classes.mustRunAfter 'clean'
     systemProperty "spring.profiles.active", "test"
@@ -338,7 +338,7 @@ task cleanResources(type: Delete) {
 }
 
 task wrapper(type: Wrapper) {
-    gradleVersion = '4.9'
+    gradleVersion = '5.0'
 }
 
 task stage(dependsOn: 'bootRepackage') {
