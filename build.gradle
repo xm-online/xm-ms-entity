@@ -278,7 +278,7 @@ dependencies {
     compile "com.icthh.xm.commons:xm-commons-permission:${xm_commons_version}"
 
     // TODO make all commons version the same
-    compile "com.icthh.xm.commons:xm-commons-scheduler:1.2.25"
+    compile "com.icthh.xm.commons:xm-commons-scheduler:1.2.26"
     compile "com.icthh.xm.commons:xm-commons-metric:1.2.26"
 
     compile "org.freemarker:freemarker:${freemarker_version}"
