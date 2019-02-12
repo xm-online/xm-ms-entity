@@ -262,7 +262,7 @@ dependencies {
     compile 'org.codehaus.groovy.modules.http-builder:http-builder:0.7.1'
 
     compile ("com.icthh.xm.commons:xm-commons-ms-web:${xm_commons_version}") {
-        exclude group: "io.github.jhipster", module: "jhipster"
+        exclude group: "io.github.jhipster", module: "jhipster-framework"
     }
     compile "com.icthh.xm.commons:xm-commons-lep:${xm_commons_version}"
     compile "com.icthh.xm.commons:xm-commons-tenant-endpoint:${xm_commons_version}"
