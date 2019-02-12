@@ -45,12 +45,7 @@ public class StorageRepository {
             String filename = UUID.randomUUID().toString() + "." + FilenameUtils.getExtension(name);
             amazonS3Template.save(filename, stream);
 
-            try {
-                if (stream != null) {
-                    stream.close();
-                }
-            } catch (IOException ignore) {
-            }
+            closeQuietly(stream);
 
             String prefix = String.format(applicationProperties.getAmazon().getAws().getTemplate(),
                 applicationProperties.getAmazon().getS3().getBucket());
@@ -58,6 +53,16 @@ public class StorageRepository {
         } catch (IOException e) {
             log.error("Error storing file", e);
             throw new BusinessException("Error storing file");
+        }
+    }
+
+    private void closeQuietly(final InputStream stream) {
+        try {
+            if (stream != null) {
+                stream.close();
+            }
+        } catch (IOException ignore) {
+            log.warn("Close stream fail: {}", ignore.getMessage());
         }
     }
 

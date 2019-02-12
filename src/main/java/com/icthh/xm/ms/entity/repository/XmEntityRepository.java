@@ -90,6 +90,16 @@ public class XmEntityRepository implements SpringXmEntityRepository {
         return springXmEntityRepository.findAllById(longs);
     }
 
+    /**
+     * For backward compatibility in LEPs.
+     *
+     * Deprecated: use findAllById(Iterable<Long> longs) instead.
+     */
+    @Deprecated
+    public List<XmEntity> findAll(Iterable<Long> longs) {
+        return findAllById(longs);
+    }
+
     @Override
     public void flush() {
         springXmEntityRepository.flush();
@@ -130,9 +140,29 @@ public class XmEntityRepository implements SpringXmEntityRepository {
         return springXmEntityRepository.findById(aLong);
     }
 
+    /**
+     * For backward compatibility in LEPs.
+     *
+     * Deprecated: use findById(Long aLong) instead.
+     */
+    @Deprecated
+    public XmEntity findOne(Long aLong) {
+        return findById(aLong).orElse(null);
+    }
+
     @Override
     public boolean existsById(Long aLong) {
         return springXmEntityRepository.existsById(aLong);
+    }
+
+    /**
+     * For backward compatibility in LEPs.
+     *
+     * Deprecated: use existsById(Long aLong) instead.
+     */
+    @Deprecated
+    public boolean exists(Long aLong) {
+        return existsById(aLong);
     }
 
     @Override
@@ -145,6 +175,16 @@ public class XmEntityRepository implements SpringXmEntityRepository {
         springXmEntityRepository.deleteById(aLong);
     }
 
+    /**
+     * For backward compatibility in LEPs.
+     *
+     * Deprecated: use deleteById(Long aLong) instead.
+     */
+    @Deprecated
+    public void delete(Long aLong) {
+        deleteById(aLong);
+    }
+
     @Override
     public void delete(XmEntity entity) {
         springXmEntityRepository.delete(entity);
@@ -153,6 +193,16 @@ public class XmEntityRepository implements SpringXmEntityRepository {
     @Override
     public void deleteAll(Iterable<? extends XmEntity> entities) {
         springXmEntityRepository.deleteAll(entities);
+    }
+
+    /**
+     * For backward compatibility in LEPs.
+     *
+     * Deprecated: use deleteAll(Iterable<? extends XmEntity> entities) instead.
+     */
+    @Deprecated
+    public void delete(Iterable<? extends XmEntity> entities) {
+        deleteAll(entities);
     }
 
     @Override
@@ -218,6 +268,16 @@ public class XmEntityRepository implements SpringXmEntityRepository {
         }
 
         return springXmEntityRepository.saveAll(entities);
+    }
+
+    /**
+     * For backward compatibility in LEPs.
+     *
+     * Deprecated: use saveAll(Iterable<? extends XmEntity> entities) instead.
+     */
+    @Deprecated
+    public <S extends XmEntity> List<S> save(Iterable<S> entities) {
+        return saveAll(entities);
     }
 
     @Override

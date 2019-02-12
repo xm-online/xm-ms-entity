@@ -619,6 +619,11 @@ public class XmEntityServiceImpl implements XmEntityService {
         return findOne(IdOrKey.of(String.valueOf(id)));
     }
 
+    @Override
+    public XmEntity findById(final Object id) {
+        return findOne(IdOrKey.of(String.valueOf(id)));
+    }
+
     @LogicExtensionPoint("Export")
     @Override
     public byte[] exportEntities(String fileFormat, String typeKey) {
