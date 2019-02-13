@@ -8,7 +8,7 @@ import com.icthh.xm.commons.tenant.TenantContextUtils;
 import com.icthh.xm.commons.tenant.TenantKey;
 import com.icthh.xm.ms.entity.config.MappingConfiguration;
 import com.icthh.xm.ms.entity.domain.XmEntity;
-import com.icthh.xm.ms.entity.repository.XmEntityRepository;
+import com.icthh.xm.ms.entity.repository.XmEntityRepositoryInternal;
 import com.icthh.xm.ms.entity.repository.search.XmEntitySearchRepository;
 import lombok.AccessLevel;
 import lombok.Setter;
@@ -20,14 +20,11 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
-import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
-import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.beans.IntrospectionException;
 import java.beans.PropertyDescriptor;
-import java.io.Serializable;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.List;
@@ -46,7 +43,7 @@ public class ElasticsearchIndexService {
 
     private static final Lock reindexLock = new ReentrantLock();
 
-    private final XmEntityRepository xmEntityRepository;
+    private final XmEntityRepositoryInternal xmEntityRepositoryInternal;
     private final XmEntitySearchRepository xmEntitySearchRepository;
     private final ElasticsearchTemplate elasticsearchTemplate;
     private final TenantContextHolder tenantContextHolder;
@@ -58,13 +55,13 @@ public class ElasticsearchIndexService {
     @Lazy
     private ElasticsearchIndexService selfReference;
 
-    public ElasticsearchIndexService(XmEntityRepository xmEntityRepository,
+    public ElasticsearchIndexService(XmEntityRepositoryInternal xmEntityRepositoryInternal,
                                      XmEntitySearchRepository xmEntitySearchRepository,
                                      ElasticsearchTemplate elasticsearchTemplate,
                                      TenantContextHolder tenantContextHolder,
                                      MappingConfiguration mappingConfiguration,
                                      @Qualifier("taskExecutor") Executor executor) {
-        this.xmEntityRepository = xmEntityRepository;
+        this.xmEntityRepositoryInternal = xmEntityRepositoryInternal;
         this.xmEntitySearchRepository = xmEntitySearchRepository;
         this.elasticsearchTemplate = elasticsearchTemplate;
         this.tenantContextHolder = tenantContextHolder;
@@ -84,7 +81,7 @@ public class ElasticsearchIndexService {
     public void reindexAll() {
         if (reindexLock.tryLock()) {
             try {
-                reindexForClass(xmEntityRepository, xmEntitySearchRepository);
+                reindexXmEntity();
 
                 log.info("Elasticsearch: Successfully performed reindexing");
             } finally {
@@ -95,29 +92,31 @@ public class ElasticsearchIndexService {
         }
     }
 
-    private <T, ID extends Serializable> void reindexForClass(JpaRepository<T, ID> jpaRepository,
-                                                              ElasticsearchRepository<T, ID> elasticsearchRepository) {
-        elasticsearchTemplate.deleteIndex(XmEntity.class);
+    private void reindexXmEntity() {
+
+        final Class<XmEntity> clazz = XmEntity.class;
+
+        elasticsearchTemplate.deleteIndex(clazz);
         try {
-            elasticsearchTemplate.createIndex(XmEntity.class);
+            elasticsearchTemplate.createIndex(clazz);
         } catch (ResourceAlreadyExistsException e) {
-            // Do nothing. Index was already concurrently recreated by some other service.
+            log.info("Do nothing. Index was already concurrently recreated by some other service");
         }
-        elasticsearchTemplate.putMapping(XmEntity.class);
+        elasticsearchTemplate.putMapping(clazz);
         if (mappingConfiguration.isMappingExists()) {
-            elasticsearchTemplate.putMapping(XmEntity.class, mappingConfiguration.getMapping());
+            elasticsearchTemplate.putMapping(clazz, mappingConfiguration.getMapping());
         }
-        if (jpaRepository.count() > 0) {
-            List<Method> relationshipGetters = Arrays.stream(XmEntity.class.getDeclaredFields())
+        if (xmEntityRepositoryInternal.count() > 0) {
+            List<Method> relationshipGetters = Arrays.stream(clazz.getDeclaredFields())
                 .filter(field -> field.getType().equals(Set.class))
                 .filter(field -> field.getAnnotation(OneToMany.class) != null)
                 .filter(field -> field.getAnnotation(JsonIgnore.class) == null)
                 .map(field -> {
                     try {
-                        return new PropertyDescriptor(field.getName(), XmEntity.class).getReadMethod();
+                        return new PropertyDescriptor(field.getName(), clazz).getReadMethod();
                     } catch (IntrospectionException e) {
                         log.error("Error retrieving getter for class {}, field {}. Field will NOT be indexed",
-                                  XmEntity.class.getSimpleName(), field.getName(), e);
+                                  clazz.getSimpleName(), field.getName(), e);
                         return null;
                     }
                 })
@@ -125,10 +124,10 @@ public class ElasticsearchIndexService {
                 .collect(Collectors.toList());
 
             int size = 100;
-            for (int i = 0; i <= jpaRepository.count() / size; i++) {
+            for (int i = 0; i <= xmEntityRepositoryInternal.count() / size; i++) {
                 Pageable page = PageRequest.of(i, size);
-                log.info("Indexing page {} of {}, size {}", i, jpaRepository.count() / size, size);
-                Page<T> results = jpaRepository.findAll(page);
+                log.info("Indexing page {} of {}, size {}", i, xmEntityRepositoryInternal.count() / size, size);
+                Page<XmEntity> results = xmEntityRepositoryInternal.findAll(page);
                 results.map(result -> {
                     // if there are any relationships to load, do it now
                     relationshipGetters.forEach(method -> {
@@ -141,10 +140,10 @@ public class ElasticsearchIndexService {
                     });
                     return result;
                 });
-                elasticsearchRepository.saveAll(results.getContent());
+                xmEntitySearchRepository.saveAll(results.getContent());
             }
         }
-        log.info("Elasticsearch: Indexed all rows for {}", XmEntity.class.getSimpleName());
+        log.info("Elasticsearch: Indexed all rows for {}", clazz.getSimpleName());
     }
 
     private void execForCustomContext(TenantKey tenantKey, String rid, Runnable runnable) {

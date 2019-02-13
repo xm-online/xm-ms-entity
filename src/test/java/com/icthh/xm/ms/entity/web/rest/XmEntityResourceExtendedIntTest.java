@@ -64,9 +64,10 @@ import com.icthh.xm.ms.entity.domain.Location;
 import com.icthh.xm.ms.entity.domain.Tag;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.domain.ext.IdOrKey;
+import com.icthh.xm.ms.entity.repository.SpringXmEntityRepository;
 import com.icthh.xm.ms.entity.repository.UniqueFieldRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityPermittedRepository;
-import com.icthh.xm.ms.entity.repository.XmEntityRepository;
+import com.icthh.xm.ms.entity.repository.XmEntityRepositoryInternal;
 import com.icthh.xm.ms.entity.repository.kafka.ProfileEventProducer;
 import com.icthh.xm.ms.entity.repository.search.XmEntityPermittedSearchRepository;
 import com.icthh.xm.ms.entity.repository.search.XmEntitySearchRepository;
@@ -213,7 +214,10 @@ public class XmEntityResourceExtendedIntTest {
     private XmEntityResource xmEntityResource;
 
     @Autowired
-    private XmEntityRepository xmEntityRepository;
+    private XmEntityRepositoryInternal xmEntityRepository;
+
+    @Autowired
+    private SpringXmEntityRepository springXmEntityRepository;
 
     @Autowired
     private ProfileEventProducer profileEventProducer;
@@ -353,7 +357,8 @@ public class XmEntityResourceExtendedIntTest {
                                                                       authContextHolder,
                                                                       objectMapper,
                                                                       tenantConfigService,
-                                                                      mock(UniqueFieldRepository.class));
+                                                                      mock(UniqueFieldRepository.class),
+                                                                      springXmEntityRepository);
 
         xmEntityService.setSelf(xmEntityService);
         this.xmEntityService = xmEntityService;

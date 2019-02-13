@@ -12,6 +12,7 @@ import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.ms.entity.config.MappingConfiguration;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
+import com.icthh.xm.ms.entity.repository.XmEntityRepositoryInternal;
 import com.icthh.xm.ms.entity.repository.search.XmEntitySearchRepository;
 import lombok.SneakyThrows;
 import org.junit.Before;
@@ -41,7 +42,7 @@ public class ElasticsearchIndexServiceUnitTest {
     @InjectMocks
     private ElasticsearchIndexService service;
     @Mock
-    private XmEntityRepository xmEntityRepository;
+    private XmEntityRepositoryInternal xmEntityRepository;
     @Mock
     private XmEntitySearchRepository xmEntitySearchRepository;
     @Mock
@@ -62,32 +63,34 @@ public class ElasticsearchIndexServiceUnitTest {
 
     @Test
     public void reindexAll() {
-        prepareInternal(XmEntity.class, xmEntityRepository);
+        prepareInternal();
 
         service.reindexAll();
 
-        verifyInternal(XmEntity.class, xmEntityRepository, xmEntitySearchRepository);
+        verifyInternal();
     }
 
     @SneakyThrows
-    private <T, ID extends Serializable> void prepareInternal(Class<T> entityClass,
-        JpaRepository<T, ID> jpaRepository) {
-        when(jpaRepository.count()).thenReturn(10L);
-        when(jpaRepository.findAll(PageRequest.of(0, 100))).thenReturn(
+    private void prepareInternal() {
+        Class<XmEntity> entityClass = XmEntity.class;
+        when(xmEntityRepository.count()).thenReturn(10L);
+        when(xmEntityRepository.findAll(PageRequest.of(0, 100))).thenReturn(
             new PageImpl<>(Collections.singletonList(createObject(entityClass))));
     }
 
     @SneakyThrows
-    private <T, ID extends Serializable> void verifyInternal(Class<T> entityClass, JpaRepository<T, ID> jpaRepository,
-        ElasticsearchRepository<T, ID> elasticsearchRepository) {
+    private  void verifyInternal() {
+
+        Class<XmEntity> entityClass = XmEntity.class;
+
         verify(elasticsearchTemplate).deleteIndex(entityClass);
         verify(elasticsearchTemplate).createIndex(entityClass);
         verify(elasticsearchTemplate).putMapping(entityClass);
 
-        verify(jpaRepository, times(4)).count();
+        verify(xmEntityRepository, times(4)).count();
 
         ArgumentCaptor<List> list = ArgumentCaptor.forClass(List.class);
-        verify(elasticsearchRepository).saveAll(list.capture());
+        verify(xmEntitySearchRepository).saveAll(list.capture());
 
         assertThat(list.getValue()).containsExactly(createObject(entityClass));
     }

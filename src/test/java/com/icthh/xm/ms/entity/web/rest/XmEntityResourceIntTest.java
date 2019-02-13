@@ -45,9 +45,10 @@ import com.icthh.xm.ms.entity.config.elasticsearch.EmbeddedElasticsearchConfig;
 import com.icthh.xm.ms.entity.config.tenant.WebappTenantOverrideConfiguration;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.domain.spec.StateSpec;
+import com.icthh.xm.ms.entity.repository.SpringXmEntityRepository;
 import com.icthh.xm.ms.entity.repository.UniqueFieldRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityPermittedRepository;
-import com.icthh.xm.ms.entity.repository.XmEntityRepository;
+import com.icthh.xm.ms.entity.repository.XmEntityRepositoryInternal;
 import com.icthh.xm.ms.entity.repository.kafka.ProfileEventProducer;
 import com.icthh.xm.ms.entity.repository.search.XmEntityPermittedSearchRepository;
 import com.icthh.xm.ms.entity.repository.search.XmEntitySearchRepository;
@@ -155,7 +156,10 @@ public class XmEntityResourceIntTest {
     private ApplicationProperties applicationProperties;
 
     @Autowired
-    private XmEntityRepository xmEntityRepository;
+    private XmEntityRepositoryInternal xmEntityRepository;
+
+    @Autowired
+    private SpringXmEntityRepository springXmEntityRepository;
 
     private XmEntityServiceImpl xmEntityServiceImpl;
 
@@ -287,7 +291,8 @@ public class XmEntityResourceIntTest {
                                                       authContextHolder,
                                                       objectMapper,
                                                       tenantConfigService,
-                                                      mock(UniqueFieldRepository.class));
+                                                      mock(UniqueFieldRepository.class),
+                                                      springXmEntityRepository);
         xmEntityServiceImpl.setSelf(xmEntityServiceImpl);
 
         this.xmEntityServiceImpl = xmEntityServiceImpl;
