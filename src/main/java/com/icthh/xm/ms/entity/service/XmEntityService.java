@@ -110,5 +110,13 @@ public interface XmEntityService extends ResourceRepository {
     @Override
     Object findResourceById(Object id);
 
+    /**
+     * For backward compatibility in LEPs.
+     *
+     * Deprecated: use findOne(IdOrKey idOrKey) instead.
+     */
+    @Deprecated
+    XmEntity findById(Object id);
+
     byte[] exportEntities(String fileFormat, String typeKey);
 }
