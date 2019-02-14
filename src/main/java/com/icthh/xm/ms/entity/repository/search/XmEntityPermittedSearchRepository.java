@@ -5,6 +5,7 @@ import static org.elasticsearch.index.query.QueryBuilders.boolQuery;
 import static org.elasticsearch.index.query.QueryBuilders.matchQuery;
 import static org.elasticsearch.index.query.QueryBuilders.prefixQuery;
 import static org.elasticsearch.index.query.QueryBuilders.simpleQueryStringQuery;
+import static org.springframework.data.elasticsearch.core.query.Query.DEFAULT_PAGE;
 
 import com.icthh.xm.commons.permission.service.PermissionCheckService;
 import com.icthh.xm.ms.entity.domain.XmEntity;
@@ -59,7 +60,7 @@ public class XmEntityPermittedSearchRepository extends PermittedSearchRepository
 
         NativeSearchQuery queryBuilder = new NativeSearchQueryBuilder()
             .withQuery(esQuery)
-            .withPageable(pageable)
+            .withPageable(pageable == null ? DEFAULT_PAGE : pageable)
             .build();
 
         return getElasticsearchTemplate().queryForPage(queryBuilder, XmEntity.class);
