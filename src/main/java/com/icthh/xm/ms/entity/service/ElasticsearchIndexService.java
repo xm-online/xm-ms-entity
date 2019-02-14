@@ -25,6 +25,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.beans.IntrospectionException;
 import java.beans.PropertyDescriptor;
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.List;
@@ -42,6 +43,7 @@ import javax.persistence.OneToMany;
 public class ElasticsearchIndexService {
 
     private static final Lock reindexLock = new ReentrantLock();
+    private static final int PAGE_SIZE = 100;
 
     private final XmEntityRepositoryInternal xmEntityRepositoryInternal;
     private final XmEntitySearchRepository xmEntitySearchRepository;
@@ -102,62 +104,61 @@ public class ElasticsearchIndexService {
         } catch (ResourceAlreadyExistsException e) {
             log.info("Do nothing. Index was already concurrently recreated by some other service");
         }
+
         elasticsearchTemplate.putMapping(clazz);
         if (mappingConfiguration.isMappingExists()) {
             elasticsearchTemplate.putMapping(clazz, mappingConfiguration.getMapping());
         }
+
         if (xmEntityRepositoryInternal.count() > 0) {
             List<Method> relationshipGetters = Arrays.stream(clazz.getDeclaredFields())
                 .filter(field -> field.getType().equals(Set.class))
                 .filter(field -> field.getAnnotation(OneToMany.class) != null)
                 .filter(field -> field.getAnnotation(JsonIgnore.class) == null)
-                .map(field -> {
-                    try {
-                        return new PropertyDescriptor(field.getName(), clazz).getReadMethod();
-                    } catch (IntrospectionException e) {
-                        log.error("Error retrieving getter for class {}, field {}. Field will NOT be indexed",
-                                  clazz.getSimpleName(), field.getName(), e);
-                        return null;
-                    }
-                })
+                .map(field -> extractFieldGetter(clazz, field))
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());
 
-            int size = 100;
-            for (int i = 0; i <= xmEntityRepositoryInternal.count() / size; i++) {
-                Pageable page = PageRequest.of(i, size);
-                log.info("Indexing page {} of {}, size {}", i, xmEntityRepositoryInternal.count() / size, size);
+            for (int i = 0; i <= xmEntityRepositoryInternal.count() / PAGE_SIZE ; i++) {
+                Pageable page = PageRequest.of(i, PAGE_SIZE);
+                log.info("Indexing page {} of {}, pageSize {}", i, xmEntityRepositoryInternal.count() / PAGE_SIZE, PAGE_SIZE);
                 Page<XmEntity> results = xmEntityRepositoryInternal.findAll(page);
-                results.map(result -> {
-                    // if there are any relationships to load, do it now
-                    relationshipGetters.forEach(method -> {
-                        try {
-                            // eagerly load the relationship set
-                            ((Set) method.invoke(result)).size();
-                        } catch (Exception ex) {
-                            log.error(ex.getMessage());
-                        }
-                    });
-                    return result;
-                });
+                results.map(entity -> loadEntityRelationships(relationshipGetters, entity));
                 xmEntitySearchRepository.saveAll(results.getContent());
             }
         }
         log.info("Elasticsearch: Indexed all rows for {}", clazz.getSimpleName());
     }
 
-    private void execForCustomContext(TenantKey tenantKey, String rid, Runnable runnable) {
-        final String oldRid = MdcUtils.getRid();
+    private Method extractFieldGetter(final Class<XmEntity> clazz, final Field field) {
         try {
-            TenantContextUtils.setTenant(tenantContextHolder, tenantKey);
-            MdcUtils.putRid(rid);
-            runnable.run();
-        } finally {
-            if (oldRid != null) {
-                MdcUtils.putRid(oldRid);
-            } else {
-                MdcUtils.removeRid();
+            return new PropertyDescriptor(field.getName(), clazz).getReadMethod();
+        } catch (IntrospectionException e) {
+            log.error("Error retrieving getter for class {}, field {}. Field will NOT be indexed",
+                      clazz.getSimpleName(), field.getName(), e);
+            return null;
+        }
+    }
+
+    private XmEntity loadEntityRelationships(final List<Method> relationshipGetters, final XmEntity entity) {
+        // if there are any relationships to load, do it now
+        relationshipGetters.forEach(method -> {
+            try {
+                // eagerly load the relationship set
+                ((Set) method.invoke(entity)).size();
+            } catch (Exception ex) {
+                log.error("Error loading relationships for entity: {}, error: {}", entity, ex.getMessage());
             }
+        });
+        return entity;
+    }
+
+    private void execForCustomContext(TenantKey tenantKey, String rid, Runnable runnable) {
+        try {
+            MdcUtils.putRid(rid);
+            tenantContextHolder.getPrivilegedContext().execute(TenantContextUtils.buildTenant(tenantKey), runnable);
+        } finally {
+            MdcUtils.removeRid();
         }
     }
 }
