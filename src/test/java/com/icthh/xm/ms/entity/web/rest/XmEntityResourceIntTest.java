@@ -279,7 +279,6 @@ public class XmEntityResourceIntTest {
         XmEntityServiceImpl xmEntityServiceImpl = new XmEntityServiceImpl(xmEntitySpecService,
                                                       xmEntityTemplatesSpecService,
                                                       xmEntityRepository,
-                                                      xmEntitySearchRepository,
                                                       lifeCycleService,
                                                       xmEntityPermittedRepository,
                                                       profileService,
@@ -290,7 +289,6 @@ public class XmEntityResourceIntTest {
                                                       startUpdateDateGenerationStrategy,
                                                       authContextHolder,
                                                       objectMapper,
-                                                      tenantConfigService,
                                                       mock(UniqueFieldRepository.class),
                                                       springXmEntityRepository);
         xmEntityServiceImpl.setSelf(xmEntityServiceImpl);

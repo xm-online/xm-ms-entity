@@ -36,6 +36,7 @@ public class XmEntityRepositoryInternalImpl implements XmEntityRepositoryInterna
 
     /**
      * Returns entity by ID with using xmEntityGraph
+     *
      * @param id
      * @return xmEntity instance
      */
@@ -79,22 +80,18 @@ public class XmEntityRepositoryInternalImpl implements XmEntityRepositoryInterna
         return springXmEntityRepository.findAll();
     }
 
-//    @Override
-//    public List<XmEntity> findAll(Sort sort) {
-//        return springXmEntityRepository.findAll(sort);
-//    }
 
     @Override
     public List<XmEntity> findAllById(Iterable<Long> longs) {
         return springXmEntityRepository.findAllById(longs);
     }
 
-//    /**
-//     * For backward compatibility in LEPs.
-//     *
-//     * Deprecated: use findAllById(Iterable<Long> longs) instead.
-//     */
-//    @Deprecated
+    /**
+     * For backward compatibility in LEPs.
+     * <p>
+     * Deprecated: use findAllById(Iterable<Long> longs) instead.
+     */
+    @Deprecated
     @Override
     public List<XmEntity> findAll(Iterable<Long> longs) {
         return findAllById(longs);
@@ -104,16 +101,6 @@ public class XmEntityRepositoryInternalImpl implements XmEntityRepositoryInterna
     public void flush() {
         springXmEntityRepository.flush();
     }
-
-//    @Override
-//    public void deleteInBatch(Iterable<XmEntity> entities) {
-//        springXmEntityRepository.deleteInBatch(entities);
-//    }
-//
-//    @Override
-//    public void deleteAllInBatch() {
-//        springXmEntityRepository.deleteAllInBatch();
-//    }
 
     /**
      * Returns a reference to the entity with the given identifier.
@@ -127,16 +114,6 @@ public class XmEntityRepositoryInternalImpl implements XmEntityRepositoryInterna
         return springXmEntityRepository.getOne(id);
     }
 
-//    @Override
-//    public <S extends XmEntity> List<S> findAll(Example<S> example) {
-//        return springXmEntityRepository.findAll(example);
-//    }
-//
-//    @Override
-//    public <S extends XmEntity> List<S> findAll(Example<S> example, Sort sort) {
-//        return springXmEntityRepository.findAll(example, sort);
-//    }
-
     @Override
     public Page<XmEntity> findAll(Pageable pageable) {
         return springXmEntityRepository.findAll(pageable);
@@ -147,12 +124,12 @@ public class XmEntityRepositoryInternalImpl implements XmEntityRepositoryInterna
         return springXmEntityRepository.findById(aLong);
     }
 
-//    /**
-//     * For backward compatibility in LEPs.
-//     *
-//     * Deprecated: use findById(Long aLong) instead.
-//     */
-//    @Deprecated
+    /**
+     * For backward compatibility in LEPs.
+     * <p>
+     * Deprecated: use findById(Long aLong) instead.
+     */
+    @Deprecated
     @Override
     public XmEntity findOne(Long aLong) {
         return findById(aLong).orElse(null);
@@ -163,12 +140,12 @@ public class XmEntityRepositoryInternalImpl implements XmEntityRepositoryInterna
         return springXmEntityRepository.existsById(aLong);
     }
 
-//    /**
-//     * For backward compatibility in LEPs.
-//     *
-//     * Deprecated: use existsById(Long aLong) instead.
-//     */
-//    @Deprecated
+    /**
+     * For backward compatibility in LEPs.
+     * <p>
+     * Deprecated: use existsById(Long aLong) instead.
+     */
+    @Deprecated
     @Override
     public boolean exists(Long aLong) {
         return existsById(aLong);
@@ -184,65 +161,15 @@ public class XmEntityRepositoryInternalImpl implements XmEntityRepositoryInterna
         springXmEntityRepository.deleteById(aLong);
     }
 
-//    /**
-//     * For backward compatibility in LEPs.
-//     *
-//     * Deprecated: use deleteById(Long aLong) instead.
-//     */
-//    @Deprecated
-//    public void delete(Long aLong) {
-//        deleteById(aLong);
-//    }
-
     @Override
     public void delete(XmEntity entity) {
         springXmEntityRepository.delete(entity);
     }
 
-//    @Override
-//    public void deleteAll(Iterable<? extends XmEntity> entities) {
-//        springXmEntityRepository.deleteAll(entities);
-//    }
-
-//    /**
-//     * For backward compatibility in LEPs.
-//     *
-//     * Deprecated: use deleteAll(Iterable<? extends XmEntity> entities) instead.
-//     */
-//    @Deprecated
-//    public void delete(Iterable<? extends XmEntity> entities) {
-//        deleteAll(entities);
-//    }
-
     @Override
     public void deleteAll() {
         springXmEntityRepository.deleteAll();
     }
-
-//    @Override
-//    public <S extends XmEntity> Optional<S> findOne(Example<S> example) {
-//        return springXmEntityRepository.findOne(example);
-//    }
-
-//    @Override
-//    public <S extends XmEntity> Page<S> findAll(Example<S> example, Pageable pageable) {
-//        return springXmEntityRepository.findAll(example, pageable);
-//    }
-
-//    @Override
-//    public <S extends XmEntity> long count(Example<S> example) {
-//        return springXmEntityRepository.count(example);
-//    }
-
-//    @Override
-//    public <S extends XmEntity> boolean exists(Example<S> example) {
-//        return springXmEntityRepository.exists(example);
-//    }
-
-//    @Override
-//    public Optional<XmEntity> findOne(Specification<XmEntity> spec) {
-//        return springXmEntityRepository.findOne(spec);
-//    }
 
     @Override
     public XmEntity findOne(Specification<XmEntity> spec) {
@@ -286,12 +213,12 @@ public class XmEntityRepositoryInternalImpl implements XmEntityRepositoryInterna
         return springXmEntityRepository.saveAll(entities);
     }
 
-//    /**
-//     * For backward compatibility in LEPs.
-//     *
-//     * Deprecated: use saveAll(Iterable<? extends XmEntity> entities) instead.
-//     */
-//    @Deprecated
+    /**
+     * For backward compatibility in LEPs.
+     * <p>
+     * Deprecated: use saveAll(Iterable<? extends XmEntity> entities) instead.
+     */
+    @Deprecated
     @Override
     public <S extends XmEntity> List<S> save(Iterable<S> entities) {
         return saveAll(entities);
@@ -328,7 +255,7 @@ public class XmEntityRepositoryInternalImpl implements XmEntityRepositoryInterna
 
     private boolean isEntityVersionEnabled() {
         return Optional.ofNullable(tenantConfigService.getConfig().get("entityVersionControl"))
-                       .filter(it -> it instanceof Map).map(Map.class::cast)
-                       .map(it -> it.get("enabled")).map(it -> (boolean)it).orElse(false);
+            .filter(it -> it instanceof Map).map(Map.class::cast)
+            .map(it -> it.get("enabled")).map(it -> (boolean) it).orElse(false);
     }
 }

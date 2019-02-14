@@ -173,7 +173,6 @@ public class EntityServiceImplIntTest {
             xmEntitySpecService,
             xmEntityTemplatesSpecService,
             xmEntityRepository,
-            xmEntitySearchRepository,
             lifecycleService,
             null,
             profileService,
@@ -184,7 +183,6 @@ public class EntityServiceImplIntTest {
             startUpdateDateGenerationStrategy,
             authContextHolder,
             objectMapper,
-            tenantConfigService,
             mock(UniqueFieldRepository.class),
             springXmEntityRepository);
         xmEntityService.setSelf(xmEntityService);

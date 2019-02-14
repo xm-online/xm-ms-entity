@@ -104,11 +104,10 @@ import org.springframework.web.multipart.MultipartFile;
 @RequiredArgsConstructor
 public class XmEntityServiceImpl implements XmEntityService {
 
-//    @Autowired
+    // @Autowired
     private final XmEntitySpecService xmEntitySpecService;
     private final XmEntityTemplatesSpecService xmEntityTemplatesSpecService;
     private final XmEntityRepositoryInternal xmEntityRepository;
-    private final XmEntitySearchRepository xmEntitySearchRepository;
     private final LifecycleLepStrategyFactory lifecycleLepStrategyFactory;
     private final XmEntityPermittedRepository xmEntityPermittedRepository;
     private final ProfileService profileService;
@@ -119,7 +118,6 @@ public class XmEntityServiceImpl implements XmEntityService {
     private final StartUpdateDateGenerationStrategy startUpdateDateGenerationStrategy;
     private final XmAuthenticationContextHolder authContextHolder;
     private final ObjectMapper objectMapper;
-    private final TenantConfigService tenantConfigService;
     private final UniqueFieldRepository uniqueFieldRepository;
     private final SpringXmEntityRepository springXmEntityRepository;
 

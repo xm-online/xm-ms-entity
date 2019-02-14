@@ -29,8 +29,6 @@ public interface XmEntityRepository {
     @Deprecated
     XmEntity findOne(Long aLong);
 
-//    <S extends XmEntity> Optional<S> findOne(Example<S> example);
-
     XmEntity findOne(Specification<XmEntity> spec);
 
     XmEntity findOne(Long aLong, List<String> embed);
@@ -38,12 +36,6 @@ public interface XmEntityRepository {
     XmEntity findOneById(Long id);
 
     XmEntity findOneByIdForUpdate(@Param("id") Long id);
-
-//    List<XmEntity> findAll();
-//
-//    List<XmEntity> findAll(Sort sort);
-//
-//    Page<XmEntity> findAll(Pageable pageable);
 
     List<XmEntity> findAllById(Iterable<Long> longs);
 
@@ -54,12 +46,6 @@ public interface XmEntityRepository {
      */
     @Deprecated
     List<XmEntity> findAll(Iterable<Long> longs);
-
-//    <S extends XmEntity> List<S> findAll(Example<S> example);
-//
-//    <S extends XmEntity> List<S> findAll(Example<S> example, Sort sort);
-//
-//    <S extends XmEntity> Page<S> findAll(Example<S> example, Pageable pageable);
 
     List<XmEntity> findAll(Specification<XmEntity> spec);
 
@@ -105,54 +91,7 @@ public interface XmEntityRepository {
     @Deprecated
     boolean exists(Long aLong);
 
-
-
-//    Optional<XmEntityVersion> findVersionById(Long id);
-//
-//    boolean existsByTypeKeyAndNameIgnoreCase(String typeKey, String name);
-//
-//
-//    void flush();
-//
-//    void deleteInBatch(Iterable<XmEntity> entities);
-//
-//    void deleteAllInBatch();
-//
-//
-//
-//
-
-//
-//    long count();
-//
     void deleteById(Long aLong);
-//
-//    /**
-//     * For backward compatibility in LEPs.
-//     *
-//     * Deprecated: use deleteById(Long aLong) instead.
-//     */
-//    @Deprecated
-//    void delete(Long aLong);
-//
-    void delete(XmEntity entity);
-//
-//    void deleteAll(Iterable<? extends XmEntity> entities);
-//
-//    /**
-//     * For backward compatibility in LEPs.
-//     *
-//     * Deprecated: use deleteAll(Iterable<? extends XmEntity> entities) instead.
-//     */
-//    @Deprecated
-//    void delete(Iterable<? extends XmEntity> entities);
-//
-//    void deleteAll();
-//
-//    <S extends XmEntity> long count(Example<S> example);
-//
-//    <S extends XmEntity> boolean exists(Example<S> example);
-//
-//    long count(Specification<XmEntity> spec);
 
+    void delete(XmEntity entity);
 }

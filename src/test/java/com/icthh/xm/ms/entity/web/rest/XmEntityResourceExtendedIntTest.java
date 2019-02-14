@@ -345,7 +345,6 @@ public class XmEntityResourceExtendedIntTest {
         XmEntityServiceImpl xmEntityService = new XmEntityServiceImpl(xmEntitySpecService,
                                                                       xmEntityTemplatesSpecService,
                                                                       xmEntityRepository,
-                                                                      xmEntitySearchRepository,
                                                                       lifeCycleService,
                                                                       xmEntityPermittedRepository,
                                                                       profileService,
@@ -356,7 +355,6 @@ public class XmEntityResourceExtendedIntTest {
                                                                       startUpdateDateGenerationStrategy,
                                                                       authContextHolder,
                                                                       objectMapper,
-                                                                      tenantConfigService,
                                                                       mock(UniqueFieldRepository.class),
                                                                       springXmEntityRepository);
 
