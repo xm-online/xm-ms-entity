@@ -49,9 +49,10 @@ import com.icthh.xm.ms.entity.lep.keyresolver.TypeKeyResolver;
 import com.icthh.xm.ms.entity.lep.keyresolver.XmEntityTypeKeyResolver;
 import com.icthh.xm.ms.entity.projection.XmEntityIdKeyTypeKey;
 import com.icthh.xm.ms.entity.projection.XmEntityStateProjection;
+import com.icthh.xm.ms.entity.repository.SpringXmEntityRepository;
 import com.icthh.xm.ms.entity.repository.UniqueFieldRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityPermittedRepository;
-import com.icthh.xm.ms.entity.repository.XmEntityRepository;
+import com.icthh.xm.ms.entity.repository.XmEntityRepositoryInternal;
 import com.icthh.xm.ms.entity.repository.search.XmEntityPermittedSearchRepository;
 import com.icthh.xm.ms.entity.repository.search.XmEntitySearchRepository;
 import com.icthh.xm.ms.entity.service.AttachmentService;
@@ -103,10 +104,10 @@ import org.springframework.web.multipart.MultipartFile;
 @RequiredArgsConstructor
 public class XmEntityServiceImpl implements XmEntityService {
 
+    // @Autowired
     private final XmEntitySpecService xmEntitySpecService;
     private final XmEntityTemplatesSpecService xmEntityTemplatesSpecService;
-    private final XmEntityRepository xmEntityRepository;
-    private final XmEntitySearchRepository xmEntitySearchRepository;
+    private final XmEntityRepositoryInternal xmEntityRepository;
     private final LifecycleLepStrategyFactory lifecycleLepStrategyFactory;
     private final XmEntityPermittedRepository xmEntityPermittedRepository;
     private final ProfileService profileService;
@@ -117,8 +118,8 @@ public class XmEntityServiceImpl implements XmEntityService {
     private final StartUpdateDateGenerationStrategy startUpdateDateGenerationStrategy;
     private final XmAuthenticationContextHolder authContextHolder;
     private final ObjectMapper objectMapper;
-    private final TenantConfigService tenantConfigService;
     private final UniqueFieldRepository uniqueFieldRepository;
+    private final SpringXmEntityRepository springXmEntityRepository;
 
     private XmEntityServiceImpl self;
 
@@ -148,7 +149,7 @@ public class XmEntityServiceImpl implements XmEntityService {
         Optional<XmEntity> oldEntity = startUpdateDateGenerationStrategy
             .preProcessStartUpdateDates(xmEntity,
                                         xmEntity.getId(),
-                                        xmEntityRepository,
+                                        springXmEntityRepository,
                                         XmEntity::setStartDate,
                                         XmEntity::getStartDate,
                                         XmEntity::setUpdateDate);

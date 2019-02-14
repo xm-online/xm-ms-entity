@@ -28,7 +28,7 @@ import com.icthh.xm.ms.entity.config.SecurityBeanOverrideConfiguration;
 import com.icthh.xm.ms.entity.config.elasticsearch.EmbeddedElasticsearchConfig;
 import com.icthh.xm.ms.entity.config.tenant.WebappTenantOverrideConfiguration;
 import com.icthh.xm.ms.entity.domain.XmEntity;
-import com.icthh.xm.ms.entity.repository.XmEntityRepository;
+import com.icthh.xm.ms.entity.repository.XmEntityRepositoryInternal;
 import com.icthh.xm.ms.entity.service.impl.XmEntityServiceImpl;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -109,7 +109,7 @@ public class XmEntitySearchIntTest {
     private ElasticsearchTemplate elasticsearchTemplate;
 
     @Autowired
-    private XmEntityRepository xmEntityRepository;
+    private XmEntityRepositoryInternal xmEntityRepository;
 
     private MockMvc restXmEntityMockMvc;
 

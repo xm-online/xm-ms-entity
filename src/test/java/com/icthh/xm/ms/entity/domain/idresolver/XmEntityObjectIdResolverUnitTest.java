@@ -23,7 +23,7 @@ import com.icthh.xm.ms.entity.config.tenant.WebappTenantOverrideConfiguration;
 import com.icthh.xm.ms.entity.domain.Link;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.repository.LinkRepository;
-import com.icthh.xm.ms.entity.repository.XmEntityRepository;
+import com.icthh.xm.ms.entity.repository.XmEntityRepositoryInternal;
 import com.icthh.xm.ms.entity.service.XmEntityService;
 import com.icthh.xm.ms.entity.web.rest.LinkResource;
 import com.icthh.xm.ms.entity.web.rest.TestUtil;
@@ -94,7 +94,7 @@ public class XmEntityObjectIdResolverUnitTest {
     private XmAuthenticationContext context;
 
     @MockBean
-    private XmEntityRepository entityRepository;
+    private XmEntityRepositoryInternal entityRepository;
 
     @MockBean
     private LinkRepository linkRepository;

@@ -21,8 +21,9 @@ import com.icthh.xm.ms.entity.domain.spec.StateSpec;
 import com.icthh.xm.ms.entity.domain.spec.TypeSpec;
 import com.icthh.xm.ms.entity.domain.spec.UniqueFieldSpec;
 import com.icthh.xm.ms.entity.projection.XmEntityStateProjection;
+import com.icthh.xm.ms.entity.repository.SpringXmEntityRepository;
 import com.icthh.xm.ms.entity.repository.UniqueFieldRepository;
-import com.icthh.xm.ms.entity.repository.XmEntityRepository;
+import com.icthh.xm.ms.entity.repository.XmEntityRepositoryInternal;
 import com.icthh.xm.ms.entity.repository.search.XmEntitySearchRepository;
 import com.icthh.xm.ms.entity.service.impl.StartUpdateDateGenerationStrategy;
 import com.icthh.xm.ms.entity.service.impl.XmEntityServiceImpl;
@@ -53,7 +54,7 @@ public class XmEntityServiceImplUnitTest {
     @Mock
     private XmEntitySpecService xmEntitySpecService;
     @Mock
-    private XmEntityRepository xmEntityRepository;
+    private XmEntityRepositoryInternal xmEntityRepository;
     @Mock
     private XmEntitySearchRepository xmEntitySearchRepository;
     @Mock
