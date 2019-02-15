@@ -12,6 +12,15 @@ import com.icthh.xm.ms.entity.config.elasticsearch.CustomElasticsearchRepository
 import com.icthh.xm.ms.entity.repository.entitygraph.EntityGraphRepositoryImpl;
 import com.icthh.xm.ms.entity.util.DatabaseUtil;
 import io.github.jhipster.config.JHipsterConstants;
+
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+import javax.sql.DataSource;
+
 import liquibase.integration.spring.MultiTenantSpringLiquibase;
 import liquibase.integration.spring.SpringLiquibase;
 import lombok.RequiredArgsConstructor;
@@ -39,16 +48,9 @@ import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
 
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
-import javax.sql.DataSource;
-
 @Configuration
-@EnableJpaRepositories(value = "com.icthh.xm.ms.entity.repository", repositoryBaseClass = EntityGraphRepositoryImpl.class)
+@EnableJpaRepositories(value = "com.icthh.xm.ms.entity.repository",
+    repositoryBaseClass = EntityGraphRepositoryImpl.class)
 @EnableJpaAuditing(auditorAwareRef = "springSecurityAuditorAware")
 @EnableTransactionManagement
 @EnableElasticsearchRepositories(value = "com.icthh.xm.ms.entity.repository.search",
@@ -153,12 +155,14 @@ public class DatabaseConfiguration {
     }
 
     @Bean
-    public LocalContainerEntityManagerFactoryBean entityManagerFactory(DataSource dataSource,
-                                                                       MultiTenantConnectionProvider multiTenantConnectionProviderImpl,
-                                                                       CurrentTenantIdentifierResolver currentTenantIdentifierResolverImpl,
-                                                                       LocalValidatorFactoryBean localValidatorFactoryBean) {
+    public LocalContainerEntityManagerFactoryBean entityManagerFactory(
+        DataSource dataSource,
+        MultiTenantConnectionProvider multiTenantConnectionProviderImpl,
+        CurrentTenantIdentifierResolver currentTenantIdentifierResolverImpl,
+        LocalValidatorFactoryBean localValidatorFactoryBean) {
+
         Map<String, Object> properties = new HashMap<>();
-        properties.putAll(jpaProperties.getHibernateProperties(new HibernateSettings()));
+        properties.putAll(jpaProperties.getProperties());
         properties.put(org.hibernate.cfg.Environment.MULTI_TENANT, MultiTenancyStrategy.SCHEMA);
         properties
             .put(org.hibernate.cfg.Environment.MULTI_TENANT_CONNECTION_PROVIDER, multiTenantConnectionProviderImpl);
