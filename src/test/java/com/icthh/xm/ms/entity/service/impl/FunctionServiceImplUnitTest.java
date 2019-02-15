@@ -5,6 +5,7 @@ import com.icthh.xm.ms.entity.domain.FunctionContext;
 import com.icthh.xm.ms.entity.domain.ext.IdOrKey;
 import com.icthh.xm.ms.entity.domain.spec.FunctionSpec;
 import com.icthh.xm.ms.entity.projection.XmEntityIdKeyTypeKey;
+import com.icthh.xm.ms.entity.security.access.DynamicPermissionCheckService;
 import com.icthh.xm.ms.entity.service.FunctionContextService;
 import com.icthh.xm.ms.entity.service.FunctionExecutorService;
 import com.icthh.xm.ms.entity.service.XmEntityService;
@@ -37,6 +38,7 @@ public class FunctionServiceImplUnitTest {
     private XmEntityService xmEntityService;
     private FunctionExecutorService functionExecutorService;
     private FunctionContextService functionContextService;
+    private DynamicPermissionCheckService dynamicPermissionCheckService;
 
     private String functionName = "F_NAME";
 
@@ -44,14 +46,16 @@ public class FunctionServiceImplUnitTest {
 
     final String xmEntityTypeKey = "DUMMY";
 
+
     @Before
     public void setUp() {
         xmEntitySpecService = Mockito.mock(XmEntitySpecService.class);
         xmEntityService = Mockito.mock(XmEntityService.class);
         functionExecutorService = Mockito.mock(FunctionExecutorService.class);
         functionContextService = Mockito.mock(FunctionContextService.class);
+        dynamicPermissionCheckService = Mockito.mock(DynamicPermissionCheckService.class);
         functionService = new FunctionServiceImpl(xmEntitySpecService, xmEntityService,
-            functionExecutorService, functionContextService);
+            functionExecutorService, functionContextService, dynamicPermissionCheckService);
     }
 
     @Test

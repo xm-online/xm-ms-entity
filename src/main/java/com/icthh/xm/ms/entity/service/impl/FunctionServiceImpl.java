@@ -5,6 +5,7 @@ import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.domain.ext.IdOrKey;
 import com.icthh.xm.ms.entity.domain.spec.FunctionSpec;
 import com.icthh.xm.ms.entity.projection.XmEntityIdKeyTypeKey;
+import com.icthh.xm.ms.entity.security.access.DynamicPermissionCheckService;
 import com.icthh.xm.ms.entity.service.FunctionContextService;
 import com.icthh.xm.ms.entity.service.FunctionExecutorService;
 import com.icthh.xm.ms.entity.service.FunctionService;
@@ -32,15 +33,17 @@ public class FunctionServiceImpl implements FunctionService {
     private final XmEntityService xmEntityService;
     private final FunctionExecutorService functionExecutorService;
     private final FunctionContextService functionContextService;
+    private final DynamicPermissionCheckService dynamicPermissionCheckService;
 
     public FunctionServiceImpl(XmEntitySpecService xmEntitySpecService,
                                XmEntityService xmEntityService,
                                FunctionExecutorService functionExecutorService,
-                               FunctionContextService functionContextService) {
+                               FunctionContextService functionContextService, DynamicPermissionCheckService dynamicPermissionCheckService) {
         this.xmEntitySpecService = xmEntitySpecService;
         this.xmEntityService = xmEntityService;
         this.functionExecutorService = functionExecutorService;
         this.functionContextService = functionContextService;
+        this.dynamicPermissionCheckService = dynamicPermissionCheckService;
     }
 
     /**
@@ -51,6 +54,11 @@ public class FunctionServiceImpl implements FunctionService {
 
         Objects.requireNonNull(functionKey, "functionKey can't be null");
         Map<String, Object> vInput = CustomCollectionUtils.emptyIfNull(functionInput);
+
+        dynamicPermissionCheckService.checkContextPermission(
+            dynamicPermissionCheckService.getTenantConfigBooleanParameterValue("functions", "dynamicContextFeatureEnabled"),
+            "FUNCTION.CALL", functionKey
+        );
 
         FunctionSpec functionSpec = xmEntitySpecService.findFunction(functionKey).orElseThrow(
             () -> new IllegalArgumentException("Function not found, function key: " + functionKey));
@@ -77,6 +85,11 @@ public class FunctionServiceImpl implements FunctionService {
         Objects.requireNonNull(idOrKey, "idOrKey can't be null");
 
         Map<String, Object> vInput =  CustomCollectionUtils.emptyIfNull(functionInput);
+
+        dynamicPermissionCheckService.checkContextPermission(
+            dynamicPermissionCheckService.getTenantConfigBooleanParameterValue("functions", "dynamicContextFeatureEnabled"),
+            "XMENTITY.FUNCTION.EXECUTE", functionKey
+        );
 
         // get type key
         XmEntityIdKeyTypeKey projection = xmEntityService.getXmEntityIdKeyTypeKey(idOrKey);
