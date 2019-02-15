@@ -11,14 +11,6 @@ import com.icthh.xm.ms.entity.projection.XmEntityIdKeyTypeKey;
 import com.icthh.xm.ms.entity.projection.XmEntityStateProjection;
 import com.icthh.xm.ms.entity.repository.ResourceRepository;
 import com.icthh.xm.ms.entity.service.dto.LinkSourceDto;
-import org.apache.commons.lang3.NotImplementedException;
-import org.springframework.core.io.Resource;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.domain.Specification;
-import org.springframework.http.HttpEntity;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.net.URI;
 import java.util.List;
@@ -28,29 +20,39 @@ import java.util.Set;
 import java.util.function.Consumer;
 import javax.annotation.Nullable;
 
+import org.apache.commons.lang3.NotImplementedException;
+import org.springframework.core.io.Resource;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.http.HttpEntity;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+
 public interface XmEntityService extends ResourceRepository {
 
     XmEntity save(XmEntity xmEntity);
 
     Page<XmEntity> findAll(Pageable pageable, String typeGroup, String privilegeKey);
 
-    Page<XmEntity> findByIds(Pageable pageable, Set<Long> ids, Set<String> embed, String privilegeKey);
-
     List<XmEntity> findAll(Specification<XmEntity> spec);
 
-    /***
+    /**
+     * Only for lep usage.
      *
-     * Only for lep usage
-     *
-     * @param jpql
-     * @param args
-     * @return
+     * @param jpql query for execution
+     * @param args query parameters
+     * @return list of xm entities
      */
     @Transactional(readOnly = true)
     List<XmEntity> findAll(String jpql, Map<String, Object> args, List<String> embed);
 
+    Page<XmEntity> findByIds(Pageable pageable, Set<Long> ids, Set<String> embed, String privilegeKey);
+
     @LoggingAspectConfig(resultDetails = false)
     XmEntity findOne(IdOrKey idOrKey);
+
+    XmEntity findOne(IdOrKey idOrKey, List<String> embed);
 
     @LoggingAspectConfig(resultDetails = false)
     XmEntity selectAndUpdate(IdOrKey idOrKey, Consumer<XmEntity> consumer);
@@ -59,7 +61,10 @@ public interface XmEntityService extends ResourceRepository {
 
     Page<XmEntity> search(String query, Pageable pageable, String privilegeKey);
 
-    Page<XmEntity> search(String template, TemplateParamsHolder templateParamsHolder, Pageable pageable, String privilegeKey);
+    Page<XmEntity> search(String template,
+                          TemplateParamsHolder templateParamsHolder,
+                          Pageable pageable,
+                          String privilegeKey);
 
     @Deprecated
     XmEntity profile();
@@ -95,11 +100,16 @@ public interface XmEntityService extends ResourceRepository {
         throw new NotImplementedException("Method findStateProjectionById not implemented");
     }
 
-    Page<XmEntity> searchByQueryAndTypeKey(@Nullable String query, String typeKey, Pageable pageable, String privilegeKey);
+    Page<XmEntity> searchByQueryAndTypeKey(@Nullable String query,
+                                           String typeKey,
+                                           Pageable pageable,
+                                           String privilegeKey);
 
-    Page<XmEntity> searchByQueryAndTypeKey(String template, TemplateParamsHolder templateParamsHolder, String typeKey, Pageable pageable, String privilegeKey);
-
-    XmEntity findOne(IdOrKey idOrKey, List<String> embed);
+    Page<XmEntity> searchByQueryAndTypeKey(String template,
+                                           TemplateParamsHolder templateParamsHolder,
+                                           String typeKey,
+                                           Pageable pageable,
+                                           String privilegeKey);
 
     URI updateAvatar(IdOrKey idOrKey, HttpEntity<Resource> avatarHttpEntity);
 
@@ -112,8 +122,9 @@ public interface XmEntityService extends ResourceRepository {
 
     /**
      * For backward compatibility in LEPs.
-     *
+     * <p>
      * Deprecated: use findOne(IdOrKey idOrKey) instead.
+     * </p>
      */
     @Deprecated
     XmEntity findById(Object id);

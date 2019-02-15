@@ -5,6 +5,11 @@ import com.icthh.xm.ms.entity.config.ApplicationProperties;
 import com.icthh.xm.ms.entity.config.amazon.AmazonS3Template;
 import com.icthh.xm.ms.entity.util.ImageResizeUtil;
 import com.icthh.xm.ms.entity.util.XmHttpEntityUtils;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.UUID;
+
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -13,10 +18,6 @@ import org.springframework.core.io.Resource;
 import org.springframework.http.HttpEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.UUID;
 
 @Slf4j
 @RequiredArgsConstructor
