@@ -162,7 +162,7 @@ public class DatabaseConfiguration {
         LocalValidatorFactoryBean localValidatorFactoryBean) {
 
         Map<String, Object> properties = new HashMap<>();
-        properties.putAll(jpaProperties.getProperties());
+        properties.putAll(jpaProperties.getHibernateProperties(new HibernateSettings()));
         properties.put(org.hibernate.cfg.Environment.MULTI_TENANT, MultiTenancyStrategy.SCHEMA);
         properties
             .put(org.hibernate.cfg.Environment.MULTI_TENANT_CONNECTION_PROVIDER, multiTenantConnectionProviderImpl);
