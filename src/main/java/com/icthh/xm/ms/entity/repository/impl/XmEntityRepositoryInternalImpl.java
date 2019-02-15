@@ -7,6 +7,12 @@ import com.icthh.xm.ms.entity.projection.XmEntityStateProjection;
 import com.icthh.xm.ms.entity.projection.XmEntityVersion;
 import com.icthh.xm.ms.entity.repository.SpringXmEntityRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityRepositoryInternal;
+
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -15,11 +21,6 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Component;
-
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
 
 @Slf4j
 @Component
@@ -35,9 +36,9 @@ public class XmEntityRepositoryInternalImpl implements XmEntityRepositoryInterna
     }
 
     /**
-     * Returns entity by ID with using xmEntityGraph
+     * Returns entity by ID with using xmEntityGraph.
      *
-     * @param id
+     * @param id identifier of the entity
      * @return xmEntity instance
      */
     @Override
@@ -80,21 +81,46 @@ public class XmEntityRepositoryInternalImpl implements XmEntityRepositoryInterna
         return springXmEntityRepository.findAll();
     }
 
+    @Override
+    public Page<XmEntity> findAll(Pageable pageable) {
+        return springXmEntityRepository.findAll(pageable);
+    }
 
     @Override
-    public List<XmEntity> findAllById(Iterable<Long> longs) {
-        return springXmEntityRepository.findAllById(longs);
+    public List<XmEntity> findAll(Specification<XmEntity> spec) {
+        return springXmEntityRepository.findAll(spec);
     }
 
     /**
      * For backward compatibility in LEPs.
      * <p>
-     * Deprecated: use findAllById(Iterable<Long> longs) instead.
+     * Deprecated: use findAllById(Iterable&lt;Long&gt; longs) instead
+     * </p>
      */
     @Deprecated
     @Override
     public List<XmEntity> findAll(Iterable<Long> longs) {
         return findAllById(longs);
+    }
+
+    @Override
+    public Page<XmEntity> findAll(Specification<XmEntity> spec, Pageable pageable) {
+        return springXmEntityRepository.findAll(spec, pageable);
+    }
+
+    @Override
+    public List<XmEntity> findAll(Specification<XmEntity> spec, Sort sort) {
+        return springXmEntityRepository.findAll(spec, sort);
+    }
+
+    @Override
+    public List<XmEntity> findAll(String jpql, Map<String, Object> args, List<String> embed) {
+        return springXmEntityRepository.findAll(jpql, args, embed);
+    }
+
+    @Override
+    public List<XmEntity> findAllById(Iterable<Long> longs) {
+        return springXmEntityRepository.findAllById(longs);
     }
 
     @Override
@@ -114,41 +140,48 @@ public class XmEntityRepositoryInternalImpl implements XmEntityRepositoryInterna
         return springXmEntityRepository.getOne(id);
     }
 
-    @Override
-    public Page<XmEntity> findAll(Pageable pageable) {
-        return springXmEntityRepository.findAll(pageable);
-    }
 
     @Override
-    public Optional<XmEntity> findById(Long aLong) {
-        return springXmEntityRepository.findById(aLong);
+    public Optional<XmEntity> findById(Long id) {
+        return springXmEntityRepository.findById(id);
     }
 
     /**
      * For backward compatibility in LEPs.
      * <p>
      * Deprecated: use findById(Long aLong) instead.
+     * </p>
      */
     @Deprecated
     @Override
-    public XmEntity findOne(Long aLong) {
-        return findById(aLong).orElse(null);
+    public XmEntity findOne(Long id) {
+        return findById(id).orElse(null);
+    }
+
+    public XmEntity findOne(Long id, List<String> embed) {
+        return springXmEntityRepository.findOne(id, embed);
     }
 
     @Override
-    public boolean existsById(Long aLong) {
-        return springXmEntityRepository.existsById(aLong);
+    public XmEntity findOne(Specification<XmEntity> spec) {
+        return springXmEntityRepository.findOne(spec).orElse(null);
+    }
+
+    @Override
+    public boolean existsById(Long id) {
+        return springXmEntityRepository.existsById(id);
     }
 
     /**
      * For backward compatibility in LEPs.
      * <p>
-     * Deprecated: use existsById(Long aLong) instead.
+     * Deprecated: use existsById(Long id) instead.
+     * </p>
      */
     @Deprecated
     @Override
-    public boolean exists(Long aLong) {
-        return existsById(aLong);
+    public boolean exists(Long id) {
+        return existsById(id);
     }
 
     @Override
@@ -156,9 +189,13 @@ public class XmEntityRepositoryInternalImpl implements XmEntityRepositoryInterna
         return springXmEntityRepository.count();
     }
 
+    public long count(Specification<XmEntity> spec) {
+        return springXmEntityRepository.count(spec);
+    }
+
     @Override
-    public void deleteById(Long aLong) {
-        springXmEntityRepository.deleteById(aLong);
+    public void deleteById(Long id) {
+        springXmEntityRepository.deleteById(id);
     }
 
     @Override
@@ -171,38 +208,6 @@ public class XmEntityRepositoryInternalImpl implements XmEntityRepositoryInterna
         springXmEntityRepository.deleteAll();
     }
 
-    @Override
-    public XmEntity findOne(Specification<XmEntity> spec) {
-        return springXmEntityRepository.findOne(spec).orElse(null);
-    }
-
-    @Override
-    public List<XmEntity> findAll(Specification<XmEntity> spec) {
-        return springXmEntityRepository.findAll(spec);
-    }
-
-    @Override
-    public Page<XmEntity> findAll(Specification<XmEntity> spec, Pageable pageable) {
-        return springXmEntityRepository.findAll(spec, pageable);
-    }
-
-    @Override
-    public List<XmEntity> findAll(Specification<XmEntity> spec, Sort sort) {
-        return springXmEntityRepository.findAll(spec, sort);
-    }
-
-    public long count(Specification<XmEntity> spec) {
-        return springXmEntityRepository.count(spec);
-    }
-
-    public XmEntity findOne(Long aLong, List<String> embed) {
-        return springXmEntityRepository.findOne(aLong, embed);
-    }
-
-    @Override
-    public List<XmEntity> findAll(String jpql, Map<String, Object> args, List<String> embed) {
-        return springXmEntityRepository.findAll(jpql, args, embed);
-    }
 
     @Override
     public <S extends XmEntity> List<S> saveAll(Iterable<S> entities) {
@@ -217,6 +222,7 @@ public class XmEntityRepositoryInternalImpl implements XmEntityRepositoryInterna
      * For backward compatibility in LEPs.
      * <p>
      * Deprecated: use saveAll(Iterable<? extends XmEntity> entities) instead.
+     * </p>
      */
     @Deprecated
     @Override

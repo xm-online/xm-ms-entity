@@ -1,6 +1,7 @@
 package com.icthh.xm.ms.entity.config;
 
-import java.nio.charset.StandardCharsets;
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
@@ -21,7 +22,7 @@ public class ThymeleafConfiguration {
         emailTemplateResolver.setPrefix("mails/");
         emailTemplateResolver.setSuffix(".html");
         emailTemplateResolver.setTemplateMode("HTML5");
-        emailTemplateResolver.setCharacterEncoding(StandardCharsets.UTF_8.name());
+        emailTemplateResolver.setCharacterEncoding(UTF_8.name());
         emailTemplateResolver.setOrder(1);
         return emailTemplateResolver;
     }
