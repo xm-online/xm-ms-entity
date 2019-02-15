@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
+import org.springframework.data.domain.Example;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -34,6 +35,12 @@ public interface XmEntityRepository {
     XmEntity findOne(Specification<XmEntity> spec);
 
     XmEntity findOne(Long id, List<String> embed);
+
+    /**
+     * For backward compatibility in LEPs.
+     */
+    @Deprecated
+    <S extends XmEntity> S findOne(Example<S> example);
 
     XmEntity findOneById(Long id);
 
@@ -90,7 +97,7 @@ public interface XmEntityRepository {
     /**
      * For backward compatibility in LEPs.
      * <p>
-     * Deprecated: use existsById(Long aLong) instead.
+     * Deprecated: use existsById(Long id) instead.
      * </p>
      */
     @Deprecated
@@ -99,4 +106,24 @@ public interface XmEntityRepository {
     void deleteById(Long id);
 
     void delete(XmEntity entity);
+
+    /**
+     * For backward compatibility in LEPs.
+     * <p>
+     * Deprecated: use deleteById(Long id) instead.
+     * </p>
+     */
+    @Deprecated
+    void delete(Long id);
+
+    /**
+     * For backward compatibility in LEPs.
+     * <p>
+     * Deprecated: use deleteAll(Iterable&lt? extends XmEntity&gt) instead.
+     * </p>
+     */
+    @Deprecated
+    void delete(Iterable<? extends XmEntity> entities);
+
+    void deleteAll(Iterable<? extends XmEntity> entities);
 }

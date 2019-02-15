@@ -15,6 +15,7 @@ import java.util.Set;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Example;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -163,6 +164,11 @@ public class XmEntityRepositoryInternalImpl implements XmEntityRepositoryInterna
     }
 
     @Override
+    public <S extends XmEntity> S findOne(Example<S> example) {
+        return springXmEntityRepository.findOne(example).orElse(null);
+    }
+
+    @Override
     public XmEntity findOne(Specification<XmEntity> spec) {
         return springXmEntityRepository.findOne(spec).orElse(null);
     }
@@ -204,10 +210,24 @@ public class XmEntityRepositoryInternalImpl implements XmEntityRepositoryInterna
     }
 
     @Override
+    public void delete(Long id) {
+        deleteById(id);
+    }
+
+    @Override
+    public void delete(Iterable<? extends XmEntity> entities) {
+        deleteAll(entities);
+    }
+
+    @Override
+    public void deleteAll(Iterable<? extends XmEntity> entities) {
+        springXmEntityRepository.deleteAll(entities);
+    }
+
+    @Override
     public void deleteAll() {
         springXmEntityRepository.deleteAll();
     }
-
 
     @Override
     public <S extends XmEntity> List<S> saveAll(Iterable<S> entities) {

@@ -20,9 +20,9 @@ public interface XmEntityRepositoryInternal extends XmEntityRepository {
 
     List<XmEntity> findAll();
 
-    void flush();
-
     Page<XmEntity> findAll(Pageable pageable);
+
+    void flush();
 
     long count();
 
