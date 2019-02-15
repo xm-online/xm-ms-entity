@@ -1,15 +1,13 @@
 package com.icthh.xm.ms.entity.service;
 
 import com.icthh.xm.commons.logging.LoggingAspectConfig;
-// TODO: 14-Jan-19 Use commons ResourceRepository after fix
-//import com.icthh.xm.commons.permission.access.repository.ResourceRepository;
+import com.icthh.xm.commons.permission.access.repository.ResourceRepository;
 import com.icthh.xm.ms.entity.domain.Link;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.domain.ext.IdOrKey;
 import com.icthh.xm.ms.entity.domain.template.TemplateParamsHolder;
 import com.icthh.xm.ms.entity.projection.XmEntityIdKeyTypeKey;
 import com.icthh.xm.ms.entity.projection.XmEntityStateProjection;
-import com.icthh.xm.ms.entity.repository.ResourceRepository;
 import com.icthh.xm.ms.entity.service.dto.LinkSourceDto;
 
 import java.net.URI;

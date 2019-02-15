@@ -3,14 +3,15 @@ package com.icthh.xm.ms.entity.repository;
 import com.icthh.xm.commons.permission.repository.PermittedRepository;
 import com.icthh.xm.commons.permission.service.PermissionCheckService;
 import com.icthh.xm.ms.entity.domain.Link;
-import org.apache.commons.collections.CollectionUtils;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.stereotype.Repository;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+
+import org.apache.commons.collections.CollectionUtils;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Repository;
 
 /**
  * Permitted repository for Link entity.
@@ -29,7 +30,7 @@ public class LinkPermittedRepository extends PermittedRepository {
         Map<String, Object> conditionParams = new HashMap<>();
         conditionParams.put("targetId", targetId);
 
-        if(CollectionUtils.isNotEmpty(typeKeys)) {
+        if (CollectionUtils.isNotEmpty(typeKeys)) {
             conditionParams.put("typeKeys", typeKeys);
             whereCondition += " and typeKey in (:typeKeys)";
         }
