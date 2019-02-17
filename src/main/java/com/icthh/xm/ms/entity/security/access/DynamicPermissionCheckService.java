@@ -2,18 +2,23 @@ package com.icthh.xm.ms.entity.security.access;
 import com.icthh.xm.commons.config.client.service.TenantConfigService;
 import com.icthh.xm.commons.permission.service.PermissionCheckService;
 import lombok.extern.slf4j.Slf4j;
+import org.hibernate.validator.constraints.NotEmpty;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.validation.annotation.Validated;
 
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
 @Slf4j
+@Validated
 @Service("dynamicPermissionCheckerService")
 public class DynamicPermissionCheckService {
+
+    public static final String CONFIG_SECTION = "entity-functions";
+    public static final String DYNAMIC_FUNCTION_PERMISSION_FEATURE = "dynamicPermissionCheckFeature";
 
     /**
      * Feature switcher implementation
@@ -33,13 +38,13 @@ public class DynamicPermissionCheckService {
     private final TenantConfigService tenantConfigService;
     private final PermissionCheckService permissionCheckService;
 
+    private BiFunction<PermissionCheckService, String, Boolean> assertPermission =
+        (service, permission) -> service.hasPermission(SecurityContextHolder.getContext().getAuthentication(), permission);
+
     public DynamicPermissionCheckService(TenantConfigService tenantConfigService, PermissionCheckService permissionCheckService) {
         this.tenantConfigService = tenantConfigService;
         this.permissionCheckService = permissionCheckService;
     }
-
-    private BiFunction<PermissionCheckService, String, Boolean> assertPermission =
-        (srv, perm) -> srv.hasPermission(SecurityContextHolder.getContext().getAuthentication(), perm);
 
     /**
      * Checks if user has permission with dynamic key feature
@@ -50,23 +55,30 @@ public class DynamicPermissionCheckService {
      * @param suffix context permission 'YYY'
      * @return result from PermissionCheckService.hasPermission
      */
-    public boolean checkContextPermission(FeatureContext featureContext, String basePermission, String suffix) {
+    public boolean checkContextPermission(FeatureContext featureContext, @NotEmpty String basePermission, @NotEmpty String suffix) {
         if (featureContext.featureContextResolver.apply(this)) {
             return checkContextPermission(basePermission, suffix);
         }
-        return assertPermission.apply(permissionCheckService, basePermission).booleanValue();
+        return assertPermission(basePermission);
     }
 
     /**
-     * Checks if user has permission with dynamic key feature
+     * Checks if user has permission with dynamic key feature permission = basePermission + "." + suffix
      * @param basePermission - base permission
      * @param suffix - suffix
-     * @return result result from PermissionCheckService.hasPermission(basePermission + '.' + suffix) from PermissionCheckService.hasPermission
+     * @return result result from PermissionCheckService.hasPermission(permission) from assertPermission
      */
-    public boolean checkContextPermission(String basePermission, String suffix) {
-        Objects.requireNonNull(basePermission, "basePermission can't be null");
-        Objects.requireNonNull(suffix, "suffix can't be null");
+    public boolean checkContextPermission(@NotEmpty String basePermission, @NotEmpty String suffix) {
         final String permission = basePermission + "." + suffix;
+        return assertPermission(permission);
+    }
+
+    /**
+     * Assert permission via permissionCheckService.hasPermission
+     * @param permission
+     * @return
+     */
+    protected boolean assertPermission(@NotEmpty final String permission) {
         return assertPermission.apply(permissionCheckService, permission).booleanValue();
     }
 
@@ -75,7 +87,7 @@ public class DynamicPermissionCheckService {
      * @return true if feature enabled
      */
     private boolean isDynamicFunctionPermissionEnabled() {
-        return getTenantConfigBooleanParameterValue("xxx", "")
+        return getTenantConfigBooleanParameterValue(CONFIG_SECTION, DYNAMIC_FUNCTION_PERMISSION_FEATURE)
             .map(it -> (Boolean)it).orElse(Boolean.FALSE).booleanValue();
     }
 
@@ -83,15 +95,14 @@ public class DynamicPermissionCheckService {
      * Checks if feature tenant-config -> stateChange -> dynamic enabled
      * @return true if feature enabled
      */
-    private Boolean isDynamicChangeStatePermissionEnabled() {
-        return getTenantConfigBooleanParameterValue("xxx", "")
-            .map(it -> (Boolean)it).orElse(Boolean.FALSE).booleanValue();
+    private boolean isDynamicChangeStatePermissionEnabled() {
+        throw new UnsupportedOperationException(this + " Not implementer");
+        /*return getTenantConfigBooleanParameterValue("xxx", "")
+            .map(it -> (Boolean)it).orElse(Boolean.FALSE).booleanValue();*/
     }
 
-    // TODO should be in Commons.TenantConfigService as utility
+    // TODO should be in Commons.TenantConfigService as utility method
     private Optional<Object> getTenantConfigBooleanParameterValue(final String configSection, String parameter) {
-        Objects.requireNonNull(configSection, "configSection can't be null");
-        Objects.requireNonNull(parameter, "parameter can't be null");
         return Optional.ofNullable(tenantConfigService.getConfig().get(configSection))
             .filter(it -> it instanceof Map).map(Map.class::cast)
             .map(it -> it.get(parameter));

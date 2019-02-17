@@ -58,18 +58,12 @@ public class FunctionServiceImpl implements FunctionService {
         dynamicPermissionCheckService.checkContextPermission(DynamicPermissionCheckService.FeatureContext.FUNCTION,
             "FUNCTION.CALL", functionKey);
 
-        FunctionSpec functionSpec = xmEntitySpecService.findFunction(functionKey).orElseThrow(
-            () -> new IllegalArgumentException("Function not found, function key: " + functionKey));
+        FunctionSpec functionSpec = findFunctionSpec(functionKey, null);
 
         // execute function
         Map<String, Object> data = functionExecutorService.execute(functionKey, vInput);
 
-        // save result in FunctionContext
-        if (functionSpec.getSaveFunctionContext()) {
-            return saveResult(functionKey, null, data, functionSpec);
-        } else {
-            return toFunctionContext(functionKey, null, data, functionSpec);
-        }
+        return processFunctionResult(functionKey,  data, functionSpec);
     }
 
     /**
@@ -92,34 +86,41 @@ public class FunctionServiceImpl implements FunctionService {
         String xmEntityTypeKey = projection.getTypeKey();
 
         // validate that current XmEntity has function
-        FunctionSpec functionSpec = xmEntitySpecService.findFunction(xmEntityTypeKey, functionKey).orElseThrow(
-            () -> new IllegalArgumentException("Function not found for entity type key " + xmEntityTypeKey
-            + " and function key: " + functionKey)
-        );
+        FunctionSpec functionSpec = findFunctionSpec(functionKey, projection);
 
         // execute function
         Map<String, Object> data = functionExecutorService.execute(functionKey, idOrKey, xmEntityTypeKey, vInput);
 
-        // save result in FunctionContext
-        if (functionSpec.getSaveFunctionContext()) {
-            return saveResult(functionKey, idOrKey, data, functionSpec);
-        } else {
-            return toFunctionContext(functionKey, idOrKey, data, functionSpec);
-        }
+        return processFunctionResult(functionKey, idOrKey, data, functionSpec);
+
     }
 
-    /**
-     * Execute any function.
-     *
-     * @param functionKey function key
-     * @param idOrKey     XmEntity id or key (can be {@code null})
-     * @return function execution result context
-     */
-    private FunctionContext saveResult(String functionKey,
-                                       IdOrKey idOrKey,
-                                       Map<String, Object> data,
-                                       FunctionSpec functionSpec) {
+    private FunctionSpec findFunctionSpec(String functionKey, XmEntityIdKeyTypeKey projection) {
+        if (projection == null) {
+            return xmEntitySpecService.findFunction(functionKey).orElseThrow(
+                () -> new IllegalArgumentException("Function not found, function key: " + functionKey));
+        }
+        return xmEntitySpecService.findFunction(projection.getTypeKey(), functionKey).orElseThrow(
+            () -> new IllegalArgumentException("Function not found for entity type key " + projection.getTypeKey()
+                + " and function key: " + functionKey)
+        );
+    }
+
+    private FunctionContext processFunctionResult(String functionKey,
+                                                  Map<String, Object> data,
+                                                  FunctionSpec functionSpec) {
+        return processFunctionResult(functionKey, null, data, functionSpec);
+    }
+
+    private FunctionContext processFunctionResult(String functionKey,
+                                  IdOrKey idOrKey,
+                                  Map<String, Object> data,
+                                  FunctionSpec functionSpec) {
         FunctionContext functionResult = toFunctionContext(functionKey, idOrKey, data, functionSpec);
+        //if spec allows not to save, just return context
+        if (!functionSpec.getSaveFunctionContext()) {
+            return functionResult;
+        }
         return functionContextService.save(functionResult);
     }
 
