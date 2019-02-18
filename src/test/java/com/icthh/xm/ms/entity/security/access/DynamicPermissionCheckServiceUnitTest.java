@@ -11,6 +11,7 @@ import org.junit.runner.RunWith;
 import org.mockito.BDDMockito;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.ContextConfiguration;
@@ -29,10 +30,13 @@ import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 public class DynamicPermissionCheckServiceUnitTest {
 
     @Autowired
+    @Qualifier("pcs")
     private PermissionCheckService permissionCheckService;
     @Autowired
+    @Qualifier("tc")
     private TenantConfigService tenantConfig;
     @Autowired
+    @Qualifier("dpcs")
     private DynamicPermissionCheckService dynamicPermissionCheckService;
 
     @Configuration
@@ -41,17 +45,17 @@ public class DynamicPermissionCheckServiceUnitTest {
         public MethodValidationPostProcessor methodValidationPostProcessor() {
             return new MethodValidationPostProcessor();
         }
-        @Bean
+        @Bean(name = "pcs")
         public PermissionCheckService createPermissionCheckService() {
             return Mockito.mock(PermissionCheckService.class);
         }
-        @Bean
+        @Bean(name = "tc")
         public TenantConfigService createTenant() {
             return Mockito.mock(TenantConfigService.class);
         }
-        @Bean(name = "dynamicPermissionCheckerService")
-        public DynamicPermissionCheckService createService(TenantConfigService tenantConfigService,
-                                                           PermissionCheckService permissionCheckService) {
+        @Bean(name = "dpcs")
+        public DynamicPermissionCheckService createService(@Qualifier("tc") TenantConfigService tenantConfigService,
+                                                           @Qualifier("pcs") PermissionCheckService permissionCheckService) {
             return new DynamicPermissionCheckService(tenantConfigService, permissionCheckService);
         }
     }
