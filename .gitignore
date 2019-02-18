@@ -145,3 +145,4 @@ Desktop.ini
 
 src/main/lep-sandbox
 src/test/groovy/com/icthh/xm/lep/tenant
+src/test/resources/lep/custom
