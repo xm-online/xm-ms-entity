@@ -9,7 +9,10 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.BDDMockito;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.Mockito;
+import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
@@ -25,40 +28,15 @@ import java.util.Map;
 import static com.icthh.xm.ms.entity.security.access.DynamicPermissionCheckService.*;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
-@ContextConfiguration(classes = {DynamicPermissionCheckServiceUnitTest.Config.class})
-@RunWith(SpringJUnit4ClassRunner.class)
+@RunWith(MockitoJUnitRunner.class)
 public class DynamicPermissionCheckServiceUnitTest {
 
-    @Autowired
-    @Qualifier("pcs")
+    @Mock
     private PermissionCheckService permissionCheckService;
-    @Autowired
-    @Qualifier("tc")
+    @Mock
     private TenantConfigService tenantConfig;
-    @Autowired
-    @Qualifier("dpcs")
+    @InjectMocks
     private DynamicPermissionCheckService dynamicPermissionCheckService;
-
-    @Configuration
-    public static class Config {
-        @Bean
-        public MethodValidationPostProcessor methodValidationPostProcessor() {
-            return new MethodValidationPostProcessor();
-        }
-        @Bean(name = "pcs")
-        public PermissionCheckService createPermissionCheckService() {
-            return Mockito.mock(PermissionCheckService.class);
-        }
-        @Bean(name = "tc")
-        public TenantConfigService createTenant() {
-            return Mockito.mock(TenantConfigService.class);
-        }
-        @Bean(name = "dpcs")
-        public DynamicPermissionCheckService createService(@Qualifier("tc") TenantConfigService tenantConfigService,
-                                                           @Qualifier("pcs") PermissionCheckService permissionCheckService) {
-            return new DynamicPermissionCheckService(tenantConfigService, permissionCheckService);
-        }
-    }
 
     @Before
     public void setUp() {
@@ -70,25 +48,25 @@ public class DynamicPermissionCheckServiceUnitTest {
 
     @Test
     public void checkContextPermissionFailsIfBasePermissionIsNull() {
-        assertThatExceptionOfType(ConstraintViolationException.class)
+        assertThatExceptionOfType(IllegalArgumentException.class)
             .isThrownBy(() -> dynamicPermissionCheckService.checkContextPermission(FeatureContext.FUNCTION, null, "SSS"));
     }
 
     @Test
     public void checkContextPermissionFailsIfBasePermissionIsEmpty() {
-        assertThatExceptionOfType(ConstraintViolationException.class)
+        assertThatExceptionOfType(IllegalArgumentException.class)
             .isThrownBy(() -> dynamicPermissionCheckService.checkContextPermission(FeatureContext.FUNCTION, "", "SSS"));
     }
 
     @Test
     public void checkContextPermissionFailsIfSuffixPermissionIsNull() {
-        assertThatExceptionOfType(ConstraintViolationException.class)
+        assertThatExceptionOfType(IllegalArgumentException.class)
             .isThrownBy(() -> dynamicPermissionCheckService.checkContextPermission(FeatureContext.FUNCTION, "XXX", null));
     }
 
     @Test
     public void checkContextPermissionFailsIfSuffixPermissionIsEmpty() {
-        assertThatExceptionOfType(ConstraintViolationException.class)
+        assertThatExceptionOfType(IllegalArgumentException.class)
             .isThrownBy(() -> dynamicPermissionCheckService.checkContextPermission(FeatureContext.FUNCTION, "XXX", ""));
     }
 
@@ -124,13 +102,13 @@ public class DynamicPermissionCheckServiceUnitTest {
 
     @Test
     public void checkStateChangePermissionFailsIfSuffixPermissionIsNull() {
-        assertThatExceptionOfType(ConstraintViolationException.class)
+        assertThatExceptionOfType(IllegalArgumentException.class)
             .isThrownBy(() -> dynamicPermissionCheckService.checkContextPermission(FeatureContext.CHANGE_STATE, "XXX", null));
     }
 
     @Test
     public void checkStateChangePermissionFailsIfSuffixPermissionIsEmpty() {
-        assertThatExceptionOfType(ConstraintViolationException.class)
+        assertThatExceptionOfType(IllegalArgumentException.class)
             .isThrownBy(() -> dynamicPermissionCheckService.checkContextPermission(FeatureContext.CHANGE_STATE, "XXX", ""));
     }
 

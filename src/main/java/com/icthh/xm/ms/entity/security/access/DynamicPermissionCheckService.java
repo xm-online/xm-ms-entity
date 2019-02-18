@@ -1,7 +1,9 @@
 package com.icthh.xm.ms.entity.security.access;
+import com.google.common.base.Preconditions;
 import com.icthh.xm.commons.config.client.service.TenantConfigService;
 import com.icthh.xm.commons.permission.service.PermissionCheckService;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -55,7 +57,9 @@ public class DynamicPermissionCheckService {
      * @param suffix context permission 'YYY'
      * @return result from PermissionCheckService.hasPermission
      */
-    public boolean checkContextPermission(FeatureContext featureContext, @NotEmpty String basePermission, @NotEmpty String suffix) {
+    public boolean checkContextPermission(FeatureContext featureContext, String basePermission, String suffix) {
+        Preconditions.checkArgument(StringUtils.isNotEmpty(basePermission));
+        Preconditions.checkArgument(StringUtils.isNotEmpty(suffix));
         if (featureContext.featureContextResolver.apply(this)) {
             return checkContextPermission(basePermission, suffix);
         }
@@ -68,7 +72,9 @@ public class DynamicPermissionCheckService {
      * @param suffix - suffix
      * @return result result from PermissionCheckService.hasPermission(permission) from assertPermission
      */
-    public boolean checkContextPermission(@NotEmpty String basePermission, @NotEmpty String suffix) {
+    public boolean checkContextPermission(String basePermission, String suffix) {
+        Preconditions.checkArgument(StringUtils.isNotEmpty(basePermission));
+        Preconditions.checkArgument(StringUtils.isNotEmpty(suffix));
         final String permission = basePermission + "." + suffix;
         return assertPermission(permission);
     }
@@ -78,7 +84,8 @@ public class DynamicPermissionCheckService {
      * @param permission
      * @return
      */
-    protected boolean assertPermission(@NotEmpty final String permission) {
+    protected boolean assertPermission(final String permission) {
+        Preconditions.checkArgument(StringUtils.isNotEmpty(permission));
         return assertPermission.apply(permissionCheckService, permission).booleanValue();
     }
 
