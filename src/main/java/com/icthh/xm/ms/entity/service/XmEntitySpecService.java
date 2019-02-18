@@ -1,43 +1,37 @@
 package com.icthh.xm.ms.entity.service;
 
-import static com.github.fge.jackson.NodeType.OBJECT;
-import static com.github.fge.jackson.NodeType.getNodeType;
-import static java.util.Collections.emptyList;
-import static java.util.Optional.ofNullable;
-import static org.apache.commons.lang.StringUtils.isEmpty;
-import static org.apache.commons.lang3.StringUtils.isBlank;
-import static org.springframework.util.CollectionUtils.isEmpty;
-
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.github.fge.jackson.JsonLoader;
-import com.github.fge.jackson.NodeType;
 import com.icthh.xm.commons.config.client.api.RefreshableConfiguration;
 import com.icthh.xm.commons.config.client.repository.TenantConfigRepository;
 import com.icthh.xm.commons.logging.aop.IgnoreLogginAspect;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
 import com.icthh.xm.ms.entity.config.ApplicationProperties;
-import com.icthh.xm.ms.entity.domain.UniqueField;
-import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.domain.spec.*;
+import com.icthh.xm.ms.entity.util.CustomCollectionUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.util.AntPathMatcher;
 
-import javax.annotation.Nullable;
-import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import static com.github.fge.jackson.NodeType.OBJECT;
+import static com.github.fge.jackson.NodeType.getNodeType;
+import static java.util.Collections.emptyList;
+import static org.apache.commons.lang.StringUtils.isEmpty;
+import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.springframework.util.CollectionUtils.isEmpty;
 
 /**
  * XM Entity Specification service, that provides extra possibilities to
@@ -143,34 +137,16 @@ public class XmEntitySpecService implements RefreshableConfiguration {
         type.setIcon(type.getIcon() != null ? type.getIcon() : parentType.getIcon());
         type.setDataSpec(type.getDataSpec() != null ? type.getDataSpec() : parentType.getDataSpec());
         type.setDataForm(type.getDataForm() != null ? type.getDataForm() : parentType.getDataForm());
-        type.setAccess(XmEntitySpecService.union(type.getAccess(), parentType.getAccess()));
-        type.setAttachments(XmEntitySpecService.union(type.getAttachments(), parentType.getAttachments()));
-        type.setCalendars(XmEntitySpecService.union(type.getCalendars(), parentType.getCalendars()));
-        type.setFunctions(XmEntitySpecService.union(type.getFunctions(), parentType.getFunctions()));
-        type.setLinks(XmEntitySpecService.union(type.getLinks(), parentType.getLinks()));
-        type.setLocations(XmEntitySpecService.union(type.getLocations(), parentType.getLocations()));
-        type.setRatings(XmEntitySpecService.union(type.getRatings(), parentType.getRatings()));
-        type.setStates(XmEntitySpecService.union(type.getStates(), parentType.getStates()));
-        type.setTags(XmEntitySpecService.union(type.getTags(), parentType.getTags()));
+        type.setAccess(CustomCollectionUtils.union(type.getAccess(), parentType.getAccess()));
+        type.setAttachments(CustomCollectionUtils.union(type.getAttachments(), parentType.getAttachments()));
+        type.setCalendars(CustomCollectionUtils.union(type.getCalendars(), parentType.getCalendars()));
+        type.setFunctions(CustomCollectionUtils.union(type.getFunctions(), parentType.getFunctions()));
+        type.setLinks(CustomCollectionUtils.union(type.getLinks(), parentType.getLinks()));
+        type.setLocations(CustomCollectionUtils.union(type.getLocations(), parentType.getLocations()));
+        type.setRatings(CustomCollectionUtils.union(type.getRatings(), parentType.getRatings()));
+        type.setStates(CustomCollectionUtils.union(type.getStates(), parentType.getStates()));
+        type.setTags(CustomCollectionUtils.union(type.getTags(), parentType.getTags()));
         return type;
-    }
-
-    /**
-     * Union for nullable lists.
-     *
-     * @param list1 first list
-     * @param list2 second list
-     * @return concatenated list
-     */
-    private static <E> List<E> union(final List<E> list1, final List<E> list2) {
-        final List<E> result = new ArrayList<>();
-        if (list1 != null) {
-            result.addAll(list1);
-        }
-        if (list2 != null) {
-            result.addAll(list2);
-        }
-        return result;
     }
 
     /**
