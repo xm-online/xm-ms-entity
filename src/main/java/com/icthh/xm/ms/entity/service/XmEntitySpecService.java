@@ -86,6 +86,7 @@ public class XmEntitySpecService implements RefreshableConfiguration {
     protected Map<String, TypeSpec> getTypeSpecs() {
         String tenantKeyValue = getTenantKeyValue();
         if (!types.containsKey(tenantKeyValue)) {
+            log.error("Tenant configuration {} not found", tenantKeyValue);
             throw new IllegalArgumentException("Tenant configuration not found");
         }
         return types.get(tenantKeyValue);
@@ -462,16 +463,6 @@ public class XmEntitySpecService implements RefreshableConfiguration {
         if (isListeningConfiguration(key)) {
             onRefresh(key, config);
         }
-    }
-
-    @Nullable
-    public String findFirstStateForTypeKey(String typeKey) {
-        return ofNullable(findTypeByKey(typeKey))
-            .map(TypeSpec::getStates)
-            .filter(CollectionUtils::isNotEmpty)
-            .map(it -> it.get(0))
-            .map(StateSpec::getKey)
-            .orElse(null);
     }
 
 }

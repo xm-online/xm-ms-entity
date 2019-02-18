@@ -84,6 +84,7 @@ import org.springframework.util.CollectionUtils;
 import org.springframework.util.ObjectUtils;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.annotation.Nullable;
 import java.net.URI;
 import java.time.Instant;
 import java.util.Collections;
@@ -162,7 +163,7 @@ public class XmEntityServiceImpl implements XmEntityService {
         } else if (xmEntity.getCreatedBy() == null) {
             xmEntity.setCreatedBy(authContextHolder.getContext().getUserKey().orElse(null));
             if (xmEntity.getStateKey() == null) {
-                xmEntity.setStateKey(xmEntitySpecService.findFirstStateForTypeKey(xmEntity.getTypeKey()));
+                xmEntity.setStateKey(findFirstStateForTypeKey(xmEntity.getTypeKey()));
             }
         }
 
@@ -693,6 +694,16 @@ public class XmEntityServiceImpl implements XmEntityService {
         if (this.self == null) {
             this.self = self;
         }
+    }
+
+    @Nullable
+    private String findFirstStateForTypeKey(String typeKey) {
+        return ofNullable(xmEntitySpecService.findTypeByKey(typeKey))
+            .map(TypeSpec::getStates)
+            .filter(org.apache.commons.collections.CollectionUtils::isNotEmpty)
+            .map(it -> it.get(0))
+            .map(StateSpec::getKey)
+            .orElse(null);
     }
 
 }
