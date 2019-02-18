@@ -15,7 +15,7 @@ import com.icthh.xm.ms.entity.util.CustomCollectionUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.util.AntPathMatcher;
 
@@ -24,13 +24,10 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
 import static com.github.fge.jackson.NodeType.OBJECT;
 import static com.github.fge.jackson.NodeType.getNodeType;
+import static com.icthh.xm.ms.entity.util.CustomCollectionUtils.nullSafe;
 import static java.util.Collections.emptyList;
-import static org.apache.commons.lang.StringUtils.isEmpty;
-import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.springframework.util.CollectionUtils.isEmpty;
 
 /**
@@ -198,7 +195,7 @@ public class XmEntitySpecService implements RefreshableConfiguration {
      */
     public List<TypeSpec> findNonAbstractTypesByPrefix(String prefix) {
         List<TypeSpec> allNonAbstractTypes = findAllNonAbstractTypes();
-        if (isEmpty(prefix)) {
+        if (StringUtils.isEmpty(prefix)) {
             return allNonAbstractTypes;
         } else {
             return allNonAbstractTypes.stream().filter(bySpecTypesPrefix(prefix)).collect(Collectors.toList());
@@ -267,14 +264,6 @@ public class XmEntitySpecService implements RefreshableConfiguration {
         return getTypeSpecs().get(key).getStates().stream().filter(s -> s.getKey().equals(stateKey)).findFirst();
     }
 
-    private <T> Iterable<T> nullSafe(Iterable<T> itr) {
-        return itr == null ? emptyList() : itr;
-    }
-
-    private <T> Stream<T> streamOf(List<T> list) {
-        return list == null ? Stream.empty() : list.stream();
-    }
-
     @IgnoreLogginAspect
     public Optional<FunctionSpec> findFunction(String functionKey) {
         for (TypeSpec ts : getTypeSpecs().values()) {
@@ -290,11 +279,14 @@ public class XmEntitySpecService implements RefreshableConfiguration {
     @IgnoreLogginAspect
     public Optional<FunctionSpec> findFunction(String typeKey, String functionKey) {
         TypeSpec typeSpec = getTypeSpecs().get(typeKey);
+
         if (typeSpec == null) {
             return Optional.empty();
         }
-        Stream<FunctionSpec> functionSpecStream = streamOf(typeSpec.getFunctions());
-        return functionSpecStream.filter(fs -> fs.getKey().equals(functionKey)).findFirst();
+
+        Predicate<FunctionSpec> keysEquals = fs -> StringUtils.equals(fs.getKey(), functionKey);
+
+        return nullSafe(typeSpec.getFunctions()).stream().filter(keysEquals).findFirst();
     }
 
     /**
@@ -379,7 +371,7 @@ public class XmEntitySpecService implements RefreshableConfiguration {
     @SneakyThrows
     private void processUniqueFields(Map<String, TypeSpec> types) {
         for (TypeSpec typeSpec: types.values()) {
-            if (isBlank(typeSpec.getDataSpec())) {
+            if (StringUtils.isBlank(typeSpec.getDataSpec())) {
                 continue;
             }
 
@@ -414,7 +406,7 @@ public class XmEntitySpecService implements RefreshableConfiguration {
         String specificationPathPattern = applicationProperties.getSpecificationPathPattern();
         try {
             String tenant = matcher.extractUriTemplateVariables(specificationPathPattern, updatedKey).get(TENANT_NAME);
-            if (org.apache.commons.lang3.StringUtils.isBlank(config)) {
+            if (StringUtils.isBlank(config)) {
                 types.remove(tenant);
                 return;
             }
