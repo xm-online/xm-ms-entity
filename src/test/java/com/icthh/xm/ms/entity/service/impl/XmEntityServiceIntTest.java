@@ -369,7 +369,6 @@ public class XmEntityServiceIntTest {
 
         xmEntityData.remove("notSaveField");
         assertEquals(searchWithMapping.getContent().get(0).getData(), xmEntityData);
-
     }
 
     private void reindexWithMapping(String mappingPath) {
