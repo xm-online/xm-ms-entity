@@ -242,15 +242,13 @@ public class XmEntitySpecService implements RefreshableConfiguration {
 
     @IgnoreLogginAspect
     public Optional<FunctionSpec> findFunction(String typeKey, String functionKey) {
-        TypeSpec typeSpec = getTypeSpecs().get(typeKey);
-
-        if (typeSpec == null) {
-            return Optional.empty();
-        }
-
         Predicate<FunctionSpec> keysEquals = fs -> StringUtils.equals(fs.getKey(), functionKey);
 
-        return nullSafe(typeSpec.getFunctions()).stream().filter(keysEquals).findFirst();
+        List<FunctionSpec> functionSpecs = getTypeSpecByKey(typeKey)
+            .map(TypeSpec::getFunctions)
+            .orElse(emptyList());
+
+        return functionSpecs.stream().filter(keysEquals).findFirst();
     }
 
     /**

@@ -1,10 +1,12 @@
 package com.icthh.xm.ms.entity.service.impl;
 
+import com.icthh.xm.commons.exceptions.EntityNotFoundException;
 import com.icthh.xm.ms.entity.domain.FunctionContext;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.domain.ext.IdOrKey;
 import com.icthh.xm.ms.entity.domain.spec.FunctionSpec;
 import com.icthh.xm.ms.entity.projection.XmEntityIdKeyTypeKey;
+import com.icthh.xm.ms.entity.projection.XmEntityStateProjection;
 import com.icthh.xm.ms.entity.security.access.DynamicPermissionCheckService;
 import com.icthh.xm.ms.entity.service.FunctionContextService;
 import com.icthh.xm.ms.entity.service.FunctionExecutorService;
@@ -82,14 +84,17 @@ public class FunctionServiceImpl implements FunctionService {
             "XMENTITY.FUNCTION.EXECUTE", functionKey);
 
         // get type key
-        XmEntityIdKeyTypeKey projection = xmEntityService.getXmEntityIdKeyTypeKey(idOrKey);
-        String xmEntityTypeKey = projection.getTypeKey();
+        XmEntityStateProjection projection = xmEntityService.findStateProjectionById(idOrKey).orElseThrow(
+            () -> new EntityNotFoundException("XmEntity with idOrKey [" + idOrKey + "] not found")
+        );
 
         // validate that current XmEntity has function
         FunctionSpec functionSpec = findFunctionSpec(functionKey, projection);
 
+        //TODO check that Entity.State compliant with functionSpec.getAllowedStateKeys()!!!! in any provided
+
         // execute function
-        Map<String, Object> data = functionExecutorService.execute(functionKey, idOrKey, xmEntityTypeKey, vInput);
+        Map<String, Object> data = functionExecutorService.execute(functionKey, idOrKey, projection.getTypeKey(), vInput);
 
         return processFunctionResult(functionKey, idOrKey, data, functionSpec);
 
@@ -117,11 +122,10 @@ public class FunctionServiceImpl implements FunctionService {
                                   Map<String, Object> data,
                                   FunctionSpec functionSpec) {
         FunctionContext functionResult = toFunctionContext(functionKey, idOrKey, data, functionSpec);
-        //if spec allows not to save, just return context
-        if (!functionSpec.getSaveFunctionContext()) {
-            return functionResult;
+        if (functionSpec.getSaveFunctionContext()) {
+            return functionContextService.save(functionResult);
         }
-        return functionContextService.save(functionResult);
+        return functionResult;
     }
 
     private FunctionContext toFunctionContext(String functionKey, IdOrKey idOrKey,
