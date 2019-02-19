@@ -103,9 +103,11 @@ public class ElasticsearchIndexService {
         } catch (IndexAlreadyExistsException e) {
             // Do nothing. Index was already concurrently recreated by some other service.
         }
-        elasticsearchTemplate.putMapping(XmEntity.class);
+
         if (mappingConfiguration.isMappingExists()) {
             elasticsearchTemplate.putMapping(XmEntity.class, mappingConfiguration.getMapping());
+        } else {
+            elasticsearchTemplate.putMapping(XmEntity.class);
         }
         if (jpaRepository.count() > 0) {
             List<Method> relationshipGetters = Arrays.stream(XmEntity.class.getDeclaredFields())

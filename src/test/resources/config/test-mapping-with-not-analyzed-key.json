@@ -1,0 +1,17 @@
+{
+    "properties": {
+        "key": {
+            "type": "string",
+            "index": "not_analyzed"
+        },
+        "data": {
+            "type": "object",
+            "properties": {
+                "targetField": {
+                    "type": "string",
+                    "index": "not_analyzed"
+                }
+            }
+        }
+    }
+}
