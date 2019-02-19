@@ -16,11 +16,11 @@ import java.util.function.Function;
 
 @Slf4j
 @Validated
-@Service("dynamicPermissionCheckerService")
+@Service("dynamicPermissionCheckService")
 public class DynamicPermissionCheckService {
 
     public static final String CONFIG_SECTION = "entity-functions";
-    public static final String DYNAMIC_FUNCTION_PERMISSION_FEATURE = "dynamicPermissionCheckFeature";
+    public static final String DYNAMIC_FUNCTION_PERMISSION_FEATURE = "dynamicPermissionCheckEnabled";
 
     /**
      * Feature switcher implementation
