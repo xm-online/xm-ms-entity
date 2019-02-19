@@ -368,8 +368,7 @@ public class XmEntityServiceIntTest {
         assertNotEquals(searchWithMapping.getContent(), asList(entity1));
 
         xmEntityData.remove("notSaveField");
-        entity1.setData(xmEntityData);
-        assertEquals(searchWithMapping.getContent(), asList(entity1));
+        assertEquals(searchWithMapping.getContent().get(0).getData(), xmEntityData);
 
     }
 

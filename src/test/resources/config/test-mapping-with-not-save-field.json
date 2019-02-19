@@ -1,41 +1,16 @@
 {
     "_source": {
         "includes": [
-            "id",
-            "key",
-            "data.*",
-            "typeKey",
-            "name",
-            "startDate",
-            "updateDate",
-            "version"
+            "data.*"
         ],
         "excludes": [
             "data.notSaveField"
         ]
     },
     "properties": {
-        "id": {
-            "type": "long"
-        },
         "key": {
             "type": "string",
             "index": "not_analyzed"
-        },
-        "typeKey": {
-            "type": "string"
-        },
-        "name": {
-            "type": "string"
-        },
-        "startDate": {
-            "type": "string"
-        },
-        "updateDate": {
-            "type": "string"
-        },
-        "version": {
-            "type": "string"
         },
         "data": {
             "type": "object",
