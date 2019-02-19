@@ -84,8 +84,7 @@ public class XmEntitySpecResource {
     @PostAuthorize("hasPermission({'returnObject': returnObject.body}, 'XMENTITY_SPEC.GET_LIST.ITEM')")
     public ResponseEntity<TypeSpec> getTypeSpec(@PathVariable String key) {
         log.debug("REST request to get TypeSpec : {}", key);
-        TypeSpec typeSpec = xmEntitySpecService.findTypeByKey(key);
-        return RespContentUtil.wrapOrNotFound(Optional.ofNullable(typeSpec));
+        return RespContentUtil.wrapOrNotFound(xmEntitySpecService.getTypeSpecByKey(key));
     }
 
     /**
