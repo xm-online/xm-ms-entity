@@ -40,28 +40,74 @@ import static org.springframework.util.CollectionUtils.isEmpty;
 public class XmEntitySpecService implements RefreshableConfiguration {
 
     private static final String TYPE_SEPARATOR_REGEXP = "\\.";
-
     private static final String TYPE_SEPARATOR = ".";
-
     private static final String TENANT_NAME = "tenantName";
-
     private final AntPathMatcher matcher = new AntPathMatcher();
 
     private ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
-
     private ConcurrentHashMap<String, Map<String, TypeSpec>> types = new ConcurrentHashMap<>();
 
     private final TenantConfigRepository tenantConfigRepository;
-
     private final ApplicationProperties applicationProperties;
-
     private final TenantContextHolder tenantContextHolder;
-
     private final EntityCustomPrivilegeService entityCustomPrivilegeService;
 
+    /**
+     * Search of all entity Type specifications.
+     * @return list of entity Types specifications
+     */
+    public List<TypeSpec> findAllTypes() {
+        return new ArrayList<>(getTypeSpecs().values());
+    }
 
-    private String getTenantKeyValue() {
-        return TenantContextUtils.getRequiredTenantKeyValue(tenantContextHolder);
+    /**
+     * Search of all entity Type specifications that marked as application.
+     * @return list of entity Types specifications that defines as application.
+     */
+    public List<TypeSpec> findAllAppTypes() {
+        return getTypeSpecs().values().stream().filter(TypeSpec::getIsApp).collect(Collectors.toList());
+    }
+
+    /**
+     * Search of all not an abstract entity Type specifications.
+     * @return list of entity Types specifications that not an abstract.
+     */
+    public List<TypeSpec> findAllNonAbstractTypes() {
+        return getTypeSpecs().values().stream().filter(t -> !t.getIsAbstract()).collect(Collectors.toList());
+    }
+
+    @Override
+    @SneakyThrows
+    @IgnoreLogginAspect
+    public void onRefresh(String updatedKey, String config) {
+        String specificationPathPattern = applicationProperties.getSpecificationPathPattern();
+        try {
+            String tenant = matcher.extractUriTemplateVariables(specificationPathPattern, updatedKey).get(TENANT_NAME);
+            if (StringUtils.isBlank(config)) {
+                types.remove(tenant);
+                return;
+            }
+            XmEntitySpec spec = mapper.readValue(config, XmEntitySpec.class);
+            Map<String, TypeSpec> value = toTypeSpecsMap(spec);
+            types.put(tenant, value);
+            entityCustomPrivilegeService.updateApplicationPermission(value, tenant);
+            log.info("Specification was for tenant {} updated", tenant);
+        } catch (Exception e) {
+            log.error("Error read xm specification from path " + updatedKey, e);
+        }
+    }
+
+    @Override
+    public boolean isListeningConfiguration(String updatedKey) {
+        String specificationPathPattern = applicationProperties.getSpecificationPathPattern();
+        return matcher.match(specificationPathPattern, updatedKey);
+    }
+
+    @Override
+    public void onInit(String key, String config) {
+        if (isListeningConfiguration(key)) {
+            onRefresh(key, config);
+        }
     }
 
     @SneakyThrows
@@ -74,76 +120,21 @@ public class XmEntitySpecService implements RefreshableConfiguration {
         tenantConfigRepository.updateConfig(getTenantKeyValue(), "/" + configName, xmEntitySpecString);
     }
 
+    /**
+     * Assumption value of types.get(tenantKey) could be null
+     * @return map with nullSafe check
+     */
     protected Map<String, TypeSpec> getTypeSpecs() {
         String tenantKeyValue = getTenantKeyValue();
         if (!types.containsKey(tenantKeyValue)) {
             log.error("Tenant configuration {} not found", tenantKeyValue);
             throw new IllegalArgumentException("Tenant configuration not found");
         }
-        return types.get(tenantKeyValue);
+        return nullSafe(types.get(tenantKeyValue));
     }
 
-    private Map<String, TypeSpec> toTypeSpecsMap(XmEntitySpec xmEntitySpec) {
-        List<TypeSpec> typeSpecs = xmEntitySpec.getTypes();
-        if (isEmpty(typeSpecs)) {
-            return Collections.emptyMap();
-        } else {
-            // Convert List<TypeSpec> to Map<key, TypeSpec>
-            Map<String, TypeSpec> result = typeSpecs.stream()
-                .collect(Collectors.toMap(TypeSpec::getKey, Function.identity(),
-                    (u, v) -> {
-                        throw new IllegalStateException(String.format("Duplicate key %s", u));
-                    }, LinkedHashMap::new));
-
-            // add inheritance
-            inheritance(result);
-            processUniqueFields(result);
-
-            return result;
-        }
-    }
-
-    /**
-     * XM Entity Type specifications support inheritance based on key hierarchy
-     * with data extension.
-     */
-    private void inheritance(Map<String, TypeSpec> types) {
-        List<String> keys = types.keySet().stream()
-            .sorted(Comparator.comparingInt(k -> k.split(TYPE_SEPARATOR_REGEXP).length))
-            .collect(Collectors.toList());
-        for (String key : keys) {
-            int level = key.split(TYPE_SEPARATOR_REGEXP).length;
-            if (level > 1) {
-                TypeSpec type = types.get(key);
-                TypeSpec parentType = types.get(StringUtils.substringBeforeLast(key, TYPE_SEPARATOR));
-                if (parentType != null) {
-                    types.put(key, extend(type, parentType));
-                }
-            }
-        }
-    }
-
-    /**
-     * Xm Entity Type specifications data extention from parent Type.
-     *
-     * @param type       entity Type specification for extention
-     * @param parentType parent entity Type specification for cloning
-     * @return entity Type specification that extended from parent Type
-     */
-    private static TypeSpec extend(TypeSpec type, TypeSpec parentType) {
-        type.setIcon(type.getIcon() != null ? type.getIcon() : parentType.getIcon());
-        type.setDataSpec(type.getDataSpec() != null ? type.getDataSpec() : parentType.getDataSpec());
-        type.setDataForm(type.getDataForm() != null ? type.getDataForm() : parentType.getDataForm());
-        type.setAccess(CustomCollectionUtils.union(type.getAccess(), parentType.getAccess()));
-        type.setAttachments(CustomCollectionUtils.union(type.getAttachments(), parentType.getAttachments()));
-        type.setCalendars(CustomCollectionUtils.union(type.getCalendars(), parentType.getCalendars()));
-        type.setFunctions(CustomCollectionUtils.union(type.getFunctions(), parentType.getFunctions()));
-        type.setLinks(CustomCollectionUtils.union(type.getLinks(), parentType.getLinks()));
-        type.setLocations(CustomCollectionUtils.union(type.getLocations(), parentType.getLocations()));
-        type.setRatings(CustomCollectionUtils.union(type.getRatings(), parentType.getRatings()));
-        type.setStates(CustomCollectionUtils.union(type.getStates(), parentType.getStates()));
-        type.setTags(CustomCollectionUtils.union(type.getTags(), parentType.getTags()));
-        return type;
+    public Optional<TypeSpec> getTypeSpecByKey(String key) {
+        return Optional.ofNullable(getTypeSpecs().get(key));
     }
 
     /**
@@ -151,38 +142,14 @@ public class XmEntitySpecService implements RefreshableConfiguration {
      *
      * @param key entity Type specification key
      * @return instance of entity Type specification if present
+     * @Deprecation method could return null, please use getTypeSpecByKey instead. findTypeByKey will be refactored
      */
     @IgnoreLogginAspect
+    @Deprecated
     public TypeSpec findTypeByKey(String key) {
         return getTypeSpecs().get(key);
     }
 
-    /**
-     * Search of all entity Type specifications.
-     *
-     * @return list of entity Types specifications
-     */
-    public List<TypeSpec> findAllTypes() {
-        return new ArrayList<>(getTypeSpecs().values());
-    }
-
-    /**
-     * Search of all entity Type specifications that marked as application.
-     *
-     * @return list of entity Types specifications that defines as application.
-     */
-    public List<TypeSpec> findAllAppTypes() {
-        return findAllTypes().stream().filter(TypeSpec::getIsApp).collect(Collectors.toList());
-    }
-
-    /**
-     * Search of all not an abstract entity Type specifications.
-     *
-     * @return list of entity Types specifications that not an abstract.
-     */
-    public List<TypeSpec> findAllNonAbstractTypes() {
-        return findAllTypes().stream().filter(t -> !t.getIsAbstract()).collect(Collectors.toList());
-    }
 
     /**
      * Search of real Type specifications based on Type key prefix. For example:
@@ -194,14 +161,11 @@ public class XmEntitySpecService implements RefreshableConfiguration {
      * @return list of entity Types specifications
      */
     public List<TypeSpec> findNonAbstractTypesByPrefix(String prefix) {
-        List<TypeSpec> allNonAbstractTypes = findAllNonAbstractTypes();
         if (StringUtils.isEmpty(prefix)) {
-            return allNonAbstractTypes;
-        } else {
-            return allNonAbstractTypes.stream().filter(bySpecTypesPrefix(prefix)).collect(Collectors.toList());
+            return findAllNonAbstractTypes();
         }
+        return findAllNonAbstractTypes().stream().filter(bySpecTypesPrefix(prefix)).collect(Collectors.toList());
     }
-
 
     private Predicate<TypeSpec> bySpecTypesPrefix(String prefix) {
         return t -> t.getKey().equals(prefix) || t.getKey().startsWith(prefix + TYPE_SEPARATOR);
@@ -399,38 +363,71 @@ public class XmEntitySpecService implements RefreshableConfiguration {
         return getNodeType(schemaNode).equals(OBJECT) && schemaNode.has("properties");
     }
 
-    @Override
-    @SneakyThrows
-    @IgnoreLogginAspect
-    public void onRefresh(String updatedKey, String config) {
-        String specificationPathPattern = applicationProperties.getSpecificationPathPattern();
-        try {
-            String tenant = matcher.extractUriTemplateVariables(specificationPathPattern, updatedKey).get(TENANT_NAME);
-            if (StringUtils.isBlank(config)) {
-                types.remove(tenant);
-                return;
+    private String getTenantKeyValue() {
+        return TenantContextUtils.getRequiredTenantKeyValue(tenantContextHolder);
+    }
+
+    private Map<String, TypeSpec> toTypeSpecsMap(XmEntitySpec xmEntitySpec) {
+        List<TypeSpec> typeSpecs = xmEntitySpec.getTypes();
+        if (isEmpty(typeSpecs)) {
+            return Collections.emptyMap();
+        } else {
+            // Convert List<TypeSpec> to Map<key, TypeSpec>
+            Map<String, TypeSpec> result = typeSpecs.stream()
+                .collect(Collectors.toMap(TypeSpec::getKey, Function.identity(),
+                    (u, v) -> {
+                        throw new IllegalStateException(String.format("Duplicate key %s", u));
+                    }, LinkedHashMap::new));
+
+            // add inheritance
+            inheritance(result);
+            processUniqueFields(result);
+
+            return result;
+        }
+    }
+
+    /**
+     * XM Entity Type specifications support inheritance based on key hierarchy
+     * with data extension.
+     */
+    private void inheritance(Map<String, TypeSpec> types) {
+        List<String> keys = types.keySet().stream()
+            .sorted(Comparator.comparingInt(k -> k.split(TYPE_SEPARATOR_REGEXP).length))
+            .collect(Collectors.toList());
+        for (String key : keys) {
+            int level = key.split(TYPE_SEPARATOR_REGEXP).length;
+            if (level > 1) {
+                TypeSpec type = types.get(key);
+                TypeSpec parentType = types.get(StringUtils.substringBeforeLast(key, TYPE_SEPARATOR));
+                if (parentType != null) {
+                    types.put(key, extend(type, parentType));
+                }
             }
-            XmEntitySpec spec = mapper.readValue(config, XmEntitySpec.class);
-            Map<String, TypeSpec> value = toTypeSpecsMap(spec);
-            types.put(tenant, value);
-            entityCustomPrivilegeService.updateApplicationPermission(value, tenant);
-            log.info("Specification was for tenant {} updated", tenant);
-        } catch (Exception e) {
-            log.error("Error read xm specification from path " + updatedKey, e);
         }
     }
 
-    @Override
-    public boolean isListeningConfiguration(String updatedKey) {
-        String specificationPathPattern = applicationProperties.getSpecificationPathPattern();
-        return matcher.match(specificationPathPattern, updatedKey);
-    }
-
-    @Override
-    public void onInit(String key, String config) {
-        if (isListeningConfiguration(key)) {
-            onRefresh(key, config);
-        }
+    /**
+     * Xm Entity Type specifications data extention from parent Type.
+     *
+     * @param type       entity Type specification for extention
+     * @param parentType parent entity Type specification for cloning
+     * @return entity Type specification that extended from parent Type
+     */
+    private static TypeSpec extend(TypeSpec type, TypeSpec parentType) {
+        type.setIcon(type.getIcon() != null ? type.getIcon() : parentType.getIcon());
+        type.setDataSpec(type.getDataSpec() != null ? type.getDataSpec() : parentType.getDataSpec());
+        type.setDataForm(type.getDataForm() != null ? type.getDataForm() : parentType.getDataForm());
+        type.setAccess(CustomCollectionUtils.union(type.getAccess(), parentType.getAccess()));
+        type.setAttachments(CustomCollectionUtils.union(type.getAttachments(), parentType.getAttachments()));
+        type.setCalendars(CustomCollectionUtils.union(type.getCalendars(), parentType.getCalendars()));
+        type.setFunctions(CustomCollectionUtils.union(type.getFunctions(), parentType.getFunctions()));
+        type.setLinks(CustomCollectionUtils.union(type.getLinks(), parentType.getLinks()));
+        type.setLocations(CustomCollectionUtils.union(type.getLocations(), parentType.getLocations()));
+        type.setRatings(CustomCollectionUtils.union(type.getRatings(), parentType.getRatings()));
+        type.setStates(CustomCollectionUtils.union(type.getStates(), parentType.getStates()));
+        type.setTags(CustomCollectionUtils.union(type.getTags(), parentType.getTags()));
+        return type;
     }
 
 }
