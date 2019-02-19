@@ -292,6 +292,8 @@ public class XmEntityResource {
      */
     @Timed
     @GetMapping("/xm-entities/{idOrKey}/functions/{functionKey:.+}")
+    @PreAuthorize("hasPermission({'idOrKey': #idOrKey, 'id': #functionKey, 'context': #context}, "
+        + "'xmEntity.function', 'XMENTITY.FUNCTION.EXECUTE')")
     public ResponseEntity<Object> executeGetFunction(@PathVariable String idOrKey,
                                                      @PathVariable String functionKey,
                                                      @RequestParam(required = false) Map<String, Object> functionInput) {
@@ -308,6 +310,8 @@ public class XmEntityResource {
      */
     @Timed
     @PostMapping("/xm-entities/{idOrKey}/functions/{functionKey:.+}")
+    @PreAuthorize("hasPermission({'idOrKey': #idOrKey, 'id': #functionKey, 'context': #context}, "
+        + "'xmEntity.function', 'XMENTITY.FUNCTION.EXECUTE')")
     public ResponseEntity<Object> executePostFunction(@PathVariable String idOrKey,
                                                            @PathVariable String functionKey,
                                                            @RequestBody(required = false) Map<String, Object> functionInput) {
@@ -503,8 +507,6 @@ public class XmEntityResource {
         this.profileEventProducer.send(content);
     }
 
-    @PreAuthorize("hasPermission({'idOrKey': #idOrKey, 'id': #functionKey, 'context': #context}, "
-        + "'xmEntity.function', 'XMENTITY.FUNCTION.EXECUTE')")
     private ResponseEntity<Object> executeFunction(String idOrKey,
                                                   String functionKey,
                                                   Map<String, Object> functionInput) {
