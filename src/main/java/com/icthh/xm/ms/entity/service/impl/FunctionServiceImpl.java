@@ -16,11 +16,10 @@ import com.icthh.xm.ms.entity.service.XmEntitySpecService;
 import com.icthh.xm.ms.entity.util.CustomCollectionUtils;
 
 import java.time.Instant;
-import java.util.Map;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang.StringUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,6 +30,9 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 @Service("functionService")
 public class FunctionServiceImpl implements FunctionService {
+
+    //Function is not visible, but could be executed
+    public static String NONE = "NONE";
 
     private final XmEntitySpecService xmEntitySpecService;
     private final XmEntityService xmEntityService;
@@ -92,13 +94,34 @@ public class FunctionServiceImpl implements FunctionService {
         // validate that current XmEntity has function
         FunctionSpec functionSpec = findFunctionSpec(functionKey, projection);
 
-        //TODO check that Entity.State compliant with functionSpec.getAllowedStateKeys()!!!! in any provided
+        isCallAllowedByState(functionSpec, projection).orElseThrow(
+            () -> new IllegalStateException("Function call forbidden for current state"));
 
         // execute function
         Map<String, Object> data = functionExecutorService.execute(functionKey, idOrKey, projection.getTypeKey(), vInput);
 
         return processFunctionResult(functionKey, idOrKey, data, functionSpec);
 
+    }
+
+    /**
+     * Validates, if current entity state is one of allowed states
+     * @param functionSpec - functionSpec
+     * @param projection - entity projection
+     * @return Optional.of(Boolean.TRUE) if allowed or Optional.Empty if not
+     */
+    protected Optional<Boolean> isCallAllowedByState(FunctionSpec functionSpec, XmEntityStateProjection projection) {
+        List<String> allowedStates = CustomCollectionUtils.nullSafe(functionSpec.getAllowedStateKeys());
+        if (allowedStates.isEmpty()) {
+            return Optional.of(Boolean.TRUE);
+        }
+        //this state is UI hide flag, so no execute validation applied
+        if (allowedStates.contains(NONE)) {
+            return Optional.of(Boolean.TRUE);
+        }
+        return allowedStates.stream()
+            .filter(stateKey -> StringUtils.equalsIgnoreCase(stateKey, projection.getStateKey()))
+            .map(stateKey -> Boolean.TRUE).findFirst();
     }
 
     private FunctionSpec findFunctionSpec(String functionKey, XmEntityIdKeyTypeKey projection) {

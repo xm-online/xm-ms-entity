@@ -4,6 +4,7 @@ import com.google.common.collect.Maps;
 import com.icthh.xm.commons.config.client.service.TenantConfigService;
 import com.icthh.xm.commons.permission.service.PermissionCheckService;
 import org.assertj.core.api.Assertions;
+import org.assertj.core.util.Lists;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -13,10 +14,15 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
+import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.function.Supplier;
 
 import static com.icthh.xm.ms.entity.security.access.DynamicPermissionCheckService.DYNAMIC_FUNCTION_PERMISSION_FEATURE;
 import static com.icthh.xm.ms.entity.security.access.DynamicPermissionCheckService.FeatureContext;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -69,8 +75,8 @@ public class DynamicPermissionCheckServiceUnitTest {
         Assertions.assertThat(result).isTrue();
 
         BDDMockito.given(permissionCheckService.hasPermission(null, "Z")).willReturn(false);
-        result = dynamicPermissionCheckService.checkContextPermission(FeatureContext.FUNCTION, "Z", "Y");
-        Assertions.assertThat(result).isFalse();
+        assertThatExceptionOfType(IllegalStateException.class)
+            .isThrownBy(() -> dynamicPermissionCheckService.checkContextPermission(FeatureContext.FUNCTION, "Z", "Y"));
     }
 
     @Test
@@ -87,8 +93,9 @@ public class DynamicPermissionCheckServiceUnitTest {
 
         //privilege == X.Y, assume hasPermission = false
         BDDMockito.given(permissionCheckService.hasPermission(null, "Z.Y")).willReturn(false);
-        result = dynamicPermissionCheckService.checkContextPermission(FeatureContext.FUNCTION, "Z", "Y");
-        Assertions.assertThat(result).isFalse();
+        assertThatExceptionOfType(IllegalStateException.class)
+            .isThrownBy(() -> dynamicPermissionCheckService.checkContextPermission(FeatureContext.FUNCTION, "Z", "Y"));
+
     }
 
     @Test
@@ -108,6 +115,30 @@ public class DynamicPermissionCheckServiceUnitTest {
         assertThatExceptionOfType(UnsupportedOperationException.class)
             .isThrownBy(() -> dynamicPermissionCheckService.checkContextPermission(FeatureContext.CHANGE_STATE, "XXX", "YY"));
     }
+
+    @Test
+    public void resultNotChangedIfFunctionFilterFeatureIsOff(){
+        BDDMockito.given(tenantConfig.getConfig()).willReturn(Maps.newHashMap());
+        final List<Boolean> someList = Lists.newArrayList(Boolean.TRUE, Boolean.FALSE, Boolean.TRUE, Boolean.FALSE);
+        Function<List<Boolean>, List<Boolean>> listSupplier = list -> list;
+        final List<Boolean> resultList = listSupplier.andThen(dynamicPermissionCheckService.dynamicFunctionFilter(superMapper)).apply(someList);
+        assertThat(resultList).containsExactly(Boolean.TRUE, Boolean.FALSE, Boolean.TRUE, Boolean.FALSE);
+    }
+
+    @Test
+    public void resultInvertedIfFunctionFilterFeatureIsOn(){
+        //setUp enabled feature
+        final Map config = getMockedConfig(DynamicPermissionCheckService.CONFIG_SECTION,
+            DYNAMIC_FUNCTION_PERMISSION_FEATURE, Boolean.TRUE);
+
+        BDDMockito.given(tenantConfig.getConfig()).willReturn(config);
+        final List<Boolean> someList = Lists.newArrayList(Boolean.TRUE, Boolean.FALSE, Boolean.TRUE, Boolean.FALSE);
+        Function<List<Boolean>, List<Boolean>> listSupplier = list -> list;
+        final List<Boolean> resultList = listSupplier.andThen(dynamicPermissionCheckService.dynamicFunctionFilter(superMapper)).apply(someList);
+        assertThat(resultList).containsExactly(Boolean.FALSE, Boolean.TRUE, Boolean.FALSE, Boolean.TRUE);
+    }
+
+    private Function<Boolean, Boolean> superMapper = value -> Boolean.TRUE.equals(value) ? Boolean.FALSE : Boolean.TRUE;
 
     private Map<String, Object> getMockedConfig(String configSectionName, String featureName, Boolean status) {
         Map<String, Object> map = Maps.newHashMap();

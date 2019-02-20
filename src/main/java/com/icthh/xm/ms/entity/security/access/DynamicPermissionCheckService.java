@@ -13,13 +13,21 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Validated
 @Service("dynamicPermissionCheckService")
 public class DynamicPermissionCheckService {
 
+    /**
+     * Permission aggregation section in tenant config
+     */
     public static final String CONFIG_SECTION = "entity-functions";
+    /**
+     * Feature name for DynamicFunctionPermission validation
+     */
     public static final String DYNAMIC_FUNCTION_PERMISSION_FEATURE = "dynamicPermissionCheckEnabled";
 
     /**
@@ -36,6 +44,11 @@ public class DynamicPermissionCheckService {
             this.featureContextResolver = featureContextResolver;
         }
 
+        /**
+         * Checks if feature FUNCTION|CHANGE_STATE enabled in tenant config
+         * @param service - DynamicPermissionCheckService instance
+         * @return true if enabled
+         */
         private boolean isEnabled(DynamicPermissionCheckService service) {
             return this.featureContextResolver.apply(service).booleanValue();
         }
@@ -84,10 +97,15 @@ public class DynamicPermissionCheckService {
         return assertPermission(permission);
     }
 
-    public <T> Function<List<T>, List<T>> dynamicFunctionFilter() {
-        //todo Filtering logic will be here!
-        if (FeatureContext.FUNCTION.isEnabled(this)){
-            return list -> list;
+    /**
+     * Performs object field adjustment if feature is enabled
+     * @param mapper - adjustment implementation
+     * @param <T> - collection element
+     * @return same collection or adjusted one
+     */
+    public <T> Function<List<T>, List<T>> dynamicFunctionFilter(Function<T, T> mapper) {
+        if (FeatureContext.FUNCTION.isEnabled(this)) {
+            return list -> list.stream().map(mapper).collect(Collectors.toList());
         }
         return list -> list;
     }
@@ -99,7 +117,12 @@ public class DynamicPermissionCheckService {
      */
     protected boolean assertPermission(final String permission) {
         Preconditions.checkArgument(StringUtils.isNotEmpty(permission));
-        return assertPermission.apply(permissionCheckService, permission).booleanValue();
+        final boolean permitted = assertPermission.apply(permissionCheckService, permission).booleanValue();
+        if (!permitted) {
+            //TODO place correct error here
+            throw new IllegalStateException("Throw correct exception here");
+        }
+        return Boolean.TRUE.booleanValue();
     }
 
     /**

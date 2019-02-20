@@ -82,7 +82,8 @@ public class XmEntitySpecResource {
     public List<TypeSpec> getTypeSpecs(@ApiParam XmEntitySpecResource.Filter filter) {
         log.debug("REST request to get a list of TypeSpec");
         XmEntitySpecResource.Filter f = filter != null ? filter : Filter.ALL;
-        return f.getTypeSpec(xmEntitySpecService, dynamicPermissionCheckService.dynamicFunctionFilter());
+        Function<TypeSpec, TypeSpec> mapper = spec -> spec;
+        return f.getTypeSpec(xmEntitySpecService, dynamicPermissionCheckService.dynamicFunctionFilter(mapper));
     }
 
     /**

@@ -4,13 +4,13 @@ import com.google.common.collect.Maps;
 import com.icthh.xm.ms.entity.domain.FunctionContext;
 import com.icthh.xm.ms.entity.domain.ext.IdOrKey;
 import com.icthh.xm.ms.entity.domain.spec.FunctionSpec;
-import com.icthh.xm.ms.entity.projection.XmEntityIdKeyTypeKey;
 import com.icthh.xm.ms.entity.projection.XmEntityStateProjection;
 import com.icthh.xm.ms.entity.security.access.DynamicPermissionCheckService;
 import com.icthh.xm.ms.entity.service.FunctionContextService;
 import com.icthh.xm.ms.entity.service.FunctionExecutorService;
 import com.icthh.xm.ms.entity.service.XmEntityService;
 import com.icthh.xm.ms.entity.service.XmEntitySpecService;
+import org.assertj.core.util.Lists;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -96,7 +96,7 @@ public class FunctionServiceImplUnitTest {
         FunctionContext fc = functionService.execute(functionName, context);
         assertThat(fc.getTypeKey()).isEqualTo(functionName);
         assertThat(fc.getKey()).contains(functionName);
-        assertThat(fc.getData().keySet()).containsSequence(data.keySet().stream().toArray(String[]::new));
+        assertThat(fc.getData().keySet()).containsSequence(data.keySet().toArray(new String[0]));
 
         verify(functionContextService, never()).save(any());
     }
@@ -129,7 +129,7 @@ public class FunctionServiceImplUnitTest {
         FunctionContext fc = functionService.execute(functionName, context);
         assertThat(fc.getTypeKey()).isEqualTo(functionName);
         assertThat(fc.getKey()).contains(functionName);
-        assertThat(fc.getData().keySet()).containsSequence(data.keySet().stream().toArray(String[]::new));
+        assertThat(fc.getData().keySet()).containsSequence(data.keySet().toArray(new String[0]));
 
         verify(functionContextService, Mockito.times(1)).save(any());
     }
@@ -158,16 +158,37 @@ public class FunctionServiceImplUnitTest {
     public void executeUnknownWithIdOrKey() {
         final String functionKey = UNKNOWN_KEY;
 
-        exception.expect(IllegalArgumentException.class);
-        exception.expectMessage("Function not found for entity type key " + xmEntityTypeKey
-            + " and function key: " + functionKey);
-
         when(xmEntityService.findStateProjectionById(key)).thenReturn(getProjection(key));
 
         when(xmEntitySpecService.findFunction(xmEntityTypeKey, functionKey))
             .thenReturn(Optional.empty());
 
+        exception.expect(IllegalArgumentException.class);
+        exception.expectMessage("Function not found for entity type key " + xmEntityTypeKey
+            + " and function key: " + functionKey);
         functionService.execute(functionKey, key, Maps.newHashMap());
+    }
+
+    @Test
+    public void executeFailsIfStatesNotMatched() {
+        FunctionSpec spec = getFunctionSpec(Boolean.FALSE);
+        spec.setAllowedStateKeys(Lists.newArrayList("SOME-STATE"));
+
+        Map<String, Object> context = Maps.newHashMap();
+        context.put("key1", "val1");
+
+        Map<String, Object> data = Maps.newHashMap();
+        data.put("KEY1", "VAL1");
+
+        when(xmEntityService.findStateProjectionById(key)).thenReturn(getProjection(key));
+
+        when(xmEntitySpecService.findFunction(xmEntityTypeKey, functionName))
+            .thenReturn(Optional.of(spec));
+
+        exception.expect(IllegalStateException.class);
+        exception.expectMessage("Function call forbidden for current state");
+        functionService.execute(functionName, key, Maps.newHashMap());
+
     }
 
     @Test
@@ -193,7 +214,7 @@ public class FunctionServiceImplUnitTest {
         FunctionContext fc = functionService.execute(functionName, key, context);
         assertThat(fc.getTypeKey()).isEqualTo(functionName);
         assertThat(fc.getKey()).contains(functionName);
-        assertThat(fc.getData().keySet()).containsSequence(data.keySet().stream().toArray(String[]::new));
+        assertThat(fc.getData().keySet()).containsSequence(data.keySet().toArray(new String[0]));
 
         verify(functionContextService, never()).save(any());
     }
@@ -221,9 +242,47 @@ public class FunctionServiceImplUnitTest {
         FunctionContext fc = functionService.execute(functionName, key, context);
         assertThat(fc.getTypeKey()).isEqualTo(functionName);
         assertThat(fc.getKey()).contains(functionName);
-        assertThat(fc.getData().keySet()).containsSequence(data.keySet().stream().toArray(String[]::new));
+        assertThat(fc.getData().keySet()).containsSequence(data.keySet().toArray(new String[0]));
 
         verify(functionContextService, Mockito.times(1)).save(any());
+    }
+
+    @Test
+    public void passStateValidationIfNoStateMapping() {
+        FunctionSpec spec = new FunctionSpec();
+        XmEntityStateProjection p = getProjection(IdOrKey.SELF).get();
+        Optional<Boolean> result = functionService.isCallAllowedByState(spec, p);
+        assertThat(result.isPresent()).isTrue();
+        assertThat(result.get()).isTrue();
+    }
+
+    @Test
+    public void passStateValidationIfNONEStateIsSet() {
+        FunctionSpec spec = new FunctionSpec();
+        spec.setAllowedStateKeys(Lists.newArrayList(FunctionServiceImpl.NONE));
+        XmEntityStateProjection p = getProjection(IdOrKey.SELF).get();
+        Optional<Boolean> result = functionService.isCallAllowedByState(spec, p);
+        assertThat(result.isPresent()).isTrue();
+        assertThat(result.get()).isTrue();
+    }
+
+    @Test
+    public void passStateValidationIfStatesMatches() {
+        FunctionSpec spec = new FunctionSpec();
+        spec.setAllowedStateKeys(Lists.newArrayList("STATE"));
+        XmEntityStateProjection p = getProjection(IdOrKey.SELF).get();
+        Optional<Boolean> result = functionService.isCallAllowedByState(spec, p);
+        assertThat(result.isPresent()).isTrue();
+        assertThat(result.get()).isTrue();
+    }
+
+    @Test
+    public void failStateValidationIfStatesNotMatches() {
+        FunctionSpec spec = new FunctionSpec();
+        spec.setAllowedStateKeys(Lists.newArrayList("XX-STATE-XX"));
+        XmEntityStateProjection p = getProjection(IdOrKey.SELF).get();
+        Optional<Boolean> result = functionService.isCallAllowedByState(spec, p);
+        assertThat(result.isPresent()).isFalse();
     }
 
     private FunctionSpec getFunctionSpec(Boolean saveContext) {
