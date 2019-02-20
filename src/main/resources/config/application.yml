@@ -58,7 +58,7 @@ spring:
                     enabled: false
     jackson:
         serialization.write_dates_as_timestamps: false
-        default-property-inclusion: NON_NULL
+        default-property-inclusion: non_empty
     jpa:
         open-in-view: false
         properties:
