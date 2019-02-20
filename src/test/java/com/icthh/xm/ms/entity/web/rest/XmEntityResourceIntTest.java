@@ -13,8 +13,8 @@ import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.nullValue;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.eq;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
@@ -29,30 +29,48 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableMap;
 import com.icthh.xm.commons.config.client.service.TenantConfigService;
-import com.icthh.xm.lep.api.LepManager;
 import com.icthh.xm.commons.i18n.error.web.ExceptionTranslator;
 import com.icthh.xm.commons.security.XmAuthenticationContext;
 import com.icthh.xm.commons.security.XmAuthenticationContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
+import com.icthh.xm.lep.api.LepManager;
 import com.icthh.xm.ms.entity.EntityApp;
 import com.icthh.xm.ms.entity.config.ApplicationProperties;
 import com.icthh.xm.ms.entity.config.Constants;
 import com.icthh.xm.ms.entity.config.InternalTransactionService;
 import com.icthh.xm.ms.entity.config.LepConfiguration;
 import com.icthh.xm.ms.entity.config.SecurityBeanOverrideConfiguration;
+import com.icthh.xm.ms.entity.config.elasticsearch.EmbeddedElasticsearchConfig;
 import com.icthh.xm.ms.entity.config.tenant.WebappTenantOverrideConfiguration;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.domain.spec.StateSpec;
+import com.icthh.xm.ms.entity.repository.SpringXmEntityRepository;
 import com.icthh.xm.ms.entity.repository.UniqueFieldRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityPermittedRepository;
-import com.icthh.xm.ms.entity.repository.XmEntityRepository;
+import com.icthh.xm.ms.entity.repository.XmEntityRepositoryInternal;
 import com.icthh.xm.ms.entity.repository.kafka.ProfileEventProducer;
 import com.icthh.xm.ms.entity.repository.search.XmEntityPermittedSearchRepository;
 import com.icthh.xm.ms.entity.repository.search.XmEntitySearchRepository;
-import com.icthh.xm.ms.entity.service.*;
+import com.icthh.xm.ms.entity.service.AttachmentService;
+import com.icthh.xm.ms.entity.service.FunctionService;
+import com.icthh.xm.ms.entity.service.LifecycleLepStrategyFactory;
+import com.icthh.xm.ms.entity.service.LinkService;
+import com.icthh.xm.ms.entity.service.ProfileService;
+import com.icthh.xm.ms.entity.service.StorageService;
+import com.icthh.xm.ms.entity.service.TenantService;
+import com.icthh.xm.ms.entity.service.XmEntitySpecService;
+import com.icthh.xm.ms.entity.service.XmEntityTemplatesSpecService;
 import com.icthh.xm.ms.entity.service.impl.StartUpdateDateGenerationStrategy;
 import com.icthh.xm.ms.entity.service.impl.XmEntityServiceImpl;
+import java.net.URI;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import javax.persistence.EntityManager;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.After;
@@ -79,15 +97,6 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.Validator;
 
-import java.net.URI;
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import javax.persistence.EntityManager;
-
 /**
  * Test class for the XmEntityResource REST controller.
  *
@@ -100,7 +109,8 @@ import javax.persistence.EntityManager;
     EntityApp.class,
     SecurityBeanOverrideConfiguration.class,
     WebappTenantOverrideConfiguration.class,
-    LepConfiguration.class
+    LepConfiguration.class,
+    EmbeddedElasticsearchConfig.class
 })
 public class XmEntityResourceIntTest {
 
@@ -146,7 +156,10 @@ public class XmEntityResourceIntTest {
     private ApplicationProperties applicationProperties;
 
     @Autowired
-    private XmEntityRepository xmEntityRepository;
+    private XmEntityRepositoryInternal xmEntityRepository;
+
+    @Autowired
+    private SpringXmEntityRepository springXmEntityRepository;
 
     private XmEntityServiceImpl xmEntityServiceImpl;
 
@@ -266,7 +279,6 @@ public class XmEntityResourceIntTest {
         XmEntityServiceImpl xmEntityServiceImpl = new XmEntityServiceImpl(xmEntitySpecService,
                                                       xmEntityTemplatesSpecService,
                                                       xmEntityRepository,
-                                                      xmEntitySearchRepository,
                                                       lifeCycleService,
                                                       xmEntityPermittedRepository,
                                                       profileService,
@@ -277,8 +289,8 @@ public class XmEntityResourceIntTest {
                                                       startUpdateDateGenerationStrategy,
                                                       authContextHolder,
                                                       objectMapper,
-                                                      tenantConfigService,
-                                                      mock(UniqueFieldRepository.class));
+                                                      mock(UniqueFieldRepository.class),
+                                                      springXmEntityRepository);
         xmEntityServiceImpl.setSelf(xmEntityServiceImpl);
 
         this.xmEntityServiceImpl = xmEntityServiceImpl;
@@ -370,9 +382,10 @@ public class XmEntityResourceIntTest {
 
             return testXmEntity;
         }, this::setup);
-
+        xmEntitySearchRepository.refresh();
         // Validate the XmEntity in Elasticsearch
-        XmEntity xmEntityEs = xmEntitySearchRepository.findOne(dbXmEntity.getId());
+        XmEntity xmEntityEs = xmEntitySearchRepository.findById(dbXmEntity.getId())
+            .orElseThrow(NullPointerException::new);
         assertThat(xmEntityEs).isEqualToIgnoringGivenFields(dbXmEntity, "avatarUrlRelative", "avatarUrlFull");
     }
 
@@ -649,7 +662,8 @@ public class XmEntityResourceIntTest {
             int databaseSizeBeforeUpdate = xmEntityRepository.findAll().size();
 
             // Update the xmEntity
-            XmEntity updatedXmEntity = xmEntityRepository.findOne(xmEntity.getId());
+            XmEntity updatedXmEntity = xmEntityRepository.findById(xmEntity.getId())
+                .orElseThrow(NullPointerException::new);
 
             em.detach(updatedXmEntity);
 
@@ -688,9 +702,10 @@ public class XmEntityResourceIntTest {
             assertThat(testXmEntity.isRemoved()).isEqualTo(UPDATED_REMOVED);
             return testXmEntity;
         }, this::setup);
-
+        xmEntitySearchRepository.refresh();
         // Validate the XmEntity in Elasticsearch
-        XmEntity xmEntityEs = xmEntitySearchRepository.findOne(dbXmEntity.getId());
+        XmEntity xmEntityEs = xmEntitySearchRepository.findById(dbXmEntity.getId())
+            .orElseThrow(NullPointerException::new);
         assertThat(xmEntityEs).isEqualToIgnoringGivenFields(dbXmEntity,
                                                             "avatarUrlRelative", "avatarUrlFull",
                                                             "version",
@@ -736,7 +751,7 @@ public class XmEntityResourceIntTest {
             return databaseSizeBeforeDeleteDb;
         }, this::setup);
         // Validate Elasticsearch is empty
-        boolean xmEntityExistsInEs = xmEntitySearchRepository.exists(xmEntity.getId());
+        boolean xmEntityExistsInEs = xmEntitySearchRepository.existsById(xmEntity.getId());
         assertThat(xmEntityExistsInEs).isFalse();
 
         // Validate the database is empty
@@ -751,6 +766,7 @@ public class XmEntityResourceIntTest {
                 // Initialize the database
                 return xmEntityServiceImpl.save(xmEntity);
         }, this::setup);
+        xmEntitySearchRepository.refresh();
 
         // Search the xmEntity
         restXmEntityMockMvc.perform(get("/api/_search/xm-entities?query=id:" + xmEntity.getId()))
@@ -777,7 +793,7 @@ public class XmEntityResourceIntTest {
             // Initialize the database
             return xmEntityServiceImpl.save(xmEntity);
         }, this::setup);
-
+        xmEntitySearchRepository.refresh();
         // Search the xmEntity
         restXmEntityMockMvc.perform(get("/api/_search-with-template/xm-entities?template=BY_TYPEKEY_AND_ID&templateParams[typeKey]=" + xmEntity.getTypeKey() + "&templateParams[id]=" + xmEntity.getId()))
             .andExpect(status().isOk())

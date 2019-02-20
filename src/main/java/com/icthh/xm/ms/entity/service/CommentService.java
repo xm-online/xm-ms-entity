@@ -77,7 +77,7 @@ public class CommentService {
     @Transactional(readOnly = true)
     @LogicExtensionPoint("FindOne")
     public Comment findOne(Long id) {
-        return commentRepository.findOne(id);
+        return commentRepository.findById(id).orElse(null);
     }
 
     /**
@@ -87,7 +87,7 @@ public class CommentService {
      */
     @LogicExtensionPoint("Delete")
     public void delete(Long id) {
-        commentRepository.delete(id);
+        commentRepository.deleteById(id);
     }
 
     /**

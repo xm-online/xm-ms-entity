@@ -1,7 +1,6 @@
 package com.icthh.xm.ms.entity.domain;
 
 import static javax.persistence.CascadeType.ALL;
-import static javax.persistence.CascadeType.DETACH;
 import static javax.persistence.CascadeType.MERGE;
 import static javax.persistence.CascadeType.PERSIST;
 import static javax.persistence.CascadeType.REMOVE;
@@ -17,7 +16,6 @@ import com.icthh.xm.ms.entity.validator.TypeKey;
 import com.icthh.xm.ms.entity.validator.NotNull;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
-import javax.persistence.ElementCollection;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.commons.collections4.CollectionUtils;
@@ -26,7 +24,6 @@ import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.springframework.data.domain.Persistable;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
-import org.springframework.data.elasticsearch.annotations.FieldIndex;
 import org.springframework.data.elasticsearch.annotations.FieldType;
 
 import javax.persistence.Column;
@@ -100,7 +97,7 @@ public class XmEntity implements Serializable, Persistable<Long> {
      */
     @ApiModelProperty(value = "Additional lateral identification for this entity could be defined by template Example: PO-1 for Product Offering, e-Mail or MSISDN for account, external Id for Order etc). Key is not full unique entity identification. Few entities could have one key, but only one entity could be addressable at one time, as other should be ended by endDate property.", required = true)
     @Column(name = "jhi_key", nullable = false)
-    @Field(index = FieldIndex.not_analyzed, type = FieldType.String)
+    @Field(type = FieldType.Keyword)
     private String key;
 
     /**
@@ -114,7 +111,7 @@ public class XmEntity implements Serializable, Persistable<Long> {
     @javax.validation.constraints.NotNull
     @ApiModelProperty(value = "Key reference to the configured Entity Type. Convention is capital letter with dash '-'. Example: ACCOUNT, PRODUCT-OFFERING, PRICE etc. Entity Sub Types could be separated by dot '.'. Convention is same as for Type. Example: ACCOUNT.ADMIN, ACCOUNT.USER, ACCOUNT.PARTNER for type ACCOUNT or PRODUCT-OFFERING.CAMPAIGN, PRODUCT-OFFERING.RATE-PLAN etc.", required = true)
     @Column(name = "type_key", nullable = false)
-    @Field(index = FieldIndex.not_analyzed, type = FieldType.String)
+    @Field(type = FieldType.Keyword)
     private String typeKey;
 
     /**
@@ -124,7 +121,7 @@ public class XmEntity implements Serializable, Persistable<Long> {
      */
     @ApiModelProperty(value = "Key reference to the configured Entity State. Entity State matrix related to the pair of Entity Type. Convention is same as for type (ACTIVE, ORDERED, PRODUCTION, CANCELED, CANCELED.MANUAL etc).")
     @Column(name = "state_key")
-    @Field(index = FieldIndex.not_analyzed, type = FieldType.String)
+    @Field(type = FieldType.Keyword)
     private String stateKey;
 
     /**

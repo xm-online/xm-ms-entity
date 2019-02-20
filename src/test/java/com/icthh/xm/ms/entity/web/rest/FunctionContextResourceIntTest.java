@@ -355,7 +355,8 @@ public class FunctionContextResourceIntTest {
         int databaseSizeBeforeUpdate = functionContextRepository.findAll().size();
 
         // Update the functionContext
-        FunctionContext updatedFunctionContext = functionContextRepository.findOne(functionContext.getId());
+        FunctionContext updatedFunctionContext = functionContextRepository.findById(functionContext.getId())
+            .orElseThrow(NullPointerException::new);
 
         em.detach(updatedFunctionContext);
 

@@ -34,13 +34,9 @@ public class CalendarObjectIdResolver extends SimpleObjectIdResolver {
 
     @Override
     public Object resolveId(final ObjectIdGenerator.IdKey id) {
-        Object entity = repository.findOne((Long) id.key);
-
-        if (entity == null) {
-            throw new BusinessException(ErrorConstants.ERR_NOTFOUND, "Can not resolve Calendar by ID: " + id.key);
-        }
-
-        return entity;
+        return repository.findById(((Long) id.key)).orElseThrow(
+            () -> new BusinessException(ErrorConstants.ERR_NOTFOUND,
+                "Can not resolve Calendar by ID: " + id.key));
     }
 
 

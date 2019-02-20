@@ -1,36 +1,35 @@
 package com.icthh.xm.ms.entity.config;
 
-import io.github.jhipster.config.metrics.SpectatorLogMetricWriter;
-
-import com.netflix.spectator.api.Registry;
-import org.springframework.boot.actuate.autoconfigure.ExportMetricReader;
-import org.springframework.boot.actuate.autoconfigure.ExportMetricWriter;
-import org.springframework.boot.actuate.metrics.writer.MetricWriter;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.cloud.netflix.metrics.spectator.SpectatorMetricReader;
-
 import com.codahale.metrics.MetricRegistry;
+import com.ryantenney.metrics.spring.config.annotation.EnableMetrics;
+import com.ryantenney.metrics.spring.config.annotation.MetricsConfigurerAdapter;
 import com.zaxxer.hikari.HikariDataSource;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import io.github.jhipster.config.JHipsterProperties;
+import io.prometheus.client.CollectorRegistry;
+import io.prometheus.client.dropwizard.DropwizardExports;
+import io.prometheus.client.exporter.MetricsServlet;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Bean;
+import org.springframework.boot.web.servlet.ServletContextInitializer;
 import org.springframework.context.annotation.Configuration;
 
-
 import javax.annotation.PostConstruct;
+import javax.servlet.ServletContext;
 
+@Slf4j
 @Configuration
-public class EntityMetricsConfiguration {
-
-    private final Logger log = LoggerFactory.getLogger(EntityMetricsConfiguration.class);
+@EnableMetrics(proxyTargetClass = true)
+public class EntityMetricsConfiguration extends MetricsConfigurerAdapter implements ServletContextInitializer {
 
     private final MetricRegistry metricRegistry;
 
+    private final JHipsterProperties jHipsterProperties;
+
     private HikariDataSource hikariDataSource;
 
-    public EntityMetricsConfiguration(MetricRegistry metricRegistry) {
+    public EntityMetricsConfiguration(MetricRegistry metricRegistry, JHipsterProperties jHipsterProperties) {
         this.metricRegistry = metricRegistry;
+        this.jHipsterProperties = jHipsterProperties;
     }
 
     @Autowired(required = false)
@@ -42,23 +41,24 @@ public class EntityMetricsConfiguration {
     public void init() {
         if (hikariDataSource != null) {
             log.debug("Monitoring the datasource");
+            // remove the factory created by HikariDataSourceMetricsPostProcessor until JHipster migrate to Micrometer
+            hikariDataSource.setMetricsTrackerFactory(null);
             hikariDataSource.setMetricRegistry(metricRegistry);
         }
     }
 
-    /* Spectator metrics log reporting */
-    @Bean
-    @ConditionalOnProperty("jhipster.logging.spectator-metrics.enabled")
-    @ExportMetricReader
-    public SpectatorMetricReader SpectatorMetricReader(Registry registry) {
-        log.info("Initializing Spectator Metrics Log reporting");
-        return new SpectatorMetricReader(registry);
-    }
+    @Override
+    public void onStartup(ServletContext servletContext) {
 
-    @Bean
-    @ConditionalOnProperty("jhipster.logging.spectator-metrics.enabled")
-    @ExportMetricWriter
-    MetricWriter metricWriter() {
-        return new SpectatorLogMetricWriter();
+        if (jHipsterProperties.getMetrics().getPrometheus().isEnabled()) {
+            String endpoint = jHipsterProperties.getMetrics().getPrometheus().getEndpoint();
+
+            log.debug("Initializing prometheus metrics exporting via {}", endpoint);
+
+            CollectorRegistry.defaultRegistry.register(new DropwizardExports(metricRegistry));
+            servletContext
+                .addServlet("prometheusMetrics", new MetricsServlet(CollectorRegistry.defaultRegistry))
+                .addMapping(endpoint);
+        }
     }
 }

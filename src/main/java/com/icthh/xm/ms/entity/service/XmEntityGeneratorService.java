@@ -61,16 +61,18 @@ public class XmEntityGeneratorService {
     private final XmEntityService xmEntityService;
     private final XmEntitySpecService xmEntitySpecService;
     private final String locationsJson;
-    private final ObjectMapper mapper = new ObjectMapper();
+    private final ObjectMapper mapper;
     private final XmAuthenticationContextHolder authContextHolder;
 
     public XmEntityGeneratorService(XmEntityService xmEntityService,
                                     XmEntitySpecService xmEntitySpecService,
-                                    XmAuthenticationContextHolder authContextHolder) {
+                                    XmAuthenticationContextHolder authContextHolder,
+                                    ObjectMapper mapper) {
         this.xmEntityService = xmEntityService;
         this.xmEntitySpecService = xmEntitySpecService;
         this.locationsJson = getLocationsJson();
         this.authContextHolder = authContextHolder;
+        this.mapper = mapper;
     }
 
     private TypeSpec getRandomTypeSpec(String rootTypeKey) {

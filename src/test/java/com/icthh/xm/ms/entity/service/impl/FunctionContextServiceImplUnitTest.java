@@ -1,7 +1,7 @@
 package com.icthh.xm.ms.entity.service.impl;
 
 import static com.google.common.collect.ImmutableMap.of;
-import static org.mockito.Matchers.refEq;
+import static org.mockito.ArgumentMatchers.refEq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -11,7 +11,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.class)
 public class FunctionContextServiceImplUnitTest {

@@ -14,14 +14,15 @@ import com.icthh.xm.ms.entity.service.FunctionService;
 import com.icthh.xm.ms.entity.service.XmEntityService;
 import com.icthh.xm.ms.entity.service.XmEntitySpecService;
 import com.icthh.xm.ms.entity.util.CustomCollectionUtils;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
+
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * The {@link FunctionServiceImpl} class.
@@ -78,7 +79,7 @@ public class FunctionServiceImpl implements FunctionService {
         Objects.requireNonNull(functionKey, "functionKey can't be null");
         Objects.requireNonNull(idOrKey, "idOrKey can't be null");
 
-        Map<String, Object> vInput =  CustomCollectionUtils.emptyIfNull(functionInput);
+        Map<String, Object> vInput = CustomCollectionUtils.emptyIfNull(functionInput);
 
         dynamicPermissionCheckService.checkContextPermission(DynamicPermissionCheckService.FeatureContext.FUNCTION,
             "XMENTITY.FUNCTION.EXECUTE", functionKey);

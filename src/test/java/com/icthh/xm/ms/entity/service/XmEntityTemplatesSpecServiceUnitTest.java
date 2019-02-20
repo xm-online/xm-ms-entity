@@ -1,43 +1,22 @@
 package com.icthh.xm.ms.entity.service;
 
 import static com.icthh.xm.commons.tenant.TenantContextUtils.getRequiredTenantKeyValue;
-import static com.icthh.xm.ms.entity.config.TenantConfigMockConfiguration.getXmEntitySpec;
 import static com.icthh.xm.ms.entity.config.TenantConfigMockConfiguration.getXmEntityTemplatesSpec;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import com.icthh.xm.commons.config.client.repository.TenantConfigRepository;
 import com.icthh.xm.commons.tenant.TenantContext;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantKey;
 import com.icthh.xm.ms.entity.config.ApplicationProperties;
-import com.icthh.xm.ms.entity.config.tenant.LocalXmEntitySpecService;
-import com.icthh.xm.ms.entity.domain.spec.AttachmentSpec;
-import com.icthh.xm.ms.entity.domain.spec.LinkSpec;
-import com.icthh.xm.ms.entity.domain.spec.LocationSpec;
-import com.icthh.xm.ms.entity.domain.spec.NextSpec;
-import com.icthh.xm.ms.entity.domain.spec.RatingSpec;
-import com.icthh.xm.ms.entity.domain.spec.StateSpec;
-import com.icthh.xm.ms.entity.domain.spec.TagSpec;
-import com.icthh.xm.ms.entity.domain.spec.TypeSpec;
+import java.util.Optional;
 import lombok.SneakyThrows;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
-
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.stream.Collectors;
+import org.mockito.junit.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.class)
 public class XmEntityTemplatesSpecServiceUnitTest {
