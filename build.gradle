@@ -276,9 +276,6 @@ dependencies {
     compile "org.freemarker:freemarker:${freemarker_version}"
     compile "org.apache.poi:poi-ooxml:${apache_poi_version}"
     compile "org.modelmapper:modelmapper:${modelmapper_version}"
-
-    compile group: 'com.auth0', name: 'java-jwt', version: '3.5.0'
-
     //compile "org.springframework.boot:spring-boot-devtools"
     // XM custom dependencies end
     // fix scala MethodNotFoundException
