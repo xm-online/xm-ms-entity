@@ -4,6 +4,9 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.github.fge.jackson.JsonLoader;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.icthh.xm.commons.config.client.api.RefreshableConfiguration;
 import com.icthh.xm.commons.config.client.repository.TenantConfigRepository;
 import com.icthh.xm.commons.logging.aop.IgnoreLogginAspect;
@@ -57,7 +60,7 @@ public class XmEntitySpecService implements RefreshableConfiguration {
      * @return list of entity Types specifications
      */
     public List<TypeSpec> findAllTypes() {
-        return new ArrayList<>(getTypeSpecs().values());
+        return Lists.newArrayList(getTypeSpecs().values());
     }
 
     /**
@@ -308,9 +311,9 @@ public class XmEntitySpecService implements RefreshableConfiguration {
      */
     @IgnoreLogginAspect
     public Map<String, Map<String, Set<String>>> getAllKeys() {
-        Map<String, Map<String, Set<String>>> result = new HashMap<>();
+        Map<String, Map<String, Set<String>>> result = Maps.newHashMap();
         for (TypeSpec typeSpec : findAllTypes()) {
-            Map<String, Set<String>> subKeys = new HashMap<>();
+            Map<String, Set<String>> subKeys = Maps.newHashMap();
             getKeys(subKeys, AttachmentSpec.class, typeSpec.getAttachments(), AttachmentSpec::getKey);
             getKeys(subKeys, CalendarSpec.class, typeSpec.getCalendars(), CalendarSpec::getKey);
             getKeys(subKeys, LinkSpec.class, typeSpec.getLinks(), LinkSpec::getKey);
@@ -338,7 +341,7 @@ public class XmEntitySpecService implements RefreshableConfiguration {
             }
 
             JsonNode node = JsonLoader.fromString(typeSpec.getDataSpec());
-            Set<UniqueFieldSpec> uniqueFields = new HashSet<>();
+            Set<UniqueFieldSpec> uniqueFields = Sets.newHashSet();
             processNode(node, "$", uniqueFields);
             typeSpec.setUniqueFields(uniqueFields);
         }
