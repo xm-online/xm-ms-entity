@@ -5,6 +5,7 @@ import com.icthh.xm.ms.entity.domain.FunctionContext;
 import com.icthh.xm.ms.entity.domain.ext.IdOrKey;
 import com.icthh.xm.ms.entity.domain.spec.FunctionSpec;
 import com.icthh.xm.ms.entity.projection.XmEntityIdKeyTypeKey;
+import com.icthh.xm.ms.entity.projection.XmEntityStateProjection;
 import com.icthh.xm.ms.entity.security.access.DynamicPermissionCheckService;
 import com.icthh.xm.ms.entity.service.FunctionContextService;
 import com.icthh.xm.ms.entity.service.FunctionExecutorService;
@@ -161,7 +162,7 @@ public class FunctionServiceImplUnitTest {
         exception.expectMessage("Function not found for entity type key " + xmEntityTypeKey
             + " and function key: " + functionKey);
 
-        when(xmEntityService.getXmEntityIdKeyTypeKey(key)).thenReturn(getProjection(key));
+        when(xmEntityService.findStateProjectionById(key)).thenReturn(getProjection(key));
 
         when(xmEntitySpecService.findFunction(xmEntityTypeKey, functionKey))
             .thenReturn(Optional.empty());
@@ -179,7 +180,7 @@ public class FunctionServiceImplUnitTest {
         Map<String, Object> data = Maps.newHashMap();
         data.put("KEY1", "VAL1");
 
-        when(xmEntityService.getXmEntityIdKeyTypeKey(key)).thenReturn(getProjection(key));
+        when(xmEntityService.findStateProjectionById(key)).thenReturn(getProjection(key));
 
         when(xmEntitySpecService.findFunction(xmEntityTypeKey, functionName))
             .thenReturn(Optional.of(spec));
@@ -207,7 +208,7 @@ public class FunctionServiceImplUnitTest {
         Map<String, Object> data = Maps.newHashMap();
         data.put("KEY1", "VAL1");
 
-        when(xmEntityService.getXmEntityIdKeyTypeKey(key)).thenReturn(getProjection(key));
+        when(xmEntityService.findStateProjectionById(key)).thenReturn(getProjection(key));
 
         when(xmEntitySpecService.findFunction(xmEntityTypeKey, functionName))
             .thenReturn(Optional.of(spec));
@@ -232,8 +233,12 @@ public class FunctionServiceImplUnitTest {
         return spec;
     }
 
-    private XmEntityIdKeyTypeKey getProjection(IdOrKey key) {
-        return new XmEntityIdKeyTypeKey() {
+    private Optional<XmEntityStateProjection> getProjection(IdOrKey key) {
+        return Optional.of(new XmEntityStateProjection() {
+            @Override
+            public String getStateKey() {
+                return "STATE";
+            }
             @Override
             public Long getId() {
                 return key.getId();
@@ -248,7 +253,7 @@ public class FunctionServiceImplUnitTest {
             public String getTypeKey() {
                 return xmEntityTypeKey;
             }
-        };
+        });
     }
 
 }
