@@ -5,6 +5,7 @@ import static org.springframework.http.MediaType.TEXT_PLAIN_VALUE;
 import com.codahale.metrics.annotation.Timed;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.domain.spec.TypeSpec;
+import com.icthh.xm.ms.entity.security.access.DynamicPermissionCheckService;
 import com.icthh.xm.ms.entity.service.XmEntityGeneratorService;
 import com.icthh.xm.ms.entity.service.XmEntitySpecService;
 import com.icthh.xm.ms.entity.web.rest.util.HeaderUtil;
@@ -27,6 +28,8 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Function;
+import java.util.function.Supplier;
 
 /**
  * REST controller for managing XmEntitySpec.
@@ -40,11 +43,31 @@ public class XmEntitySpecResource {
     private static final String ENTITY_NAME = "xmEntity";
 
     private final XmEntitySpecService xmEntitySpecService;
-
     private final XmEntityGeneratorService xmEntityGeneratorService;
+    private final DynamicPermissionCheckService dynamicPermissionCheckService;
 
     public enum Filter {
-        ALL, APP, NON_ABSTRACT;
+
+        ALL(XmEntitySpecService::findAllTypes),
+        APP(XmEntitySpecService::findAllAppTypes),
+        NON_ABSTRACT(XmEntitySpecService::findAllNonAbstractTypes);
+
+        private Function<XmEntitySpecService, List<TypeSpec>> typeSpecSupplier;
+
+        Filter(Function<XmEntitySpecService, List<TypeSpec>> typeSpecSupplier){
+            this.typeSpecSupplier = typeSpecSupplier;
+        }
+
+        /**
+         * getFilteredEntities
+         * @param xmEntitySpecService
+         * @param filterFunction
+         * @return
+         */
+        private List<TypeSpec> getTypeSpec(XmEntitySpecService xmEntitySpecService,  Function<List<TypeSpec>, List<TypeSpec>> filterFunction) {
+            return this.typeSpecSupplier.andThen(filterFunction).apply(xmEntitySpecService);
+        }
+
     }
 
     /**
@@ -58,19 +81,8 @@ public class XmEntitySpecResource {
     @PostFilter("hasPermission({'returnObject': filterObject, 'log': false}, 'XMENTITY_SPEC.GET')")
     public List<TypeSpec> getTypeSpecs(@ApiParam XmEntitySpecResource.Filter filter) {
         log.debug("REST request to get a list of TypeSpec");
-        List<TypeSpec> typeSpecs;
-        switch (filter != null ? filter : Filter.ALL) {
-            case APP:
-                typeSpecs = xmEntitySpecService.findAllAppTypes();
-                break;
-            case NON_ABSTRACT:
-                typeSpecs = xmEntitySpecService.findAllNonAbstractTypes();
-                break;
-            default:
-                typeSpecs = xmEntitySpecService.findAllTypes();
-                break;
-        }
-        return typeSpecs;
+        XmEntitySpecResource.Filter f = filter != null ? filter : Filter.ALL;
+        return f.getTypeSpec(xmEntitySpecService, dynamicPermissionCheckService.dynamicFunctionFilter());
     }
 
     /**

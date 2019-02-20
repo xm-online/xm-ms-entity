@@ -8,6 +8,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.BiFunction;
@@ -34,6 +35,11 @@ public class DynamicPermissionCheckService {
         FeatureContext (Function<DynamicPermissionCheckService, Boolean> featureContextResolver) {
             this.featureContextResolver = featureContextResolver;
         }
+
+        private boolean isEnabled(DynamicPermissionCheckService service) {
+            return this.featureContextResolver.apply(service).booleanValue();
+        }
+
     }
 
     private final TenantConfigService tenantConfigService;
@@ -59,7 +65,7 @@ public class DynamicPermissionCheckService {
     public boolean checkContextPermission(FeatureContext featureContext, String basePermission, String suffix) {
         Preconditions.checkArgument(StringUtils.isNotEmpty(basePermission));
         Preconditions.checkArgument(StringUtils.isNotEmpty(suffix));
-        if (featureContext.featureContextResolver.apply(this)) {
+        if (featureContext.isEnabled(this)) {
             return checkContextPermission(basePermission, suffix);
         }
         return assertPermission(basePermission);
@@ -76,6 +82,14 @@ public class DynamicPermissionCheckService {
         Preconditions.checkArgument(StringUtils.isNotEmpty(suffix));
         final String permission = basePermission + "." + suffix;
         return assertPermission(permission);
+    }
+
+    public <T> Function<List<T>, List<T>> dynamicFunctionFilter() {
+        //todo Filtering logic will be here!
+        if (FeatureContext.FUNCTION.isEnabled(this)){
+            return list -> list;
+        }
+        return list -> list;
     }
 
     /**
