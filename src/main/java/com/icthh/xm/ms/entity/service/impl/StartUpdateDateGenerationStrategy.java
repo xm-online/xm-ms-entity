@@ -81,7 +81,7 @@ public class StartUpdateDateGenerationStrategy {
         T oldEntity = null;
 
         if (id != null) {
-            oldEntity = repository.findOne(id);
+            oldEntity = repository.findById(id).orElse(null);
         }
 
         if (oldEntity != null) {

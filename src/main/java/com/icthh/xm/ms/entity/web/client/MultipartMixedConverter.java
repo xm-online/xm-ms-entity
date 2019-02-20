@@ -238,7 +238,7 @@ public class MultipartMixedConverter implements HttpMessageConverter<MultiValueM
         MediaType partContentType = partHeaders.getContentType();
         for (HttpMessageConverter<?> messageConverter : this.partConverters) {
             if (messageConverter.canWrite(partType, partContentType)) {
-                HttpOutputMessage multipartMessage = new MultipartMixedConverter.MultipartHttpOutputMessage(os);
+                HttpOutputMessage multipartMessage = new MultipartHttpOutputMessage(os);
                 multipartMessage.getHeaders().setContentDispositionFormData(name, null);
                 if (!partHeaders.isEmpty()) {
                     multipartMessage.getHeaders().putAll(partHeaders);

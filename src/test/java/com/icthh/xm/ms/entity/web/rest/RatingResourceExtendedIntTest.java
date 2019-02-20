@@ -13,6 +13,7 @@ import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
 import com.icthh.xm.ms.entity.EntityApp;
 import com.icthh.xm.ms.entity.config.SecurityBeanOverrideConfiguration;
+import com.icthh.xm.ms.entity.config.elasticsearch.EmbeddedElasticsearchConfig;
 import com.icthh.xm.ms.entity.config.tenant.WebappTenantOverrideConfiguration;
 import com.icthh.xm.ms.entity.domain.Rating;
 import com.icthh.xm.ms.entity.repository.RatingRepository;
@@ -53,7 +54,8 @@ import javax.persistence.EntityManager;
 @SpringBootTest(classes = {
     EntityApp.class,
     SecurityBeanOverrideConfiguration.class,
-    WebappTenantOverrideConfiguration.class
+    WebappTenantOverrideConfiguration.class,
+    EmbeddedElasticsearchConfig.class
 })
 public class RatingResourceExtendedIntTest {
 

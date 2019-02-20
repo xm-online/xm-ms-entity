@@ -23,7 +23,7 @@ class CommentGatlingTest extends Simulation {
     val baseURL = Option(System.getProperty("baseURL")) getOrElse """http://127.0.0.1:8080"""
 
     val httpConf = http
-        .baseURL(baseURL)
+        .baseUrl(baseURL)
         .inferHtmlResources()
         .acceptHeader("*/*")
         .acceptEncodingHeader("gzip, deflate")
@@ -80,7 +80,7 @@ class CommentGatlingTest extends Simulation {
             .exec(http("Create new comment")
             .post("/entity/api/comments")
             .headers(headers_http_authenticated)
-            .body(StringBody("""{"id":null, "userKey":"SAMPLE_TEXT", "message":"SAMPLE_TEXT", "entryDate":"2020-01-01T00:00:00.000Z"}""")).asJSON
+            .body(StringBody("""{"id":null, "userKey":"SAMPLE_TEXT", "message":"SAMPLE_TEXT", "entryDate":"2020-01-01T00:00:00.000Z"}""")).asJson
             .check(status.is(201))
             .check(headerRegex("Location", "(.*)").saveAs("new_comment_url"))).exitHereIfFailed
             .pause(10)
@@ -99,6 +99,6 @@ class CommentGatlingTest extends Simulation {
     val users = scenario("Users").exec(scn)
 
     setUp(
-        users.inject(rampUsers(Integer.getInteger("users", 100)) over (Integer.getInteger("ramp", 1) minutes))
+        users.inject(rampUsers(Integer.getInteger("users", 100)) during (Integer.getInteger("ramp", 1) minutes))
     ).protocols(httpConf)
 }

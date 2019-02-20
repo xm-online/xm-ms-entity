@@ -23,7 +23,7 @@ class FunctionContextGatlingTest extends Simulation {
     val baseURL = Option(System.getProperty("baseURL")) getOrElse """http://127.0.0.1:8080"""
 
     val httpConf = http
-        .baseURL(baseURL)
+        .baseUrl(baseURL)
         .inferHtmlResources()
         .acceptHeader("*/*")
         .acceptEncodingHeader("gzip, deflate")
@@ -80,7 +80,7 @@ class FunctionContextGatlingTest extends Simulation {
             .exec(http("Create new functionContext")
             .post("/entity/api/function-contexts")
             .headers(headers_http_authenticated)
-            .body(StringBody("""{"id":null, "key":"SAMPLE_TEXT", "typeKey":"SAMPLE_TEXT", "description":"SAMPLE_TEXT", "startDate":"2020-01-01T00:00:00.000Z", "updateDate":"2020-01-01T00:00:00.000Z", "endDate":"2020-01-01T00:00:00.000Z", "data":"SAMPLE_TEXT"}""")).asJSON
+            .body(StringBody("""{"id":null, "key":"SAMPLE_TEXT", "typeKey":"SAMPLE_TEXT", "description":"SAMPLE_TEXT", "startDate":"2020-01-01T00:00:00.000Z", "updateDate":"2020-01-01T00:00:00.000Z", "endDate":"2020-01-01T00:00:00.000Z", "data":"SAMPLE_TEXT"}""")).asJson
             .check(status.is(201))
             .check(headerRegex("Location", "(.*)").saveAs("new_functionContext_url"))).exitHereIfFailed
             .pause(10)
@@ -99,6 +99,6 @@ class FunctionContextGatlingTest extends Simulation {
     val users = scenario("Users").exec(scn)
 
     setUp(
-        users.inject(rampUsers(Integer.getInteger("users", 100)) over (Integer.getInteger("ramp", 1) minutes))
+        users.inject(rampUsers(Integer.getInteger("users", 100)) during (Integer.getInteger("ramp", 1) minutes))
     ).protocols(httpConf)
 }

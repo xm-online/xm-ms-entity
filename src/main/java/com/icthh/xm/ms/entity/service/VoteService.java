@@ -54,7 +54,7 @@ public class VoteService {
      */
     @Transactional(readOnly = true)
     public Vote findOne(Long id) {
-        return voteRepository.findOne(id);
+        return voteRepository.findById(id).orElse(null);
     }
 
     @FindWithPermission("VOTE.GET_LIST")
@@ -80,6 +80,6 @@ public class VoteService {
      * @param id the id of the entity
      */
     public void delete(Long id) {
-        voteRepository.delete(id);
+        voteRepository.deleteById(id);
     }
 }

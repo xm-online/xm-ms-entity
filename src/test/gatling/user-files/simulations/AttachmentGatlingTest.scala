@@ -23,7 +23,7 @@ class AttachmentGatlingTest extends Simulation {
     val baseURL = Option(System.getProperty("baseURL")) getOrElse """http://127.0.0.1:8080"""
 
     val httpConf = http
-        .baseURL(baseURL)
+        .baseUrl(baseURL)
         .inferHtmlResources()
         .acceptHeader("*/*")
         .acceptEncodingHeader("gzip, deflate")
@@ -80,7 +80,7 @@ class AttachmentGatlingTest extends Simulation {
             .exec(http("Create new attachment")
             .post("/entity/api/attachments")
             .headers(headers_http_authenticated)
-            .body(StringBody("""{"id":null, "typeKey":"SAMPLE_TEXT", "name":"SAMPLE_TEXT", "contentUrl":"SAMPLE_TEXT", "description":"SAMPLE_TEXT", "startDate":"2020-01-01T00:00:00.000Z", "endDate":"2020-01-01T00:00:00.000Z", "valueContentType":"SAMPLE_TEXT", "valueContentSize":null}""")).asJSON
+            .body(StringBody("""{"id":null, "typeKey":"SAMPLE_TEXT", "name":"SAMPLE_TEXT", "contentUrl":"SAMPLE_TEXT", "description":"SAMPLE_TEXT", "startDate":"2020-01-01T00:00:00.000Z", "endDate":"2020-01-01T00:00:00.000Z", "valueContentType":"SAMPLE_TEXT", "valueContentSize":null}""")).asJson
             .check(status.is(201))
             .check(headerRegex("Location", "(.*)").saveAs("new_attachment_url"))).exitHereIfFailed
             .pause(10)
@@ -99,6 +99,6 @@ class AttachmentGatlingTest extends Simulation {
     val users = scenario("Users").exec(scn)
 
     setUp(
-        users.inject(rampUsers(Integer.getInteger("users", 100)) over (Integer.getInteger("ramp", 1) minutes))
+        users.inject(rampUsers(Integer.getInteger("users", 100)) during (Integer.getInteger("ramp", 1) minutes))
     ).protocols(httpConf)
 }

@@ -67,7 +67,7 @@ public class RatingService {
      */
     @Transactional(readOnly = true)
     public Rating findOne(Long id) {
-        return ratingRepository.findOne(id);
+        return ratingRepository.findById(id).orElse(null);
     }
 
     /**
@@ -76,7 +76,7 @@ public class RatingService {
      *  @param id the id of the entity
      */
     public void delete(Long id) {
-        ratingRepository.delete(id);
+        ratingRepository.deleteById(id);
     }
 
     /**

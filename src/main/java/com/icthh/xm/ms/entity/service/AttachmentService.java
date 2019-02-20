@@ -78,11 +78,11 @@ public class AttachmentService {
      */
     @Transactional(readOnly = true)
     public Attachment findOneWithContent(Long id) {
-        Attachment attachment = attachmentRepository.findOne(id);
-        if (attachment != null) {
-            Hibernate.initialize(attachment.getContent());
-        }
-        return attachment;
+        return attachmentRepository.findById(id)
+            .map(att -> {
+                Hibernate.initialize(att.getContent());
+                return att;
+            }).orElse(null);
     }
 
     /**
@@ -93,7 +93,7 @@ public class AttachmentService {
      */
     @Transactional(readOnly = true)
     public Attachment findOne(Long id) {
-        return attachmentRepository.findOne(id);
+        return attachmentRepository.findById(id).orElse(null);
     }
 
     /**
@@ -103,7 +103,7 @@ public class AttachmentService {
      */
     @LogicExtensionPoint("Delete")
     public void delete(Long id) {
-        attachmentRepository.delete(id);
+        attachmentRepository.deleteById(id);
     }
 
     /**

@@ -1,6 +1,7 @@
 package com.icthh.xm.ms.entity.repository.search;
 
 import static org.elasticsearch.index.query.QueryBuilders.queryStringQuery;
+import static org.springframework.data.elasticsearch.core.query.Query.DEFAULT_PAGE;
 
 import com.icthh.xm.commons.permission.service.PermissionCheckService;
 import com.icthh.xm.ms.entity.repository.search.translator.SpelToElasticTranslator;
@@ -58,7 +59,7 @@ public class PermittedSearchRepository {
 
         return new NativeSearchQueryBuilder()
             .withQuery(queryStringQuery(permittedQuery))
-            .withPageable(pageable)
+            .withPageable(pageable == null ? DEFAULT_PAGE : pageable)
             .build();
     }
 

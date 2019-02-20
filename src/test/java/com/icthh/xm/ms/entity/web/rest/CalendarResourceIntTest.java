@@ -369,7 +369,8 @@ public class CalendarResourceIntTest {
         int databaseSizeBeforeUpdate = calendarRepository.findAll().size();
 
         // Update the calendar
-        Calendar updatedCalendar = calendarRepository.findOne(calendar.getId());
+        Calendar updatedCalendar = calendarRepository.findById(calendar.getId())
+            .orElseThrow(NullPointerException::new);
         updatedCalendar
             .typeKey(UPDATED_TYPE_KEY)
             .name(UPDATED_NAME)

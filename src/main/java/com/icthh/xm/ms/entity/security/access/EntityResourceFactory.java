@@ -13,12 +13,13 @@ import com.icthh.xm.ms.entity.repository.RatingRepository;
 import com.icthh.xm.ms.entity.repository.TagRepository;
 import com.icthh.xm.ms.entity.repository.VoteRepository;
 import com.icthh.xm.ms.entity.service.XmEntityService;
-import org.springframework.context.annotation.Lazy;
-import org.springframework.stereotype.Component;
 
 import java.util.HashMap;
 import java.util.Map;
 import javax.annotation.PostConstruct;
+
+import org.springframework.context.annotation.Lazy;
+import org.springframework.stereotype.Component;
 
 @Component
 public class EntityResourceFactory implements ResourceFactory {
@@ -76,7 +77,7 @@ public class EntityResourceFactory implements ResourceFactory {
         Object result = null;
         ResourceRepository resourceRepository = repositories.get(objectType);
         if (resourceRepository != null) {
-            result = resourceRepository.findById(resourceId);
+            result = resourceRepository.findResourceById(resourceId);
         }
         return result;
     }
