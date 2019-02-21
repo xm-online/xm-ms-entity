@@ -105,16 +105,9 @@ public class ElasticsearchIndexService {
             log.info("Do nothing. Index was already concurrently recreated by some other service");
         }
 
-<<<<<<< HEAD
-        if (mappingConfiguration.isMappingExists()) {
-            elasticsearchTemplate.putMapping(XmEntity.class, mappingConfiguration.getMapping());
-        } else {
-            elasticsearchTemplate.putMapping(XmEntity.class);
-=======
         elasticsearchTemplate.putMapping(clazz);
         if (mappingConfiguration.isMappingExists()) {
             elasticsearchTemplate.putMapping(clazz, mappingConfiguration.getMapping());
->>>>>>> master
         }
 
         if (xmEntityRepositoryInternal.count() > 0) {
