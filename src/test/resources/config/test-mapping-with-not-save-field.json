@@ -1,4 +1,12 @@
 {
+    "_source": {
+        "includes": [
+            "data.*"
+        ],
+        "excludes": [
+            "data.notSaveField"
+        ]
+    },
     "properties": {
         "key": {
             "type": "string",
@@ -10,6 +18,9 @@
                 "targetField": {
                     "type": "string",
                     "index": "not_analyzed"
+                },
+                "notSaveField": {
+                    "type": "string"
                 }
             }
         }
