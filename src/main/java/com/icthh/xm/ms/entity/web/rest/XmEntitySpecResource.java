@@ -28,6 +28,8 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -60,8 +62,8 @@ public class XmEntitySpecResource {
 
         /**
          * getFilteredEntities
-         * @param xmEntitySpecService
-         * @param filterFunction
+         * @param xmEntitySpecService specification supplier
+         * @param filterFunction filter function
          * @return
          */
         private List<TypeSpec> getTypeSpec(XmEntitySpecService xmEntitySpecService,  Function<List<TypeSpec>, List<TypeSpec>> filterFunction) {
@@ -82,7 +84,7 @@ public class XmEntitySpecResource {
     public List<TypeSpec> getTypeSpecs(@ApiParam XmEntitySpecResource.Filter filter) {
         log.debug("REST request to get a list of TypeSpec");
         XmEntitySpecResource.Filter f = filter != null ? filter : Filter.ALL;
-        Function<TypeSpec, TypeSpec> mapper = spec -> spec;
+        BiFunction<TypeSpec, Set<String>, TypeSpec> mapper = xmEntitySpecService::filterTypeSpecByFunctionPermission;
         return f.getTypeSpec(xmEntitySpecService, dynamicPermissionCheckService.dynamicFunctionFilter(mapper));
     }
 

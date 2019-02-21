@@ -16,9 +16,9 @@ import org.mockito.runners.MockitoJUnitRunner;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.function.BiFunction;
 import java.util.function.Function;
-import java.util.function.Predicate;
-import java.util.function.Supplier;
 
 import static com.icthh.xm.ms.entity.security.access.DynamicPermissionCheckService.DYNAMIC_FUNCTION_PERMISSION_FEATURE;
 import static com.icthh.xm.ms.entity.security.access.DynamicPermissionCheckService.FeatureContext;
@@ -116,12 +116,17 @@ public class DynamicPermissionCheckServiceUnitTest {
             .isThrownBy(() -> dynamicPermissionCheckService.checkContextPermission(FeatureContext.CHANGE_STATE, "XXX", "YY"));
     }
 
+    /**
+     * Inverse incoming list
+     */
+    private BiFunction<Boolean, Set<String>, Boolean> mapper = (item, set) -> !item;
+
     @Test
     public void resultNotChangedIfFunctionFilterFeatureIsOff(){
         BDDMockito.given(tenantConfig.getConfig()).willReturn(Maps.newHashMap());
         final List<Boolean> someList = Lists.newArrayList(Boolean.TRUE, Boolean.FALSE, Boolean.TRUE, Boolean.FALSE);
         Function<List<Boolean>, List<Boolean>> listSupplier = list -> list;
-        final List<Boolean> resultList = listSupplier.andThen(dynamicPermissionCheckService.dynamicFunctionFilter(superMapper)).apply(someList);
+        final List<Boolean> resultList = listSupplier.andThen(dynamicPermissionCheckService.dynamicFunctionFilter(mapper)).apply(someList);
         assertThat(resultList).containsExactly(Boolean.TRUE, Boolean.FALSE, Boolean.TRUE, Boolean.FALSE);
     }
 
@@ -134,11 +139,9 @@ public class DynamicPermissionCheckServiceUnitTest {
         BDDMockito.given(tenantConfig.getConfig()).willReturn(config);
         final List<Boolean> someList = Lists.newArrayList(Boolean.TRUE, Boolean.FALSE, Boolean.TRUE, Boolean.FALSE);
         Function<List<Boolean>, List<Boolean>> listSupplier = list -> list;
-        final List<Boolean> resultList = listSupplier.andThen(dynamicPermissionCheckService.dynamicFunctionFilter(superMapper)).apply(someList);
+        final List<Boolean> resultList = listSupplier.andThen(dynamicPermissionCheckService.dynamicFunctionFilter(mapper)).apply(someList);
         assertThat(resultList).containsExactly(Boolean.FALSE, Boolean.TRUE, Boolean.FALSE, Boolean.TRUE);
     }
-
-    private Function<Boolean, Boolean> superMapper = value -> Boolean.TRUE.equals(value) ? Boolean.FALSE : Boolean.TRUE;
 
     private Map<String, Object> getMockedConfig(String configSectionName, String featureName, Boolean status) {
         Map<String, Object> map = Maps.newHashMap();

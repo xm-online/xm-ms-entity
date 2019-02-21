@@ -1,7 +1,13 @@
 package com.icthh.xm.ms.entity.security.access;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.icthh.xm.commons.config.client.service.TenantConfigService;
+import com.icthh.xm.commons.permission.domain.Permission;
 import com.icthh.xm.commons.permission.service.PermissionCheckService;
+import com.icthh.xm.commons.permission.service.PermissionService;
+import com.icthh.xm.commons.tenant.TenantContextHolder;
+import com.icthh.xm.commons.tenant.TenantContextUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -11,9 +17,9 @@ import org.springframework.validation.annotation.Validated;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.function.Function;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -57,13 +63,20 @@ public class DynamicPermissionCheckService {
 
     private final TenantConfigService tenantConfigService;
     private final PermissionCheckService permissionCheckService;
+    private final PermissionService permissionService;
+    private final TenantContextHolder tenantContextHolder;
 
     private BiFunction<PermissionCheckService, String, Boolean> assertPermission =
         (service, permission) -> service.hasPermission(SecurityContextHolder.getContext().getAuthentication(), permission);
 
-    public DynamicPermissionCheckService(TenantConfigService tenantConfigService, PermissionCheckService permissionCheckService) {
+    public DynamicPermissionCheckService(TenantConfigService tenantConfigService,
+                                         PermissionCheckService permissionCheckService,
+                                         PermissionService permissionService,
+                                         TenantContextHolder tenantContextHolder) {
         this.tenantConfigService = tenantConfigService;
         this.permissionCheckService = permissionCheckService;
+        this.permissionService = permissionService;
+        this.tenantContextHolder = tenantContextHolder;
     }
 
     /**
@@ -98,14 +111,14 @@ public class DynamicPermissionCheckService {
     }
 
     /**
-     * Performs object field adjustment if feature is enabled
+     * Performs object field adjustment if feature is enabled. Function is generified, as it could be re used with other mappers.
      * @param mapper - adjustment implementation
      * @param <T> - collection element
      * @return same collection or adjusted one
      */
-    public <T> Function<List<T>, List<T>> dynamicFunctionFilter(Function<T, T> mapper) {
+    public <T> Function<List<T>, List<T>> dynamicFunctionFilter(BiFunction<T, Set<String>, T> mapper) {
         if (FeatureContext.FUNCTION.isEnabled(this)) {
-            return list -> list.stream().map(mapper).collect(Collectors.toList());
+            return list -> list.stream().map(item -> mapper.apply(item, Sets.newHashSet())).collect(Collectors.toList());
         }
         return list -> list;
     }

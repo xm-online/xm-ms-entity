@@ -304,6 +304,24 @@ public class XmEntitySpecService implements RefreshableConfiguration {
     }
 
     /**
+     * Filter returned list of function in accordance to configured role permissions
+     * @param typeSpec entity type spec
+     * @param rolePermissions
+     * @return
+     */
+    public TypeSpec filterTypeSpecByFunctionPermission(final TypeSpec typeSpec, final Set<String> rolePermissions) {
+        Set<String> lPermissions = nullSafe(rolePermissions);
+        if (lPermissions.isEmpty()) {
+            typeSpec.setFunctions(Lists.newArrayList());
+            return typeSpec;
+        }
+        List<FunctionSpec> functions = nullSafe(typeSpec.getFunctions());
+        List<FunctionSpec> filteredList = functions.stream().filter(rolePermissions::contains).collect(Collectors.toList());
+        typeSpec.setFunctions(filteredList);
+        return typeSpec;
+    }
+
+    /**
      * Transforms all XmEntity Specification keys into the thin structure based
      * in maps and sets.
      *
