@@ -1,5 +1,9 @@
 {
     "properties": {
+        "key": {
+            "type": "string",
+            "fielddata": true
+        },
         "data": {
             "type": "object",
             "properties": {

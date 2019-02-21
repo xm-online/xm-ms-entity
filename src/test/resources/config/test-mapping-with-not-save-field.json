@@ -10,7 +10,7 @@
     "properties": {
         "key": {
             "type": "string",
-            "index": "not_analyzed"
+            "fielddata": true
         },
         "data": {
             "type": "object",

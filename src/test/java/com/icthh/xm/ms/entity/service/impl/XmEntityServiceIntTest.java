@@ -349,6 +349,8 @@ public class XmEntityServiceIntTest {
         assertEquals(search.getContent(), asList(entity1, entity2));
         Page<XmEntity> searchByKey = xmEntityService.search("key: F-E", page, null);
         assertEquals(searchByKey.getContent(), asList(entity2));
+        Page<XmEntity> searchByKeyword = xmEntityService.search("data.targetField.keyword: C-D", page, null);
+        assertEquals(searchByKeyword.getContent(), asList(entity1));
 
         reindexWithMapping("config/test-mapping.json");
         Page<XmEntity> searchWithMapping = xmEntityService.search("data.targetField: C-D", page, null);
@@ -359,13 +361,12 @@ public class XmEntityServiceIntTest {
         reindexWithMapping("config/test-mapping-with-not-analyzed-key.json");
         searchWithMapping = xmEntityService.search("data.targetField: C-D", page, null);
         assertEquals(searchWithMapping.getContent(), asList(entity1));
-        searchByKeyWithMapping = xmEntityService.search("key: F-E", page, null);
+        searchByKeyWithMapping = xmEntityService.search("key.keyword: F-E", page, null);
         assertEquals(searchByKeyWithMapping.getContent(), asList(entity2));
 
         reindexWithMapping("config/test-mapping-with-not-save-field.json");
         searchWithMapping = xmEntityService.search("data.targetField: C-D", page, null);
         assertNotEquals(searchWithMapping.getContent(), asList(entity1));
-
         xmEntityData.remove("notSaveField");
         assertEquals(searchWithMapping.getContent().get(0).getData(), xmEntityData);
     }

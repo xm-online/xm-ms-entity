@@ -2,7 +2,12 @@
     "properties": {
         "key": {
             "type": "string",
-            "index": "not_analyzed"
+            "fielddata": true,
+            "fields": {
+                "keyword": {
+                    "type": "keyword"
+                }
+            }
         },
         "data": {
             "type": "object",
