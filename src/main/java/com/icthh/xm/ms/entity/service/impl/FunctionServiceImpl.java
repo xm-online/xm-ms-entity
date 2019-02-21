@@ -97,8 +97,11 @@ public class FunctionServiceImpl implements FunctionService {
         // validate that current XmEntity has function
         FunctionSpec functionSpec = findFunctionSpec(functionKey, projection);
 
-        isCallAllowedByState(functionSpec, projection).orElseThrow(
-            () -> new IllegalStateException("Function call forbidden for current state"));
+        //orElseThorw is replaced by war message
+        isCallAllowedByState(functionSpec, projection).orElseGet(() -> {
+           log.warn("Entity state [{}] not found in specMapping for {}", projection.getStateKey(), functionKey);
+           return Boolean.TRUE;
+        });
 
         // execute function
         Map<String, Object> data = functionExecutorService.execute(functionKey, idOrKey, projection.getTypeKey(), vInput);
