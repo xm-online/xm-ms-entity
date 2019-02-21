@@ -8,9 +8,8 @@ import static java.util.Arrays.asList;
 import static java.util.UUID.randomUUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 
 import com.icthh.xm.commons.lep.XmLepScriptConfigServerResourceLoader;
 import com.icthh.xm.commons.security.XmAuthenticationContext;
@@ -37,6 +36,11 @@ import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
 import com.icthh.xm.ms.entity.service.ElasticsearchIndexService;
 import java.io.InputStream;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
@@ -54,10 +58,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.junit4.SpringRunner;
-
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
 
 @Slf4j
 @RunWith(SpringRunner.class)
@@ -333,8 +333,13 @@ public class XmEntityServiceIntTest {
     @WithMockUser(authorities = "SUPER-ADMIN")
     public void testAdditionalMapping() {
         elasticsearchIndexService.reindexAll();
+
+        Map<String, Object> xmEntityData = new HashMap<>();
+        xmEntityData.put("targetField", "C-D");
+        xmEntityData.put("notSaveField", "FF-AA");
+
         XmEntity entity1 = new XmEntity().typeKey("TEST_SEARCH").name("A-B").key("E-F")
-            .data(of("targetField", "C-D"));
+            .data(xmEntityData);
         XmEntity entity2 = new XmEntity().typeKey("TEST_SEARCH").name("B-A").key("F-E")
             .data(of("targetField", "D-C"));
         xmEntityService.save(entity1);
@@ -344,15 +349,32 @@ public class XmEntityServiceIntTest {
         assertEquals(search.getContent(), asList(entity1, entity2));
         Page<XmEntity> searchByKey = xmEntityService.search("key: F-E", page, null);
         assertEquals(searchByKey.getContent(), asList(entity2));
+        Page<XmEntity> searchByKeyword = xmEntityService.search("data.targetField.keyword: C-D", page, null);
+        assertEquals(searchByKeyword.getContent(), asList(entity1));
 
-        String mapping = loadFile("config/test-mapping.json");
-        mappingConfiguration.onRefresh("/config/tenants/RESINTTEST/entity/mapping.json", mapping);
-        elasticsearchIndexService.reindexAll();
-
+        reindexWithMapping("config/test-mapping.json");
         Page<XmEntity> searchWithMapping = xmEntityService.search("data.targetField: C-D", page, null);
         assertEquals(searchWithMapping.getContent(), asList(entity1));
         Page<XmEntity> searchByKeyWithMapping = xmEntityService.search("key: F-E", page, null);
+        assertNotEquals(searchByKeyWithMapping.getContent(), asList(entity2));
+
+        reindexWithMapping("config/test-mapping-with-not-analyzed-key.json");
+        searchWithMapping = xmEntityService.search("data.targetField: C-D", page, null);
+        assertEquals(searchWithMapping.getContent(), asList(entity1));
+        searchByKeyWithMapping = xmEntityService.search("key.keyword: F-E", page, null);
         assertEquals(searchByKeyWithMapping.getContent(), asList(entity2));
+
+        reindexWithMapping("config/test-mapping-with-not-save-field.json");
+        searchWithMapping = xmEntityService.search("data.targetField: C-D", page, null);
+        assertNotEquals(searchWithMapping.getContent(), asList(entity1));
+        xmEntityData.remove("notSaveField");
+        assertEquals(searchWithMapping.getContent().get(0).getData(), xmEntityData);
+    }
+
+    private void reindexWithMapping(String mappingPath) {
+        String mapping = loadFile(mappingPath);
+        mappingConfiguration.onRefresh("/config/tenants/RESINTTEST/entity/mapping.json", mapping);
+        elasticsearchIndexService.reindexAll();
     }
 
     @SneakyThrows
