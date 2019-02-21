@@ -34,6 +34,9 @@ public class FunctionServiceImpl implements FunctionService {
     //Function is not visible, but could be executed
     public static String NONE = "NONE";
 
+    private static String FUNCTION_CALL_PRIV = "FUNCTION.CALL";
+    private static String XM_ENITITY_FUNCTION_CALL_PRIV = "XMENTITY.FUNCTION.EXECUTE";
+
     private final XmEntitySpecService xmEntitySpecService;
     private final XmEntityService xmEntityService;
     private final FunctionExecutorService functionExecutorService;
@@ -61,7 +64,7 @@ public class FunctionServiceImpl implements FunctionService {
         Map<String, Object> vInput = CustomCollectionUtils.emptyIfNull(functionInput);
 
         dynamicPermissionCheckService.checkContextPermission(DynamicPermissionCheckService.FeatureContext.FUNCTION,
-            "FUNCTION.CALL", functionKey);
+            FUNCTION_CALL_PRIV, functionKey);
 
         FunctionSpec functionSpec = findFunctionSpec(functionKey, null);
 
@@ -84,7 +87,7 @@ public class FunctionServiceImpl implements FunctionService {
         Map<String, Object> vInput = CustomCollectionUtils.emptyIfNull(functionInput);
 
         dynamicPermissionCheckService.checkContextPermission(DynamicPermissionCheckService.FeatureContext.FUNCTION,
-            "XMENTITY.FUNCTION.EXECUTE", functionKey);
+            XM_ENITITY_FUNCTION_CALL_PRIV , functionKey);
 
         // get type key
         XmEntityStateProjection projection = xmEntityService.findStateProjectionById(idOrKey).orElseThrow(
