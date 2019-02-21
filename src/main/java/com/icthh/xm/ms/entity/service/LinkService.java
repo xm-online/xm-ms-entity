@@ -90,7 +90,7 @@ public class LinkService {
     @Transactional(readOnly = true)
     @LogicExtensionPoint("FindOne")
     public Link findOne(Long id) {
-        return linkRepository.findOne(id);
+        return linkRepository.findById(id).orElse(null);
     }
 
     /**
@@ -132,7 +132,7 @@ public class LinkService {
      */
     @LogicExtensionPoint("Delete")
     public void delete(Long id) {
-        linkRepository.delete(id);
+        linkRepository.deleteById(id);
     }
 
     /**

@@ -309,7 +309,8 @@ public class LocationResourceIntTest {
         int databaseSizeBeforeUpdate = locationRepository.findAll().size();
 
         // Update the location
-        Location updatedLocation = locationRepository.findOne(location.getId());
+        Location updatedLocation = locationRepository.findById(location.getId())
+            .orElseThrow(NullPointerException::new);
         updatedLocation
             .typeKey(UPDATED_TYPE_KEY)
             .countryKey(UPDATED_COUNTRY_KEY)

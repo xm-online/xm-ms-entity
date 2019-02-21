@@ -5,8 +5,8 @@ import static com.icthh.xm.ms.entity.domain.spec.LinkSpec.SEARCH_BUILDER_TYPE;
 import static com.icthh.xm.ms.entity.util.CustomCollectionUtils.nullSafe;
 import static com.jayway.jsonpath.Configuration.defaultConfiguration;
 import static com.jayway.jsonpath.Option.SUPPRESS_EXCEPTIONS;
-import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
 import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.collections.MapUtils.isEmpty;
@@ -15,7 +15,6 @@ import static org.apache.commons.lang3.StringUtils.isNoneBlank;
 import static org.springframework.beans.BeanUtils.isSimpleValueType;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.icthh.xm.commons.config.client.service.TenantConfigService;
 import com.icthh.xm.commons.exceptions.BusinessException;
 import com.icthh.xm.commons.exceptions.EntityNotFoundException;
 import com.icthh.xm.commons.exceptions.ErrorConstants;
@@ -49,11 +48,11 @@ import com.icthh.xm.ms.entity.lep.keyresolver.TypeKeyResolver;
 import com.icthh.xm.ms.entity.lep.keyresolver.XmEntityTypeKeyResolver;
 import com.icthh.xm.ms.entity.projection.XmEntityIdKeyTypeKey;
 import com.icthh.xm.ms.entity.projection.XmEntityStateProjection;
+import com.icthh.xm.ms.entity.repository.SpringXmEntityRepository;
 import com.icthh.xm.ms.entity.repository.UniqueFieldRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityPermittedRepository;
-import com.icthh.xm.ms.entity.repository.XmEntityRepository;
+import com.icthh.xm.ms.entity.repository.XmEntityRepositoryInternal;
 import com.icthh.xm.ms.entity.repository.search.XmEntityPermittedSearchRepository;
-import com.icthh.xm.ms.entity.repository.search.XmEntitySearchRepository;
 import com.icthh.xm.ms.entity.service.AttachmentService;
 import com.icthh.xm.ms.entity.service.LifecycleLepStrategy;
 import com.icthh.xm.ms.entity.service.LifecycleLepStrategyFactory;
@@ -66,11 +65,23 @@ import com.icthh.xm.ms.entity.service.XmEntityTemplatesSpecService;
 import com.icthh.xm.ms.entity.service.dto.LinkSourceDto;
 import com.jayway.jsonpath.DocumentContext;
 import com.jayway.jsonpath.JsonPath;
+
+import java.net.URI;
+import java.time.Instant;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.function.Consumer;
+import java.util.stream.Collectors;
+
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang.text.StrSubstitutor;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.text.StrSubstitutor;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
@@ -84,17 +95,6 @@ import org.springframework.util.CollectionUtils;
 import org.springframework.util.ObjectUtils;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.net.URI;
-import java.time.Instant;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.function.Consumer;
-import java.util.stream.Collectors;
-
 /**
  * Service Implementation for managing XmEntity.
  */
@@ -104,10 +104,10 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class XmEntityServiceImpl implements XmEntityService {
 
+    // @Autowired
     private final XmEntitySpecService xmEntitySpecService;
     private final XmEntityTemplatesSpecService xmEntityTemplatesSpecService;
-    private final XmEntityRepository xmEntityRepository;
-    private final XmEntitySearchRepository xmEntitySearchRepository;
+    private final XmEntityRepositoryInternal xmEntityRepository;
     private final LifecycleLepStrategyFactory lifecycleLepStrategyFactory;
     private final XmEntityPermittedRepository xmEntityPermittedRepository;
     private final ProfileService profileService;
@@ -118,8 +118,8 @@ public class XmEntityServiceImpl implements XmEntityService {
     private final StartUpdateDateGenerationStrategy startUpdateDateGenerationStrategy;
     private final XmAuthenticationContextHolder authContextHolder;
     private final ObjectMapper objectMapper;
-    private final TenantConfigService tenantConfigService;
     private final UniqueFieldRepository uniqueFieldRepository;
+    private final SpringXmEntityRepository springXmEntityRepository;
 
     private XmEntityServiceImpl self;
 
@@ -148,11 +148,11 @@ public class XmEntityServiceImpl implements XmEntityService {
 
         Optional<XmEntity> oldEntity = startUpdateDateGenerationStrategy
             .preProcessStartUpdateDates(xmEntity,
-                                        xmEntity.getId(),
-                                        xmEntityRepository,
-                                        XmEntity::setStartDate,
-                                        XmEntity::getStartDate,
-                                        XmEntity::setUpdateDate);
+                xmEntity.getId(),
+                springXmEntityRepository,
+                XmEntity::setStartDate,
+                XmEntity::getStartDate,
+                XmEntity::setUpdateDate);
 
         if (oldEntity.isPresent()) {
             preventRenameTenant(xmEntity, oldEntity.get());
@@ -176,8 +176,10 @@ public class XmEntityServiceImpl implements XmEntityService {
         xmEntity.updateXmEntityReference(xmEntity.getTargets(), Link::setSource);
         xmEntity.updateXmEntityReference(xmEntity.getSources(), Link::setTarget);
         xmEntity.updateXmEntityReference(xmEntity.getVotes(), Vote::setXmEntity);
-        nullSafe(xmEntity.getTargets()).forEach(link -> link.setTarget(xmEntityRepository.getOne(link.getTarget().getId())));
-        nullSafe(xmEntity.getSources()).forEach(link -> link.setSource(xmEntityRepository.getOne(link.getSource().getId())));
+        nullSafe(xmEntity.getTargets()).forEach(link ->
+            link.setTarget(xmEntityRepository.getOne(link.getTarget().getId())));
+        nullSafe(xmEntity.getSources()).forEach(link ->
+            link.setSource(xmEntityRepository.getOne(link.getSource().getId())));
         processUniqueField(xmEntity, oldEntity);
 
         // TODO: amedved: use saveAndFlash() here because old entity was returned if use save()
@@ -212,7 +214,7 @@ public class XmEntityServiceImpl implements XmEntityService {
 
         DocumentContext document = JsonPath.using(defaultConfiguration().addOptions(SUPPRESS_EXCEPTIONS)).parse(json);
 
-        for (UniqueFieldSpec uniqueFieldSpec: typeByKey.getUniqueFields()) {
+        for (UniqueFieldSpec uniqueFieldSpec : typeByKey.getUniqueFields()) {
             String jsonPath = uniqueFieldSpec.getJsonPath();
             String value = convertToString(document.read(jsonPath));
 
@@ -263,26 +265,31 @@ public class XmEntityServiceImpl implements XmEntityService {
         }
     }
 
-    @Override
-    @Transactional(readOnly = true)
-    @FindWithPermission("XMENTITY.GET_LIST")
-    public Page<XmEntity> findByIds(Pageable pageable, Set<Long> ids, Set<String> embed, String privilegeKey) {
-        return xmEntityPermittedRepository.findAllByIdsWithEmbed(pageable, ids, embed, privilegeKey);
-    }
-
     @Transactional(readOnly = true)
     @Override
     public List<XmEntity> findAll(Specification<XmEntity> spec) {
         return xmEntityRepository.findAll(spec);
     }
 
-    /***
-     * Only for lep usage
+    /**
+     * Only for lep usage.
+     *
+     * @param jpql  query for execution
+     * @param args  query parameters
+     * @param embed list of additional fields that must be returned by query
+     * @return list of found entities
      */
     @Transactional(readOnly = true)
     @Override
     public List<XmEntity> findAll(String jpql, Map<String, Object> args, List<String> embed) {
         return xmEntityRepository.findAll(jpql, args, embed);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    @FindWithPermission("XMENTITY.GET_LIST")
+    public Page<XmEntity> findByIds(Pageable pageable, Set<Long> ids, Set<String> embed, String privilegeKey) {
+        return xmEntityPermittedRepository.findAllByIdsWithEmbed(pageable, ids, embed, privilegeKey);
     }
 
     /**
@@ -305,6 +312,17 @@ public class XmEntityServiceImpl implements XmEntityService {
         }
         return findOneById(xmEntityId);
     }
+
+    @LogicExtensionPoint("FindOneEmbed")
+    @Override
+    @Transactional(readOnly = true)
+    public XmEntity findOne(IdOrKey idOrKey, List<String> embed) {
+        if (idOrKey.isKey()) {
+            throw new IllegalArgumentException("Key mode is not supported yet");
+        }
+        return self.getOneEntity(xmEntityRepository.findOne(idOrKey.getId(), embed));
+    }
+
 
     private XmEntity findOneById(Long xmEntityId) {
         XmEntity xmEntity = xmEntityRepository.findOneById(xmEntityId);
@@ -342,7 +360,7 @@ public class XmEntityServiceImpl implements XmEntityService {
     public void delete(Long id) {
         log.debug("Request to delete XmEntity : {}", id);
 
-        XmEntity xmEntity = xmEntityRepository.findOne(id, asList("targets"));
+        XmEntity xmEntity = xmEntityRepository.findOne(id, singletonList("targets"));
 
         self.deleteXmEntityByTypeKeyLep(xmEntity);
     }
@@ -352,6 +370,7 @@ public class XmEntityServiceImpl implements XmEntityService {
         self.deleteXmEntityGeneralLep(xmEntity.getId(), xmEntity);
     }
 
+    @SuppressWarnings("unused")
     @LogicExtensionPoint("Delete")
     public void deleteXmEntityGeneralLep(Long id, XmEntity xmEntity) {
         deleteXmEntity(xmEntity);
@@ -375,11 +394,12 @@ public class XmEntityServiceImpl implements XmEntityService {
             if (NEW_BUILDER_TYPE.equalsIgnoreCase(linkSpec.get(target.getTypeKey()))) {
                 deleteNewLink(target);
             } else if (!SEARCH_BUILDER_TYPE.equals(linkSpec.get(target.getTypeKey()))) {
-                log.warn("Unknown link builder type |{}| for link type {}", linkSpec.get(target.getTypeKey()), target.getTypeKey());
+                log.warn("Unknown link builder type |{}| for link type {}",
+                    linkSpec.get(target.getTypeKey()), target.getTypeKey());
             }
         }
 
-        xmEntityRepository.delete(xmEntity.getId());
+        xmEntityRepository.deleteById(xmEntity.getId());
     }
 
 
@@ -389,7 +409,8 @@ public class XmEntityServiceImpl implements XmEntityService {
 
         for (Link sourceLink : nullSafe(entity.getSources())) {
             if (!sourceLink.linkFromSameEntity(linkToDelete)) {
-                log.warn("Entity {} has links from other entity(ies), so deletion of this entity will be ignored in cascade deletion.", entity);
+                log.warn("Entity {} has links from other entity(ies), "
+                    + "so deletion of this entity will be ignored in cascade deletion.", entity);
                 return;
             }
         }
@@ -415,7 +436,10 @@ public class XmEntityServiceImpl implements XmEntityService {
     @Override
     @Transactional(readOnly = true)
     @FindWithPermission("XMENTITY.SEARCH")
-    public Page<XmEntity> search(String template, TemplateParamsHolder templateParamsHolder, Pageable pageable, String privilegeKey) {
+    public Page<XmEntity> search(String template,
+                                 TemplateParamsHolder templateParamsHolder,
+                                 Pageable pageable,
+                                 String privilegeKey) {
         String query = getTemplateQuery(template, templateParamsHolder);
         return xmEntityPermittedSearchRepository.search(query, pageable, XmEntity.class, privilegeKey);
     }
@@ -423,21 +447,28 @@ public class XmEntityServiceImpl implements XmEntityService {
     @Override
     @Transactional(readOnly = true)
     @FindWithPermission("XMENTITY.SEARCH")
-    public Page<XmEntity> searchByQueryAndTypeKey(String query, String typeKey, Pageable pageable, String privilegeKey) {
+    public Page<XmEntity> searchByQueryAndTypeKey(String query,
+                                                  String typeKey,
+                                                  Pageable pageable,
+                                                  String privilegeKey) {
         return xmEntityPermittedSearchRepository.searchByQueryAndTypeKey(query, typeKey, pageable, privilegeKey);
     }
 
     @Override
     @Transactional(readOnly = true)
     @FindWithPermission("XMENTITY.SEARCH")
-    public Page<XmEntity> searchByQueryAndTypeKey(String template, TemplateParamsHolder templateParamsHolder, String typeKey, Pageable pageable, String privilegeKey) {
+    public Page<XmEntity> searchByQueryAndTypeKey(String template,
+                                                  TemplateParamsHolder templateParamsHolder,
+                                                  String typeKey,
+                                                  Pageable pageable,
+                                                  String privilegeKey) {
         String query = isBlank(template) ? StringUtils.EMPTY : getTemplateQuery(template, templateParamsHolder);
         return xmEntityPermittedSearchRepository.searchByQueryAndTypeKey(query, typeKey, pageable, privilegeKey);
     }
 
     private String getTemplateQuery(String template, TemplateParamsHolder templateParamsHolder) {
         return StrSubstitutor.replace(xmEntityTemplatesSpecService.findTemplate(template), templateParamsHolder
-                .getTemplateParams());
+            .getTemplateParams());
     }
 
     @Override
@@ -465,7 +496,7 @@ public class XmEntityServiceImpl implements XmEntityService {
                                                       final String privilegeKey) {
         XmEntity source = toSourceXmEntity(idOrKey);
         return linkService.findSourceByTargetIdAndTypeKey(pageable, source.getId(), typeKey, privilegeKey)
-                          .map(LinkSourceDto::new);
+            .map(LinkSourceDto::new);
     }
 
     @LogicExtensionPoint("SaveLinkTarget")
@@ -503,7 +534,9 @@ public class XmEntityServiceImpl implements XmEntityService {
         }
 
         //get first attachment spec type for now
-        String attachmentTypeKey = typeSpec.getAttachments().stream().findFirst().get().getKey();
+        String attachmentTypeKey = typeSpec.getAttachments().stream().findFirst()
+            .orElseThrow(() -> new IllegalArgumentException("Attachment typeKey not found for key " + targetTypeKey))
+            .getKey();
         log.debug("Attachment type key {}", attachmentTypeKey);
 
         Attachment attachment = attachmentService.save(new Attachment()
@@ -538,7 +571,7 @@ public class XmEntityServiceImpl implements XmEntityService {
         }
 
         Long foundSourceId = foundLink.getSource().getId();
-        if (!foundSourceId.equals(source.getId())) {
+        if (foundSourceId == null || !foundSourceId.equals(source.getId())) {
             throw new BusinessException("Wrong source id. Expected " + source.getId() + " found " + foundSourceId);
         }
         log.debug("Delete link by id " + linkId);
@@ -583,8 +616,8 @@ public class XmEntityServiceImpl implements XmEntityService {
         List<StateSpec> stateSpecs = xmEntitySpecService.nextStates(entity.getTypeKey(), entity.getStateKey());
         if (stateSpecs == null || stateSpecs.stream().map(StateSpec::getKey).noneMatch(stateKey::equals)) {
             throw new BusinessException(ErrorConstants.ERR_VALIDATION,
-                                        "Entity " + entity + " can not go from [" + entity.getStateKey() + "] to ["
-                                        + stateKey + "]");
+                "Entity " + entity + " can not go from [" + entity.getStateKey() + "] to ["
+                    + stateKey + "]");
         }
     }
 
@@ -595,7 +628,7 @@ public class XmEntityServiceImpl implements XmEntityService {
         if (idOrKey.isId()) {
             // ID case
             projection = xmEntityRepository.findStateProjectionById(idOrKey.getId());
-         } else {
+        } else {
             // KEY case
             projection = xmEntityRepository.findStateProjectionByKey(idOrKey.getKey());
         }
@@ -616,7 +649,12 @@ public class XmEntityServiceImpl implements XmEntityService {
     }
 
     @Override
-    public Object findById(Object id) {
+    public Object findResourceById(Object id) {
+        return findOne(IdOrKey.of(String.valueOf(id)));
+    }
+
+    @Override
+    public XmEntity findById(final Object id) {
         return findOne(IdOrKey.of(String.valueOf(id)));
     }
 
@@ -624,35 +662,25 @@ public class XmEntityServiceImpl implements XmEntityService {
     @Override
     public byte[] exportEntities(String fileFormat, String typeKey) {
         Set<String> typeKeys = xmEntitySpecService.findNonAbstractTypesByPrefix(typeKey).stream()
-                        .map(TypeSpec::getKey).collect(Collectors.toSet());
+            .map(TypeSpec::getKey).collect(Collectors.toSet());
         List<XmEntity> xmEntities = xmEntityRepository.findAllByTypeKeyIn(
-                        new PageRequest(0, Integer.MAX_VALUE), typeKeys).getContent();
+            PageRequest.of(0, Integer.MAX_VALUE), typeKeys).getContent();
 
         ModelMapper modelMapper = new ModelMapper();
 
         List<SimpleExportXmEntityDto> simpleEntities = xmEntities.stream()
-                        .map(entity -> modelMapper.map(entity, SimpleExportXmEntityDto.class))
-                        .collect(Collectors.toList());
+            .map(entity -> modelMapper.map(entity, SimpleExportXmEntityDto.class))
+            .collect(Collectors.toList());
         switch (FileFormatEnum.valueOf(fileFormat.toUpperCase())) {
             case CSV:
                 return EntityToCsvConverterUtils.toCsv(simpleEntities,
-                                SimpleExportXmEntityDto.class);
+                    SimpleExportXmEntityDto.class);
             case XLSX:
                 return EntityToExcelConverterUtils.toExcel(simpleEntities, typeKey);
             default:
                 throw new BusinessException(ErrorConstants.ERR_VALIDATION, String.format(
-                                "Converter doesn't support '%s' file format", fileFormat));
+                    "Converter doesn't support '%s' file format", fileFormat));
         }
-    }
-
-    @LogicExtensionPoint("FindOneEmbed")
-    @Override
-    @Transactional(readOnly = true)
-    public XmEntity findOne(IdOrKey idOrKey, List<String> embed) {
-        if (idOrKey.isKey()) {
-            throw new IllegalArgumentException("Key mode is not supported yet");
-        }
-        return self.getOneEntity(xmEntityRepository.findOne(idOrKey.getId(), embed));
     }
 
     @Transactional(readOnly = true)
@@ -688,6 +716,11 @@ public class XmEntityServiceImpl implements XmEntityService {
         return xmEntityRepository.existsByTypeKeyAndNameIgnoreCase(typeKey, name);
     }
 
+    /**
+     * Holder for the same service instance.
+     *
+     * @param self link for the same service instance
+     */
     @Autowired
     public void setSelf(XmEntityServiceImpl self) {
         if (this.self == null) {

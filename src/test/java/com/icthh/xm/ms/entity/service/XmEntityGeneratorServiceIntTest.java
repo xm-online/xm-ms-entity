@@ -6,7 +6,7 @@ import static org.apache.commons.lang.StringUtils.isBlank;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Matchers.any;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -67,6 +67,9 @@ public class XmEntityGeneratorServiceIntTest {
     @Autowired
     private TenantContextHolder tenantContextHolder;
 
+    @Autowired
+    private ObjectMapper objectMapper;
+
     @Mock
     private XmAuthenticationContextHolder authContextHolder;
 
@@ -82,7 +85,7 @@ public class XmEntityGeneratorServiceIntTest {
         entityServiceMock = mock(XmEntityServiceImpl.class);
         when(entityServiceMock.save(any())).thenAnswer(arg -> arg.getArguments()[0]);
         xmEntityGeneratorService = new XmEntityGeneratorService(entityServiceMock,
-            xmEntitySpecService, authContextHolder);
+            xmEntitySpecService, authContextHolder, objectMapper);
     }
 
     @After

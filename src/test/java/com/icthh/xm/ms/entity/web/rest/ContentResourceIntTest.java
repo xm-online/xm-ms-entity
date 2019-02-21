@@ -232,7 +232,8 @@ public class ContentResourceIntTest {
         int databaseSizeBeforeUpdate = contentRepository.findAll().size();
 
         // Update the content
-        Content updatedContent = contentRepository.findOne(content.getId());
+        Content updatedContent = contentRepository.findById(content.getId())
+            .orElseThrow(NullPointerException::new);
         updatedContent
             .value(UPDATED_VALUE);
 

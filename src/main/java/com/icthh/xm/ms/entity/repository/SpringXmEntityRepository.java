@@ -5,6 +5,12 @@ import com.icthh.xm.ms.entity.projection.XmEntityIdKeyTypeKey;
 import com.icthh.xm.ms.entity.projection.XmEntityStateProjection;
 import com.icthh.xm.ms.entity.projection.XmEntityVersion;
 import com.icthh.xm.ms.entity.repository.entitygraph.EntityGraphRepository;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import javax.persistence.LockModeType;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
@@ -15,18 +21,13 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import javax.persistence.LockModeType;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
-
-
 /**
  * Spring Data JPA repository for the XmEntity entity.
  */
 @SuppressWarnings("unused")
 @Repository
-public interface SpringXmEntityRepository extends JpaRepository<XmEntity, Long>, JpaSpecificationExecutor<XmEntity>, EntityGraphRepository<XmEntity, Long> {
+public interface SpringXmEntityRepository extends
+    JpaRepository<XmEntity, Long>, JpaSpecificationExecutor<XmEntity>, EntityGraphRepository<XmEntity, Long> {
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT e FROM XmEntity e WHERE e.id = :id")
@@ -52,7 +53,7 @@ public interface SpringXmEntityRepository extends JpaRepository<XmEntity, Long>,
 
     @Lock(LockModeType.WRITE)
     @Override
-    <S extends XmEntity> List<S> save(Iterable<S> entities);
+    <S extends XmEntity> List<S> saveAll(Iterable<S> entities);
 
     @Lock(LockModeType.WRITE)
     @Override

@@ -5,19 +5,19 @@ import com.icthh.xm.ms.entity.config.ApplicationProperties;
 import com.icthh.xm.ms.entity.config.amazon.AmazonS3Template;
 import com.icthh.xm.ms.entity.util.ImageResizeUtil;
 import com.icthh.xm.ms.entity.util.XmHttpEntityUtils;
-import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.io.FilenameUtils;
-import org.apache.commons.io.IOUtils;
-import org.springframework.core.io.Resource;
-import org.springframework.http.HttpEntity;
-import org.springframework.stereotype.Component;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.UUID;
+
+import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.FilenameUtils;
+import org.springframework.core.io.Resource;
+import org.springframework.http.HttpEntity;
+import org.springframework.stereotype.Component;
+import org.springframework.web.multipart.MultipartFile;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -45,7 +45,8 @@ public class StorageRepository {
             }
             String filename = UUID.randomUUID().toString() + "." + FilenameUtils.getExtension(name);
             amazonS3Template.save(filename, stream);
-            IOUtils.closeQuietly(stream);
+
+            closeQuietly(stream);
 
             String prefix = String.format(applicationProperties.getAmazon().getAws().getTemplate(),
                 applicationProperties.getAmazon().getS3().getBucket());
@@ -53,6 +54,16 @@ public class StorageRepository {
         } catch (IOException e) {
             log.error("Error storing file", e);
             throw new BusinessException("Error storing file");
+        }
+    }
+
+    private void closeQuietly(final InputStream stream) {
+        try {
+            if (stream != null) {
+                stream.close();
+            }
+        } catch (IOException ignore) {
+            log.warn("Close stream fail: {}", ignore.getMessage());
         }
     }
 

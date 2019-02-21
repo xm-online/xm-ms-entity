@@ -11,14 +11,15 @@ import com.icthh.xm.ms.entity.service.FunctionService;
 import com.icthh.xm.ms.entity.service.XmEntityService;
 import com.icthh.xm.ms.entity.service.XmEntitySpecService;
 import com.icthh.xm.ms.entity.util.CustomCollectionUtils;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
+
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * The {@link FunctionServiceImpl} class.
@@ -76,7 +77,7 @@ public class FunctionServiceImpl implements FunctionService {
         Objects.requireNonNull(functionKey, "functionKey can't be null");
         Objects.requireNonNull(idOrKey, "idOrKey can't be null");
 
-        Map<String, Object> vInput =  CustomCollectionUtils.emptyIfNull(functionInput);
+        Map<String, Object> vInput = CustomCollectionUtils.emptyIfNull(functionInput);
 
         // get type key
         XmEntityIdKeyTypeKey projection = xmEntityService.getXmEntityIdKeyTypeKey(idOrKey);
@@ -85,7 +86,7 @@ public class FunctionServiceImpl implements FunctionService {
         // validate that current XmEntity has function
         FunctionSpec functionSpec = xmEntitySpecService.findFunction(xmEntityTypeKey, functionKey).orElseThrow(
             () -> new IllegalArgumentException("Function not found for entity type key " + xmEntityTypeKey
-            + " and function key: " + functionKey)
+                + " and function key: " + functionKey)
         );
 
         // execute function

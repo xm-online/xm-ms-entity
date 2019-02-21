@@ -5,10 +5,10 @@ import static org.apache.commons.lang3.time.StopWatch.createStarted;
 
 import com.icthh.xm.commons.gen.model.Tenant;
 import com.icthh.xm.commons.logging.aop.IgnoreLogginAspect;
+import com.icthh.xm.commons.migration.db.tenant.DropSchemaResolver;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
 import com.icthh.xm.ms.entity.config.Constants;
-import com.icthh.xm.ms.entity.config.tenant.SchemaDropResolver;
 import com.icthh.xm.ms.entity.domain.EntityState;
 import com.icthh.xm.ms.entity.domain.Profile;
 import com.icthh.xm.ms.entity.domain.XmEntity;
@@ -38,7 +38,7 @@ public class TenantDatabaseService {
     private DataSource dataSource;
     private LiquibaseProperties liquibaseProperties;
     private ResourceLoader resourceLoader;
-    private SchemaDropResolver schemaDropResolver;
+    private DropSchemaResolver schemaDropResolver;
     private TenantContextHolder tenantContextHolder;
     private ProfileService profileService;
 

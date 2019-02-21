@@ -198,13 +198,13 @@ public class XmEntityServiceIntTest {
 
         xmEntityService.delete(entity.getId());
 
-        assertThat(xmEntityRepository.exists(entity.getId())).isFalse();
+        assertThat(xmEntityRepository.existsById(entity.getId())).isFalse();
 
-        assertThat(xmEntityRepository.exists(breakLink.getId())).isTrue();
-        assertThat(xmEntityRepository.exists(cascadeDeleteLink.getId())).isFalse();
+        assertThat(xmEntityRepository.existsById(breakLink.getId())).isTrue();
+        assertThat(xmEntityRepository.existsById(cascadeDeleteLink.getId())).isFalse();
 
-        assertThat(xmEntityRepository.exists(cascadeBreakSubLinks.getId())).isTrue();
-        assertThat(xmEntityRepository.exists(cascadeDeleteSubLinks.getId())).isFalse();
+        assertThat(xmEntityRepository.existsById(cascadeBreakSubLinks.getId())).isTrue();
+        assertThat(xmEntityRepository.existsById(cascadeDeleteSubLinks.getId())).isFalse();
 
         xmEntityService.delete(breakLink.getId());
         xmEntityService.delete(cascadeBreakSubLinks.getId());
@@ -263,15 +263,15 @@ public class XmEntityServiceIntTest {
 
         xmEntityService.delete(entity.getId());
 
-        assertThat(xmEntityRepository.exists(parentEntity.getId())).isTrue();
+        assertThat(xmEntityRepository.existsById(parentEntity.getId())).isTrue();
 
-        assertThat(xmEntityRepository.exists(entity.getId())).isFalse();
+        assertThat(xmEntityRepository.existsById(entity.getId())).isFalse();
 
-        assertThat(xmEntityRepository.exists(breakLink.getId())).isTrue();
-        assertThat(xmEntityRepository.exists(cascadeDeleteLink.getId())).isFalse();
+        assertThat(xmEntityRepository.existsById(breakLink.getId())).isTrue();
+        assertThat(xmEntityRepository.existsById(cascadeDeleteLink.getId())).isFalse();
 
-        assertThat(xmEntityRepository.exists(cascadeBreakSubLinks.getId())).isTrue();
-        assertThat(xmEntityRepository.exists(cascadeDeleteSubLinks.getId())).isFalse();
+        assertThat(xmEntityRepository.existsById(cascadeBreakSubLinks.getId())).isTrue();
+        assertThat(xmEntityRepository.existsById(cascadeDeleteSubLinks.getId())).isFalse();
 
         xmEntityService.delete(breakLink.getId());
         xmEntityService.delete(cascadeBreakSubLinks.getId());
@@ -301,9 +301,9 @@ public class XmEntityServiceIntTest {
 
         xmEntityService.delete(deletedEntity.getId());
 
-        assertThat(xmEntityRepository.exists(otherEntity.getId())).isTrue();
-        assertThat(xmEntityRepository.exists(sharedEntity.getId())).isTrue();
-        assertThat(xmEntityRepository.exists(deletedEntity.getId())).isFalse();
+        assertThat(xmEntityRepository.existsById(otherEntity.getId())).isTrue();
+        assertThat(xmEntityRepository.existsById(sharedEntity.getId())).isTrue();
+        assertThat(xmEntityRepository.existsById(deletedEntity.getId())).isFalse();
 
         xmEntityService.delete(sharedEntity.getId());
         xmEntityService.delete(otherEntity.getId());
@@ -344,8 +344,7 @@ public class XmEntityServiceIntTest {
             .data(of("targetField", "D-C"));
         xmEntityService.save(entity1);
         xmEntityService.save(entity2);
-        PageRequest page = new PageRequest(0, 10, new Sort("key"));
-
+        PageRequest page = PageRequest.of(0, 10, Sort.by("key"));
         Page<XmEntity> search = xmEntityService.search("data.targetField: C-D", page, null);
         assertEquals(search.getContent(), asList(entity1, entity2));
         Page<XmEntity> searchByKey = xmEntityService.search("key: F-E", page, null);

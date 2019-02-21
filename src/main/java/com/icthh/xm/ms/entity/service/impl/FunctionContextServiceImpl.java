@@ -70,7 +70,7 @@ public class FunctionContextServiceImpl implements FunctionContextService {
      */
     @Transactional(readOnly = true)
     public FunctionContext findOne(Long id) {
-        return functionContextRepository.findOne(id);
+        return functionContextRepository.findById(id).orElse(null);
     }
 
     /**
@@ -79,7 +79,7 @@ public class FunctionContextServiceImpl implements FunctionContextService {
      * @param id the id of the entity
      */
     public void delete(Long id) {
-        functionContextRepository.delete(id);
+        functionContextRepository.deleteById(id);
     }
 
     /**

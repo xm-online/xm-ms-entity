@@ -1,217 +1,129 @@
 package com.icthh.xm.ms.entity.repository;
 
-import com.icthh.xm.commons.config.client.service.TenantConfigService;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.projection.XmEntityIdKeyTypeKey;
 import com.icthh.xm.ms.entity.projection.XmEntityStateProjection;
-import com.icthh.xm.ms.entity.projection.XmEntityVersion;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Example;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
-import org.springframework.data.jpa.domain.Specification;
-import org.springframework.data.repository.NoRepositoryBean;
-import org.springframework.data.repository.query.Param;
-import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
-@Slf4j
-@Component
-@NoRepositoryBean
-@RequiredArgsConstructor
-public class XmEntityRepository implements SpringXmEntityRepository {
+import org.springframework.data.domain.Example;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.data.repository.query.Param;
 
-    private final SpringXmEntityRepository springXmEntityRepository;
-    private final TenantConfigService tenantConfigService;
+/**
+ * Repository interface accessible by LEP scripts.
+ */
+public interface XmEntityRepository {
 
-    public XmEntity findOneByIdForUpdate(@Param("id") Long id) {
-        return springXmEntityRepository.findOneByIdForUpdate(id);
-    }
+    Optional<XmEntity> findById(Long id);
 
-    public XmEntity findOneById(Long id) {
-        return springXmEntityRepository.findOneById(id);
-    }
+    /**
+     * For backward compatibility in LEPs.
+     * <p>
+     * Deprecated: use findById(Long aLong) instead.
+     * </p>
+     */
+    @Deprecated
+    XmEntity findOne(Long id);
 
-    public Page<XmEntity> findAllByTypeKeyIn(Pageable pageable, Set<String> typeKeys) {
-        return springXmEntityRepository.findAllByTypeKeyIn(pageable, typeKeys);
-    }
+    XmEntity findOne(Specification<XmEntity> spec);
 
-    public XmEntityIdKeyTypeKey findOneIdKeyTypeKeyById(Long id) {
-        return springXmEntityRepository.findOneIdKeyTypeKeyById(id);
-    }
+    XmEntity findOne(Long id, List<String> embed);
 
-    public XmEntityIdKeyTypeKey findOneIdKeyTypeKeyByKey(String key) {
-        return springXmEntityRepository.findOneIdKeyTypeKeyByKey(key);
-    }
+    /**
+     * For backward compatibility in LEPs.
+     */
+    @Deprecated
+    <S extends XmEntity> S findOne(Example<S> example);
 
-    public XmEntityStateProjection findStateProjectionById(Long id) {
-        return springXmEntityRepository.findStateProjectionById(id);
-    }
+    XmEntity findOneById(Long id);
 
-    public XmEntityStateProjection findStateProjectionByKey(String key) {
-        return springXmEntityRepository.findStateProjectionByKey(key);
-    }
+    XmEntity findOneByIdForUpdate(@Param("id") Long id);
 
-    public Optional<XmEntityVersion> findVersionById(Long id) {
-        return springXmEntityRepository.findVersionById(id);
-    }
+    List<XmEntity> findAllById(Iterable<Long> longs);
 
-    public boolean existsByTypeKeyAndNameIgnoreCase(String typeKey, String name) {
-        return springXmEntityRepository.existsByTypeKeyAndNameIgnoreCase(typeKey, name);
-    }
+    /**
+     * For backward compatibility in LEPs.
+     * <p>
+     * Deprecated: use findAllById(IterableIterable&lt;Long&gt; longs) instead.
+     * </p>
+     */
+    @Deprecated
+    List<XmEntity> findAll(Iterable<Long> longs);
 
-    public List<XmEntity> findAll() {
-        return springXmEntityRepository.findAll();
-    }
+    List<XmEntity> findAll(Specification<XmEntity> spec);
 
-    public List<XmEntity> findAll(Sort sort) {
-        return springXmEntityRepository.findAll(sort);
-    }
+    Page<XmEntity> findAll(Specification<XmEntity> spec, Pageable pageable);
 
-    public List<XmEntity> findAll(Iterable<Long> longs) {
-        return springXmEntityRepository.findAll(longs);
-    }
+    List<XmEntity> findAll(Specification<XmEntity> spec, Sort sort);
 
-    public void flush() {
-        springXmEntityRepository.flush();
-    }
+    List<XmEntity> findAll(String jpql, Map<String, Object> args, List<String> embed);
 
-    public void deleteInBatch(Iterable<XmEntity> entities) {
-        springXmEntityRepository.deleteInBatch(entities);
-    }
+    Page<XmEntity> findAllByTypeKeyIn(Pageable pageable, Set<String> typeKeys);
 
-    public void deleteAllInBatch() {
-        springXmEntityRepository.deleteAllInBatch();
-    }
+    XmEntityIdKeyTypeKey findOneIdKeyTypeKeyByKey(String key);
 
-    public XmEntity getOne(Long aLong) {
-        return springXmEntityRepository.getOne(aLong);
-    }
+    XmEntityIdKeyTypeKey findOneIdKeyTypeKeyById(Long id);
 
-    public <S extends XmEntity> List<S> findAll(Example<S> example) {
-        return springXmEntityRepository.findAll(example);
-    }
+    XmEntityStateProjection findStateProjectionByKey(String key);
 
-    public <S extends XmEntity> List<S> findAll(Example<S> example, Sort sort) {
-        return springXmEntityRepository.findAll(example, sort);
-    }
+    XmEntityStateProjection findStateProjectionById(Long id);
 
-    public Page<XmEntity> findAll(Pageable pageable) {
-        return springXmEntityRepository.findAll(pageable);
-    }
+    XmEntity getOne(Long id);
 
-    public XmEntity findOne(Long aLong) {
-        return springXmEntityRepository.findOne(aLong);
-    }
+    <S extends XmEntity> S save(S entity);
 
-    public boolean exists(Long aLong) {
-        return springXmEntityRepository.exists(aLong);
-    }
+    /**
+     * For backward compatibility in LEPs.
+     * <p>
+     * Deprecated: use saveAll(Iterable<? extends XmEntity> entities) instead.
+     * </p>
+     */
+    @Deprecated
+    <S extends XmEntity> List<S> save(Iterable<S> entities);
 
-    public long count() {
-        return springXmEntityRepository.count();
-    }
+    <S extends XmEntity> S saveAndFlush(S entity);
 
-    public void delete(Long aLong) {
-        springXmEntityRepository.delete(aLong);
-    }
+    <S extends XmEntity> List<S> saveAll(Iterable<S> entities);
 
-    public void delete(XmEntity entity) {
-        springXmEntityRepository.delete(entity);
-    }
+    boolean existsById(Long id);
 
-    public void delete(Iterable<? extends XmEntity> entities) {
-        springXmEntityRepository.delete(entities);
-    }
+    /**
+     * For backward compatibility in LEPs.
+     * <p>
+     * Deprecated: use existsById(Long id) instead.
+     * </p>
+     */
+    @Deprecated
+    boolean exists(Long id);
 
-    public void deleteAll() {
-        springXmEntityRepository.deleteAll();
-    }
+    void deleteById(Long id);
 
-    public <S extends XmEntity> S findOne(Example<S> example) {
-        return springXmEntityRepository.findOne(example);
-    }
+    void delete(XmEntity entity);
 
-    public <S extends XmEntity> Page<S> findAll(Example<S> example, Pageable pageable) {
-        return springXmEntityRepository.findAll(example, pageable);
-    }
+    /**
+     * For backward compatibility in LEPs.
+     * <p>
+     * Deprecated: use deleteById(Long id) instead.
+     * </p>
+     */
+    @Deprecated
+    void delete(Long id);
 
-    public <S extends XmEntity> long count(Example<S> example) {
-        return springXmEntityRepository.count(example);
-    }
+    /**
+     * For backward compatibility in LEPs.
+     * <p>
+     * Deprecated: use deleteAll(Iterable&lt? extends XmEntity&gt) instead.
+     * </p>
+     */
+    @Deprecated
+    void delete(Iterable<? extends XmEntity> entities);
 
-    public <S extends XmEntity> boolean exists(Example<S> example) {
-        return springXmEntityRepository.exists(example);
-    }
-
-    public XmEntity findOne(Specification<XmEntity> spec) {
-        return springXmEntityRepository.findOne(spec);
-    }
-
-    public List<XmEntity> findAll(Specification<XmEntity> spec) {
-        return springXmEntityRepository.findAll(spec);
-    }
-
-    public Page<XmEntity> findAll(Specification<XmEntity> spec, Pageable pageable) {
-        return springXmEntityRepository.findAll(spec, pageable);
-    }
-
-    public List<XmEntity> findAll(Specification<XmEntity> spec, Sort sort) {
-        return springXmEntityRepository.findAll(spec, sort);
-    }
-
-    public long count(Specification<XmEntity> spec) {
-        return springXmEntityRepository.count(spec);
-    }
-
-    public XmEntity findOne(Long aLong, List<String> embed) {
-        return springXmEntityRepository.findOne(aLong, embed);
-    }
-
-    @Override
-    public List<XmEntity> findAll(String jpql, Map<String, Object> args, List<String> embed) {
-        return springXmEntityRepository.findAll(jpql, args, embed);
-    }
-
-    public <S extends XmEntity> List<S> save(Iterable<S> entities) {
-        if (!isEntityVersionEnabled()) {
-            entities.forEach(this::updateVersion);
-        }
-
-        return springXmEntityRepository.save(entities);
-    }
-
-    public <S extends XmEntity> S saveAndFlush(S entity) {
-        if (!isEntityVersionEnabled()) {
-            updateVersion(entity);
-        }
-
-        return springXmEntityRepository.saveAndFlush(entity);
-    }
-
-    private <S extends XmEntity> void updateVersion(S entity) {
-        if (!entity.isNew() && entity.getVersion() == null) {
-            entity.setVersion(findVersionById(entity.getId()).map(XmEntityVersion::getVersion).orElse(null));
-        }
-    }
-
-    public <S extends XmEntity> S save(S entity) {
-        if (!isEntityVersionEnabled()) {
-            updateVersion(entity);
-        }
-
-        return springXmEntityRepository.save(entity);
-    }
-
-    private boolean isEntityVersionEnabled() {
-        return Optional.ofNullable(tenantConfigService.getConfig().get("entityVersionControl"))
-            .filter(it -> it instanceof Map).map(Map.class::cast)
-            .map(it -> it.get("enabled")).map(it -> (boolean)it).orElse(false);
-    }
+    void deleteAll(Iterable<? extends XmEntity> entities);
 }

@@ -73,7 +73,7 @@ public class CalendarService {
     @Transactional(readOnly = true)
     @LogicExtensionPoint("FindOne")
     public Calendar findOne(Long id) {
-        return calendarRepository.findOne(id);
+        return calendarRepository.findById(id).orElse(null);
     }
 
     /**
@@ -83,7 +83,7 @@ public class CalendarService {
      */
     @LogicExtensionPoint("Delete")
     public void delete(Long id) {
-        calendarRepository.delete(id);
+        calendarRepository.deleteById(id);
     }
 
     /**
