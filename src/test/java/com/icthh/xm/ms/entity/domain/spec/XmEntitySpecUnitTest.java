@@ -21,6 +21,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
+
+import com.icthh.xm.ms.entity.AbstractUnitTest;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -35,7 +37,7 @@ import org.springframework.cglib.proxy.MethodProxy;
 import org.springframework.core.io.ClassPathResource;
 
 @Slf4j
-public class XmEntitySpecUnitTest {
+public class XmEntitySpecUnitTest extends AbstractUnitTest {
 
     private static final Path SPEC_PATH = Paths.get("./src/test/resources/config/specs/xmentityspec-test.yml");
 

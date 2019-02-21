@@ -10,6 +10,8 @@ import org.springframework.security.oauth2.provider.token.TokenStore;
 import org.springframework.security.oauth2.provider.token.store.JwtAccessTokenConverter;
 import org.springframework.web.client.RestTemplate;
 
+import javax.annotation.PostConstruct;
+
 /**
  * Overrides UAA specific beans, so they do not interfere the testing
  * This configuration must be included in @SpringBootTest in order to take effect.
@@ -34,4 +36,11 @@ public class SecurityBeanOverrideConfiguration {
     public RestTemplate loadBalancedRestTemplate(RestTemplateCustomizer customizer) {
         return mock(RestTemplate.class);
     }
+
+    @PostConstruct
+    public void postConstruct(){
+        // Need system error to see when contect is recreated during dunning test from gradle
+        System.err.println(" ===================== SecurityBeanOverrideConfiguration inited !!! =======================");
+    }
+
 }

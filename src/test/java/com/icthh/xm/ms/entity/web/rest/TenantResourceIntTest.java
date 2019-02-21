@@ -12,21 +12,14 @@ import com.icthh.xm.commons.gen.api.TenantsApiController;
 import com.icthh.xm.commons.gen.model.Tenant;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
-import com.icthh.xm.commons.tenant.spring.config.TenantContextConfiguration;
-import com.icthh.xm.ms.entity.EntityApp;
-import com.icthh.xm.ms.entity.config.DatabaseConfiguration;
-import com.icthh.xm.ms.entity.config.SecurityBeanOverrideConfiguration;
-import com.icthh.xm.ms.entity.config.tenant.WebappTenantOverrideConfiguration;
+import com.icthh.xm.ms.entity.AbstractSpringBootTest;
 import com.icthh.xm.ms.entity.service.TenantService;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
-import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.context.transaction.BeforeTransaction;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -42,15 +35,7 @@ import javax.sql.DataSource;
  *
  * @see TenantResource
  */
-@RunWith(SpringRunner.class)
-@SpringBootTest(classes = {
-    EntityApp.class,
-    SecurityBeanOverrideConfiguration.class,
-    WebappTenantOverrideConfiguration.class,
-    TenantContextConfiguration.class,
-    DatabaseConfiguration.class
-})
-public class TenantResourceIntTest {
+public class TenantResourceIntTest extends AbstractSpringBootTest {
 
     private static final String TENANT_SUPER = "XM";
     private static final String TENANT_NEW = "SAMARA";

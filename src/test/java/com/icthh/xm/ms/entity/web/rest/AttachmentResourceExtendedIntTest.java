@@ -19,9 +19,7 @@ import com.icthh.xm.commons.i18n.error.web.ExceptionTranslator;
 import com.icthh.xm.commons.permission.repository.PermittedRepository;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
-import com.icthh.xm.ms.entity.EntityApp;
-import com.icthh.xm.ms.entity.config.SecurityBeanOverrideConfiguration;
-import com.icthh.xm.ms.entity.config.tenant.WebappTenantOverrideConfiguration;
+import com.icthh.xm.ms.entity.AbstractSpringBootTest;
 import com.icthh.xm.ms.entity.domain.Attachment;
 import com.icthh.xm.ms.entity.domain.Content;
 import com.icthh.xm.ms.entity.domain.XmEntity;
@@ -34,16 +32,13 @@ import org.apache.commons.codec.digest.DigestUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.security.test.context.support.WithMockUser;
-import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.context.transaction.BeforeTransaction;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -59,14 +54,8 @@ import javax.persistence.EntityManager;
  *
  * @see AttachmentResource
  */
-@RunWith(SpringRunner.class)
 @WithMockUser(authorities = {"SUPER-ADMIN"})
-@SpringBootTest(classes = {
-    EntityApp.class,
-    SecurityBeanOverrideConfiguration.class,
-    WebappTenantOverrideConfiguration.class
-})
-public class AttachmentResourceExtendedIntTest {
+public class AttachmentResourceExtendedIntTest extends AbstractSpringBootTest {
 
     private static final Instant MOCKED_START_DATE = Instant.ofEpochMilli(42L);
 

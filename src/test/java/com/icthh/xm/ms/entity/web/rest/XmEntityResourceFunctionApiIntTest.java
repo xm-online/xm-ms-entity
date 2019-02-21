@@ -1,7 +1,16 @@
 package com.icthh.xm.ms.entity.web.rest;
 
+import static com.google.common.collect.ImmutableMap.of;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
 import com.icthh.xm.commons.i18n.error.web.ExceptionTranslator;
 import com.icthh.xm.commons.i18n.spring.service.LocalizationMessageService;
+import com.icthh.xm.ms.entity.AbstractWebMvcTest;
 import com.icthh.xm.ms.entity.domain.FunctionContext;
 import com.icthh.xm.ms.entity.domain.ext.IdOrKey;
 import com.icthh.xm.ms.entity.repository.kafka.ProfileEventProducer;
@@ -12,29 +21,18 @@ import com.icthh.xm.ms.entity.service.XmEntityService;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
-import static com.google.common.collect.ImmutableMap.of;
-import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
 @Slf4j
-@RunWith(SpringRunner.class)
 @WebMvcTest(controllers = XmEntityResource.class)
 @ContextConfiguration(classes = {XmEntityResource.class, ExceptionTranslator.class})
-public class XmEntityResourceFunctionApiIntTest {
+public class XmEntityResourceFunctionApiIntTest extends AbstractWebMvcTest {
     @Autowired
     private WebApplicationContext wac;
     private MockMvc mockMvc;

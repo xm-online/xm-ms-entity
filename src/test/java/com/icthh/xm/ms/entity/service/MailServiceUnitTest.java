@@ -16,6 +16,7 @@ import com.icthh.xm.commons.i18n.spring.service.LocalizationMessageService;
 import com.icthh.xm.commons.tenant.PrivilegedTenantContext;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantKey;
+import com.icthh.xm.ms.entity.AbstractUnitTest;
 import com.icthh.xm.ms.entity.service.mail.MailService;
 import com.icthh.xm.ms.entity.service.mail.TenantEmailTemplateService;
 import freemarker.template.Configuration;
@@ -34,7 +35,7 @@ import javax.mail.internet.MimeMessage;
 import java.util.HashMap;
 
 @RunWith(MockitoJUnitRunner.class)
-public class MailServiceUnitTest {
+public class MailServiceUnitTest extends AbstractUnitTest {
 
     private static final String MAIL_SETTINGS = "mailSettings";
     private static final String TEMPLATE_NAME = "templateName";

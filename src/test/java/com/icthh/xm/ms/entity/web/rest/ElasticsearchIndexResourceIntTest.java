@@ -19,10 +19,7 @@ import com.icthh.xm.commons.security.XmAuthenticationContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
 import com.icthh.xm.lep.api.LepManager;
-import com.icthh.xm.ms.entity.EntityApp;
-import com.icthh.xm.ms.entity.config.SecurityBeanOverrideConfiguration;
-import com.icthh.xm.ms.entity.config.elasticsearch.EmbeddedElasticsearchConfig;
-import com.icthh.xm.ms.entity.config.tenant.WebappTenantOverrideConfiguration;
+import com.icthh.xm.ms.entity.AbstractSpringBootTest;
 import com.icthh.xm.ms.entity.domain.Attachment;
 import com.icthh.xm.ms.entity.domain.Location;
 import com.icthh.xm.ms.entity.domain.Tag;
@@ -30,20 +27,16 @@ import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.repository.search.XmEntitySearchRepository;
 import com.icthh.xm.ms.entity.service.ElasticsearchIndexService;
 import com.icthh.xm.ms.entity.service.XmEntityService;
-import java.util.concurrent.Executor;
 import lombok.SneakyThrows;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.security.test.context.support.WithMockUser;
-import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.context.transaction.BeforeTransaction;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -56,15 +49,9 @@ import java.util.concurrent.Executor;
  *
  * @see ElasticsearchIndexResource
  */
-@RunWith(SpringRunner.class)
 @WithMockUser(authorities = {"SUPER-ADMIN"})
-@SpringBootTest(classes = {
-    EntityApp.class,
-    SecurityBeanOverrideConfiguration.class,
-    WebappTenantOverrideConfiguration.class,
-    EmbeddedElasticsearchConfig.class
-})
-public class ElasticsearchIndexResourceIntTest {
+// FIXME this test triggers Spring boot context reloading and slow down test execution. Need investigate the reason.
+public class ElasticsearchIndexResourceIntTest extends AbstractSpringBootTest {
 
     private static final String DEFAULT_TYPE_KEY = "ACCOUNT.ADMIN";
 

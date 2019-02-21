@@ -14,27 +14,25 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.icthh.xm.commons.i18n.error.web.ExceptionTranslator;
 import com.icthh.xm.commons.i18n.spring.service.LocalizationMessageService;
+import com.icthh.xm.ms.entity.AbstractWebMvcTest;
 import com.icthh.xm.ms.entity.domain.FunctionContext;
 import com.icthh.xm.ms.entity.service.FunctionService;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
 @Slf4j
-@RunWith(SpringRunner.class)
 @WebMvcTest(controllers = FunctionResource.class)
 @ContextConfiguration(classes = {FunctionResource.class, ExceptionTranslator.class})
-public class FunctionResourceMvcIntTest {
+public class FunctionResourceMvcIntTest extends AbstractWebMvcTest {
 
     @Autowired
     private WebApplicationContext wac;

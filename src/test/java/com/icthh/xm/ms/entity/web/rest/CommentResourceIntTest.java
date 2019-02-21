@@ -6,7 +6,6 @@ import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_TENANT_
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.notNullValue;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -19,34 +18,29 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.icthh.xm.commons.i18n.error.web.ExceptionTranslator;
 import com.icthh.xm.commons.lep.XmLepScriptConfigServerResourceLoader;
+import com.icthh.xm.commons.permission.repository.PermittedRepository;
 import com.icthh.xm.commons.security.XmAuthenticationContext;
 import com.icthh.xm.commons.security.XmAuthenticationContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
 import com.icthh.xm.lep.api.LepManager;
-import com.icthh.xm.ms.entity.EntityApp;
-import com.icthh.xm.ms.entity.config.SecurityBeanOverrideConfiguration;
-import com.icthh.xm.ms.entity.config.tenant.WebappTenantOverrideConfiguration;
+import com.icthh.xm.ms.entity.AbstractSpringBootTest;
 import com.icthh.xm.ms.entity.domain.Comment;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.repository.CommentRepository;
+import com.icthh.xm.ms.entity.repository.XmEntityRepository;
+import com.icthh.xm.ms.entity.repository.search.PermittedSearchRepository;
 import com.icthh.xm.ms.entity.service.CommentService;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Primary;
 import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.security.test.context.support.WithMockUser;
-import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.context.transaction.BeforeTransaction;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -63,16 +57,8 @@ import javax.persistence.EntityManager;
  *
  * @see CommentResource
  */
-@RunWith(SpringRunner.class)
 @WithMockUser(authorities = {"SUPER-ADMIN"})
-@SpringBootTest(classes = {
-    EntityApp.class,
-    SecurityBeanOverrideConfiguration.class,
-    WebappTenantOverrideConfiguration.class,
-    CommentResourceIntTest.class
-})
-@Configuration
-public class CommentResourceIntTest {
+public class CommentResourceIntTest extends AbstractSpringBootTest {
 
     private static final String DEFAULT_USER_KEY = "AAAAAAAAAA";
     private static final String UPDATED_USER_KEY = "BBBBBBBBBB";
@@ -90,9 +76,6 @@ public class CommentResourceIntTest {
     private CommentRepository commentRepository;
 
     @Autowired
-    private CommentService commentService;
-
-    @Autowired
     private MappingJackson2HttpMessageConverter jacksonMessageConverter;
 
     @Autowired
@@ -107,36 +90,37 @@ public class CommentResourceIntTest {
     @Autowired
     private TenantContextHolder tenantContextHolder;
 
-    @Mock
-    private XmAuthenticationContextHolder authContextHolder;
-
     @Autowired
     private LepManager lepManager;
 
     @Autowired
     private XmLepScriptConfigServerResourceLoader lepLoader;
 
+    @Autowired
+    private PermittedRepository permittedRepository;
+
+    @Autowired
+    private PermittedSearchRepository permittedSearchRepository;
+
+    @Autowired
+    private XmEntityRepository xmEntityRepository;
+
+    @Autowired
+    private CommentService commentServiceForLep;
+
+    @Mock
+    private XmAuthenticationContextHolder authContextHolder;
+
     @Mock
     private XmAuthenticationContext context;
+
+    private CommentService commentService;
+
+    private MockMvc restCommentMockMvcForLep;
 
     private MockMvc restCommentMockMvc;
 
     private Comment comment;
-
-    @Bean
-    @Primary
-    public XmAuthenticationContextHolder xmAuthenticationContextHolder() {
-        XmAuthenticationContext context = mock(XmAuthenticationContext.class);
-        when(context.hasAuthentication()).thenReturn(true);
-        when(context.getLogin()).thenReturn(Optional.of("testLogin"));
-        when(context.getUserKey()).thenReturn(Optional.of(DEFAULT_USER_KEY));
-        when(context.getDetailsValue(LANGUAGE)).thenReturn(Optional.of("en"));
-
-        XmAuthenticationContextHolder holder = mock(XmAuthenticationContextHolder.class);
-        when(holder.getContext()).thenReturn(context);
-
-        return holder;
-    }
 
     @BeforeTransaction
     public void beforeTransaction() {
@@ -146,16 +130,36 @@ public class CommentResourceIntTest {
     @Before
     public void setup() {
         MockitoAnnotations.initMocks(this);
-        CommentResource commentResourceMock = new CommentResource(commentService, commentResource);
+
+        when(context.hasAuthentication()).thenReturn(true);
+        when(context.getLogin()).thenReturn(Optional.of("testLogin"));
+        when(context.getUserKey()).thenReturn(Optional.of(DEFAULT_USER_KEY));
+        when(context.getDetailsValue(LANGUAGE)).thenReturn(Optional.of("en"));
+
+        when(authContextHolder.getContext()).thenReturn(context);
+
+        commentService = new CommentService(commentRepository,
+                                            authContextHolder,
+                                            permittedRepository,
+                                            permittedSearchRepository,
+                                            xmEntityRepository);
+
+        CommentResource self = new CommentResource(commentService, null);
+        CommentResource commentResourceMock = new CommentResource(commentService, self);
+
         this.restCommentMockMvc = MockMvcBuilders.standaloneSetup(commentResourceMock)
+            .setCustomArgumentResolvers(pageableArgumentResolver)
+            .setControllerAdvice(exceptionTranslator)
+            .setMessageConverters(jacksonMessageConverter).build();
+
+        this.restCommentMockMvcForLep = MockMvcBuilders
+            .standaloneSetup(new CommentResource(commentServiceForLep, commentResource))
             .setCustomArgumentResolvers(pageableArgumentResolver)
             .setControllerAdvice(exceptionTranslator)
             .setMessageConverters(jacksonMessageConverter).build();
 
         comment = createEntity(em);
 
-        when(authContextHolder.getContext()).thenReturn(context);
-        when(context.getUserKey()).thenReturn(Optional.of("userKey"));
         lepManager.beginThreadContext(ctx -> {
             ctx.setValue(THREAD_CONTEXT_KEY_TENANT_CONTEXT, tenantContextHolder.getContext());
             ctx.setValue(THREAD_CONTEXT_KEY_AUTH_CONTEXT, authContextHolder.getContext());
@@ -163,8 +167,7 @@ public class CommentResourceIntTest {
     }
 
     @After
-    @Override
-    public void finalize() {
+    public void destroy() {
         lepManager.endThreadContext();
         tenantContextHolder.getPrivilegedContext().destroyCurrentContext();
     }
@@ -186,11 +189,6 @@ public class CommentResourceIntTest {
         em.flush();
         comment.setXmEntity(xmEntity);
         return comment;
-    }
-
-    @Before
-    public void initTest() {
-  //      commentSearchRepository.deleteAll();
     }
 
     @Test
@@ -222,13 +220,15 @@ public class CommentResourceIntTest {
             "throw new com.icthh.xm.commons.exceptions.BusinessException('lep','comments')");
 
         // Create the Comment
-        restCommentMockMvc.perform(post("/api/comments")
+        restCommentMockMvcForLep.perform(post("/api/comments")
             .contentType(TestUtil.APPLICATION_JSON_UTF8)
             .content(TestUtil.convertObjectToJsonBytes(comment)))
             .andDo(print())
             .andExpect(jsonPath("$.error").value("lep"))
             .andExpect(jsonPath("$.error_description").value("comments"))
             .andExpect(status().isBadRequest());
+
+        assertThat(commentRepository.findAll().size()).isEqualTo(databaseSizeBeforeCreate);
 
         // this sleep is needed because sometimes LEP script remains old as onRefresh() called within one millisecond
         // alternative fix is delete LEP script with lepLoader.onRefresh(<path_to_script>, null) instead of update;

@@ -1,5 +1,6 @@
 package com.icthh.xm.ms.entity.web.rest.util;
 
+import com.icthh.xm.ms.entity.AbstractUnitTest;
 import com.icthh.xm.ms.entity.domain.SimpleExportXmEntityDto;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 
@@ -20,7 +21,7 @@ import java.util.stream.IntStream;
  * Tests excel converter.
  * @see EntityToCsvConverterUnitTest
  */
-public class EntityToExcelConverterUnitTest {
+public class EntityToExcelConverterUnitTest extends AbstractUnitTest {
 
     private static final Long DEFAULT_LONG_VALUE = 1L;
     private static final String DEFAULT_STRING_VALUE = "FOO";

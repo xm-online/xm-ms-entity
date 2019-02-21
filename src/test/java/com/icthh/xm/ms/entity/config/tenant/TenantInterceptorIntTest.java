@@ -8,30 +8,25 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.google.common.collect.ImmutableMap;
-import com.icthh.xm.lep.api.LepManager;
 import com.icthh.xm.commons.i18n.error.web.ExceptionTranslator;
 import com.icthh.xm.commons.security.XmAuthenticationContext;
 import com.icthh.xm.commons.tenant.TenantContext;
 import com.icthh.xm.commons.tenant.TenantKey;
 import com.icthh.xm.commons.web.spring.TenantInterceptor;
-import com.icthh.xm.ms.entity.EntityApp;
-import com.icthh.xm.ms.entity.config.LepConfiguration;
-import com.icthh.xm.ms.entity.config.SecurityBeanOverrideConfiguration;
+import com.icthh.xm.lep.api.LepManager;
+import com.icthh.xm.ms.entity.AbstractSpringBootTest;
 import com.icthh.xm.ms.entity.web.rest.XmEntityResource;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.provider.OAuth2Authentication;
 import org.springframework.security.oauth2.provider.authentication.OAuth2AuthenticationDetails;
-import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
@@ -43,14 +38,7 @@ import java.util.Optional;
  *
  * @see XmEntityResource
  */
-@RunWith(SpringRunner.class)
-@SpringBootTest(classes = {
-    EntityApp.class,
-    SecurityBeanOverrideConfiguration.class,
-    WebappTenantOverrideConfiguration.class,
-    LepConfiguration.class
-})
-public class TenantInterceptorIntTest {
+public class TenantInterceptorIntTest extends AbstractSpringBootTest {
 
     @Autowired
     private XmEntityResource xmEntityResource;

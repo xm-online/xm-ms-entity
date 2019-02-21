@@ -11,10 +11,7 @@ import com.icthh.xm.commons.security.XmAuthenticationContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
 import com.icthh.xm.lep.api.LepManager;
-import com.icthh.xm.ms.entity.EntityApp;
-import com.icthh.xm.ms.entity.config.LepConfiguration;
-import com.icthh.xm.ms.entity.config.SecurityBeanOverrideConfiguration;
-import com.icthh.xm.ms.entity.config.tenant.WebappTenantOverrideConfiguration;
+import com.icthh.xm.ms.entity.AbstractSpringBootTest;
 import com.icthh.xm.ms.entity.service.FunctionExecutorService;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -22,13 +19,9 @@ import org.apache.commons.io.IOUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.io.ClassPathResource;
-import org.springframework.security.test.context.support.WithMockUser;
-import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.context.transaction.BeforeTransaction;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -36,15 +29,7 @@ import java.io.InputStream;
 import java.util.Map;
 
 @Slf4j
-@RunWith(SpringRunner.class)
-@WithMockUser(authorities = {"SUPER-ADMIN"})
-@SpringBootTest(classes = {
-    EntityApp.class,
-    SecurityBeanOverrideConfiguration.class,
-    WebappTenantOverrideConfiguration.class,
-    LepConfiguration.class
-})
-public class XmEntityCommonsIntTest {
+public class XmEntityCommonsIntTest extends AbstractSpringBootTest {
 
     @Autowired
     private FunctionExecutorService functionService;

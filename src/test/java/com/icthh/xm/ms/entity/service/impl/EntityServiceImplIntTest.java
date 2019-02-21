@@ -14,42 +14,45 @@ import static org.mockito.Mockito.when;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableMap;
 import com.icthh.xm.commons.config.client.service.TenantConfigService;
-import com.icthh.xm.lep.api.LepManager;
 import com.icthh.xm.commons.exceptions.BusinessException;
 import com.icthh.xm.commons.exceptions.EntityNotFoundException;
 import com.icthh.xm.commons.security.XmAuthenticationContext;
 import com.icthh.xm.commons.security.XmAuthenticationContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
-import com.icthh.xm.ms.entity.EntityApp;
+import com.icthh.xm.lep.api.LepManager;
+import com.icthh.xm.ms.entity.AbstractSpringBootTest;
 import com.icthh.xm.ms.entity.config.ApplicationProperties;
-import com.icthh.xm.ms.entity.config.LepConfiguration;
-import com.icthh.xm.ms.entity.config.SecurityBeanOverrideConfiguration;
-import com.icthh.xm.ms.entity.config.elasticsearch.EmbeddedElasticsearchConfig;
-import com.icthh.xm.ms.entity.config.tenant.WebappTenantOverrideConfiguration;
-import com.icthh.xm.ms.entity.domain.*;
+import com.icthh.xm.ms.entity.domain.Attachment;
+import com.icthh.xm.ms.entity.domain.Link;
+import com.icthh.xm.ms.entity.domain.Profile;
+import com.icthh.xm.ms.entity.domain.UniqueField;
+import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.domain.ext.IdOrKey;
 import com.icthh.xm.ms.entity.domain.template.TemplateParamsHolder;
 import com.icthh.xm.ms.entity.repository.LinkRepository;
 import com.icthh.xm.ms.entity.repository.SpringXmEntityRepository;
 import com.icthh.xm.ms.entity.repository.UniqueFieldRepository;
-import com.icthh.xm.ms.entity.repository.XmEntityRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityRepositoryInternal;
 import com.icthh.xm.ms.entity.repository.search.XmEntityPermittedSearchRepository;
 import com.icthh.xm.ms.entity.repository.search.XmEntitySearchRepository;
-import com.icthh.xm.ms.entity.service.*;
+import com.icthh.xm.ms.entity.service.AttachmentService;
+import com.icthh.xm.ms.entity.service.LifecycleLepStrategyFactory;
+import com.icthh.xm.ms.entity.service.LinkService;
+import com.icthh.xm.ms.entity.service.ProfileService;
+import com.icthh.xm.ms.entity.service.StorageService;
+import com.icthh.xm.ms.entity.service.XmEntitySpecService;
+import com.icthh.xm.ms.entity.service.XmEntityTemplatesSpecService;
 import com.icthh.xm.ms.entity.util.XmHttpEntityUtils;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.io.Resource;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
@@ -58,28 +61,18 @@ import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
 import org.springframework.http.HttpEntity;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.test.context.support.WithMockUser;
-import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.context.transaction.BeforeTransaction;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigInteger;
 import java.net.URI;
-import java.time.Instant;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 
 @Slf4j
-@RunWith(SpringRunner.class)
-@SpringBootTest(classes = {
-    EntityApp.class,
-    SecurityBeanOverrideConfiguration.class,
-    WebappTenantOverrideConfiguration.class,
-    LepConfiguration.class,
-    EmbeddedElasticsearchConfig.class
-})
-public class EntityServiceImplIntTest {
+public class EntityServiceImplIntTest extends AbstractSpringBootTest {
 
     private XmEntityServiceImpl xmEntityService;
 

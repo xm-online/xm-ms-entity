@@ -25,6 +25,7 @@ import com.icthh.xm.commons.permission.service.RoleService;
 import com.icthh.xm.commons.tenant.TenantContext;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantKey;
+import com.icthh.xm.ms.entity.AbstractUnitTest;
 import com.icthh.xm.ms.entity.config.ApplicationProperties;
 import com.icthh.xm.ms.entity.config.tenant.LocalXmEntitySpecService;
 import com.icthh.xm.ms.entity.domain.spec.AttachmentSpec;
@@ -51,7 +52,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.core.io.ClassPathResource;
 
-public class XmEntitySpecServiceUnitTest {
+public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
 
     private static final String TENANT = "TEST";
 

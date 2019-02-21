@@ -6,6 +6,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
+import com.icthh.xm.ms.entity.AbstractUnitTest;
 import com.icthh.xm.ms.entity.config.ApplicationProperties;
 import com.icthh.xm.ms.entity.config.amazon.AmazonS3Template;
 import java.io.IOException;
@@ -15,7 +16,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.mock.web.MockMultipartFile;
 
-public class StorageRepositoryUnitTest {
+public class StorageRepositoryUnitTest extends AbstractUnitTest {
 
     private StorageRepository storageRepository;
     @Mock

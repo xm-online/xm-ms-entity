@@ -7,6 +7,8 @@ import com.google.common.base.Charsets;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+
+import com.icthh.xm.ms.entity.AbstractUnitTest;
 import org.apache.commons.io.IOUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -19,7 +21,7 @@ import org.springframework.http.MediaType;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 
-public class MutipartMixedConverterUnitTest {
+public class MutipartMixedConverterUnitTest extends AbstractUnitTest {
 
     private MultipartMixedConverter multipartMixedConverter;
 
