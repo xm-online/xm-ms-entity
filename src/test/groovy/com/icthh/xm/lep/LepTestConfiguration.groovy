@@ -1,17 +1,21 @@
 package com.icthh.xm.lep
 
-
 import com.icthh.xm.commons.lep.TenantScriptStorage
 import com.icthh.xm.commons.lep.spring.LepSpringConfiguration
 import org.springframework.boot.test.context.TestConfiguration
 import org.springframework.context.ApplicationEventPublisher
+import org.springframework.context.annotation.Profile
 import org.springframework.core.io.ResourceLoader
 
+/**
+ * All LEP related configuration should have @Profile('leptest') annotation to prevent interfering with main java test.
+ */
 @TestConfiguration
-class LepTestConfig extends LepSpringConfiguration {
+@Profile('leptest')
+class LepTestConfiguration extends LepSpringConfiguration {
 
-    LepTestConfig(final ApplicationEventPublisher eventPublisher,
-                  final ResourceLoader resourceLoader) {
+    LepTestConfiguration(final ApplicationEventPublisher eventPublisher,
+                         final ResourceLoader resourceLoader) {
         super("testApp", eventPublisher, resourceLoader)
     }
 

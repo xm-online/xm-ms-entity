@@ -20,6 +20,7 @@ import org.mockito.Mock
 import org.mockito.MockitoAnnotations
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.junit4.SpringRunner
 
 import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_AUTH_CONTEXT
@@ -34,9 +35,11 @@ import static org.mockito.Mockito.when
 @SpringBootTest(classes = [
         EntityApp.class,
         SecurityBeanOverrideConfiguration.class,
-        WebappTenantOverrideConfiguration.class,
+        WebappTenantOverrideConfiguration.class
 ])
-class LepFunctionBaseTest {
+@ActiveProfiles('leptest')
+abstract class AbstractLepFunctionTest {
+
 
     @Autowired
     protected SpringLepManager lepManager

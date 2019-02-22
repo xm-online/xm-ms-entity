@@ -1,4 +1,4 @@
-package com.icthh.xm.lifecycle
+package com.icthh.xm.lep.lifecycle
 
 import com.icthh.xm.commons.exceptions.EntityNotFoundException
 import com.icthh.xm.ms.entity.domain.XmEntity
@@ -7,12 +7,13 @@ import com.icthh.xm.ms.entity.service.XmEntityService
 import com.icthh.xm.ms.entity.service.XmTenantLifecycleService
 import org.junit.Before
 import org.junit.Test
+
+import static com.icthh.xm.lep.LepTestConstants.LEP_DEFAULT_PATH
 import static org.mockito.Mockito.*
-//import static org.mockito.Matchers.*
 
-class ChangeStateUnitTest extends GroovyTestCase{
+class ChangeStateUnitTest extends GroovyTestCase {
 
-    String scriptName = 'src/main/resources/lep/default/lifecycle/ChangeState.groovy'
+    String scriptName = LEP_DEFAULT_PATH + '/lifecycle/ChangeState.groovy'
 
     GroovyShell groovyShell
     Binding binding
@@ -38,7 +39,7 @@ class ChangeStateUnitTest extends GroovyTestCase{
     }
 
     @Test
-    void testErrorOnTonFound() {
+    void testErrorOnNotFound() {
         def msg = shouldFail(EntityNotFoundException) {
             lepContext.inArgs.idOrKey = IdOrKey.of(1)
             lepContext.services.xmEntity = [
