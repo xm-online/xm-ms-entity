@@ -162,7 +162,7 @@ application:
     scheduler-enabled: false
     tenant-ignored-path-list: /v2/api-docs, /api/profile-info, /swagger-resources/configuration/ui, /management/health
     timelines-enabled: true
-    kafka-enabled: true
+    kafka-enabled: true\
     tenant-create-service-list: uaa, gate, timeline, entity, dashboard, balance, scheduler
     tenant-client-connection-timeout: 2000
     tenant-client-read-timeout: 40000
