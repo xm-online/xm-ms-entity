@@ -315,9 +315,10 @@ public class XmEntitySpecService implements RefreshableConfiguration {
             typeSpec.setFunctions(Lists.newArrayList());
             return typeSpec;
         }
-        final Predicate<FunctionSpec> filter = (item) -> lPermissions.contains(item.getKey());
         List<FunctionSpec> filteredList = nullSafe(typeSpec.getFunctions())
-            .stream().filter(filter).collect(Collectors.toList());
+            .stream()
+            .filter((item) -> lPermissions.contains(item.getKey()))
+            .collect(Collectors.toList());
         typeSpec.setFunctions(filteredList);
         return typeSpec;
     }
