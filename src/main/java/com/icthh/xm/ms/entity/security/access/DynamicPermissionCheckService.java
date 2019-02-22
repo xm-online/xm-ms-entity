@@ -8,13 +8,14 @@ import com.icthh.xm.commons.permission.service.PermissionCheckService;
 import com.icthh.xm.commons.permission.service.PermissionService;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
+import com.icthh.xm.ms.entity.security.SecurityUtils;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -26,9 +27,12 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+import static com.icthh.xm.ms.entity.util.CustomCollectionUtils.nullSafe;
+
 @Slf4j
 @Validated
-@Service("dynamicPermissionCheckService")
+@RequiredArgsConstructor
+@Service
 public class DynamicPermissionCheckService {
 
     /**
@@ -60,7 +64,7 @@ public class DynamicPermissionCheckService {
          * @return true if enabled
          */
         private boolean isEnabled(DynamicPermissionCheckService service) {
-            return this.featureContextResolver.apply(service).booleanValue();
+            return this.featureContextResolver.apply(service);
         }
 
     }
@@ -72,16 +76,6 @@ public class DynamicPermissionCheckService {
 
     private BiFunction<PermissionCheckService, String, Boolean> assertPermission =
         (service, permission) -> service.hasPermission(SecurityContextHolder.getContext().getAuthentication(), permission);
-
-    public DynamicPermissionCheckService(TenantConfigService tenantConfigService,
-                                         PermissionCheckService permissionCheckService,
-                                         PermissionService permissionService,
-                                         TenantContextHolder tenantContextHolder) {
-        this.tenantConfigService = tenantConfigService;
-        this.permissionCheckService = permissionCheckService;
-        this.permissionService = permissionService;
-        this.tenantContextHolder = tenantContextHolder;
-    }
 
     /**
      * Checks if user has permission with dynamic key feature
@@ -107,78 +101,86 @@ public class DynamicPermissionCheckService {
      * @param suffix - suffix
      * @return result result from PermissionCheckService.hasPermission(permission) from assertPermission
      */
-    public boolean checkContextPermission(String basePermission, String suffix) {
+    private boolean checkContextPermission(String basePermission, String suffix) {
         Preconditions.checkArgument(StringUtils.isNotEmpty(basePermission));
         Preconditions.checkArgument(StringUtils.isNotEmpty(suffix));
         final String permission = basePermission + "." + suffix;
         return assertPermission(permission);
     }
 
-    /**
-     * Performs object field adjustment if feature is enabled. Function is generified, as it could be re used with other mappers.
-     * @param mapper - adjustment implementation
-     * @param <T> - collection element
-     * @return same collection or adjusted one
-     */
-    public <T> Function<List<T>, List<T>> dynamicFunctionListFilter(BiFunction<T, Set<String>, T> mapper) {
-        if (FeatureContext.FUNCTION.isEnabled(this)) {
-            return list -> list.stream().map(item -> mapper.apply(item, Sets.newHashSet())).collect(Collectors.toList());
-        }
-        return list -> list;
-    }
-
-    public <T> T dynamicFunctionListFilter2(T item, BiFunction<T, Set<String>, T> mapper) {
-        if (FeatureContext.FUNCTION.isEnabled(this)) {
-            return mapper.apply(item, Sets.newHashSet());
-        }
-        return item;
-    }
-
-    public <T, I> T filterTypeSpecByPermission2(final T outterType,
-                                                Supplier<List<I>> innerGetter ,
+    public <T, I> T filterInnerListByPermission(final T outterType,
+                                                Supplier<List<I>> innerGetter,
                                                 Consumer<List<I>> innerSetter,
-                                                Function<I, String> innerKeyGetter
-                                                ) {
-        Set<String> lPermissions = Sets.newHashSet();
-        if (lPermissions.isEmpty()) {
-            innerSetter.accept(Lists.newArrayList());
+                                                Function<I, String> innerKeyGetter) {
+
+        if (!FeatureContext.FUNCTION.isEnabled(this)) {
             return outterType;
         }
-        List<I> filteredList = innerGetter.get()
-            .stream()
-            .filter(item -> lPermissions.contains(innerKeyGetter.apply(item)))
-            .collect(Collectors.toList());
+
+        List<I> filteredList = Lists.newArrayList();
+
+        Set<String> lPermissions = getRoleFunctionPermissions();
+        if (!lPermissions.isEmpty()) {
+            filteredList = innerGetter.get()
+                                      .stream()
+                                      .filter(item -> lPermissions.contains(innerKeyGetter.apply(item)))
+                                      .collect(Collectors.toList());
+        }
+
         innerSetter.accept(filteredList);
+
         return outterType;
+
     }
 
+    /**
+     * Function should return set of custom.dynamicFunctionFeature permissions assigned to role in current security scope
+     * @return set
+     */
+    Set<String> getRoleFunctionPermissions() {
+
+        //TODO throw error here, after migration to new test paradigm
+        final Optional<String> userRole = SecurityUtils.getCurrentUserRole();
+        if (!userRole.isPresent()) {
+            return Sets.newHashSet();
+        }
+
+        Map<String, Permission> permissions = permissionService.getPermissions(
+            TenantContextUtils.getRequiredTenantKeyValue(tenantContextHolder.getContext()));
+        return nullSafe(permissions).values().stream()
+                                    .filter(functionPermissionMatcher(userRole.get()))
+                                    .map(Permission::getPrivilegeKey)
+                                    .collect(Collectors.toSet());
+    }
 
     /**
-     * Performs object field adjustment if feature is enabled. Function is generified, as it could be re used with other mappers.
-     * @param mapper - adjustment implementation
-     * @param <T> - collection element
-     * @return same collection or adjusted one
+     * is permission belongs to functional or not?
+     * @param roleKey
      */
-    public <T> Function<T, T> dynamicFunctionFilter(BiFunction<T, Set<String>, T> mapper) {
-        if (FeatureContext.FUNCTION.isEnabled(this)) {
-            return item -> mapper.apply(item, Sets.newHashSet());
-        }
-        return item -> item;
+    Predicate<Permission> functionPermissionMatcher(String roleKey) {
+        Predicate<Permission> isConfigSection = permission -> StringUtils.equals(CONFIG_SECTION, permission.getMsName());
+        Predicate<Permission> isAssignedToRole = permission -> StringUtils.equals(roleKey, permission.getRoleKey());
+        Predicate<Permission> isEnabled = permission -> !permission.isDisabled();
+        Predicate<Permission> isIsNotDeleted = permission -> !permission.isDeleted();
+
+        return isConfigSection
+            .and(isAssignedToRole)
+            .and(isEnabled)
+            .and(isIsNotDeleted);
     }
 
     /**
      * Assert permission via permissionCheckService.hasPermission
-     * @param permission
-     * @return
+     * @param permission Permission
      */
-    protected boolean assertPermission(final String permission) {
+    private boolean assertPermission(final String permission) {
         Preconditions.checkArgument(StringUtils.isNotEmpty(permission));
-        final boolean permitted = assertPermission.apply(permissionCheckService, permission).booleanValue();
+        final boolean permitted = assertPermission.apply(permissionCheckService, permission);
         if (!permitted) {
             //TODO place correct error here
             throw new IllegalStateException("Throw correct exception here");
         }
-        return Boolean.TRUE.booleanValue();
+        return true;
     }
 
     /**
@@ -187,7 +189,8 @@ public class DynamicPermissionCheckService {
      */
     private boolean isDynamicFunctionPermissionEnabled() {
         return getTenantConfigBooleanParameterValue(CONFIG_SECTION, DYNAMIC_FUNCTION_PERMISSION_FEATURE)
-            .map(it -> (Boolean)it).orElse(Boolean.FALSE).booleanValue();
+            .map(it -> (Boolean) it)
+            .orElse(Boolean.FALSE);
     }
 
     /**
@@ -202,8 +205,10 @@ public class DynamicPermissionCheckService {
     // TODO should be in Commons.TenantConfigService as utility method
     private Optional<Object> getTenantConfigBooleanParameterValue(final String configSection, String parameter) {
         return Optional.ofNullable(tenantConfigService.getConfig().get(configSection))
-            .filter(it -> it instanceof Map).map(Map.class::cast)
-            .map(it -> it.get(parameter));
+                       .filter(it -> it instanceof Map)
+                       .map(Map.class::cast)
+                       .map(it -> it.get(parameter));
     }
 
 }
+

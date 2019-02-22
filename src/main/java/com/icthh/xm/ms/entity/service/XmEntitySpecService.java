@@ -325,16 +325,13 @@ public class XmEntitySpecService implements RefreshableConfiguration {
             typeSpec.setFunctions(Lists.newArrayList());
             return typeSpec;
         }
-        final Predicate<FunctionSpec> filter = (item) -> lPermissions.contains(item.getKey());
         List<FunctionSpec> filteredList = nullSafe(typeSpec.getFunctions())
             .stream()
-            .filter(filter)
+            .filter((item) -> lPermissions.contains(item.getKey()))
             .collect(Collectors.toList());
         typeSpec.setFunctions(filteredList);
         return typeSpec;
     }
-
-
 
     /**
      * Transforms all XmEntity Specification keys into the thin structure based

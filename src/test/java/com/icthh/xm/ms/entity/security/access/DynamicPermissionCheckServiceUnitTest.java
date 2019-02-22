@@ -1,29 +1,34 @@
 package com.icthh.xm.ms.entity.security.access;
 
-import com.google.common.collect.Maps;
-import com.icthh.xm.commons.config.client.service.TenantConfigService;
-import com.icthh.xm.commons.permission.service.PermissionCheckService;
-import org.assertj.core.api.Assertions;
-import org.assertj.core.util.Lists;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.BDDMockito;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
-
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.function.BiFunction;
-import java.util.function.Function;
-
+import static com.google.common.collect.Maps.newHashMap;
+import static com.google.common.collect.Sets.newHashSet;
+import static com.icthh.xm.ms.entity.security.access.DynamicPermissionCheckService.CONFIG_SECTION;
 import static com.icthh.xm.ms.entity.security.access.DynamicPermissionCheckService.DYNAMIC_FUNCTION_PERMISSION_FEATURE;
 import static com.icthh.xm.ms.entity.security.access.DynamicPermissionCheckService.FeatureContext;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.assertj.core.util.Lists.newArrayList;
+import static org.mockito.BDDMockito.given;
+
+import com.icthh.xm.commons.config.client.service.TenantConfigService;
+import com.icthh.xm.commons.permission.domain.Permission;
+import com.icthh.xm.commons.permission.service.PermissionCheckService;
+import com.icthh.xm.ms.entity.domain.spec.FunctionSpec;
+import com.icthh.xm.ms.entity.domain.spec.TypeSpec;
+import org.assertj.core.api.Assertions;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.Spy;
+import org.mockito.junit.MockitoJUnitRunner;
+
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @RunWith(MockitoJUnitRunner.class)
 public class DynamicPermissionCheckServiceUnitTest {
@@ -33,6 +38,7 @@ public class DynamicPermissionCheckServiceUnitTest {
     @Mock
     private TenantConfigService tenantConfig;
     @InjectMocks
+    @Spy
     private DynamicPermissionCheckService dynamicPermissionCheckService;
 
     @Before
@@ -69,12 +75,12 @@ public class DynamicPermissionCheckServiceUnitTest {
 
     @Test
     public void assertCallBasicCheckIfTenantConfigNotProvided() {
-        BDDMockito.given(tenantConfig.getConfig()).willReturn(Maps.newHashMap());
-        BDDMockito.given(permissionCheckService.hasPermission(null, "X")).willReturn(true);
+        given(tenantConfig.getConfig()).willReturn(newHashMap());
+        given(permissionCheckService.hasPermission(null, "X")).willReturn(true);
         boolean result = dynamicPermissionCheckService.checkContextPermission(FeatureContext.FUNCTION, "X", "Y");
         Assertions.assertThat(result).isTrue();
 
-        BDDMockito.given(permissionCheckService.hasPermission(null, "Z")).willReturn(false);
+        given(permissionCheckService.hasPermission(null, "Z")).willReturn(false);
         assertThatExceptionOfType(IllegalStateException.class)
             .isThrownBy(() -> dynamicPermissionCheckService.checkContextPermission(FeatureContext.FUNCTION, "Z", "Y"));
     }
@@ -82,17 +88,17 @@ public class DynamicPermissionCheckServiceUnitTest {
     @Test
     public void assertCallCustomCheckIfTenantConfigProvided() {
         //setUp enabled feature
-        final Map config = getMockedConfig(DynamicPermissionCheckService.CONFIG_SECTION,
+        final Map config = getMockedConfig(CONFIG_SECTION,
             DYNAMIC_FUNCTION_PERMISSION_FEATURE, Boolean.TRUE);
 
-        BDDMockito.given(tenantConfig.getConfig()).willReturn(config);
+        given(tenantConfig.getConfig()).willReturn(config);
         //privilege == X.Y, assume hasPermission = true
-        BDDMockito.given(permissionCheckService.hasPermission(null, "X.Y")).willReturn(true);
+        given(permissionCheckService.hasPermission(null, "X.Y")).willReturn(true);
         boolean result = dynamicPermissionCheckService.checkContextPermission(FeatureContext.FUNCTION, "X", "Y");
         Assertions.assertThat(result).isTrue();
 
         //privilege == X.Y, assume hasPermission = false
-        BDDMockito.given(permissionCheckService.hasPermission(null, "Z.Y")).willReturn(false);
+        given(permissionCheckService.hasPermission(null, "Z.Y")).willReturn(false);
         assertThatExceptionOfType(IllegalStateException.class)
             .isThrownBy(() -> dynamicPermissionCheckService.checkContextPermission(FeatureContext.FUNCTION, "Z", "Y"));
 
@@ -116,36 +122,118 @@ public class DynamicPermissionCheckServiceUnitTest {
             .isThrownBy(() -> dynamicPermissionCheckService.checkContextPermission(FeatureContext.CHANGE_STATE, "XXX", "YY"));
     }
 
-    /**
-     * Inverse incoming list
-     */
-    private BiFunction<Boolean, Set<String>, Boolean> mapper = (item, set) -> !item;
-
     @Test
-    public void resultNotChangedIfFunctionFilterFeatureIsOff(){
-        BDDMockito.given(tenantConfig.getConfig()).willReturn(Maps.newHashMap());
-        final List<Boolean> someList = Lists.newArrayList(Boolean.TRUE, Boolean.FALSE, Boolean.TRUE, Boolean.FALSE);
-        Function<List<Boolean>, List<Boolean>> listSupplier = list -> list;
-        final List<Boolean> resultList = listSupplier.andThen(dynamicPermissionCheckService.dynamicFunctionListFilter(mapper)).apply(someList);
+    public void resultNotChangedIfFunctionFilterFeatureIsOff() {
+
+        given(tenantConfig.getConfig()).willReturn(newHashMap());
+        final List<Boolean> someList = newArrayList(Boolean.TRUE, Boolean.FALSE, Boolean.TRUE, Boolean.FALSE);
+
+        List<Boolean> resultList = dynamicPermissionCheckService
+            .filterInnerListByPermission(someList, null, null, null);
+
         assertThat(resultList).containsExactly(Boolean.TRUE, Boolean.FALSE, Boolean.TRUE, Boolean.FALSE);
     }
 
     @Test
-    public void resultInvertedIfFunctionFilterFeatureIsOn(){
+    public void resultInvertedIfFunctionFilterFeatureIsOn() {
         //setUp enabled feature
-        final Map config = getMockedConfig(DynamicPermissionCheckService.CONFIG_SECTION,
-            DYNAMIC_FUNCTION_PERMISSION_FEATURE, Boolean.TRUE);
+        final Map<String, Object> config = getMockedConfig(CONFIG_SECTION,
+                                                           DYNAMIC_FUNCTION_PERMISSION_FEATURE, Boolean.TRUE);
 
-        BDDMockito.given(tenantConfig.getConfig()).willReturn(config);
-        final List<Boolean> someList = Lists.newArrayList(Boolean.TRUE, Boolean.FALSE, Boolean.TRUE, Boolean.FALSE);
-        Function<List<Boolean>, List<Boolean>> listSupplier = list -> list;
-        final List<Boolean> resultList = listSupplier.andThen(dynamicPermissionCheckService.dynamicFunctionListFilter(mapper)).apply(someList);
-        assertThat(resultList).containsExactly(Boolean.FALSE, Boolean.TRUE, Boolean.FALSE, Boolean.TRUE);
+        given(tenantConfig.getConfig()).willReturn(config);
+
+        Set<String> rolesPrivileges = newHashSet("function1", "function3");
+        given(dynamicPermissionCheckService.getRoleFunctionPermissions()).willReturn(rolesPrivileges);
+
+        List<FunctionSpec> functions = newArrayList(
+            createFunction("function1"),
+            createFunction("function2"),
+            createFunction("function3")
+        );
+        TypeSpec typeSpec = new TypeSpec();
+        typeSpec.setFunctions(functions);
+
+        TypeSpec result = dynamicPermissionCheckService.filterInnerListByPermission(typeSpec,
+                                                                                    typeSpec::getFunctions,
+                                                                                    typeSpec::setFunctions,
+                                                                                    FunctionSpec::getKey);
+
+        assertThat(result.getFunctions().stream().map(FunctionSpec::getKey))
+            .containsExactly("function1", "function3");
+
+    }
+
+    private FunctionSpec createFunction(String key){
+        FunctionSpec spec = new FunctionSpec();
+        spec.setKey(key);
+        return spec;
+    }
+
+    @Test
+    public void testPermissionFilterPredicate(){
+
+        final String role = "ROLE";
+        final String privKey = "PK";
+
+        List<Permission> mockedList = newArrayList(
+            createMockedPermission(role + "_A", privKey+"-1"),
+            createMockedPermission(role + "_A", privKey+"-2"),
+            createMockedPermission(role + "_A", privKey+"-3"),
+            createMockedPermission(role + "_A", privKey+"-4"),
+            createMockedPermission(role + "_B", privKey+"-3"),
+            createMockedPermission(role + "_B", privKey+"-4"),
+            createMockedPermission(role + "_B", privKey+"-5"),
+            createMockedPermission(role + "_B", privKey+"-6"),
+            createMockedPermission(role + "_C", privKey+"-1"),
+            createMockedPermission(role + "_A", privKey+"-7")
+        );
+
+        List<Permission> filteredList = mockedList.stream()
+            .filter(dynamicPermissionCheckService.functionPermissionMatcher(role + "_XXX"))
+            .collect(Collectors.toList());
+
+        assertThat(filteredList.stream().map(Permission::getPrivilegeKey).collect(Collectors.toSet()).isEmpty())
+            .isTrue();
+
+        filteredList = mockedList.stream()
+            .filter(dynamicPermissionCheckService.functionPermissionMatcher(role + "_A"))
+            .collect(Collectors.toList());
+
+        assertThat(filteredList.stream().map(Permission::getPrivilegeKey).collect(Collectors.toSet()))
+            .containsExactlyInAnyOrder("PK-1", "PK-2", "PK-3", "PK-4", "PK-7");
+
+        filteredList = mockedList.stream()
+            .filter(dynamicPermissionCheckService.functionPermissionMatcher(role + "_B"))
+            .collect(Collectors.toList());
+
+        assertThat(filteredList.stream().map(Permission::getPrivilegeKey).collect(Collectors.toSet()))
+            .containsExactlyInAnyOrder("PK-3", "PK-4", "PK-5", "PK-6");
+
+        filteredList = mockedList.stream()
+            .filter(dynamicPermissionCheckService.functionPermissionMatcher(role + "_C"))
+            .collect(Collectors.toList());
+
+        assertThat(filteredList.stream().map(Permission::getPrivilegeKey).collect(Collectors.toSet()))
+            .containsExactlyInAnyOrder("PK-1");
+
+    }
+
+    /**
+     * Inverse incoming item. Used to test feature enabled flag
+     */
+//    private BiFunction<Boolean, Set<String>, Boolean> inversionMapper = (item, set) -> !item;
+
+    private Permission createMockedPermission(String role, String permKey) {
+        Permission p = new Permission();
+        p.setRoleKey(role);
+        p.setPrivilegeKey(permKey);
+        p.setMsName(CONFIG_SECTION);
+        return p;
     }
 
     private Map<String, Object> getMockedConfig(String configSectionName, String featureName, Boolean status) {
-        Map<String, Object> map = Maps.newHashMap();
-        Map<String, Object> section = Maps.newHashMap();
+        Map<String, Object> map = newHashMap();
+        Map<String, Object> section = newHashMap();
         section.put(featureName, status);
         map.put(configSectionName, section);
         return map;

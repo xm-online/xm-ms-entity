@@ -1,5 +1,7 @@
 package com.icthh.xm.ms.entity.security;
 
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -31,6 +33,14 @@ public final class SecurityUtils {
                 }
                 return null;
             });
+    }
+
+    public static Optional<String> getCurrentUserRole() {
+        SecurityContext securityContext = SecurityContextHolder.getContext();
+        Optional<Authentication> authCtx = Optional.ofNullable(securityContext.getAuthentication());
+        return authCtx.flatMap(authentication -> authentication
+            .getAuthorities().stream().findFirst())
+            .map(GrantedAuthority::getAuthority);
     }
 
 }
