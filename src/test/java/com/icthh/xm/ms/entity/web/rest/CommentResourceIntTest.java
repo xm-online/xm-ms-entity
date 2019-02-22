@@ -349,7 +349,8 @@ public class CommentResourceIntTest {
         int databaseSizeBeforeUpdate = commentRepository.findAll().size();
 
         // Update the comment
-        Comment updatedComment = commentRepository.findOne(comment.getId());
+        Comment updatedComment = commentRepository.findById(comment.getId())
+            .orElseThrow(NullPointerException::new);
         updatedComment
             .userKey(UPDATED_USER_KEY)
             .message(UPDATED_MESSAGE)

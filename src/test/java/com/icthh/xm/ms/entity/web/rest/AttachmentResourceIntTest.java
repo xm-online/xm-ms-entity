@@ -415,7 +415,8 @@ public class AttachmentResourceIntTest {
         int databaseSizeBeforeUpdate = attachmentRepository.findAll().size();
 
         // Update the attachment
-        Attachment updatedAttachment = attachmentRepository.findOne(attachment.getId());
+        Attachment updatedAttachment = attachmentRepository.findById(attachment.getId())
+            .orElseThrow(NullPointerException::new);
         updatedAttachment
             .typeKey(UPDATED_TYPE_KEY)
             .name(UPDATED_NAME)

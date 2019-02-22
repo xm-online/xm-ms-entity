@@ -8,6 +8,7 @@ import static org.mockito.Mockito.when;
 import com.icthh.xm.ms.entity.domain.FunctionContext;
 import com.icthh.xm.ms.entity.repository.FunctionContextRepository;
 import com.icthh.xm.ms.entity.service.impl.StartUpdateDateGenerationStrategy;
+import java.util.Optional;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -177,7 +178,7 @@ public class StartUpdateDateGenerationStrategyUnitTest {
         Instant updateDate = Instant.now();
 
         when(strategy.generateUpdateDate()).thenReturn(updateDate);
-        when(repository.findOne(1L)).thenReturn(oldContext);
+        when(repository.findById(1L)).thenReturn(Optional.ofNullable(oldContext));
 
         FunctionContext newContext = new FunctionContext();
         // set ID to trigger findOne from repo.
@@ -192,7 +193,7 @@ public class StartUpdateDateGenerationStrategyUnitTest {
                                             FunctionContext::getStartDate,
                                             FunctionContext::setUpdateDate);
 
-        verify(repository).findOne(1L);
+        verify(repository).findById(1L);
 
         System.out.println(newContext);
 

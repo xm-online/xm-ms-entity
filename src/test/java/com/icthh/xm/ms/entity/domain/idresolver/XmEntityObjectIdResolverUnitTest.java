@@ -2,7 +2,7 @@ package com.icthh.xm.ms.entity.domain.idresolver;
 
 import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_AUTH_CONTEXT;
 import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_TENANT_CONTEXT;
-import static org.mockito.Matchers.any;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -23,7 +23,7 @@ import com.icthh.xm.ms.entity.config.tenant.WebappTenantOverrideConfiguration;
 import com.icthh.xm.ms.entity.domain.Link;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.repository.LinkRepository;
-import com.icthh.xm.ms.entity.repository.XmEntityRepository;
+import com.icthh.xm.ms.entity.repository.XmEntityRepositoryInternal;
 import com.icthh.xm.ms.entity.service.XmEntityService;
 import com.icthh.xm.ms.entity.web.rest.LinkResource;
 import com.icthh.xm.ms.entity.web.rest.TestUtil;
@@ -94,7 +94,7 @@ public class XmEntityObjectIdResolverUnitTest {
     private XmAuthenticationContext context;
 
     @MockBean
-    private XmEntityRepository entityRepository;
+    private XmEntityRepositoryInternal entityRepository;
 
     @MockBean
     private LinkRepository linkRepository;
@@ -140,8 +140,8 @@ public class XmEntityObjectIdResolverUnitTest {
         XmEntity source = createRef(1L);
         XmEntity target = createRef(2L);
 
-        when(entityRepository.findOne(1L)).thenReturn(source);
-        when(entityRepository.findOne(2L)).thenReturn(target);
+        when(entityRepository.findById(1L)).thenReturn(Optional.ofNullable(source));
+        when(entityRepository.findById(2L)).thenReturn(Optional.ofNullable(target));
 
         Link link = new Link().typeKey(DEFAULT_TYPE_KEY)
             .startDate(Instant.now())
@@ -164,7 +164,7 @@ public class XmEntityObjectIdResolverUnitTest {
                 .andExpect(jsonPath("$.source").value(1L))
                 .andExpect(jsonPath("$.target.id").value(2L));
         }
-        verify(entityRepository, times(2)).findOne(1L);
+        verify(entityRepository, times(2)).findById(1L);
     }
 
     private XmEntity createRef(Long id) {

@@ -23,7 +23,7 @@ class LocationGatlingTest extends Simulation {
     val baseURL = Option(System.getProperty("baseURL")) getOrElse """http://127.0.0.1:8080"""
 
     val httpConf = http
-        .baseURL(baseURL)
+        .baseUrl(baseURL)
         .inferHtmlResources()
         .acceptHeader("*/*")
         .acceptEncodingHeader("gzip, deflate")
@@ -80,7 +80,7 @@ class LocationGatlingTest extends Simulation {
             .exec(http("Create new location")
             .post("/entity/api/locations")
             .headers(headers_http_authenticated)
-            .body(StringBody("""{"id":null, "typeKey":"SAMPLE_TEXT", "countryKey":"SAMPLE_TEXT", "longitude":null, "latitude":null, "name":"SAMPLE_TEXT", "addressLine1":"SAMPLE_TEXT", "addressLine2":"SAMPLE_TEXT", "city":"SAMPLE_TEXT", "region":"SAMPLE_TEXT", "zip":"SAMPLE_TEXT"}""")).asJSON
+            .body(StringBody("""{"id":null, "typeKey":"SAMPLE_TEXT", "countryKey":"SAMPLE_TEXT", "longitude":null, "latitude":null, "name":"SAMPLE_TEXT", "addressLine1":"SAMPLE_TEXT", "addressLine2":"SAMPLE_TEXT", "city":"SAMPLE_TEXT", "region":"SAMPLE_TEXT", "zip":"SAMPLE_TEXT"}""")).asJson
             .check(status.is(201))
             .check(headerRegex("Location", "(.*)").saveAs("new_location_url"))).exitHereIfFailed
             .pause(10)
@@ -99,6 +99,6 @@ class LocationGatlingTest extends Simulation {
     val users = scenario("Users").exec(scn)
 
     setUp(
-        users.inject(rampUsers(Integer.getInteger("users", 100)) over (Integer.getInteger("ramp", 1) minutes))
+        users.inject(rampUsers(Integer.getInteger("users", 100)) during (Integer.getInteger("ramp", 1) minutes))
     ).protocols(httpConf)
 }

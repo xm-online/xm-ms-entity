@@ -344,7 +344,8 @@ public class LinkResourceIntTest {
         int databaseSizeBeforeUpdate = linkRepository.findAll().size();
 
         // Update the link
-        Link updatedLink = linkRepository.findOne(link.getId());
+        Link updatedLink = linkRepository.findById(link.getId())
+            .orElseThrow(NullPointerException::new);
         updatedLink
             .typeKey(UPDATED_TYPE_KEY)
             .name(UPDATED_NAME)

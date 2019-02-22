@@ -23,7 +23,7 @@ class XmEntityGatlingTest extends Simulation {
     val baseURL = Option(System.getProperty("baseURL")) getOrElse """http://127.0.0.1:8081/"""
 
     val httpConf = http
-        .baseURL(baseURL)
+        .baseUrl(baseURL)
         .inferHtmlResources()
         .acceptHeader("*/*")
         .acceptEncodingHeader("gzip, deflate")
@@ -76,7 +76,7 @@ class XmEntityGatlingTest extends Simulation {
             .exec(http("Create new xmEntity")
             .post("/entity/api/xm-entities")
             .headers(headers_http_authenticated)
-            .body(StringBody("""{"key":"SAMPLE_TEXT", "typeKey":"ACCOUNT.USER", "stateKey":"NEW", "name":"Some user", "startDate":"2020-01-01T00:00:00.000Z", "updateDate":"2020-01-01T00:00:00.000Z", "endDate":"2020-01-01T00:00:00.000Z", "description":null, "data":null}""")).asJSON
+            .body(StringBody("""{"key":"SAMPLE_TEXT", "typeKey":"ACCOUNT.USER", "stateKey":"NEW", "name":"Some user", "startDate":"2020-01-01T00:00:00.000Z", "updateDate":"2020-01-01T00:00:00.000Z", "endDate":"2020-01-01T00:00:00.000Z", "description":null, "data":null}""")).asJson
             .check(status.is(201))
             .check(headerRegex("Location", "(.*)").saveAs("new_xmEntity_url"))).exitHereIfFailed
             .pause(10)
@@ -95,6 +95,6 @@ class XmEntityGatlingTest extends Simulation {
     val users = scenario("Users").exec(scn)
 
     setUp(
-        users.inject(rampUsers(5) over (1 minutes))
+        users.inject(rampUsers(5) during (1 minutes))
     ).protocols(httpConf)
 }

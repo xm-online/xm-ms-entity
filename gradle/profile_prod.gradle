@@ -1,4 +1,5 @@
 apply plugin: 'org.springframework.boot'
+apply plugin: 'com.gorylenko.gradle-git-properties'
 
 ext {
     logbackLoglevel = "INFO"
@@ -23,12 +24,7 @@ bootRun {
 
 
 processResources {
-    filesMatching('**/logback-spring.xml') {
-        filter {
-            it.replace('#logback.loglevel#', logbackLoglevel)
-        }
-    }
-    filesMatching('**/bootstrap.yml') {
+    filesMatching('**/application.yml') {
         filter {
             it.replace('#spring.profiles.active#', profiles)
         }
@@ -36,5 +32,25 @@ processResources {
             it.replace('#project.version#', version)
         }
     }
+    filesMatching('**/bootstrap.yml') {
+        filter {
+            it.replace('#spring.profiles.active#', profiles)
+        }
+    }
+    filesMatching('**/logback-spring.xml') {
+        filter {
+            it.replace('#logback.loglevel#', logbackLoglevel)
+        }
+    }
+}
+
+generateGitProperties {
+    onlyIf {
+        !source.isEmpty()
+    }
+}
+
+gitProperties {
+    keys = ['git.branch', 'git.commit.id.abbrev', 'git.commit.id.describe']
 }
 

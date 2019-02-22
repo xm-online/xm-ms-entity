@@ -1,6 +1,6 @@
 {
   "generator-jhipster": {
-    "jhipsterVersion": "4.6.1",
+    "jhipsterVersion": "5.7.0",
     "baseName": "entity",
     "packageName": "com.icthh.xm.ms.entity",
     "packageFolder": "com/icthh/xm/ms/entity",

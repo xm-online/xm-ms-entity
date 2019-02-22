@@ -23,7 +23,7 @@ class ContentGatlingTest extends Simulation {
     val baseURL = Option(System.getProperty("baseURL")) getOrElse """http://127.0.0.1:8080"""
 
     val httpConf = http
-        .baseURL(baseURL)
+        .baseUrl(baseURL)
         .inferHtmlResources()
         .acceptHeader("*/*")
         .acceptEncodingHeader("gzip, deflate")
@@ -80,7 +80,7 @@ class ContentGatlingTest extends Simulation {
             .exec(http("Create new content")
             .post("/entity/api/contents")
             .headers(headers_http_authenticated)
-            .body(StringBody("""{"id":null, "value":null}""")).asJSON
+            .body(StringBody("""{"id":null, "value":null}""")).asJson
             .check(status.is(201))
             .check(headerRegex("Location", "(.*)").saveAs("new_content_url"))).exitHereIfFailed
             .pause(10)
@@ -99,6 +99,6 @@ class ContentGatlingTest extends Simulation {
     val users = scenario("Users").exec(scn)
 
     setUp(
-        users.inject(rampUsers(Integer.getInteger("users", 100)) over (Integer.getInteger("ramp", 1) minutes))
+        users.inject(rampUsers(Integer.getInteger("users", 100)) during (Integer.getInteger("ramp", 1) minutes))
     ).protocols(httpConf)
 }

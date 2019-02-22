@@ -11,21 +11,26 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.icthh.xm.lep.api.LepManager;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.icthh.xm.commons.security.XmAuthenticationContext;
 import com.icthh.xm.commons.security.XmAuthenticationContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
+import com.icthh.xm.lep.api.LepManager;
 import com.icthh.xm.ms.entity.EntityApp;
 import com.icthh.xm.ms.entity.config.LepConfiguration;
 import com.icthh.xm.ms.entity.config.SecurityBeanOverrideConfiguration;
 import com.icthh.xm.ms.entity.config.tenant.WebappTenantOverrideConfiguration;
 import com.icthh.xm.ms.entity.service.XmEntityGeneratorService;
-import com.icthh.xm.ms.entity.service.impl.XmEntityServiceImpl;
 import com.icthh.xm.ms.entity.service.XmEntitySpecService;
+import com.icthh.xm.ms.entity.service.impl.XmEntityServiceImpl;
+import java.io.File;
 import lombok.SneakyThrows;
+import org.apache.commons.io.FileUtils;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.ClassRule;
 import org.junit.Test;
+import org.junit.rules.ExternalResource;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
@@ -76,6 +81,9 @@ public class XmEntitySpecResourceIntTest {
     @Autowired
     private LepManager lepManager;
 
+    @Autowired
+    private ObjectMapper objectMapper;
+
     private XmEntityGeneratorService xmEntityGeneratorService;
 
     private MockMvc restXmEntitySpecMockMvc;
@@ -94,7 +102,7 @@ public class XmEntitySpecResourceIntTest {
         });
 
         xmEntityGeneratorService = new XmEntityGeneratorService(xmEntityService,
-            xmEntitySpecService, authContextHolder);
+            xmEntitySpecService, authContextHolder, objectMapper);
 
         XmEntitySpecResource xmEntitySpecResource = new XmEntitySpecResource(xmEntitySpecService,
                                                                              xmEntityGeneratorService);

@@ -25,9 +25,10 @@ import com.icthh.xm.lep.api.LepManager;
 import com.icthh.xm.ms.entity.EntityApp;
 import com.icthh.xm.ms.entity.config.LepConfiguration;
 import com.icthh.xm.ms.entity.config.SecurityBeanOverrideConfiguration;
+import com.icthh.xm.ms.entity.config.elasticsearch.EmbeddedElasticsearchConfig;
 import com.icthh.xm.ms.entity.config.tenant.WebappTenantOverrideConfiguration;
 import com.icthh.xm.ms.entity.domain.XmEntity;
-import com.icthh.xm.ms.entity.repository.XmEntityRepository;
+import com.icthh.xm.ms.entity.repository.XmEntityRepositoryInternal;
 import com.icthh.xm.ms.entity.service.impl.XmEntityServiceImpl;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -66,8 +67,10 @@ import java.util.UUID;
     EntityApp.class,
     SecurityBeanOverrideConfiguration.class,
     WebappTenantOverrideConfiguration.class,
-    LepConfiguration.class
+    LepConfiguration.class,
+    EmbeddedElasticsearchConfig.class
 })
+// FIXME: 18-Jan-19 cannot find XmEntity in elasticsearch (nullpointer) when executing with other tests
 public class XmEntitySearchIntTest {
 
     private static final String KEY1 = "ACCOUNT";
@@ -106,12 +109,15 @@ public class XmEntitySearchIntTest {
     private ElasticsearchTemplate elasticsearchTemplate;
 
     @Autowired
-    private XmEntityRepository xmEntityRepository;
+    private XmEntityRepositoryInternal xmEntityRepository;
 
     private MockMvc restXmEntityMockMvc;
 
     @Autowired
     private XmLepScriptConfigServerResourceLoader leps;
+
+    @Autowired
+    private ObjectMapper objectMapper;
 
     @Before
     @SneakyThrows
@@ -223,7 +229,7 @@ public class XmEntitySearchIntTest {
         List<XmEntity> fullMatchResult = searchEntityByKey(KEY2);
         assertEquals(1, fullMatchResult.size());
 
-        xmEntityRepository.delete(account.getId());
+        xmEntityRepository.deleteById(account.getId());
         assertEquals(databaseSizeBeforeCreate, xmEntityRepository.findAll().size());
     }
 
@@ -245,7 +251,7 @@ public class XmEntitySearchIntTest {
         List<XmEntity> fullMatchResult = searchEntityByStateKey(STATE_KEY2);
         assertEquals(1, fullMatchResult.size());
 
-        xmEntityRepository.delete(account.getId());
+        xmEntityRepository.deleteById(account.getId());
         assertEquals(databaseSizeBeforeCreate, xmEntityRepository.findAll().size());
     }
 

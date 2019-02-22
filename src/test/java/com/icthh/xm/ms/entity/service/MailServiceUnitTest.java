@@ -6,7 +6,7 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.emptyMap;
 import static java.util.Locale.ENGLISH;
 import static java.util.Locale.FRANCE;
-import static org.mockito.Matchers.eq;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -25,7 +25,7 @@ import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.mail.javamail.JavaMailSender;
 
 import javax.mail.Message;
@@ -175,9 +175,6 @@ public class MailServiceUnitTest {
     @Test
     @SneakyThrows
     public void ifInConfigNoTranslationKeyReturnByLocale() {
-        when(localizationMessageService.getMessage("tr subject key")).thenReturn("subject value");
-        when(localizationMessageService.getMessage("tr from key")).thenReturn("fromvalue (From value caption)");
-
         when(tenantConfigService.getConfig()).thenReturn(
             of(MAIL_SETTINGS, asList(of(
                 TEMPLATE_NAME, EMAIL_TEMPLATE,
@@ -198,9 +195,6 @@ public class MailServiceUnitTest {
     @Test
     @SneakyThrows
     public void ifInConfigNoTranslationKeyAndNoTranslationsByLocaleReturnEn() {
-        when(localizationMessageService.getMessage("tr subject key")).thenReturn("subject value");
-        when(localizationMessageService.getMessage("tr from key")).thenReturn("fromvalue (From value caption)");
-
         when(tenantConfigService.getConfig()).thenReturn(
             of(MAIL_SETTINGS, asList(of(
                 TEMPLATE_NAME, EMAIL_TEMPLATE,

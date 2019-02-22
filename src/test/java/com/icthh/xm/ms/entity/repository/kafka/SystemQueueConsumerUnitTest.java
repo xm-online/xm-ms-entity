@@ -1,6 +1,6 @@
 package com.icthh.xm.ms.entity.repository.kafka;
 
-import static org.mockito.Matchers.anyObject;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -127,43 +127,43 @@ public class SystemQueueConsumerUnitTest {
     @Test
     public void createProfile() {
         when(profileService.getProfile(USER_KEY)).thenReturn(null);
-        when(profileService.save(anyObject())).thenReturn(new Profile());
+        when(profileService.save(any())).thenReturn(new Profile());
         consumer.consumeEvent(new ConsumerRecord<>("test", 0, 0, "", CREATE_PROFILE_EVENT));
 
         verify(profileService).getProfile(USER_KEY);
-        verify(profileService).save(anyObject());
+        verify(profileService).save(any());
 
     }
 
     @Test
     public void createExistsProfile() {
         when(profileService.getProfile(USER_KEY)).thenReturn(new Profile());
-        when(profileService.save(anyObject())).thenReturn(new Profile());
+        when(profileService.save(any())).thenReturn(new Profile());
         consumer.consumeEvent(new ConsumerRecord<>("test", 0, 0, "", CREATE_PROFILE_EVENT));
 
         verify(profileService).getProfile(USER_KEY);
-        verify(profileService, times(0)).save(anyObject());
+        verify(profileService, times(0)).save(any());
 
     }
 
     @Test
     public void updateProfile() {
         when(profileService.getProfile(USER_KEY)).thenReturn(new Profile());
-        when(profileService.save(anyObject())).thenReturn(new Profile());
+        when(profileService.save(any())).thenReturn(new Profile());
         consumer.consumeEvent(new ConsumerRecord<>("test", 0, 0, "", UPDATE_PROFILE_EVENT));
 
         verify(profileService).getProfile(USER_KEY);
-        verify(profileService).save(anyObject());
+        verify(profileService).save(any());
     }
 
     @Test
     public void updateNotExistsProfile() {
         when(profileService.getProfile(USER_KEY)).thenReturn(null);
-        when(profileService.save(anyObject())).thenReturn(new Profile());
+        when(profileService.save(any())).thenReturn(new Profile());
         consumer.consumeEvent(new ConsumerRecord<>("test", 0, 0, "", UPDATE_PROFILE_EVENT));
 
         verify(profileService).getProfile(USER_KEY);
-        verify(profileService, times(0)).save(anyObject());
+        verify(profileService, times(0)).save(any());
     }
 
 }

@@ -2,6 +2,7 @@ package com.icthh.xm.ms.entity.config.tenant;
 
 import static org.junit.Assert.assertEquals;
 
+import com.icthh.xm.commons.migration.db.tenant.SchemaChangeResolver;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;

@@ -23,7 +23,7 @@ class ConfigContentGatlingTest extends Simulation {
     val baseURL = Option(System.getProperty("baseURL")) getOrElse """http://127.0.0.1:8080"""
 
     val httpConf = http
-        .baseURL(baseURL)
+        .baseUrl(baseURL)
         .inferHtmlResources()
         .acceptHeader("*/*")
         .acceptEncodingHeader("gzip, deflate")
@@ -80,7 +80,7 @@ class ConfigContentGatlingTest extends Simulation {
             .exec(http("Create new configContent")
             .post("/entity/api/config-contents")
             .headers(headers_http_authenticated)
-            .body(StringBody("""{"id":null, "encoding":"SAMPLE_TEXT", "format":"SAMPLE_TEXT", "text":null, "description":"SAMPLE_TEXT"}""")).asJSON
+            .body(StringBody("""{"id":null, "encoding":"SAMPLE_TEXT", "format":"SAMPLE_TEXT", "text":null, "description":"SAMPLE_TEXT"}""")).asJson
             .check(status.is(201))
             .check(headerRegex("Location", "(.*)").saveAs("new_configContent_url"))).exitHereIfFailed
             .pause(10)
@@ -99,6 +99,6 @@ class ConfigContentGatlingTest extends Simulation {
     val users = scenario("Users").exec(scn)
 
     setUp(
-        users.inject(rampUsers(Integer.getInteger("users", 100)) over (Integer.getInteger("ramp", 1) minutes))
+        users.inject(rampUsers(Integer.getInteger("users", 100)) during (Integer.getInteger("ramp", 1) minutes))
     ).protocols(httpConf)
 }

@@ -66,7 +66,7 @@ public class EventService {
     @Transactional(readOnly = true)
     @LogicExtensionPoint("FindOne")
     public Event findOne(Long id) {
-        return eventRepository.findOne(id);
+        return eventRepository.findById(id).orElse(null);
     }
 
     /**
@@ -76,7 +76,7 @@ public class EventService {
      */
     @LogicExtensionPoint("Delete")
     public void delete(Long id) {
-        eventRepository.delete(id);
+        eventRepository.deleteById(id);
     }
 
     /**

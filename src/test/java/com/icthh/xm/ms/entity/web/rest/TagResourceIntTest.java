@@ -18,6 +18,7 @@ import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
 import com.icthh.xm.ms.entity.EntityApp;
 import com.icthh.xm.ms.entity.config.SecurityBeanOverrideConfiguration;
+import com.icthh.xm.ms.entity.config.elasticsearch.EmbeddedElasticsearchConfig;
 import com.icthh.xm.ms.entity.config.tenant.WebappTenantOverrideConfiguration;
 import com.icthh.xm.ms.entity.domain.Tag;
 import com.icthh.xm.ms.entity.domain.XmEntity;
@@ -58,7 +59,12 @@ import javax.persistence.EntityManager;
  */
 @RunWith(SpringRunner.class)
 @WithMockUser(authorities = {"SUPER-ADMIN"})
-@SpringBootTest(classes = {EntityApp.class, SecurityBeanOverrideConfiguration.class, WebappTenantOverrideConfiguration.class})
+@SpringBootTest(classes = {
+    EntityApp.class,
+    SecurityBeanOverrideConfiguration.class,
+    WebappTenantOverrideConfiguration.class,
+    EmbeddedElasticsearchConfig.class
+})
 public class TagResourceIntTest {
 
     private static final String DEFAULT_TYPE_KEY = "TEST";
@@ -314,7 +320,8 @@ public class TagResourceIntTest {
         int databaseSizeBeforeUpdate = tagRepository.findAll().size();
 
         // Update the tag
-        Tag updatedTag = tagRepository.findOne(tag.getId());
+        Tag updatedTag = tagRepository.findById(tag.getId())
+            .orElseThrow(NullPointerException::new);
         updatedTag
             .typeKey(UPDATED_TYPE_KEY)
             .name(UPDATED_NAME)

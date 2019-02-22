@@ -293,7 +293,8 @@ public class EventResourceIntTest {
         int databaseSizeBeforeUpdate = eventRepository.findAll().size();
 
         // Update the event
-        Event updatedEvent = eventRepository.findOne(event.getId());
+        Event updatedEvent = eventRepository.findById(event.getId())
+            .orElseThrow(NullPointerException::new);
         updatedEvent
             .typeKey(UPDATED_TYPE_KEY)
             .repeatRuleKey(UPDATED_REPEAT_RULE_KEY)
