@@ -10,9 +10,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.icthh.xm.commons.i18n.error.web.ExceptionTranslator;
 import com.icthh.xm.commons.i18n.spring.service.LocalizationMessageService;
+import com.icthh.xm.ms.entity.config.JacksonConfiguration;
 import com.icthh.xm.ms.entity.domain.Configuration;
 import com.icthh.xm.ms.entity.domain.Link;
 import com.icthh.xm.ms.entity.domain.XmEntity;
+import com.icthh.xm.ms.entity.repository.XmEntityRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityRepositoryInternal;
 import com.icthh.xm.ms.entity.service.LinkService;
 import com.icthh.xm.ms.entity.web.rest.LinkResource;
@@ -39,9 +41,8 @@ import org.springframework.web.context.WebApplicationContext;
 @Slf4j
 @RunWith(SpringRunner.class)
 @WebMvcTest(controllers = LinkResource.class)
-@ContextConfiguration(classes = {LinkResource.class, ExceptionTranslator.class,
-                                 MappingJackson2HttpMessageConverter.class, XmEntityObjectIdResolver.class,
-                                 Configuration.class})
+@ContextConfiguration(classes = {JacksonConfiguration.class, LinkResource.class, ExceptionTranslator.class,
+                                 MappingJackson2HttpMessageConverter.class})
 public class XmEntityObjectIdResolverUnitTest {
 
     private static final String DEFAULT_TYPE_KEY = "ACCOUNT.ADMIN";
@@ -53,13 +54,10 @@ public class XmEntityObjectIdResolverUnitTest {
     private LocalizationMessageService localizationMessageService;
 
     @MockBean
-    private XmEntityRepositoryInternal entityRepository;
+    private XmEntityRepository entityRepository;
 
     @MockBean
     private LinkService linkService;
-
-    @Autowired
-    private XmEntityObjectIdResolver xmEntityObjectIdResolver;
 
     private MockMvc mockMvc;
 
