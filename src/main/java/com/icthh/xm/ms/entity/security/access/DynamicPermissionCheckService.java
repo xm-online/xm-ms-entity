@@ -145,7 +145,7 @@ public class DynamicPermissionCheckService {
      * Function should return set of custom.dynamicFunctionFeature permissions assigned to role in current security scope
      * @return set
      */
-    protected Set<String> getRoleFunctionPermissions() {
+    Set<String> getRoleFunctionPermissions() {
 
         //TODO throw error here, after migration to new test paradigm
         final Optional<String> userRole = SecurityUtils.getCurrentUserRole();
@@ -166,7 +166,7 @@ public class DynamicPermissionCheckService {
      * @param roleKey
      * @return
      */
-    protected Predicate<Permission> functionPermissionMatcher(String roleKey) {
+    Predicate<Permission> functionPermissionMatcher(String roleKey) {
         Predicate<Permission> isConfigSection = permission -> StringUtils.equals(CONFIG_SECTION, permission.getMsName());
         Predicate<Permission> isAssignedToRole = permission -> StringUtils.equals(roleKey, permission.getRoleKey());
         return isConfigSection.and(isAssignedToRole);
