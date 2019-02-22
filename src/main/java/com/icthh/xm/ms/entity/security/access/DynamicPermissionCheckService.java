@@ -20,7 +20,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -73,9 +72,6 @@ public class DynamicPermissionCheckService {
     private final PermissionCheckService permissionCheckService;
     private final PermissionService permissionService;
     private final TenantContextHolder tenantContextHolder;
-
-    private BiFunction<PermissionCheckService, String, Boolean> assertPermission =
-        (service, permission) -> service.hasPermission(SecurityContextHolder.getContext().getAuthentication(), permission);
 
     /**
      * Checks if user has permission with dynamic key feature
@@ -175,7 +171,10 @@ public class DynamicPermissionCheckService {
      */
     private boolean assertPermission(final String permission) {
         Preconditions.checkArgument(StringUtils.isNotEmpty(permission));
-        final boolean permitted = assertPermission.apply(permissionCheckService, permission);
+
+        boolean permitted = permissionCheckService
+            .hasPermission(SecurityContextHolder.getContext().getAuthentication(), permission);
+
         if (!permitted) {
             //TODO place correct error here
             throw new IllegalStateException("Throw correct exception here");
