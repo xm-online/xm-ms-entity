@@ -14,12 +14,16 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.BiFunction;
+import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -122,6 +126,32 @@ public class DynamicPermissionCheckService {
         }
         return list -> list;
     }
+
+    public <T> T dynamicFunctionListFilter2(T item, BiFunction<T, Set<String>, T> mapper) {
+        if (FeatureContext.FUNCTION.isEnabled(this)) {
+            return mapper.apply(item, Sets.newHashSet());
+        }
+        return item;
+    }
+
+    public <T, I> T filterTypeSpecByPermission2(final T outterType,
+                                                Supplier<List<I>> innerGetter ,
+                                                Consumer<List<I>> innerSetter,
+                                                Function<I, String> innerKeyGetter
+                                                ) {
+        Set<String> lPermissions = Sets.newHashSet();
+        if (lPermissions.isEmpty()) {
+            innerSetter.accept(Lists.newArrayList());
+            return outterType;
+        }
+        List<I> filteredList = innerGetter.get()
+            .stream()
+            .filter(item -> lPermissions.contains(innerKeyGetter.apply(item)))
+            .collect(Collectors.toList());
+        innerSetter.accept(filteredList);
+        return outterType;
+    }
+
 
     /**
      * Performs object field adjustment if feature is enabled. Function is generified, as it could be re used with other mappers.

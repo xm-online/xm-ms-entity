@@ -3,7 +3,9 @@ package com.icthh.xm.ms.entity.web.rest;
 import static org.springframework.http.MediaType.TEXT_PLAIN_VALUE;
 
 import com.codahale.metrics.annotation.Timed;
+import com.google.common.collect.Sets;
 import com.icthh.xm.ms.entity.domain.XmEntity;
+import com.icthh.xm.ms.entity.domain.spec.FunctionSpec;
 import com.icthh.xm.ms.entity.domain.spec.TypeSpec;
 import com.icthh.xm.ms.entity.security.access.DynamicPermissionCheckService;
 import com.icthh.xm.ms.entity.service.XmEntityGeneratorService;
@@ -31,6 +33,9 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.function.Supplier;
+import java.util.stream.Stream;
 
 /**
  * REST controller for managing XmEntitySpec.
@@ -78,6 +83,28 @@ public class XmEntitySpecResource {
 
     }
 
+    public enum Filter2 {
+
+        ALL((spec) -> true),
+        APP(XmEntitySpecService.isApp()),
+        NON_ABSTRACT(XmEntitySpecService.isNotAbstract());
+
+        private Predicate<TypeSpec> typeSpecPredicate;
+
+        Filter2(final Predicate<TypeSpec> typeSpecPredicate) {
+            this.typeSpecPredicate = typeSpecPredicate;
+        }
+
+        /**
+         * getFilteredEntities
+         */
+        private Stream<TypeSpec> getTypeSpec(XmEntitySpecService xmEntitySpecService) {
+            return xmEntitySpecService.findAllTypes()
+                                      .stream()
+                                      .filter(typeSpecPredicate);
+        }
+    }
+
     /**
      * GET  /xm-entity-specs : get the typeSpecs.
      *
@@ -89,11 +116,30 @@ public class XmEntitySpecResource {
     @PostFilter("hasPermission({'returnObject': filterObject, 'log': false}, 'XMENTITY_SPEC.GET')")
     public List<TypeSpec> getTypeSpecs(@ApiParam XmEntitySpecResource.Filter filter) {
         log.debug("REST request to get a list of TypeSpec");
+
+        Filter2 filter2 = Filter2.NON_ABSTRACT;
+
+        Stream<TypeSpec> res = filter2.getTypeSpec(xmEntitySpecService)
+                                      .map(this::filterFunctions);
+//            .collect(Coll);
+
         XmEntitySpecResource.Filter f = filter != null ? filter : Filter.ALL;
         BiFunction<TypeSpec, Set<String>, TypeSpec> mapper = xmEntitySpecService::filterTypeSpecByFunctionPermission;
         //get specs from typedEnum F, and then filter by mapper if feature is enabled
         return f.getTypeSpec(xmEntitySpecService, dynamicPermissionCheckService.dynamicFunctionListFilter(mapper));
     }
+
+    private TypeSpec filterFunctions(TypeSpec spec) {
+
+        return dynamicPermissionCheckService.filterTypeSpecByPermission2(spec,
+                                                                         spec::getFunctions,
+                                                                         spec::setFunctions,
+                                                                         FunctionSpec::getKey);
+
+//        return dynamicPermissionCheckService
+//            .dynamicFunctionListFilter2(spec, xmEntitySpecService::filterTypeSpecByFunctionPermission);
+    }
+
 
     /**
      * GET  /xm-entity-specs/:key : get the "key" typeSpec.

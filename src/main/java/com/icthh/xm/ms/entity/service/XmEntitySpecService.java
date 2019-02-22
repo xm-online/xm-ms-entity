@@ -27,6 +27,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+
 import static com.github.fge.jackson.NodeType.OBJECT;
 import static com.github.fge.jackson.NodeType.getNodeType;
 import static com.icthh.xm.ms.entity.util.CustomCollectionUtils.nullSafe;
@@ -68,7 +69,7 @@ public class XmEntitySpecService implements RefreshableConfiguration {
      * @return list of entity Types specifications that defines as application.
      */
     public List<TypeSpec> findAllAppTypes() {
-        return getTypeSpecs().values().stream().filter(TypeSpec::getIsApp).collect(Collectors.toList());
+        return getTypeSpecs().values().stream().filter(isApp()).collect(Collectors.toList());
     }
 
     /**
@@ -76,8 +77,17 @@ public class XmEntitySpecService implements RefreshableConfiguration {
      * @return list of entity Types specifications that not an abstract.
      */
     public List<TypeSpec> findAllNonAbstractTypes() {
-        return getTypeSpecs().values().stream().filter(t -> !t.getIsAbstract()).collect(Collectors.toList());
+        return getTypeSpecs().values().stream().filter(isNotAbstract()).collect(Collectors.toList());
     }
+
+    public static Predicate<TypeSpec> isApp() {
+        return TypeSpec::getIsApp;
+    }
+
+    public static Predicate<TypeSpec> isNotAbstract() {
+        return t -> !t.getIsAbstract();
+    }
+
 
     @Override
     @SneakyThrows
@@ -317,10 +327,14 @@ public class XmEntitySpecService implements RefreshableConfiguration {
         }
         final Predicate<FunctionSpec> filter = (item) -> lPermissions.contains(item.getKey());
         List<FunctionSpec> filteredList = nullSafe(typeSpec.getFunctions())
-            .stream().filter(filter).collect(Collectors.toList());
+            .stream()
+            .filter(filter)
+            .collect(Collectors.toList());
         typeSpec.setFunctions(filteredList);
         return typeSpec;
     }
+
+
 
     /**
      * Transforms all XmEntity Specification keys into the thin structure based
