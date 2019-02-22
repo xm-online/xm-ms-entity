@@ -126,7 +126,7 @@ public class DynamicPermissionCheckServiceUnitTest {
         BDDMockito.given(tenantConfig.getConfig()).willReturn(Maps.newHashMap());
         final List<Boolean> someList = Lists.newArrayList(Boolean.TRUE, Boolean.FALSE, Boolean.TRUE, Boolean.FALSE);
         Function<List<Boolean>, List<Boolean>> listSupplier = list -> list;
-        final List<Boolean> resultList = listSupplier.andThen(dynamicPermissionCheckService.dynamicFunctionFilter(mapper)).apply(someList);
+        final List<Boolean> resultList = listSupplier.andThen(dynamicPermissionCheckService.dynamicFunctionListFilter(mapper)).apply(someList);
         assertThat(resultList).containsExactly(Boolean.TRUE, Boolean.FALSE, Boolean.TRUE, Boolean.FALSE);
     }
 
@@ -139,7 +139,7 @@ public class DynamicPermissionCheckServiceUnitTest {
         BDDMockito.given(tenantConfig.getConfig()).willReturn(config);
         final List<Boolean> someList = Lists.newArrayList(Boolean.TRUE, Boolean.FALSE, Boolean.TRUE, Boolean.FALSE);
         Function<List<Boolean>, List<Boolean>> listSupplier = list -> list;
-        final List<Boolean> resultList = listSupplier.andThen(dynamicPermissionCheckService.dynamicFunctionFilter(mapper)).apply(someList);
+        final List<Boolean> resultList = listSupplier.andThen(dynamicPermissionCheckService.dynamicFunctionListFilter(mapper)).apply(someList);
         assertThat(resultList).containsExactly(Boolean.FALSE, Boolean.TRUE, Boolean.FALSE, Boolean.TRUE);
     }
 

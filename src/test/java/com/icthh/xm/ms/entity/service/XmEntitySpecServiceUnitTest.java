@@ -16,6 +16,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.google.common.collect.Sets;
 import com.icthh.xm.commons.config.client.repository.CommonConfigRepository;
 import com.icthh.xm.commons.config.client.repository.TenantConfigRepository;
 import com.icthh.xm.commons.config.domain.Configuration;
@@ -27,15 +28,8 @@ import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantKey;
 import com.icthh.xm.ms.entity.config.ApplicationProperties;
 import com.icthh.xm.ms.entity.config.tenant.LocalXmEntitySpecService;
-import com.icthh.xm.ms.entity.domain.spec.AttachmentSpec;
-import com.icthh.xm.ms.entity.domain.spec.LinkSpec;
-import com.icthh.xm.ms.entity.domain.spec.LocationSpec;
-import com.icthh.xm.ms.entity.domain.spec.NextSpec;
-import com.icthh.xm.ms.entity.domain.spec.RatingSpec;
-import com.icthh.xm.ms.entity.domain.spec.StateSpec;
-import com.icthh.xm.ms.entity.domain.spec.TagSpec;
-import com.icthh.xm.ms.entity.domain.spec.TypeSpec;
-import com.icthh.xm.ms.entity.domain.spec.UniqueFieldSpec;
+import com.icthh.xm.ms.entity.domain.spec.*;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
@@ -43,6 +37,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
 import lombok.SneakyThrows;
 import org.apache.commons.io.IOUtils;
 import org.junit.Before;
@@ -352,6 +348,49 @@ public class XmEntitySpecServiceUnitTest {
         verify(commonConfigRepository).updateConfigFullPath(refEq(new Configuration(permissionPath, expectedPermissions)), eq(sha1Hex(permissions)));
     }
 
+    @Test
+    public void filterAllFunctionsIfPermissionSetIsEmpty() {
+        Set<String> permissions = Sets.newHashSet();
+        String [] fNames = {"F0", "F1", "F2", "F3", "F4"};
+        TypeSpec spec = newTypeSpec("SP1", fNames);
+        assertThat(getFunctions(spec)).containsExactly(fNames);
+        TypeSpec filteredSpec  = xmEntitySpecService.filterTypeSpecByFunctionPermission(spec, permissions);
+        assertThat(filteredSpec.getKey()).isEqualTo(spec.getKey());
+        assertThat(filteredSpec.getFunctions().size()).isEqualTo(0);
+    }
+
+    @Test
+    public void filterFunctionsByPermissionSet() {
+        String [] fNames = {"F0", "F1", "F2", "F3", "F4"};
+        Set<String> permissions = Sets.newHashSet("F1", "F3", "F5");
+        TypeSpec spec = newTypeSpec("SP1", fNames);
+        assertThat(getFunctions(spec)).containsExactly(fNames);
+        TypeSpec filteredSpec  = xmEntitySpecService.filterTypeSpecByFunctionPermission(spec, permissions);
+        assertThat(filteredSpec.getKey()).isEqualTo(spec.getKey());
+        assertThat(filteredSpec.getFunctions().size()).isEqualTo(2);
+        assertThat(getFunctions(filteredSpec)).containsExactly("F1", "F3");
+    }
+
+    private List<String> getFunctions(TypeSpec spec) {
+        return spec.getFunctions().stream().map(functionSpec -> functionSpec.getKey()).collect(Collectors.toList());
+    }
+
+    private TypeSpec newTypeSpec(String key, String ... functions) {
+        TypeSpec spec = new TypeSpec();
+        spec.setKey(key);
+        spec.setFunctions(newFunctionSpec(functions));
+        return spec;
+    }
+
+    private List<FunctionSpec> newFunctionSpec(String ... keys) {
+        return Stream.of(keys).map(this::newFunction).collect(Collectors.toList());
+    }
+
+    private FunctionSpec newFunction(String key) {
+        FunctionSpec f = new FunctionSpec();
+        f.setKey(key);
+        return f;
+    }
 
     private String readFile(String path1) throws IOException {
         InputStream cfgInputStream = new ClassPathResource(path1).getInputStream();

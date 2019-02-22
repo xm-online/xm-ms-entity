@@ -31,7 +31,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.function.Function;
-import java.util.function.Supplier;
 
 /**
  * REST controller for managing XmEntitySpec.
@@ -47,6 +46,8 @@ public class XmEntitySpecResource {
     private final XmEntitySpecService xmEntitySpecService;
     private final XmEntityGeneratorService xmEntityGeneratorService;
     private final DynamicPermissionCheckService dynamicPermissionCheckService;
+
+    BiFunction<TypeSpec, Set<String>, TypeSpec> mapper = xmEntitySpecService::filterTypeSpecByFunctionPermission;
 
     public enum Filter {
 
@@ -84,8 +85,8 @@ public class XmEntitySpecResource {
     public List<TypeSpec> getTypeSpecs(@ApiParam XmEntitySpecResource.Filter filter) {
         log.debug("REST request to get a list of TypeSpec");
         XmEntitySpecResource.Filter f = filter != null ? filter : Filter.ALL;
-        BiFunction<TypeSpec, Set<String>, TypeSpec> mapper = xmEntitySpecService::filterTypeSpecByFunctionPermission;
-        return f.getTypeSpec(xmEntitySpecService, dynamicPermissionCheckService.dynamicFunctionFilter(mapper));
+        //get specs from typedEnum F, and then filter by mapper if feature is enabled
+        return f.getTypeSpec(xmEntitySpecService, dynamicPermissionCheckService.dynamicFunctionListFilter(mapper));
     }
 
     /**
@@ -99,7 +100,11 @@ public class XmEntitySpecResource {
     @PostAuthorize("hasPermission({'returnObject': returnObject.body}, 'XMENTITY_SPEC.GET_LIST.ITEM')")
     public ResponseEntity<TypeSpec> getTypeSpec(@PathVariable String key) {
         log.debug("REST request to get TypeSpec : {}", key);
-        return RespContentUtil.wrapOrNotFound(xmEntitySpecService.getTypeSpecByKey(key));
+        Optional<TypeSpec> spec = xmEntitySpecService.getTypeSpecByKey(key).map(
+            //filter spec content if feature enabled
+            dynamicPermissionCheckService.dynamicFunctionFilter(mapper)
+        );
+        return RespContentUtil.wrapOrNotFound(spec);
     }
 
     /**

@@ -116,11 +116,24 @@ public class DynamicPermissionCheckService {
      * @param <T> - collection element
      * @return same collection or adjusted one
      */
-    public <T> Function<List<T>, List<T>> dynamicFunctionFilter(BiFunction<T, Set<String>, T> mapper) {
+    public <T> Function<List<T>, List<T>> dynamicFunctionListFilter(BiFunction<T, Set<String>, T> mapper) {
         if (FeatureContext.FUNCTION.isEnabled(this)) {
             return list -> list.stream().map(item -> mapper.apply(item, Sets.newHashSet())).collect(Collectors.toList());
         }
         return list -> list;
+    }
+
+    /**
+     * Performs object field adjustment if feature is enabled. Function is generified, as it could be re used with other mappers.
+     * @param mapper - adjustment implementation
+     * @param <T> - collection element
+     * @return same collection or adjusted one
+     */
+    public <T> Function<T, T> dynamicFunctionFilter(BiFunction<T, Set<String>, T> mapper) {
+        if (FeatureContext.FUNCTION.isEnabled(this)) {
+            return item -> mapper.apply(item, Sets.newHashSet());
+        }
+        return item -> item;
     }
 
     /**
