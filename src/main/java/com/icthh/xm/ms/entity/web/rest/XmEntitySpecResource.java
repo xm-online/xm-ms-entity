@@ -36,18 +36,23 @@ import java.util.function.Function;
  * REST controller for managing XmEntitySpec.
  */
 @Slf4j
-@RequiredArgsConstructor
 @RestController
 @RequestMapping("/api")
 public class XmEntitySpecResource {
 
     private static final String ENTITY_NAME = "xmEntity";
 
-    private final XmEntitySpecService xmEntitySpecService;
-    private final XmEntityGeneratorService xmEntityGeneratorService;
-    private final DynamicPermissionCheckService dynamicPermissionCheckService;
+    private XmEntitySpecService xmEntitySpecService;
+    private XmEntityGeneratorService xmEntityGeneratorService;
+    private DynamicPermissionCheckService dynamicPermissionCheckService;
 
-    BiFunction<TypeSpec, Set<String>, TypeSpec> mapper = xmEntitySpecService::filterTypeSpecByFunctionPermission;
+    public XmEntitySpecResource(XmEntitySpecService xmEntitySpecService,
+                                XmEntityGeneratorService xmEntityGeneratorService,
+                                DynamicPermissionCheckService dynamicPermissionCheckService) {
+        this.xmEntitySpecService = xmEntitySpecService;
+        this.xmEntityGeneratorService = xmEntityGeneratorService;
+        this.dynamicPermissionCheckService = dynamicPermissionCheckService;
+    }
 
     public enum Filter {
 
@@ -85,6 +90,7 @@ public class XmEntitySpecResource {
     public List<TypeSpec> getTypeSpecs(@ApiParam XmEntitySpecResource.Filter filter) {
         log.debug("REST request to get a list of TypeSpec");
         XmEntitySpecResource.Filter f = filter != null ? filter : Filter.ALL;
+        BiFunction<TypeSpec, Set<String>, TypeSpec> mapper = xmEntitySpecService::filterTypeSpecByFunctionPermission;
         //get specs from typedEnum F, and then filter by mapper if feature is enabled
         return f.getTypeSpec(xmEntitySpecService, dynamicPermissionCheckService.dynamicFunctionListFilter(mapper));
     }
@@ -100,6 +106,8 @@ public class XmEntitySpecResource {
     @PostAuthorize("hasPermission({'returnObject': returnObject.body}, 'XMENTITY_SPEC.GET_LIST.ITEM')")
     public ResponseEntity<TypeSpec> getTypeSpec(@PathVariable String key) {
         log.debug("REST request to get TypeSpec : {}", key);
+        BiFunction<TypeSpec, Set<String>, TypeSpec> mapper = xmEntitySpecService::filterTypeSpecByFunctionPermission;
+
         Optional<TypeSpec> spec = xmEntitySpecService.getTypeSpecByKey(key).map(
             //filter spec content if feature enabled
             dynamicPermissionCheckService.dynamicFunctionFilter(mapper)
