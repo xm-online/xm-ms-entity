@@ -2,7 +2,12 @@
     "properties": {
         "key": {
             "type": "string",
-            "fielddata": true
+            "fielddata": true,
+            "fields": {
+                "keyword": {
+                    "type": "keyword"
+                }
+            }
         },
         "data": {
             "type": "object",
