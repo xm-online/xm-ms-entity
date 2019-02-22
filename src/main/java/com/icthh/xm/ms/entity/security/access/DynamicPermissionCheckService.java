@@ -165,7 +165,8 @@ public class DynamicPermissionCheckService {
      * @return true if feature enabled
      */
     private boolean isDynamicChangeStatePermissionEnabled() {
-        throw new UnsupportedOperationException(this + " Not implementer");
+        //TODO feature discussion needed
+        throw new UnsupportedOperationException("isDynamicChangeStatePermissionEnabled Not implementer");
     }
 
     // TODO should be in Commons.TenantConfigService as utility method
