@@ -11,6 +11,7 @@ import com.icthh.xm.ms.entity.service.XmEntitySpecService;
 import com.icthh.xm.ms.entity.web.rest.util.HeaderUtil;
 import com.icthh.xm.ms.entity.web.rest.util.RespContentUtil;
 import io.swagger.annotations.ApiParam;
+import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -37,22 +38,15 @@ import java.util.function.Function;
  */
 @Slf4j
 @RestController
+@AllArgsConstructor
 @RequestMapping("/api")
 public class XmEntitySpecResource {
 
     private static final String ENTITY_NAME = "xmEntity";
 
-    private XmEntitySpecService xmEntitySpecService;
-    private XmEntityGeneratorService xmEntityGeneratorService;
-    private DynamicPermissionCheckService dynamicPermissionCheckService;
-
-    public XmEntitySpecResource(XmEntitySpecService xmEntitySpecService,
-                                XmEntityGeneratorService xmEntityGeneratorService,
-                                DynamicPermissionCheckService dynamicPermissionCheckService) {
-        this.xmEntitySpecService = xmEntitySpecService;
-        this.xmEntityGeneratorService = xmEntityGeneratorService;
-        this.dynamicPermissionCheckService = dynamicPermissionCheckService;
-    }
+    private final XmEntitySpecService xmEntitySpecService;
+    private final XmEntityGeneratorService xmEntityGeneratorService;
+    private final DynamicPermissionCheckService dynamicPermissionCheckService;
 
     public enum Filter {
 
