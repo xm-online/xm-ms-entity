@@ -173,19 +173,23 @@ public class DynamicPermissionCheckServiceUnitTest {
     public void testPermissionFilterPredicate(){
 
         final String role = "ROLE";
-        final String privKey = "PK";
+        final String permissionKey = "PK";
 
         List<Permission> mockedList = newArrayList(
-            createMockedPermission(role + "_A", privKey+"-1"),
-            createMockedPermission(role + "_A", privKey+"-2"),
-            createMockedPermission(role + "_A", privKey+"-3"),
-            createMockedPermission(role + "_A", privKey+"-4"),
-            createMockedPermission(role + "_B", privKey+"-3"),
-            createMockedPermission(role + "_B", privKey+"-4"),
-            createMockedPermission(role + "_B", privKey+"-5"),
-            createMockedPermission(role + "_B", privKey+"-6"),
-            createMockedPermission(role + "_C", privKey+"-1"),
-            createMockedPermission(role + "_A", privKey+"-7")
+            createMockedPermission(role + "_A", permissionKey+"-1"),
+            createMockedPermission(role + "_A", permissionKey+"-2"),
+            createMockedPermission(role + "_A", permissionKey+"-3"),
+            createMockedPermission(role + "_A", permissionKey+"-4"),
+            createMockedPermission(role + "_B", permissionKey+"-3"),
+            createMockedPermission(role + "_B", permissionKey+"-4"),
+            createMockedPermission(role + "_B", permissionKey+"-5"),
+            createMockedPermission(role + "_B", permissionKey+"-6"),
+            createMockedPermission(role + "_C", permissionKey+"-1"),
+            createMockedPermission(role + "_A", permissionKey+"-7"),
+            createMockedPermission(role + "_C", permissionKey+"-2", false, false),
+            createMockedPermission(role + "_C", permissionKey+"-4", true, false),
+            createMockedPermission(role + "_C", permissionKey+"-5", false, true),
+            createMockedPermission(role + "_C", permissionKey+"-6", true, true)
         );
 
         List<Permission> filteredList = mockedList.stream()
@@ -214,21 +218,22 @@ public class DynamicPermissionCheckServiceUnitTest {
             .collect(Collectors.toList());
 
         assertThat(filteredList.stream().map(Permission::getPrivilegeKey).collect(Collectors.toSet()))
-            .containsExactlyInAnyOrder("PK-1");
+            .containsExactlyInAnyOrder("PK-1", "PK-2");
 
     }
 
-    /**
-     * Inverse incoming item. Used to test feature enabled flag
-     */
-//    private BiFunction<Boolean, Set<String>, Boolean> inversionMapper = (item, set) -> !item;
-
-    private Permission createMockedPermission(String role, String permKey) {
+    private Permission createMockedPermission(String role, String permKey, boolean iDisabled, boolean isDeleted) {
         Permission p = new Permission();
         p.setRoleKey(role);
         p.setPrivilegeKey(permKey);
+        p.setDeleted(isDeleted);
+        p.setDisabled(iDisabled);
         p.setMsName(CONFIG_SECTION);
         return p;
+    }
+
+    private Permission createMockedPermission(String role, String permKey) {
+        return createMockedPermission(role, permKey, false, false);
     }
 
     private Map<String, Object> getMockedConfig(String configSectionName, String featureName, Boolean status) {
