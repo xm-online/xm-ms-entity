@@ -166,8 +166,6 @@ public class DynamicPermissionCheckService {
      */
     private boolean isDynamicChangeStatePermissionEnabled() {
         throw new UnsupportedOperationException(this + " Not implementer");
-        /*return getTenantConfigBooleanParameterValue("xxx", "")
-            .map(it -> (Boolean)it).orElse(Boolean.FALSE).booleanValue();*/
     }
 
     // TODO should be in Commons.TenantConfigService as utility method
