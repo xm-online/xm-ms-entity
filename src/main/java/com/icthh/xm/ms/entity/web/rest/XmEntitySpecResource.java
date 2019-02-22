@@ -83,9 +83,10 @@ public class XmEntitySpecResource {
     public List<TypeSpec> getTypeSpecs(@ApiParam XmEntitySpecResource.Filter filter) {
         log.debug("REST request to get a list of TypeSpec");
 
-        return filter.getTypeSpec(xmEntitySpecService)
-                     .map(this::filterFunctions)
-                     .collect(Collectors.toList());
+        return Optional.ofNullable(filter).orElse(Filter.ALL)
+                       .getTypeSpec(xmEntitySpecService)
+                       .map(this::filterFunctions)
+                       .collect(Collectors.toList());
     }
 
 
