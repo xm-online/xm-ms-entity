@@ -282,9 +282,7 @@ public class FunctionServiceImplUnitTest {
     public void passStateValidationIfNoStateMapping() {
         FunctionSpec spec = new FunctionSpec();
         XmEntityStateProjection p = getProjection(IdOrKey.SELF).get();
-        Optional<Boolean> result = functionService.isCallAllowedByState(spec, p);
-        assertThat(result.isPresent()).isTrue();
-        assertThat(result.get()).isTrue();
+        functionService.assertCallAllowedByState(spec, p);
     }
 
     @Test
@@ -292,9 +290,7 @@ public class FunctionServiceImplUnitTest {
         FunctionSpec spec = new FunctionSpec();
         spec.setAllowedStateKeys(Lists.newArrayList(FunctionServiceImpl.NONE));
         XmEntityStateProjection p = getProjection(IdOrKey.SELF).get();
-        Optional<Boolean> result = functionService.isCallAllowedByState(spec, p);
-        assertThat(result.isPresent()).isTrue();
-        assertThat(result.get()).isTrue();
+        functionService.assertCallAllowedByState(spec, p);
     }
 
     @Test
@@ -302,9 +298,7 @@ public class FunctionServiceImplUnitTest {
         FunctionSpec spec = new FunctionSpec();
         spec.setAllowedStateKeys(Lists.newArrayList("STATE"));
         XmEntityStateProjection p = getProjection(IdOrKey.SELF).get();
-        Optional<Boolean> result = functionService.isCallAllowedByState(spec, p);
-        assertThat(result.isPresent()).isTrue();
-        assertThat(result.get()).isTrue();
+        functionService.assertCallAllowedByState(spec, p);
     }
 
     @Test
@@ -312,8 +306,7 @@ public class FunctionServiceImplUnitTest {
         FunctionSpec spec = new FunctionSpec();
         spec.setAllowedStateKeys(Lists.newArrayList("XX-STATE-XX"));
         XmEntityStateProjection p = getProjection(IdOrKey.SELF).get();
-        Optional<Boolean> result = functionService.isCallAllowedByState(spec, p);
-        assertThat(result.isPresent()).isFalse();
+        functionService.assertCallAllowedByState(spec, p);
     }
 
     private FunctionSpec getFunctionSpec(Boolean saveContext) {

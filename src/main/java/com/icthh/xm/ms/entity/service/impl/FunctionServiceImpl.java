@@ -98,10 +98,7 @@ public class FunctionServiceImpl implements FunctionService {
         FunctionSpec functionSpec = findFunctionSpec(functionKey, projection);
 
         //orElseThorw is replaced by war message
-        isCallAllowedByState(functionSpec, projection).orElseGet(() -> {
-           log.warn("Entity state [{}] not found in specMapping for {}", projection.getStateKey(), functionKey);
-           return Boolean.TRUE;
-        });
+        assertCallAllowedByState(functionSpec, projection);
 
         // execute function
         Map<String, Object> data = functionExecutorService.execute(functionKey, idOrKey, projection.getTypeKey(), vInput);
@@ -116,18 +113,25 @@ public class FunctionServiceImpl implements FunctionService {
      * @param projection - entity projection
      * @return Optional.of(Boolean.TRUE) if allowed or Optional.Empty if not
      */
-    protected Optional<Boolean> isCallAllowedByState(FunctionSpec functionSpec, XmEntityStateProjection projection) {
+    void assertCallAllowedByState(FunctionSpec functionSpec, XmEntityStateProjection projection) {
         List<String> allowedStates = CustomCollectionUtils.nullSafe(functionSpec.getAllowedStateKeys());
         if (allowedStates.isEmpty()) {
-            return Optional.of(Boolean.TRUE);
+            return;
         }
         //this state is UI hide flag, so no execute validation applied
         if (allowedStates.contains(NONE)) {
-            return Optional.of(Boolean.TRUE);
+            return;
         }
-        return allowedStates.stream()
+        Optional<Boolean> result = allowedStates.stream()
             .filter(stateKey -> StringUtils.equalsIgnoreCase(stateKey, projection.getStateKey()))
             .map(stateKey -> Boolean.TRUE).findFirst();
+
+        if (result.isPresent()) {
+            return;
+        }
+
+        log.warn("Entity state [{}] not found in specMapping for {}", projection.getStateKey(), functionSpec.getKey());
+        return;
     }
 
     private FunctionSpec findFunctionSpec(String functionKey, XmEntityIdKeyTypeKey projection) {
