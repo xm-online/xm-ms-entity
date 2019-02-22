@@ -1,6 +1,5 @@
 package com.icthh.xm.ms.entity.security.access;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.icthh.xm.commons.config.client.service.TenantConfigService;
 import com.icthh.xm.commons.permission.domain.Permission;
@@ -8,6 +7,7 @@ import com.icthh.xm.commons.permission.service.PermissionCheckService;
 import com.icthh.xm.commons.permission.service.PermissionService;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
+import com.icthh.xm.ms.entity.security.SecurityUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -20,7 +20,10 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
+
+import static com.icthh.xm.ms.entity.util.CustomCollectionUtils.nullSafe;
 
 @Slf4j
 @Validated
@@ -118,7 +121,8 @@ public class DynamicPermissionCheckService {
      */
     public <T> Function<List<T>, List<T>> dynamicFunctionListFilter(BiFunction<T, Set<String>, T> mapper) {
         if (FeatureContext.FUNCTION.isEnabled(this)) {
-            return list -> list.stream().map(item -> mapper.apply(item, Sets.newHashSet())).collect(Collectors.toList());
+            final Set<String> rolePermissionSet = getRoleFunctionPermissions();
+            return list -> list.stream().map(item -> mapper.apply(item, rolePermissionSet)).collect(Collectors.toList());
         }
         return list -> list;
     }
@@ -131,9 +135,41 @@ public class DynamicPermissionCheckService {
      */
     public <T> Function<T, T> dynamicFunctionFilter(BiFunction<T, Set<String>, T> mapper) {
         if (FeatureContext.FUNCTION.isEnabled(this)) {
-            return item -> mapper.apply(item, Sets.newHashSet());
+            final Set<String> rolePermissionSet = getRoleFunctionPermissions();
+            return item -> mapper.apply(item, rolePermissionSet);
         }
         return item -> item;
+    }
+
+    /**
+     * Function should return set of custom.dynamicFunctionFeature permissions assigned to role in current security scope
+     * @return set
+     */
+    protected Set<String> getRoleFunctionPermissions() {
+
+        //TODO throw error here, after migration to new test paradigm
+        final Optional<String> userRole = SecurityUtils.getCurrentUserRole();
+        if (!userRole.isPresent()) {
+            return Sets.newHashSet();
+        }
+
+        Map<String, Permission> permissions = permissionService.getPermissions(
+            TenantContextUtils.getRequiredTenantKeyValue(tenantContextHolder.getContext()));
+        return nullSafe(permissions).values().stream()
+            .filter(functionPermissionMatcher(userRole.get()))
+            .map(Permission::getPrivilegeKey)
+            .collect(Collectors.toSet());
+    }
+
+    /**
+     * is permission belongs to functional or not?
+     * @param roleKey
+     * @return
+     */
+    protected Predicate<Permission> functionPermissionMatcher(String roleKey) {
+        Predicate<Permission> isConfigSection = permission -> StringUtils.equals(CONFIG_SECTION, permission.getMsName());
+        Predicate<Permission> isAssignedToRole = permission -> StringUtils.equals(roleKey, permission.getRoleKey());
+        return isConfigSection.and(isAssignedToRole);
     }
 
     /**
