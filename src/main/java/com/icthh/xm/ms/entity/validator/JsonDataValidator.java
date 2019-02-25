@@ -57,7 +57,7 @@ public class JsonDataValidator implements ConstraintValidator<JsonData, XmEntity
 
             context.disableDefaultConstraintViolation();
             context
-                .buildConstraintViolationWithTemplate("User " + processingMessages.toString() + "already exists!")
+                .buildConstraintViolationWithTemplate(processingMessages.toString())
                 .addConstraintViolation();
 
             return false;
