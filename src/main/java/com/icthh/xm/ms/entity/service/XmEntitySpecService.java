@@ -14,6 +14,7 @@ import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
 import com.icthh.xm.ms.entity.config.ApplicationProperties;
 import com.icthh.xm.ms.entity.domain.spec.*;
+import com.icthh.xm.ms.entity.security.access.DynamicPermissionCheckService;
 import com.icthh.xm.ms.entity.util.CustomCollectionUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
@@ -55,13 +56,14 @@ public class XmEntitySpecService implements RefreshableConfiguration {
     private final ApplicationProperties applicationProperties;
     private final TenantContextHolder tenantContextHolder;
     private final EntityCustomPrivilegeService entityCustomPrivilegeService;
+    private final DynamicPermissionCheckService dynamicPermissionCheckService;
 
     /**
      * Search of all entity Type specifications.
      * @return list of entity Types specifications
      */
     public List<TypeSpec> findAllTypes() {
-        return Lists.newArrayList(getTypeSpecs().values());
+        return getTypeSpecs().values().stream().map(this::filterFunctions).collect(Collectors.toList());
     }
 
     /**
@@ -69,7 +71,7 @@ public class XmEntitySpecService implements RefreshableConfiguration {
      * @return list of entity Types specifications that defines as application.
      */
     public List<TypeSpec> findAllAppTypes() {
-        return getTypeSpecs().values().stream().filter(isApp()).collect(Collectors.toList());
+        return getTypeSpecs().values().stream().filter(isApp()).map(this::filterFunctions).collect(Collectors.toList());
     }
 
     /**
@@ -77,7 +79,7 @@ public class XmEntitySpecService implements RefreshableConfiguration {
      * @return list of entity Types specifications that not an abstract.
      */
     public List<TypeSpec> findAllNonAbstractTypes() {
-        return getTypeSpecs().values().stream().filter(isNotAbstract()).collect(Collectors.toList());
+        return getTypeSpecs().values().stream().filter(isNotAbstract()).map(this::filterFunctions).collect(Collectors.toList());
     }
 
     public static Predicate<TypeSpec> isApp() {
@@ -147,7 +149,7 @@ public class XmEntitySpecService implements RefreshableConfiguration {
     }
 
     public Optional<TypeSpec> getTypeSpecByKey(String key) {
-        return Optional.ofNullable(getTypeSpecs().get(key));
+        return Optional.ofNullable(getTypeSpecs().get(key)).map(this::filterFunctions);
     }
 
     /**
@@ -314,26 +316,6 @@ public class XmEntitySpecService implements RefreshableConfiguration {
     }
 
     /**
-     * Filter returned list of function in accordance to configured role permissions
-     * @param typeSpec entity type spec
-     * @param rolePermissions
-     * @return
-     */
-    public TypeSpec filterTypeSpecByFunctionPermission(final TypeSpec typeSpec, final Set<String> rolePermissions) {
-        Set<String> lPermissions = nullSafe(rolePermissions);
-        if (lPermissions.isEmpty()) {
-            typeSpec.setFunctions(Lists.newArrayList());
-            return typeSpec;
-        }
-        List<FunctionSpec> filteredList = nullSafe(typeSpec.getFunctions())
-            .stream()
-            .filter((item) -> lPermissions.contains(item.getKey()))
-            .collect(Collectors.toList());
-        typeSpec.setFunctions(filteredList);
-        return typeSpec;
-    }
-
-    /**
      * Transforms all XmEntity Specification keys into the thin structure based
      * in maps and sets.
      *
@@ -459,6 +441,13 @@ public class XmEntitySpecService implements RefreshableConfiguration {
         type.setStates(CustomCollectionUtils.union(type.getStates(), parentType.getStates()));
         type.setTags(CustomCollectionUtils.union(type.getTags(), parentType.getTags()));
         return type;
+    }
+
+    private TypeSpec filterFunctions(TypeSpec spec) {
+        return dynamicPermissionCheckService.filterInnerListByPermission(spec,
+            spec::getFunctions,
+            spec::setFunctions,
+            FunctionSpec::getKey);
     }
 
 }

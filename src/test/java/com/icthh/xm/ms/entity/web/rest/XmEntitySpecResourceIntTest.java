@@ -10,7 +10,6 @@ import com.icthh.xm.ms.entity.EntityApp;
 import com.icthh.xm.ms.entity.config.LepConfiguration;
 import com.icthh.xm.ms.entity.config.SecurityBeanOverrideConfiguration;
 import com.icthh.xm.ms.entity.config.tenant.WebappTenantOverrideConfiguration;
-import com.icthh.xm.ms.entity.security.access.DynamicPermissionCheckService;
 import com.icthh.xm.ms.entity.service.XmEntityGeneratorService;
 import com.icthh.xm.ms.entity.service.XmEntitySpecService;
 import com.icthh.xm.ms.entity.service.impl.XmEntityServiceImpl;
@@ -66,9 +65,6 @@ public class XmEntitySpecResourceIntTest {
     private XmEntitySpecService xmEntitySpecService;
 
     @Autowired
-    private DynamicPermissionCheckService dynamicPermissionCheckService;
-
-    @Autowired
     private TenantContextHolder tenantContextHolder;
 
     @Mock
@@ -107,7 +103,7 @@ public class XmEntitySpecResourceIntTest {
             xmEntitySpecService, authContextHolder, objectMapper);
 
         XmEntitySpecResource xmEntitySpecResource = new XmEntitySpecResource(xmEntitySpecService,
-            xmEntityGeneratorService, dynamicPermissionCheckService);
+            xmEntityGeneratorService);
         this.restXmEntitySpecMockMvc = MockMvcBuilders.standaloneSetup(xmEntitySpecResource)
             .setControllerAdvice(exceptionTranslator).build();
     }

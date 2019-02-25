@@ -4,9 +4,7 @@ import static org.springframework.http.MediaType.TEXT_PLAIN_VALUE;
 
 import com.codahale.metrics.annotation.Timed;
 import com.icthh.xm.ms.entity.domain.XmEntity;
-import com.icthh.xm.ms.entity.domain.spec.FunctionSpec;
 import com.icthh.xm.ms.entity.domain.spec.TypeSpec;
-import com.icthh.xm.ms.entity.security.access.DynamicPermissionCheckService;
 import com.icthh.xm.ms.entity.service.XmEntityGeneratorService;
 import com.icthh.xm.ms.entity.service.XmEntitySpecService;
 import com.icthh.xm.ms.entity.web.rest.util.HeaderUtil;
@@ -46,7 +44,6 @@ public class XmEntitySpecResource {
 
     private final XmEntitySpecService xmEntitySpecService;
     private final XmEntityGeneratorService xmEntityGeneratorService;
-    private final DynamicPermissionCheckService dynamicPermissionCheckService;
 
     public enum Filter {
 
@@ -85,7 +82,6 @@ public class XmEntitySpecResource {
 
         return Optional.ofNullable(filter).orElse(Filter.ALL)
                        .getTypeSpec(xmEntitySpecService)
-                       .map(this::filterFunctions)
                        .collect(Collectors.toList());
     }
 
@@ -101,10 +97,7 @@ public class XmEntitySpecResource {
     @PostAuthorize("hasPermission({'returnObject': returnObject.body}, 'XMENTITY_SPEC.GET_LIST.ITEM')")
     public ResponseEntity<TypeSpec> getTypeSpec(@PathVariable String key) {
         log.debug("REST request to get TypeSpec : {}", key);
-
-        Optional<TypeSpec> spec = xmEntitySpecService.getTypeSpecByKey(key).map(this::filterFunctions);
-
-        return RespContentUtil.wrapOrNotFound(spec);
+        return RespContentUtil.wrapOrNotFound(xmEntitySpecService.getTypeSpecByKey(key));
     }
 
     /**
@@ -136,13 +129,6 @@ public class XmEntitySpecResource {
     public ResponseEntity<XmEntity> updateXmEntitySpec(@RequestBody String xmEntitySpec) {
         xmEntitySpecService.updateXmEntitySpec(xmEntitySpec);
         return ResponseEntity.ok().build();
-    }
-
-    private TypeSpec filterFunctions(TypeSpec spec) {
-        return dynamicPermissionCheckService.filterInnerListByPermission(spec,
-                                                                         spec::getFunctions,
-                                                                         spec::setFunctions,
-                                                                         FunctionSpec::getKey);
     }
 
 }

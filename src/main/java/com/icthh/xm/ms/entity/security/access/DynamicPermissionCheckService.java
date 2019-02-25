@@ -203,7 +203,8 @@ public class DynamicPermissionCheckService {
 
     // TODO should be in Commons.TenantConfigService as utility method
     private Optional<Object> getTenantConfigBooleanParameterValue(final String configSection, String parameter) {
-        return Optional.ofNullable(tenantConfigService.getConfig().get(configSection))
+        return Optional.ofNullable(tenantConfigService.getConfig())
+                       .map(config -> config.get(configSection))
                        .filter(it -> it instanceof Map)
                        .map(Map.class::cast)
                        .map(it -> it.get(parameter));
