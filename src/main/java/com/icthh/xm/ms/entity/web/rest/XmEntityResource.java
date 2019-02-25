@@ -4,9 +4,13 @@ import static com.icthh.xm.ms.entity.web.rest.XmRestApiConstants.XM_HEADER_CONTE
 import static org.apache.commons.collections.CollectionUtils.isEmpty;
 
 import com.codahale.metrics.annotation.Timed;
+import com.github.fge.jsonschema.core.report.ProcessingReport;
 import com.google.common.collect.Maps;
 import com.icthh.xm.commons.exceptions.BusinessException;
 import com.icthh.xm.commons.exceptions.ErrorConstants;
+import com.icthh.xm.commons.i18n.error.domain.vm.ErrorVM;
+import com.icthh.xm.commons.i18n.error.domain.vm.FieldErrorVM;
+import com.icthh.xm.commons.i18n.spring.service.LocalizationMessageService;
 import com.icthh.xm.ms.entity.config.Constants;
 import com.icthh.xm.ms.entity.domain.FunctionContext;
 import com.icthh.xm.ms.entity.domain.Link;
@@ -25,6 +29,7 @@ import com.icthh.xm.ms.entity.web.rest.util.HeaderUtil;
 import com.icthh.xm.ms.entity.web.rest.util.PaginationUtil;
 import com.icthh.xm.ms.entity.web.rest.util.RespContentUtil;
 import io.swagger.annotations.ApiParam;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Page;
@@ -36,7 +41,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PostAuthorize;
 import org.springframework.security.access.prepost.PostFilter;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.FieldError;
+import org.springframework.validation.ObjectError;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -46,6 +56,8 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -62,6 +74,7 @@ import javax.validation.Valid;
 /**
  * REST controller for managing XmEntity.
  */
+@Slf4j
 @RestController
 @RequestMapping("/api")
 public class XmEntityResource {
@@ -81,12 +94,15 @@ public class XmEntityResource {
 
     private final XmEntityResource xmEntityResource;
 
+
+
     public XmEntityResource(
         XmEntityService xmEntityService,
         ProfileService profileService,
         ProfileEventProducer profileEventProducer,
         FunctionService functionService,
         TenantService tenantService,
+
         @Lazy XmEntityResource xmEntityResource) {
         this.xmEntityService = xmEntityService;
         this.profileService = profileService;
@@ -94,6 +110,7 @@ public class XmEntityResource {
         this.functionService = functionService;
         this.tenantService = tenantService;
         this.xmEntityResource = xmEntityResource;
+
     }
 
     /**
@@ -108,6 +125,7 @@ public class XmEntityResource {
     @Timed
     @PreAuthorize("hasPermission({'xmEntity': #xmEntity}, 'XMENTITY.CREATE')")
     public ResponseEntity<XmEntity> createXmEntity(@Valid @RequestBody XmEntity xmEntity) throws URISyntaxException {
+
         if (xmEntity.getId() != null) {
             throw new BusinessException(ErrorConstants.ERR_BUSINESS_IDEXISTS,
                                         "A new XmEntity cannot already have an ID");
@@ -123,6 +141,22 @@ public class XmEntityResource {
             .headers(HeaderUtil.createEntityCreationAlert(ENTITY_NAME, String.valueOf(result.getId())))
             .body(result);
     }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ResponseBody
+    public ErrorVM processValidationError(MethodArgumentNotValidException ex) {
+        BindingResult result = ex.getBindingResult();
+        FieldErrorVM dto = new FieldErrorVM(ErrorConstants.ERR_VALIDATION, ErrorConstants.ERR_VALIDATION);
+        for (FieldError fieldError : result.getFieldErrors()) {
+            dto.add(fieldError.getObjectName(), fieldError.getField(), fieldError.getDefaultMessage());
+        }
+        for (ObjectError globalError : result.getGlobalErrors()) {
+            dto.add(globalError.getObjectName(), globalError.getObjectName(), globalError.getDefaultMessage());
+        }
+        return dto;
+    }
+
 
     /**
      * PUT /xm-entities : Updates an existing xmEntity.
