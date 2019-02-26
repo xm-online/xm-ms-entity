@@ -34,7 +34,6 @@ import java.time.Instant;
 import java.util.Optional;
 
 @Slf4j
-// FIXME this test triggers Spring boot context reloading and slow down test execution. Need investigate the reason.
 @WebMvcTest(controllers = LinkResource.class)
 @ContextConfiguration(classes = {LinkResource.class, ExceptionTranslator.class})
 public class XmEntityObjectIdResolverUnitTest extends AbstractWebMvcTest {
@@ -59,11 +58,15 @@ public class XmEntityObjectIdResolverUnitTest extends AbstractWebMvcTest {
     @Autowired
     private MappingJackson2HttpMessageConverter jacksonMessageConverter;
 
+    @Autowired
+    private ExceptionTranslator exceptionTranslator;
+
     private MockMvc mockMvc;
 
     @Before
     public void setup() {
         this.mockMvc = MockMvcBuilders.standaloneSetup(linkResource)
+                                      .setControllerAdvice(exceptionTranslator)
             .setMessageConverters(jacksonMessageConverter).build();
     }
 
