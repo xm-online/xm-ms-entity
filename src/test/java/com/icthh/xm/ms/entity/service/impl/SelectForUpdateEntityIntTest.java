@@ -103,10 +103,10 @@ public class SelectForUpdateEntityIntTest extends AbstractSpringBootTest {
                 assertEquals("Initial", first.getName());
                 first.setData(of("AAAAAAAAAA", "first"));
                 first.setName("First");
-                for (int i = 0; i < 10; i++) {
-                    log.info("Waiting .... {} sec", (i + 1) * 1000);
+                for (int i = 0; i < 3; i++) {
+                    log.info("Waiting .... {} milliseconds", (i + 1) * 500);
                     try {
-                        Thread.sleep(1000);
+                        Thread.sleep(500);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
@@ -115,7 +115,7 @@ public class SelectForUpdateEntityIntTest extends AbstractSpringBootTest {
             log.info("First: {}", entity1);
         });
 
-        Thread.sleep(1000);
+        Thread.sleep(500);
 
         executorService.submit(() -> {
             TenantContextUtils.setTenant(tenantContextHolder, "RESINTTEST");
@@ -132,7 +132,7 @@ public class SelectForUpdateEntityIntTest extends AbstractSpringBootTest {
             log.info("Second: {}", entity2);
         });
 
-        executorService.awaitTermination(12, TimeUnit.SECONDS);
+        executorService.awaitTermination(2500, TimeUnit.MILLISECONDS);
 
         XmEntity after = xmEntityService.findOne(IdOrKey.of(sourceEntity.getId()));
         assertEquals("second", after.getData().get("AAAAAAAAAA"));
