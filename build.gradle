@@ -27,7 +27,7 @@ plugins {
 }
 
 apply from: 'gradle/git.gradle'
-
+apply plugin: 'groovy'
 apply plugin: 'java'
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
@@ -305,6 +305,7 @@ dependencies {
     compile "org.apache.poi:poi-ooxml:${apache_poi_version}"
     compile "org.modelmapper:modelmapper:${modelmapper_version}"
     //compile "org.springframework.boot:spring-boot-devtools"
+    testCompile 'org.codehaus.groovy:groovy-all:2.4.8'
     // XM custom dependencies end
     // fix scala MethodNotFoundException
     zinc 'com.typesafe.zinc:zinc:0.3.9'

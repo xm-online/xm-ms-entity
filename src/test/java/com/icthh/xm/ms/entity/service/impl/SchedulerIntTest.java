@@ -65,6 +65,7 @@ public class SchedulerIntTest extends AbstractSpringBootTest {
     }
 
     @Test
+    @SneakyThrows
     public void testCallLepOnEvent() {
         initLeps();
         ScheduledEvent scheduledEvent = new ScheduledEvent();
