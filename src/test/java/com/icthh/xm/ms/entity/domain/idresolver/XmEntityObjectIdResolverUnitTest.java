@@ -1,7 +1,5 @@
 package com.icthh.xm.ms.entity.domain.idresolver;
 
-import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_AUTH_CONTEXT;
-import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_TENANT_CONTEXT;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -11,119 +9,66 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.icthh.xm.commons.i18n.error.web.ExceptionTranslator;
-import com.icthh.xm.commons.security.XmAuthenticationContext;
-import com.icthh.xm.commons.security.XmAuthenticationContextHolder;
-import com.icthh.xm.commons.tenant.TenantContextHolder;
-import com.icthh.xm.commons.tenant.TenantContextUtils;
-import com.icthh.xm.lep.api.LepManager;
-import com.icthh.xm.ms.entity.AbstractSpringBootTest;
+import com.icthh.xm.commons.i18n.spring.service.LocalizationMessageService;
+import com.icthh.xm.ms.entity.AbstractWebMvcTest;
 import com.icthh.xm.ms.entity.domain.Link;
 import com.icthh.xm.ms.entity.domain.XmEntity;
-import com.icthh.xm.ms.entity.repository.LinkRepository;
-import com.icthh.xm.ms.entity.repository.XmEntityRepositoryInternal;
-import com.icthh.xm.ms.entity.service.XmEntityService;
+import com.icthh.xm.ms.entity.repository.CalendarRepository;
+import com.icthh.xm.ms.entity.repository.XmEntityRepository;
+import com.icthh.xm.ms.entity.service.LinkService;
 import com.icthh.xm.ms.entity.web.rest.LinkResource;
 import com.icthh.xm.ms.entity.web.rest.TestUtil;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
-import org.springframework.security.test.context.support.WithMockUser;
-import org.springframework.test.context.transaction.BeforeTransaction;
+import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.validation.Validator;
 
 import java.time.Instant;
 import java.util.Optional;
 
 @Slf4j
 // FIXME this test triggers Spring boot context reloading and slow down test execution. Need investigate the reason.
-public class XmEntityObjectIdResolverUnitTest extends AbstractSpringBootTest {
+@WebMvcTest(controllers = LinkResource.class)
+@ContextConfiguration(classes = {LinkResource.class, ExceptionTranslator.class})
+public class XmEntityObjectIdResolverUnitTest extends AbstractWebMvcTest {
 
     private static final String DEFAULT_TYPE_KEY = "ACCOUNT.ADMIN";
+
+    @MockBean
+    private LocalizationMessageService localizationMessageService;
+
+    @MockBean
+    private XmEntityRepository entityRepository;
+
+    @MockBean
+    private LinkService linkService;
+
+    @MockBean
+    private CalendarRepository calendarRepository;
 
     @Autowired
     private LinkResource linkResource;
 
     @Autowired
-    private XmEntityService xmEntityService;
-
-    @Autowired
     private MappingJackson2HttpMessageConverter jacksonMessageConverter;
-
-    @Autowired
-    private PageableHandlerMethodArgumentResolver pageableArgumentResolver;
-
-    @Autowired
-    private ExceptionTranslator exceptionTranslator;
-
-    @Autowired
-    private LepManager lepManager;
-
-    @Autowired
-    private Validator validator;
-
-    @Autowired
-    private TenantContextHolder tenantContextHolder;
-
-    @Mock
-    private XmAuthenticationContextHolder authContextHolder;
-
-    @Mock
-    private XmAuthenticationContext context;
-
-    @MockBean
-    private XmEntityRepositoryInternal entityRepository;
-
-    @MockBean
-    private LinkRepository linkRepository;
 
     private MockMvc mockMvc;
 
-    @BeforeTransaction
-    public void beforeTransaction() {
-        TenantContextUtils.setTenant(tenantContextHolder, "RESINTTEST");
-    }
-
     @Before
     public void setup() {
-        MockitoAnnotations.initMocks(this);
-
-        when(authContextHolder.getContext()).thenReturn(context);
-        when(context.getUserKey()).thenReturn(Optional.of("userKey"));
-
-        lepManager.beginThreadContext(ctx -> {
-            ctx.setValue(THREAD_CONTEXT_KEY_TENANT_CONTEXT, tenantContextHolder.getContext());
-            ctx.setValue(THREAD_CONTEXT_KEY_AUTH_CONTEXT, authContextHolder.getContext());
-        });
-
         this.mockMvc = MockMvcBuilders.standaloneSetup(linkResource)
-            .setCustomArgumentResolvers(pageableArgumentResolver)
-            .setControllerAdvice(exceptionTranslator)
-            .setValidator(validator)
             .setMessageConverters(jacksonMessageConverter).build();
     }
 
-    @After
-    @Override
-    public void finalize() {
-        lepManager.endThreadContext();
-        tenantContextHolder.getPrivilegedContext().destroyCurrentContext();
-    }
-
     @SneakyThrows
-    @WithMockUser(authorities = "SUPER-ADMIN")
     @Test
-    @Transactional
     public void shouldCreatePrototypeEveryTime() {
         XmEntity source = createRef(1L);
         XmEntity target = createRef(2L);
@@ -142,7 +87,7 @@ public class XmEntityObjectIdResolverUnitTest extends AbstractSpringBootTest {
             .source(source)
             .target(target);
         savedLink.setId(1L);
-        when(linkRepository.save(any)).thenReturn(savedLink);
+        when(linkService.save(any)).thenReturn(savedLink);
 
         for (int i = 0; i < 2; i++) {
             mockMvc.perform(post("/api/links")
