@@ -10,17 +10,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.icthh.xm.commons.i18n.error.web.ExceptionTranslator;
 import com.icthh.xm.commons.i18n.spring.service.LocalizationMessageService;
-import com.icthh.xm.ms.entity.config.JacksonConfiguration;
-import com.icthh.xm.ms.entity.domain.Configuration;
 import com.icthh.xm.ms.entity.domain.Link;
 import com.icthh.xm.ms.entity.domain.XmEntity;
+import com.icthh.xm.ms.entity.repository.CalendarRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
-import com.icthh.xm.ms.entity.repository.XmEntityRepositoryInternal;
 import com.icthh.xm.ms.entity.service.LinkService;
 import com.icthh.xm.ms.entity.web.rest.LinkResource;
 import com.icthh.xm.ms.entity.web.rest.TestUtil;
-import java.time.Instant;
-import java.util.Optional;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
@@ -30,25 +26,21 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
-import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
-import org.springframework.test.context.support.AnnotationConfigContextLoader;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-import org.springframework.web.context.WebApplicationContext;
+
+import java.time.Instant;
+import java.util.Optional;
 
 @Slf4j
 @RunWith(SpringRunner.class)
 @WebMvcTest(controllers = LinkResource.class)
-@ContextConfiguration(classes = {JacksonConfiguration.class, LinkResource.class, ExceptionTranslator.class,
-                                 MappingJackson2HttpMessageConverter.class})
+@ContextConfiguration(classes = {LinkResource.class, ExceptionTranslator.class})
 public class XmEntityObjectIdResolverUnitTest {
 
     private static final String DEFAULT_TYPE_KEY = "ACCOUNT.ADMIN";
-
-    @Autowired
-    private WebApplicationContext wac;
 
     @MockBean
     private LocalizationMessageService localizationMessageService;
@@ -59,16 +51,24 @@ public class XmEntityObjectIdResolverUnitTest {
     @MockBean
     private LinkService linkService;
 
+    @MockBean
+    private CalendarRepository calendarRepository;
+
+    @Autowired
+    private LinkResource linkResource;
+
+    @Autowired
+    private MappingJackson2HttpMessageConverter jacksonMessageConverter;
+
     private MockMvc mockMvc;
 
     @Before
     public void setup() {
-        // Setup MockMVC to use our Spring Configuration
-        this.mockMvc = MockMvcBuilders.webAppContextSetup(this.wac).build();
+        this.mockMvc = MockMvcBuilders.standaloneSetup(linkResource)
+                                      .setMessageConverters(jacksonMessageConverter).build();
     }
 
     @SneakyThrows
-    @WithMockUser(authorities = "SUPER-ADMIN")
     @Test
     public void shouldCreatePrototypeEveryTime() {
         XmEntity source = createRef(1L);
