@@ -1,4 +1,4 @@
-package com.icthh.xm.ms.entity.web.rest;
+package com.icthh.xm.ms.entity.service;
 
 import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_AUTH_CONTEXT;
 import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_TENANT_CONTEXT;
@@ -20,19 +20,22 @@ import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
 import com.icthh.xm.lep.api.LepManager;
 import com.icthh.xm.ms.entity.AbstractSpringBootTest;
+import com.icthh.xm.ms.entity.config.MappingConfiguration;
 import com.icthh.xm.ms.entity.domain.Attachment;
 import com.icthh.xm.ms.entity.domain.Location;
 import com.icthh.xm.ms.entity.domain.Tag;
 import com.icthh.xm.ms.entity.domain.XmEntity;
+import com.icthh.xm.ms.entity.repository.XmEntityRepositoryInternal;
 import com.icthh.xm.ms.entity.repository.search.XmEntitySearchRepository;
-import com.icthh.xm.ms.entity.service.ElasticsearchIndexService;
-import com.icthh.xm.ms.entity.service.XmEntityService;
+import com.icthh.xm.ms.entity.web.rest.ElasticsearchIndexResource;
+import com.icthh.xm.ms.entity.web.rest.XmEntityResource;
 import lombok.SneakyThrows;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
 import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
@@ -50,7 +53,6 @@ import java.util.concurrent.Executor;
  * @see ElasticsearchIndexResource
  */
 @WithMockUser(authorities = {"SUPER-ADMIN"})
-// FIXME this test triggers Spring boot context reloading and slow down test execution. Need investigate the reason.
 public class ElasticsearchIndexResourceIntTest extends AbstractSpringBootTest {
 
     private static final String DEFAULT_TYPE_KEY = "ACCOUNT.ADMIN";
@@ -59,12 +61,6 @@ public class ElasticsearchIndexResourceIntTest extends AbstractSpringBootTest {
 
     @Autowired
     private XmEntityService xmEntityService;
-
-    @Autowired
-    private ElasticsearchIndexResource elasticsearchIndexResource;
-
-    @Autowired
-    private ElasticsearchIndexService elasticsearchIndexService;
 
     @Autowired
     private XmEntityResource xmEntityResource;
@@ -90,7 +86,19 @@ public class ElasticsearchIndexResourceIntTest extends AbstractSpringBootTest {
     @Autowired
     private XmEntitySearchRepository searchRepository;
 
-    @MockBean(name = "taskExecutor")
+    @Autowired
+    private XmEntityRepositoryInternal xmEntityRepositoryInternal;
+
+    @Autowired
+    private XmEntitySearchRepository xmEntitySearchRepository;
+
+    @Autowired
+    private ElasticsearchTemplate elasticsearchTemplate;
+
+    @Autowired
+    private MappingConfiguration mappingConfiguration;
+
+    @Mock
     private Executor executor;
 
     @BeforeTransaction
@@ -105,12 +113,26 @@ public class ElasticsearchIndexResourceIntTest extends AbstractSpringBootTest {
             ctx.setValue(THREAD_CONTEXT_KEY_AUTH_CONTEXT, authenticationContextHolder.getContext());
         });
 
+        ElasticsearchIndexService elasticsearchIndexService = new ElasticsearchIndexService(xmEntityRepositoryInternal,
+                                                                                            xmEntitySearchRepository,
+                                                                                            elasticsearchTemplate,
+                                                                                            tenantContextHolder,
+                                                                                            mappingConfiguration,
+                                                                                            executor);
+
+        elasticsearchIndexService.setSelfReference(elasticsearchIndexService);
+
+        ElasticsearchIndexResource elasticsearchIndexResource =
+            new ElasticsearchIndexResource(elasticsearchIndexService);
+
         this.mockMvc = MockMvcBuilders.standaloneSetup(elasticsearchIndexResource, xmEntityResource)
-            .setCustomArgumentResolvers(pageableArgumentResolver)
-            .setControllerAdvice(exceptionTranslator)
-            .setMessageConverters(jacksonMessageConverter).build();
+                                      .setCustomArgumentResolvers(pageableArgumentResolver)
+                                      .setControllerAdvice(exceptionTranslator)
+                                      .setMessageConverters(jacksonMessageConverter).build();
+
+        // make executor run task immediately
         doAnswer(a -> {
-            ((Runnable)a.getArguments()[0]).run();
+            ((Runnable) a.getArguments()[0]).run();
             return null;
         }).when(executor).execute(any(Runnable.class));
     }
