@@ -81,6 +81,7 @@ public class SchedulerIntTest {
     }
 
     @Test
+    @SneakyThrows
     public void testCallLepOnEvent() {
         initLeps();
         ScheduledEvent scheduledEvent = new ScheduledEvent();
