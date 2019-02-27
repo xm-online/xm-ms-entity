@@ -200,6 +200,9 @@ application:
             access-key-secret:
         s3:
             bucket:
+    kafkaHealthCheck:
+        enabled: true
+        connectionTimeout: 1000
 # ===================================================================
 # Timeline specific properties
 #

@@ -2,6 +2,7 @@ package com.icthh.xm.ms.entity.config;
 
 import com.icthh.xm.commons.lep.TenantScriptStorage;
 import java.util.List;
+import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -50,6 +51,8 @@ public class ApplicationProperties {
     private String webappName;
     private String dbSchemaSuffix;
 
+    private final KafkaHealthCheck kafkaHealthCheck = new KafkaHealthCheck();
+
     @Getter
     @Setter
     public static class Amazon {
@@ -97,5 +100,11 @@ public class ApplicationProperties {
     public static class Lep {
         private TenantScriptStorage tenantScriptStorage;
         private String lepResourcePathPattern;
+    }
+
+    @Data
+    public static class KafkaHealthCheck {
+        private boolean enabled;
+        private int connectionTimeout;
     }
 }
