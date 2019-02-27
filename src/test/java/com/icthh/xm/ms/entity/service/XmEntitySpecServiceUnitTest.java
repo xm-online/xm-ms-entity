@@ -31,7 +31,16 @@ import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantKey;
 import com.icthh.xm.ms.entity.config.ApplicationProperties;
 import com.icthh.xm.ms.entity.config.tenant.LocalXmEntitySpecService;
-import com.icthh.xm.ms.entity.domain.spec.*;
+import com.icthh.xm.ms.entity.domain.spec.AttachmentSpec;
+import com.icthh.xm.ms.entity.domain.spec.FunctionSpec;
+import com.icthh.xm.ms.entity.domain.spec.LinkSpec;
+import com.icthh.xm.ms.entity.domain.spec.TypeSpec;
+import com.icthh.xm.ms.entity.domain.spec.LocationSpec;
+import com.icthh.xm.ms.entity.domain.spec.RatingSpec;
+import com.icthh.xm.ms.entity.domain.spec.StateSpec;
+import com.icthh.xm.ms.entity.domain.spec.NextSpec;
+import com.icthh.xm.ms.entity.domain.spec.TagSpec;
+import com.icthh.xm.ms.entity.domain.spec.UniqueFieldSpec;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -40,7 +49,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import com.icthh.xm.ms.entity.security.access.DynamicPermissionCheckService;
 import lombok.SneakyThrows;
@@ -421,21 +429,6 @@ public class XmEntitySpecServiceUnitTest {
         verify(commonConfigRepository).getConfig(isNull(), eq(asList(privilegesPath, permissionPath)));
         verify(commonConfigRepository).updateConfigFullPath(refEq(new Configuration(privilegesPath, privileges)), isNull());
         verify(commonConfigRepository).updateConfigFullPath(refEq(new Configuration(permissionPath, expectedPermissions)), eq(sha1Hex(permissions)));
-    }
-
-    private List<String> getFunctions(TypeSpec spec) {
-        return spec.getFunctions().stream().map(FunctionSpec::getKey).collect(Collectors.toList());
-    }
-
-    private TypeSpec newTypeSpec(String key, String ... functions) {
-        TypeSpec spec = new TypeSpec();
-        spec.setKey(key);
-        spec.setFunctions(newFunctionSpec(functions));
-        return spec;
-    }
-
-    private List<FunctionSpec> newFunctionSpec(String ... keys) {
-        return Stream.of(keys).map(this::newFunction).collect(Collectors.toList());
     }
 
     private FunctionSpec newFunction(String key) {
