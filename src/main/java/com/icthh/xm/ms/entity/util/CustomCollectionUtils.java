@@ -1,14 +1,9 @@
 package com.icthh.xm.ms.entity.util;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import lombok.experimental.UtilityClass;
-import org.apache.commons.collections4.MapUtils;
-import org.apache.commons.lang3.StringUtils;
-
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 @UtilityClass
 public final class CustomCollectionUtils {
@@ -27,10 +22,10 @@ public final class CustomCollectionUtils {
 
     /**
      * Return immutable empty map, if map is empty
-     * @param map
-     * @param <K>
-     * @param <V>
-     * @return
+     * @param map map
+     * @param <K> key
+     * @param <V> value
+     * @return original map or EmptyMap
      */
     public static <K, V> Map<K, V> nullSafe(Map<K, V> map) {
         return map == null ? Collections.emptyMap() : map;
@@ -39,12 +34,30 @@ public final class CustomCollectionUtils {
     /**
      * Returns new mutable HashMap instance if input is null
      * @param map input map
-     * @param <K>
-     * @param <V>
-     * @return
+     * @param <K> key
+     * @param <V> value
+     * @return original map or new HashMap (mutable)
      */
     public static <K, V> Map<K, V> emptyIfNull (Map<K, V> map) {
         return map == null ? Maps.newHashMap() : map;
+    }
+
+    /**
+     * Union for nullable lists.
+     *
+     * @param list1 first list
+     * @param list2 second list
+     * @return concatenated list
+     */
+    public static <E> List<E> union(final List<E> list1, final List<E> list2) {
+        final List<E> result = Lists.newArrayList();
+        if (list1 != null) {
+            result.addAll(list1);
+        }
+        if (list2 != null) {
+            result.addAll(list2);
+        }
+        return result;
     }
 
 }

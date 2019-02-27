@@ -1,43 +1,39 @@
 package com.icthh.xm.ms.entity.service;
 
-import static com.github.fge.jackson.NodeType.OBJECT;
-import static com.github.fge.jackson.NodeType.getNodeType;
-import static java.util.Collections.emptyList;
-import static java.util.Optional.ofNullable;
-import static org.apache.commons.lang.StringUtils.isEmpty;
-import static org.apache.commons.lang3.StringUtils.isBlank;
-import static org.springframework.util.CollectionUtils.isEmpty;
-
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.github.fge.jackson.JsonLoader;
-import com.github.fge.jackson.NodeType;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.icthh.xm.commons.config.client.api.RefreshableConfiguration;
 import com.icthh.xm.commons.config.client.repository.TenantConfigRepository;
 import com.icthh.xm.commons.logging.aop.IgnoreLogginAspect;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
 import com.icthh.xm.ms.entity.config.ApplicationProperties;
-import com.icthh.xm.ms.entity.domain.UniqueField;
-import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.domain.spec.*;
+import com.icthh.xm.ms.entity.security.access.DynamicPermissionCheckService;
+import com.icthh.xm.ms.entity.util.CustomCollectionUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.util.AntPathMatcher;
 
-import javax.annotation.Nullable;
-import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
+
+import static com.github.fge.jackson.NodeType.OBJECT;
+import static com.github.fge.jackson.NodeType.getNodeType;
+import static com.icthh.xm.ms.entity.util.CustomCollectionUtils.nullSafe;
+import static java.util.Collections.emptyList;
+import static org.springframework.util.CollectionUtils.isEmpty;
 
 /**
  * XM Entity Specification service, that provides extra possibilities to
@@ -49,28 +45,84 @@ import java.util.stream.Stream;
 public class XmEntitySpecService implements RefreshableConfiguration {
 
     private static final String TYPE_SEPARATOR_REGEXP = "\\.";
-
     private static final String TYPE_SEPARATOR = ".";
-
     private static final String TENANT_NAME = "tenantName";
-
     private final AntPathMatcher matcher = new AntPathMatcher();
 
     private ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
-
     private ConcurrentHashMap<String, Map<String, TypeSpec>> types = new ConcurrentHashMap<>();
 
     private final TenantConfigRepository tenantConfigRepository;
-
     private final ApplicationProperties applicationProperties;
-
     private final TenantContextHolder tenantContextHolder;
-
     private final EntityCustomPrivilegeService entityCustomPrivilegeService;
+    private final DynamicPermissionCheckService dynamicPermissionCheckService;
+
+    /**
+     * Search of all entity Type specifications.
+     * @return list of entity Types specifications
+     */
+    public List<TypeSpec> findAllTypes() {
+        return getTypeSpecs().values().stream().map(this::filterFunctions).collect(Collectors.toList());
+    }
+
+    /**
+     * Search of all entity Type specifications that marked as application.
+     * @return list of entity Types specifications that defines as application.
+     */
+    public List<TypeSpec> findAllAppTypes() {
+        return getTypeSpecs().values().stream().filter(isApp()).map(this::filterFunctions).collect(Collectors.toList());
+    }
+
+    /**
+     * Search of all not an abstract entity Type specifications.
+     * @return list of entity Types specifications that not an abstract.
+     */
+    public List<TypeSpec> findAllNonAbstractTypes() {
+        return getTypeSpecs().values().stream().filter(isNotAbstract()).map(this::filterFunctions).collect(Collectors.toList());
+    }
+
+    public static Predicate<TypeSpec> isApp() {
+        return TypeSpec::getIsApp;
+    }
+
+    public static Predicate<TypeSpec> isNotAbstract() {
+        return t -> !t.getIsAbstract();
+    }
 
 
-    private String getTenantKeyValue() {
-        return TenantContextUtils.getRequiredTenantKeyValue(tenantContextHolder);
+    @Override
+    @SneakyThrows
+    @IgnoreLogginAspect
+    public void onRefresh(String updatedKey, String config) {
+        String specificationPathPattern = applicationProperties.getSpecificationPathPattern();
+        try {
+            String tenant = matcher.extractUriTemplateVariables(specificationPathPattern, updatedKey).get(TENANT_NAME);
+            if (StringUtils.isBlank(config)) {
+                types.remove(tenant);
+                return;
+            }
+            XmEntitySpec spec = mapper.readValue(config, XmEntitySpec.class);
+            Map<String, TypeSpec> value = toTypeSpecsMap(spec);
+            types.put(tenant, value);
+            entityCustomPrivilegeService.updateApplicationPermission(value, tenant);
+            log.info("Specification was for tenant {} updated", tenant);
+        } catch (Exception e) {
+            log.error("Error read xm specification from path " + updatedKey, e);
+        }
+    }
+
+    @Override
+    public boolean isListeningConfiguration(String updatedKey) {
+        String specificationPathPattern = applicationProperties.getSpecificationPathPattern();
+        return matcher.match(specificationPathPattern, updatedKey);
+    }
+
+    @Override
+    public void onInit(String key, String config) {
+        if (isListeningConfiguration(key)) {
+            onRefresh(key, config);
+        }
     }
 
     @SneakyThrows
@@ -83,93 +135,21 @@ public class XmEntitySpecService implements RefreshableConfiguration {
         tenantConfigRepository.updateConfig(getTenantKeyValue(), "/" + configName, xmEntitySpecString);
     }
 
+    /**
+     * Assumption value of types.get(tenantKey) could be null
+     * @return map with nullSafe check
+     */
     protected Map<String, TypeSpec> getTypeSpecs() {
         String tenantKeyValue = getTenantKeyValue();
         if (!types.containsKey(tenantKeyValue)) {
+            log.error("Tenant configuration {} not found", tenantKeyValue);
             throw new IllegalArgumentException("Tenant configuration not found");
         }
-        return types.get(tenantKeyValue);
+        return nullSafe(types.get(tenantKeyValue));
     }
 
-    private Map<String, TypeSpec> toTypeSpecsMap(XmEntitySpec xmEntitySpec) {
-        List<TypeSpec> typeSpecs = xmEntitySpec.getTypes();
-        if (isEmpty(typeSpecs)) {
-            return Collections.emptyMap();
-        } else {
-            // Convert List<TypeSpec> to Map<key, TypeSpec>
-            Map<String, TypeSpec> result = typeSpecs.stream()
-                .collect(Collectors.toMap(TypeSpec::getKey, Function.identity(),
-                    (u, v) -> {
-                        throw new IllegalStateException(String.format("Duplicate key %s", u));
-                    }, LinkedHashMap::new));
-
-            // add inheritance
-            inheritance(result);
-            processUniqueFields(result);
-
-            return result;
-        }
-    }
-
-    /**
-     * XM Entity Type specifications support inheritance based on key hierarchy
-     * with data extension.
-     */
-    private void inheritance(Map<String, TypeSpec> types) {
-        List<String> keys = types.keySet().stream()
-            .sorted(Comparator.comparingInt(k -> k.split(TYPE_SEPARATOR_REGEXP).length))
-            .collect(Collectors.toList());
-        for (String key : keys) {
-            int level = key.split(TYPE_SEPARATOR_REGEXP).length;
-            if (level > 1) {
-                TypeSpec type = types.get(key);
-                TypeSpec parentType = types.get(StringUtils.substringBeforeLast(key, TYPE_SEPARATOR));
-                if (parentType != null) {
-                    types.put(key, extend(type, parentType));
-                }
-            }
-        }
-    }
-
-    /**
-     * Xm Entity Type specifications data extention from parent Type.
-     *
-     * @param type       entity Type specification for extention
-     * @param parentType parent entity Type specification for cloning
-     * @return entity Type specification that extended from parent Type
-     */
-    private static TypeSpec extend(TypeSpec type, TypeSpec parentType) {
-        type.setIcon(type.getIcon() != null ? type.getIcon() : parentType.getIcon());
-        type.setDataSpec(type.getDataSpec() != null ? type.getDataSpec() : parentType.getDataSpec());
-        type.setDataForm(type.getDataForm() != null ? type.getDataForm() : parentType.getDataForm());
-        type.setAccess(XmEntitySpecService.union(type.getAccess(), parentType.getAccess()));
-        type.setAttachments(XmEntitySpecService.union(type.getAttachments(), parentType.getAttachments()));
-        type.setCalendars(XmEntitySpecService.union(type.getCalendars(), parentType.getCalendars()));
-        type.setFunctions(XmEntitySpecService.union(type.getFunctions(), parentType.getFunctions()));
-        type.setLinks(XmEntitySpecService.union(type.getLinks(), parentType.getLinks()));
-        type.setLocations(XmEntitySpecService.union(type.getLocations(), parentType.getLocations()));
-        type.setRatings(XmEntitySpecService.union(type.getRatings(), parentType.getRatings()));
-        type.setStates(XmEntitySpecService.union(type.getStates(), parentType.getStates()));
-        type.setTags(XmEntitySpecService.union(type.getTags(), parentType.getTags()));
-        return type;
-    }
-
-    /**
-     * Union for nullable lists.
-     *
-     * @param list1 first list
-     * @param list2 second list
-     * @return concatenated list
-     */
-    private static <E> List<E> union(final List<E> list1, final List<E> list2) {
-        final List<E> result = new ArrayList<>();
-        if (list1 != null) {
-            result.addAll(list1);
-        }
-        if (list2 != null) {
-            result.addAll(list2);
-        }
-        return result;
+    public Optional<TypeSpec> getTypeSpecByKey(String key) {
+        return Optional.ofNullable(getTypeSpecs().get(key)).map(this::filterFunctions);
     }
 
     /**
@@ -177,38 +157,14 @@ public class XmEntitySpecService implements RefreshableConfiguration {
      *
      * @param key entity Type specification key
      * @return instance of entity Type specification if present
+     * @Deprecation method could return null, please use getTypeSpecByKey instead. findTypeByKey will be refactored
      */
     @IgnoreLogginAspect
+    @Deprecated
     public TypeSpec findTypeByKey(String key) {
         return getTypeSpecs().get(key);
     }
 
-    /**
-     * Search of all entity Type specifications.
-     *
-     * @return list of entity Types specifications
-     */
-    public List<TypeSpec> findAllTypes() {
-        return new ArrayList<>(getTypeSpecs().values());
-    }
-
-    /**
-     * Search of all entity Type specifications that marked as application.
-     *
-     * @return list of entity Types specifications that defines as application.
-     */
-    public List<TypeSpec> findAllAppTypes() {
-        return findAllTypes().stream().filter(TypeSpec::getIsApp).collect(Collectors.toList());
-    }
-
-    /**
-     * Search of all not an abstract entity Type specifications.
-     *
-     * @return list of entity Types specifications that not an abstract.
-     */
-    public List<TypeSpec> findAllNonAbstractTypes() {
-        return findAllTypes().stream().filter(t -> !t.getIsAbstract()).collect(Collectors.toList());
-    }
 
     /**
      * Search of real Type specifications based on Type key prefix. For example:
@@ -220,14 +176,11 @@ public class XmEntitySpecService implements RefreshableConfiguration {
      * @return list of entity Types specifications
      */
     public List<TypeSpec> findNonAbstractTypesByPrefix(String prefix) {
-        List<TypeSpec> allNonAbstractTypes = findAllNonAbstractTypes();
-        if (isEmpty(prefix)) {
-            return allNonAbstractTypes;
-        } else {
-            return allNonAbstractTypes.stream().filter(bySpecTypesPrefix(prefix)).collect(Collectors.toList());
+        if (StringUtils.isEmpty(prefix)) {
+            return findAllNonAbstractTypes();
         }
+        return findAllNonAbstractTypes().stream().filter(bySpecTypesPrefix(prefix)).collect(Collectors.toList());
     }
-
 
     private Predicate<TypeSpec> bySpecTypesPrefix(String prefix) {
         return t -> t.getKey().equals(prefix) || t.getKey().startsWith(prefix + TYPE_SEPARATOR);
@@ -290,14 +243,6 @@ public class XmEntitySpecService implements RefreshableConfiguration {
         return getTypeSpecs().get(key).getStates().stream().filter(s -> s.getKey().equals(stateKey)).findFirst();
     }
 
-    private <T> Iterable<T> nullSafe(Iterable<T> itr) {
-        return itr == null ? emptyList() : itr;
-    }
-
-    private <T> Stream<T> streamOf(List<T> list) {
-        return list == null ? Stream.empty() : list.stream();
-    }
-
     @IgnoreLogginAspect
     public Optional<FunctionSpec> findFunction(String functionKey) {
         for (TypeSpec ts : getTypeSpecs().values()) {
@@ -312,12 +257,13 @@ public class XmEntitySpecService implements RefreshableConfiguration {
 
     @IgnoreLogginAspect
     public Optional<FunctionSpec> findFunction(String typeKey, String functionKey) {
-        TypeSpec typeSpec = getTypeSpecs().get(typeKey);
-        if (typeSpec == null) {
-            return Optional.empty();
-        }
-        Stream<FunctionSpec> functionSpecStream = streamOf(typeSpec.getFunctions());
-        return functionSpecStream.filter(fs -> fs.getKey().equals(functionKey)).findFirst();
+        Predicate<FunctionSpec> keysEquals = fs -> StringUtils.equals(fs.getKey(), functionKey);
+
+        List<FunctionSpec> functionSpecs = getTypeSpecByKey(typeKey)
+            .map(TypeSpec::getFunctions)
+            .orElse(emptyList());
+
+        return functionSpecs.stream().filter(keysEquals).findFirst();
     }
 
     /**
@@ -377,9 +323,9 @@ public class XmEntitySpecService implements RefreshableConfiguration {
      */
     @IgnoreLogginAspect
     public Map<String, Map<String, Set<String>>> getAllKeys() {
-        Map<String, Map<String, Set<String>>> result = new HashMap<>();
+        Map<String, Map<String, Set<String>>> result = Maps.newHashMap();
         for (TypeSpec typeSpec : findAllTypes()) {
-            Map<String, Set<String>> subKeys = new HashMap<>();
+            Map<String, Set<String>> subKeys = Maps.newHashMap();
             getKeys(subKeys, AttachmentSpec.class, typeSpec.getAttachments(), AttachmentSpec::getKey);
             getKeys(subKeys, CalendarSpec.class, typeSpec.getCalendars(), CalendarSpec::getKey);
             getKeys(subKeys, LinkSpec.class, typeSpec.getLinks(), LinkSpec::getKey);
@@ -402,12 +348,12 @@ public class XmEntitySpecService implements RefreshableConfiguration {
     @SneakyThrows
     private void processUniqueFields(Map<String, TypeSpec> types) {
         for (TypeSpec typeSpec: types.values()) {
-            if (isBlank(typeSpec.getDataSpec())) {
+            if (StringUtils.isBlank(typeSpec.getDataSpec())) {
                 continue;
             }
 
             JsonNode node = JsonLoader.fromString(typeSpec.getDataSpec());
-            Set<UniqueFieldSpec> uniqueFields = new HashSet<>();
+            Set<UniqueFieldSpec> uniqueFields = Sets.newHashSet();
             processNode(node, "$", uniqueFields);
             typeSpec.setUniqueFields(uniqueFields);
         }
@@ -430,48 +376,78 @@ public class XmEntitySpecService implements RefreshableConfiguration {
         return getNodeType(schemaNode).equals(OBJECT) && schemaNode.has("properties");
     }
 
-    @Override
-    @SneakyThrows
-    @IgnoreLogginAspect
-    public void onRefresh(String updatedKey, String config) {
-        String specificationPathPattern = applicationProperties.getSpecificationPathPattern();
-        try {
-            String tenant = matcher.extractUriTemplateVariables(specificationPathPattern, updatedKey).get(TENANT_NAME);
-            if (org.apache.commons.lang3.StringUtils.isBlank(config)) {
-                types.remove(tenant);
-                return;
+    private String getTenantKeyValue() {
+        return TenantContextUtils.getRequiredTenantKeyValue(tenantContextHolder);
+    }
+
+    private Map<String, TypeSpec> toTypeSpecsMap(XmEntitySpec xmEntitySpec) {
+        List<TypeSpec> typeSpecs = xmEntitySpec.getTypes();
+        if (isEmpty(typeSpecs)) {
+            return Collections.emptyMap();
+        } else {
+            // Convert List<TypeSpec> to Map<key, TypeSpec>
+            Map<String, TypeSpec> result = typeSpecs.stream()
+                .collect(Collectors.toMap(TypeSpec::getKey, Function.identity(),
+                    (u, v) -> {
+                        throw new IllegalStateException(String.format("Duplicate key %s", u));
+                    }, LinkedHashMap::new));
+
+            // add inheritance
+            inheritance(result);
+            processUniqueFields(result);
+
+            return result;
+        }
+    }
+
+    /**
+     * XM Entity Type specifications support inheritance based on key hierarchy
+     * with data extension.
+     */
+    private void inheritance(Map<String, TypeSpec> types) {
+        List<String> keys = types.keySet().stream()
+            .sorted(Comparator.comparingInt(k -> k.split(TYPE_SEPARATOR_REGEXP).length))
+            .collect(Collectors.toList());
+        for (String key : keys) {
+            int level = key.split(TYPE_SEPARATOR_REGEXP).length;
+            if (level > 1) {
+                TypeSpec type = types.get(key);
+                TypeSpec parentType = types.get(StringUtils.substringBeforeLast(key, TYPE_SEPARATOR));
+                if (parentType != null) {
+                    types.put(key, extend(type, parentType));
+                }
             }
-            XmEntitySpec spec = mapper.readValue(config, XmEntitySpec.class);
-            Map<String, TypeSpec> value = toTypeSpecsMap(spec);
-            types.put(tenant, value);
-            entityCustomPrivilegeService.updateApplicationPermission(value, tenant);
-            log.info("Specification was for tenant {} updated", tenant);
-        } catch (Exception e) {
-            log.error("Error read xm specification from path " + updatedKey, e);
         }
     }
 
-    @Override
-    public boolean isListeningConfiguration(String updatedKey) {
-        String specificationPathPattern = applicationProperties.getSpecificationPathPattern();
-        return matcher.match(specificationPathPattern, updatedKey);
+    /**
+     * Xm Entity Type specifications data extention from parent Type.
+     *
+     * @param type       entity Type specification for extention
+     * @param parentType parent entity Type specification for cloning
+     * @return entity Type specification that extended from parent Type
+     */
+    private static TypeSpec extend(TypeSpec type, TypeSpec parentType) {
+        type.setIcon(type.getIcon() != null ? type.getIcon() : parentType.getIcon());
+        type.setDataSpec(type.getDataSpec() != null ? type.getDataSpec() : parentType.getDataSpec());
+        type.setDataForm(type.getDataForm() != null ? type.getDataForm() : parentType.getDataForm());
+        type.setAccess(CustomCollectionUtils.union(type.getAccess(), parentType.getAccess()));
+        type.setAttachments(CustomCollectionUtils.union(type.getAttachments(), parentType.getAttachments()));
+        type.setCalendars(CustomCollectionUtils.union(type.getCalendars(), parentType.getCalendars()));
+        type.setFunctions(CustomCollectionUtils.union(type.getFunctions(), parentType.getFunctions()));
+        type.setLinks(CustomCollectionUtils.union(type.getLinks(), parentType.getLinks()));
+        type.setLocations(CustomCollectionUtils.union(type.getLocations(), parentType.getLocations()));
+        type.setRatings(CustomCollectionUtils.union(type.getRatings(), parentType.getRatings()));
+        type.setStates(CustomCollectionUtils.union(type.getStates(), parentType.getStates()));
+        type.setTags(CustomCollectionUtils.union(type.getTags(), parentType.getTags()));
+        return type;
     }
 
-    @Override
-    public void onInit(String key, String config) {
-        if (isListeningConfiguration(key)) {
-            onRefresh(key, config);
-        }
-    }
-
-    @Nullable
-    public String findFirstStateForTypeKey(String typeKey) {
-        return ofNullable(findTypeByKey(typeKey))
-            .map(TypeSpec::getStates)
-            .filter(CollectionUtils::isNotEmpty)
-            .map(it -> it.get(0))
-            .map(StateSpec::getKey)
-            .orElse(null);
+    private TypeSpec filterFunctions(TypeSpec spec) {
+        return dynamicPermissionCheckService.filterInnerListByPermission(spec,
+            spec::getFunctions,
+            spec::setFunctions,
+            FunctionSpec::getKey);
     }
 
 }

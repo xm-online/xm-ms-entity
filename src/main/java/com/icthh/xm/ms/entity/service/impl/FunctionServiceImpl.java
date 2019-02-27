@@ -1,10 +1,13 @@
 package com.icthh.xm.ms.entity.service.impl;
 
+import com.icthh.xm.commons.exceptions.EntityNotFoundException;
 import com.icthh.xm.ms.entity.domain.FunctionContext;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.domain.ext.IdOrKey;
 import com.icthh.xm.ms.entity.domain.spec.FunctionSpec;
 import com.icthh.xm.ms.entity.projection.XmEntityIdKeyTypeKey;
+import com.icthh.xm.ms.entity.projection.XmEntityStateProjection;
+import com.icthh.xm.ms.entity.security.access.DynamicPermissionCheckService;
 import com.icthh.xm.ms.entity.service.FunctionContextService;
 import com.icthh.xm.ms.entity.service.FunctionExecutorService;
 import com.icthh.xm.ms.entity.service.FunctionService;
@@ -13,11 +16,10 @@ import com.icthh.xm.ms.entity.service.XmEntitySpecService;
 import com.icthh.xm.ms.entity.util.CustomCollectionUtils;
 
 import java.time.Instant;
-import java.util.Map;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang.StringUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,19 +31,27 @@ import org.springframework.transaction.annotation.Transactional;
 @Service("functionService")
 public class FunctionServiceImpl implements FunctionService {
 
+    //Function is not visible, but could be executed
+    public static String NONE = "NONE";
+
+    private static String FUNCTION_CALL_PRIV = "FUNCTION.CALL";
+    private static String XM_ENITITY_FUNCTION_CALL_PRIV = "XMENTITY.FUNCTION.EXECUTE";
+
     private final XmEntitySpecService xmEntitySpecService;
     private final XmEntityService xmEntityService;
     private final FunctionExecutorService functionExecutorService;
     private final FunctionContextService functionContextService;
+    private final DynamicPermissionCheckService dynamicPermissionCheckService;
 
     public FunctionServiceImpl(XmEntitySpecService xmEntitySpecService,
                                XmEntityService xmEntityService,
                                FunctionExecutorService functionExecutorService,
-                               FunctionContextService functionContextService) {
+                               FunctionContextService functionContextService, DynamicPermissionCheckService dynamicPermissionCheckService) {
         this.xmEntitySpecService = xmEntitySpecService;
         this.xmEntityService = xmEntityService;
         this.functionExecutorService = functionExecutorService;
         this.functionContextService = functionContextService;
+        this.dynamicPermissionCheckService = dynamicPermissionCheckService;
     }
 
     /**
@@ -53,18 +63,15 @@ public class FunctionServiceImpl implements FunctionService {
         Objects.requireNonNull(functionKey, "functionKey can't be null");
         Map<String, Object> vInput = CustomCollectionUtils.emptyIfNull(functionInput);
 
-        FunctionSpec functionSpec = xmEntitySpecService.findFunction(functionKey).orElseThrow(
-            () -> new IllegalArgumentException("Function not found, function key: " + functionKey));
+        dynamicPermissionCheckService.checkContextPermission(DynamicPermissionCheckService.FeatureContext.FUNCTION,
+            FUNCTION_CALL_PRIV, functionKey);
+
+        FunctionSpec functionSpec = findFunctionSpec(functionKey, null);
 
         // execute function
         Map<String, Object> data = functionExecutorService.execute(functionKey, vInput);
 
-        // save result in FunctionContext
-        if (functionSpec.getSaveFunctionContext()) {
-            return saveResult(functionKey, null, data, functionSpec);
-        } else {
-            return toFunctionContext(functionKey, null, data, functionSpec);
-        }
+        return processFunctionResult(functionKey,  data, functionSpec);
     }
 
     /**
@@ -79,40 +86,77 @@ public class FunctionServiceImpl implements FunctionService {
 
         Map<String, Object> vInput = CustomCollectionUtils.emptyIfNull(functionInput);
 
-        // get type key
-        XmEntityIdKeyTypeKey projection = xmEntityService.getXmEntityIdKeyTypeKey(idOrKey);
-        String xmEntityTypeKey = projection.getTypeKey();
+        dynamicPermissionCheckService.checkContextPermission(DynamicPermissionCheckService.FeatureContext.FUNCTION,
+            XM_ENITITY_FUNCTION_CALL_PRIV , functionKey);
 
-        // validate that current XmEntity has function
-        FunctionSpec functionSpec = xmEntitySpecService.findFunction(xmEntityTypeKey, functionKey).orElseThrow(
-            () -> new IllegalArgumentException("Function not found for entity type key " + xmEntityTypeKey
-                + " and function key: " + functionKey)
+        // get type key
+        XmEntityStateProjection projection = xmEntityService.findStateProjectionById(idOrKey).orElseThrow(
+            () -> new EntityNotFoundException("XmEntity with idOrKey [" + idOrKey + "] not found")
         );
 
-        // execute function
-        Map<String, Object> data = functionExecutorService.execute(functionKey, idOrKey, xmEntityTypeKey, vInput);
+        // validate that current XmEntity has function
+        FunctionSpec functionSpec = findFunctionSpec(functionKey, projection);
 
-        // save result in FunctionContext
-        if (functionSpec.getSaveFunctionContext()) {
-            return saveResult(functionKey, idOrKey, data, functionSpec);
-        } else {
-            return toFunctionContext(functionKey, idOrKey, data, functionSpec);
-        }
+        //orElseThorw is replaced by war message
+        assertCallAllowedByState(functionSpec, projection);
+
+        // execute function
+        Map<String, Object> data = functionExecutorService.execute(functionKey, idOrKey, projection.getTypeKey(), vInput);
+
+        return processFunctionResult(functionKey, idOrKey, data, functionSpec);
+
     }
 
     /**
-     * Execute any function.
-     *
-     * @param functionKey function key
-     * @param idOrKey     XmEntity id or key (can be {@code null})
-     * @return function execution result context
+     * Validates, if current entity state is one of allowed states
+     * @param functionSpec - functionSpec
+     * @param projection - entity projection
      */
-    private FunctionContext saveResult(String functionKey,
-                                       IdOrKey idOrKey,
-                                       Map<String, Object> data,
-                                       FunctionSpec functionSpec) {
+    void assertCallAllowedByState(FunctionSpec functionSpec, XmEntityStateProjection projection) {
+        List<String> allowedStates = CustomCollectionUtils.nullSafe(functionSpec.getAllowedStateKeys());
+        if (allowedStates.isEmpty()) {
+            return;
+        }
+        //this state is UI hide flag, so no execute validation applied
+        if (allowedStates.contains(NONE)) {
+            return;
+        }
+
+        if (!allowedStates.contains(projection.getStateKey())) {
+            // TODO: to decide how to turn on state change checking per tenant
+            log.warn("Entity state [{}] not found in specMapping for {}",
+                     projection.getStateKey(),
+                     functionSpec.getKey());
+        }
+
+    }
+
+    private FunctionSpec findFunctionSpec(String functionKey, XmEntityIdKeyTypeKey projection) {
+        if (projection == null) {
+            return xmEntitySpecService.findFunction(functionKey).orElseThrow(
+                () -> new IllegalArgumentException("Function not found, function key: " + functionKey));
+        }
+        return xmEntitySpecService.findFunction(projection.getTypeKey(), functionKey).orElseThrow(
+            () -> new IllegalArgumentException("Function not found for entity type key " + projection.getTypeKey()
+                + " and function key: " + functionKey)
+        );
+    }
+
+    private FunctionContext processFunctionResult(String functionKey,
+                                                  Map<String, Object> data,
+                                                  FunctionSpec functionSpec) {
+        return processFunctionResult(functionKey, null, data, functionSpec);
+    }
+
+    private FunctionContext processFunctionResult(String functionKey,
+                                  IdOrKey idOrKey,
+                                  Map<String, Object> data,
+                                  FunctionSpec functionSpec) {
         FunctionContext functionResult = toFunctionContext(functionKey, idOrKey, data, functionSpec);
-        return functionContextService.save(functionResult);
+        if (functionSpec.getSaveFunctionContext()) {
+            return functionContextService.save(functionResult);
+        }
+        return functionResult;
     }
 
     private FunctionContext toFunctionContext(String functionKey, IdOrKey idOrKey,

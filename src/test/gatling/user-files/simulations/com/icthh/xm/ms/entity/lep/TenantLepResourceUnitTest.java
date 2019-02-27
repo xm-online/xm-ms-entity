@@ -14,12 +14,11 @@ import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
-
 import java.util.Optional;
 
 @Slf4j
 @RunWith(MockitoJUnitRunner.class)
-public class TenantLepResourceTest {
+public class TenantLepResourceUnitTest {
 
     @Mock
     private TenantContextHolder tenantContextHolder;
