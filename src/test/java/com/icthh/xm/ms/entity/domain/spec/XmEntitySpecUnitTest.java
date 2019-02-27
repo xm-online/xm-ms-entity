@@ -57,6 +57,7 @@ public class XmEntitySpecUnitTest extends AbstractUnitTest {
         ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
         XmEntitySpec xmEntitySpec = mapper.readValue(new File(SPEC_PATH.toString()), XmEntitySpec.class);
 
+        // TODO: add tests for indexAfterSaveEnabled and indexAfterDeleteEnabled
         assertNotNull(xmEntitySpec);
         assertNotNull(xmEntitySpec.getTypes());
         assertEquals(5, xmEntitySpec.getTypes().size());
