@@ -13,6 +13,7 @@ import static org.mockito.BDDMockito.given;
 import com.icthh.xm.commons.config.client.service.TenantConfigService;
 import com.icthh.xm.commons.permission.domain.Permission;
 import com.icthh.xm.commons.permission.service.PermissionCheckService;
+import com.icthh.xm.ms.entity.AbstractUnitTest;
 import com.icthh.xm.ms.entity.domain.spec.FunctionSpec;
 import com.icthh.xm.ms.entity.domain.spec.TypeSpec;
 import org.assertj.core.api.Assertions;
@@ -31,7 +32,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 @RunWith(MockitoJUnitRunner.class)
-public class DynamicPermissionCheckServiceUnitTest {
+public class DynamicPermissionCheckServiceUnitTest extends AbstractUnitTest {
 
     @Mock
     private PermissionCheckService permissionCheckService;
