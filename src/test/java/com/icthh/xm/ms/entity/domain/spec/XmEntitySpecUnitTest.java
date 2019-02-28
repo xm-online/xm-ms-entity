@@ -57,7 +57,6 @@ public class XmEntitySpecUnitTest extends AbstractUnitTest {
         ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
         XmEntitySpec xmEntitySpec = mapper.readValue(new File(SPEC_PATH.toString()), XmEntitySpec.class);
 
-        // TODO: add tests for indexAfterSaveEnabled and indexAfterDeleteEnabled
         assertNotNull(xmEntitySpec);
         assertNotNull(xmEntitySpec.getTypes());
         assertEquals(5, xmEntitySpec.getTypes().size());
@@ -75,6 +74,10 @@ public class XmEntitySpecUnitTest extends AbstractUnitTest {
         assertEquals(false, xmEntitySpec.getTypes().get(0).getIsNameRequired());
         assertEquals(true, xmEntitySpec.getTypes().get(1).getIsKeyRequired());
         assertEquals(true, xmEntitySpec.getTypes().get(1).getIsNameRequired());
+        assertEquals(false, xmEntitySpec.getTypes().get(0).getIndexAfterSaveEnabled());
+        assertEquals(false, xmEntitySpec.getTypes().get(0).getIndexAfterDeleteEnabled());
+        assertEquals(true, xmEntitySpec.getTypes().get(1).getIndexAfterSaveEnabled());
+        assertEquals(true, xmEntitySpec.getTypes().get(1).getIndexAfterDeleteEnabled());
         assertNotNull(xmEntitySpec.getTypes().get(0).getDataSpec());
         assertNotNull(xmEntitySpec.getTypes().get(0).getDataForm());
         assertNotNull(xmEntitySpec.getTypes().get(0).getFastSearch());
