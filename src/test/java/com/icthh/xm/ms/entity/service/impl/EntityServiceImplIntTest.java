@@ -57,7 +57,6 @@ import org.springframework.core.io.Resource;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
 import org.springframework.http.HttpEntity;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.test.context.support.WithMockUser;
@@ -121,9 +120,6 @@ public class EntityServiceImplIntTest extends AbstractSpringBootTest {
     @Autowired
     private TenantConfigService tenantConfigService;
 
-    @Autowired
-    private ElasticsearchTemplate elasticsearchTemplate;
-
     @Mock
     private ProfileService profileService;
 
@@ -142,16 +138,21 @@ public class EntityServiceImplIntTest extends AbstractSpringBootTest {
 
     private static final String TARGET_TYPE_KEY = "ACCOUNT.USER";
 
+    private static boolean elasticInited = false;
+
     @Autowired
     private ObjectMapper objectMapper;
 
     @BeforeTransaction
     public void beforeTransaction() {
+
         TenantContextUtils.setTenant(tenantContextHolder, "RESINTTEST");
 
-        elasticsearchTemplate.deleteIndex(XmEntity.class);
-        elasticsearchTemplate.createIndex(XmEntity.class);
-        elasticsearchTemplate.putMapping(XmEntity.class);
+        if (!elasticInited) {
+            initElasticsearch();
+            elasticInited = true;
+        }
+        cleanElasticsearch();
 
         MockitoAnnotations.initMocks(this);
         when(authContextHolder.getContext()).thenReturn(context);
@@ -196,7 +197,6 @@ public class EntityServiceImplIntTest extends AbstractSpringBootTest {
 
     @After
     public void afterTest() {
-        elasticsearchTemplate.deleteIndex(XmEntity.class);
         tenantContextHolder.getPrivilegedContext().destroyCurrentContext();
     }
 

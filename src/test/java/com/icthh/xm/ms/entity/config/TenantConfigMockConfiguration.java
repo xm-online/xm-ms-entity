@@ -14,6 +14,7 @@ import com.icthh.xm.commons.config.client.service.TenantConfigService;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.web.spring.TenantVerifyInterceptor;
 import com.icthh.xm.ms.entity.config.tenant.LocalXmEntitySpecService;
+import com.icthh.xm.ms.entity.security.access.DynamicPermissionCheckService;
 import com.icthh.xm.ms.entity.service.EntityCustomPrivilegeService;
 import com.icthh.xm.ms.entity.service.XmEntitySpecService;
 import lombok.SneakyThrows;
@@ -41,12 +42,13 @@ public class TenantConfigMockConfiguration {
     @Bean
     public XmEntitySpecService xmEntitySpecService(ApplicationProperties applicationProperties,
                                                    TenantContextHolder tenantContextHolder,
-                                                   EntityCustomPrivilegeService entityCustomPrivilegeService) {
-        XmEntitySpecService xmEntitySpecService = new LocalXmEntitySpecService(tenantConfigRepository(),
-                                                                               applicationProperties,
-                                                                               tenantContextHolder,
-                                                                               entityCustomPrivilegeService);
-        return xmEntitySpecService;
+                                                   EntityCustomPrivilegeService entityCustomPrivilegeService,
+                                                   DynamicPermissionCheckService dynamicPermissionCheckService) {
+        return new LocalXmEntitySpecService(tenantConfigRepository(),
+                                            applicationProperties,
+                                            tenantContextHolder,
+                                            entityCustomPrivilegeService,
+                                            dynamicPermissionCheckService);
     }
 
     @Bean

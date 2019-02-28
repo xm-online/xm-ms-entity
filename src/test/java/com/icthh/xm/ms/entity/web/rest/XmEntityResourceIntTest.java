@@ -78,7 +78,6 @@ import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
 import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -136,6 +135,8 @@ public class XmEntityResourceIntTest extends AbstractSpringBootTest {
 
     private static final Boolean DEFAULT_REMOVED = false;
     private static final Boolean UPDATED_REMOVED = true;
+
+    private static boolean elasticInited = false;
 
     @Autowired
     private ApplicationProperties applicationProperties;
@@ -205,9 +206,6 @@ public class XmEntityResourceIntTest extends AbstractSpringBootTest {
     @Autowired
     ObjectMapper objectMapper;
 
-    @Autowired
-    private ElasticsearchTemplate elasticsearchTemplate;
-
     @Mock
     private XmAuthenticationContextHolder authContextHolder;
 
@@ -245,9 +243,11 @@ public class XmEntityResourceIntTest extends AbstractSpringBootTest {
         TenantContextUtils.setTenant(tenantContextHolder, "RESINTTEST");
 
         //initialize index before test - put valid mapping
-        elasticsearchTemplate.deleteIndex(XmEntity.class);
-        elasticsearchTemplate.createIndex(XmEntity.class);
-        elasticsearchTemplate.putMapping(XmEntity.class);
+        if (!elasticInited) {
+            initElasticsearch();
+            elasticInited = true;
+        }
+        cleanElasticsearch();
 
         MockitoAnnotations.initMocks(this);
         when(authContextHolder.getContext()).thenReturn(context);

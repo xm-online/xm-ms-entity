@@ -104,7 +104,6 @@ import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
 import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
@@ -125,7 +124,6 @@ import org.springframework.validation.Validator;
  */
 @Slf4j
 @Transactional
-// FIXME: 18-Jan-19 cannot find XmEntity in elasticsearch (nullpointer) when executing with other tests
 public class XmEntityResourceExtendedIntTest extends AbstractSpringBootTest {
 
     private static final String DEFAULT_KEY = "AAAAAAAAAA";
@@ -186,6 +184,8 @@ public class XmEntityResourceExtendedIntTest extends AbstractSpringBootTest {
     private static final String DEFAULT_LN_TARGET_NAME = "My target link";
     private static final Instant DEFAULT_LN_TARGET_START_DATE = Instant.now();
 
+    private static boolean elasticInited = false;
+
     @Autowired
     private ApplicationProperties applicationProperties;
 
@@ -232,9 +232,6 @@ public class XmEntityResourceExtendedIntTest extends AbstractSpringBootTest {
 
     @Autowired
     private ExceptionTranslator exceptionTranslator;
-
-    @Autowired
-    private ElasticsearchTemplate elasticsearchTemplate;
 
     @Autowired
     private EntityManager em;
@@ -310,9 +307,11 @@ public class XmEntityResourceExtendedIntTest extends AbstractSpringBootTest {
         //xmEntitySearchRepository.deleteAll();
 
         //initialize index before test - put valid mapping
-        elasticsearchTemplate.deleteIndex(XmEntity.class);
-        elasticsearchTemplate.createIndex(XmEntity.class);
-        elasticsearchTemplate.putMapping(XmEntity.class);
+        if (!elasticInited) {
+            initElasticsearch();
+            elasticInited = true;
+        }
+        cleanElasticsearch();
 
         MockitoAnnotations.initMocks(this);
 

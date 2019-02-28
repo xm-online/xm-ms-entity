@@ -7,6 +7,7 @@ import static org.mockito.Mockito.when;
 import com.icthh.xm.commons.tenant.TenantContext;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantKey;
+import com.icthh.xm.ms.entity.AbstractUnitTest;
 import com.icthh.xm.ms.entity.config.ApplicationProperties;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
@@ -14,12 +15,11 @@ import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
-
 import java.util.Optional;
 
 @Slf4j
 @RunWith(MockitoJUnitRunner.class)
-public class TenantLepResourceTest {
+public class TenantLepResourceUnitTest extends AbstractUnitTest {
 
     @Mock
     private TenantContextHolder tenantContextHolder;
