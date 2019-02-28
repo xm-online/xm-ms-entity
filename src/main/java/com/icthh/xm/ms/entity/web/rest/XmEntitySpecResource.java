@@ -10,7 +10,7 @@ import com.icthh.xm.ms.entity.service.XmEntitySpecService;
 import com.icthh.xm.ms.entity.web.rest.util.HeaderUtil;
 import com.icthh.xm.ms.entity.web.rest.util.RespContentUtil;
 import io.swagger.annotations.ApiParam;
-import lombok.RequiredArgsConstructor;
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PostAuthorize;
@@ -27,24 +27,45 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * REST controller for managing XmEntitySpec.
  */
 @Slf4j
-@RequiredArgsConstructor
 @RestController
+@AllArgsConstructor
 @RequestMapping("/api")
 public class XmEntitySpecResource {
 
     private static final String ENTITY_NAME = "xmEntity";
 
     private final XmEntitySpecService xmEntitySpecService;
-
     private final XmEntityGeneratorService xmEntityGeneratorService;
 
     public enum Filter {
-        ALL, APP, NON_ABSTRACT;
+
+        ALL((spec) -> true),
+        APP(XmEntitySpecService.isApp()),
+        NON_ABSTRACT(XmEntitySpecService.isNotAbstract());
+
+        private Predicate<TypeSpec> typeSpecPredicate;
+
+        Filter(final Predicate<TypeSpec> typeSpecPredicate) {
+            this.typeSpecPredicate = typeSpecPredicate;
+        }
+
+        /**
+         * getFilteredEntities
+         */
+        private Stream<TypeSpec> getTypeSpec(XmEntitySpecService xmEntitySpecService) {
+            return xmEntitySpecService.findAllTypes()
+                                      .stream()
+                                      .filter(typeSpecPredicate);
+        }
+
     }
 
     /**
@@ -58,20 +79,12 @@ public class XmEntitySpecResource {
     @PostFilter("hasPermission({'returnObject': filterObject, 'log': false}, 'XMENTITY_SPEC.GET')")
     public List<TypeSpec> getTypeSpecs(@ApiParam XmEntitySpecResource.Filter filter) {
         log.debug("REST request to get a list of TypeSpec");
-        List<TypeSpec> typeSpecs;
-        switch (filter != null ? filter : Filter.ALL) {
-            case APP:
-                typeSpecs = xmEntitySpecService.findAllAppTypes();
-                break;
-            case NON_ABSTRACT:
-                typeSpecs = xmEntitySpecService.findAllNonAbstractTypes();
-                break;
-            default:
-                typeSpecs = xmEntitySpecService.findAllTypes();
-                break;
-        }
-        return typeSpecs;
+
+        return Optional.ofNullable(filter).orElse(Filter.ALL)
+                       .getTypeSpec(xmEntitySpecService)
+                       .collect(Collectors.toList());
     }
+
 
     /**
      * GET  /xm-entity-specs/:key : get the "key" typeSpec.
@@ -84,8 +97,7 @@ public class XmEntitySpecResource {
     @PostAuthorize("hasPermission({'returnObject': returnObject.body}, 'XMENTITY_SPEC.GET_LIST.ITEM')")
     public ResponseEntity<TypeSpec> getTypeSpec(@PathVariable String key) {
         log.debug("REST request to get TypeSpec : {}", key);
-        TypeSpec typeSpec = xmEntitySpecService.findTypeByKey(key);
-        return RespContentUtil.wrapOrNotFound(Optional.ofNullable(typeSpec));
+        return RespContentUtil.wrapOrNotFound(xmEntitySpecService.getTypeSpecByKey(key));
     }
 
     /**

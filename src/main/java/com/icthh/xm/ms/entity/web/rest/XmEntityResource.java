@@ -283,7 +283,8 @@ public class XmEntityResource {
     }
 
     /**
-     * Call XM entity relayed function via GET method. Used in xm-entity related flows
+     * Call XM entity function via GET method. Used in xm-entity related flows and widgets
+     * Authorization is done in private {@executeFunction}
      * @param idOrKey entity ID or Key
      * @param functionKey function key
      * @param functionInput - optional input
@@ -292,23 +293,29 @@ public class XmEntityResource {
     @Timed
     @GetMapping("/xm-entities/{idOrKey}/functions/{functionKey:.+}")
     @PreAuthorize("hasPermission({'idOrKey': #idOrKey, 'id': #functionKey, 'context': #context}, "
-        + "'xmEntity.function', 'XMENTITY.FUNCTION.GET')")
+        + "'xmEntity.function', 'XMENTITY.FUNCTION.EXECUTE')")
     public ResponseEntity<Object> executeGetFunction(@PathVariable String idOrKey,
                                                      @PathVariable String functionKey,
                                                      @RequestParam(required = false) Map<String, Object> functionInput) {
         return executeFunction(idOrKey, functionKey, functionInput);
     }
 
+    /**
+     * Call XM entity function via POST method. Used in xm-entity related actions
+     * Authorization is done in private {@executeFunction}
+     * @param idOrKey entity ID or Key
+     * @param functionKey function key
+     * @param functionInput - optional input
+     * @return any object
+     */
     @Timed
     @PostMapping("/xm-entities/{idOrKey}/functions/{functionKey:.+}")
     @PreAuthorize("hasPermission({'idOrKey': #idOrKey, 'id': #functionKey, 'context': #context}, "
         + "'xmEntity.function', 'XMENTITY.FUNCTION.EXECUTE')")
-    public ResponseEntity<Object> executeFunction(@PathVariable String idOrKey,
+    public ResponseEntity<Object> executePostFunction(@PathVariable String idOrKey,
                                                            @PathVariable String functionKey,
                                                            @RequestBody(required = false) Map<String, Object> functionInput) {
-        Map<String, Object> fContext = functionInput != null ? functionInput : Maps.newHashMap();
-        FunctionContext result = functionService.execute(functionKey, IdOrKey.of(idOrKey), fContext);
-        return ResponseEntity.ok().body(result.functionResult());
+        return executeFunction(idOrKey, functionKey, functionInput);
     }
 
     @GetMapping("/xm-entities/{idOrKey}/links/targets")
@@ -498,6 +505,14 @@ public class XmEntityResource {
         }
         String content = this.profileEventProducer.createEventJson(profile, eventType);
         this.profileEventProducer.send(content);
+    }
+
+    private ResponseEntity<Object> executeFunction(String idOrKey,
+                                                  String functionKey,
+                                                  Map<String, Object> functionInput) {
+        Map<String, Object> fContext = functionInput != null ? functionInput : Maps.newHashMap();
+        FunctionContext result = functionService.execute(functionKey, IdOrKey.of(idOrKey), fContext);
+        return ResponseEntity.ok().body(result.functionResult());
     }
 
 }

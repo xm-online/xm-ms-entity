@@ -1,6 +1,10 @@
 package com.icthh.xm.ms.entity.service;
 
 import static com.google.common.collect.ImmutableMap.of;
+import static com.google.common.collect.Maps.newHashMap;
+import static com.icthh.xm.ms.entity.security.access.DynamicPermissionCheckService.CONFIG_SECTION;
+import static com.icthh.xm.ms.entity.security.access.DynamicPermissionCheckService.DYNAMIC_FUNCTION_PERMISSION_FEATURE;
+import static com.icthh.xm.ms.entity.util.CustomCollectionUtils.nullSafe;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
 import static org.apache.commons.codec.digest.DigestUtils.sha1Hex;
@@ -9,15 +13,15 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.ArgumentMatchers.isNull;
-import static org.mockito.ArgumentMatchers.refEq;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.icthh.xm.commons.config.client.repository.CommonConfigRepository;
 import com.icthh.xm.commons.config.client.repository.TenantConfigRepository;
+import com.icthh.xm.commons.config.client.service.TenantConfigService;
 import com.icthh.xm.commons.config.domain.Configuration;
 import com.icthh.xm.commons.permission.config.PermissionProperties;
 import com.icthh.xm.commons.permission.domain.Role;
@@ -29,14 +33,16 @@ import com.icthh.xm.ms.entity.AbstractUnitTest;
 import com.icthh.xm.ms.entity.config.ApplicationProperties;
 import com.icthh.xm.ms.entity.config.tenant.LocalXmEntitySpecService;
 import com.icthh.xm.ms.entity.domain.spec.AttachmentSpec;
+import com.icthh.xm.ms.entity.domain.spec.FunctionSpec;
 import com.icthh.xm.ms.entity.domain.spec.LinkSpec;
+import com.icthh.xm.ms.entity.domain.spec.TypeSpec;
 import com.icthh.xm.ms.entity.domain.spec.LocationSpec;
-import com.icthh.xm.ms.entity.domain.spec.NextSpec;
 import com.icthh.xm.ms.entity.domain.spec.RatingSpec;
 import com.icthh.xm.ms.entity.domain.spec.StateSpec;
+import com.icthh.xm.ms.entity.domain.spec.NextSpec;
 import com.icthh.xm.ms.entity.domain.spec.TagSpec;
-import com.icthh.xm.ms.entity.domain.spec.TypeSpec;
 import com.icthh.xm.ms.entity.domain.spec.UniqueFieldSpec;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
@@ -44,12 +50,16 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+
+import com.icthh.xm.ms.entity.security.access.DynamicPermissionCheckService;
 import lombok.SneakyThrows;
 import org.apache.commons.io.IOUtils;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.mockito.Spy;
 import org.springframework.core.io.ClassPathResource;
 
 public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
@@ -71,8 +81,8 @@ public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
     private static final String KEY5 = "TYPE1-OTHER";
 
     private static final String KEY6 = "TYPE3";
-    public static final String PRIVILEGES_PATH = "/config/tenants/TEST/custom-privileges.yml";
-    public static final String PERMISSION_PATH = "/config/tenants/TEST/permissions.yml";
+    private static final String PRIVILEGES_PATH = "/config/tenants/TEST/custom-privileges.yml";
+    private static final String PERMISSION_PATH = "/config/tenants/TEST/permissions.yml";
 
     private XmEntitySpecService xmEntitySpecService;
 
@@ -85,7 +95,11 @@ public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
     private RoleService roleService;
     @Mock
     private TenantConfigRepository tenantConfigRepository;
-
+    @InjectMocks
+    @Spy
+    private DynamicPermissionCheckService dynamicPermissionCheckService;
+    @Mock
+    private TenantConfigService tenantConfig;
 
     @Before
     @SneakyThrows
@@ -111,7 +125,8 @@ public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
                                                 commonConfigRepository,
                                                 permissionProperties,
                                                 roleService
-                                            ));
+                                            ),
+                                            dynamicPermissionCheckService);
     }
 
     @Test
@@ -130,32 +145,96 @@ public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
 
     @Test
     public void testFindAllTypes() {
+
+        given(tenantConfig.getConfig()).willReturn(newHashMap());
         List<TypeSpec> types = xmEntitySpecService.findAllTypes();
         assertNotNull(types);
         assertEquals(5, types.size());
 
         List<String> keys = types.stream().map(TypeSpec::getKey).collect(Collectors.toList());
         assertThat(keys).containsExactlyInAnyOrder(KEY1, KEY2, KEY3, KEY5, KEY6);
+
+        List<FunctionSpec> functions = flattenFunctions(types);
+
+        assertThat(functions.size()).isEqualTo(4);
+
+    }
+
+    @Test
+    public void testFindAllTypesWithFunctionFilterAndNoPrivilege() {
+        given(tenantConfig.getConfig()).willReturn(getMockedConfig(CONFIG_SECTION,
+            DYNAMIC_FUNCTION_PERMISSION_FEATURE, Boolean.TRUE));
+
+        List<TypeSpec> types = xmEntitySpecService.findAllTypes();
+        assertNotNull(types);
+        assertEquals(5, types.size());
+
+        List<String> keys = types.stream().map(TypeSpec::getKey).collect(Collectors.toList());
+        assertThat(keys).containsExactlyInAnyOrder(KEY1, KEY2, KEY3, KEY5, KEY6);
+
+        List<FunctionSpec> functions = flattenFunctions(types);
+
+        assertThat(functions.size()).isEqualTo(0);
     }
 
     @Test
     public void testFindAllAppTypes() {
+        given(tenantConfig.getConfig()).willReturn(newHashMap());
         List<TypeSpec> types = xmEntitySpecService.findAllAppTypes();
         assertNotNull(types);
         assertEquals(3, types.size());
 
         List<String> keys = types.stream().map(TypeSpec::getKey).collect(Collectors.toList());
         assertThat(keys).containsExactlyInAnyOrder(KEY1, KEY2, KEY6);
+
+        List<FunctionSpec> functions = flattenFunctions(types);
+        assertThat(functions.size()).isEqualTo(3);
+    }
+
+    @Test
+    public void testFindAllAppTypesWithFunctionFilterAndNoPrivilege() {
+        given(tenantConfig.getConfig()).willReturn(getMockedConfig(CONFIG_SECTION,
+            DYNAMIC_FUNCTION_PERMISSION_FEATURE, Boolean.TRUE));
+        List<TypeSpec> types = xmEntitySpecService.findAllAppTypes();
+        assertNotNull(types);
+        assertEquals(3, types.size());
+
+        List<String> keys = types.stream().map(TypeSpec::getKey).collect(Collectors.toList());
+        assertThat(keys).containsExactlyInAnyOrder(KEY1, KEY2, KEY6);
+
+        List<FunctionSpec> functions = flattenFunctions(types);
+
+        assertThat(functions.size()).isEqualTo(0);
     }
 
     @Test
     public void testFindAllNonAbstractTypes() {
+        given(tenantConfig.getConfig()).willReturn(newHashMap());
         List<TypeSpec> types = xmEntitySpecService.findAllNonAbstractTypes();
         assertNotNull(types);
         assertEquals(4, types.size());
 
         List<String> keys = types.stream().map(TypeSpec::getKey).collect(Collectors.toList());
         assertThat(keys).containsExactlyInAnyOrder(KEY2, KEY3, KEY5, KEY6);
+
+        List<FunctionSpec> functions = flattenFunctions(types);
+        assertThat(functions.size()).isEqualTo(3);
+    }
+
+    @Test
+    public void testFindAllNonAbstractTypesWithFunctionFilterAndNoPrivilege() {
+        given(tenantConfig.getConfig()).willReturn(getMockedConfig(CONFIG_SECTION,
+            DYNAMIC_FUNCTION_PERMISSION_FEATURE, Boolean.TRUE));
+
+        List<TypeSpec> types = xmEntitySpecService.findAllNonAbstractTypes();
+        assertNotNull(types);
+        assertEquals(4, types.size());
+
+        List<String> keys = types.stream().map(TypeSpec::getKey).collect(Collectors.toList());
+        assertThat(keys).containsExactlyInAnyOrder(KEY2, KEY3, KEY5, KEY6);
+
+        List<FunctionSpec> functions = flattenFunctions(types);
+        assertThat(functions.size()).isEqualTo(0);
     }
 
     @Test
@@ -353,11 +432,30 @@ public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
         verify(commonConfigRepository).updateConfigFullPath(refEq(new Configuration(permissionPath, expectedPermissions)), eq(sha1Hex(permissions)));
     }
 
+    private FunctionSpec newFunction(String key) {
+        FunctionSpec f = new FunctionSpec();
+        f.setKey(key);
+        return f;
+    }
 
     private String readFile(String path1) throws IOException {
         InputStream cfgInputStream = new ClassPathResource(path1).getInputStream();
         return IOUtils.toString(cfgInputStream, UTF_8);
     }
 
+    private Map<String, Object> getMockedConfig(String configSectionName, String featureName, Boolean status) {
+        Map<String, Object> map = newHashMap();
+        Map<String, Object> section = newHashMap();
+        section.put(featureName, status);
+        map.put(configSectionName, section);
+        return map;
+    }
+
+    private List<FunctionSpec> flattenFunctions(List<TypeSpec> types) {
+        return types.stream()
+            .map(type -> nullSafe(type.getFunctions()) )
+            .flatMap(List::stream)
+            .collect(Collectors.toList());
+    }
 
 }
