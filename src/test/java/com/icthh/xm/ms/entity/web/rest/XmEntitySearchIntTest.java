@@ -37,7 +37,6 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
-import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
 import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
@@ -55,7 +54,6 @@ import java.util.UUID;
  * @see XmEntitySpecResource
  */
 @Slf4j
-// FIXME: 18-Jan-19 cannot find XmEntity in elasticsearch (nullpointer) when executing with other tests
 public class XmEntitySearchIntTest extends AbstractSpringBootTest {
 
     private static final String KEY1 = "ACCOUNT";
@@ -65,6 +63,8 @@ public class XmEntitySearchIntTest extends AbstractSpringBootTest {
     private static final String STATE_KEY1 = "TEST-STATE-KEY-1";
 
     private static final String STATE_KEY2 = "TEST-STATE-KEY-2";
+
+    private static boolean elasticInited = false;
 
     @Autowired
     private XmEntityServiceImpl xmEntityService;
@@ -91,9 +91,6 @@ public class XmEntitySearchIntTest extends AbstractSpringBootTest {
     private ExceptionTranslator exceptionTranslator;
 
     @Autowired
-    private ElasticsearchTemplate elasticsearchTemplate;
-
-    @Autowired
     private XmEntityRepositoryInternal xmEntityRepository;
 
     private MockMvc restXmEntityMockMvc;
@@ -113,9 +110,11 @@ public class XmEntitySearchIntTest extends AbstractSpringBootTest {
 
         setTenant(tenantContextHolder, "DEMO");
 
-        elasticsearchTemplate.deleteIndex(XmEntity.class);
-        elasticsearchTemplate.createIndex(XmEntity.class);
-        elasticsearchTemplate.putMapping(XmEntity.class);
+        if (!elasticInited) {
+            initElasticsearch();
+            elasticInited = true;
+        }
+        cleanElasticsearch();
 
         lepManager.beginThreadContext(ctx -> {
             ctx.setValue(THREAD_CONTEXT_KEY_TENANT_CONTEXT, tenantContextHolder.getContext());
