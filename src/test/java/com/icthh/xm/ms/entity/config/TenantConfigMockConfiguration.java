@@ -44,12 +44,11 @@ public class TenantConfigMockConfiguration {
                                                    TenantContextHolder tenantContextHolder,
                                                    EntityCustomPrivilegeService entityCustomPrivilegeService,
                                                    DynamicPermissionCheckService dynamicPermissionCheckService) {
-        XmEntitySpecService xmEntitySpecService = new LocalXmEntitySpecService(tenantConfigRepository(),
-                                                                               applicationProperties,
-                                                                               tenantContextHolder,
-                                                                               entityCustomPrivilegeService,
-                                                                               dynamicPermissionCheckService);
-        return xmEntitySpecService;
+        return new LocalXmEntitySpecService(tenantConfigRepository(),
+                                            applicationProperties,
+                                            tenantContextHolder,
+                                            entityCustomPrivilegeService,
+                                            dynamicPermissionCheckService);
     }
 
     @Bean

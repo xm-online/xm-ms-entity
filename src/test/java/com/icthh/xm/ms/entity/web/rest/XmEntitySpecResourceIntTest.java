@@ -1,32 +1,5 @@
 package com.icthh.xm.ms.entity.web.rest;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.icthh.xm.commons.i18n.error.web.ExceptionTranslator;
-import com.icthh.xm.commons.security.XmAuthenticationContext;
-import com.icthh.xm.commons.security.XmAuthenticationContextHolder;
-import com.icthh.xm.commons.tenant.TenantContextHolder;
-import com.icthh.xm.lep.api.LepManager;
-import com.icthh.xm.ms.entity.EntityApp;
-import com.icthh.xm.ms.entity.config.LepConfiguration;
-import com.icthh.xm.ms.entity.config.SecurityBeanOverrideConfiguration;
-import com.icthh.xm.ms.entity.config.tenant.WebappTenantOverrideConfiguration;
-import com.icthh.xm.ms.entity.service.XmEntityGeneratorService;
-import com.icthh.xm.ms.entity.service.XmEntitySpecService;
-import com.icthh.xm.ms.entity.service.impl.XmEntityServiceImpl;
-import lombok.SneakyThrows;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.http.MediaType;
-import org.springframework.test.context.junit4.SpringRunner;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-
 import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_AUTH_CONTEXT;
 import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_TENANT_CONTEXT;
 import static com.icthh.xm.commons.tenant.TenantContextUtils.setTenant;
@@ -34,21 +7,37 @@ import static org.hamcrest.Matchers.hasItem;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.icthh.xm.commons.i18n.error.web.ExceptionTranslator;
+import com.icthh.xm.commons.security.XmAuthenticationContext;
+import com.icthh.xm.commons.security.XmAuthenticationContextHolder;
+import com.icthh.xm.commons.tenant.TenantContextHolder;
+import com.icthh.xm.lep.api.LepManager;
+import com.icthh.xm.ms.entity.AbstractSpringBootTest;
+import com.icthh.xm.ms.entity.service.XmEntityGeneratorService;
+import com.icthh.xm.ms.entity.service.XmEntitySpecService;
+import com.icthh.xm.ms.entity.service.impl.XmEntityServiceImpl;
+import lombok.SneakyThrows;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 /**
  * Test class for the XmEntitySpecResource REST controller.
  *
  * @see XmEntitySpecResource
  */
-@RunWith(SpringRunner.class)
-@SpringBootTest(classes = {
-    EntityApp.class,
-    SecurityBeanOverrideConfiguration.class,
-    WebappTenantOverrideConfiguration.class,
-    LepConfiguration.class
-})
-public class XmEntitySpecResourceIntTest {
+public class XmEntitySpecResourceIntTest extends AbstractSpringBootTest {
 
     private static final String KEY1 = "ACCOUNT";
 

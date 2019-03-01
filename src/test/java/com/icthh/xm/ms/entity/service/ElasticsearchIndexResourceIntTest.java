@@ -1,4 +1,4 @@
-package com.icthh.xm.ms.entity.web.rest;
+package com.icthh.xm.ms.entity.service;
 
 import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_AUTH_CONTEXT;
 import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_TENANT_CONTEXT;
@@ -19,31 +19,27 @@ import com.icthh.xm.commons.security.XmAuthenticationContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
 import com.icthh.xm.lep.api.LepManager;
-import com.icthh.xm.ms.entity.EntityApp;
-import com.icthh.xm.ms.entity.config.SecurityBeanOverrideConfiguration;
-import com.icthh.xm.ms.entity.config.elasticsearch.EmbeddedElasticsearchConfig;
-import com.icthh.xm.ms.entity.config.tenant.WebappTenantOverrideConfiguration;
+import com.icthh.xm.ms.entity.AbstractSpringBootTest;
+import com.icthh.xm.ms.entity.config.MappingConfiguration;
 import com.icthh.xm.ms.entity.domain.Attachment;
 import com.icthh.xm.ms.entity.domain.Location;
 import com.icthh.xm.ms.entity.domain.Tag;
 import com.icthh.xm.ms.entity.domain.XmEntity;
+import com.icthh.xm.ms.entity.repository.XmEntityRepositoryInternal;
 import com.icthh.xm.ms.entity.repository.search.XmEntitySearchRepository;
-import com.icthh.xm.ms.entity.service.ElasticsearchIndexService;
-import com.icthh.xm.ms.entity.service.XmEntityService;
-import java.util.concurrent.Executor;
+import com.icthh.xm.ms.entity.web.rest.ElasticsearchIndexResource;
+import com.icthh.xm.ms.entity.web.rest.XmEntityResource;
 import lombok.SneakyThrows;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
 import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.security.test.context.support.WithMockUser;
-import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.context.transaction.BeforeTransaction;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -56,15 +52,8 @@ import java.util.concurrent.Executor;
  *
  * @see ElasticsearchIndexResource
  */
-@RunWith(SpringRunner.class)
 @WithMockUser(authorities = {"SUPER-ADMIN"})
-@SpringBootTest(classes = {
-    EntityApp.class,
-    SecurityBeanOverrideConfiguration.class,
-    WebappTenantOverrideConfiguration.class,
-    EmbeddedElasticsearchConfig.class
-})
-public class ElasticsearchIndexResourceIntTest {
+public class ElasticsearchIndexResourceIntTest extends AbstractSpringBootTest {
 
     private static final String DEFAULT_TYPE_KEY = "ACCOUNT.ADMIN";
 
@@ -72,12 +61,6 @@ public class ElasticsearchIndexResourceIntTest {
 
     @Autowired
     private XmEntityService xmEntityService;
-
-    @Autowired
-    private ElasticsearchIndexResource elasticsearchIndexResource;
-
-    @Autowired
-    private ElasticsearchIndexService elasticsearchIndexService;
 
     @Autowired
     private XmEntityResource xmEntityResource;
@@ -103,7 +86,19 @@ public class ElasticsearchIndexResourceIntTest {
     @Autowired
     private XmEntitySearchRepository searchRepository;
 
-    @MockBean(name = "taskExecutor")
+    @Autowired
+    private XmEntityRepositoryInternal xmEntityRepositoryInternal;
+
+    @Autowired
+    private XmEntitySearchRepository xmEntitySearchRepository;
+
+    @Autowired
+    private ElasticsearchTemplate elasticsearchTemplate;
+
+    @Autowired
+    private MappingConfiguration mappingConfiguration;
+
+    @Mock
     private Executor executor;
 
     @BeforeTransaction
@@ -118,12 +113,26 @@ public class ElasticsearchIndexResourceIntTest {
             ctx.setValue(THREAD_CONTEXT_KEY_AUTH_CONTEXT, authenticationContextHolder.getContext());
         });
 
+        ElasticsearchIndexService elasticsearchIndexService = new ElasticsearchIndexService(xmEntityRepositoryInternal,
+                                                                                            xmEntitySearchRepository,
+                                                                                            elasticsearchTemplate,
+                                                                                            tenantContextHolder,
+                                                                                            mappingConfiguration,
+                                                                                            executor);
+
+        elasticsearchIndexService.setSelfReference(elasticsearchIndexService);
+
+        ElasticsearchIndexResource elasticsearchIndexResource =
+            new ElasticsearchIndexResource(elasticsearchIndexService);
+
         this.mockMvc = MockMvcBuilders.standaloneSetup(elasticsearchIndexResource, xmEntityResource)
-            .setCustomArgumentResolvers(pageableArgumentResolver)
-            .setControllerAdvice(exceptionTranslator)
-            .setMessageConverters(jacksonMessageConverter).build();
+                                      .setCustomArgumentResolvers(pageableArgumentResolver)
+                                      .setControllerAdvice(exceptionTranslator)
+                                      .setMessageConverters(jacksonMessageConverter).build();
+
+        // make executor run task immediately
         doAnswer(a -> {
-            ((Runnable)a.getArguments()[0]).run();
+            ((Runnable) a.getArguments()[0]).run();
             return null;
         }).when(executor).execute(any(Runnable.class));
     }

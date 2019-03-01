@@ -86,23 +86,51 @@ if (OperatingSystem.current().isWindows()) {
     }
 }
 
+String [] testCategories = ['com.icthh.xm.ms.entity.AbstractSpringBootTest',
+                            'com.icthh.xm.ms.entity.AbstractUnitTest',
+                            'com.icthh.xm.ms.entity.AbstractWebMvcTest']
+
+Closure testLoggingConf = {
+    exceptionFormat = 'full'
+    events "passed", "skipped", "failed"//, "standardError" //, "standardOut"
+}
+
 test {
+    
+    doFirst {
+        println '!!! ATTENTION: start execution of non-categorized tests. it may impact test performance !!!'
+    }
+
     exclude '**/CucumberTest*'
-    dependsOn 'clean'
+    dependsOn 'clean' , 'runCategorizedTests'
     classes.mustRunAfter 'clean'
     systemProperty "spring.profiles.active", "test"
     mkdir("src/test/features")
     include '**/*UnitTest*'
     include '**/*IntTest*'
 
+    // to run all test that was not categorized
+    useJUnit {
+        excludeCategories(testCategories)
+    }
+
     // uncomment if the tests reports are not generated
     // see https://github.com/jhipster/generator-jhipster/pull/2771 and https://github.com/jhipster/generator-jhipster/pull/4484
     // ignoreFailures true
     reports.html.enabled = true
-    testLogging {
-        exceptionFormat = 'full'
-        events "passed", "skipped", "failed"//, "standardOut", "standardError"
+    testLogging testLoggingConf
+
+    doLast{
+        println '!!! ATTENTION: check if there are non-categorized tests !!!'
     }
+
+}
+
+task runCategorizedTests(type: Test) {
+    useJUnit {
+        includeCategories(testCategories)
+    }
+    testLogging testLoggingConf
 }
 
 task cucumberTest(type: Test) {

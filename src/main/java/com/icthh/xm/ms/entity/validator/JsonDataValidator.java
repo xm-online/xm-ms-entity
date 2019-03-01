@@ -15,7 +15,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.Map;
 import javax.validation.ConstraintValidator;
@@ -43,7 +42,7 @@ public class JsonDataValidator implements ConstraintValidator<JsonData, XmEntity
         }
 
         if (dataWithoutSpecification(value, typeSpecification)) {
-            log.error("Data specification null, but data is not null");
+            log.error("Data specification null, but data is not null: {}", value.getData());
             return false;
         }
 

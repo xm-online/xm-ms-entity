@@ -11,34 +11,28 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.icthh.xm.lep.api.LepManager;
 import com.icthh.xm.commons.i18n.error.web.ExceptionTranslator;
 import com.icthh.xm.commons.security.XmAuthenticationContext;
 import com.icthh.xm.commons.security.XmAuthenticationContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
-import com.icthh.xm.ms.entity.EntityApp;
-import com.icthh.xm.ms.entity.config.SecurityBeanOverrideConfiguration;
-import com.icthh.xm.ms.entity.config.elasticsearch.EmbeddedElasticsearchConfig;
-import com.icthh.xm.ms.entity.config.tenant.WebappTenantOverrideConfiguration;
+import com.icthh.xm.lep.api.LepManager;
+import com.icthh.xm.ms.entity.AbstractSpringBootTest;
 import com.icthh.xm.ms.entity.domain.Profile;
 import com.icthh.xm.ms.entity.domain.XmEntity;
+import com.icthh.xm.ms.entity.repository.ProfileRepository;
+import com.icthh.xm.ms.entity.repository.search.XmEntitySearchRepository;
 import com.icthh.xm.ms.entity.service.ProfileService;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Primary;
 import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
-import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.context.transaction.BeforeTransaction;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -52,20 +46,10 @@ import javax.persistence.EntityManager;
  *
  * @see ProfileResource
  */
-@RunWith(SpringRunner.class)
-@SpringBootTest(classes = {
-    EntityApp.class,
-    SecurityBeanOverrideConfiguration.class,
-    WebappTenantOverrideConfiguration.class,
-    ProfileResourceIntTest.class,
-    EmbeddedElasticsearchConfig.class
-})
-@Configuration
-public class ProfileResourceIntTest {
+public class ProfileResourceIntTest extends AbstractSpringBootTest {
 
     private static final String DEFAULT_USER_KEY = "AAAAAAAAAA";
 
-    @Autowired
     private ProfileService profileService;
 
     @Autowired
@@ -85,8 +69,18 @@ public class ProfileResourceIntTest {
 
     @Autowired
     private TenantContextHolder tenantContextHolder;
+
     @Autowired
+    private ProfileRepository profileRepository;
+
+    @Autowired
+    private XmEntitySearchRepository entitySearchRepository;
+
+    @Mock
     private XmAuthenticationContextHolder authContextHolder;
+
+    @Mock
+    private XmAuthenticationContext context;
 
     private MockMvc restProfileMockMvc;
     private Profile profile;
@@ -97,10 +91,11 @@ public class ProfileResourceIntTest {
         TenantContextUtils.setTenant(tenantContextHolder, "RESINTTEST");
     }
 
-    @Bean
-    @Primary
-    public XmAuthenticationContextHolder xmAuthenticationContextHolder() {
-        XmAuthenticationContext context = mock(XmAuthenticationContext.class);
+    @Before
+    public void setup() {
+        MockitoAnnotations.initMocks(this);
+
+
         when(context.hasAuthentication()).thenReturn(true);
         when(context.isFullyAuthenticated()).thenReturn(true);
         when(context.getUserKey()).thenReturn(Optional.of(DEFAULT_USER_KEY));
@@ -108,15 +103,10 @@ public class ProfileResourceIntTest {
         when(context.getDetailsValue(LANGUAGE)).thenReturn(Optional.of("en"));
 
 
-        XmAuthenticationContextHolder holder = mock(XmAuthenticationContextHolder.class);
-        when(holder.getContext()).thenReturn(context);
+        when(authContextHolder.getContext()).thenReturn(context);
 
-        return holder;
-    }
+        profileService = new ProfileService(profileRepository, entitySearchRepository, authContextHolder);
 
-    @Before
-    public void setup() {
-        MockitoAnnotations.initMocks(this);
         final ProfileResource profileResource = new ProfileResource(profileService);
         this.restProfileMockMvc = MockMvcBuilders.standaloneSetup(profileResource)
             .setCustomArgumentResolvers(pageableArgumentResolver)

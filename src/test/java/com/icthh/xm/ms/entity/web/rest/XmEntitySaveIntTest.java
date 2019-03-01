@@ -10,10 +10,7 @@ import com.icthh.xm.commons.security.XmAuthenticationContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
 import com.icthh.xm.lep.api.LepManager;
-import com.icthh.xm.ms.entity.EntityApp;
-import com.icthh.xm.ms.entity.config.LepConfiguration;
-import com.icthh.xm.ms.entity.config.SecurityBeanOverrideConfiguration;
-import com.icthh.xm.ms.entity.config.tenant.WebappTenantOverrideConfiguration;
+import com.icthh.xm.ms.entity.AbstractSpringBootTest;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.service.impl.XmEntityServiceImpl;
 import lombok.SneakyThrows;
@@ -23,13 +20,10 @@ import org.apache.commons.io.IOUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.security.test.context.support.WithMockUser;
-import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.context.transaction.BeforeTransaction;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -39,15 +33,8 @@ import java.util.HashMap;
 import java.util.UUID;
 
 @Slf4j
-@RunWith(SpringRunner.class)
 @WithMockUser(authorities = {"SUPER-ADMIN"})
-@SpringBootTest(classes = {
-    EntityApp.class,
-    SecurityBeanOverrideConfiguration.class,
-    WebappTenantOverrideConfiguration.class,
-    LepConfiguration.class
-})
-public class XmEntitySaveIntTest {
+public class XmEntitySaveIntTest extends AbstractSpringBootTest {
 
     @Autowired
     private XmEntityServiceImpl xmEntityServiceImpl;
@@ -79,7 +66,16 @@ public class XmEntitySaveIntTest {
         });
     }
 
-    void initLeps() {
+    @After
+    public void destroy(){
+        initLeps(false);
+    }
+
+    void initLeps(){
+        initLeps(true);
+    }
+
+    void initLeps(boolean loadData) {
         String pattern = "/config/tenants/RESINTTEST/entity/lep/service/entity/";
 
         val testLeps = new String[]{
@@ -92,7 +88,7 @@ public class XmEntitySaveIntTest {
         };
 
         for (val lep: testLeps) {
-            leps.onRefresh(pattern + lep, loadFile("config/testlep/" + lep));
+            leps.onRefresh(pattern + lep, loadData ? loadFile("config/testlep/" + lep) : null);
         }
     }
 

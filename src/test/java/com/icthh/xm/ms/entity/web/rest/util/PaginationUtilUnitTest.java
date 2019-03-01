@@ -5,10 +5,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
-
+import com.icthh.xm.ms.entity.AbstractUnitTest;
 import com.icthh.xm.ms.entity.domain.template.TemplateParamsHolder;
 import org.junit.Test;
 import org.springframework.data.domain.Page;
@@ -16,12 +13,16 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpHeaders;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+
 /**
  * Tests based on parsing algorithm in app/components/util/pagination-util.service.js
  *
  * @see PaginationUtil
  */
-public class PaginationUtilUnitTest {
+public class PaginationUtilUnitTest extends AbstractUnitTest {
 
     @Test
     public void generatePaginationHttpHeadersTest() {

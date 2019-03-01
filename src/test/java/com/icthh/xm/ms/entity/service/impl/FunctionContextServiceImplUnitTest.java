@@ -5,6 +5,7 @@ import static org.mockito.ArgumentMatchers.refEq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.icthh.xm.ms.entity.AbstractUnitTest;
 import com.icthh.xm.ms.entity.domain.FunctionContext;
 import com.icthh.xm.ms.entity.repository.FunctionContextRepository;
 import org.junit.Test;
@@ -14,7 +15,7 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.class)
-public class FunctionContextServiceImplUnitTest {
+public class FunctionContextServiceImplUnitTest extends AbstractUnitTest {
 
     @InjectMocks
     private FunctionContextServiceImpl functionContextService;

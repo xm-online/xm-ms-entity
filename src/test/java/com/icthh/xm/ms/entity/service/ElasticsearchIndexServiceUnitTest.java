@@ -9,9 +9,9 @@ import static org.mockito.Mockito.when;
 import com.icthh.xm.commons.tenant.PrivilegedTenantContext;
 import com.icthh.xm.commons.tenant.TenantContext;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
+import com.icthh.xm.ms.entity.AbstractUnitTest;
 import com.icthh.xm.ms.entity.config.MappingConfiguration;
 import com.icthh.xm.ms.entity.domain.XmEntity;
-import com.icthh.xm.ms.entity.repository.XmEntityRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityRepositoryInternal;
 import com.icthh.xm.ms.entity.repository.search.XmEntitySearchRepository;
 import lombok.SneakyThrows;
@@ -21,23 +21,18 @@ import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Spy;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
-import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
-import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.util.ReflectionUtils;
 
-import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 
 @RunWith(MockitoJUnitRunner.class)
-public class ElasticsearchIndexServiceUnitTest {
+public class ElasticsearchIndexServiceUnitTest extends AbstractUnitTest {
 
     @InjectMocks
     private ElasticsearchIndexService service;

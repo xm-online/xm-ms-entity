@@ -47,14 +47,10 @@ import com.icthh.xm.commons.security.XmAuthenticationContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
 import com.icthh.xm.lep.api.LepManager;
-import com.icthh.xm.ms.entity.EntityApp;
+import com.icthh.xm.ms.entity.AbstractSpringBootTest;
 import com.icthh.xm.ms.entity.config.ApplicationProperties;
 import com.icthh.xm.ms.entity.config.Constants;
 import com.icthh.xm.ms.entity.config.InternalTransactionService;
-import com.icthh.xm.ms.entity.config.LepConfiguration;
-import com.icthh.xm.ms.entity.config.SecurityBeanOverrideConfiguration;
-import com.icthh.xm.ms.entity.config.elasticsearch.EmbeddedElasticsearchConfig;
-import com.icthh.xm.ms.entity.config.tenant.WebappTenantOverrideConfiguration;
 import com.icthh.xm.ms.entity.domain.Attachment;
 import com.icthh.xm.ms.entity.domain.Calendar;
 import com.icthh.xm.ms.entity.domain.Content;
@@ -103,19 +99,15 @@ import org.apache.commons.lang3.mutable.MutableObject;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
 import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.security.test.context.support.WithMockUser;
-import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.context.transaction.BeforeTransaction;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
@@ -132,16 +124,7 @@ import org.springframework.validation.Validator;
  */
 @Slf4j
 @Transactional
-@RunWith(SpringRunner.class)
-@SpringBootTest(classes = {
-    EntityApp.class,
-    SecurityBeanOverrideConfiguration.class,
-    WebappTenantOverrideConfiguration.class,
-    LepConfiguration.class,
-    EmbeddedElasticsearchConfig.class
-})
-// FIXME: 18-Jan-19 cannot find XmEntity in elasticsearch (nullpointer) when executing with other tests
-public class XmEntityResourceExtendedIntTest {
+public class XmEntityResourceExtendedIntTest extends AbstractSpringBootTest {
 
     private static final String DEFAULT_KEY = "AAAAAAAAAA";
 
@@ -201,6 +184,8 @@ public class XmEntityResourceExtendedIntTest {
     private static final String DEFAULT_LN_TARGET_NAME = "My target link";
     private static final Instant DEFAULT_LN_TARGET_START_DATE = Instant.now();
 
+    private static boolean elasticInited = false;
+
     @Autowired
     private ApplicationProperties applicationProperties;
 
@@ -247,9 +232,6 @@ public class XmEntityResourceExtendedIntTest {
 
     @Autowired
     private ExceptionTranslator exceptionTranslator;
-
-    @Autowired
-    private ElasticsearchTemplate elasticsearchTemplate;
 
     @Autowired
     private EntityManager em;
@@ -325,9 +307,11 @@ public class XmEntityResourceExtendedIntTest {
         //xmEntitySearchRepository.deleteAll();
 
         //initialize index before test - put valid mapping
-        elasticsearchTemplate.deleteIndex(XmEntity.class);
-        elasticsearchTemplate.createIndex(XmEntity.class);
-        elasticsearchTemplate.putMapping(XmEntity.class);
+        if (!elasticInited) {
+            initElasticsearch();
+            elasticInited = true;
+        }
+        cleanElasticsearch();
 
         MockitoAnnotations.initMocks(this);
 
@@ -394,29 +378,6 @@ public class XmEntityResourceExtendedIntTest {
     }
 
     /**
-     * Create an entity for this test.
-     * <p>
-     * This is a static method, as tests for other entities might also need it, if they test an entity which requires
-     * the current entity.
-     */
-    public static XmEntity createEntity() {
-        XmEntity xmEntity = new XmEntity()
-            .key(DEFAULT_KEY)
-            .typeKey(DEFAULT_TYPE_KEY)
-            .stateKey(DEFAULT_STATE_KEY)
-            .name(DEFAULT_NAME)
-            .startDate(DEFAULT_START_DATE)
-            .updateDate(DEFAULT_UPDATE_DATE)
-            .endDate(DEFAULT_END_DATE)
-            .avatarUrl(DEFAULT_AVATAR_URL)
-            .description(DEFAULT_DESCRIPTION)
-            .data(DEFAULT_DATA)
-            .removed(DEFAULT_REMOVED);
-
-        return xmEntity;
-    }
-
-    /**
      * Creates incoming Entity as from HTTP request. Potentially cam be moved to DTO
      *
      * @return XmEntity for incoming request
@@ -445,6 +406,29 @@ public class XmEntityResourceExtendedIntTest {
         );
 
         return entity;
+    }
+
+    /**
+     * Create an entity for this test.
+     * <p>
+     * This is a static method, as tests for other entities might also need it, if they test an entity which requires
+     * the current entity.
+     */
+    public static XmEntity createEntity() {
+        XmEntity xmEntity = new XmEntity()
+            .key(DEFAULT_KEY)
+            .typeKey(DEFAULT_TYPE_KEY)
+            .stateKey(DEFAULT_STATE_KEY)
+            .name(DEFAULT_NAME)
+            .startDate(DEFAULT_START_DATE)
+            .updateDate(DEFAULT_UPDATE_DATE)
+            .endDate(DEFAULT_END_DATE)
+            .avatarUrl(DEFAULT_AVATAR_URL)
+            .description(DEFAULT_DESCRIPTION)
+            .data(DEFAULT_DATA)
+            .removed(DEFAULT_REMOVED);
+
+        return xmEntity;
     }
 
     /**

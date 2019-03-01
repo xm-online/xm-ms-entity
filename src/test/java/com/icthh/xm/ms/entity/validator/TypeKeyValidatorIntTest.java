@@ -5,19 +5,14 @@ import static org.junit.Assert.assertEquals;
 
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
-import com.icthh.xm.ms.entity.EntityApp;
-import com.icthh.xm.ms.entity.config.SecurityBeanOverrideConfiguration;
-import com.icthh.xm.ms.entity.config.tenant.WebappTenantOverrideConfiguration;
+import com.icthh.xm.ms.entity.AbstractSpringBootTest;
 import com.icthh.xm.ms.entity.domain.Tag;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.junit4.SpringRunner;
 
 import java.time.Instant;
 import java.util.Map;
@@ -26,9 +21,7 @@ import javax.validation.ConstraintViolation;
 import javax.validation.Validator;
 
 @Slf4j
-@RunWith(SpringRunner.class)
-@SpringBootTest(classes = {EntityApp.class, SecurityBeanOverrideConfiguration.class, WebappTenantOverrideConfiguration.class})
-public class TypeKeyValidatorIntTest {
+public class TypeKeyValidatorIntTest extends AbstractSpringBootTest {
 
     @Autowired
     private Validator validator;

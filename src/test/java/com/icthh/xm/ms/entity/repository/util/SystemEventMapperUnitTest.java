@@ -1,5 +1,6 @@
 package com.icthh.xm.ms.entity.repository.util;
 
+import com.icthh.xm.ms.entity.AbstractUnitTest;
 import com.icthh.xm.ms.entity.config.Constants;
 import com.icthh.xm.ms.entity.domain.EntityState;
 import com.icthh.xm.ms.entity.domain.Profile;
@@ -14,7 +15,7 @@ import java.util.Map;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
-public class SystemEventMapperUnitTest {
+public class SystemEventMapperUnitTest extends AbstractUnitTest {
 
     private static final String DEFAULT_ID = "id";
     private static final String DEFAULT_FIRST_NAME = "firstName";

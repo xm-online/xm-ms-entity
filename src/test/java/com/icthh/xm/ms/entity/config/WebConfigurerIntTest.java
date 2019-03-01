@@ -16,6 +16,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.servlet.InstrumentedFilter;
 import com.codahale.metrics.servlets.MetricsServlet;
+import com.icthh.xm.ms.entity.AbstractUnitTest;
 import io.github.jhipster.config.JHipsterConstants;
 import io.github.jhipster.config.JHipsterProperties;
 import io.undertow.Undertow;
@@ -53,7 +54,7 @@ import org.xnio.OptionMap;
  *
  * @see WebConfigurer
  */
-public class WebConfigurerIntTest {
+public class WebConfigurerIntTest extends AbstractUnitTest {
 
     private WebConfigurer webConfigurer;
 

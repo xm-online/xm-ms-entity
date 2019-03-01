@@ -16,12 +16,9 @@ import com.icthh.xm.commons.security.XmAuthenticationContext;
 import com.icthh.xm.commons.security.XmAuthenticationContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
-import com.icthh.xm.commons.tenant.spring.config.TenantContextConfiguration;
 import com.icthh.xm.lep.api.LepManager;
-import com.icthh.xm.ms.entity.EntityApp;
+import com.icthh.xm.ms.entity.AbstractSpringBootTest;
 import com.icthh.xm.ms.entity.config.MappingConfiguration;
-import com.icthh.xm.ms.entity.config.SecurityBeanOverrideConfiguration;
-import com.icthh.xm.ms.entity.config.tenant.WebappTenantOverrideConfiguration;
 import com.icthh.xm.ms.entity.domain.Attachment;
 import com.icthh.xm.ms.entity.domain.Calendar;
 import com.icthh.xm.ms.entity.domain.Comment;
@@ -47,27 +44,17 @@ import org.apache.commons.io.IOUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.security.test.context.support.WithMockUser;
-import org.springframework.test.context.junit4.SpringRunner;
 
 @Slf4j
-@RunWith(SpringRunner.class)
-@SpringBootTest(classes = {
-    EntityApp.class,
-    SecurityBeanOverrideConfiguration.class,
-    WebappTenantOverrideConfiguration.class,
-    TenantContextConfiguration.class
-})
-public class XmEntityServiceIntTest {
+public class XmEntityServiceIntTest extends AbstractSpringBootTest {
 
     @Autowired
     private TenantContextHolder tenantContextHolder;
@@ -97,7 +84,7 @@ public class XmEntityServiceIntTest {
     private XmAuthenticationContext context;
 
     @Before
-    public void beforeTransaction() {
+    public void before() {
         TenantContextUtils.setTenant(tenantContextHolder, "RESINTTEST");
         MockitoAnnotations.initMocks(this);
         when(authContextHolder.getContext()).thenReturn(context);
@@ -113,6 +100,7 @@ public class XmEntityServiceIntTest {
     @After
     public void afterTest() {
         tenantContextHolder.getPrivilegedContext().destroyCurrentContext();
+        lepManager.endThreadContext();
     }
 
     private XmEntity createXmEntity() {

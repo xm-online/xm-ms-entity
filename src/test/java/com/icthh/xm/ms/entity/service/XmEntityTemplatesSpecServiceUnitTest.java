@@ -9,6 +9,7 @@ import static org.mockito.Mockito.when;
 import com.icthh.xm.commons.tenant.TenantContext;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantKey;
+import com.icthh.xm.ms.entity.AbstractUnitTest;
 import com.icthh.xm.ms.entity.config.ApplicationProperties;
 import java.util.Optional;
 import lombok.SneakyThrows;
@@ -19,7 +20,7 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.class)
-public class XmEntityTemplatesSpecServiceUnitTest {
+public class XmEntityTemplatesSpecServiceUnitTest extends AbstractUnitTest {
 
     private static final String TENANT = "TEST";
 

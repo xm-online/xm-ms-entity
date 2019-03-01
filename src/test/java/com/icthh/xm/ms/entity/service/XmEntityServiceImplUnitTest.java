@@ -15,6 +15,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.icthh.xm.commons.config.client.service.TenantConfigService;
 import com.icthh.xm.commons.exceptions.BusinessException;
+import com.icthh.xm.ms.entity.AbstractUnitTest;
 import com.icthh.xm.ms.entity.domain.UniqueField;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.domain.spec.StateSpec;
@@ -45,7 +46,7 @@ import org.mockito.junit.MockitoJUnitRunner;
 
 @Slf4j
 @RunWith(MockitoJUnitRunner.class)
-public class XmEntityServiceImplUnitTest {
+public class XmEntityServiceImplUnitTest extends AbstractUnitTest {
 
     public static final String TEST_TYPE_KEY = "TEST_TYPE_KEY";
     @InjectMocks

@@ -3,10 +3,11 @@ package com.icthh.xm.ms.entity.service;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import com.icthh.xm.ms.entity.AbstractUnitTest;
 import org.junit.Test;
 import org.springframework.util.AntPathMatcher;
 
-public class PathMatcherUnitTest {
+public class PathMatcherUnitTest extends AbstractUnitTest {
 
     @Test
     public void testMatcher() {

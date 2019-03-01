@@ -4,9 +4,10 @@ import static org.hamcrest.Matchers.isEmptyString;
 import static org.hamcrest.core.IsNot.not;
 import static org.junit.Assert.assertThat;
 
+import com.icthh.xm.ms.entity.AbstractUnitTest;
 import org.junit.Test;
 
-public class ResourceUtilsUnitTest {
+public class ResourceUtilsUnitTest extends AbstractUnitTest {
 
     @Test
     public void testResourceExists() {

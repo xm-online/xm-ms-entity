@@ -8,6 +8,7 @@ import static org.mockito.Mockito.when;
 import com.icthh.xm.commons.gen.model.Tenant;
 import com.icthh.xm.commons.tenant.TenantContext;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
+import com.icthh.xm.ms.entity.AbstractUnitTest;
 import com.icthh.xm.ms.entity.config.ApplicationProperties;
 import com.icthh.xm.ms.entity.domain.EntityState;
 import com.icthh.xm.ms.entity.domain.XmEntity;
@@ -26,7 +27,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-public class XmTenantLifecycleServiceUnitTest {
+public class XmTenantLifecycleServiceUnitTest extends AbstractUnitTest {
 
     private static final String ENTITY_TYPE_KEY = "RESOURCE.XM-TENANT";
     private static final String SERVICE_NAME = "test";

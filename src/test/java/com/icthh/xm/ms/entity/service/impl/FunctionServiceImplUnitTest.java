@@ -1,6 +1,7 @@
 package com.icthh.xm.ms.entity.service.impl;
 
 import com.google.common.collect.Maps;
+import com.icthh.xm.ms.entity.AbstractUnitTest;
 import com.icthh.xm.ms.entity.domain.FunctionContext;
 import com.icthh.xm.ms.entity.domain.ext.IdOrKey;
 import com.icthh.xm.ms.entity.domain.spec.FunctionSpec;
@@ -27,7 +28,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-public class FunctionServiceImplUnitTest {
+public class FunctionServiceImplUnitTest extends AbstractUnitTest {
 
     public static final String UNKNOWN_KEY = "UNKNOWN_KEY";
 

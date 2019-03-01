@@ -3,7 +3,11 @@ package com.icthh.xm.ms.entity.util;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import lombok.experimental.UtilityClass;
-import java.util.*;
+
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 @UtilityClass
 public final class CustomCollectionUtils {
