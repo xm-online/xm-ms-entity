@@ -8,7 +8,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.util.Optional;
 import java.util.function.Function;
 import javax.annotation.PostConstruct;
 import javax.persistence.PostPersist;
@@ -55,9 +54,9 @@ public class XmEntityElasticSearchListener {
         }
     }
 
-    boolean isFeatureEnabled(XmEntity entity, Function<TypeSpec, Boolean> flag){
-        return Optional.ofNullable(xmEntitySpecService.findTypeByKey(entity.getTypeKey()))
-                       .map(flag::apply)
-                       .orElse(false);
+    private boolean isFeatureEnabled(XmEntity entity, Function<TypeSpec, Boolean> flag) {
+        return xmEntitySpecService.getTypeSpecByKey(entity.getTypeKey())
+                                  .map(flag)
+                                  .orElse(false);
     }
 }

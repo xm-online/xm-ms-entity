@@ -13,6 +13,7 @@ import com.icthh.xm.ms.entity.repository.search.XmEntitySearchRepository;
 import lombok.AccessLevel;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.time.StopWatch;
 import org.elasticsearch.ResourceAlreadyExistsException;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Lazy;
@@ -20,6 +21,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -35,8 +37,11 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import javax.annotation.Resource;
 import javax.persistence.OneToMany;
+import javax.persistence.criteria.CriteriaBuilder;
 
 @Slf4j
 @Service
@@ -44,6 +49,8 @@ public class ElasticsearchIndexService {
 
     private static final Lock reindexLock = new ReentrantLock();
     private static final int PAGE_SIZE = 100;
+    private static final String XM_ENTITY_FIELD_TYPEKEY = "typeKey";
+    private static final String XM_ENTITY_FIELD_ID = "id";
 
     private final XmEntityRepositoryInternal xmEntityRepositoryInternal;
     private final XmEntitySearchRepository xmEntitySearchRepository;
@@ -78,25 +85,113 @@ public class ElasticsearchIndexService {
         executor.execute(() -> execForCustomContext(tenantKey, rid, () -> selfReference.reindexAll()));
     }
 
+    /**
+     * Recreates index and then reindexes ALL entities from database.
+     * @return number of reindexed entities.
+     */
     @Timed
     @Transactional(readOnly = true)
-    public void reindexAll() {
+    public long reindexAll() {
+        long reindexed = 0L;
         if (reindexLock.tryLock()) {
             try {
-                reindexXmEntity();
-
-                log.info("Elasticsearch: Successfully performed reindexing");
+                recreateIndex();
+                reindexed = reindexXmEntity();
+                log.info("Elasticsearch: Successfully performed full reindexing");
             } finally {
                 reindexLock.unlock();
             }
         } else {
             log.info("Elasticsearch: concurrent reindexing attempt");
         }
+        return reindexed;
     }
 
-    private void reindexXmEntity() {
+    /**
+     * Refreshes entities in elasticsearch index filtered by typeKey.
+     *
+     * Does not recreate index.
+     * @param typeKey typeKey to filter source entities.
+     * @return number of reindexed entities.
+     */
+    @Timed
+    @Transactional(readOnly = true)
+    public long reindexAll(@Nonnull String typeKey){
+
+        Objects.requireNonNull(typeKey, "typeKey should not be null");
+
+        Specification<XmEntity> spec = Specification
+            .where((root, query, cb) -> cb.equal(root.get(XM_ENTITY_FIELD_TYPEKEY), typeKey));
+
+        return reindexXmEntity(spec);
+
+    }
+
+    /**
+     * Refreshes entities in elasticsearch index filtered by collection of IDs.
+     *
+     * Does not recreate index.
+     * @param ids - collection of IDs of entities to be reindexed.
+     * @return number of reindexed entities.
+     */
+    @Timed
+    @Transactional(readOnly = true)
+    public long reindexAll(@Nonnull Iterable<Long> ids) {
+
+        Objects.requireNonNull(ids, "ids should not be null");
+
+        Specification<XmEntity> spec = Specification
+            .where((root, query, cb) -> {
+                CriteriaBuilder.In<Long> in = cb.in(root.get(XM_ENTITY_FIELD_ID));
+                ids.forEach(in::value);
+                return in;
+            });
+
+        return reindexXmEntity(spec);
+    }
+
+    private Long reindexXmEntity() {
+
+        return reindexXmEntity(null);
+    }
+
+    private long reindexXmEntity(@Nullable Specification<XmEntity> spec) {
+
+        StopWatch stopWatch = StopWatch.createStarted();
 
         final Class<XmEntity> clazz = XmEntity.class;
+
+        long reindexed = 0L;
+
+        if (xmEntityRepositoryInternal.count(spec) > 0) {
+            List<Method> relationshipGetters = Arrays.stream(clazz.getDeclaredFields())
+                                                     .filter(field -> field.getType().equals(Set.class))
+                                                     .filter(field -> field.getAnnotation(OneToMany.class) != null)
+                                                     .filter(field -> field.getAnnotation(JsonIgnore.class) == null)
+                                                     .map(field -> extractFieldGetter(clazz, field))
+                                                     .filter(Objects::nonNull)
+                                                     .collect(Collectors.toList());
+
+            for (int i = 0; i <= xmEntityRepositoryInternal.count(spec) / PAGE_SIZE ; i++) {
+                Pageable page = PageRequest.of(i, PAGE_SIZE);
+                log.info("Indexing page {} of {}, pageSize {}", i, xmEntityRepositoryInternal.count(spec) / PAGE_SIZE, PAGE_SIZE);
+                Page<XmEntity> results = xmEntityRepositoryInternal.findAll(spec, page);
+                results.map(entity -> loadEntityRelationships(relationshipGetters, entity));
+                xmEntitySearchRepository.saveAll(results.getContent());
+                reindexed += results.getContent().size();
+            }
+        }
+        log.info("Elasticsearch: Indexed [{}] rows for {} in {} ms",
+                 reindexed, clazz.getSimpleName(), stopWatch.getTime());
+        return reindexed;
+
+    }
+
+    private void recreateIndex() {
+
+        final Class<XmEntity> clazz = XmEntity.class;
+
+        StopWatch stopWatch = StopWatch.createStarted();
 
         elasticsearchTemplate.deleteIndex(clazz);
         try {
@@ -110,25 +205,8 @@ public class ElasticsearchIndexService {
         } else {
             elasticsearchTemplate.putMapping(clazz);
         }
-
-        if (xmEntityRepositoryInternal.count() > 0) {
-            List<Method> relationshipGetters = Arrays.stream(clazz.getDeclaredFields())
-                .filter(field -> field.getType().equals(Set.class))
-                .filter(field -> field.getAnnotation(OneToMany.class) != null)
-                .filter(field -> field.getAnnotation(JsonIgnore.class) == null)
-                .map(field -> extractFieldGetter(clazz, field))
-                .filter(Objects::nonNull)
-                .collect(Collectors.toList());
-
-            for (int i = 0; i <= xmEntityRepositoryInternal.count() / PAGE_SIZE ; i++) {
-                Pageable page = PageRequest.of(i, PAGE_SIZE);
-                log.info("Indexing page {} of {}, pageSize {}", i, xmEntityRepositoryInternal.count() / PAGE_SIZE, PAGE_SIZE);
-                Page<XmEntity> results = xmEntityRepositoryInternal.findAll(page);
-                results.map(entity -> loadEntityRelationships(relationshipGetters, entity));
-                xmEntitySearchRepository.saveAll(results.getContent());
-            }
-        }
-        log.info("Elasticsearch: Indexed all rows for {}", clazz.getSimpleName());
+        log.info("elasticsearch index was recreated for {} in {} ms",
+                 XmEntity.class.getSimpleName(), stopWatch.getTime());
     }
 
     private Method extractFieldGetter(final Class<XmEntity> clazz, final Field field) {

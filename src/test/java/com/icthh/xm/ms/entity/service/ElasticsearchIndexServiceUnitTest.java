@@ -1,13 +1,11 @@
 package com.icthh.xm.ms.entity.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.mock;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.icthh.xm.commons.tenant.PrivilegedTenantContext;
-import com.icthh.xm.commons.tenant.TenantContext;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.ms.entity.AbstractUnitTest;
 import com.icthh.xm.ms.entity.config.MappingConfiguration;
@@ -50,10 +48,6 @@ public class ElasticsearchIndexServiceUnitTest extends AbstractUnitTest {
     @Before
     public void before() {
         service.setSelfReference(service);
-
-        TenantContext tenantContext = mock(TenantContext.class);
-
-        PrivilegedTenantContext privilegedTenantContext = mock(PrivilegedTenantContext.class);
     }
 
     @Test
@@ -68,12 +62,13 @@ public class ElasticsearchIndexServiceUnitTest extends AbstractUnitTest {
     @SneakyThrows
     private void prepareInternal() {
         Class<XmEntity> entityClass = XmEntity.class;
-        when(xmEntityRepository.count()).thenReturn(10L);
-        when(xmEntityRepository.findAll(PageRequest.of(0, 100))).thenReturn(
+        when(xmEntityRepository.count(null)).thenReturn(10L);
+        when(xmEntityRepository.findAll(null, PageRequest.of(0, 100))).thenReturn(
             new PageImpl<>(Collections.singletonList(createObject(entityClass))));
     }
 
     @SneakyThrows
+    @SuppressWarnings("unchecked")
     private  void verifyInternal() {
 
         Class<XmEntity> entityClass = XmEntity.class;
@@ -82,7 +77,7 @@ public class ElasticsearchIndexServiceUnitTest extends AbstractUnitTest {
         verify(elasticsearchTemplate).createIndex(entityClass);
         verify(elasticsearchTemplate).putMapping(entityClass);
 
-        verify(xmEntityRepository, times(4)).count();
+        verify(xmEntityRepository, times(4)).count(any());
 
         ArgumentCaptor<List> list = ArgumentCaptor.forClass(List.class);
         verify(xmEntitySearchRepository).saveAll(list.capture());
