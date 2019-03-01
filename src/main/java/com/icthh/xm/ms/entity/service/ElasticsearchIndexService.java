@@ -33,9 +33,11 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -78,11 +80,55 @@ public class ElasticsearchIndexService {
         this.executor = executor;
     }
 
+    /**
+     * Recreates index and then reindexes ALL entities from database asynchronously.
+     * @return @{@link CompletableFuture<Long>} with a number of reindexed entities.
+     */
     @Timed
-    public void reindexAllAsync() {
+    public CompletableFuture<Long> reindexAllAsync() {
         TenantKey tenantKey = TenantContextUtils.getRequiredTenantKey(tenantContextHolder);
         String rid = MdcUtils.getRid();
-        executor.execute(() -> execForCustomContext(tenantKey, rid, () -> selfReference.reindexAll()));
+        return CompletableFuture.supplyAsync(() -> execForCustomContext(tenantKey,
+                                                                        rid,
+                                                                        selfReference::reindexAll), executor);
+    }
+
+    /**
+     * Refreshes entities in elasticsearch index filtered by typeKey asynchronously.
+     *
+     * Does not recreate index.
+     * @param typeKey typeKey to filter source entities.
+     * @return @{@link CompletableFuture<Long>} with a number of reindexed entities.
+     */
+    @Timed
+    public CompletableFuture<Long> reindexByTypeKeyAsync(@Nonnull String typeKey) {
+
+        Objects.requireNonNull(typeKey, "typeKey should not be null");
+
+        TenantKey tenantKey = TenantContextUtils.getRequiredTenantKey(tenantContextHolder);
+        String rid = MdcUtils.getRid();
+        return CompletableFuture.supplyAsync(() -> execForCustomContext(tenantKey,
+                                                                        rid,
+                                                                        () -> selfReference.reindexByTypeKey(typeKey)), executor);
+    }
+
+    /**
+     * Refreshes entities in elasticsearch index filtered by collection of IDs asynchronously.
+     *
+     * Does not recreate index.
+     * @param ids - collection of IDs of entities to be reindexed.
+     * @return @{@link CompletableFuture<Long>} with a number of reindexed entities.
+     */
+    @Timed
+    public CompletableFuture<Long> reindexByIdsAsync(@Nonnull Iterable<Long> ids) {
+
+        Objects.requireNonNull(ids, "ids should not be null");
+
+        TenantKey tenantKey = TenantContextUtils.getRequiredTenantKey(tenantContextHolder);
+        String rid = MdcUtils.getRid();
+        return CompletableFuture.supplyAsync(() -> execForCustomContext(tenantKey,
+                                                                        rid,
+                                                                        () -> selfReference.reindexByIds(ids)), executor);
     }
 
     /**
@@ -116,7 +162,7 @@ public class ElasticsearchIndexService {
      */
     @Timed
     @Transactional(readOnly = true)
-    public long reindexAll(@Nonnull String typeKey){
+    public long reindexByTypeKey(@Nonnull String typeKey){
 
         Objects.requireNonNull(typeKey, "typeKey should not be null");
 
@@ -136,7 +182,7 @@ public class ElasticsearchIndexService {
      */
     @Timed
     @Transactional(readOnly = true)
-    public long reindexAll(@Nonnull Iterable<Long> ids) {
+    public long reindexByIds(@Nonnull Iterable<Long> ids) {
 
         Objects.requireNonNull(ids, "ids should not be null");
 
@@ -232,10 +278,10 @@ public class ElasticsearchIndexService {
         return entity;
     }
 
-    private void execForCustomContext(TenantKey tenantKey, String rid, Runnable runnable) {
+    private Long execForCustomContext(TenantKey tenantKey, String rid, Supplier<Long> runnable) {
         try {
             MdcUtils.putRid(rid);
-            tenantContextHolder.getPrivilegedContext().execute(TenantContextUtils.buildTenant(tenantKey), runnable);
+            return tenantContextHolder.getPrivilegedContext().execute(TenantContextUtils.buildTenant(tenantKey), runnable);
         } finally {
             MdcUtils.removeRid();
         }

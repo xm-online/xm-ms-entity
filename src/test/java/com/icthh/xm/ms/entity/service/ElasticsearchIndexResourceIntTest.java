@@ -43,7 +43,6 @@ import lombok.SneakyThrows;
 import org.assertj.core.util.Lists;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -412,7 +411,7 @@ public class ElasticsearchIndexResourceIntTest extends AbstractSpringBootTest {
         xmEntityService.save(createEntity().typeKey(DEFAULT_TYPE_KEY));
         xmEntityService.save(createEntity().typeKey(ANOTHER_TYPE_KEY));
 
-        long reindexed = elasticsearchIndexService.reindexAll(DEFAULT_TYPE_KEY);
+        long reindexed = elasticsearchIndexService.reindexByTypeKey(DEFAULT_TYPE_KEY);
         assertEquals(2L, reindexed);
 
         mockMvc.perform(get("/api/_search/xm-entities?query=*:*"))
@@ -428,6 +427,30 @@ public class ElasticsearchIndexResourceIntTest extends AbstractSpringBootTest {
     @Test
     @SneakyThrows
     @Transactional
+    public void testReindexByTypeKeyAsync() {
+
+        autoIndexDisable();
+        assertIndexIsEmpty();
+
+        xmEntityService.save(createEntity().typeKey(DEFAULT_TYPE_KEY));
+        xmEntityService.save(createEntity().typeKey(DEFAULT_TYPE_KEY));
+        xmEntityService.save(createEntity().typeKey(ANOTHER_TYPE_KEY));
+
+        long reindexed = elasticsearchIndexService.reindexByTypeKeyAsync(DEFAULT_TYPE_KEY).get();
+        assertEquals(2L, reindexed);
+
+        mockMvc.perform(get("/api/_search/xm-entities?query=*:*"))
+               .andExpect(status().isOk())
+               .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+               .andExpect(jsonPath("$").isArray())
+               .andExpect(jsonPath("$").value(hasSize(2)))
+               .andExpect(jsonPath("$.[0].typeKey").value(DEFAULT_TYPE_KEY))
+               .andExpect(jsonPath("$.[1].typeKey").value(DEFAULT_TYPE_KEY))
+        ;
+    }
+
+    @Test
+    @Transactional
     public void testReindexByTypeKeyNonNull() {
 
         autoIndexDisable();
@@ -436,7 +459,21 @@ public class ElasticsearchIndexResourceIntTest extends AbstractSpringBootTest {
         exception.expectMessage("typeKey should not be null");
 
         String typeKey = null;
-        elasticsearchIndexService.reindexAll(typeKey);
+        elasticsearchIndexService.reindexByTypeKey(typeKey);
+
+    }
+
+    @Test
+    @Transactional
+    public void testReindexByTypeKeyAsyncNonNull() {
+
+        autoIndexDisable();
+
+        exception.expect(NullPointerException.class);
+        exception.expectMessage("typeKey should not be null");
+
+        String typeKey = null;
+        elasticsearchIndexService.reindexByTypeKeyAsync(typeKey);
 
     }
 
@@ -455,7 +492,7 @@ public class ElasticsearchIndexResourceIntTest extends AbstractSpringBootTest {
         assert id1 != null;
         assert id3 != null;
 
-        long reindexed = elasticsearchIndexService.reindexAll(Lists.newArrayList(id1, id3));
+        long reindexed = elasticsearchIndexService.reindexByIds(Lists.newArrayList(id1, id3));
         assertEquals(2L, reindexed);
 
         mockMvc.perform(get("/api/_search/xm-entities?query=*:*"))
@@ -471,6 +508,33 @@ public class ElasticsearchIndexResourceIntTest extends AbstractSpringBootTest {
     @Test
     @SneakyThrows
     @Transactional
+    public void testReindexByIdsAsync() {
+
+        autoIndexDisable();
+        assertIndexIsEmpty();
+
+        Long id1 = xmEntityService.save(createEntity().typeKey(DEFAULT_TYPE_KEY)).getId();
+        xmEntityService.save(createEntity().typeKey(DEFAULT_TYPE_KEY));
+        Long id3 = xmEntityService.save(createEntity().typeKey(ANOTHER_TYPE_KEY)).getId();
+
+        assert id1 != null;
+        assert id3 != null;
+
+        long reindexed = elasticsearchIndexService.reindexByIdsAsync(Lists.newArrayList(id1, id3)).get();
+        assertEquals(2L, reindexed);
+
+        mockMvc.perform(get("/api/_search/xm-entities?query=*:*"))
+               .andExpect(status().isOk())
+               .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+               .andExpect(jsonPath("$").isArray())
+               .andExpect(jsonPath("$").value(hasSize(2)))
+               .andExpect(jsonPath("$.[*].id")
+                              .value(containsInAnyOrder(id1.intValue(),id3.intValue())))
+        ;
+    }
+
+    @Test
+    @Transactional
     public void testReindexByIdsNonNull() {
 
         autoIndexDisable();
@@ -479,9 +543,24 @@ public class ElasticsearchIndexResourceIntTest extends AbstractSpringBootTest {
         exception.expectMessage("ids should not be null");
 
         List<Long> ids = null;
-        elasticsearchIndexService.reindexAll(ids);
+        elasticsearchIndexService.reindexByIds(ids);
 
     }
+
+    @Test
+    @Transactional
+    public void testReindexByIdsAsyncNonNull() {
+
+        autoIndexDisable();
+
+        exception.expect(NullPointerException.class);
+        exception.expectMessage("ids should not be null");
+
+        List<Long> ids = null;
+        elasticsearchIndexService.reindexByIds(ids);
+
+    }
+
 
     @Test
     @SneakyThrows
@@ -499,7 +578,7 @@ public class ElasticsearchIndexResourceIntTest extends AbstractSpringBootTest {
         assert id2 != null;
         assert id3 != null;
 
-        long reindexed = elasticsearchIndexService.reindexAll(Lists.newArrayList(id1, id2));
+        long reindexed = elasticsearchIndexService.reindexByIds(Lists.newArrayList(id1, id2));
         assertEquals(2L, reindexed);
 
         mockMvc.perform(get("/api/_search/xm-entities?query=*:*"))
@@ -511,7 +590,7 @@ public class ElasticsearchIndexResourceIntTest extends AbstractSpringBootTest {
                               .value(containsInAnyOrder(id1.intValue(), id2.intValue())))
         ;
 
-        reindexed = elasticsearchIndexService.reindexAll(Lists.newArrayList(id3));
+        reindexed = elasticsearchIndexService.reindexByIds(Lists.newArrayList(id3));
         assertEquals(1L, reindexed);
 
         mockMvc.perform(get("/api/_search/xm-entities?query=*:*"))
@@ -527,7 +606,6 @@ public class ElasticsearchIndexResourceIntTest extends AbstractSpringBootTest {
     @Test
     @SneakyThrows
     @Transactional
-    @Ignore
     public void testReindexByIdsUpdatesIndexData() {
 
         autoIndexDisable();
@@ -541,7 +619,7 @@ public class ElasticsearchIndexResourceIntTest extends AbstractSpringBootTest {
 
         List<Long> ids = Lists.newArrayList(xmEntity1.getId(), xmEntity2.getId());
 
-        long reindexed = elasticsearchIndexService.reindexAll(ids);
+        long reindexed = elasticsearchIndexService.reindexByIds(ids);
         assertEquals(2L, reindexed);
 
         mockMvc.perform(get("/api/_search/xm-entities?query=*:*"))
@@ -559,7 +637,7 @@ public class ElasticsearchIndexResourceIntTest extends AbstractSpringBootTest {
 
         xmEntityService.save(xmEntity1.name("new name 1"));
 
-        reindexed = elasticsearchIndexService.reindexAll(ids);
+        reindexed = elasticsearchIndexService.reindexByIds(ids);
         assertEquals(2L, reindexed);
 
         mockMvc.perform(get("/api/_search/xm-entities?query=*:*"))
