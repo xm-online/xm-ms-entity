@@ -3,6 +3,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.icthh.xm.commons.config.client.service.TenantConfigService;
+import com.icthh.xm.commons.logging.aop.IgnoreLogginAspect;
 import com.icthh.xm.commons.permission.domain.Permission;
 import com.icthh.xm.commons.permission.service.PermissionCheckService;
 import com.icthh.xm.commons.permission.service.PermissionService;
@@ -82,6 +83,7 @@ public class DynamicPermissionCheckService {
      * @param suffix context permission 'YYY'
      * @return result from PermissionCheckService.hasPermission
      */
+    @IgnoreLogginAspect
     public boolean checkContextPermission(FeatureContext featureContext, String basePermission, String suffix) {
         Preconditions.checkArgument(StringUtils.isNotEmpty(basePermission));
         Preconditions.checkArgument(StringUtils.isNotEmpty(suffix));
@@ -104,6 +106,7 @@ public class DynamicPermissionCheckService {
         return assertPermission(permission);
     }
 
+    @IgnoreLogginAspect
     public <T, I> T filterInnerListByPermission(final T outterType,
                                                 Supplier<List<I>> innerGetter,
                                                 Consumer<List<I>> innerSetter,
