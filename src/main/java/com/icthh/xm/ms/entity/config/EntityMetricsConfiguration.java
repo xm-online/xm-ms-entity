@@ -23,6 +23,8 @@ import javax.servlet.ServletContext;
 @RequiredArgsConstructor
 public class EntityMetricsConfiguration extends MetricsConfigurerAdapter implements ServletContextInitializer {
 
+    private static final String SCHEDULER = "scheduler";
+
     private final MetricRegistry metricRegistry;
     private final SchedulerMetricsSet schedulerMetricsSet;
     private final JHipsterProperties jHipsterProperties;
@@ -43,7 +45,7 @@ public class EntityMetricsConfiguration extends MetricsConfigurerAdapter impleme
             hikariDataSource.setMetricRegistry(metricRegistry);
         }
 
-        metricRegistry.register("scheduler", schedulerMetricsSet);
+        metricRegistry.register(SCHEDULER, schedulerMetricsSet);
     }
 
     @Override

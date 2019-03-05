@@ -22,8 +22,8 @@ public class SchedulerMetricsSet implements MetricSet {
     public Map<String, Metric> getMetrics() {
         Map<String, Metric> metrics = new HashMap<>();
         metrics.put("success.messages.count", (Gauge) countSuccessMessages::get);
-        metrics.put("success.last.time", (Gauge) countSuccessMessages::get);
-        metrics.put("failed.messages.count", (Gauge) () -> lastSuccess.get().toString());
+        metrics.put("success.last.time", (Gauge) () -> lastSuccess.get().toString());
+        metrics.put("failed.messages.count", (Gauge) countFailedMessages::get);
         metrics.put("failed.last.time", (Gauge) () -> lastError.get().toString());
         return metrics;
     }
