@@ -8,6 +8,7 @@ import io.github.jhipster.config.JHipsterProperties;
 import io.prometheus.client.CollectorRegistry;
 import io.prometheus.client.dropwizard.DropwizardExports;
 import io.prometheus.client.exporter.MetricsServlet;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.web.servlet.ServletContextInitializer;
@@ -19,18 +20,16 @@ import javax.servlet.ServletContext;
 @Slf4j
 @Configuration
 @EnableMetrics(proxyTargetClass = true)
+@RequiredArgsConstructor
 public class EntityMetricsConfiguration extends MetricsConfigurerAdapter implements ServletContextInitializer {
 
-    private final MetricRegistry metricRegistry;
+    private static final String SCHEDULER = "scheduler";
 
+    private final MetricRegistry metricRegistry;
+    private final SchedulerMetricsSet schedulerMetricsSet;
     private final JHipsterProperties jHipsterProperties;
 
     private HikariDataSource hikariDataSource;
-
-    public EntityMetricsConfiguration(MetricRegistry metricRegistry, JHipsterProperties jHipsterProperties) {
-        this.metricRegistry = metricRegistry;
-        this.jHipsterProperties = jHipsterProperties;
-    }
 
     @Autowired(required = false)
     public void setHikariDataSource(HikariDataSource hikariDataSource) {
@@ -45,6 +44,8 @@ public class EntityMetricsConfiguration extends MetricsConfigurerAdapter impleme
             hikariDataSource.setMetricsTrackerFactory(null);
             hikariDataSource.setMetricRegistry(metricRegistry);
         }
+
+        metricRegistry.register(SCHEDULER, schedulerMetricsSet);
     }
 
     @Override

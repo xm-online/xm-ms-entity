@@ -10,6 +10,7 @@ import com.icthh.xm.commons.security.XmAuthenticationContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
 import com.icthh.xm.lep.api.LepManager;
+import com.icthh.xm.ms.entity.config.SchedulerMetricsSet;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -24,19 +25,24 @@ public class SchedulerHandler implements SchedulerEventHandler {
     private final TenantContextHolder tenantContextHolder;
     private final XmAuthenticationContextHolder authContextHolder;
     private final LepManager lepManager;
+    private final SchedulerMetricsSet schedulerMetricsSet;
 
     @Override
     public void onEvent(ScheduledEvent scheduledEvent, String tenant) {
         try {
-            init(tenant, scheduledEvent.getCreatedBy());
+            init(tenant);
             log.info("Receive event {} {}", scheduledEvent, tenant);
             schedulerService.onEvent(scheduledEvent);
+            schedulerMetricsSet.onSuccess();
+        } catch (Throwable e) {
+            schedulerMetricsSet.onError();
+            throw e;
         } finally {
             destroy();
         }
     }
 
-    private void init(String tenantKey, String login) {
+    private void init(String tenantKey) {
         TenantContextUtils.setTenant(tenantContextHolder, tenantKey);
 
         lepManager.beginThreadContext(threadContext -> {
