@@ -15,8 +15,8 @@ public class SchedulerMetricsSet implements MetricSet {
 
     private final AtomicLong countSuccessMessages = new AtomicLong();
     private final AtomicLong countFailedMessages = new AtomicLong();
-    private final AtomicReference<Instant> lastSuccess = new AtomicReference<>();
-    private final AtomicReference<Instant> lastError = new AtomicReference<>();
+    private final AtomicReference<Instant> lastSuccess = new AtomicReference<>(Instant.MIN);
+    private final AtomicReference<Instant> lastError = new AtomicReference<>(Instant.MIN);
 
     @Override
     public Map<String, Metric> getMetrics() {
