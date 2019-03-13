@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonIdentityReference;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import com.icthh.xm.ms.entity.domain.idresolver.CalendarObjectIdResolver;
 import com.icthh.xm.ms.entity.domain.idresolver.XmEntityObjectIdResolver;
+import com.icthh.xm.ms.entity.validator.EventTypeKey;
 import io.swagger.annotations.ApiModelProperty;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
@@ -21,6 +22,7 @@ import java.util.Objects;
 @Entity
 @Table(name = "event")
 @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
+@EventTypeKey
 public class Event implements Serializable {
 
     private static final long serialVersionUID = 1L;

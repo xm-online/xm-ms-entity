@@ -8,6 +8,8 @@ import com.icthh.xm.commons.tenant.TenantContextUtils;
 import com.icthh.xm.ms.entity.EntityApp;
 import com.icthh.xm.ms.entity.config.SecurityBeanOverrideConfiguration;
 import com.icthh.xm.ms.entity.config.tenant.WebappTenantOverrideConfiguration;
+import com.icthh.xm.ms.entity.domain.Calendar;
+import com.icthh.xm.ms.entity.domain.Event;
 import com.icthh.xm.ms.entity.domain.Tag;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import lombok.extern.slf4j.Slf4j;
@@ -20,6 +22,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import java.time.Instant;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import javax.validation.ConstraintViolation;
@@ -140,6 +143,44 @@ public class TypeKeyValidatorIntTest {
     public void testXmEntityDataValidationIsInvalidString() {
         Map data = of("stringProperties", 57);
         testDataValidation(data);
+    }
+
+    @Test
+    public void testCalendarTypeKeyValidationIsValid() {
+        XmEntity entity = new XmEntity().key("TYPE1.SUBTYPE1-1").typeKey("TYPE1.SUBTYPE1").name("Entity name")
+            .startDate(Instant.now()).updateDate(Instant.now()).stateKey("STATE1");
+        Calendar calendar = new Calendar().typeKey("DEFAULT").xmEntity(entity).name("Calendar name");
+        Set<ConstraintViolation<Calendar>> constraintViolations = validator.validate(calendar);
+
+        assertEquals(0,constraintViolations.size());
+    }
+
+
+    @Test
+    public void testCalendarTypeKeyValidationIsNotValid() {
+        XmEntity entity = new XmEntity().key("TYPE1.SUBTYPE1-1").typeKey("TYPE1.SUBTYPE1").name("Entity name")
+            .startDate(Instant.now()).updateDate(Instant.now()).stateKey("STATE1");
+        Calendar calendar = new Calendar().typeKey("INVALID").xmEntity(entity).name("Calendar name");
+        Set<ConstraintViolation<Calendar>> constraintViolations = validator.validate(calendar);
+
+        assertEquals(2,constraintViolations.size());
+        assertEquals("{xm.ms.entity.calendar.typekey.constraint}", constraintViolations.iterator().next().getMessageTemplate());
+    }
+    @Test
+    public void testEventTypeKeyValidationIsValid() {
+        Event event = new Event().typeKey("EVENT1").title("Event name");
+        Set<ConstraintViolation<Event>> constraintViolations = validator.validate(event);
+
+        assertEquals(0,constraintViolations.size());
+    }
+
+    @Test
+    public void testEventTypeKeyValidationIsNotValid() {
+        Event event = new Event().typeKey("INVALID").title("Event name");
+        Set<ConstraintViolation<Event>> constraintViolations = validator.validate(event);
+
+        assertEquals(1,constraintViolations.size());
+        assertEquals("{xm.ms.entity.event.typekey.constraint}", constraintViolations.iterator().next().getMessageTemplate());
     }
 
 }
