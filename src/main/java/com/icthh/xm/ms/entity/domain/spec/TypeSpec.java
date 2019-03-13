@@ -38,6 +38,10 @@ public class TypeSpec {
     private Boolean isKeyRequired = true;
     @JsonProperty("isNameRequired")
     private Boolean isNameRequired = true;
+    @JsonProperty("indexAfterSaveEnabled")
+    private Boolean indexAfterSaveEnabled = true;
+    @JsonProperty("indexAfterDeleteEnabled")
+    private Boolean indexAfterDeleteEnabled = true;
     @JsonProperty("fastSearch")
     private List<FastSearchSpec> fastSearch = null;
     @JsonProperty("icon")

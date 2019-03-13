@@ -7,6 +7,8 @@ types:
       isAvatarEnabled: true
       isKeyRequired: false
       isNameRequired: false
+      indexAfterSaveEnabled: false
+      indexAfterDeleteEnabled: false
       fastSearch:
           - query: typeKey:TYPE1*
             name: { en: "Fast search" }

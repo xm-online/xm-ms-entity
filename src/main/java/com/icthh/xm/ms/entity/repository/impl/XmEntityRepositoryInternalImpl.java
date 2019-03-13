@@ -195,6 +195,7 @@ public class XmEntityRepositoryInternalImpl implements XmEntityRepositoryInterna
         return springXmEntityRepository.count();
     }
 
+    @Override
     public long count(Specification<XmEntity> spec) {
         return springXmEntityRepository.count(spec);
     }

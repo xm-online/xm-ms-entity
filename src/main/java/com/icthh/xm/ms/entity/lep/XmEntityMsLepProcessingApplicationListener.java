@@ -11,6 +11,7 @@ import static com.icthh.xm.ms.entity.lep.LepXmEntityMsConstants.BINDING_SUB_KEY_
 import static com.icthh.xm.ms.entity.lep.LepXmEntityMsConstants.BINDING_SUB_KEY_REPOSITORY_XM_ENTITY;
 import static com.icthh.xm.ms.entity.lep.LepXmEntityMsConstants.BINDING_SUB_KEY_SERVICE_ATTACHMENT;
 import static com.icthh.xm.ms.entity.lep.LepXmEntityMsConstants.BINDING_SUB_KEY_SERVICE_CALENDAR_SERVICE;
+import static com.icthh.xm.ms.entity.lep.LepXmEntityMsConstants.BINDING_SUB_KEY_SERVICE_ELASTICSEARCH_INDEXS;
 import static com.icthh.xm.ms.entity.lep.LepXmEntityMsConstants.BINDING_SUB_KEY_SERVICE_EVENT_SERVICE;
 import static com.icthh.xm.ms.entity.lep.LepXmEntityMsConstants.BINDING_SUB_KEY_SERVICE_LEP_RESOURCE;
 import static com.icthh.xm.ms.entity.lep.LepXmEntityMsConstants.BINDING_SUB_KEY_SERVICE_LINK;
@@ -38,6 +39,7 @@ import com.icthh.xm.ms.entity.repository.search.PermittedSearchRepository;
 import com.icthh.xm.ms.entity.service.AttachmentService;
 import com.icthh.xm.ms.entity.service.CalendarService;
 import com.icthh.xm.ms.entity.service.CommentService;
+import com.icthh.xm.ms.entity.service.ElasticsearchIndexService;
 import com.icthh.xm.ms.entity.service.EventService;
 import com.icthh.xm.ms.entity.service.LinkService;
 import com.icthh.xm.ms.entity.service.LocationService;
@@ -80,6 +82,7 @@ public class XmEntityMsLepProcessingApplicationListener extends SpringLepProcess
     private final AmazonS3Template s3Template;
     private final ElasticsearchTemplate elasticsearchTemplate;
     private final PermittedSearchRepository permittedSearchRepository;
+    private final ElasticsearchIndexService elasticsearchIndexService;
 
     @Override
     protected void bindExecutionContext(ScopedContext executionContext) {
@@ -100,6 +103,7 @@ public class XmEntityMsLepProcessingApplicationListener extends SpringLepProcess
         services.put(BINDING_SUB_KEY_PROFILE_EVENT_PRODUCER_SERVICE, profileEventProducer);
         services.put(BINDING_SUB_KEY_COMMENT_SERVICE, commentService);
         services.put(BINDING_SUB_KEY_PERMISSION_SERVICE, permissionCheckService);
+        services.put(BINDING_SUB_KEY_SERVICE_ELASTICSEARCH_INDEXS, elasticsearchIndexService);
 
         executionContext.setValue(BINDING_KEY_COMMONS, new CommonsExecutor(commonsService));
 
