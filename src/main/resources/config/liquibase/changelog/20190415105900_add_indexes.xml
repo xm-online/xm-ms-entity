@@ -8,31 +8,28 @@
 
     <changeSet id="2010415105900" author="ssenko">
         <createIndex tableName="xm_entity" indexName="idx_entity_key">
-            <column>jhi_key</column>
+            <column name="jhi_key" />
         </createIndex>
         <createIndex tableName="xm_entity" indexName="idx_entity_type_key">
-            <column>type_key</column>
+            <column name="type_key" />
         </createIndex>
         <createIndex tableName="xm_entity" indexName="idx_entity_state_key">
-            <column>state_key</column>
+            <column name="state_key" />
         </createIndex>
         <createIndex tableName="xm_entity" indexName="idx_entity_removed">
-            <column>removed</column>
-        </createIndex>
-        <createIndex tableName="xm_entity" indexName="idx_entity_removed">
-            <column>removed</column>
+            <column name="removed" />
         </createIndex>
         <createIndex tableName="link" indexName="idx_link_target">
-            <column>target_id</column>
+            <column name="target_id" />
         </createIndex>
         <createIndex tableName="link" indexName="idx_link_source">
-            <column>source_id</column>
+            <column name="source_id" />
         </createIndex>
         <createIndex tableName="unique_field" indexName="idx_unique_field">
-            <column>xm_entity_id</column>
+            <column name="xm_entity_id" />
         </createIndex>
         <createIndex tableName="attachment" indexName="idx_attachment_entity">
-            <column>xm_entity_id</column>
+            <column name="xm_entity_id" />
         </createIndex>
     </changeSet>
 
