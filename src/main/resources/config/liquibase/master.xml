@@ -66,4 +66,6 @@
 
     <include file="classpath:config/liquibase/changelog/20181214175400_rename_comment_table.xml" relativeToChangelogFile="false"/>
 
+    <include file="classpath:config/liquibase/changelog/20190415105900_add_indexes.xml" relativeToChangelogFile="false"/>
+
 </databaseChangeLog>
