@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd
+                        http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd">
+
+    <changeSet id="2010415105900" author="ssenko">
+        <createIndex tableName="xm_entity" indexName="idx_entity_key">
+            <column>jhi_key</column>
+        </createIndex>
+        <createIndex tableName="xm_entity" indexName="idx_entity_type_key">
+            <column>type_key</column>
+        </createIndex>
+        <createIndex tableName="xm_entity" indexName="idx_entity_state_key">
+            <column>state_key</column>
+        </createIndex>
+        <createIndex tableName="xm_entity" indexName="idx_entity_removed">
+            <column>removed</column>
+        </createIndex>
+        <createIndex tableName="xm_entity" indexName="idx_entity_removed">
+            <column>removed</column>
+        </createIndex>
+        <createIndex tableName="link" indexName="idx_link_target">
+            <column>target_id</column>
+        </createIndex>
+        <createIndex tableName="link" indexName="idx_link_source">
+            <column>source_id</column>
+        </createIndex>
+        <createIndex tableName="unique_field" indexName="idx_unique_field">
+            <column>xm_entity_id</column>
+        </createIndex>
+        <createIndex tableName="attachment" indexName="idx_attachment_entity">
+            <column>xm_entity_id</column>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>
