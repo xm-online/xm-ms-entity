@@ -13,10 +13,10 @@ import org.springframework.stereotype.Component;
 @Component
 public class SchedulerMetricsSet implements MetricSet {
 
-    private final AtomicLong countSuccessMessages = new AtomicLong();
-    private final AtomicLong countFailedMessages = new AtomicLong();
-    private final AtomicReference<Instant> lastSuccess = new AtomicReference<>();
-    private final AtomicReference<Instant> lastError = new AtomicReference<>();
+    private final AtomicLong countSuccessMessages = new AtomicLong(0L);
+    private final AtomicLong countFailedMessages = new AtomicLong(0L);
+    private final AtomicReference<Instant> lastSuccess = new AtomicReference<>(Instant.MIN);
+    private final AtomicReference<Instant> lastError = new AtomicReference<>(Instant.MIN);
 
     @Override
     public Map<String, Metric> getMetrics() {
