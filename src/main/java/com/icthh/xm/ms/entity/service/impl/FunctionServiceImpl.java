@@ -36,8 +36,8 @@ public class FunctionServiceImpl implements FunctionService {
     //Function is not visible, but could be executed
     public static String NONE = "NONE";
 
-    private static String FUNCTION_CALL_PRIV = "FUNCTION.CALL";
-    private static String XM_ENITITY_FUNCTION_CALL_PRIV = "XMENTITY.FUNCTION.EXECUTE";
+    public static String FUNCTION_CALL_PRIV = "FUNCTION.CALL";
+    public static String XM_ENITITY_FUNCTION_CALL_PRIV = "XMENTITY.FUNCTION.EXECUTE";
 
     private final XmEntitySpecService xmEntitySpecService;
     private final XmEntityService xmEntityService;
