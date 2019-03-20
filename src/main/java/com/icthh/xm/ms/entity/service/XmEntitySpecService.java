@@ -463,7 +463,7 @@ public class XmEntitySpecService implements RefreshableConfiguration {
         return dynamicPermissionCheckService.filterInnerListByPermission(spec,
             spec::getFunctions,
             spec::setFunctions,
-            FunctionSpec::getKey);
+            FunctionSpec::getDynamicPrivilegeKey);
     }
 
 }

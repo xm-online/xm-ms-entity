@@ -5,6 +5,8 @@ import static com.google.common.collect.Sets.newHashSet;
 import static com.icthh.xm.ms.entity.security.access.DynamicPermissionCheckService.CONFIG_SECTION;
 import static com.icthh.xm.ms.entity.security.access.DynamicPermissionCheckService.DYNAMIC_FUNCTION_PERMISSION_FEATURE;
 import static com.icthh.xm.ms.entity.security.access.DynamicPermissionCheckService.FeatureContext;
+import static com.icthh.xm.ms.entity.service.impl.FunctionServiceImpl.FUNCTION_CALL_PRIV;
+import static com.icthh.xm.ms.entity.service.impl.FunctionServiceImpl.XM_ENITITY_FUNCTION_CALL_PRIV;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.util.Lists.newArrayList;
@@ -143,13 +145,13 @@ public class DynamicPermissionCheckServiceUnitTest extends AbstractUnitTest {
 
         given(tenantConfig.getConfig()).willReturn(config);
 
-        Set<String> rolesPrivileges = newHashSet("function1", "function3");
+        Set<String> rolesPrivileges = newHashSet(XM_ENITITY_FUNCTION_CALL_PRIV + ".F1", FUNCTION_CALL_PRIV + ".F3");
         given(dynamicPermissionCheckService.getRoleFunctionPermissions()).willReturn(rolesPrivileges);
 
         List<FunctionSpec> functions = newArrayList(
-            createFunction("function1"),
-            createFunction("function2"),
-            createFunction("function3")
+            createEntityFunction("F1"),
+            createFunction("F2"),
+            createFunction("F3")
         );
         TypeSpec typeSpec = new TypeSpec();
         typeSpec.setFunctions(functions);
@@ -157,16 +159,22 @@ public class DynamicPermissionCheckServiceUnitTest extends AbstractUnitTest {
         TypeSpec result = dynamicPermissionCheckService.filterInnerListByPermission(typeSpec,
                                                                                     typeSpec::getFunctions,
                                                                                     typeSpec::setFunctions,
-                                                                                    FunctionSpec::getKey);
+                                                                                    FunctionSpec::getDynamicPrivilegeKey);
 
         assertThat(result.getFunctions().stream().map(FunctionSpec::getKey))
-            .containsExactly("function1", "function3");
+            .containsExactly("F1", "F3");
 
     }
 
     private FunctionSpec createFunction(String key){
         FunctionSpec spec = new FunctionSpec();
         spec.setKey(key);
+        return spec;
+    }
+
+    private FunctionSpec createEntityFunction(String key){
+        FunctionSpec spec = createFunction(key);
+        spec.setWithEntityId(true);
         return spec;
     }
 

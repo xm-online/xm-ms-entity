@@ -8,6 +8,9 @@ import lombok.Data;
 import java.util.List;
 import java.util.Map;
 
+import static com.icthh.xm.ms.entity.service.impl.FunctionServiceImpl.FUNCTION_CALL_PRIV;
+import static com.icthh.xm.ms.entity.service.impl.FunctionServiceImpl.XM_ENITITY_FUNCTION_CALL_PRIV;
+
 /**
  * The {@link FunctionSpec} class.
  */
@@ -86,6 +89,12 @@ public class FunctionSpec {
 
     public Boolean getOnlyData() {
         return onlyData == null ? false : onlyData;
+    }
+
+    public String getDynamicPrivilegeKey() {
+        return getWithEntityId() ?
+            XM_ENITITY_FUNCTION_CALL_PRIV.concat(".").concat(getKey()) :
+            FUNCTION_CALL_PRIV.concat(".").concat(getKey());
     }
 
 }
