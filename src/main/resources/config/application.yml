@@ -56,6 +56,10 @@ spring:
             config:
                 watch:
                     enabled: false
+        stream:
+            kafka:
+                binder:
+                    health-timeout: 5 # kafkaHealthCheck timeout when scheduler-enabled: true, in seconds
     jackson:
         serialization.write_dates_as_timestamps: false
         default-property-inclusion: non_empty
