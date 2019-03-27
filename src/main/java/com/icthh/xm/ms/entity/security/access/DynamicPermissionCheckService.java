@@ -4,6 +4,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.icthh.xm.commons.config.client.service.TenantConfigService;
 import com.icthh.xm.commons.logging.aop.IgnoreLogginAspect;
+import com.icthh.xm.commons.permission.constants.RoleConstant;
 import com.icthh.xm.commons.permission.domain.Permission;
 import com.icthh.xm.commons.permission.service.PermissionCheckService;
 import com.icthh.xm.commons.permission.service.PermissionService;
@@ -158,10 +159,15 @@ public class DynamicPermissionCheckService {
      * @param roleKey
      */
     Predicate<Permission> functionPermissionMatcher(String roleKey) {
+
         Predicate<Permission> isConfigSection = permission -> StringUtils.equals(CONFIG_SECTION, permission.getMsName());
         Predicate<Permission> isAssignedToRole = permission -> StringUtils.equals(roleKey, permission.getRoleKey());
         Predicate<Permission> isEnabled = permission -> !permission.isDisabled();
         Predicate<Permission> isIsNotDeleted = permission -> !permission.isDeleted();
+
+        if (RoleConstant.SUPER_ADMIN.equals(roleKey)) {
+            return isConfigSection.and(isEnabled).and(isIsNotDeleted);
+        }
 
         return isConfigSection
             .and(isAssignedToRole)
