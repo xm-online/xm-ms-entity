@@ -1,7 +1,7 @@
 package com.icthh.xm.ms.entity.service;
 
+import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
@@ -19,12 +19,14 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.annotation.Transactional;
 
 public class ProfileServiceUnitTest extends AbstractSpringBootTest {
 
     private static final Long ID = 1L;
     private static final String USER_KEY = "test";
 
+    @Autowired
     private ProfileRepository profileRepository;
 
     private XmEntitySearchRepository entitySearchRepository;
@@ -41,7 +43,6 @@ public class ProfileServiceUnitTest extends AbstractSpringBootTest {
     public void init() {
         TenantContextUtils.setTenant(tenantContextHolder, "TEST");
 
-        profileRepository = mock(ProfileRepository.class);
         entitySearchRepository = mock(XmEntitySearchRepository.class);
         service = new ProfileService(profileRepository, entitySearchRepository, authContextHolder);
     }
@@ -54,6 +55,8 @@ public class ProfileServiceUnitTest extends AbstractSpringBootTest {
 
     @Test
     public void saveProfile() {
+        profileRepository = mock(ProfileRepository.class);
+        service = new ProfileService(profileRepository, entitySearchRepository, authContextHolder);
         Profile profile = new Profile();
         profile.setId(ID);
         XmEntity xmEntity = new XmEntity();
@@ -68,6 +71,8 @@ public class ProfileServiceUnitTest extends AbstractSpringBootTest {
 
     @Test
     public void getProfile() {
+        profileRepository = mock(ProfileRepository.class);
+        service = new ProfileService(profileRepository, entitySearchRepository, authContextHolder);
         Profile profile = new Profile();
         profile.setId(1L);
         profile.setUserKey(USER_KEY);
@@ -79,6 +84,8 @@ public class ProfileServiceUnitTest extends AbstractSpringBootTest {
 
     @Test
     public void getProfileByEntityId() {
+        profileRepository = mock(ProfileRepository.class);
+        service = new ProfileService(profileRepository, entitySearchRepository, authContextHolder);
         Profile profile = new Profile();
         profile.setId(1L);
         profile.setUserKey(USER_KEY);
@@ -92,12 +99,20 @@ public class ProfileServiceUnitTest extends AbstractSpringBootTest {
     }
 
     @Test
+    @Transactional
     public void deleteProfile() {
+        XmEntity entity = XmEntityResourceIntTest.createEntity();
+        entity.setTypeKey("TYPE1");
         Profile profile = new Profile();
         profile.setUserKey(USER_KEY);
-        profile.setXmentity(XmEntityResourceIntTest.createEntity());
+        profile.setXmentity(entity);
+
+        profile = profileRepository.saveAndFlush(profile);
+        int bdSizeBeforeDeleteProfile = profileRepository.findAll().size();
 
         service.deleteProfile(profile);
-        verify(profileRepository, times(1)).delete(profile);
+        int bdSizeAfterDeleteProfile = profileRepository.findAll().size();
+
+        assertEquals(bdSizeBeforeDeleteProfile, bdSizeAfterDeleteProfile + 1);
     }
 }
