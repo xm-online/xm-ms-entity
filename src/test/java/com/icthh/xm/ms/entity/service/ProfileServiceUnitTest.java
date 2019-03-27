@@ -1,6 +1,7 @@
 package com.icthh.xm.ms.entity.service;
 
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
@@ -88,5 +89,15 @@ public class ProfileServiceUnitTest extends AbstractSpringBootTest {
         service.getByXmEntityId(entity.getId());
 
         verify(profileRepository).findOneByXmentityId(entity.getId());
+    }
+
+    @Test
+    public void deleteProfile() {
+        Profile profile = new Profile();
+        profile.setUserKey(USER_KEY);
+        profile.setXmentity(XmEntityResourceIntTest.createEntity());
+
+        service.deleteProfile(profile);
+        verify(profileRepository, times(1)).delete(profile);
     }
 }
