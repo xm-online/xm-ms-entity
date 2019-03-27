@@ -77,4 +77,9 @@ public class ProfileService {
         save(profile);
         return profileEntity;
     }
+
+    @LogicExtensionPoint("DeleteProfile")
+    public void deleteProfile(Profile profile) {
+        profileRepository.delete(profile);
+    }
 }
