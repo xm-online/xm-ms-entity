@@ -13,6 +13,7 @@ import static org.assertj.core.util.Lists.newArrayList;
 import static org.mockito.BDDMockito.given;
 
 import com.icthh.xm.commons.config.client.service.TenantConfigService;
+import com.icthh.xm.commons.permission.constants.RoleConstant;
 import com.icthh.xm.commons.permission.domain.Permission;
 import com.icthh.xm.commons.permission.service.PermissionCheckService;
 import com.icthh.xm.ms.entity.AbstractUnitTest;
@@ -228,6 +229,13 @@ public class DynamicPermissionCheckServiceUnitTest extends AbstractUnitTest {
 
         assertThat(filteredList.stream().map(Permission::getPrivilegeKey).collect(Collectors.toSet()))
             .containsExactlyInAnyOrder("PK-1", "PK-2");
+
+        filteredList = mockedList.stream()
+            .filter(dynamicPermissionCheckService.functionPermissionMatcher(RoleConstant.SUPER_ADMIN))
+            .collect(Collectors.toList());
+
+        assertThat(filteredList.stream().map(Permission::getPrivilegeKey).collect(Collectors.toSet()))
+            .containsExactlyInAnyOrder("PK-7", "PK-6", "PK-3", "PK-2", "PK-5", "PK-4", "PK-1");
 
     }
 
