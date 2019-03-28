@@ -19,6 +19,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.context.transaction.BeforeTransaction;
 import org.springframework.transaction.annotation.Transactional;
 
 public class ProfileServiceUnitTest extends AbstractSpringBootTest {
@@ -45,6 +46,11 @@ public class ProfileServiceUnitTest extends AbstractSpringBootTest {
 
         entitySearchRepository = mock(XmEntitySearchRepository.class);
         service = new ProfileService(profileRepository, entitySearchRepository, authContextHolder);
+    }
+
+    @BeforeTransaction
+    public void beforeTransaction() {
+        TenantContextUtils.setTenant(tenantContextHolder, "TEST");
     }
 
     @After
