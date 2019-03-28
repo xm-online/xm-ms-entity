@@ -10,15 +10,6 @@
         <createIndex tableName="xm_entity" indexName="idx_entity_key">
             <column name="jhi_key" />
         </createIndex>
-        <createIndex tableName="xm_entity" indexName="idx_entity_type_key">
-            <column name="type_key" />
-        </createIndex>
-        <createIndex tableName="xm_entity" indexName="idx_entity_state_key">
-            <column name="state_key" />
-        </createIndex>
-        <createIndex tableName="xm_entity" indexName="idx_entity_removed">
-            <column name="removed" />
-        </createIndex>
         <createIndex tableName="link" indexName="idx_link_target">
             <column name="target_id" />
         </createIndex>
