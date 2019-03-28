@@ -114,11 +114,11 @@ public class ProfileServiceUnitTest extends AbstractSpringBootTest {
         profile.setXmentity(entity);
 
         profile = profileRepository.saveAndFlush(profile);
-        int bdSizeBeforeDeleteProfile = profileRepository.findAll().size();
+        int dbSizeBeforeDeleteProfile = profileRepository.findAll().size();
 
         service.deleteProfile(profile);
-        int bdSizeAfterDeleteProfile = profileRepository.findAll().size();
+        int dbSizeAfterDeleteProfile = profileRepository.findAll().size();
 
-        assertEquals(bdSizeBeforeDeleteProfile, bdSizeAfterDeleteProfile + 1);
+        assertEquals(dbSizeBeforeDeleteProfile, dbSizeAfterDeleteProfile + 1);
     }
 }
