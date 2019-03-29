@@ -96,7 +96,7 @@ Closure testLoggingConf = {
 }
 
 test {
-    
+
     doFirst {
         println '!!! ATTENTION: start execution of non-categorized tests. it may impact test performance !!!'
     }
@@ -277,7 +277,9 @@ dependencies {
         exclude group: 'com.vaadin.external.google', module: 'android-json'
     }
     // XM custom dependencies
-    compile "com.github.java-json-tools:json-schema-validator:2.2.8"
+    compile ("com.github.java-json-tools:json-schema-validator:2.2.8") {
+        exclude group: 'javax.mail', module: 'mailapi'
+    }
     compile "com.amazonaws:aws-java-sdk-s3:1.11.158"
     compile "com.amazonaws:aws-java-sdk-core:1.11.158"
     annotationProcessor "com.elasticpath.json:json-unmarshaller:1.0.0"
@@ -305,7 +307,7 @@ dependencies {
     compile "org.apache.poi:poi-ooxml:${apache_poi_version}"
     compile "org.modelmapper:modelmapper:${modelmapper_version}"
     //compile "org.springframework.boot:spring-boot-devtools"
-    testCompile 'org.codehaus.groovy:groovy-all:2.4.8'
+
     // XM custom dependencies end
     // fix scala MethodNotFoundException
     zinc 'com.typesafe.zinc:zinc:0.3.9'

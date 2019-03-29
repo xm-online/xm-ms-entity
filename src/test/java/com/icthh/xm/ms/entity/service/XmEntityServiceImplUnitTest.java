@@ -3,7 +3,6 @@ package com.icthh.xm.ms.entity.service;
 import static com.google.common.collect.ImmutableMap.of;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
-import static java.util.Collections.emptyMap;
 import static java.util.stream.Collectors.toList;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -16,13 +15,15 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.icthh.xm.commons.config.client.service.TenantConfigService;
 import com.icthh.xm.commons.exceptions.BusinessException;
 import com.icthh.xm.ms.entity.AbstractUnitTest;
+import com.icthh.xm.ms.entity.domain.Comment;
+import com.icthh.xm.ms.entity.domain.FunctionContext;
+import com.icthh.xm.ms.entity.domain.Link;
 import com.icthh.xm.ms.entity.domain.UniqueField;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.domain.spec.StateSpec;
 import com.icthh.xm.ms.entity.domain.spec.TypeSpec;
 import com.icthh.xm.ms.entity.domain.spec.UniqueFieldSpec;
 import com.icthh.xm.ms.entity.projection.XmEntityStateProjection;
-import com.icthh.xm.ms.entity.repository.SpringXmEntityRepository;
 import com.icthh.xm.ms.entity.repository.UniqueFieldRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityRepositoryInternal;
 import com.icthh.xm.ms.entity.repository.search.XmEntitySearchRepository;
@@ -34,6 +35,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
 import org.junit.Test;
@@ -173,4 +175,34 @@ public class XmEntityServiceImplUnitTest extends AbstractUnitTest {
         };
     }
 
+    @Test
+    @SneakyThrows
+    public void testEntityDataFieldDeserialize() {
+        String json = "{\n" + "   \"typeKey\":\"SERVICE-TO-COMPANY\",\n" +
+                      "   \"startDate\":\"2019-03-28T12:20:00.000Z\",\n" + "   \"endDate\":null,\n" +
+                      "   \"target\":{\n" + "      \"id\":756756756756,\n" +
+                      "      \"key\":\"67bb1e21-b72f-4b9c-08f7-43f8767b4974\",\n" + "      \"typeKey\":\"SERVICE\",\n" +
+                      "      \"name\":\"Service test\",\n" + "      \"startDate\":\"2019-03-14T09:15:48.429Z\",\n" +
+                      "      \"updateDate\":\"2019-03-14T09:15:48.429Z\",\n" + "      \"data\":{\n" +
+                      "         \"a\": \"b\"         \n" + "      },\n" +
+                      "      \"description\":\"ТЕСТИМ СОЗДНИЕ СЕРВИСА\",\n" + "      \"removed\":false,\n" +
+                      "      \"createdBy\":\"kmelnik\",\n" + "      \"version\":0,\n" + "      \"endDate\":null\n" +
+                      "   },\n" + "   \"source\":{\n" + "      \"id\":456456456456456,\n" +
+                      "      \"key\":\"4e0ab82e-f815-54e9-53ff-04a1be6e7f6a\",\n" + "      \"typeKey\":\"COMPANY\",\n" +
+                      "      \"stateKey\":\"ACTIVE\",\n" + "      \"name\":\"123\",\n" +
+                      "      \"startDate\":\"2019-03-27T11:35:34.246Z\",\n" +
+                      "      \"updateDate\":\"2019-03-28T14:20:30.580Z\",\n" + "      \"data\":{\n" +
+                      "         \"a\": \"b\"\n" + "      },\n" + "      \"removed\":false,\n" +
+                      "      \"createdBy\":\"kmelnik\",\n" + "      \"version\":4,\n" + "      \"endDate\":null\n" +
+                      "   }\n" + "}";
+
+        log.info(json);
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        objectMapper.registerModule(new JavaTimeModule());
+
+        objectMapper.readValue("{}", FunctionContext.class);
+        objectMapper.readValue("{}", Comment.class);
+        objectMapper.readValue(json, Link.class);
+    }
 }
