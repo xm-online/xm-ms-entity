@@ -3,8 +3,13 @@
 directory `src/test/groovy/com/icthh/xm/lep/tenant` is reserved for xm-entity tenant's LEP unit tests symlinks
 directory `src/test/resources/lep/custom` is reserved for tenant's LEP scripts symlinks
 
+# Automatic test scanning
 
-# Setup environment for tenant
+Run class com.icthh.xm.ms.entity.LepTestLinkScanner
+
+# Manual environment setup
+
+## Setup environment for tenant
 ```
 export XM_REPOSITORY_HOME=<path_to_ms_config>/xm-ms-config-repository
 export tenant=<tenant>
