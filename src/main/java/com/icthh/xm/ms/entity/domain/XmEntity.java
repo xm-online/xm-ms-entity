@@ -7,6 +7,8 @@ import static javax.persistence.CascadeType.REMOVE;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.deser.std.UntypedObjectDeserializer;
 import com.icthh.xm.ms.entity.domain.converter.MapToStringConverter;
 import com.icthh.xm.ms.entity.domain.listener.AvatarUrlListener;
 import com.icthh.xm.ms.entity.domain.listener.XmEntityElasticSearchListener;
@@ -181,6 +183,7 @@ public class XmEntity implements Serializable, Persistable<Long> {
      * Formly and could use them for form building.
      */
     @ApiModelProperty(value = "Data property represents entity fields as JSON structure. Fields specified by Formly and could use them for form building.")
+    @JsonDeserialize(using = UntypedObjectDeserializer.class)
     @Convert(converter = MapToStringConverter.class)
     @Column(name = "data")
     private Map<String, Object> data = new HashMap<>();
