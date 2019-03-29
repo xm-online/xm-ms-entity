@@ -10,6 +10,7 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.springframework.data.domain.Persistable;
 
 import java.io.Serializable;
 import java.time.Instant;
@@ -32,7 +33,7 @@ import javax.validation.constraints.NotNull;
 @Entity
 @Table(name = "link")
 @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
-public class Link implements Serializable {
+public class Link implements Serializable, Persistable<Long> {
 
     private static final long serialVersionUID = 1L;
 
@@ -95,6 +96,11 @@ public class Link implements Serializable {
 
     public Long getId() {
         return id;
+    }
+
+    @Override
+    public boolean isNew() {
+        return id == null;
     }
 
     public void setId(Long id) {
@@ -189,7 +195,7 @@ public class Link implements Serializable {
     }
 
     public void setSource(XmEntity xmEntity) {
-        this.source = xmEntity;
+            this.source = xmEntity;
     }
 
     public boolean linkFromSameEntity(Link link) {

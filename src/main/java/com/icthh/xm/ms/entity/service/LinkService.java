@@ -1,10 +1,13 @@
 package com.icthh.xm.ms.entity.service;
 
+import com.icthh.xm.commons.exceptions.BusinessException;
 import com.icthh.xm.commons.lep.LogicExtensionPoint;
 import com.icthh.xm.commons.lep.spring.LepService;
 import com.icthh.xm.commons.permission.annotation.FindWithPermission;
 import com.icthh.xm.ms.entity.domain.Link;
 import com.icthh.xm.ms.entity.domain.XmEntity;
+import com.icthh.xm.ms.entity.domain.spec.LinkSpec;
+import com.icthh.xm.ms.entity.projection.XmEntityStateProjection;
 import com.icthh.xm.ms.entity.repository.LinkPermittedRepository;
 import com.icthh.xm.ms.entity.repository.LinkRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
@@ -41,6 +44,8 @@ public class LinkService {
 
     private final XmEntityRepository xmEntityRepository;
 
+    private final XmEntitySpecService xmEntitySpecService;
+
     /**
      * Save a link.
      *
@@ -49,7 +54,7 @@ public class LinkService {
      */
     @LogicExtensionPoint("Save")
     public Link save(Link link) {
-
+        assertMaxLinksValue(link);
         startUpdateDateGenerationStrategy.preProcessStartDate(link,
                                                               link.getId(),
                                                               linkRepository,
@@ -58,6 +63,36 @@ public class LinkService {
         link.setTarget(xmEntityRepository.getOne(entityId(link.getTarget())));
         link.setSource(xmEntityRepository.getOne(entityId(link.getSource())));
         return linkRepository.save(link);
+    }
+
+    private void assertMaxLinksValue(Link link) {
+
+        XmEntityStateProjection sourceEntity = xmEntityRepository.findStateProjectionById(link.getSource().getId());
+
+        boolean present = xmEntitySpecService.findLink(sourceEntity.getTypeKey(), link.getTypeKey()).isPresent();
+        if (!present){
+            return;
+        }
+
+        LinkSpec linkSpec = xmEntitySpecService.findLink(sourceEntity.getTypeKey(), link.getTypeKey()).get();
+
+        if (linkSpec.getMax() == null || linkSpec.getMax() < 0) {
+            return;
+        }
+
+        if (link.getId() != null){
+            return;
+        }
+
+        boolean canSaveMore = linkSpec.getMax() > linkRepository.countBySourceIdAndTypeKey(link.getSource().getId(), link.getTypeKey());
+
+        if (canSaveMore) {
+            return;
+        }
+
+        throw new BusinessException("Link with type key " + link.getTypeKey()
+                + " already has the maximum number of items.");
+
     }
 
     private Long entityId(XmEntity entity) {

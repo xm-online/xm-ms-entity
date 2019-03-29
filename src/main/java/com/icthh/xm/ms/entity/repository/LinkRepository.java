@@ -22,4 +22,11 @@ public interface LinkRepository extends JpaRepository<Link, Long>, JpaSpecificat
     List<Link> findBySourceIdAndTargetTypeKey(Long sourceId, String typeKey);
 
     List<Link> findByTargetIdAndTypeKey(Long targetId, String typeKey);
+
+    Integer countBySourceIdAndTypeKeyAndIdNot(Long sourceId, String typeKey, Long notId);
+
+    Integer countBySourceIdAndTypeKeyAndIdNotIn(Long sourceId, String typeKey, List<Long> notId);
+
+    Integer countBySourceIdAndTypeKey(Long sourceId, String typeKey);
+
 }

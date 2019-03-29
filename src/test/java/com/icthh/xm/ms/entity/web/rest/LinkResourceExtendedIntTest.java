@@ -17,6 +17,7 @@ import com.icthh.xm.ms.entity.repository.LinkRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
 import com.icthh.xm.ms.entity.repository.search.PermittedSearchRepository;
 import com.icthh.xm.ms.entity.service.LinkService;
+import com.icthh.xm.ms.entity.service.XmEntitySpecService;
 import com.icthh.xm.ms.entity.service.impl.StartUpdateDateGenerationStrategy;
 import org.junit.After;
 import org.junit.Before;
@@ -81,6 +82,9 @@ public class LinkResourceExtendedIntTest extends AbstractSpringBootTest {
     @Autowired
     private XmEntityRepository xmEntityRepository;
 
+    @Autowired
+    private XmEntitySpecService xmEntitySpecService;
+
     @Spy
     private StartUpdateDateGenerationStrategy startUpdateDateGenerationStrategy;
 
@@ -106,7 +110,7 @@ public class LinkResourceExtendedIntTest extends AbstractSpringBootTest {
             permittedRepository,
             permittedSearchRepository,
             startUpdateDateGenerationStrategy,
-            xmEntityRepository);
+            xmEntityRepository, xmEntitySpecService);
 
         LinkResource linkResourceMock = new LinkResource(linkService, linkResource);
         this.restLinkMockMvc = MockMvcBuilders.standaloneSetup(linkResourceMock)

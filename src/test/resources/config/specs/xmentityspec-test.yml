@@ -48,9 +48,9 @@ types:
             builderType: NEW
             name: { en: "Link 1", ru: "Связь 1" }
             icon: local_offer
-            typeKey: TYPE 2
+            typeKey: TYPE2
             backName: { en: "Link to me", ru: "Линка на меня" }
-            max: 10
+            max: 2
       states:
           - key: STATE1
             name: { en: "State 1", ru: "Состояние 1" }
