@@ -177,7 +177,7 @@ public class XmEntityServiceImplUnitTest extends AbstractUnitTest {
 
     @Test
     @SneakyThrows
-    public void test() {
+    public void testEntityDataFieldDeserialize() {
         String json = "{\n" + "   \"typeKey\":\"SERVICE-TO-COMPANY\",\n" +
                       "   \"startDate\":\"2019-03-28T12:20:00.000Z\",\n" + "   \"endDate\":null,\n" +
                       "   \"target\":{\n" + "      \"id\":756756756756,\n" +
