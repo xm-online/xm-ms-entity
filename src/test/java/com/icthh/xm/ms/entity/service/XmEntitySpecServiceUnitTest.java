@@ -13,7 +13,9 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
+import static org.mockito.ArgumentMatchers.refEq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -35,14 +37,14 @@ import com.icthh.xm.ms.entity.config.tenant.LocalXmEntitySpecService;
 import com.icthh.xm.ms.entity.domain.spec.AttachmentSpec;
 import com.icthh.xm.ms.entity.domain.spec.FunctionSpec;
 import com.icthh.xm.ms.entity.domain.spec.LinkSpec;
-import com.icthh.xm.ms.entity.domain.spec.TypeSpec;
 import com.icthh.xm.ms.entity.domain.spec.LocationSpec;
+import com.icthh.xm.ms.entity.domain.spec.NextSpec;
 import com.icthh.xm.ms.entity.domain.spec.RatingSpec;
 import com.icthh.xm.ms.entity.domain.spec.StateSpec;
-import com.icthh.xm.ms.entity.domain.spec.NextSpec;
 import com.icthh.xm.ms.entity.domain.spec.TagSpec;
+import com.icthh.xm.ms.entity.domain.spec.TypeSpec;
 import com.icthh.xm.ms.entity.domain.spec.UniqueFieldSpec;
-
+import com.icthh.xm.ms.entity.security.access.DynamicPermissionCheckService;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
@@ -50,9 +52,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
-
-import com.icthh.xm.ms.entity.security.access.DynamicPermissionCheckService;
 import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -62,6 +63,7 @@ import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
 import org.springframework.core.io.ClassPathResource;
 
+@Slf4j
 public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
 
     private static final String TENANT = "TEST";
@@ -457,5 +459,4 @@ public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
             .flatMap(List::stream)
             .collect(Collectors.toList());
     }
-
 }
