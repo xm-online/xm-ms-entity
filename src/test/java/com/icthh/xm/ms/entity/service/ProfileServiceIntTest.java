@@ -22,7 +22,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.transaction.BeforeTransaction;
 import org.springframework.transaction.annotation.Transactional;
 
-public class ProfileServiceUnitTest extends AbstractSpringBootTest {
+public class ProfileServiceIntTest extends AbstractSpringBootTest {
 
     private static final Long ID = 1L;
     private static final String USER_KEY = "test";
