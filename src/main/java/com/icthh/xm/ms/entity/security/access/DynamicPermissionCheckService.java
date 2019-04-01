@@ -121,7 +121,7 @@ public class DynamicPermissionCheckService {
         Set<String> lPermissions = getRoleFunctionPermissions();
 
         if (!lPermissions.isEmpty()) {
-            filteredList = innerGetter.get()
+            filteredList = nullSafe(innerGetter.get())
                                       .stream()
                                       .filter(item -> lPermissions.contains(innerKeyGetter.apply(item)))
                                       .collect(Collectors.toList());
