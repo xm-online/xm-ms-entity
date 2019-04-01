@@ -28,5 +28,4 @@ public interface LinkRepository extends JpaRepository<Link, Long>, JpaSpecificat
     Integer countBySourceIdAndTypeKeyAndIdNotIn(Long sourceId, String typeKey, List<Long> notId);
 
     Integer countBySourceIdAndTypeKey(Long sourceId, String typeKey);
-
 }

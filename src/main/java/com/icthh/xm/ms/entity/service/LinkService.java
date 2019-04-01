@@ -22,6 +22,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 /**
@@ -66,33 +67,24 @@ public class LinkService {
     }
 
     private void assertMaxLinksValue(Link link) {
-
-        XmEntityStateProjection sourceEntity = xmEntityRepository.findStateProjectionById(link.getSource().getId());
-
-        boolean present = xmEntitySpecService.findLink(sourceEntity.getTypeKey(), link.getTypeKey()).isPresent();
-        if (!present){
+        if (link.getId() != null) {
             return;
         }
-
-        LinkSpec linkSpec = xmEntitySpecService.findLink(sourceEntity.getTypeKey(), link.getTypeKey()).get();
-
+        XmEntityStateProjection sourceEntity = xmEntityRepository.findStateProjectionById(link.getSource().getId());
+        Optional<LinkSpec> linkSpecOptional = xmEntitySpecService.findLink(sourceEntity.getTypeKey(), link.getTypeKey());
+        boolean present = linkSpecOptional.isPresent();
+        if (!present) {
+            return;
+        }
+        LinkSpec linkSpec = linkSpecOptional.get();
         if (linkSpec.getMax() == null || linkSpec.getMax() < 0) {
             return;
         }
-
-        if (link.getId() != null){
-            return;
-        }
-
-        boolean canSaveMore = linkSpec.getMax() > linkRepository.countBySourceIdAndTypeKey(link.getSource().getId(), link.getTypeKey());
-
-        if (canSaveMore) {
-            return;
-        }
-
-        throw new BusinessException("Link with type key " + link.getTypeKey()
+        Integer currentValue = linkRepository.countBySourceIdAndTypeKey(link.getSource().getId(), link.getTypeKey());
+        if (currentValue >= linkSpec.getMax()) {
+            throw new BusinessException("Link with type key " + link.getTypeKey()
                 + " already has the maximum number of items.");
-
+        }
     }
 
     private Long entityId(XmEntity entity) {

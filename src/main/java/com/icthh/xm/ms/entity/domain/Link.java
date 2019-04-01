@@ -195,7 +195,7 @@ public class Link implements Serializable, Persistable<Long> {
     }
 
     public void setSource(XmEntity xmEntity) {
-            this.source = xmEntity;
+        this.source = xmEntity;
     }
 
     public boolean linkFromSameEntity(Link link) {
