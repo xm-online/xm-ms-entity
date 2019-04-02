@@ -484,9 +484,10 @@ public class EntityServiceImplIntTest extends AbstractSpringBootTest {
         link2 = linkRepository.save(link2);
         link3 = linkRepository.save(link3);
         assertThat(1).isEqualTo(linkRepository.countBySourceIdAndTypeKeyAndIdNot(sourceEntity.getId(),
-                                                                                        TEST_LINK_KEY,link2.getId()));
+            TEST_LINK_KEY, link2.getId()));
+    }
 
-    }    @Test
+    @Test
     @Transactional
     public void findBySourceIdAndTypeKey() {
         XmEntity sourceEntity = xmEntityRepository.save(createEntity(1l, "ACCOUNT.USER"));
@@ -500,7 +501,8 @@ public class EntityServiceImplIntTest extends AbstractSpringBootTest {
         link = linkRepository.save(link);
         link2 = linkRepository.save(link2);
         link3 = linkRepository.save(link3);
-        assertThat(2).isEqualTo(linkRepository.countBySourceIdAndTypeKey(sourceEntity.getId(),TEST_LINK_KEY));
+        assertThat(2).isEqualTo(linkRepository.countBySourceIdAndTypeKey(sourceEntity.getId(),
+            TEST_LINK_KEY));
     }
 
     @Test
@@ -521,7 +523,6 @@ public class EntityServiceImplIntTest extends AbstractSpringBootTest {
         testLinksId.add(link.getId());
         testLinksId.add(link3.getId());
         assertThat(1).isEqualTo(linkRepository.countBySourceIdAndTypeKeyAndIdNotIn(sourceEntity.getId(),
-                                                                                          TEST_LINK_KEY, testLinksId));
+            TEST_LINK_KEY, testLinksId));
     }
-
 }
