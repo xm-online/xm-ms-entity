@@ -2,7 +2,7 @@ package com.icthh.xm.ms.entity.service.mail;
 
 import static com.icthh.xm.ms.entity.config.Constants.TRANSLATION_KEY;
 import static java.util.Locale.ENGLISH;
-import static java.util.Objects.isNull;
+import static java.util.Objects.nonNull;
 import static org.springframework.context.i18n.LocaleContextHolder.getLocale;
 import static org.springframework.context.i18n.LocaleContextHolder.getLocaleContext;
 import static org.springframework.context.i18n.LocaleContextHolder.setLocale;
@@ -274,23 +274,19 @@ public class MailService {
         MimeMessage mimeMessage = javaMailSender.createMimeMessage();
         MimeMessageHelper message;
         try {
-            if (isNull(attachmentFilename) || isNull(dataSource)) {
-                log.debug("Send email[multipart '{}' and html '{}'] to '{}' with subject '{}' and content={}",
-                    false, true, to, subject, content);
-
-                message = new MimeMessageHelper(mimeMessage, false, StandardCharsets.UTF_8.name());
-                initMessage(message, to, subject, content, from);
-                javaMailSender.send(mimeMessage);
-                log.debug("Sent email to User '{}'", to);
-                return;
-            }
+            boolean hasAttachments = nonNull(attachmentFilename) || nonNull(dataSource);
 
             log.debug("Send email[multipart '{}' and html '{}' and attachmentFilename '{}'] to '{}' with subject '{}' and content={}",
                 true, true, attachmentFilename, to, subject, content);
 
-            message = new MimeMessageHelper(mimeMessage, true, StandardCharsets.UTF_8.name());
-            initMessage(message, to, subject, content, from);
-            message.addAttachment(attachmentFilename, dataSource);
+            message = new MimeMessageHelper(mimeMessage, hasAttachments, StandardCharsets.UTF_8.name());
+            message.setTo(to);
+            message.setFrom(from);
+            message.setSubject(subject);
+            message.setText(content, true);
+            if (hasAttachments) {
+                message.addAttachment(attachmentFilename, dataSource);
+            }
             javaMailSender.send(mimeMessage);
             log.debug("Sent email to User '{}'", to);
         } catch (Exception e) {
@@ -301,16 +297,4 @@ public class MailService {
             }
         }
     }
-
-    private void initMessage(MimeMessageHelper message,
-                     String to,
-                     String subject,
-                     String content,
-                     String from) throws MessagingException {
-        message.setTo(to);
-        message.setFrom(from);
-        message.setSubject(subject);
-        message.setText(content, true);
-    }
-
 }
