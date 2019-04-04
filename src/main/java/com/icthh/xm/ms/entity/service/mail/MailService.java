@@ -2,6 +2,7 @@ package com.icthh.xm.ms.entity.service.mail;
 
 import static com.icthh.xm.ms.entity.config.Constants.TRANSLATION_KEY;
 import static java.util.Locale.ENGLISH;
+import static java.util.Objects.isNull;
 import static org.springframework.context.i18n.LocaleContextHolder.getLocale;
 import static org.springframework.context.i18n.LocaleContextHolder.getLocaleContext;
 import static org.springframework.context.i18n.LocaleContextHolder.setLocale;
@@ -26,12 +27,14 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import javax.annotation.Resource;
+import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.context.i18n.LocaleContext;
+import org.springframework.core.io.InputStreamSource;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
@@ -146,6 +149,44 @@ public class MailService {
                                Map<String, Object> objectModel,
                                String rid,
                                String from) {
+        selfReference.sendEmailFromTemplateWithAttachment(
+            tenantKey,
+            locale,
+            templateName,
+            subject,
+            email,
+            objectModel,
+            rid,
+            from,
+            null,
+            null);
+    }
+
+    /**
+     * Async send of email with attachment
+     * @param tenantKey the tenant key
+     * @param locale the locale
+     * @param templateName the email template name
+     * @param subject the raw subject
+     * @param email the to email
+     * @param objectModel the email parameters
+     * @param rid the request id
+     * @param from the from email
+     * @param attachmentFilename the name of the attachment as it will appear in the mail
+     * @param dataSource the {@code javax.activation.DataSource} to take the content from, determining the InputStream
+     * and the content type
+     */
+    @Async
+    public void sendEmailFromTemplateWithAttachment(TenantKey tenantKey,
+                                      Locale locale,
+                                      String templateName,
+                                      String subject,
+                                      String email,
+                                      Map<String, Object> objectModel,
+                                      String rid,
+                                      String from,
+                                      String attachmentFilename,
+                                      InputStreamSource dataSource) {
         execForCustomRid(rid, () -> {
             if (email == null) {
                 log.warn("Can't send email on null address for tenant: {}, email template: {}",
@@ -166,7 +207,9 @@ public class MailService {
                     email,
                     resolve(SUBJECT, subject, templateName, locale),
                     content,
-                    resolve(FROM, from, templateName, locale)
+                    resolve(FROM, from, templateName, locale),
+                    attachmentFilename,
+                    dataSource
                 );
             } catch (TemplateException e) {
                 throw new IllegalStateException("Mail template rendering failed");
@@ -220,18 +263,34 @@ public class MailService {
     }
 
     // package level for testing
-    void sendEmail(String to, String subject, String content, String from) {
-        log.debug("Send email[multipart '{}' and html '{}'] to '{}' with subject '{}' and content={}",
-            false, true, to, subject, content);
+    void sendEmail(String to,
+                   String subject,
+                   String content,
+                   String from,
+                   String attachmentFilename,
+                   InputStreamSource dataSource) {
 
         // Prepare message using a Spring helper
         MimeMessage mimeMessage = javaMailSender.createMimeMessage();
+        MimeMessageHelper message;
         try {
-            MimeMessageHelper message = new MimeMessageHelper(mimeMessage, false, StandardCharsets.UTF_8.name());
-            message.setTo(to);
-            message.setFrom(from);
-            message.setSubject(subject);
-            message.setText(content, true);
+            if (isNull(attachmentFilename) || isNull(dataSource)) {
+                log.debug("Send email[multipart '{}' and html '{}'] to '{}' with subject '{}' and content={}",
+                    false, true, to, subject, content);
+
+                message = new MimeMessageHelper(mimeMessage, false, StandardCharsets.UTF_8.name());
+                initMessage(message, to, subject, content, from);
+                javaMailSender.send(mimeMessage);
+                log.debug("Sent email to User '{}'", to);
+                return;
+            }
+
+            log.debug("Send email[multipart '{}' and html '{}' and attachmentFilename '{}'] to '{}' with subject '{}' and content={}",
+                true, true, attachmentFilename, to, subject, content);
+
+            message = new MimeMessageHelper(mimeMessage, true, StandardCharsets.UTF_8.name());
+            initMessage(message, to, subject, content, from);
+            message.addAttachment(attachmentFilename, dataSource);
             javaMailSender.send(mimeMessage);
             log.debug("Sent email to User '{}'", to);
         } catch (Exception e) {
@@ -241,6 +300,17 @@ public class MailService {
                 log.warn("Email could not be sent to user '{}': {}", to, e.getMessage());
             }
         }
+    }
+
+    private void initMessage(MimeMessageHelper message,
+                     String to,
+                     String subject,
+                     String content,
+                     String from) throws MessagingException {
+        message.setTo(to);
+        message.setFrom(from);
+        message.setSubject(subject);
+        message.setText(content, true);
     }
 
 }
