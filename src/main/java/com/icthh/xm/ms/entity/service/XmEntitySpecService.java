@@ -462,8 +462,8 @@ public class XmEntitySpecService implements RefreshableConfiguration {
     private TypeSpec filterFunctions(TypeSpec spec) {
         TypeSpec clone = spec.toBuilder().build();
         return dynamicPermissionCheckService.filterInnerListByPermission(clone,
-            spec::getFunctions,
-            spec::setFunctions,
+            clone::getFunctions,
+            clone::setFunctions,
             FunctionSpec::getDynamicPrivilegeKey);
     }
 
