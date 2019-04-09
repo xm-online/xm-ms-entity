@@ -44,6 +44,8 @@ public interface SpringXmEntityRepository extends
 
     XmEntityStateProjection findStateProjectionById(Long id);
 
+    List<XmEntityStateProjection> findAllStateProjectionByIdIn(Iterable<Long> longs);
+
     XmEntityStateProjection findStateProjectionByKey(String key);
 
     Optional<XmEntityVersion> findVersionById(Long id);

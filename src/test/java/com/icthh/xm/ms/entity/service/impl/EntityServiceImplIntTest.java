@@ -7,6 +7,7 @@ import static com.icthh.xm.ms.entity.config.TenantConfigMockConfiguration.getXmE
 import static java.time.Instant.now;
 import static java.util.Arrays.asList;
 import static java.util.UUID.randomUUID;
+import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -30,6 +31,7 @@ import com.icthh.xm.ms.entity.domain.UniqueField;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.domain.ext.IdOrKey;
 import com.icthh.xm.ms.entity.domain.template.TemplateParamsHolder;
+import com.icthh.xm.ms.entity.projection.XmEntityIdKeyTypeKey;
 import com.icthh.xm.ms.entity.repository.LinkRepository;
 import com.icthh.xm.ms.entity.repository.SpringXmEntityRepository;
 import com.icthh.xm.ms.entity.repository.UniqueFieldRepository;
@@ -66,10 +68,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigInteger;
 import java.net.URI;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.List;
+import java.util.*;
 
 @Slf4j
 public class EntityServiceImplIntTest extends AbstractSpringBootTest {
@@ -524,5 +523,27 @@ public class EntityServiceImplIntTest extends AbstractSpringBootTest {
         testLinksId.add(link3.getId());
         assertThat(1).isEqualTo(linkRepository.countBySourceIdAndTypeKeyAndIdNotIn(sourceEntity.getId(),
             TEST_LINK_KEY, testLinksId));
+    }
+
+    @Test
+    @Transactional
+    public void findAllStateProjectionByIdIn() {
+        XmEntity xmEntity1 = xmEntityRepository.save(createEntity(1l, "ACCOUNT.USER"));
+        XmEntity xmEntity2 = xmEntityRepository.save(createEntity(2l, "ACCOUNT.USER"));
+        XmEntity xmEntity3 = xmEntityRepository.save(createEntity(3l, "ACCOUNT.USER"));
+
+        List<Long> ids = new ArrayList<>();
+        ids.add(xmEntity1.getId());
+        ids.add(xmEntity2.getId());
+        ids.add(xmEntity3.getId());
+
+        List<String> typeKeys = new ArrayList<>();
+        typeKeys.add(xmEntity1.getTypeKey());
+        typeKeys.add(xmEntity2.getTypeKey());
+        typeKeys.add(xmEntity3.getTypeKey());
+
+        List<String> testTypeKeys = xmEntityRepository.findAllStateProjectionByIdIn(ids).stream()
+            .map(XmEntityIdKeyTypeKey::getTypeKey).collect(toList());
+        assertThat(testTypeKeys).isEqualTo(typeKeys);
     }
 }

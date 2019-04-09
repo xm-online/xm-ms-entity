@@ -28,11 +28,11 @@ public class LinkServiceUnitTest {
 
     private XmEntitySpecService xmEntitySpecService;
 
-    private  LinkPermittedRepository permittedRepository;
+    private LinkPermittedRepository permittedRepository;
 
-    private  PermittedSearchRepository permittedSearchRepository;
+    private PermittedSearchRepository permittedSearchRepository;
 
-    private  StartUpdateDateGenerationStrategy startUpdateDateGenerationStrategy;
+    private StartUpdateDateGenerationStrategy startUpdateDateGenerationStrategy;
 
     @Before
     public void init() {
@@ -51,7 +51,7 @@ public class LinkServiceUnitTest {
 
     @Test
     public void saveLinkWithId() {
-        Link link = preparationForSavingLink(true,0,0);
+        Link link = preparationForSavingLink(true, 0, 0);
         assertThat(link).isEqualTo(linkService.save(link));
         verify(linkRepository).save(link);
         verify(xmEntityRepository).getOne(entityId(link.getTarget()));
@@ -60,7 +60,7 @@ public class LinkServiceUnitTest {
 
     @Test
     public void saveLinkWithOutId() {
-        Link link = preparationForSavingLink(false,0,3);
+        Link link = preparationForSavingLink(false, 0, 3);
         assertThat(link).isEqualTo(linkService.save(link));
         verify(linkRepository).save(link);
         verify(xmEntityRepository).findStateProjectionById(link.getSource().getId());
@@ -72,7 +72,7 @@ public class LinkServiceUnitTest {
 
     @Test(expected = BusinessException.class)
     public void saveLinkOutOfMaxValue() {
-        Link link = preparationForSavingLink(false,3,3);
+        Link link = preparationForSavingLink(false, 3, 3);
         linkService.save(link);
     }
 
@@ -116,26 +116,26 @@ public class LinkServiceUnitTest {
 
     private XmEntityStateProjection getXmEntityStateProjection(String typeKey) {
         return new XmEntityStateProjection() {
-               @Override
-               public String getStateKey() {
-                   return null;
-               }
+            @Override
+            public String getStateKey() {
+                return null;
+            }
 
-               @Override
-               public Long getId() {
-                   return null;
-               }
+            @Override
+            public Long getId() {
+                return null;
+            }
 
-               @Override
-               public String getKey() {
-                   return null;
-               }
+            @Override
+            public String getKey() {
+                return null;
+            }
 
-               @Override
-               public String getTypeKey() {
-                   return typeKey;
-               }
-           };
+            @Override
+            public String getTypeKey() {
+                return typeKey;
+            }
+        };
     }
 }
 

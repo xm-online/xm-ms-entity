@@ -68,6 +68,11 @@ public class XmEntityRepositoryInternalImpl implements XmEntityRepositoryInterna
     }
 
     @Override
+    public List<XmEntityStateProjection> findAllStateProjectionByIdIn(Iterable<Long> longs) {
+        return springXmEntityRepository.findAllStateProjectionByIdIn(longs);
+    }
+
+    @Override
     public XmEntityStateProjection findStateProjectionByKey(String key) {
         return springXmEntityRepository.findStateProjectionByKey(key);
     }

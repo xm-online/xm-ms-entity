@@ -3,7 +3,6 @@ package com.icthh.xm.ms.entity.service;
 import static com.google.common.collect.ImmutableMap.of;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
-import static java.util.Collections.emptyMap;
 import static java.util.stream.Collectors.toList;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -15,25 +14,28 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.icthh.xm.commons.config.client.service.TenantConfigService;
 import com.icthh.xm.commons.exceptions.BusinessException;
+import com.icthh.xm.commons.security.XmAuthenticationContext;
+import com.icthh.xm.commons.security.XmAuthenticationContextHolder;
 import com.icthh.xm.ms.entity.AbstractUnitTest;
+import com.icthh.xm.ms.entity.domain.Link;
 import com.icthh.xm.ms.entity.domain.UniqueField;
 import com.icthh.xm.ms.entity.domain.XmEntity;
+import com.icthh.xm.ms.entity.domain.spec.LinkSpec;
 import com.icthh.xm.ms.entity.domain.spec.StateSpec;
 import com.icthh.xm.ms.entity.domain.spec.TypeSpec;
 import com.icthh.xm.ms.entity.domain.spec.UniqueFieldSpec;
 import com.icthh.xm.ms.entity.projection.XmEntityStateProjection;
+import com.icthh.xm.ms.entity.repository.LinkRepository;
 import com.icthh.xm.ms.entity.repository.SpringXmEntityRepository;
 import com.icthh.xm.ms.entity.repository.UniqueFieldRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityRepositoryInternal;
 import com.icthh.xm.ms.entity.repository.search.XmEntitySearchRepository;
 import com.icthh.xm.ms.entity.service.impl.StartUpdateDateGenerationStrategy;
 import com.icthh.xm.ms.entity.service.impl.XmEntityServiceImpl;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+
+import java.time.Instant;
+import java.util.*;
+
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
 import org.junit.Test;
@@ -49,11 +51,17 @@ import org.mockito.junit.MockitoJUnitRunner;
 public class XmEntityServiceImplUnitTest extends AbstractUnitTest {
 
     public static final String TEST_TYPE_KEY = "TEST_TYPE_KEY";
+
+    private static final Instant MOCKED_START_DATE = Instant.ofEpochMilli(42L);
+    private static final Instant MOCKED_UPDATE_DATE = Instant.ofEpochMilli(84L);
+
     @InjectMocks
     private XmEntityServiceImpl xmEntityService;
 
     @Mock
     private XmEntitySpecService xmEntitySpecService;
+    @Mock
+    private LinkRepository linkRepository;
     @Mock
     private XmEntityRepositoryInternal xmEntityRepository;
     @Mock
@@ -64,12 +72,17 @@ public class XmEntityServiceImplUnitTest extends AbstractUnitTest {
     TenantConfigService tenantConfigService;
     @Mock
     UniqueFieldRepository uniqueFieldRepository;
-
+    @Mock
+    private SpringXmEntityRepository springXmEntityRepository;
+    @Mock
+    private XmAuthenticationContextHolder authContextHolder;
+    @Mock
+    private XmAuthenticationContext context;
     @Spy
     private ObjectMapper mapper = new ObjectMapper();
 
     @Before
-    public void before(){
+    public void before() {
         mapper.registerModule(new JavaTimeModule());
         xmEntityService.setSelf(xmEntityService);
     }
@@ -132,21 +145,21 @@ public class XmEntityServiceImplUnitTest extends AbstractUnitTest {
     @Test(expected = BusinessException.class)
     public void testFailTransitionIfNoNextStatesAssertChangeState() {
         when(xmEntitySpecService.nextStates("TEST_TYPE_KEY", "CURRENT_STATE")).thenReturn(emptyList());
-        xmEntityService.assertStateTransition("NEXT_STATE",  mockEntityProjection());
+        xmEntityService.assertStateTransition("NEXT_STATE", mockEntityProjection());
     }
 
     @Test(expected = BusinessException.class)
     public void testFailTransitionIfNoMathesStates() {
         List<StateSpec> states = asList(new StateSpec().key("NEXT_STATE_BUT_OTHER"), new StateSpec().key("ORHTER_STATE"));
         when(xmEntitySpecService.nextStates("TEST_TYPE_KEY", "CURRENT_STATE")).thenReturn(states);
-        xmEntityService.assertStateTransition("NEXT_STATE",  mockEntityProjection());
+        xmEntityService.assertStateTransition("NEXT_STATE", mockEntityProjection());
     }
 
     @Test
     public void testAssertNextState() {
         List<StateSpec> states = asList(new StateSpec().key("FIRST_STATE"), new StateSpec().key("NEXT_STATE"), new StateSpec().key("ORHTER_STATE"));
         when(xmEntitySpecService.nextStates("TEST_TYPE_KEY", "CURRENT_STATE")).thenReturn(states);
-        xmEntityService.assertStateTransition("NEXT_STATE",  mockEntityProjection());
+        xmEntityService.assertStateTransition("NEXT_STATE", mockEntityProjection());
     }
 
     private XmEntityStateProjection mockEntityProjection() {
@@ -173,4 +186,128 @@ public class XmEntityServiceImplUnitTest extends AbstractUnitTest {
         };
     }
 
+    @Test(expected = BusinessException.class)
+    public void assertMaxLinksValueSource() {
+        XmEntity source = new XmEntity().typeKey("XM_ENTITY_TYPE_KEY");
+        XmEntity testEntity = new XmEntity().typeKey("XM_ENTITY_TYPE_KEY");
+        preparationForAssertMaxLinksValueSource(source, testEntity);
+        when(xmEntitySpecService.findLink(source.getTypeKey(), "LINK_TYPE_KEY")).thenReturn(createLinkSpeckOptional(4));
+        when(xmEntitySpecService.findLink(source.getTypeKey(), "LINK_TYPE_KEY1")).thenReturn(createLinkSpeckOptional(1));
+        xmEntityService.save(testEntity);
+    }
+
+    @Test
+    public void assertMaxLinksValueSourceOk() {
+        XmEntity source = new XmEntity().typeKey("XM_ENTITY_TYPE_KEY");
+        source.setId(1000L);
+        XmEntity testEntity = new XmEntity().typeKey("XM_ENTITY_TYPE_KEY");
+        preparationForAssertMaxLinksValueSource(source, testEntity);
+        when(xmEntitySpecService.findLink(source.getTypeKey(), "LINK_TYPE_KEY")).thenReturn(createLinkSpeckOptional(4));
+        when(xmEntitySpecService.findLink(source.getTypeKey(), "LINK_TYPE_KEY1")).thenReturn(createLinkSpeckOptional(3));
+        assertEquals(xmEntityService.save(testEntity), testEntity);
+        verifyAssertMaxLinksValue(testEntity);
+    }
+
+    @Test(expected = BusinessException.class)
+    public void assertMaxLinksValueTarget() {
+        XmEntity testEntity = new XmEntity().typeKey("XM_ENTITY_TYPE_KEY");
+        XmEntity target = new XmEntity().typeKey("XM_ENTITY_TYPE_KEY");
+        preparationForAssertMaxLinksValueTarget(testEntity, target);
+        when(xmEntitySpecService.findLink(testEntity.getTypeKey(), "LINK_TYPE_KEY")).thenReturn(createLinkSpeckOptional(2));
+        when(xmEntitySpecService.findLink(testEntity.getTypeKey(), "LINK_TYPE_KEY1")).thenReturn(createLinkSpeckOptional(1));
+        xmEntityService.save(testEntity);
+    }
+
+    @Test
+    public void assertMaxLinksValueTargetOk() {
+        XmEntity testEntity = new XmEntity().typeKey("XM_ENTITY_TYPE_KEY");
+        XmEntity target = new XmEntity().typeKey("XM_ENTITY_TYPE_KEY");
+        preparationForAssertMaxLinksValueTarget(testEntity, target);
+        when(xmEntitySpecService.findLink(testEntity.getTypeKey(), "LINK_TYPE_KEY")).thenReturn(createLinkSpeckOptional(3));
+        when(xmEntitySpecService.findLink(testEntity.getTypeKey(), "LINK_TYPE_KEY1")).thenReturn(createLinkSpeckOptional(1));
+        assertEquals(testEntity, xmEntityService.save(testEntity));
+        verifyAssertMaxLinksValue(testEntity);
+    }
+
+    @Test
+    public void testSaveXmentityWithOutId() {
+        XmEntity source = new XmEntity();
+        source.setId(1000L);
+        XmEntity testEntity = new XmEntity().typeKey("XM_ENTITY_TYPE_KEY");
+        preparationForAssertMaxLinksValueSource(source, testEntity);
+        when(xmEntitySpecService.findLink(source.getTypeKey(), "LINK_TYPE_KEY")).thenReturn(createLinkSpeckOptional(5));
+        when(xmEntitySpecService.findLink(source.getTypeKey(), "LINK_TYPE_KEY1")).thenReturn(createLinkSpeckOptional(3));
+        assertEquals(xmEntityService.save(testEntity), testEntity);
+    }
+
+    private void verifyAssertMaxLinksValue(XmEntity testEntity) {
+        verify(authContextHolder).getContext();
+        verify(context).getUserKey();
+        verify(xmEntityRepository).save(testEntity);
+    }
+
+    private void preparationForAssertMaxLinksValueTarget(XmEntity testEntity, XmEntity target) {
+        Link newLink = new Link().typeKey("LINK_TYPE_KEY").source(testEntity).target(target);
+        Link link1 = new Link().typeKey("LINK_TYPE_KEY").source(testEntity).target(target);
+        link1.setId(3L);
+        Link link2 = new Link().typeKey("LINK_TYPE_KEY").source(testEntity).target(target);
+        link2.setId(4L);
+        Link link3 = new Link().typeKey("LINK_TYPE_KEY1").source(testEntity).target(target);
+        link3.setId(6L);
+
+        Set<Link> linkss = new HashSet<>();
+        linkss.add(link1);
+        linkss.add(link2);
+        linkss.add(link3);
+        linkss.add(newLink);
+        linkss.forEach(it -> testEntity.addTargets(it));
+
+        when(authContextHolder.getContext()).thenReturn(context);
+        when(context.getUserKey()).thenReturn(Optional.of("userKey"));
+        when(xmEntityRepository.save(testEntity)).thenReturn(testEntity);
+    }
+
+    private void preparationForAssertMaxLinksValueSource(XmEntity source, XmEntity testEntity) {
+        Link link1 = new Link().typeKey("LINK_TYPE_KEY").source(source).target(testEntity);
+        Link link2 = new Link().typeKey("LINK_TYPE_KEY").source(source).target(testEntity);
+        Link link3 = new Link().typeKey("LINK_TYPE_KEY1").source(source).target(testEntity);
+
+        Link link4 = new Link().typeKey("LINK_TYPE_KEY").source(source).target(testEntity);
+        link4.setId(3L);
+        Link link5 = new Link().typeKey("LINK_TYPE_KEY").source(source).target(testEntity);
+        link5.setId(4L);
+        Link link6 = new Link().typeKey("LINK_TYPE_KEY1").source(source).target(testEntity);
+        link6.setId(6L);
+
+        Link link7 = new Link().typeKey("LINK_TYPE_KEY1").source(source).target(testEntity);
+        link7.setId(7L);
+
+        Set<Link> linkss = new HashSet<>();
+        linkss.add(link4);
+        linkss.add(link5);
+        linkss.add(link6);
+        source.setTargets(linkss);
+        Set<Link> links = new HashSet<>();
+        links.add(link1);
+        links.add(link2);
+        links.add(link3);
+        links.add(link7);
+        testEntity.setSources(links);
+
+        Set<Long> idsWithOutTypeKey = new HashSet<>();
+        idsWithOutTypeKey.add(1000L);
+        List<XmEntityStateProjection> projectionList = new ArrayList<>();
+        projectionList.add(mockEntityProjection());
+
+        when(authContextHolder.getContext()).thenReturn(context);
+        when(context.getUserKey()).thenReturn(Optional.of("userKey"));
+        when(xmEntityRepository.findAllStateProjectionByIdIn(idsWithOutTypeKey)).thenReturn(projectionList);
+        when(xmEntityRepository.save(testEntity)).thenReturn(testEntity);
+    }
+
+    private Optional<LinkSpec> createLinkSpeckOptional(int maxValue) {
+        LinkSpec linkSpec = new LinkSpec();
+        linkSpec.setMax(maxValue);
+        return Optional.of(linkSpec);
+    }
 }

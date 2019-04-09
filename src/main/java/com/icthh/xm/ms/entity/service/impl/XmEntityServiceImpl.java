@@ -13,6 +13,7 @@ import static org.apache.commons.collections.MapUtils.isEmpty;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNoneBlank;
 import static org.springframework.beans.BeanUtils.isSimpleValueType;
+import static java.util.stream.Collectors.*;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.icthh.xm.commons.exceptions.BusinessException;
@@ -53,30 +54,10 @@ import com.icthh.xm.ms.entity.repository.UniqueFieldRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityPermittedRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityRepositoryInternal;
 import com.icthh.xm.ms.entity.repository.search.XmEntityPermittedSearchRepository;
-import com.icthh.xm.ms.entity.service.AttachmentService;
-import com.icthh.xm.ms.entity.service.LifecycleLepStrategy;
-import com.icthh.xm.ms.entity.service.LifecycleLepStrategyFactory;
-import com.icthh.xm.ms.entity.service.LinkService;
-import com.icthh.xm.ms.entity.service.ProfileService;
-import com.icthh.xm.ms.entity.service.StorageService;
-import com.icthh.xm.ms.entity.service.XmEntityService;
-import com.icthh.xm.ms.entity.service.XmEntitySpecService;
-import com.icthh.xm.ms.entity.service.XmEntityTemplatesSpecService;
+import com.icthh.xm.ms.entity.service.*;
 import com.icthh.xm.ms.entity.service.dto.LinkSourceDto;
 import com.jayway.jsonpath.DocumentContext;
 import com.jayway.jsonpath.JsonPath;
-
-import java.net.URI;
-import java.time.Instant;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.function.Consumer;
-import java.util.stream.Collectors;
-
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -94,7 +75,13 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.ObjectUtils;
 import org.springframework.web.multipart.MultipartFile;
+
 import javax.annotation.Nullable;
+import java.net.URI;
+import java.time.Instant;
+import java.util.*;
+import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 /**
  * Service Implementation for managing XmEntity.
@@ -167,6 +154,9 @@ public class XmEntityServiceImpl implements XmEntityService {
             }
         }
 
+        assertMaxLinksValueSource(xmEntity);
+        assertMaxLinksValueTarget(xmEntity);
+
         // FIXME It is hack to link each tag with entity before persisting. may be there is more elegant solution.
         xmEntity.updateXmEntityReference(xmEntity.getAttachments(), Attachment::setXmEntity);
         xmEntity.updateXmEntityReference(xmEntity.getCalendars(), Calendar::setXmEntity);
@@ -187,6 +177,83 @@ public class XmEntityServiceImpl implements XmEntityService {
         // as a result old data may be persisted to elasticsearch
 
         return xmEntityRepository.save(xmEntity);
+    }
+
+    private void assertMaxLinksValueSource(XmEntity xmEntity) {
+        if (xmEntity.getSources().isEmpty()) {
+            return;
+        }
+        Map<String, Map<String, Integer>> sourceTypeKeyAndLinkInfo = new HashMap<>();
+        Map<String, Integer> linkTypeKeyAndCount = new HashMap<>();
+        Set<Link> sources = xmEntity.getSources();
+        Set<Link> newLinks = sources.stream().filter(Link::isNew).collect(toSet());
+        Set<Long> idsWithOutTypeKey = sources.stream().map(Link::getSource).filter(it -> it.getTypeKey() == null)
+            .map(XmEntity::getId).collect(Collectors.toSet());
+        List<XmEntityStateProjection> sourceStateProjection = xmEntityRepository.
+            findAllStateProjectionByIdIn(idsWithOutTypeKey);
+        int i = 0;
+        for (Link newLink : newLinks) {
+            Set<String> newLinkTypeKeys = newLinks.stream().map(Link::getTypeKey).collect(toSet());
+            XmEntity source = newLink.getSource();
+            for (String newLinkTypeKey : newLinkTypeKeys) {
+                Integer newLinkCount = (int) sources.stream().filter(it -> it.getSource().equals(source))
+                    .filter(it -> it.getTypeKey().equals(newLinkTypeKey)).count();
+                Integer oldSourceLinkCount = (int) source.getTargets().stream().filter(it -> it.getTypeKey().equals(newLinkTypeKey)).count();
+                linkTypeKeyAndCount.put(newLinkTypeKey, (oldSourceLinkCount + newLinkCount));
+            }
+            if (source.getTypeKey() == null && i < sourceStateProjection.size()) {
+                sourceTypeKeyAndLinkInfo.put(sourceStateProjection.get(i).getTypeKey(), linkTypeKeyAndCount);
+                i++;
+            } else {
+                sourceTypeKeyAndLinkInfo.put(source.getTypeKey(), linkTypeKeyAndCount);
+            }
+        }
+        for (String sourceTypeKey : sourceTypeKeyAndLinkInfo.keySet()) {
+            for (String linkTypeKey : linkTypeKeyAndCount.keySet()) {
+                Optional<LinkSpec> linkSpecOptional = xmEntitySpecService.findLink(sourceTypeKey, linkTypeKey);
+                boolean present = linkSpecOptional.isPresent();
+                if (!present) {
+                    return;
+                }
+                LinkSpec linkSpec = linkSpecOptional.get();
+                if (linkSpec.getMax() == null || linkSpec.getMax() < 0) {
+                    return;
+                }
+                Integer integer = linkTypeKeyAndCount.get(linkTypeKey);
+                if (integer > linkSpec.getMax()) {
+                    throw new BusinessException("Link with type key " + linkTypeKey
+                        + " already has the maximum number of items.");
+                }
+            }
+        }
+    }
+
+    private void assertMaxLinksValueTarget(XmEntity xmEntity) {
+        if (xmEntity.getTargets().isEmpty()) {
+            return;
+        }
+        Set<Link> targets = xmEntity.getTargets();
+        Set<String> newLinkTypeKeys = targets.stream().filter(Link::isNew).map(Link::getTypeKey).collect(toSet());
+        Map<String, Integer> linkTypeKeyAndCount = new HashMap<>();
+        for (String newLinkTypeKey : newLinkTypeKeys) {
+            Integer count = (int) targets.stream().filter(it -> it.getTypeKey().equals(newLinkTypeKey)).count();
+            linkTypeKeyAndCount.put(newLinkTypeKey, count);
+        }
+        for (String linkTypeKey : linkTypeKeyAndCount.keySet()) {
+            Optional<LinkSpec> linkSpecOptional = xmEntitySpecService.findLink(xmEntity.getTypeKey(), linkTypeKey);
+            boolean present = linkSpecOptional.isPresent();
+            if (!present) {
+                return;
+            }
+            LinkSpec linkSpec = linkSpecOptional.get();
+            if (linkSpec.getMax() == null || linkSpec.getMax() < 0) {
+                return;
+            }
+            if (linkTypeKeyAndCount.get(linkTypeKey) > linkSpec.getMax()) {
+                throw new BusinessException("Link with type key " + linkTypeKey
+                    + " already has the maximum number of items.");
+            }
+        }
     }
 
     private void preventRenameTenant(XmEntity xmEntity, XmEntity oldEntity) {
@@ -258,7 +325,7 @@ public class XmEntityServiceImpl implements XmEntityService {
         log.debug("Request to get all XmEntities");
         if (StringUtils.isNoneBlank(typeKey)) {
             Set<String> typeKeys = xmEntitySpecService.findNonAbstractTypesByPrefix(typeKey).stream()
-                .map(TypeSpec::getKey).collect(Collectors.toSet());
+                .map(TypeSpec::getKey).collect(toSet());
             log.debug("Find by typeKeys {}", typeKeys);
             return xmEntityPermittedRepository.findAllByTypeKeyIn(pageable, typeKeys, privilegeKey);
         } else {
@@ -663,7 +730,7 @@ public class XmEntityServiceImpl implements XmEntityService {
     @Override
     public byte[] exportEntities(String fileFormat, String typeKey) {
         Set<String> typeKeys = xmEntitySpecService.findNonAbstractTypesByPrefix(typeKey).stream()
-            .map(TypeSpec::getKey).collect(Collectors.toSet());
+            .map(TypeSpec::getKey).collect(toSet());
         List<XmEntity> xmEntities = xmEntityRepository.findAllByTypeKeyIn(
             PageRequest.of(0, Integer.MAX_VALUE), typeKeys).getContent();
 
@@ -671,7 +738,7 @@ public class XmEntityServiceImpl implements XmEntityService {
 
         List<SimpleExportXmEntityDto> simpleEntities = xmEntities.stream()
             .map(entity -> modelMapper.map(entity, SimpleExportXmEntityDto.class))
-            .collect(Collectors.toList());
+            .collect(toList());
         switch (FileFormatEnum.valueOf(fileFormat.toUpperCase())) {
             case CSV:
                 return EntityToCsvConverterUtils.toCsv(simpleEntities,
