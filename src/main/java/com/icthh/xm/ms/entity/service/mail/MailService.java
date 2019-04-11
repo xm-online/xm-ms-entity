@@ -277,7 +277,7 @@ public class MailService {
             boolean hasAttachments = nonNull(attachmentFilename) || nonNull(dataSource);
 
             log.debug("Send email[multipart '{}' and html '{}' and attachmentFilename '{}'] to '{}' with subject '{}' and content={}",
-                true, true, attachmentFilename, to, subject, content);
+                hasAttachments, true, attachmentFilename, to, subject, content);
 
             message = new MimeMessageHelper(mimeMessage, hasAttachments, StandardCharsets.UTF_8.name());
             message.setTo(to);

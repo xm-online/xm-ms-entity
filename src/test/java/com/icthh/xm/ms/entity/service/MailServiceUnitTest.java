@@ -6,10 +6,14 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.emptyMap;
 import static java.util.Locale.ENGLISH;
 import static java.util.Locale.FRANCE;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
-import static org.springframework.test.util.AssertionErrors.assertEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
+import com.google.common.io.ByteStreams;
 import com.icthh.xm.commons.config.client.service.TenantConfigService;
 import com.icthh.xm.commons.i18n.spring.service.LocalizationMessageService;
 import com.icthh.xm.commons.tenant.PrivilegedTenantContext;
@@ -22,23 +26,23 @@ import freemarker.template.Configuration;
 import lombok.SneakyThrows;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.mail.javamail.MimeMessageHelper;
-import org.springframework.mock.web.MockMultipartFile;
-import org.springframework.web.multipart.MultipartFile;;
 
+import javax.activation.DataSource;
+import javax.mail.BodyPart;
 import javax.mail.Message;
 import javax.mail.Multipart;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
-import javax.mail.internet.MimeMultipart;
-import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 
 @RunWith(MockitoJUnitRunner.class)
 public class MailServiceUnitTest extends AbstractUnitTest {
@@ -54,7 +58,10 @@ public class MailServiceUnitTest extends AbstractUnitTest {
     private static final String MOCK_FROM = "MOCK_FROM";
     private static final String MOCK_SUBJECT = "MOCK_SUBJECT";
     private static final String TO = "to@yopmail.com";
-    private static final String FILE_NAME = "FILE_NAME";
+    private static final String FILE_NAME = "FILE_NAME.csv";
+    private static final String ATTACHMENT = "attachment";
+    private static final String TEXT_CSV = "text/csv";
+    private static final byte[] FILE_BYTE_ARRAY = FILE_NAME.getBytes();
 
     @InjectMocks
     private MailService mailService;
@@ -97,9 +104,30 @@ public class MailServiceUnitTest extends AbstractUnitTest {
         verify(mock).setFrom(eq(InternetAddress.parse(MOCK_FROM)[0]));
         verify(mock).setSubject(eq(MOCK_SUBJECT), eq("UTF-8"));
 
-        verify(mock, times(1)).setContent(any(Multipart.class));
+        ArgumentCaptor<Multipart> captor = ArgumentCaptor.forClass(Multipart.class);
+        verify(mock).setContent(captor.capture());
+        List<Multipart> multiparts = captor.getAllValues();
+        assertMultipart(multiparts);
 
         verify(javaMailSender).send(mock);
+    }
+
+    private void assertMultipart(List<Multipart> multiparts) throws Exception {
+        assertEquals(1, multiparts.size());
+
+        Multipart multipart = multiparts.get(0);
+        assertEquals(2, multipart.getCount());
+
+        BodyPart bodyPart = multipart.getBodyPart(1);
+        assertEquals(ATTACHMENT, bodyPart.getDisposition());
+        assertEquals(FILE_NAME, bodyPart.getFileName());
+
+        DataSource dataSource = bodyPart.getDataHandler().getDataSource();
+        assertEquals(FILE_NAME, dataSource.getName());
+        assertEquals(TEXT_CSV, dataSource.getContentType());
+
+        byte[] arrayFromInputStream = ByteStreams.toByteArray(dataSource.getInputStream());
+        assertTrue(Arrays.equals(FILE_BYTE_ARRAY, arrayFromInputStream));
     }
 
     private MimeMessage sendEmail() {
@@ -118,7 +146,7 @@ public class MailServiceUnitTest extends AbstractUnitTest {
             "rid",
             MOCK_FROM,
             FILE_NAME,
-            new ByteArrayResource(FILE_NAME.getBytes())
+            new ByteArrayResource(FILE_BYTE_ARRAY)
         );
         return mock;
     }
