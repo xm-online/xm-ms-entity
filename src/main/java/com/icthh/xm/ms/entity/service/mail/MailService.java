@@ -149,12 +149,10 @@ public class MailService {
                                Map<String, Object> objectModel,
                                String rid,
                                String from) {
-        selfReference.sendEmailFromTemplateWithAttachment(
-            tenantKey,
+        initAndSendEmail(tenantKey,
             locale,
             templateName,
-            subject,
-            email,
+            subject, email,
             objectModel,
             rid,
             from,
@@ -187,6 +185,28 @@ public class MailService {
                                       String from,
                                       String attachmentFilename,
                                       InputStreamSource dataSource) {
+        initAndSendEmail(tenantKey,
+            locale,
+            templateName,
+            subject,
+            email,
+            objectModel,
+            rid,
+            from,
+            attachmentFilename,
+            dataSource);
+    }
+
+    private void initAndSendEmail(TenantKey tenantKey,
+                                  Locale locale,
+                                  String templateName,
+                                  String subject,
+                                  String email,
+                                  Map<String, Object> objectModel,
+                                  String rid,
+                                  String from,
+                                  String attachmentFilename,
+                                  InputStreamSource dataSource) {
         execForCustomRid(rid, () -> {
             if (email == null) {
                 log.warn("Can't send email on null address for tenant: {}, email template: {}",

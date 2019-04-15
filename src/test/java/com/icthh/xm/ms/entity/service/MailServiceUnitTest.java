@@ -104,30 +104,7 @@ public class MailServiceUnitTest extends AbstractUnitTest {
         verify(mock).setFrom(eq(InternetAddress.parse(MOCK_FROM)[0]));
         verify(mock).setSubject(eq(MOCK_SUBJECT), eq("UTF-8"));
 
-        ArgumentCaptor<Multipart> captor = ArgumentCaptor.forClass(Multipart.class);
-        verify(mock).setContent(captor.capture());
-        List<Multipart> multiparts = captor.getAllValues();
-        assertMultipart(multiparts);
-
         verify(javaMailSender).send(mock);
-    }
-
-    private void assertMultipart(List<Multipart> multiparts) throws Exception {
-        assertEquals(1, multiparts.size());
-
-        Multipart multipart = multiparts.get(0);
-        assertEquals(2, multipart.getCount());
-
-        BodyPart bodyPart = multipart.getBodyPart(1);
-        assertEquals(ATTACHMENT, bodyPart.getDisposition());
-        assertEquals(FILE_NAME, bodyPart.getFileName());
-
-        DataSource dataSource = bodyPart.getDataHandler().getDataSource();
-        assertEquals(FILE_NAME, dataSource.getName());
-        assertEquals(TEXT_CSV, dataSource.getContentType());
-
-        byte[] arrayFromInputStream = ByteStreams.toByteArray(dataSource.getInputStream());
-        assertTrue(Arrays.equals(FILE_BYTE_ARRAY, arrayFromInputStream));
     }
 
     private MimeMessage sendEmail() {
@@ -136,7 +113,7 @@ public class MailServiceUnitTest extends AbstractUnitTest {
         MimeMessage mock = mock(MimeMessage.class);
         when(javaMailSender.createMimeMessage()).thenReturn(mock);
 
-        mailService.sendEmailFromTemplateWithAttachment(
+        mailService.sendEmailFromTemplate(
             TenantKey.valueOf(TENANT_KEY),
             FRANCE,
             EMAIL_TEMPLATE,
@@ -144,9 +121,7 @@ public class MailServiceUnitTest extends AbstractUnitTest {
             TO,
             emptyMap(),
             "rid",
-            MOCK_FROM,
-            FILE_NAME,
-            new ByteArrayResource(FILE_BYTE_ARRAY)
+            MOCK_FROM
         );
         return mock;
     }
@@ -310,4 +285,63 @@ public class MailServiceUnitTest extends AbstractUnitTest {
         verify(javaMailSender).send(mock);
     }
 
+    @Test
+    @SneakyThrows
+    public void testSendEmailWithAttachment()  {
+        when(tenantConfigService.getConfig()).thenReturn(new HashMap<String, Object>() {{
+            put(MAIL_SETTINGS, new HashMap<>());
+        }});
+
+        MimeMessage mock = sendEmailWithAttachment();
+
+        verify(mock).setRecipient(eq(Message.RecipientType.TO),  eq(InternetAddress.parse(TO)[0]));
+        verify(mock).setFrom(eq(InternetAddress.parse(MOCK_FROM)[0]));
+        verify(mock).setSubject(eq(MOCK_SUBJECT), eq("UTF-8"));
+
+        ArgumentCaptor<Multipart> captor = ArgumentCaptor.forClass(Multipart.class);
+        verify(mock).setContent(captor.capture());
+        List<Multipart> multiparts = captor.getAllValues();
+        assertMultipart(multiparts);
+
+        verify(javaMailSender).send(mock);
+    }
+
+    private MimeMessage sendEmailWithAttachment() {
+        when(tenantContextHolder.getPrivilegedContext()).thenReturn(mock(PrivilegedTenantContext.class));
+        when(tenantEmailTemplateService.getEmailTemplate(TENANT_KEY + "/" + FRANCE.getLanguage() + "/" + EMAIL_TEMPLATE)).thenReturn(TEST_TEMPLATE_CONTENT);
+        MimeMessage mock = mock(MimeMessage.class);
+        when(javaMailSender.createMimeMessage()).thenReturn(mock);
+
+        mailService.sendEmailFromTemplateWithAttachment(
+            TenantKey.valueOf(TENANT_KEY),
+            FRANCE,
+            EMAIL_TEMPLATE,
+            MOCK_SUBJECT,
+            TO,
+            emptyMap(),
+            "rid",
+            MOCK_FROM,
+            FILE_NAME,
+            new ByteArrayResource(FILE_BYTE_ARRAY)
+        );
+        return mock;
+    }
+
+    private void assertMultipart(List<Multipart> multiparts) throws Exception {
+        assertEquals(1, multiparts.size());
+
+        Multipart multipart = multiparts.get(0);
+        assertEquals(2, multipart.getCount());
+
+        BodyPart bodyPart = multipart.getBodyPart(1);
+        assertEquals(ATTACHMENT, bodyPart.getDisposition());
+        assertEquals(FILE_NAME, bodyPart.getFileName());
+
+        DataSource dataSource = bodyPart.getDataHandler().getDataSource();
+        assertEquals(FILE_NAME, dataSource.getName());
+        assertEquals(TEXT_CSV, dataSource.getContentType());
+
+        byte[] arrayFromInputStream = ByteStreams.toByteArray(dataSource.getInputStream());
+        assertTrue(Arrays.equals(FILE_BYTE_ARRAY, arrayFromInputStream));
+    }
 }
