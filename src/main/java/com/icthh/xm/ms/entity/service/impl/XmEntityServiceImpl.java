@@ -209,7 +209,7 @@ public class XmEntityServiceImpl implements XmEntityService {
         List<String> sourceStateProjection = xmEntityRepository.findAllStateProjectionByIdIn(sourceIds)
             .stream().map(XmEntityStateProjection::getTypeKey).collect(toList());
         Map<Long, String> sourceIdsAndTypeKeys = IntStream.range(0, sourceIds.size()).boxed()
-            .collect(toMap(sourceIds::get,sourceStateProjection::get));
+            .collect(toMap(sourceIds::get, sourceStateProjection::get));
 
         newLinks.forEach(it -> linkCount(it.getTypeKey(),
                                             it.getSource(),
@@ -225,7 +225,7 @@ public class XmEntityServiceImpl implements XmEntityService {
         Predicate<Link> checkTypeKeyPredicate = it -> it.getTypeKey().equals(newLinkTypeKey);
         Long newLinkCount = newLinks.stream().filter(it -> it.getSource().getId().equals(source.getId()))
             .filter(checkTypeKeyPredicate).count();
-        Long countOfSourceTarget = (long) linkRepository.countBySourceIdAndTypeKey(source.getId(),newLinkTypeKey);
+        Long countOfSourceTarget = (long) linkRepository.countBySourceIdAndTypeKey(source.getId(), newLinkTypeKey);
         Long linkCount = newLinkCount + countOfSourceTarget;
 
         newLinkValidate(newLinkTypeKey, sourceIdsAndTypeKeys.get(source.getId()), linkCount);
