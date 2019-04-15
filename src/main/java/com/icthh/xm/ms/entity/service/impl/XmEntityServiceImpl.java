@@ -8,6 +8,7 @@ import static com.jayway.jsonpath.Option.SUPPRESS_EXCEPTIONS;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static java.util.Optional.ofNullable;
+import static java.util.stream.Collectors.counting;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static java.util.stream.Collectors.toSet;
@@ -50,6 +51,7 @@ import com.icthh.xm.ms.entity.lep.keyresolver.TypeKeyResolver;
 import com.icthh.xm.ms.entity.lep.keyresolver.XmEntityTypeKeyResolver;
 import com.icthh.xm.ms.entity.projection.XmEntityIdKeyTypeKey;
 import com.icthh.xm.ms.entity.projection.XmEntityStateProjection;
+import com.icthh.xm.ms.entity.repository.LinkRepository;
 import com.icthh.xm.ms.entity.repository.SpringXmEntityRepository;
 import com.icthh.xm.ms.entity.repository.UniqueFieldRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityPermittedRepository;
@@ -97,6 +99,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
+import java.util.stream.IntStream;
 
 /**
  * Service Implementation for managing XmEntity.
@@ -123,6 +126,7 @@ public class XmEntityServiceImpl implements XmEntityService {
     private final ObjectMapper objectMapper;
     private final UniqueFieldRepository uniqueFieldRepository;
     private final SpringXmEntityRepository springXmEntityRepository;
+    private final LinkRepository linkRepository;
 
     private XmEntityServiceImpl self;
 
@@ -198,32 +202,30 @@ public class XmEntityServiceImpl implements XmEntityService {
         if (xmEntity.getSources().isEmpty()) {
             return;
         }
-        Map<Long, String> sourceIdsAndTypeKeys = new HashMap<>();
         Set<Link> sources = xmEntity.getSources();
         Set<Link> newLinks = sources.stream().filter(Link::isNew).collect(toSet());
         List<Long> sourceIds = newLinks.stream().map(Link::getSource)
             .map(XmEntity::getId).collect(toList());
-        List<XmEntityStateProjection> sourceStateProjection = xmEntityRepository.
-            findAllStateProjectionByIdIn(sourceIds);
-        for (int i = 0; i < sourceIds.size(); ) {
-            sourceIdsAndTypeKeys.put(sourceIds.get(i), sourceStateProjection.get(i).getTypeKey());
-            i++;
-        }
-        newLinks.forEach(it -> getLinkCount(it.getTypeKey(),
+        List<String> sourceStateProjection = xmEntityRepository.findAllStateProjectionByIdIn(sourceIds)
+            .stream().map(XmEntityStateProjection::getTypeKey).collect(toList());
+        Map<Long, String> sourceIdsAndTypeKeys = IntStream.range(0, sourceIds.size()).boxed()
+            .collect(toMap(sourceIds::get,sourceStateProjection::get));
+
+        newLinks.forEach(it -> linkCount(it.getTypeKey(),
                                             it.getSource(),
                                             newLinks,
                                             sourceIdsAndTypeKeys));
     }
 
-    private void getLinkCount(String newLinkTypeKey,
-                              XmEntity source,
-                              Set<Link> newLinks,
-                              Map<Long, String> sourceIdsAndTypeKeys) {
+    private void linkCount(String newLinkTypeKey,
+                           XmEntity source,
+                           Set<Link> newLinks,
+                           Map<Long, String> sourceIdsAndTypeKeys) {
 
         Predicate<Link> checkTypeKeyPredicate = it -> it.getTypeKey().equals(newLinkTypeKey);
         Long newLinkCount = newLinks.stream().filter(it -> it.getSource().getId().equals(source.getId()))
             .filter(checkTypeKeyPredicate).count();
-        Long countOfSourceTarget = source.getTargets().stream().filter(checkTypeKeyPredicate).count();
+        Long countOfSourceTarget = (long) linkRepository.countBySourceIdAndTypeKey(source.getId(),newLinkTypeKey);
         Long linkCount = newLinkCount + countOfSourceTarget;
 
         newLinkValidate(newLinkTypeKey, sourceIdsAndTypeKeys.get(source.getId()), linkCount);
@@ -260,11 +262,11 @@ public class XmEntityServiceImpl implements XmEntityService {
             Optional<LinkSpec> linkSpecOptional = xmEntitySpecService.findLink(xmEntity.getTypeKey(), linkTypeKey);
             boolean present = linkSpecOptional.isPresent();
             if (!present) {
-                return;
+                continue;
             }
             LinkSpec linkSpec = linkSpecOptional.get();
             if (linkSpec.getMax() == null || linkSpec.getMax() < 0) {
-                return;
+                continue;
             }
             if (linkTypeKeyAndCount.get(linkTypeKey) > linkSpec.getMax()) {
                 throw new BusinessException("Link with type key " + linkTypeKey
