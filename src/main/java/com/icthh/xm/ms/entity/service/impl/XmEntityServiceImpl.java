@@ -8,12 +8,13 @@ import static com.jayway.jsonpath.Option.SUPPRESS_EXCEPTIONS;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static java.util.Optional.ofNullable;
+import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
+import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.collections.MapUtils.isEmpty;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNoneBlank;
 import static org.springframework.beans.BeanUtils.isSimpleValueType;
-import static java.util.stream.Collectors.*;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.icthh.xm.commons.exceptions.BusinessException;
@@ -54,7 +55,15 @@ import com.icthh.xm.ms.entity.repository.UniqueFieldRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityPermittedRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityRepositoryInternal;
 import com.icthh.xm.ms.entity.repository.search.XmEntityPermittedSearchRepository;
-import com.icthh.xm.ms.entity.service.*;
+import com.icthh.xm.ms.entity.service.AttachmentService;
+import com.icthh.xm.ms.entity.service.LifecycleLepStrategy;
+import com.icthh.xm.ms.entity.service.LifecycleLepStrategyFactory;
+import com.icthh.xm.ms.entity.service.LinkService;
+import com.icthh.xm.ms.entity.service.ProfileService;
+import com.icthh.xm.ms.entity.service.StorageService;
+import com.icthh.xm.ms.entity.service.XmEntityService;
+import com.icthh.xm.ms.entity.service.XmEntitySpecService;
+import com.icthh.xm.ms.entity.service.XmEntityTemplatesSpecService;
 import com.icthh.xm.ms.entity.service.dto.LinkSourceDto;
 import com.jayway.jsonpath.DocumentContext;
 import com.jayway.jsonpath.JsonPath;
@@ -79,7 +88,13 @@ import org.springframework.web.multipart.MultipartFile;
 import javax.annotation.Nullable;
 import java.net.URI;
 import java.time.Instant;
-import java.util.*;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
@@ -154,8 +169,8 @@ public class XmEntityServiceImpl implements XmEntityService {
             }
         }
 
-        assertMaxLinksValueSource(xmEntity);
-        assertMaxLinksValueTarget(xmEntity);
+        assertSourceEntityMaxLinkValue(xmEntity);
+        assertEntityTargetsMaxValue(xmEntity);
 
         // FIXME It is hack to link each tag with entity before persisting. may be there is more elegant solution.
         xmEntity.updateXmEntityReference(xmEntity.getAttachments(), Attachment::setXmEntity);
@@ -179,7 +194,7 @@ public class XmEntityServiceImpl implements XmEntityService {
         return xmEntityRepository.save(xmEntity);
     }
 
-    private void assertMaxLinksValueSource(XmEntity xmEntity) {
+    private void assertSourceEntityMaxLinkValue(XmEntity xmEntity) {
         if (xmEntity.getSources().isEmpty()) {
             return;
         }
@@ -190,8 +205,8 @@ public class XmEntityServiceImpl implements XmEntityService {
             .map(XmEntity::getId).collect(toList());
         List<XmEntityStateProjection> sourceStateProjection = xmEntityRepository.
             findAllStateProjectionByIdIn(sourceIds);
-        for (int i = 0; i < sourceIds.size();) {
-               sourceIdsAndTypeKeys.put(sourceIds.get(i), sourceStateProjection.get(i).getTypeKey());
+        for (int i = 0; i < sourceIds.size(); ) {
+            sourceIdsAndTypeKeys.put(sourceIds.get(i), sourceStateProjection.get(i).getTypeKey());
             i++;
         }
         newLinks.forEach(it -> getLinkCount(it.getTypeKey(),
@@ -214,23 +229,23 @@ public class XmEntityServiceImpl implements XmEntityService {
         newLinkValidate(newLinkTypeKey, sourceIdsAndTypeKeys.get(source.getId()), linkCount);
     }
 
-    private void newLinkValidate(String newLinkTypeKey, String sourceTypeKey, Long linkCount ) {
-                Optional<LinkSpec> linkSpecOptional = xmEntitySpecService.findLink(sourceTypeKey, newLinkTypeKey);
-                boolean present = linkSpecOptional.isPresent();
-                if (!present) {
-                    return;
-                }
-                LinkSpec linkSpec = linkSpecOptional.get();
-                if (linkSpec.getMax() == null || linkSpec.getMax() < 0) {
-                    return;
-                }
-                if (linkCount > linkSpec.getMax()) {
-                    throw new BusinessException("Link with type key " + newLinkTypeKey
-                        + " already has the maximum number of items.");
-                }
-            }
+    private void newLinkValidate(String newLinkTypeKey, String sourceTypeKey, Long linkCount) {
+        Optional<LinkSpec> linkSpecOptional = xmEntitySpecService.findLink(sourceTypeKey, newLinkTypeKey);
+        boolean present = linkSpecOptional.isPresent();
+        if (!present) {
+            return;
+        }
+        LinkSpec linkSpec = linkSpecOptional.get();
+        if (linkSpec.getMax() == null || linkSpec.getMax() < 0) {
+            return;
+        }
+        if (linkCount > linkSpec.getMax()) {
+            throw new BusinessException("Link with type key " + newLinkTypeKey
+                + " already has the maximum number of items.");
+        }
+    }
 
-    private void assertMaxLinksValueTarget(XmEntity xmEntity) {
+    private void assertEntityTargetsMaxValue(XmEntity xmEntity) {
         if (xmEntity.getTargets().isEmpty()) {
             return;
         }

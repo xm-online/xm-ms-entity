@@ -192,11 +192,8 @@ public class XmEntityServiceImplUnitTest extends AbstractUnitTest {
         source.setId(951L);
         XmEntity source2 = new XmEntity().typeKey("XM_ENTITY_TYPE_KEY2");
         source2.setId(952L);
-
         XmEntity testEntity = new XmEntity().typeKey("XM_ENTITY_TYPE_KEY");
-
         preparationForAssertMaxLinksValueSource(source, source2, testEntity);
-
         when(xmEntitySpecService.findLink(source.getTypeKey(), "LINK_TYPE_KEY")).thenReturn(createLinkSpeckOptional(4));
         when(xmEntitySpecService.findLink(source2.getTypeKey(), "LINK_TYPE_KEY1")).thenReturn(createLinkSpeckOptional(0));
         xmEntityService.save(testEntity);
@@ -278,12 +275,9 @@ public class XmEntityServiceImplUnitTest extends AbstractUnitTest {
     }
 
     private void preparationForAssertMaxLinksValueSource(XmEntity source, XmEntity source2, XmEntity testEntity) {
-
         Link link1 = new Link().typeKey("LINK_TYPE_KEY").source(source).target(testEntity);
         Link link2 = new Link().typeKey("LINK_TYPE_KEY").source(source).target(testEntity);
         Link link3 = new Link().typeKey("LINK_TYPE_KEY1").source(source2).target(testEntity);
-
-
 
         Link link4 = new Link().typeKey("LINK_TYPE_KEY").source(source).target(testEntity);
         link4.setId(3L);
@@ -291,10 +285,8 @@ public class XmEntityServiceImplUnitTest extends AbstractUnitTest {
         link5.setId(4L);
         Link link6 = new Link().typeKey("LINK_TYPE_KEY1").source(source).target(testEntity);
         link6.setId(6L);
-
         Link link7 = new Link().typeKey("LINK_TYPE_KEY1").source(source).target(testEntity);
         link7.setId(7L);
-
 
         Set<Link> linkss = new HashSet<>();
         linkss.add(link4);

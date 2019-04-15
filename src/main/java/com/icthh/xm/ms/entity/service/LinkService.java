@@ -67,7 +67,7 @@ public class LinkService {
     }
 
     private void assertMaxLinksValue(Link link) {
-        if (link.getId() != null) {
+        if (!link.isNew()) {
             return;
         }
         XmEntityStateProjection sourceEntity = xmEntityRepository.findStateProjectionById(link.getSource().getId());

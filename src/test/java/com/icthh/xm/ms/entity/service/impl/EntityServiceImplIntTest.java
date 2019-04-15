@@ -470,24 +470,6 @@ public class EntityServiceImplIntTest extends AbstractSpringBootTest {
 
     @Test
     @Transactional
-    public void findBySourceIdAndTypeKeyAndIdNot() {
-        XmEntity sourceEntity = xmEntityRepository.save(createEntity(1l, "ACCOUNT.USER"));
-        XmEntity targetEntity = xmEntityRepository.save(createEntity(2l, "ACCOUNT.USER"));
-
-        Link link = createLink(sourceEntity, targetEntity);
-        link.setTypeKey("TEST.LINK.IT");
-        Link link2 = createLink(sourceEntity, targetEntity);
-        Link link3 = createLink(sourceEntity, targetEntity);
-
-        link = linkRepository.save(link);
-        link2 = linkRepository.save(link2);
-        link3 = linkRepository.save(link3);
-        assertThat(1).isEqualTo(linkRepository.countBySourceIdAndTypeKeyAndIdNot(sourceEntity.getId(),
-            TEST_LINK_KEY, link2.getId()));
-    }
-
-    @Test
-    @Transactional
     public void findBySourceIdAndTypeKey() {
         XmEntity sourceEntity = xmEntityRepository.save(createEntity(1l, "ACCOUNT.USER"));
         XmEntity targetEntity = xmEntityRepository.save(createEntity(2l, "ACCOUNT.USER"));
@@ -502,27 +484,6 @@ public class EntityServiceImplIntTest extends AbstractSpringBootTest {
         link3 = linkRepository.save(link3);
         assertThat(2).isEqualTo(linkRepository.countBySourceIdAndTypeKey(sourceEntity.getId(),
             TEST_LINK_KEY));
-    }
-
-    @Test
-    @Transactional
-    public void findBySourceIdAndTypeKeyAndIdNotIn() {
-        XmEntity sourceEntity = xmEntityRepository.save(createEntity(1l, "ACCOUNT.USER"));
-        XmEntity targetEntity = xmEntityRepository.save(createEntity(2l, "ACCOUNT.USER"));
-
-        Link link = createLink(sourceEntity, targetEntity);
-        Link link2 = createLink(sourceEntity, targetEntity);
-        Link link3 = createLink(sourceEntity, targetEntity);
-
-        link = linkRepository.save(link);
-        link2 = linkRepository.save(link2);
-        link3 = linkRepository.save(link3);
-
-        List<Long> testLinksId = new ArrayList<>();
-        testLinksId.add(link.getId());
-        testLinksId.add(link3.getId());
-        assertThat(1).isEqualTo(linkRepository.countBySourceIdAndTypeKeyAndIdNotIn(sourceEntity.getId(),
-            TEST_LINK_KEY, testLinksId));
     }
 
     @Test

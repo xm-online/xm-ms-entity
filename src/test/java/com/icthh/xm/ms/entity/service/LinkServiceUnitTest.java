@@ -15,39 +15,29 @@ import com.icthh.xm.ms.entity.repository.search.PermittedSearchRepository;
 import com.icthh.xm.ms.entity.service.impl.StartUpdateDateGenerationStrategy;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.MockitoJUnitRunner;
 
 import java.util.Optional;
 
+@RunWith(MockitoJUnitRunner.class)
 public class LinkServiceUnitTest {
-
+    @InjectMocks
     private LinkService linkService;
-
+    @Mock
     private LinkRepository linkRepository;
-
+    @Mock
     private XmEntityRepository xmEntityRepository;
-
+    @Mock
     private XmEntitySpecService xmEntitySpecService;
-
+    @Mock
     private LinkPermittedRepository permittedRepository;
-
+    @Mock
     private PermittedSearchRepository permittedSearchRepository;
-
+    @Mock
     private StartUpdateDateGenerationStrategy startUpdateDateGenerationStrategy;
-
-    @Before
-    public void init() {
-
-        xmEntitySpecService = mock(XmEntitySpecService.class);
-
-        linkRepository = mock(LinkRepository.class);
-        xmEntityRepository = mock(XmEntityRepository.class);
-        permittedRepository = mock(LinkPermittedRepository.class);
-        permittedSearchRepository = mock(PermittedSearchRepository.class);
-        startUpdateDateGenerationStrategy = mock(StartUpdateDateGenerationStrategy.class);
-        linkService = new LinkService(linkRepository, permittedRepository,
-            permittedSearchRepository, startUpdateDateGenerationStrategy, xmEntityRepository, xmEntitySpecService);
-
-    }
 
     @Test
     public void saveLinkWithId() {
