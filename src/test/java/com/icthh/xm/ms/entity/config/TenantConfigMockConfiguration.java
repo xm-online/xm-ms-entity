@@ -20,6 +20,7 @@ import com.icthh.xm.ms.entity.service.EntityCustomPrivilegeService;
 import com.icthh.xm.ms.entity.service.XmEntitySpecService;
 import lombok.SneakyThrows;
 import org.apache.commons.io.IOUtils;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ClassPathResource;
@@ -91,6 +92,7 @@ public class TenantConfigMockConfiguration {
     }
 
     @Bean
+    @ConditionalOnMissingBean(TenantConfigService.class)
     public TenantConfigService tenantContigService() {
         return mock(TenantConfigService.class);
     }
