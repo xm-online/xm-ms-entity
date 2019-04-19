@@ -3,12 +3,14 @@ package com.icthh.xm.ms.entity.lep.keyresolver;
 import com.icthh.xm.lep.api.LepManagerService;
 import com.icthh.xm.lep.api.LepMethod;
 import com.icthh.xm.lep.api.commons.SeparatorSegmentedLepKey;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 /**
  * The {@link ChangeStateTargetStateLepKeyResolver} class.
  */
 @Component
+@RequiredArgsConstructor
 public class ChangeStateTargetStateLepKeyResolver extends AppendLepKeyResolver {
 
     /**
@@ -21,6 +23,7 @@ public class ChangeStateTargetStateLepKeyResolver extends AppendLepKeyResolver {
      */
     private static final String PARAM_TYPE_KEY = "xmEntityTypeKey";
 
+    private final TypeKeyWithExtends typeKeyWithExtends;
 
     /**
      * LEP extension key specification:<br>
@@ -40,10 +43,11 @@ public class ChangeStateTargetStateLepKeyResolver extends AppendLepKeyResolver {
         String translatedXmEntityTypeKey = translateToLepConvention(getRequiredStrParam(method, PARAM_TYPE_KEY));
         String translatedNextStateKey = translateToLepConvention(getRequiredStrParam(method, PARAM_NEXT_STATE_KEY));
 
-        return new String[] {
-            translatedXmEntityTypeKey,
-            translatedNextStateKey
-        };
+        return typeKeyWithExtends.resolveWithTypeKeyInheritance(baseKey, translatedXmEntityTypeKey,
+                                                                tk -> new String[] {
+                                                                    translateToLepConvention(tk),
+                                                                    translatedNextStateKey
+                                                                });
     }
 
 }
