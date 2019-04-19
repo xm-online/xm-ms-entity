@@ -1,8 +1,11 @@
 package com.icthh.xm.ms.entity.security.access;
+
+import static com.icthh.xm.ms.entity.util.CustomCollectionUtils.nullSafe;
+import static java.lang.Boolean.TRUE;
+
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import com.icthh.xm.commons.config.client.service.TenantConfigService;
 import com.icthh.xm.commons.logging.aop.IgnoreLogginAspect;
 import com.icthh.xm.commons.permission.constants.RoleConstant;
 import com.icthh.xm.commons.permission.domain.Permission;
@@ -10,14 +13,8 @@ import com.icthh.xm.commons.permission.service.PermissionCheckService;
 import com.icthh.xm.commons.permission.service.PermissionService;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
+import com.icthh.xm.ms.entity.config.XmEntityTenantConfigService;
 import com.icthh.xm.ms.entity.security.SecurityUtils;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.stereotype.Service;
-import org.springframework.validation.annotation.Validated;
-
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -27,8 +24,12 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
-
-import static com.icthh.xm.ms.entity.util.CustomCollectionUtils.nullSafe;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Service;
+import org.springframework.validation.annotation.Validated;
 
 @Slf4j
 @Validated
@@ -37,13 +38,9 @@ import static com.icthh.xm.ms.entity.util.CustomCollectionUtils.nullSafe;
 public class DynamicPermissionCheckService {
 
     /**
-     * Permission aggregation section in tenant config
+     * Permission aggregation section in custom privileges
      */
     public static final String CONFIG_SECTION = "entity-functions";
-    /**
-     * Feature name for DynamicFunctionPermission validation
-     */
-    public static final String DYNAMIC_FUNCTION_PERMISSION_FEATURE = "dynamicPermissionCheckEnabled";
 
     /**
      * Feature switcher implementation
@@ -70,7 +67,7 @@ public class DynamicPermissionCheckService {
 
     }
 
-    private final TenantConfigService tenantConfigService;
+    private final XmEntityTenantConfigService tenantConfigService;
     private final PermissionCheckService permissionCheckService;
     private final PermissionService permissionService;
     private final TenantContextHolder tenantContextHolder;
@@ -197,9 +194,7 @@ public class DynamicPermissionCheckService {
      * @return true if feature enabled
      */
     private boolean isDynamicFunctionPermissionEnabled() {
-        return getTenantConfigBooleanParameterValue(CONFIG_SECTION, DYNAMIC_FUNCTION_PERMISSION_FEATURE)
-            .map(it -> (Boolean) it)
-            .orElse(Boolean.FALSE);
+        return TRUE.equals(tenantConfigService.getXmEntityTenantConfig().getEntityFunctions().getDynamicPermissionCheckEnabled());
     }
 
     /**
@@ -209,15 +204,6 @@ public class DynamicPermissionCheckService {
     private boolean isDynamicChangeStatePermissionEnabled() {
         //TODO feature discussion needed
         throw new UnsupportedOperationException("isDynamicChangeStatePermissionEnabled Not implementer");
-    }
-
-    // TODO should be in Commons.TenantConfigService as utility method
-    private Optional<Object> getTenantConfigBooleanParameterValue(final String configSection, String parameter) {
-        return Optional.ofNullable(tenantConfigService.getConfig())
-                       .map(config -> config.get(configSection))
-                       .filter(it -> it instanceof Map)
-                       .map(Map.class::cast)
-                       .map(it -> it.get(parameter));
     }
 
 }

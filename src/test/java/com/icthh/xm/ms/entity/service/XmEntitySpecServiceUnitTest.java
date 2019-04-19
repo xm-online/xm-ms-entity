@@ -3,7 +3,6 @@ package com.icthh.xm.ms.entity.service;
 import static com.google.common.collect.ImmutableMap.of;
 import static com.google.common.collect.Maps.newHashMap;
 import static com.icthh.xm.ms.entity.security.access.DynamicPermissionCheckService.CONFIG_SECTION;
-import static com.icthh.xm.ms.entity.security.access.DynamicPermissionCheckService.DYNAMIC_FUNCTION_PERMISSION_FEATURE;
 import static com.icthh.xm.ms.entity.util.CustomCollectionUtils.nullSafe;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
@@ -63,6 +62,8 @@ import org.mockito.Spy;
 import org.springframework.core.io.ClassPathResource;
 
 public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
+
+    private static final String DYNAMIC_FUNCTION_PERMISSION_FEATURE = "dynamicPermissionCheckEnabled";
 
     private static final String TENANT = "TEST";
 
