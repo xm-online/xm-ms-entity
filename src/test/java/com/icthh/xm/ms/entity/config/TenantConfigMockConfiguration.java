@@ -7,6 +7,7 @@ import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import com.icthh.xm.commons.config.client.config.XmConfigProperties;
 import com.icthh.xm.commons.config.client.repository.CommonConfigRepository;
 import com.icthh.xm.commons.config.client.repository.TenantConfigRepository;
 import com.icthh.xm.commons.config.client.repository.TenantListRepository;
@@ -58,6 +59,11 @@ public class TenantConfigMockConfiguration {
         doAnswer(mvc -> tenants.remove(mvc.getArguments()[0].toString())).when(mockTenantListRepository).deleteTenant(any());
         when(mockTenantListRepository.getTenants()).thenReturn(tenants);
         return mockTenantListRepository;
+    }
+
+    @Bean
+    public XmConfigProperties xmConfigProperties() {
+        return mock(XmConfigProperties.class);
     }
 
     @Bean

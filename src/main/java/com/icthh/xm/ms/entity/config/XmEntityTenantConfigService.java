@@ -74,6 +74,12 @@ public class XmEntityTenantConfigService extends TenantConfigService {
             private Map<String, String> from = new HashMap<>();
         }
 
+        private LepSetting lep = new LepSetting();
+        @Data
+        private static class LepSetting {
+            private Boolean enableInheritanceTypeKey;
+        }
+
     }
 
 }
