@@ -39,7 +39,7 @@ public class XmEntityTenantConfigService extends TenantConfigService {
             ObjectMapper objectMapper = new ObjectMapper(new YAMLFactory());
             objectMapper.registerModule(new JavaTimeModule());
             objectMapper.configure(FAIL_ON_UNKNOWN_PROPERTIES, false);
-            configs.put(/*getTenantKey(updatedKey)*/ "XM", objectMapper.readValue(config, XmEntityTenantConfig.class));
+            configs.put(getTenantKey(updatedKey), objectMapper.readValue(config, XmEntityTenantConfig.class));
         } catch (Exception e) {
             log.error("Error read tenant configuration from path " + updatedKey, e);
         }
