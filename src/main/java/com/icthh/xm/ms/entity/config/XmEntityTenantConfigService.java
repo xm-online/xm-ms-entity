@@ -76,7 +76,7 @@ public class XmEntityTenantConfigService extends TenantConfigService {
 
         private LepSetting lep = new LepSetting();
         @Data
-        private static class LepSetting {
+        public static class LepSetting {
             private Boolean enableInheritanceTypeKey;
         }
 

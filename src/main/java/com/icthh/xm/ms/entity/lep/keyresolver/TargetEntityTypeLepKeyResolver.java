@@ -3,13 +3,17 @@ package com.icthh.xm.ms.entity.lep.keyresolver;
 import com.icthh.xm.lep.api.LepManagerService;
 import com.icthh.xm.lep.api.LepMethod;
 import com.icthh.xm.lep.api.commons.SeparatorSegmentedLepKey;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 /**
  * The {@link TargetEntityTypeLepKeyResolver} class.
  */
 @Component
+@RequiredArgsConstructor
 public class TargetEntityTypeLepKeyResolver extends AppendLepKeyResolver {
+
+    private final TypeKeyWithExtends typeKeyWithExtends;
 
     /**
      * LEP extension key specification:<br>
@@ -27,11 +31,10 @@ public class TargetEntityTypeLepKeyResolver extends AppendLepKeyResolver {
                                          LepMethod method,
                                          LepManagerService managerService) {
         String xmEntityTypeKey = getRequiredStrParam(method, "xmEntityTypeKey");
-        String translatedXmEntityTypeKey = translateToLepConvention(xmEntityTypeKey);
-
-        return new String[] {
-            translatedXmEntityTypeKey
-        };
+        return typeKeyWithExtends.resolveWithTypeKeyInheritance(baseKey, xmEntityTypeKey,
+                                                                tk -> new String[] {
+                                                                    translateToLepConvention(tk)
+                                                                });
     }
 
 }

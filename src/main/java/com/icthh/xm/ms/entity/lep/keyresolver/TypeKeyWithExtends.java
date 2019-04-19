@@ -1,5 +1,7 @@
 package com.icthh.xm.ms.entity.lep.keyresolver;
 
+import static java.lang.Boolean.TRUE;
+
 import com.icthh.xm.commons.lep.XmExtensionService;
 import com.icthh.xm.commons.lep.XmGroovyExecutionStrategy;
 import com.icthh.xm.lep.api.LepKey;
@@ -7,6 +9,7 @@ import com.icthh.xm.lep.api.LepManager;
 import com.icthh.xm.lep.api.commons.GroupMode;
 import com.icthh.xm.lep.api.commons.SeparatorSegmentedLepKey;
 import com.icthh.xm.lep.api.commons.UrlLepResourceKey;
+import com.icthh.xm.ms.entity.config.XmEntityTenantConfigService;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
@@ -20,8 +23,13 @@ public class TypeKeyWithExtends {
     private final XmGroovyExecutionStrategy xmGroovyExecutionStrategy;
     private final XmExtensionService xmExtensionService;
     private final LepManager lepManager;
+    private final XmEntityTenantConfigService xmEntityTenantConfigService;
 
     public LepKey resolveWithTypeKeyInheritance(String typeKey, Function<String, LepKey> transform) {
+
+        if (TRUE.equals(xmEntityTenantConfigService.getXmEntityTenantConfig().getLep().getEnableInheritanceTypeKey())) {
+            return transform.apply(typeKey);
+        }
 
         for (String currentTypeKey: generateTypeKeys(typeKey)) {
             LepKey lepKey = transform.apply(currentTypeKey);
@@ -34,6 +42,10 @@ public class TypeKeyWithExtends {
     }
 
     public String[] resolveWithTypeKeyInheritance(SeparatorSegmentedLepKey baseKey, String typeKey, Function<String, String[]> transform) {
+        if (TRUE.equals(xmEntityTenantConfigService.getXmEntityTenantConfig().getLep().getEnableInheritanceTypeKey())) {
+            return transform.apply(typeKey);
+        }
+
         GroupMode groupMode = new GroupMode.Builder().prefixAndIdIncludeGroup(baseKey.getGroupSegmentsSize()).build();
 
         for (String currentTypeKey: generateTypeKeys(typeKey)) {

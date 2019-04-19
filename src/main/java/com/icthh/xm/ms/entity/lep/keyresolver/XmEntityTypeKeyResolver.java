@@ -12,12 +12,14 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class XmEntityTypeKeyResolver extends AppendLepKeyResolver {
 
+    private final TypeKeyWithExtends typeKeyWithExtends;
+
     @Override
     protected String[] getAppendSegments(SeparatorSegmentedLepKey baseKey, LepMethod method, LepManagerService managerService) {
         XmEntity xmEntity = getRequiredParam(method, "xmEntity", XmEntity.class);
-        String translatedXmEntityTypeKey = translateToLepConvention(xmEntity.getTypeKey());
-        return new String[] {
-            translatedXmEntityTypeKey
-        };
+        return typeKeyWithExtends.resolveWithTypeKeyInheritance(baseKey, xmEntity.getTypeKey(),
+                                                                typeKey -> new String[] {
+                                                                    translateToLepConvention(typeKey)
+                                                                });
     }
 }
