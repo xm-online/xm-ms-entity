@@ -1,5 +1,6 @@
 package com.icthh.xm.ms.entity.web.rest;
 
+import static com.google.common.collect.ImmutableMap.of;
 import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_AUTH_CONTEXT;
 import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_TENANT_CONTEXT;
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -21,15 +22,22 @@ import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
 import com.icthh.xm.lep.api.LepManager;
 import com.icthh.xm.ms.entity.AbstractSpringBootTest;
+import com.icthh.xm.ms.entity.config.XmEntityTenantConfigService;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.repository.kafka.ProfileEventProducer;
-import com.icthh.xm.ms.entity.service.*;
+import com.icthh.xm.ms.entity.service.FunctionService;
+import com.icthh.xm.ms.entity.service.ProfileService;
+import com.icthh.xm.ms.entity.service.TenantService;
 import com.icthh.xm.ms.entity.service.impl.XmEntityServiceImpl;
+import java.io.InputStream;
+import java.net.URI;
+import java.util.HashMap;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.mutable.MutableLong;
+import org.apache.commons.lang.text.StrSubstitutor;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -45,10 +53,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.Validator;
-
-import java.io.InputStream;
-import java.net.URI;
-import java.util.HashMap;
 
 @Slf4j
 @WithMockUser(authorities = {"SUPER-ADMIN"})
@@ -94,9 +98,13 @@ public class XmEntityLifeCycleSupportIntTest extends AbstractSpringBootTest {
     @Autowired
     private XmLepScriptConfigServerResourceLoader leps;
 
+    @Autowired
+    private XmEntityTenantConfigService xmEntityTenantConfigService;
+
     @BeforeTransaction
     public void beforeTransaction() {
         TenantContextUtils.setTenant(tenantContextHolder, "RESINTTEST");
+        xmEntityTenantConfigService.getXmEntityTenantConfig().getLep().setEnableInheritanceTypeKey(true);
     }
 
     private int updateState, updateByEntity, updateByTargetState, updateByTransition;
@@ -143,6 +151,23 @@ public class XmEntityLifeCycleSupportIntTest extends AbstractSpringBootTest {
         for (val lep: testLeps) {
             leps.onRefresh(pattern + "chained/" + lep, loadFile("config/testlep/" + lep));
         }
+
+        addLep(pattern, "TEST_LIFECYCLE_TYPE_KEY");
+        addLep(pattern, "TEST_LIFECYCLE_TYPE_KEY$SUB");
+        addLep(pattern, "TEST_LIFECYCLE_TYPE_KEY$SUB$CHILD");
+        addLep(pattern, "TEST_LIFECYCLE_TYPE_KEY$$STATE2");
+        addLep(pattern, "TEST_LIFECYCLE_TYPE_KEY$SUB$$STATE2");
+        addLep(pattern, "TEST_LIFECYCLE_TYPE_KEY$SUB$CHILD$$STATE2");
+        addLep(pattern, "TEST_LIFECYCLE_TYPE_KEY$$STATE1$$STATE2");
+        addLep(pattern, "TEST_LIFECYCLE_TYPE_KEY$SUB$$STATE1$$STATE2");
+        addLep(pattern, "TEST_LIFECYCLE_TYPE_KEY$SUB$CHILD$$STATE1$$STATE2");
+
+    }
+
+    private void addLep(String pattern, String lepName) {
+        String lepBody = loadFile("config/testlep/ChangeState$$TEST_LIFECYCLE_TYPE_KEY$$around.groovy");
+        lepBody = StrSubstitutor.replace(lepBody, of("lepName", lepName));
+        leps.onRefresh(pattern + "chained/ChangeState$$" + lepName + "$$around.groovy", lepBody);
     }
 
     @SneakyThrows
@@ -154,11 +179,12 @@ public class XmEntityLifeCycleSupportIntTest extends AbstractSpringBootTest {
     @After
     @Override
     public void finalize() {
+        xmEntityTenantConfigService.getXmEntityTenantConfig().getLep().setEnableInheritanceTypeKey(false);
         lepManager.endThreadContext();
         tenantContextHolder.getPrivilegedContext().destroyCurrentContext();
     }
 
-    public static XmEntity createEntity(String key) {
+    public static XmEntity createEntity(String key, String typeKey) {
         val data = new HashMap<String, Object>();
         data.put("updateState", 0);
         data.put("updateByEntity", 0);
@@ -166,7 +192,7 @@ public class XmEntityLifeCycleSupportIntTest extends AbstractSpringBootTest {
         data.put("updateByTransition", 0);
         val entity = new XmEntity()
             .key(key)
-            .typeKey("TEST_LIFECYCLE")
+            .typeKey(typeKey)
             .stateKey("STATE1")
             .name("DEFAULT_NAME")
             .description("DEFAULT_DESCRIPTION");
@@ -183,7 +209,7 @@ public class XmEntityLifeCycleSupportIntTest extends AbstractSpringBootTest {
         // Create the XmEntity
         restXmEntityMockMvc.perform(post("/api/xm-entities")
             .contentType(TestUtil.APPLICATION_JSON_UTF8)
-            .content(TestUtil.convertObjectToJsonBytes(createEntity("KEY1"))))
+            .content(TestUtil.convertObjectToJsonBytes(createEntity("KEY1", "TEST_LIFECYCLE"))))
             .andDo(r -> {
                 log.info(r.getResponse().getContentAsString());
                 final ObjectNode node = new ObjectMapper().readValue(r.getResponse().getContentAsString(), ObjectNode.class);
@@ -202,12 +228,44 @@ public class XmEntityLifeCycleSupportIntTest extends AbstractSpringBootTest {
 
     @Test
     @Transactional
-    public void setCreateEntityWithoutState() throws Exception {
+    @SneakyThrows
+    public void testExtendsTypeKey() {
 
+        MutableLong id = new MutableLong();
+        // Create the XmEntity
+        XmEntity entity = createEntity("TEST_KEY", "TEST_LIFECYCLE_TYPE_KEY.SUB.CHILD");
+        entity.getData().put("called", "");
+        restXmEntityMockMvc.perform(post("/api/xm-entities")
+                                        .contentType(TestUtil.APPLICATION_JSON_UTF8)
+                                        .content(TestUtil.convertObjectToJsonBytes(entity)))
+            .andDo(r -> {
+                log.info(r.getResponse().getContentAsString());
+                final ObjectNode node = new ObjectMapper().readValue(r.getResponse().getContentAsString(), ObjectNode.class);
+                id.setValue(node.get("id").longValue());
+            })
+            .andExpect(status().isCreated());
+
+        initLeps();
+
+        restXmEntityMockMvc.perform(put("/api/xm-entities/{id}/states/{state}", id.toLong(), "STATE2")
+                                        .contentType(TestUtil.APPLICATION_JSON_UTF8))
+            .andExpect(status().isOk())
+            .andDo(r -> {
+                String json = r.getResponse().getContentAsString();
+                log.info(json);
+                final ObjectNode node = new ObjectMapper().readValue(r.getResponse().getContentAsString(), ObjectNode.class);
+                String expected = " root TEST_LIFECYCLE_TYPE_KEY TEST_LIFECYCLE_TYPE_KEY$SUB TEST_LIFECYCLE_TYPE_KEY$SUB$CHILD TEST_LIFECYCLE_TYPE_KEY$$STATE2 TEST_LIFECYCLE_TYPE_KEY$SUB$$STATE2 TEST_LIFECYCLE_TYPE_KEY$SUB$CHILD$$STATE2 TEST_LIFECYCLE_TYPE_KEY$$STATE1$$STATE2 TEST_LIFECYCLE_TYPE_KEY$SUB$$STATE1$$STATE2 TEST_LIFECYCLE_TYPE_KEY$SUB$CHILD$$STATE1$$STATE2";
+                assertThat(node.get("data").get("called").textValue()).isEqualTo(expected);
+            });
+    }
+
+    @Test
+    @Transactional
+    public void setCreateEntityWithoutState() throws Exception {
         // Create the XmEntity
         restXmEntityMockMvc.perform(post("/api/xm-entities")
             .contentType(TestUtil.APPLICATION_JSON_UTF8)
-            .content(TestUtil.convertObjectToJsonBytes(createEntity("KEY1").stateKey(null))))
+            .content(TestUtil.convertObjectToJsonBytes(createEntity("KEY1", "TEST_LIFECYCLE").stateKey(null))))
             .andExpect(jsonPath("$.stateKey").value("STATE1"))
             .andExpect(status().isCreated());
     }
@@ -222,7 +280,7 @@ public class XmEntityLifeCycleSupportIntTest extends AbstractSpringBootTest {
         // Create the XmEntity
         restXmEntityMockMvc.perform(post("/api/xm-entities")
             .contentType(TestUtil.APPLICATION_JSON_UTF8)
-            .content(TestUtil.convertObjectToJsonBytes(createEntity("KEY1"))))
+            .content(TestUtil.convertObjectToJsonBytes(createEntity("KEY1", "TEST_LIFECYCLE"))))
             .andDo(r -> {
                 log.info(r.getResponse().getContentAsString());
                 final ObjectNode node = new ObjectMapper().readValue(r.getResponse().getContentAsString(), ObjectNode.class);
@@ -231,7 +289,7 @@ public class XmEntityLifeCycleSupportIntTest extends AbstractSpringBootTest {
             .andExpect(status().isCreated());
 
         // Create the XmEntity
-        XmEntity entity = createEntity("KEY1");
+        XmEntity entity = createEntity("KEY1", "TEST_LIFECYCLE");
         entity.setId(id.toLong());
         restXmEntityMockMvc.perform(put("/api/xm-entities")
             .contentType(TestUtil.APPLICATION_JSON_UTF8)

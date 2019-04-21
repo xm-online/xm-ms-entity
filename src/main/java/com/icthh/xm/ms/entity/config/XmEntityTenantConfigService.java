@@ -47,7 +47,8 @@ public class XmEntityTenantConfigService extends TenantConfigService {
 
     public XmEntityTenantConfig getXmEntityTenantConfig() {
         String tenantKey = tenantContextHolder.getTenantKey();
-        return configs.getOrDefault(tenantKey, new XmEntityTenantConfig());
+        configs.putIfAbsent(tenantKey, new XmEntityTenantConfig());
+        return configs.get(tenantKey);
     }
 
     @Data
@@ -79,7 +80,6 @@ public class XmEntityTenantConfigService extends TenantConfigService {
         public static class LepSetting {
             private Boolean enableInheritanceTypeKey;
         }
-
     }
 
 }
