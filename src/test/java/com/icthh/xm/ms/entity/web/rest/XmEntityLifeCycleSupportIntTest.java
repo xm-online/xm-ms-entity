@@ -254,7 +254,11 @@ public class XmEntityLifeCycleSupportIntTest extends AbstractSpringBootTest {
                 String json = r.getResponse().getContentAsString();
                 log.info(json);
                 final ObjectNode node = new ObjectMapper().readValue(r.getResponse().getContentAsString(), ObjectNode.class);
-                String expected = " root TEST_LIFECYCLE_TYPE_KEY TEST_LIFECYCLE_TYPE_KEY$SUB TEST_LIFECYCLE_TYPE_KEY$SUB$CHILD TEST_LIFECYCLE_TYPE_KEY$$STATE2 TEST_LIFECYCLE_TYPE_KEY$SUB$$STATE2 TEST_LIFECYCLE_TYPE_KEY$SUB$CHILD$$STATE2 TEST_LIFECYCLE_TYPE_KEY$$STATE1$$STATE2 TEST_LIFECYCLE_TYPE_KEY$SUB$$STATE1$$STATE2 TEST_LIFECYCLE_TYPE_KEY$SUB$CHILD$$STATE1$$STATE2";
+                String expected = " root TEST_LIFECYCLE_TYPE_KEY TEST_LIFECYCLE_TYPE_KEY$SUB " +
+                                  "TEST_LIFECYCLE_TYPE_KEY$SUB$CHILD TEST_LIFECYCLE_TYPE_KEY$$STATE2" +
+                                  " TEST_LIFECYCLE_TYPE_KEY$SUB$$STATE2 TEST_LIFECYCLE_TYPE_KEY$SUB$CHILD$$STATE2" +
+                                  " TEST_LIFECYCLE_TYPE_KEY$$STATE1$$STATE2 TEST_LIFECYCLE_TYPE_KEY$SUB$$STATE1$$STATE2" +
+                                  " TEST_LIFECYCLE_TYPE_KEY$SUB$CHILD$$STATE1$$STATE2";
                 assertThat(node.get("data").get("called").textValue()).isEqualTo(expected);
             });
     }
