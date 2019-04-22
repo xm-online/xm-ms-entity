@@ -58,6 +58,8 @@ import org.springframework.validation.Validator;
 @WithMockUser(authorities = {"SUPER-ADMIN"})
 public class XmEntityLifeCycleSupportIntTest extends AbstractSpringBootTest {
 
+    private final String PATTERN = "/config/tenants/RESINTTEST/entity/lep/lifecycle/";
+
     @Autowired
     private XmEntityServiceImpl xmEntityServiceImpl;
 
@@ -136,7 +138,6 @@ public class XmEntityLifeCycleSupportIntTest extends AbstractSpringBootTest {
     }
 
     void initLeps() {
-        String pattern = "/config/tenants/RESINTTEST/entity/lep/lifecycle/";
 
         val testLeps = new String[]{
             "ChangeState$$TEST_LIFECYCLE$$around.groovy",
@@ -146,22 +147,11 @@ public class XmEntityLifeCycleSupportIntTest extends AbstractSpringBootTest {
             "ChangeState$$TEST_LIFECYCLE$$STATE7$$around.groovy"
         };
 
-        leps.onRefresh(pattern + "ChangeState$$around.groovy", loadFile("config/testlep/ChangeState$$around.groovy"));
+        leps.onRefresh(PATTERN + "ChangeState$$around.groovy", loadFile("config/testlep/ChangeState$$around.groovy"));
 
         for (val lep: testLeps) {
-            leps.onRefresh(pattern + "chained/" + lep, loadFile("config/testlep/" + lep));
+            leps.onRefresh(PATTERN + "chained/" + lep, loadFile("config/testlep/" + lep));
         }
-
-        addLep(pattern, "TEST_LIFECYCLE_TYPE_KEY");
-        addLep(pattern, "TEST_LIFECYCLE_TYPE_KEY$SUB");
-        addLep(pattern, "TEST_LIFECYCLE_TYPE_KEY$SUB$CHILD");
-        addLep(pattern, "TEST_LIFECYCLE_TYPE_KEY$$STATE2");
-        addLep(pattern, "TEST_LIFECYCLE_TYPE_KEY$SUB$$STATE2");
-        addLep(pattern, "TEST_LIFECYCLE_TYPE_KEY$SUB$CHILD$$STATE2");
-        addLep(pattern, "TEST_LIFECYCLE_TYPE_KEY$$STATE1$$STATE2");
-        addLep(pattern, "TEST_LIFECYCLE_TYPE_KEY$SUB$$STATE1$$STATE2");
-        addLep(pattern, "TEST_LIFECYCLE_TYPE_KEY$SUB$CHILD$$STATE1$$STATE2");
-
     }
 
     private void addLep(String pattern, String lepName) {
@@ -230,6 +220,16 @@ public class XmEntityLifeCycleSupportIntTest extends AbstractSpringBootTest {
     @Transactional
     @SneakyThrows
     public void testExtendsTypeKey() {
+        leps.onRefresh(PATTERN + "ChangeState$$around.groovy", loadFile("config/testlep/ChangeState$$around.groovy"));
+        addLep(PATTERN, "TEST_LIFECYCLE_TYPE_KEY");
+        addLep(PATTERN, "TEST_LIFECYCLE_TYPE_KEY$SUB");
+        addLep(PATTERN, "TEST_LIFECYCLE_TYPE_KEY$SUB$CHILD");
+        addLep(PATTERN, "TEST_LIFECYCLE_TYPE_KEY$$STATE2");
+        addLep(PATTERN, "TEST_LIFECYCLE_TYPE_KEY$SUB$$STATE2");
+        addLep(PATTERN, "TEST_LIFECYCLE_TYPE_KEY$SUB$CHILD$$STATE2");
+        addLep(PATTERN, "TEST_LIFECYCLE_TYPE_KEY$$STATE1$$STATE2");
+        addLep(PATTERN, "TEST_LIFECYCLE_TYPE_KEY$SUB$$STATE1$$STATE2");
+        addLep(PATTERN, "TEST_LIFECYCLE_TYPE_KEY$SUB$CHILD$$STATE1$$STATE2");
 
         MutableLong id = new MutableLong();
         // Create the XmEntity
@@ -245,8 +245,6 @@ public class XmEntityLifeCycleSupportIntTest extends AbstractSpringBootTest {
             })
             .andExpect(status().isCreated());
 
-        initLeps();
-
         restXmEntityMockMvc.perform(put("/api/xm-entities/{id}/states/{state}", id.toLong(), "STATE2")
                                         .contentType(TestUtil.APPLICATION_JSON_UTF8))
             .andExpect(status().isOk())
@@ -261,6 +259,8 @@ public class XmEntityLifeCycleSupportIntTest extends AbstractSpringBootTest {
                                   " TEST_LIFECYCLE_TYPE_KEY$SUB$CHILD$$STATE1$$STATE2";
                 assertThat(node.get("data").get("called").textValue()).isEqualTo(expected);
             });
+
+        leps.onRefresh(PATTERN + "ChangeState$$around.groovy", null);
     }
 
     @Test
