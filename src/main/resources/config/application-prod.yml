@@ -50,6 +50,8 @@ spring:
             #hibernate.cache.hazelcast.instance_name: entity
             hibernate.cache.use_minimal_puts: true
             #hibernate.cache.hazelcast.use_lite_member: true
+            hibernate.show_sql: false
+            hibernate.format_sql: false
     data:
         elasticsearch:
             cluster-name:
