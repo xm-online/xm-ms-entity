@@ -1,60 +1,44 @@
 package com.icthh.xm.ms.entity.repository.entitygraph;
 
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections.CollectionUtils;
-import org.springframework.data.jpa.repository.support.JpaEntityInformation;
-import org.springframework.data.jpa.repository.support.SimpleJpaRepository;
-import org.springframework.transaction.annotation.Transactional;
+import static org.hibernate.jpa.QueryHints.HINT_LOADGRAPH;
 
+import com.icthh.xm.ms.entity.domain.XmEntity;
+import java.util.List;
+import java.util.Map;
 import javax.persistence.EntityGraph;
 import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
 import javax.persistence.Subgraph;
 import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
-import java.io.Serializable;
-import java.util.List;
-import java.util.Map;
-
-import static org.hibernate.jpa.QueryHints.HINT_LOADGRAPH;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections.CollectionUtils;
+import org.springframework.stereotype.Component;
 
 @Slf4j
-public class EntityGraphRepositoryImpl<T, I extends Serializable>
-    extends SimpleJpaRepository<T, I> implements EntityGraphRepository<T, I> {
+@Component
+public class EntityGraphRepositoryImpl implements EntityGraphRepository {
 
     private static final String GRAPH_DELIMETER = ".";
-    private final EntityManager entityManager;
+    @PersistenceContext
+    private EntityManager entityManager;
 
-    private final Class<T> domainClass;
-
-    public EntityGraphRepositoryImpl(JpaEntityInformation<T, I> entityInformation, EntityManager entityManager) {
-        super(entityInformation, entityManager);
-
-        this.entityManager = entityManager;
-        this.domainClass = entityInformation.getJavaType();
-    }
-
-    public EntityGraphRepositoryImpl(Class<T> domainClass, EntityManager entityManager) {
-        super(domainClass, entityManager);
-
-        this.entityManager = entityManager;
-        this.domainClass = domainClass;
-    }
 
     @Override
-    public T findOne(I id, List<String> embed) {
+    public XmEntity findOne(Long id, List<String> embed) {
         CriteriaBuilder builder = entityManager.getCriteriaBuilder();
-        CriteriaQuery<T> criteriaQuery = builder.createQuery(domainClass);
-        Root<T> root = criteriaQuery.from(domainClass);
+        CriteriaQuery<XmEntity> criteriaQuery = builder.createQuery(XmEntity.class);
+        Root<XmEntity> root = criteriaQuery.from(XmEntity.class);
         criteriaQuery.where(builder.equal(root.get("id"), id));
 
-        TypedQuery<T> query = entityManager
+        TypedQuery<XmEntity> query = entityManager
             .createQuery(criteriaQuery)
             .setHint(HINT_LOADGRAPH, createEntityGraph(embed));
 
-        List<T> resultList = query.getResultList();
+        List<XmEntity> resultList = query.getResultList();
         if (CollectionUtils.isEmpty(resultList)) {
             return null;
         }
@@ -62,15 +46,15 @@ public class EntityGraphRepositoryImpl<T, I extends Serializable>
     }
 
     @Override
-    public List<T> findAll(String jpql, Map<String, Object> args, List<String> embed) {
+    public List<XmEntity> findAll(String jpql, Map<String, Object> args, List<String> embed) {
         Query query = entityManager.createQuery(jpql);
         args.forEach(query::setParameter);
         query.setHint(HINT_LOADGRAPH, createEntityGraph(embed));
         return query.getResultList();
     }
 
-    private EntityGraph<T> createEntityGraph(List<String> embed) {
-        EntityGraph<T> graph = entityManager.createEntityGraph(domainClass);
+    private EntityGraph<XmEntity> createEntityGraph(List<String> embed) {
+        EntityGraph<XmEntity> graph = entityManager.createEntityGraph(XmEntity.class);
         if (CollectionUtils.isNotEmpty(embed)) {
             embed.forEach(f -> addAttributeNodes(f, graph));
         }

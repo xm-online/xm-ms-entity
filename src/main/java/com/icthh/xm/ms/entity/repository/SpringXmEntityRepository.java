@@ -27,7 +27,7 @@ import org.springframework.stereotype.Repository;
 @SuppressWarnings("unused")
 @Repository
 public interface SpringXmEntityRepository extends
-    JpaRepository<XmEntity, Long>, JpaSpecificationExecutor<XmEntity>, EntityGraphRepository<XmEntity, Long> {
+    JpaRepository<XmEntity, Long>, JpaSpecificationExecutor<XmEntity> {
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT e FROM XmEntity e WHERE e.id = :id")

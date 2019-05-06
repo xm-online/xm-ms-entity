@@ -49,8 +49,7 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
 
 @Configuration
-@EnableJpaRepositories(value = "com.icthh.xm.ms.entity.repository",
-    repositoryBaseClass = EntityGraphRepositoryImpl.class)
+@EnableJpaRepositories(value = "com.icthh.xm.ms.entity.repository")
 @EnableJpaAuditing(auditorAwareRef = "springSecurityAuditorAware")
 @EnableTransactionManagement
 @EnableElasticsearchRepositories(value = "com.icthh.xm.ms.entity.repository.search",

@@ -8,6 +8,7 @@ import com.icthh.xm.ms.entity.projection.XmEntityVersion;
 import com.icthh.xm.ms.entity.repository.SpringXmEntityRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityRepositoryInternal;
 
+import com.icthh.xm.ms.entity.repository.entitygraph.EntityGraphRepository;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -30,6 +31,7 @@ public class XmEntityRepositoryInternalImpl implements XmEntityRepositoryInterna
 
     private final SpringXmEntityRepository springXmEntityRepository;
     private final TenantConfigService tenantConfigService;
+    private final EntityGraphRepository entityGraphRepository;
 
     @Override
     public XmEntity findOneByIdForUpdate(@Param("id") Long id) {
@@ -116,7 +118,7 @@ public class XmEntityRepositoryInternalImpl implements XmEntityRepositoryInterna
 
     @Override
     public List<XmEntity> findAll(String jpql, Map<String, Object> args, List<String> embed) {
-        return springXmEntityRepository.findAll(jpql, args, embed);
+        return entityGraphRepository.findAll(jpql, args, embed);
     }
 
     @Override
@@ -160,7 +162,7 @@ public class XmEntityRepositoryInternalImpl implements XmEntityRepositoryInterna
     }
 
     public XmEntity findOne(Long id, List<String> embed) {
-        return springXmEntityRepository.findOne(id, embed);
+        return entityGraphRepository.findOne(id, embed);
     }
 
     @Override
