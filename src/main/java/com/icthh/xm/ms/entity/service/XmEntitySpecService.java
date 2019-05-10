@@ -8,6 +8,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.icthh.xm.commons.config.client.api.RefreshableConfiguration;
 import com.icthh.xm.commons.config.client.repository.TenantConfigRepository;
+import com.icthh.xm.commons.logging.LoggingAspectConfig;
 import com.icthh.xm.commons.logging.aop.IgnoreLogginAspect;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
@@ -135,6 +136,7 @@ public class XmEntitySpecService implements RefreshableConfiguration {
     }
 
     @Override
+    @LoggingAspectConfig(inputExcludeParams = "config")
     public void onInit(String key, String config) {
         if (isListeningConfiguration(key)) {
             onRefresh(key, config);
@@ -142,6 +144,7 @@ public class XmEntitySpecService implements RefreshableConfiguration {
     }
 
     @SneakyThrows
+    @LoggingAspectConfig(inputExcludeParams = "xmEntitySpecString")
     public void updateXmEntitySpec(String xmEntitySpecString) {
         String configName = applicationProperties.getSpecificationName();
 
@@ -164,6 +167,7 @@ public class XmEntitySpecService implements RefreshableConfiguration {
         return nullSafe(types.get(tenantKeyValue));
     }
 
+    @LoggingAspectConfig(resultDetails = false)
     public Optional<TypeSpec> getTypeSpecByKey(String key) {
         return Optional.ofNullable(getTypeSpecs().get(key)).map(this::filterFunctions);
     }
@@ -209,6 +213,7 @@ public class XmEntitySpecService implements RefreshableConfiguration {
      * @param attachmentKey Attachment key
      * @return entity Attachment if present
      */
+    @LoggingAspectConfig(resultDetails = false)
     public Optional<AttachmentSpec> findAttachment(String key, String attachmentKey) {
         return getTypeSpecs().get(key).getAttachments().stream().filter(l -> l.getKey().equals(attachmentKey))
             .findFirst();
@@ -221,6 +226,7 @@ public class XmEntitySpecService implements RefreshableConfiguration {
      * @param linkKey Link key
      * @return entity Link if present
      */
+    @LoggingAspectConfig(resultDetails = false)
     public Optional<LinkSpec> findLink(String key, String linkKey) {
         return getTypeSpecs().get(key).getLinks().stream().filter(l -> l.getKey().equals(linkKey)).findFirst();
     }
@@ -232,6 +238,7 @@ public class XmEntitySpecService implements RefreshableConfiguration {
      * @param locationKey Location key
      * @return entity Location if present
      */
+    @LoggingAspectConfig(resultDetails = false)
     public Optional<LocationSpec> findLocation(String key, String locationKey) {
         return getTypeSpecs().get(key).getLocations().stream().filter(l -> l.getKey().equals(locationKey))
             .findFirst();
@@ -244,6 +251,7 @@ public class XmEntitySpecService implements RefreshableConfiguration {
      * @param ratingKey Rating key
      * @return entity Rating if present
      */
+    @LoggingAspectConfig(resultDetails = false)
     public Optional<RatingSpec> findRating(String key, String ratingKey) {
         return getTypeSpecs().get(key).getRatings().stream().filter(l -> l.getKey().equals(ratingKey)).findFirst();
     }
@@ -255,6 +263,7 @@ public class XmEntitySpecService implements RefreshableConfiguration {
      * @param stateKey State key
      * @return entity State if present
      */
+    @LoggingAspectConfig(resultDetails = false)
     public Optional<StateSpec> findState(String key, String stateKey) {
         return getTypeSpecs().get(key).getStates().stream().filter(s -> s.getKey().equals(stateKey)).findFirst();
     }
@@ -327,6 +336,7 @@ public class XmEntitySpecService implements RefreshableConfiguration {
      * @param tagKey Tag key
      * @return entity Tag if present
      */
+    @LoggingAspectConfig(resultDetails = false)
     public Optional<TagSpec> findTag(String key, String tagKey) {
         return getTypeSpecs().get(key).getTags().stream().filter(l -> l.getKey().equals(tagKey)).findFirst();
     }
