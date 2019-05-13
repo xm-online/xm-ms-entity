@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
+import com.icthh.xm.ms.entity.config.ApplicationProperties;
 import com.icthh.xm.ms.entity.domain.Content;
 import org.elasticsearch.client.Client;
 import org.springframework.context.annotation.Bean;
@@ -30,9 +31,11 @@ public class ElasticsearchConfiguration {
     public static class IndexName {
 
         private final TenantContextHolder tenantContextHolder;
+        private final ApplicationProperties applicationProperties;
 
-        public IndexName(TenantContextHolder tenantContextHolder) {
+        public IndexName(TenantContextHolder tenantContextHolder, ApplicationProperties applicationProperties) {
             this.tenantContextHolder = tenantContextHolder;
+            this.applicationProperties = applicationProperties;
         }
 
         private String getTenantKeyLowerCase() {
@@ -40,7 +43,12 @@ public class ElasticsearchConfiguration {
         }
 
         public String getPrefix() {
-            return getTenantKeyLowerCase() + "_";
+            return getTenantKeyLowerCase() + "_" + getElasticSchemaSuffix();
+        }
+
+        public String getElasticSchemaSuffix() {
+            String suffix = applicationProperties.getElasticSchemaSuffix();
+            return suffix == null ? "" : suffix;
         }
     }
 

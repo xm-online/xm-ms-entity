@@ -204,6 +204,8 @@ application:
             access-key-secret:
         s3:
             bucket:
+    elasticSchemaSuffix: ""
+
 # ===================================================================
 # Timeline specific properties
 #
