@@ -2,7 +2,9 @@ package com.icthh.xm.ms.entity.web.rest;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
-import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.everyItem;
+import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -218,27 +220,28 @@ public class LinkResourceExtendedIntTest extends AbstractSpringBootTest {
                        .andExpect(status().isOk())
                        .andDo(this::printMvcResult)
                        .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
-                       .andExpect(jsonPath("$.[*].id").value(hasItem(link.getId().intValue())))
-                       .andExpect(jsonPath("$.[*].typeKey").value(hasItem(LinkResourceIntTest.DEFAULT_TYPE_KEY)))
-                       .andExpect(jsonPath("$.[*].name").value(hasItem(LinkResourceIntTest.DEFAULT_NAME)))
-                       .andExpect(jsonPath("$.[*].description").value(hasItem(LinkResourceIntTest.DEFAULT_DESCRIPTION)))
-                       .andExpect(jsonPath("$.[*].startDate").value(hasItem(LinkResourceIntTest.DEFAULT_START_DATE.toString())))
-                       .andExpect(jsonPath("$.[*].endDate").value(hasItem(LinkResourceIntTest.DEFAULT_END_DATE.toString())))
+                       .andExpect(jsonPath("$", hasSize(1)))
+                       .andExpect(jsonPath("$.[*].id").value(everyItem(is(link.getId().intValue()))))
+                       .andExpect(jsonPath("$.[*].typeKey").value(everyItem(is(LinkResourceIntTest.DEFAULT_TYPE_KEY))))
+                       .andExpect(jsonPath("$.[*].name").value(everyItem(is(LinkResourceIntTest.DEFAULT_NAME))))
+                       .andExpect(jsonPath("$.[*].description").value(everyItem(is(LinkResourceIntTest.DEFAULT_DESCRIPTION))))
+                       .andExpect(jsonPath("$.[*].startDate").value(everyItem(is(LinkResourceIntTest.DEFAULT_START_DATE.toString()))))
+                       .andExpect(jsonPath("$.[*].endDate").value(everyItem(is(LinkResourceIntTest.DEFAULT_END_DATE.toString()))))
 
                        .andExpect(jsonPath("$.[*].target").exists())
-                       .andExpect(jsonPath("$.[*].target.id").value(hasItem(notNullValue())))
-                       .andExpect(jsonPath("$.[*].target.key").value(hasItem(notNullValue())))
-                       .andExpect(jsonPath("$.[*].target.typeKey").value(hasItem(notNullValue())))
-                       .andExpect(jsonPath("$.[*].target.stateKey").value(hasItem(notNullValue())))
-                       .andExpect(jsonPath("$.[*].target.name").value(hasItem(notNullValue())))
-                       .andExpect(jsonPath("$.[*].target.startDate").value(hasItem(notNullValue())))
-                       .andExpect(jsonPath("$.[*].target.startDate").value(hasItem(notNullValue())))
-                       .andExpect(jsonPath("$.[*].target.updateDate").value(hasItem(notNullValue())))
-                       .andExpect(jsonPath("$.[*].target.description").value(hasItem(notNullValue())))
-                       .andExpect(jsonPath("$.[*].target.createdBy").value(hasItem(notNullValue())))
-                       .andExpect(jsonPath("$.[*].target.removed").value(hasItem(notNullValue())))
+                       .andExpect(jsonPath("$.[*].target.id").value(everyItem(notNullValue())))
+                       .andExpect(jsonPath("$.[*].target.key").value(everyItem(notNullValue())))
+                       .andExpect(jsonPath("$.[*].target.typeKey").value(everyItem(notNullValue())))
+                       .andExpect(jsonPath("$.[*].target.stateKey").value(everyItem(notNullValue())))
+                       .andExpect(jsonPath("$.[*].target.name").value(everyItem(notNullValue())))
+                       .andExpect(jsonPath("$.[*].target.startDate").value(everyItem(notNullValue())))
+                       .andExpect(jsonPath("$.[*].target.startDate").value(everyItem(notNullValue())))
+                       .andExpect(jsonPath("$.[*].target.updateDate").value(everyItem(notNullValue())))
+                       .andExpect(jsonPath("$.[*].target.description").value(everyItem(notNullValue())))
+                       .andExpect(jsonPath("$.[*].target.createdBy").value(everyItem(notNullValue())))
+                       .andExpect(jsonPath("$.[*].target.removed").value(everyItem(notNullValue())))
                        .andExpect(jsonPath("$.[*].target.data").exists())
-                       .andExpect(jsonPath("$.[*].target.data.AAAAAAAAAA").value(hasItem(notNullValue())))
+                       .andExpect(jsonPath("$.[*].target.data.AAAAAAAAAA").value(everyItem(notNullValue())))
 
                        .andExpect(jsonPath("$.[*].target.avatarUrlRelative").doesNotExist())
                        .andExpect(jsonPath("$.[*].target.avatarUrlFull").doesNotExist())

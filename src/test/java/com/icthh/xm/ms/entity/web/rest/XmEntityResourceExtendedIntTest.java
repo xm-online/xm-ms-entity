@@ -20,6 +20,7 @@ import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.everyItem;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.nullValue;
 import static org.hibernate.validator.internal.util.CollectionHelper.asSet;
@@ -100,6 +101,7 @@ import lombok.val;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.mutable.MutableObject;
+import org.hamcrest.Matchers;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -1879,17 +1881,17 @@ public class XmEntityResourceExtendedIntTest extends AbstractSpringBootTest {
         XmEntity target2 = xmEntityRepository.saveAndFlush(createComplexEntityPersistable().typeKey(tgtTypeKey)
                                                                                            .createdBy(tgtCreatedBy));
 
-        String defDescr = DEFAULT_DESCRIPTION;
+        String defDescription = DEFAULT_DESCRIPTION;
         String lnTypekey = DEFAULT_LN_TARGET_KEY;
         String lnName = DEFAULT_LN_TARGET_NAME;
-        String lnStartDate = DEFAULT_LN_TARGET_START_DATE.toString();
-        Instant lnEndDate = Instant.ofEpochMilli(DEFAULT_LN_TARGET_START_DATE.toEpochMilli() + 100L);
+        Instant lnStartDate = DEFAULT_LN_TARGET_START_DATE;
+        Instant lnEndDate = Instant.ofEpochMilli(lnStartDate.toEpochMilli() + 100L);
 
         source.getTargets().add(new Link()
                                     .typeKey(lnTypekey)
                                     .name(lnName)
-                                    .description(defDescr)
-                                    .startDate(DEFAULT_LN_TARGET_START_DATE)
+                                    .description(defDescription)
+                                    .startDate(lnStartDate)
                                     .endDate(lnEndDate)
                                     .target(target1)
                                     .source(source));
@@ -1897,8 +1899,8 @@ public class XmEntityResourceExtendedIntTest extends AbstractSpringBootTest {
         source.getTargets().add(new Link()
                                     .typeKey(lnTypekey)
                                     .name(lnName)
-                                    .description(defDescr)
-                                    .startDate(DEFAULT_LN_TARGET_START_DATE)
+                                    .description(defDescription)
+                                    .startDate(lnStartDate)
                                     .endDate(lnEndDate)
                                     .target(target2)
                                     .source(source)
@@ -1918,8 +1920,6 @@ public class XmEntityResourceExtendedIntTest extends AbstractSpringBootTest {
         int target1Id = target1.getId().intValue();
         int target2Id = target2.getId().intValue();
 
-        String tgtKey = DEFAULT_KEY;
-        String tgtStateKey = DEFAULT_STATE_KEY;
         String tgtStartDate = DEFAULT_START_DATE.toString();
         String tgtUpdateDate = DEFAULT_UPDATE_DATE.toString();
         String tgtEndDate = DEFAULT_END_DATE.toString();
@@ -1929,27 +1929,27 @@ public class XmEntityResourceExtendedIntTest extends AbstractSpringBootTest {
             .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
             .andExpect(jsonPath("$", hasSize(2)))
             .andExpect(jsonPath("$.[*].id").value(containsInAnyOrder(linIds)))
-            .andExpect(jsonPath("$.[*].typeKey").value(containsInAnyOrder(lnTypekey, lnTypekey)))
-            .andExpect(jsonPath("$.[*].name").value(containsInAnyOrder(lnName, lnName)))
-            .andExpect(jsonPath("$.[*].description").value(containsInAnyOrder(defDescr, defDescr)))
-            .andExpect(jsonPath("$.[*].startDate").value(containsInAnyOrder(lnStartDate, lnStartDate)))
-            .andExpect(jsonPath("$.[*].endDate").value(containsInAnyOrder(lnEndDate.toString(), lnEndDate.toString())))
-            .andExpect(jsonPath("$.[*].source").value(containsInAnyOrder(srcId, srcId)))
+            .andExpect(jsonPath("$.[*].typeKey").value(everyItem(is(lnTypekey))))
+            .andExpect(jsonPath("$.[*].name").value(everyItem(is(lnName))))
+            .andExpect(jsonPath("$.[*].description").value(everyItem(is(defDescription))))
+            .andExpect(jsonPath("$.[*].startDate").value(everyItem(is(lnStartDate.toString()))))
+            .andExpect(jsonPath("$.[*].endDate").value(everyItem(is(lnEndDate.toString()))))
+            .andExpect(jsonPath("$.[*].source").value(everyItem(is(srcId))))
 
             .andExpect(jsonPath("$.[*].target").exists())
             .andExpect(jsonPath("$.[*].target.id").value(containsInAnyOrder(target1Id, target2Id)))
-            .andExpect(jsonPath("$.[*].target.key").value(containsInAnyOrder(tgtKey, tgtKey)))
-            .andExpect(jsonPath("$.[*].target.typeKey").value(containsInAnyOrder(tgtTypeKey, tgtTypeKey)))
-            .andExpect(jsonPath("$.[*].target.stateKey").value(containsInAnyOrder(tgtStateKey, tgtStateKey)))
-            .andExpect(jsonPath("$.[*].target.name").value(containsInAnyOrder(DEFAULT_NAME, DEFAULT_NAME)))
-            .andExpect(jsonPath("$.[*].target.startDate").value(containsInAnyOrder(tgtStartDate, tgtStartDate)))
-            .andExpect(jsonPath("$.[*].target.startDate").value(containsInAnyOrder(tgtEndDate, tgtEndDate)))
-            .andExpect(jsonPath("$.[*].target.updateDate").value(containsInAnyOrder(tgtUpdateDate, tgtUpdateDate)))
-            .andExpect(jsonPath("$.[*].target.description").value(containsInAnyOrder(defDescr, defDescr)))
-            .andExpect(jsonPath("$.[*].target.createdBy").value(containsInAnyOrder(tgtCreatedBy, tgtCreatedBy)))
-            .andExpect(jsonPath("$.[*].target.removed").value(containsInAnyOrder(false, false)))
+            .andExpect(jsonPath("$.[*].target.key").value(everyItem(is(DEFAULT_KEY))))
+            .andExpect(jsonPath("$.[*].target.typeKey").value(everyItem(is(tgtTypeKey))))
+            .andExpect(jsonPath("$.[*].target.stateKey").value(everyItem(is(DEFAULT_STATE_KEY))))
+            .andExpect(jsonPath("$.[*].target.name").value(everyItem(is(DEFAULT_NAME))))
+            .andExpect(jsonPath("$.[*].target.startDate").value(everyItem(is(tgtStartDate))))
+            .andExpect(jsonPath("$.[*].target.startDate").value(everyItem(is(tgtEndDate))))
+            .andExpect(jsonPath("$.[*].target.updateDate").value(everyItem(is(tgtUpdateDate))))
+            .andExpect(jsonPath("$.[*].target.description").value(everyItem(is(defDescription))))
+            .andExpect(jsonPath("$.[*].target.createdBy").value(everyItem(is(tgtCreatedBy))))
+            .andExpect(jsonPath("$.[*].target.removed").value(everyItem(is(false))))
             .andExpect(jsonPath("$.[*].target.data").exists())
-            .andExpect(jsonPath("$.[*].target.data.AAAAAAAAAA").value(containsInAnyOrder("BBBBBBBBBB", "BBBBBBBBBB")))
+            .andExpect(jsonPath("$.[*].target.data.AAAAAAAAAA").value(everyItem(is("BBBBBBBBBB"))))
 
             .andExpect(jsonPath("$.[*].target.avatarUrlRelative").doesNotExist())
             .andExpect(jsonPath("$.[*].target.avatarUrlFull").doesNotExist())
