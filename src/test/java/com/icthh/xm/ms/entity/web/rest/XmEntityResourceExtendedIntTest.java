@@ -10,6 +10,7 @@ import static java.lang.Long.valueOf;
 import static java.time.Instant.now;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.emptySet;
+import static java.util.Objects.requireNonNull;
 import static java.util.UUID.randomUUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
@@ -419,7 +420,8 @@ public class XmEntityResourceExtendedIntTest extends AbstractSpringBootTest {
      * the current entity.
      */
     public static XmEntity createEntity() {
-        XmEntity xmEntity = new XmEntity()
+
+        return new XmEntity()
             .key(DEFAULT_KEY)
             .typeKey(DEFAULT_TYPE_KEY)
             .stateKey(DEFAULT_STATE_KEY)
@@ -431,8 +433,6 @@ public class XmEntityResourceExtendedIntTest extends AbstractSpringBootTest {
             .description(DEFAULT_DESCRIPTION)
             .data(DEFAULT_DATA)
             .removed(DEFAULT_REMOVED);
-
-        return xmEntity;
     }
 
     /**
@@ -477,14 +477,14 @@ public class XmEntityResourceExtendedIntTest extends AbstractSpringBootTest {
     /**
      * Performs HTTP PUT.
      *
-     * @param url     URL template
      * @param content Content object
      */
-    private ResultActions performPut(String url, Object content) throws Exception {
+    private ResultActions performPut(Object content) throws Exception {
 
+        String entityPutUrl = "/api/xm-entities";
         String json = new String(convertObjectToJsonBytesByFields(content));
-        log.info("perform PUT: {} with content: {}", url, json);
-        return restXmEntityMockMvc.perform(put(url)
+        log.info("perform PUT: {} with content: {}", entityPutUrl, json);
+        return restXmEntityMockMvc.perform(put(entityPutUrl)
                                                .contentType(TestUtil.APPLICATION_JSON_UTF8)
                                                .content(json))
                                   .andDo(this::printMvcResult);
@@ -615,6 +615,8 @@ public class XmEntityResourceExtendedIntTest extends AbstractSpringBootTest {
 
         XmEntity presaved = xmEntityService.save(createEntity());
 
+        assertNotNull(presaved.getId());
+
         int databaseSizeBeforeCreate = xmEntityRepository.findAll().size();
 
         XmEntity entity = xmEntityIncoming;
@@ -698,6 +700,8 @@ public class XmEntityResourceExtendedIntTest extends AbstractSpringBootTest {
 
         presaved = xmEntityService.findOne(IdOrKey.of(presaved.getId()));
 
+        assertNotNull(presaved.getId());
+
         // Get the xmEntityPersisted with tag by ID
         performGet("/api/xm-entities/{id}", presaved.getId())
             .andExpect(status().isOk())
@@ -747,6 +751,10 @@ public class XmEntityResourceExtendedIntTest extends AbstractSpringBootTest {
         source2.getTargets().add(new Link().typeKey("LINK1").source(source2).target(target));
         source2.getTargets().add(new Link().typeKey("LINK2").source(source2).target(target));
 
+        assertNotNull(target.getId());
+        assertNotNull(source1.getId());
+        assertNotNull(source2.getId());
+
         Integer targetId = target.getId().intValue();
         Integer srcId1 = source1.getId().intValue();
         Integer srcId2 = source2.getId().intValue();
@@ -780,6 +788,10 @@ public class XmEntityResourceExtendedIntTest extends AbstractSpringBootTest {
         source2.getTargets().add(new Link().typeKey("LINK1").source(source2).target(target));
         source2.getTargets().add(new Link().typeKey("LINK2").source(source2).target(target));
         source2.getTargets().add(new Link().typeKey("LINK3").source(source2).target(target));
+
+        assertNotNull(target.getId());
+        assertNotNull(source1.getId());
+        assertNotNull(source2.getId());
 
         Integer targetId = target.getId().intValue();
         Integer srcId1 = source1.getId().intValue();
@@ -827,6 +839,10 @@ public class XmEntityResourceExtendedIntTest extends AbstractSpringBootTest {
         source2.getTargets().clear();
         source2.getTargets().add(new Link().typeKey("LINK2").source(source2).target(target));
 
+        assertNotNull(target.getId());
+        assertNotNull(source1.getId());
+        assertNotNull(source2.getId());
+
         Integer targetId = target.getId().intValue();
         Integer srcId1 = source1.getId().intValue();
         Integer srcId2 = source2.getId().intValue();
@@ -858,6 +874,10 @@ public class XmEntityResourceExtendedIntTest extends AbstractSpringBootTest {
 
         source2.getTargets().clear();
         source2.getTargets().add(new Link().typeKey("LINK2").source(source2).target(target));
+
+        assertNotNull(target.getId());
+        assertNotNull(source1.getId());
+        assertNotNull(source2.getId());
 
         Integer targetId = target.getId().intValue();
         Integer srcId1 = source1.getId().intValue();
@@ -923,6 +943,7 @@ public class XmEntityResourceExtendedIntTest extends AbstractSpringBootTest {
         List<XmEntity> xmEntityList = validateEntityInDB(databaseSizeBeforeCreate + 1);
 
         XmEntity testXmEntity = xmEntityList.get(xmEntityList.size() - 1);
+        assertNotNull(testXmEntity.getId());
         assertThat(testXmEntity.getData()).isEqualTo(LARGE_DATA);
 
         xmEntitySearchRepository.refresh();
@@ -942,7 +963,7 @@ public class XmEntityResourceExtendedIntTest extends AbstractSpringBootTest {
 
         entity.setData(of("numberProperties", "5"));
 
-        performPut("/api/xm-entities", entity)
+        performPut(entity)
             .andExpect(status().isBadRequest())
             .andExpect(jsonPath("$.error").value("error.validation"));
 
@@ -951,7 +972,7 @@ public class XmEntityResourceExtendedIntTest extends AbstractSpringBootTest {
 
         entity.setData(of("numberProperties", "testse"));
 
-        performPut("/api/xm-entities", entity)
+        performPut(entity)
             .andExpect(status().isBadRequest())
             .andExpect(jsonPath("$.error").value("error.validation"));
 
@@ -960,7 +981,7 @@ public class XmEntityResourceExtendedIntTest extends AbstractSpringBootTest {
 
         entity.setData(of("numberProperties", Boolean.FALSE));
 
-        performPut("/api/xm-entities", entity)
+        performPut(entity)
             .andExpect(status().isBadRequest())
             .andExpect(jsonPath("$.error").value("error.validation"));
 
@@ -975,7 +996,7 @@ public class XmEntityResourceExtendedIntTest extends AbstractSpringBootTest {
 
         xmEntityIncoming.setData(emptyMap());
 
-        performPut("/api/xm-entities", xmEntityIncoming)
+        performPut(xmEntityIncoming)
             .andExpect(status().isBadRequest())
             .andExpect(jsonPath("$.error").value("error.validation"));
 
@@ -1037,6 +1058,8 @@ public class XmEntityResourceExtendedIntTest extends AbstractSpringBootTest {
 
         XmEntity entity = createEntityComplexPersisted(em);
 
+        assertNotNull(entity.getId());
+
         // Get all the xmEntityList
         performGet("/api/xm-entities?sort=id,desc&typeKey=ACCOUNT")
             .andExpect(status().isOk())
@@ -1049,7 +1072,7 @@ public class XmEntityResourceExtendedIntTest extends AbstractSpringBootTest {
     @WithMockUser(authorities = "SUPER-ADMIN")
     public void getAllXmEntitiesByTypeKeyNo() throws Exception {
 
-        XmEntity entity = createEntityComplexPersisted(em);
+        createEntityComplexPersisted(em);
 
         // Get all the xmEntityList
         performGet("/api/xm-entities?sort=id,desc&typeKey=PRICE")
@@ -1385,7 +1408,7 @@ public class XmEntityResourceExtendedIntTest extends AbstractSpringBootTest {
         val event = new Event().typeKey("TYPEKEY").title("title").startDate(Instant.now())
                                .calendar(calendar).assigned(xmEntityIncoming);
 
-        MvcResult resultSaveEvent = performPost("/api/events", event)
+        performPost("/api/events", event)
             .andExpect(status().is2xxSuccessful())
             .andReturn();
 
@@ -1472,7 +1495,7 @@ public class XmEntityResourceExtendedIntTest extends AbstractSpringBootTest {
     }
 
     @Test
-    public void checkUpdateDateIsRequiredInDb() throws Exception {
+    public void checkUpdateDateIsRequiredInDb() {
 
         // set the field null
         when(startUpdateDateGenerationStrategy.generateUpdateDate()).thenReturn(null);
@@ -1676,7 +1699,7 @@ public class XmEntityResourceExtendedIntTest extends AbstractSpringBootTest {
                                     .target(target)
         );
 
-        MvcResult result = performPost("/api/xm-entities", entity)
+        performPost("/api/xm-entities", entity)
             .andExpect(status().isCreated())
             .andExpect(jsonPath("$.key").value(DEFAULT_KEY))
             .andReturn();
@@ -1694,7 +1717,9 @@ public class XmEntityResourceExtendedIntTest extends AbstractSpringBootTest {
         Long id = xmEntityService.save(entity).getId();
 
         String sourceLinkRequest = IOUtils.toString(
-            this.getClass().getClassLoader().getResourceAsStream("testrequests/newEntityWithLinkToExistsEntity.json"),
+            requireNonNull(this.getClass()
+                               .getClassLoader()
+                               .getResourceAsStream("testrequests/newEntityWithLinkToExistsEntity.json")),
             "UTF-8"
         );
 
@@ -1741,7 +1766,7 @@ public class XmEntityResourceExtendedIntTest extends AbstractSpringBootTest {
 
         em.flush();
 
-        performPut("/api/xm-entities", entity)
+        performPut(entity)
             .andExpect(status().is2xxSuccessful())
             .andReturn();
 
@@ -1778,6 +1803,8 @@ public class XmEntityResourceExtendedIntTest extends AbstractSpringBootTest {
 
         validateEntityInDB(databaseSizeBeforeCreate + 1);
 
+        assertNotNull(presaved.getId());
+
         // Get the xmEntityPersisted with tag by ID
         result = performGet("/api/xm-entities/{id}", id)
             .andExpect(status().isOk())
@@ -1798,7 +1825,7 @@ public class XmEntityResourceExtendedIntTest extends AbstractSpringBootTest {
         toUpdate.setAvatarUrl(DEFAULT_AVATAR_URL_PREFIX + "bbbbb.jpg");
         toUpdate.setName("new_name1");
 
-        performPut("/api/xm-entities", toUpdate)
+        performPut(toUpdate)
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.key").value(DEFAULT_KEY))
             .andExpect(jsonPath("$.name").value("new_name1"))
