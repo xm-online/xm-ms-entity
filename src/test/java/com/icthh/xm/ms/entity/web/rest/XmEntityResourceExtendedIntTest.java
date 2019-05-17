@@ -38,6 +38,7 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.PropertyAccessor;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.google.common.collect.ImmutableMap;
 import com.icthh.xm.commons.config.client.service.TenantConfigService;
@@ -82,6 +83,7 @@ import com.icthh.xm.ms.entity.service.XmEntityTemplatesSpecService;
 import com.icthh.xm.ms.entity.service.impl.StartUpdateDateGenerationStrategy;
 import com.icthh.xm.ms.entity.service.impl.XmEntityServiceImpl;
 import com.jayway.jsonpath.JsonPath;
+
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.time.Instant;
@@ -90,6 +92,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import javax.persistence.EntityManager;
+
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -368,6 +371,7 @@ public class XmEntityResourceExtendedIntTest extends AbstractSpringBootTest {
 
         xmEntityIncoming = createEntityComplexIncoming();
 
+        objectMapper.configure(SerializationFeature.INDENT_OUTPUT, true);
     }
 
     @After
@@ -378,7 +382,7 @@ public class XmEntityResourceExtendedIntTest extends AbstractSpringBootTest {
     }
 
     /**
-     * Creates incoming Entity as from HTTP request. Potentially cam be moved to DTO
+     * Creates incoming Entity as from HTTP request. Potentially can be moved to DTO
      *
      * @return XmEntity for incoming request
      */
@@ -601,7 +605,7 @@ public class XmEntityResourceExtendedIntTest extends AbstractSpringBootTest {
 
         // Validate the XmEntity in Elasticsearch
         XmEntity xmEntityEs = xmEntitySearchRepository.findById(valueOf(id.toString()))
-            .orElseThrow(NullPointerException::new);
+                                                      .orElseThrow(NullPointerException::new);
         assertThat(xmEntityEs).isEqualToIgnoringGivenFields(testXmEntity, "avatarUrlRelative");
 
     }
@@ -659,7 +663,7 @@ public class XmEntityResourceExtendedIntTest extends AbstractSpringBootTest {
 
         // Validate the XmEntity in Elasticsearch
         XmEntity xmEntityEs = xmEntitySearchRepository.findById(valueOf(id.toString()))
-            .orElseThrow(NullPointerException::new);
+                                                      .orElseThrow(NullPointerException::new);
         assertThat(xmEntityEs).isEqualToIgnoringGivenFields(testXmEntity, "avatarUrlRelative");
 
     }
@@ -719,7 +723,7 @@ public class XmEntityResourceExtendedIntTest extends AbstractSpringBootTest {
         xmEntitySearchRepository.refresh();
         // Validate the XmEntity in Elasticsearch
         XmEntity xmEntityEs = xmEntitySearchRepository.findById(valueOf(id.toString()))
-            .orElseThrow(NullPointerException::new);
+                                                      .orElseThrow(NullPointerException::new);
         // TODO - may be compare avatarUrl too ?
         assertThat(xmEntityEs).isEqualToIgnoringGivenFields(testXmEntity, "sources", "avatarUrlRelative");
     }
@@ -924,7 +928,7 @@ public class XmEntityResourceExtendedIntTest extends AbstractSpringBootTest {
         xmEntitySearchRepository.refresh();
         // Validate the XmEntity in Elasticsearch
         XmEntity xmEntityEs = xmEntitySearchRepository.findById(testXmEntity.getId())
-            .orElseThrow(NullPointerException::new);
+                                                      .orElseThrow(NullPointerException::new);
         assertThat(xmEntityEs).isEqualToIgnoringGivenFields(testXmEntity, "avatarUrlRelative");
         assertThat(xmEntityEs.getData()).isEqualTo(LARGE_DATA);
     }
@@ -1060,7 +1064,6 @@ public class XmEntityResourceExtendedIntTest extends AbstractSpringBootTest {
 
         prepareSearch();
 
-
         String urlTemplate = "/api/_search-with-typekey/xm-entities?typeKey=ACCOUNT&size=5";
 
         performGet(urlTemplate)
@@ -1105,7 +1108,6 @@ public class XmEntityResourceExtendedIntTest extends AbstractSpringBootTest {
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.length()").value(0));
 
-
         deleteData();
     }
 
@@ -1128,8 +1130,15 @@ public class XmEntityResourceExtendedIntTest extends AbstractSpringBootTest {
 
             // Initialize the database
             xmEntityService.save(createEntityComplexIncoming().typeKey(DEFAULT_TYPE_KEY).stateKey(DEFAULT_STATE_KEY));
-            xmEntityService.save(createEntityComplexIncoming().typeKey(UPDATED_TYPE_KEY).description(UNIQ_DESCRIPTION).stateKey(DEFAULT_STATE_KEY));
-            xmEntityService.save(createEntityComplexIncoming().typeKey(SEARCH_TEST_KEY).stateKey(null).data(null).attachments(emptySet()).tags(emptySet()).locations(emptySet()));
+            xmEntityService.save(createEntityComplexIncoming().typeKey(UPDATED_TYPE_KEY)
+                                                              .description(UNIQ_DESCRIPTION)
+                                                              .stateKey(DEFAULT_STATE_KEY));
+            xmEntityService.save(createEntityComplexIncoming().typeKey(SEARCH_TEST_KEY)
+                                                              .stateKey(null)
+                                                              .data(null)
+                                                              .attachments(emptySet())
+                                                              .tags(emptySet())
+                                                              .locations(emptySet()));
 
             return null;
         }, this::setup);
@@ -1816,9 +1825,12 @@ public class XmEntityResourceExtendedIntTest extends AbstractSpringBootTest {
         xmEntitySearchRepository.refresh();
         // Validate the XmEntity in Elasticsearch
         XmEntity xmEntityEs = xmEntitySearchRepository.findById(valueOf(id.toString()))
-            .orElseThrow(NullPointerException::new);
+                                                      .orElseThrow(NullPointerException::new);
         XmEntity testXmEntity = convertJsonToOnject(result.getResponse().getContentAsString());
-        assertThat(xmEntityEs).isEqualToIgnoringGivenFields(testXmEntity, "version", "avatarUrlRelative", "avatarUrlFull");
+        assertThat(xmEntityEs).isEqualToIgnoringGivenFields(testXmEntity,
+                                                            "version",
+                                                            "avatarUrlRelative",
+                                                            "avatarUrlFull");
 
         // TODO: fix: old avatarUrl inside elasticsearch after save
 //        assertEquals(testXmEntity.getAvatarUrl(), xmEntityEs.getAvatarUrl());
@@ -1826,6 +1838,122 @@ public class XmEntityResourceExtendedIntTest extends AbstractSpringBootTest {
 
     }
 
+    @Test
+    @Transactional
+    @SneakyThrows
+    public void testGetLinkTargetsDefaultSerialization() {
 
+        String tgtTypeKey = "ACCOUNT.USER";
+        String tgtCreatedBy = "admin";
+
+        XmEntity source = xmEntityRepository.saveAndFlush(createComplexEntityPersistable().typeKey("ACCOUNT.ADMIN"));
+        XmEntity target1 = xmEntityRepository.saveAndFlush(createComplexEntityPersistable().typeKey(tgtTypeKey)
+                                                                                           .createdBy(tgtCreatedBy));
+        XmEntity target2 = xmEntityRepository.saveAndFlush(createComplexEntityPersistable().typeKey(tgtTypeKey)
+                                                                                           .createdBy(tgtCreatedBy));
+
+        String defDescr = DEFAULT_DESCRIPTION;
+        String lnTypekey = DEFAULT_LN_TARGET_KEY;
+        String lnName = DEFAULT_LN_TARGET_NAME;
+        String lnStartDate = DEFAULT_LN_TARGET_START_DATE.toString();
+        Instant lnEndDate = Instant.ofEpochMilli(DEFAULT_LN_TARGET_START_DATE.toEpochMilli() + 100L);
+
+        source.getTargets().add(new Link()
+                                    .typeKey(lnTypekey)
+                                    .name(lnName)
+                                    .description(defDescr)
+                                    .startDate(DEFAULT_LN_TARGET_START_DATE)
+                                    .endDate(lnEndDate)
+                                    .target(target1)
+                                    .source(source));
+
+        source.getTargets().add(new Link()
+                                    .typeKey(lnTypekey)
+                                    .name(lnName)
+                                    .description(defDescr)
+                                    .startDate(DEFAULT_LN_TARGET_START_DATE)
+                                    .endDate(lnEndDate)
+                                    .target(target2)
+                                    .source(source)
+        );
+
+        xmEntityRepository.saveAndFlush(source);
+
+        assertNotNull(source.getId());
+        assertNotNull(target1.getId());
+        assertNotNull(target2.getId());
+        Integer[] linIds = source.getTargets().stream()
+                                 .map(Link::getId)
+                                 .map(Long::intValue)
+                                 .toArray(Integer[]::new);
+
+        int srcId = source.getId().intValue();
+        int target1Id = target1.getId().intValue();
+        int target2Id = target2.getId().intValue();
+
+        String tgtKey = DEFAULT_KEY;
+        String tgtStateKey = DEFAULT_STATE_KEY;
+        String tgtStartDate = DEFAULT_START_DATE.toString();
+        String tgtUpdateDate = DEFAULT_UPDATE_DATE.toString();
+        String tgtEndDate = DEFAULT_END_DATE.toString();
+
+        performGet("/api/xm-entities/{id}/links/targets?typeKey={typeKey}", srcId, tgtTypeKey)
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+            .andExpect(jsonPath("$", hasSize(2)))
+            .andExpect(jsonPath("$.[*].id").value(containsInAnyOrder(linIds)))
+            .andExpect(jsonPath("$.[*].typeKey").value(containsInAnyOrder(lnTypekey, lnTypekey)))
+            .andExpect(jsonPath("$.[*].name").value(containsInAnyOrder(lnName, lnName)))
+            .andExpect(jsonPath("$.[*].description").value(containsInAnyOrder(defDescr, defDescr)))
+            .andExpect(jsonPath("$.[*].startDate").value(containsInAnyOrder(lnStartDate, lnStartDate)))
+            .andExpect(jsonPath("$.[*].endDate").value(containsInAnyOrder(lnEndDate.toString(), lnEndDate.toString())))
+            .andExpect(jsonPath("$.[*].source").value(containsInAnyOrder(srcId, srcId)))
+
+            .andExpect(jsonPath("$.[*].target").exists())
+            .andExpect(jsonPath("$.[*].target.id").value(containsInAnyOrder(target1Id, target2Id)))
+            .andExpect(jsonPath("$.[*].target.key").value(containsInAnyOrder(tgtKey, tgtKey)))
+            .andExpect(jsonPath("$.[*].target.typeKey").value(containsInAnyOrder(tgtTypeKey, tgtTypeKey)))
+            .andExpect(jsonPath("$.[*].target.stateKey").value(containsInAnyOrder(tgtStateKey, tgtStateKey)))
+            .andExpect(jsonPath("$.[*].target.name").value(containsInAnyOrder(DEFAULT_NAME, DEFAULT_NAME)))
+            .andExpect(jsonPath("$.[*].target.startDate").value(containsInAnyOrder(tgtStartDate, tgtStartDate)))
+            .andExpect(jsonPath("$.[*].target.startDate").value(containsInAnyOrder(tgtEndDate, tgtEndDate)))
+            .andExpect(jsonPath("$.[*].target.updateDate").value(containsInAnyOrder(tgtUpdateDate, tgtUpdateDate)))
+            .andExpect(jsonPath("$.[*].target.description").value(containsInAnyOrder(defDescr, defDescr)))
+            .andExpect(jsonPath("$.[*].target.createdBy").value(containsInAnyOrder(tgtCreatedBy, tgtCreatedBy)))
+            .andExpect(jsonPath("$.[*].target.removed").value(containsInAnyOrder(false, false)))
+            .andExpect(jsonPath("$.[*].target.data").exists())
+            .andExpect(jsonPath("$.[*].target.data.AAAAAAAAAA").value(containsInAnyOrder("BBBBBBBBBB", "BBBBBBBBBB")))
+
+            .andExpect(jsonPath("$.[*].target.avatarUrlRelative").doesNotExist())
+            .andExpect(jsonPath("$.[*].target.avatarUrlFull").doesNotExist())
+            .andExpect(jsonPath("$.[*].target.version").doesNotExist())
+            .andExpect(jsonPath("$.[*].target.targets").doesNotExist())
+            .andExpect(jsonPath("$.[*].target.targets").doesNotExist())
+            .andExpect(jsonPath("$.[*].target.sources").doesNotExist())
+            .andExpect(jsonPath("$.[*].target.attachments").doesNotExist())
+            .andExpect(jsonPath("$.[*].target.locations").doesNotExist())
+            .andExpect(jsonPath("$.[*].target.tags").doesNotExist())
+            .andExpect(jsonPath("$.[*].target.calendars").doesNotExist())
+            .andExpect(jsonPath("$.[*].target.ratings").doesNotExist())
+            .andExpect(jsonPath("$.[*].target.comments").doesNotExist())
+            .andExpect(jsonPath("$.[*].target.votes").doesNotExist())
+            .andExpect(jsonPath("$.[*].target.functionContexts").doesNotExist())
+            .andExpect(jsonPath("$.[*].target.events").doesNotExist())
+            .andExpect(jsonPath("$.[*].target.uniqueFields").doesNotExist())
+        ;
+
+    }
+
+    private XmEntity createComplexEntityPersistable() {
+
+        XmEntity entity = createEntityComplexIncoming();
+
+        entity.getAttachments().forEach(inner -> inner.setXmEntity(entity));
+        entity.getTags().forEach(inner -> inner.setXmEntity(entity));
+        entity.getLocations().forEach(inner -> inner.setXmEntity(entity));
+
+        return entity;
+
+    }
 
 }
