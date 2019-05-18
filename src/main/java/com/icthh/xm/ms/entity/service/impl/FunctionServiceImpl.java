@@ -83,10 +83,8 @@ public class FunctionServiceImpl implements FunctionService {
         String xmEntityTypeKey = projection.getTypeKey();
 
         // validate that current XmEntity has function
-        FunctionSpec functionSpec = xmEntitySpecService.findFunction(xmEntityTypeKey, functionKey).orElseThrow(
-            () -> new IllegalArgumentException("Function not found for entity type key " + xmEntityTypeKey
-            + " and function key: " + functionKey)
-        );
+        FunctionSpec functionSpec = xmEntitySpecService.findFunction(functionKey).orElseThrow(
+            () -> new IllegalArgumentException("Function not found, function key: " + functionKey));
 
         // execute function
         Map<String, Object> data = functionExecutorService.execute(functionKey, idOrKey, xmEntityTypeKey, vInput);
