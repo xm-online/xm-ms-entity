@@ -1,7 +1,6 @@
 package com.icthh.xm.ms.entity.security.access;
 
 import static com.icthh.xm.ms.entity.util.CustomCollectionUtils.nullSafe;
-import static java.lang.Boolean.TRUE;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
@@ -194,7 +193,7 @@ public class DynamicPermissionCheckService {
      * @return true if feature enabled
      */
     private boolean isDynamicFunctionPermissionEnabled() {
-        return TRUE.equals(tenantConfigService.getXmEntityTenantConfig().getEntityFunctions().getDynamicPermissionCheckEnabled());
+        return tenantConfigService.getXmEntityTenantConfig().getEntityFunctions().getDynamicPermissionCheckEnabled();
     }
 
     /**

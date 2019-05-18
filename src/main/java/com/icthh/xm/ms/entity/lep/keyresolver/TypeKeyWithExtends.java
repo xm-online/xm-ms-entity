@@ -1,7 +1,5 @@
 package com.icthh.xm.ms.entity.lep.keyresolver;
 
-import static java.lang.Boolean.TRUE;
-
 import com.icthh.xm.ms.entity.config.XmEntityTenantConfigService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -13,7 +11,7 @@ public class TypeKeyWithExtends {
     private final XmEntityTenantConfigService tenantConfigService;
 
     public boolean doInheritance(String typeKey) {
-        return TRUE.equals(tenantConfigService.getXmEntityTenantConfig().getLep().getEnableInheritanceTypeKey())
+        return tenantConfigService.getXmEntityTenantConfig().getLep().getEnableInheritanceTypeKey()
                && typeKey.lastIndexOf('.') > 0;
     }
 

@@ -279,6 +279,6 @@ public class XmEntityRepositoryInternalImpl implements XmEntityRepositoryInterna
     }
 
     private boolean isEntityVersionEnabled() {
-        return Boolean.TRUE.equals(tenantConfigService.getXmEntityTenantConfig().getEntityVersionControl().getEnabled());
+        return tenantConfigService.getXmEntityTenantConfig().getEntityVersionControl().getEnabled();
     }
 }

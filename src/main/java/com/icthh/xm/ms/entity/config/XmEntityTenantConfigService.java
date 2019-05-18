@@ -1,5 +1,6 @@
 package com.icthh.xm.ms.entity.config;
 
+import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
 import static com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -39,18 +40,28 @@ public class XmEntityTenantConfigService extends TenantConfigService {
             ObjectMapper objectMapper = new ObjectMapper(new YAMLFactory());
             objectMapper.registerModule(new JavaTimeModule());
             objectMapper.configure(FAIL_ON_UNKNOWN_PROPERTIES, false);
-            configs.put(getTenantKey(updatedKey), objectMapper.readValue(config, XmEntityTenantConfig.class));
+            config = skipNullFIelds(config, objectMapper);
+            XmEntityTenantConfig value = objectMapper.readValue(config, XmEntityTenantConfig.class);
+            configs.put(getTenantKey(updatedKey), value);
         } catch (Exception e) {
-            log.error("Error read tenant configuration from path " + updatedKey, e);
+            log.error("Error read tenant configuration from path [{}]", updatedKey, e);
         }
+    }
+
+    private String skipNullFIelds(String config, ObjectMapper objectMapper) throws java.io.IOException {
+        objectMapper.setSerializationInclusion(NON_NULL);
+        return objectMapper.writeValueAsString(objectMapper.readValue(config, Map.class));
     }
 
     public XmEntityTenantConfig getXmEntityTenantConfig() {
         String tenantKey = tenantContextHolder.getTenantKey();
-        configs.putIfAbsent(tenantKey, new XmEntityTenantConfig());
+        configs.computeIfAbsent(tenantKey, (key) -> new XmEntityTenantConfig());
         return configs.get(tenantKey);
     }
 
+    /**
+     * Configuration class for enable/disable tenant level feature in xm-entity.
+     */
     @Data
     public static class XmEntityTenantConfig {
 
@@ -78,7 +89,7 @@ public class XmEntityTenantConfigService extends TenantConfigService {
         private LepSetting lep = new LepSetting();
         @Data
         public static class LepSetting {
-            private Boolean enableInheritanceTypeKey;
+            private Boolean enableInheritanceTypeKey = false;
         }
     }
 
