@@ -11,28 +11,24 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.icthh.xm.lep.api.LepManager;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.icthh.xm.commons.i18n.error.web.ExceptionTranslator;
 import com.icthh.xm.commons.security.XmAuthenticationContext;
 import com.icthh.xm.commons.security.XmAuthenticationContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
-import com.icthh.xm.ms.entity.EntityApp;
-import com.icthh.xm.ms.entity.config.LepConfiguration;
-import com.icthh.xm.ms.entity.config.SecurityBeanOverrideConfiguration;
-import com.icthh.xm.ms.entity.config.tenant.WebappTenantOverrideConfiguration;
+import com.icthh.xm.lep.api.LepManager;
+import com.icthh.xm.ms.entity.AbstractSpringBootTest;
 import com.icthh.xm.ms.entity.service.XmEntityGeneratorService;
-import com.icthh.xm.ms.entity.service.impl.XmEntityServiceImpl;
 import com.icthh.xm.ms.entity.service.XmEntitySpecService;
+import com.icthh.xm.ms.entity.service.impl.XmEntityServiceImpl;
 import lombok.SneakyThrows;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
@@ -41,14 +37,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
  *
  * @see XmEntitySpecResource
  */
-@RunWith(SpringRunner.class)
-@SpringBootTest(classes = {
-    EntityApp.class,
-    SecurityBeanOverrideConfiguration.class,
-    WebappTenantOverrideConfiguration.class,
-    LepConfiguration.class
-})
-public class XmEntitySpecResourceIntTest {
+public class XmEntitySpecResourceIntTest extends AbstractSpringBootTest {
 
     private static final String KEY1 = "ACCOUNT";
 
@@ -76,6 +65,12 @@ public class XmEntitySpecResourceIntTest {
     @Autowired
     private LepManager lepManager;
 
+    @Autowired
+    private ObjectMapper objectMapper;
+
+    @Autowired
+    private ExceptionTranslator exceptionTranslator;
+
     private XmEntityGeneratorService xmEntityGeneratorService;
 
     private MockMvc restXmEntitySpecMockMvc;
@@ -94,11 +89,12 @@ public class XmEntitySpecResourceIntTest {
         });
 
         xmEntityGeneratorService = new XmEntityGeneratorService(xmEntityService,
-            xmEntitySpecService, authContextHolder);
+            xmEntitySpecService, authContextHolder, objectMapper);
 
         XmEntitySpecResource xmEntitySpecResource = new XmEntitySpecResource(xmEntitySpecService,
-                                                                             xmEntityGeneratorService);
-        this.restXmEntitySpecMockMvc = MockMvcBuilders.standaloneSetup(xmEntitySpecResource).build();
+            xmEntityGeneratorService);
+        this.restXmEntitySpecMockMvc = MockMvcBuilders.standaloneSetup(xmEntitySpecResource)
+            .setControllerAdvice(exceptionTranslator).build();
     }
 
     @After
@@ -119,8 +115,18 @@ public class XmEntitySpecResourceIntTest {
     }
 
     @Test
+    public void getAllXmEntityTypeSpecsByFilter() throws Exception {
+        restXmEntitySpecMockMvc.perform(get("/api/xm-entity-specs?filter=" + XmEntitySpecResource.Filter.ALL))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+            .andExpect(jsonPath("$.[*].key").value(hasItem(KEY1)))
+            .andExpect(jsonPath("$.[*].key").value(hasItem(KEY2)))
+            .andExpect(jsonPath("$.[*].key").value(hasItem(KEY3)));
+    }
+
+    @Test
     public void getAllAppXmEntityTypeSpecs() throws Exception {
-        restXmEntitySpecMockMvc.perform(get("/api/xm-entity-specs?filter=APP"))
+        restXmEntitySpecMockMvc.perform(get("/api/xm-entity-specs?filter=" + XmEntitySpecResource.Filter.APP))
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
             .andExpect(jsonPath("$.[*].key").value(hasItem(KEY1)))
@@ -129,7 +135,7 @@ public class XmEntitySpecResourceIntTest {
 
     @Test
     public void getAllNonAbstractXmEntityTypeSpecs() throws Exception {
-        restXmEntitySpecMockMvc.perform(get("/api/xm-entity-specs?filter=NON_ABSTRACT"))
+        restXmEntitySpecMockMvc.perform(get("/api/xm-entity-specs?filter=" + XmEntitySpecResource.Filter.NON_ABSTRACT))
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
             .andExpect(jsonPath("$.[*].key").value(hasItem(KEY2)))
@@ -142,6 +148,13 @@ public class XmEntitySpecResourceIntTest {
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
             .andExpect(jsonPath("$.key").value(KEY1));
+    }
+
+    @Test
+    public void getXmEntityTypeSpecNotFound() throws Exception {
+        restXmEntitySpecMockMvc.perform(get("/api/xm-entity-specs/UNDEFINED_KEY"))
+            .andExpect(status().isNotFound())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE));
     }
 
     @Test

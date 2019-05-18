@@ -24,19 +24,19 @@ public class StateKeyValidator implements ConstraintValidator<StateKey, XmEntity
 
     @Override
     public void initialize(StateKey constraintAnnotation) {
-        log.trace("State key validator inited");
+        log.trace("State key validator initialized");
     }
 
     @Override
     public boolean isValid(XmEntity value, ConstraintValidatorContext context) {
 
-        TypeSpec typeSpec = xmEntitySpecService.findTypeByKey(value.getTypeKey());
-
-        if (typeSpec == null) {
+        if (value.getStateKey() == null) {
             return true;
         }
 
-        if (value.getStateKey() == null) {
+        TypeSpec typeSpec = xmEntitySpecService.findTypeByKey(value.getTypeKey());
+
+        if (typeSpec == null) {
             return true;
         }
 

@@ -5,9 +5,11 @@ import static org.junit.Assert.fail;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.icthh.xm.ms.entity.AbstractUnitTest;
 import com.icthh.xm.ms.entity.domain.FunctionContext;
 import com.icthh.xm.ms.entity.repository.FunctionContextRepository;
 import com.icthh.xm.ms.entity.service.impl.StartUpdateDateGenerationStrategy;
+import java.util.Optional;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -19,7 +21,7 @@ import java.time.Instant;
 /**
  * Unit test for StartUpdateDateGenerationStrategy.
  */
-public class StartUpdateDateGenerationStrategyUnitTest {
+public class StartUpdateDateGenerationStrategyUnitTest extends AbstractUnitTest {
 
     private static final Instant MOCK_START_DATE = Instant.ofEpochMilli(100);
     private static final Instant MOCK_UPDATE_DATE = Instant.ofEpochMilli(200);
@@ -177,7 +179,7 @@ public class StartUpdateDateGenerationStrategyUnitTest {
         Instant updateDate = Instant.now();
 
         when(strategy.generateUpdateDate()).thenReturn(updateDate);
-        when(repository.findOne(1L)).thenReturn(oldContext);
+        when(repository.findById(1L)).thenReturn(Optional.ofNullable(oldContext));
 
         FunctionContext newContext = new FunctionContext();
         // set ID to trigger findOne from repo.
@@ -192,7 +194,7 @@ public class StartUpdateDateGenerationStrategyUnitTest {
                                             FunctionContext::getStartDate,
                                             FunctionContext::setUpdateDate);
 
-        verify(repository).findOne(1L);
+        verify(repository).findById(1L);
 
         System.out.println(newContext);
 

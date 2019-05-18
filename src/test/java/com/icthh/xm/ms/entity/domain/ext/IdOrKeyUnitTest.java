@@ -1,10 +1,11 @@
 package com.icthh.xm.ms.entity.domain.ext;
+import com.icthh.xm.ms.entity.AbstractUnitTest;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import static org.assertj.core.api.Assertions.*;
 
-public class IdOrKeyUnitTest {
+public class IdOrKeyUnitTest extends AbstractUnitTest {
 
     @Rule
     public final ExpectedException exception = ExpectedException.none();

@@ -1,25 +1,28 @@
 package com.icthh.xm.ms.entity.validator;
 
+import static com.github.fge.jsonschema.core.report.LogLevel.ERROR;
+import static java.util.stream.Collectors.toList;
+import static java.util.stream.StreamSupport.stream;
 import static org.apache.commons.collections.MapUtils.isEmpty;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.github.fge.jackson.JsonLoader;
+import com.github.fge.jsonschema.core.report.ProcessingMessage;
 import com.github.fge.jsonschema.main.JsonSchema;
 import com.github.fge.jsonschema.main.JsonSchemaFactory;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.domain.spec.TypeSpec;
 import com.icthh.xm.ms.entity.service.XmEntitySpecService;
+import java.util.List;
+import java.util.Map;
+import javax.validation.ConstraintValidator;
+import javax.validation.ConstraintValidatorContext;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
-import org.springframework.beans.factory.annotation.Autowired;
-
-import java.util.Map;
-import javax.validation.ConstraintValidator;
-import javax.validation.ConstraintValidatorContext;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -43,11 +46,11 @@ public class JsonDataValidator implements ConstraintValidator<JsonData, XmEntity
         }
 
         if (dataWithoutSpecification(value, typeSpecification)) {
-            log.error("Data specification null, but data is not null");
+            log.error("Data specification null, but data is not null: {}", value.getData());
             return false;
         }
 
-        return validate(value.getData(), typeSpecification.getDataSpec());
+        return validate(value.getData(), typeSpecification.getDataSpec(), context);
     }
 
     private static boolean present(Object object) {
@@ -63,7 +66,7 @@ public class JsonDataValidator implements ConstraintValidator<JsonData, XmEntity
     }
 
     @SneakyThrows
-    private boolean validate(Map<String, Object> data, String jsonSchema) {
+    private boolean validate(Map<String, Object> data, String jsonSchema, ConstraintValidatorContext context) {
 
         String stringData = objectMapper.writeValueAsString(data);
         log.debug("Validation data. map: {}, jsonData: {}", data, stringData);
@@ -78,6 +81,12 @@ public class JsonDataValidator implements ConstraintValidator<JsonData, XmEntity
         boolean isSuccess = report.isSuccess();
         if (!isSuccess) {
             log.error("Validation data report: {}", report.toString().replaceAll("\n", " | "));
+            context.disableDefaultConstraintViolation();
+
+            List<?> message = stream(report.spliterator(), false)
+                .filter(error -> error.getLogLevel().equals(ERROR)).map(ProcessingMessage::asJson).collect(toList());
+            context.buildConstraintViolationWithTemplate(objectMapper.writeValueAsString(message))
+                   .addConstraintViolation();
         }
         return isSuccess;
     }

@@ -10,11 +10,8 @@ import com.icthh.xm.commons.security.XmAuthenticationContext;
 import com.icthh.xm.commons.security.XmAuthenticationContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
-import com.icthh.xm.commons.tenant.spring.config.TenantContextConfiguration;
 import com.icthh.xm.lep.api.LepManager;
-import com.icthh.xm.ms.entity.EntityApp;
-import com.icthh.xm.ms.entity.config.SecurityBeanOverrideConfiguration;
-import com.icthh.xm.ms.entity.config.tenant.WebappTenantOverrideConfiguration;
+import com.icthh.xm.ms.entity.AbstractSpringBootTest;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.domain.ext.IdOrKey;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
@@ -22,13 +19,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.test.context.support.WithMockUser;
-import org.springframework.test.context.junit4.SpringRunner;
 
 import java.util.Date;
 import java.util.concurrent.ExecutorService;
@@ -36,14 +30,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
-@RunWith(SpringRunner.class)
-@SpringBootTest(classes = {
-    EntityApp.class,
-    SecurityBeanOverrideConfiguration.class,
-    WebappTenantOverrideConfiguration.class,
-    TenantContextConfiguration.class
-})
-public class SelectForUpdateEntityIntTest {
+public class SelectForUpdateEntityIntTest extends AbstractSpringBootTest {
 
     @Autowired
     private TenantContextHolder tenantContextHolder;
@@ -116,10 +103,10 @@ public class SelectForUpdateEntityIntTest {
                 assertEquals("Initial", first.getName());
                 first.setData(of("AAAAAAAAAA", "first"));
                 first.setName("First");
-                for (int i = 0; i < 10; i++) {
-                    log.info("Waiting .... {} sec", (i + 1) * 1000);
+                for (int i = 0; i < 3; i++) {
+                    log.info("Waiting .... {} milliseconds", (i + 1) * 500);
                     try {
-                        Thread.sleep(1000);
+                        Thread.sleep(500);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
@@ -128,7 +115,7 @@ public class SelectForUpdateEntityIntTest {
             log.info("First: {}", entity1);
         });
 
-        Thread.sleep(1000);
+        Thread.sleep(500);
 
         executorService.submit(() -> {
             TenantContextUtils.setTenant(tenantContextHolder, "RESINTTEST");
@@ -145,7 +132,7 @@ public class SelectForUpdateEntityIntTest {
             log.info("Second: {}", entity2);
         });
 
-        executorService.awaitTermination(12, TimeUnit.SECONDS);
+        executorService.awaitTermination(2500, TimeUnit.MILLISECONDS);
 
         XmEntity after = xmEntityService.findOne(IdOrKey.of(sourceEntity.getId()));
         assertEquals("second", after.getData().get("AAAAAAAAAA"));

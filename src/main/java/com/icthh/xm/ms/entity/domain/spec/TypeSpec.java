@@ -4,7 +4,10 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.util.HashSet;
 import java.util.List;
@@ -16,6 +19,9 @@ import java.util.Set;
     "isAvatarEnabled", "isKeyRequired", "isNameRequired", "fastSearch", "icon", "dataSpec", "dataForm", "functions", "access", "attachments", "calendars",
     "links", "locations", "ratings", "states", "tags"})
 @Data
+@Builder(toBuilder = true)
+@AllArgsConstructor
+@NoArgsConstructor
 public class TypeSpec {
 
     @JsonProperty("key")
@@ -38,6 +44,10 @@ public class TypeSpec {
     private Boolean isKeyRequired = true;
     @JsonProperty("isNameRequired")
     private Boolean isNameRequired = true;
+    @JsonProperty("indexAfterSaveEnabled")
+    private Boolean indexAfterSaveEnabled = true;
+    @JsonProperty("indexAfterDeleteEnabled")
+    private Boolean indexAfterDeleteEnabled = true;
     @JsonProperty("fastSearch")
     private List<FastSearchSpec> fastSearch = null;
     @JsonProperty("icon")

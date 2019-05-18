@@ -12,6 +12,7 @@ import com.icthh.xm.ms.entity.repository.search.PermittedSearchRepository;
 import com.icthh.xm.ms.entity.service.AttachmentService;
 import com.icthh.xm.ms.entity.service.CalendarService;
 import com.icthh.xm.ms.entity.service.CommentService;
+import com.icthh.xm.ms.entity.service.ElasticsearchIndexService;
 import com.icthh.xm.ms.entity.service.EventService;
 import com.icthh.xm.ms.entity.service.LinkService;
 import com.icthh.xm.ms.entity.service.LocationService;
@@ -34,34 +35,35 @@ public class LepAppEventListenerConfiguration {
 
     @Bean
     XmEntityMsLepProcessingApplicationListener buildLepProcessingApplicationListener(
-                    XmEntityService xmEntityService,
-                    XmTenantLifecycleService xmTenantLifecycleService,
-                    XmEntityRepository xmEntityRepository,
-                    ProfileService profileService,
-                    LinkService linkService,
-                    MailService mailService,
-                    EventService eventService,
-                    CalendarService calendarService,
-                    CommentService commentService,
-                    TenantConfigService tenantConfigService,
-                    AttachmentService attachmentService,
-                    @Qualifier("loadBalancedRestTemplate") RestTemplate restTemplate,
-                    LocationService locationService,
-                    TagService tagService,
-                    ProfileEventProducer profileEventProducer,
-                    CommonsService commonsService,
-                    PermissionCheckService permissionCheckService,
-                    TenantLepResource tenantLepResource,
-                    AmazonS3Template amazonS3Template,
-                    ElasticsearchTemplate elasticsearchTemplate,
-                    PermittedSearchRepository permittedSearchRepository) {
+        XmEntityService xmEntityService,
+        XmTenantLifecycleService xmTenantLifecycleService,
+        XmEntityRepository xmEntityRepository,
+        ProfileService profileService,
+        LinkService linkService,
+        MailService mailService,
+        EventService eventService,
+        CalendarService calendarService,
+        CommentService commentService,
+        TenantConfigService tenantConfigService,
+        AttachmentService attachmentService,
+        @Qualifier("loadBalancedRestTemplate") RestTemplate restTemplate,
+        LocationService locationService,
+        TagService tagService,
+        ProfileEventProducer profileEventProducer,
+        CommonsService commonsService,
+        PermissionCheckService permissionCheckService,
+        TenantLepResource tenantLepResource,
+        AmazonS3Template amazonS3Template,
+        ElasticsearchTemplate elasticsearchTemplate,
+        PermittedSearchRepository permittedSearchRepository,
+        ElasticsearchIndexService elasticsearchIndexService) {
 
         return new XmEntityMsLepProcessingApplicationListener(xmEntityService,
                         xmTenantLifecycleService, xmEntityRepository, profileService, linkService,
                         mailService, tenantConfigService, attachmentService, restTemplate,
                         locationService, tagService, profileEventProducer, commentService, commonsService,
                         permissionCheckService, eventService, calendarService, tenantLepResource, amazonS3Template,
-                        elasticsearchTemplate, permittedSearchRepository);
+                        elasticsearchTemplate, permittedSearchRepository, elasticsearchIndexService);
 
     }
 

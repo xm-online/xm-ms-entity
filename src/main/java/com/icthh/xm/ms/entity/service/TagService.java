@@ -53,7 +53,7 @@ public class TagService {
      */
     @Transactional(readOnly = true)
     public Tag findOne(Long id) {
-        return tagRepository.findOne(id);
+        return tagRepository.findById(id).orElse(null);
     }
 
     @Transactional(readOnly = true)
@@ -80,6 +80,6 @@ public class TagService {
      * @param id the id of the entity
      */
     public void delete(Long id) {
-        tagRepository.delete(id);
+        tagRepository.deleteById(id);
     }
 }

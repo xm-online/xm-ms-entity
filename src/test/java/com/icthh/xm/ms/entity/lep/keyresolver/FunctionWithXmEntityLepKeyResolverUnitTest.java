@@ -11,6 +11,7 @@ import com.icthh.xm.lep.api.LepMethod;
 import com.icthh.xm.lep.api.MethodSignature;
 import com.icthh.xm.lep.api.commons.SeparatorSegmentedLepKey;
 import com.icthh.xm.commons.lep.XmLepConstants;
+import com.icthh.xm.ms.entity.AbstractUnitTest;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
@@ -22,7 +23,7 @@ import java.util.Arrays;
 /**
  * The {@link FunctionWithXmEntityLepKeyResolverUnitTest} class.
  */
-public class FunctionWithXmEntityLepKeyResolverUnitTest {
+public class FunctionWithXmEntityLepKeyResolverUnitTest extends AbstractUnitTest {
 
     @Rule
     public ExpectedException expectedEx = ExpectedException.none();

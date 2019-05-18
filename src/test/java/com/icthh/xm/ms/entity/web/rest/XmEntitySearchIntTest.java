@@ -22,12 +22,9 @@ import com.icthh.xm.commons.security.XmAuthenticationContext;
 import com.icthh.xm.commons.security.XmAuthenticationContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.lep.api.LepManager;
-import com.icthh.xm.ms.entity.EntityApp;
-import com.icthh.xm.ms.entity.config.LepConfiguration;
-import com.icthh.xm.ms.entity.config.SecurityBeanOverrideConfiguration;
-import com.icthh.xm.ms.entity.config.tenant.WebappTenantOverrideConfiguration;
+import com.icthh.xm.ms.entity.AbstractSpringBootTest;
 import com.icthh.xm.ms.entity.domain.XmEntity;
-import com.icthh.xm.ms.entity.repository.XmEntityRepository;
+import com.icthh.xm.ms.entity.repository.XmEntityRepositoryInternal;
 import com.icthh.xm.ms.entity.service.impl.XmEntityServiceImpl;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -36,16 +33,12 @@ import org.apache.commons.io.IOUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.io.ClassPathResource;
-import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
 import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
 import org.springframework.security.test.context.support.WithMockUser;
-import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.validation.Validator;
@@ -61,14 +54,7 @@ import java.util.UUID;
  * @see XmEntitySpecResource
  */
 @Slf4j
-@RunWith(SpringRunner.class)
-@SpringBootTest(classes = {
-    EntityApp.class,
-    SecurityBeanOverrideConfiguration.class,
-    WebappTenantOverrideConfiguration.class,
-    LepConfiguration.class
-})
-public class XmEntitySearchIntTest {
+public class XmEntitySearchIntTest extends AbstractSpringBootTest {
 
     private static final String KEY1 = "ACCOUNT";
 
@@ -77,6 +63,8 @@ public class XmEntitySearchIntTest {
     private static final String STATE_KEY1 = "TEST-STATE-KEY-1";
 
     private static final String STATE_KEY2 = "TEST-STATE-KEY-2";
+
+    private static boolean elasticInited = false;
 
     @Autowired
     private XmEntityServiceImpl xmEntityService;
@@ -103,15 +91,15 @@ public class XmEntitySearchIntTest {
     private ExceptionTranslator exceptionTranslator;
 
     @Autowired
-    private ElasticsearchTemplate elasticsearchTemplate;
-
-    @Autowired
-    private XmEntityRepository xmEntityRepository;
+    private XmEntityRepositoryInternal xmEntityRepository;
 
     private MockMvc restXmEntityMockMvc;
 
     @Autowired
     private XmLepScriptConfigServerResourceLoader leps;
+
+    @Autowired
+    private ObjectMapper objectMapper;
 
     @Before
     @SneakyThrows
@@ -122,9 +110,11 @@ public class XmEntitySearchIntTest {
 
         setTenant(tenantContextHolder, "DEMO");
 
-        elasticsearchTemplate.deleteIndex(XmEntity.class);
-        elasticsearchTemplate.createIndex(XmEntity.class);
-        elasticsearchTemplate.putMapping(XmEntity.class);
+        if (!elasticInited) {
+            initElasticsearch();
+            elasticInited = true;
+        }
+        cleanElasticsearch();
 
         lepManager.beginThreadContext(ctx -> {
             ctx.setValue(THREAD_CONTEXT_KEY_TENANT_CONTEXT, tenantContextHolder.getContext());
@@ -223,7 +213,7 @@ public class XmEntitySearchIntTest {
         List<XmEntity> fullMatchResult = searchEntityByKey(KEY2);
         assertEquals(1, fullMatchResult.size());
 
-        xmEntityRepository.delete(account.getId());
+        xmEntityRepository.deleteById(account.getId());
         assertEquals(databaseSizeBeforeCreate, xmEntityRepository.findAll().size());
     }
 
@@ -245,7 +235,7 @@ public class XmEntitySearchIntTest {
         List<XmEntity> fullMatchResult = searchEntityByStateKey(STATE_KEY2);
         assertEquals(1, fullMatchResult.size());
 
-        xmEntityRepository.delete(account.getId());
+        xmEntityRepository.deleteById(account.getId());
         assertEquals(databaseSizeBeforeCreate, xmEntityRepository.findAll().size());
     }
 

@@ -1,5 +1,6 @@
 package com.icthh.xm.ms.entity.service;
 
+import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -8,10 +9,7 @@ import static org.mockito.Mockito.when;
 import com.icthh.xm.commons.security.XmAuthenticationContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
-import com.icthh.xm.commons.tenant.spring.config.TenantContextConfiguration;
-import com.icthh.xm.ms.entity.EntityApp;
-import com.icthh.xm.ms.entity.config.SecurityBeanOverrideConfiguration;
-import com.icthh.xm.ms.entity.config.tenant.WebappTenantOverrideConfiguration;
+import com.icthh.xm.ms.entity.AbstractSpringBootTest;
 import com.icthh.xm.ms.entity.domain.Profile;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.repository.ProfileRepository;
@@ -20,23 +18,16 @@ import com.icthh.xm.ms.entity.web.rest.XmEntityResourceIntTest;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.context.transaction.BeforeTransaction;
+import org.springframework.transaction.annotation.Transactional;
 
-@RunWith(SpringRunner.class)
-@SpringBootTest(classes = {
-    EntityApp.class,
-    SecurityBeanOverrideConfiguration.class,
-    WebappTenantOverrideConfiguration.class,
-    TenantContextConfiguration.class
-})
-public class ProfileServiceUnitTest {
+public class ProfileServiceIntTest extends AbstractSpringBootTest {
 
     private static final Long ID = 1L;
     private static final String USER_KEY = "test";
 
+    @Autowired
     private ProfileRepository profileRepository;
 
     private XmEntitySearchRepository entitySearchRepository;
@@ -53,9 +44,13 @@ public class ProfileServiceUnitTest {
     public void init() {
         TenantContextUtils.setTenant(tenantContextHolder, "TEST");
 
-        profileRepository = mock(ProfileRepository.class);
         entitySearchRepository = mock(XmEntitySearchRepository.class);
         service = new ProfileService(profileRepository, entitySearchRepository, authContextHolder);
+    }
+
+    @BeforeTransaction
+    public void beforeTransaction() {
+        TenantContextUtils.setTenant(tenantContextHolder, "TEST");
     }
 
     @After
@@ -66,6 +61,8 @@ public class ProfileServiceUnitTest {
 
     @Test
     public void saveProfile() {
+        profileRepository = mock(ProfileRepository.class);
+        service = new ProfileService(profileRepository, entitySearchRepository, authContextHolder);
         Profile profile = new Profile();
         profile.setId(ID);
         XmEntity xmEntity = new XmEntity();
@@ -80,6 +77,8 @@ public class ProfileServiceUnitTest {
 
     @Test
     public void getProfile() {
+        profileRepository = mock(ProfileRepository.class);
+        service = new ProfileService(profileRepository, entitySearchRepository, authContextHolder);
         Profile profile = new Profile();
         profile.setId(1L);
         profile.setUserKey(USER_KEY);
@@ -91,6 +90,8 @@ public class ProfileServiceUnitTest {
 
     @Test
     public void getProfileByEntityId() {
+        profileRepository = mock(ProfileRepository.class);
+        service = new ProfileService(profileRepository, entitySearchRepository, authContextHolder);
         Profile profile = new Profile();
         profile.setId(1L);
         profile.setUserKey(USER_KEY);
@@ -101,5 +102,23 @@ public class ProfileServiceUnitTest {
         service.getByXmEntityId(entity.getId());
 
         verify(profileRepository).findOneByXmentityId(entity.getId());
+    }
+
+    @Test
+    @Transactional
+    public void deleteProfile() {
+        XmEntity entity = XmEntityResourceIntTest.createEntity();
+        entity.setTypeKey("TYPE1");
+        Profile profile = new Profile();
+        profile.setUserKey(USER_KEY);
+        profile.setXmentity(entity);
+
+        profile = profileRepository.saveAndFlush(profile);
+        int dbSizeBeforeDeleteProfile = profileRepository.findAll().size();
+
+        service.deleteProfile(profile);
+        int dbSizeAfterDeleteProfile = profileRepository.findAll().size();
+
+        assertEquals(dbSizeBeforeDeleteProfile, dbSizeAfterDeleteProfile + 1);
     }
 }

@@ -2,7 +2,7 @@ package com.icthh.xm.ms.entity.config;
 
 import static java.lang.String.format;
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static org.mockito.Matchers.any;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -10,11 +10,11 @@ import static org.mockito.Mockito.when;
 import com.icthh.xm.commons.config.client.repository.CommonConfigRepository;
 import com.icthh.xm.commons.config.client.repository.TenantConfigRepository;
 import com.icthh.xm.commons.config.client.repository.TenantListRepository;
-import com.icthh.xm.commons.config.client.service.CommonConfigService;
 import com.icthh.xm.commons.config.client.service.TenantConfigService;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.web.spring.TenantVerifyInterceptor;
 import com.icthh.xm.ms.entity.config.tenant.LocalXmEntitySpecService;
+import com.icthh.xm.ms.entity.security.access.DynamicPermissionCheckService;
 import com.icthh.xm.ms.entity.service.EntityCustomPrivilegeService;
 import com.icthh.xm.ms.entity.service.XmEntitySpecService;
 import lombok.SneakyThrows;
@@ -42,12 +42,13 @@ public class TenantConfigMockConfiguration {
     @Bean
     public XmEntitySpecService xmEntitySpecService(ApplicationProperties applicationProperties,
                                                    TenantContextHolder tenantContextHolder,
-                                                   EntityCustomPrivilegeService entityCustomPrivilegeService) {
-        XmEntitySpecService xmEntitySpecService = new LocalXmEntitySpecService(tenantConfigRepository(),
-                                                                               applicationProperties,
-                                                                               tenantContextHolder,
-                                                                               entityCustomPrivilegeService);
-        return xmEntitySpecService;
+                                                   EntityCustomPrivilegeService entityCustomPrivilegeService,
+                                                   DynamicPermissionCheckService dynamicPermissionCheckService) {
+        return new LocalXmEntitySpecService(tenantConfigRepository(),
+                                            applicationProperties,
+                                            tenantContextHolder,
+                                            entityCustomPrivilegeService,
+                                            dynamicPermissionCheckService);
     }
 
     @Bean

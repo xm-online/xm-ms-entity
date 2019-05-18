@@ -2,6 +2,7 @@ package com.icthh.xm.ms.entity.web.rest.util;
 
 import com.fasterxml.jackson.dataformat.csv.CsvSchema;
 import com.google.common.collect.ImmutableMap;
+import com.icthh.xm.ms.entity.AbstractUnitTest;
 import com.icthh.xm.ms.entity.domain.converter.EntityToCsvConverterUtils;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -16,7 +17,7 @@ import java.util.Map;
  *
  * @see EntityToCsvConverterUnitTest
  */
-public class EntityToCsvConverterUnitTest {
+public class EntityToCsvConverterUnitTest extends AbstractUnitTest {
 
     @Test
     public void convertWithBasedOnSchema() throws Exception {

@@ -32,8 +32,8 @@ public class TenantLepResource implements RefreshableConfiguration {
     }
 
     public String getResource(String path) {
-        TenantKey tenantKey = tenantContextHolder.getContext().getTenantKey().get();
-        if (!lepResources.containsKey(tenantKey.getValue())) {
+        TenantKey tenantKey = tenantContextHolder.getContext().getTenantKey().orElse(null);
+        if (tenantKey == null || !lepResources.containsKey(tenantKey.getValue())) {
             return null;
         }
         return lepResources.get(tenantKey.getValue()).get(path);

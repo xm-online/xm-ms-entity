@@ -13,8 +13,8 @@ import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.nullValue;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.eq;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
@@ -29,56 +29,36 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableMap;
 import com.icthh.xm.commons.config.client.service.TenantConfigService;
-import com.icthh.xm.lep.api.LepManager;
 import com.icthh.xm.commons.i18n.error.web.ExceptionTranslator;
 import com.icthh.xm.commons.security.XmAuthenticationContext;
 import com.icthh.xm.commons.security.XmAuthenticationContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
-import com.icthh.xm.ms.entity.EntityApp;
+import com.icthh.xm.lep.api.LepManager;
+import com.icthh.xm.ms.entity.AbstractSpringBootTest;
 import com.icthh.xm.ms.entity.config.ApplicationProperties;
 import com.icthh.xm.ms.entity.config.Constants;
 import com.icthh.xm.ms.entity.config.InternalTransactionService;
-import com.icthh.xm.ms.entity.config.LepConfiguration;
-import com.icthh.xm.ms.entity.config.SecurityBeanOverrideConfiguration;
-import com.icthh.xm.ms.entity.config.tenant.WebappTenantOverrideConfiguration;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.domain.spec.StateSpec;
+import com.icthh.xm.ms.entity.repository.SpringXmEntityRepository;
 import com.icthh.xm.ms.entity.repository.UniqueFieldRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityPermittedRepository;
-import com.icthh.xm.ms.entity.repository.XmEntityRepository;
+import com.icthh.xm.ms.entity.repository.XmEntityRepositoryInternal;
 import com.icthh.xm.ms.entity.repository.kafka.ProfileEventProducer;
 import com.icthh.xm.ms.entity.repository.search.XmEntityPermittedSearchRepository;
 import com.icthh.xm.ms.entity.repository.search.XmEntitySearchRepository;
-import com.icthh.xm.ms.entity.service.*;
+import com.icthh.xm.ms.entity.service.AttachmentService;
+import com.icthh.xm.ms.entity.service.FunctionService;
+import com.icthh.xm.ms.entity.service.LifecycleLepStrategyFactory;
+import com.icthh.xm.ms.entity.service.LinkService;
+import com.icthh.xm.ms.entity.service.ProfileService;
+import com.icthh.xm.ms.entity.service.StorageService;
+import com.icthh.xm.ms.entity.service.TenantService;
+import com.icthh.xm.ms.entity.service.XmEntitySpecService;
+import com.icthh.xm.ms.entity.service.XmEntityTemplatesSpecService;
 import com.icthh.xm.ms.entity.service.impl.StartUpdateDateGenerationStrategy;
 import com.icthh.xm.ms.entity.service.impl.XmEntityServiceImpl;
-import lombok.SneakyThrows;
-import lombok.extern.slf4j.Slf4j;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.Mock;
-import org.mockito.Mockito;
-import org.mockito.MockitoAnnotations;
-import org.mockito.Spy;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
-import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
-import org.springframework.security.test.context.support.WithMockUser;
-import org.springframework.test.context.junit4.SpringRunner;
-import org.springframework.test.context.transaction.BeforeTransaction;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.validation.Validator;
-
 import java.net.URI;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -87,6 +67,27 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import javax.persistence.EntityManager;
+import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Ignore;
+import org.junit.Test;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.MockitoAnnotations;
+import org.mockito.Spy;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
+import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.context.transaction.BeforeTransaction;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.validation.Validator;
 
 /**
  * Test class for the XmEntityResource REST controller.
@@ -94,15 +95,8 @@ import javax.persistence.EntityManager;
  * @see XmEntityResource
  */
 @Slf4j
-@RunWith(SpringRunner.class)
 @WithMockUser(authorities = {"SUPER-ADMIN"})
-@SpringBootTest(classes = {
-    EntityApp.class,
-    SecurityBeanOverrideConfiguration.class,
-    WebappTenantOverrideConfiguration.class,
-    LepConfiguration.class
-})
-public class XmEntityResourceIntTest {
+public class XmEntityResourceIntTest extends AbstractSpringBootTest {
 
     private static final String DEFAULT_KEY = "AAAAAAAAAA";
     private static final String UPDATED_KEY = "BBBBBBBBBB";
@@ -142,11 +136,16 @@ public class XmEntityResourceIntTest {
     private static final Boolean DEFAULT_REMOVED = false;
     private static final Boolean UPDATED_REMOVED = true;
 
+    private static boolean elasticInited = false;
+
     @Autowired
     private ApplicationProperties applicationProperties;
 
     @Autowired
-    private XmEntityRepository xmEntityRepository;
+    private XmEntityRepositoryInternal xmEntityRepository;
+
+    @Autowired
+    private SpringXmEntityRepository springXmEntityRepository;
 
     private XmEntityServiceImpl xmEntityServiceImpl;
 
@@ -207,9 +206,6 @@ public class XmEntityResourceIntTest {
     @Autowired
     ObjectMapper objectMapper;
 
-    @Autowired
-    private ElasticsearchTemplate elasticsearchTemplate;
-
     @Mock
     private XmAuthenticationContextHolder authContextHolder;
 
@@ -247,9 +243,11 @@ public class XmEntityResourceIntTest {
         TenantContextUtils.setTenant(tenantContextHolder, "RESINTTEST");
 
         //initialize index before test - put valid mapping
-        elasticsearchTemplate.deleteIndex(XmEntity.class);
-        elasticsearchTemplate.createIndex(XmEntity.class);
-        elasticsearchTemplate.putMapping(XmEntity.class);
+        if (!elasticInited) {
+            initElasticsearch();
+            elasticInited = true;
+        }
+        cleanElasticsearch();
 
         MockitoAnnotations.initMocks(this);
         when(authContextHolder.getContext()).thenReturn(context);
@@ -266,7 +264,6 @@ public class XmEntityResourceIntTest {
         XmEntityServiceImpl xmEntityServiceImpl = new XmEntityServiceImpl(xmEntitySpecService,
                                                       xmEntityTemplatesSpecService,
                                                       xmEntityRepository,
-                                                      xmEntitySearchRepository,
                                                       lifeCycleService,
                                                       xmEntityPermittedRepository,
                                                       profileService,
@@ -277,8 +274,8 @@ public class XmEntityResourceIntTest {
                                                       startUpdateDateGenerationStrategy,
                                                       authContextHolder,
                                                       objectMapper,
-                                                      tenantConfigService,
-                                                      mock(UniqueFieldRepository.class));
+                                                      mock(UniqueFieldRepository.class),
+                                                      springXmEntityRepository);
         xmEntityServiceImpl.setSelf(xmEntityServiceImpl);
 
         this.xmEntityServiceImpl = xmEntityServiceImpl;
@@ -370,9 +367,10 @@ public class XmEntityResourceIntTest {
 
             return testXmEntity;
         }, this::setup);
-
+        xmEntitySearchRepository.refresh();
         // Validate the XmEntity in Elasticsearch
-        XmEntity xmEntityEs = xmEntitySearchRepository.findOne(dbXmEntity.getId());
+        XmEntity xmEntityEs = xmEntitySearchRepository.findById(dbXmEntity.getId())
+            .orElseThrow(NullPointerException::new);
         assertThat(xmEntityEs).isEqualToIgnoringGivenFields(dbXmEntity, "avatarUrlRelative", "avatarUrlFull");
     }
 
@@ -649,7 +647,8 @@ public class XmEntityResourceIntTest {
             int databaseSizeBeforeUpdate = xmEntityRepository.findAll().size();
 
             // Update the xmEntity
-            XmEntity updatedXmEntity = xmEntityRepository.findOne(xmEntity.getId());
+            XmEntity updatedXmEntity = xmEntityRepository.findById(xmEntity.getId())
+                .orElseThrow(NullPointerException::new);
 
             em.detach(updatedXmEntity);
 
@@ -688,9 +687,10 @@ public class XmEntityResourceIntTest {
             assertThat(testXmEntity.isRemoved()).isEqualTo(UPDATED_REMOVED);
             return testXmEntity;
         }, this::setup);
-
+        xmEntitySearchRepository.refresh();
         // Validate the XmEntity in Elasticsearch
-        XmEntity xmEntityEs = xmEntitySearchRepository.findOne(dbXmEntity.getId());
+        XmEntity xmEntityEs = xmEntitySearchRepository.findById(dbXmEntity.getId())
+            .orElseThrow(NullPointerException::new);
         assertThat(xmEntityEs).isEqualToIgnoringGivenFields(dbXmEntity,
                                                             "avatarUrlRelative", "avatarUrlFull",
                                                             "version",
@@ -736,7 +736,7 @@ public class XmEntityResourceIntTest {
             return databaseSizeBeforeDeleteDb;
         }, this::setup);
         // Validate Elasticsearch is empty
-        boolean xmEntityExistsInEs = xmEntitySearchRepository.exists(xmEntity.getId());
+        boolean xmEntityExistsInEs = xmEntitySearchRepository.existsById(xmEntity.getId());
         assertThat(xmEntityExistsInEs).isFalse();
 
         // Validate the database is empty
@@ -751,6 +751,7 @@ public class XmEntityResourceIntTest {
                 // Initialize the database
                 return xmEntityServiceImpl.save(xmEntity);
         }, this::setup);
+        xmEntitySearchRepository.refresh();
 
         // Search the xmEntity
         restXmEntityMockMvc.perform(get("/api/_search/xm-entities?query=id:" + xmEntity.getId()))
@@ -777,7 +778,7 @@ public class XmEntityResourceIntTest {
             // Initialize the database
             return xmEntityServiceImpl.save(xmEntity);
         }, this::setup);
-
+        xmEntitySearchRepository.refresh();
         // Search the xmEntity
         restXmEntityMockMvc.perform(get("/api/_search-with-template/xm-entities?template=BY_TYPEKEY_AND_ID&templateParams[typeKey]=" + xmEntity.getTypeKey() + "&templateParams[id]=" + xmEntity.getId()))
             .andExpect(status().isOk())

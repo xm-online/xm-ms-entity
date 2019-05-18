@@ -6,7 +6,7 @@ import static org.apache.commons.lang.StringUtils.isBlank;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Matchers.any;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -15,10 +15,7 @@ import com.icthh.xm.commons.security.XmAuthenticationContext;
 import com.icthh.xm.commons.security.XmAuthenticationContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
-import com.icthh.xm.commons.tenant.spring.config.TenantContextConfiguration;
-import com.icthh.xm.ms.entity.EntityApp;
-import com.icthh.xm.ms.entity.config.SecurityBeanOverrideConfiguration;
-import com.icthh.xm.ms.entity.config.tenant.WebappTenantOverrideConfiguration;
+import com.icthh.xm.ms.entity.AbstractSpringBootTest;
 import com.icthh.xm.ms.entity.domain.Location;
 import com.icthh.xm.ms.entity.domain.Tag;
 import com.icthh.xm.ms.entity.domain.XmEntity;
@@ -32,11 +29,8 @@ import lombok.val;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.junit4.SpringRunner;
 
 import java.util.List;
 import java.util.Set;
@@ -44,14 +38,7 @@ import javax.validation.ConstraintViolation;
 import javax.validation.Validator;
 
 @Slf4j
-@RunWith(SpringRunner.class)
-@SpringBootTest(classes = {
-    EntityApp.class,
-    SecurityBeanOverrideConfiguration.class,
-    WebappTenantOverrideConfiguration.class,
-    TenantContextConfiguration.class
-})
-public class XmEntityGeneratorServiceIntTest {
+public class XmEntityGeneratorServiceIntTest extends AbstractSpringBootTest {
 
     private static final String ENTITY_TYPE_WITH_TAGS_AND_LOCATIONS_KEY = "TYPE1.SUBTYPE1";
 
@@ -66,6 +53,9 @@ public class XmEntityGeneratorServiceIntTest {
 
     @Autowired
     private TenantContextHolder tenantContextHolder;
+
+    @Autowired
+    private ObjectMapper objectMapper;
 
     @Mock
     private XmAuthenticationContextHolder authContextHolder;
@@ -82,7 +72,7 @@ public class XmEntityGeneratorServiceIntTest {
         entityServiceMock = mock(XmEntityServiceImpl.class);
         when(entityServiceMock.save(any())).thenAnswer(arg -> arg.getArguments()[0]);
         xmEntityGeneratorService = new XmEntityGeneratorService(entityServiceMock,
-            xmEntitySpecService, authContextHolder);
+            xmEntitySpecService, authContextHolder, objectMapper);
     }
 
     @After

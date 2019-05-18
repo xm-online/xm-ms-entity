@@ -16,9 +16,7 @@ import com.icthh.xm.commons.i18n.error.web.ExceptionTranslator;
 import com.icthh.xm.commons.permission.repository.PermittedRepository;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
-import com.icthh.xm.ms.entity.EntityApp;
-import com.icthh.xm.ms.entity.config.SecurityBeanOverrideConfiguration;
-import com.icthh.xm.ms.entity.config.tenant.WebappTenantOverrideConfiguration;
+import com.icthh.xm.ms.entity.AbstractSpringBootTest;
 import com.icthh.xm.ms.entity.domain.Rating;
 import com.icthh.xm.ms.entity.domain.Vote;
 import com.icthh.xm.ms.entity.domain.XmEntity;
@@ -31,16 +29,13 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.security.test.context.support.WithMockUser;
-import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.context.transaction.BeforeTransaction;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -56,10 +51,8 @@ import javax.persistence.EntityManager;
  *
  * @see VoteResource
  */
-@RunWith(SpringRunner.class)
 @WithMockUser(authorities = {"SUPER-ADMIN"})
-@SpringBootTest(classes = {EntityApp.class, SecurityBeanOverrideConfiguration.class, WebappTenantOverrideConfiguration.class})
-public class VoteResourceIntTest {
+public class VoteResourceIntTest extends AbstractSpringBootTest {
 
     private static final String DEFAULT_USER_KEY = "AAAAAAAAAA";
     private static final String UPDATED_USER_KEY = "BBBBBBBBBB";
@@ -339,7 +332,8 @@ public class VoteResourceIntTest {
         int databaseSizeBeforeUpdate = voteRepository.findAll().size();
 
         // Update the vote
-        Vote updatedVote = voteRepository.findOne(vote.getId());
+        Vote updatedVote = voteRepository.findById(vote.getId())
+            .orElseThrow(NullPointerException::new);
         updatedVote
             .userKey(UPDATED_USER_KEY)
             .value(UPDATED_VALUE)

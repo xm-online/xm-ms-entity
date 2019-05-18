@@ -7,15 +7,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.icthh.xm.commons.logging.web.rest.LogsResource;
 import com.icthh.xm.commons.logging.web.rest.vm.LoggerVm;
-import com.icthh.xm.ms.entity.EntityApp;
-import com.icthh.xm.ms.entity.config.SecurityBeanOverrideConfiguration;
-import com.icthh.xm.ms.entity.config.tenant.WebappTenantOverrideConfiguration;
+import com.icthh.xm.ms.entity.AbstractSpringBootTest;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
@@ -24,13 +19,13 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
  *
  * @see LogsResource
  */
-@RunWith(SpringRunner.class)
-@SpringBootTest(classes = {
-    EntityApp.class,
-    SecurityBeanOverrideConfiguration.class,
-    WebappTenantOverrideConfiguration.class,
-})
-public class LogsResourceIntTest {
+//@RunWith(SpringRunner.class)
+//@SpringBootTest(classes = {
+//    EntityApp.class,
+//    SecurityBeanOverrideConfiguration.class,
+//    WebappTenantOverrideConfiguration.class,
+//})
+public class LogsResourceIntTest extends AbstractSpringBootTest {
 
     private MockMvc restLogsMockMvc;
 

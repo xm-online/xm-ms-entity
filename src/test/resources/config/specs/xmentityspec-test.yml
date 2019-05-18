@@ -7,6 +7,8 @@ types:
       isAvatarEnabled: true
       isKeyRequired: false
       isNameRequired: false
+      indexAfterSaveEnabled: false
+      indexAfterDeleteEnabled: false
       fastSearch:
           - query: typeKey:TYPE1*
             name: { en: "Fast search" }
@@ -70,6 +72,13 @@ types:
             name: { en: "State 3", ru: "Состояние 3" }
             icon: highlight_off
             color: null
+      functions:
+          - key: GET-OPENED-ORDERS
+            name: { en: "Get transfer targets", uk: "Відкриті заявки" }
+            actionName: { en: "Get transfer targets", uk: "Відкриті заявки" }
+            saveFunctionContext: false
+            allowedStateKeys:
+                - NEVER
     - key: TYPE2
       name: { ru: "Тип 2" }
       pluralName: { ru: "Типы 2" }

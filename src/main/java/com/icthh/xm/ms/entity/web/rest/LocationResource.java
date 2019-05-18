@@ -115,7 +115,7 @@ public class LocationResource {
     @Timed
     @PostAuthorize("hasPermission({'returnObject': returnObject.body}, 'LOCATION.GET_LIST.ITEM')")
     public ResponseEntity<Location> getLocation(@PathVariable Long id) {
-        Location location = locationRepository.findOne(id);
+        Location location = locationRepository.findById(id).orElse(null);
         return RespContentUtil.wrapOrNotFound(Optional.ofNullable(location));
     }
 
@@ -129,7 +129,7 @@ public class LocationResource {
     @Timed
     @PreAuthorize("hasPermission({'id': #id}, 'location', 'LOCATION.DELETE')")
     public ResponseEntity<Void> deleteLocation(@PathVariable Long id) {
-        locationRepository.delete(id);
+        locationRepository.deleteById(id);
         return ResponseEntity.ok().headers(HeaderUtil.createEntityDeletionAlert(ENTITY_NAME, id.toString())).build();
     }
 }

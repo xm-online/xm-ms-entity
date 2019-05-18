@@ -2,6 +2,8 @@ package com.icthh.xm.ms.entity.config.tenant;
 
 import static org.junit.Assert.assertEquals;
 
+import com.icthh.xm.commons.migration.db.tenant.SchemaChangeResolver;
+import com.icthh.xm.ms.entity.AbstractUnitTest;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -11,7 +13,7 @@ import org.springframework.core.env.Environment;
 /**
  * Test schema change resolver.
  */
-public class SchemaChangeResolverUnitTest {
+public class SchemaChangeResolverUnitTest extends AbstractUnitTest {
 
     private SchemaChangeResolver resolver;
 

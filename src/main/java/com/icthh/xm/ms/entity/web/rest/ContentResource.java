@@ -115,7 +115,7 @@ public class ContentResource {
     @Timed
     @PostAuthorize("hasPermission({'returnObject': returnObject.body}, 'CONTENT.GET_LIST.ITEM')")
     public ResponseEntity<Content> getContent(@PathVariable Long id) {
-        Content content = contentRepository.findOne(id);
+        Content content = contentRepository.findById(id).orElse(null);
         return RespContentUtil.wrapOrNotFound(Optional.ofNullable(content));
     }
 
@@ -129,7 +129,7 @@ public class ContentResource {
     @Timed
     @PreAuthorize("hasPermission({'id': #id}, 'content', 'CONTENT.DELETE')")
     public ResponseEntity<Void> deleteContent(@PathVariable Long id) {
-        contentRepository.delete(id);
+        contentRepository.deleteById(id);
         return ResponseEntity.ok().headers(HeaderUtil.createEntityDeletionAlert(ENTITY_NAME, id.toString())).build();
     }
 

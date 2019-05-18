@@ -8,21 +8,17 @@ import static java.util.Arrays.asList;
 import static java.util.UUID.randomUUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 
 import com.icthh.xm.commons.lep.XmLepScriptConfigServerResourceLoader;
 import com.icthh.xm.commons.security.XmAuthenticationContext;
 import com.icthh.xm.commons.security.XmAuthenticationContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
-import com.icthh.xm.commons.tenant.spring.config.TenantContextConfiguration;
 import com.icthh.xm.lep.api.LepManager;
-import com.icthh.xm.ms.entity.EntityApp;
+import com.icthh.xm.ms.entity.AbstractSpringBootTest;
 import com.icthh.xm.ms.entity.config.MappingConfiguration;
-import com.icthh.xm.ms.entity.config.SecurityBeanOverrideConfiguration;
-import com.icthh.xm.ms.entity.config.tenant.WebappTenantOverrideConfiguration;
 import com.icthh.xm.ms.entity.domain.Attachment;
 import com.icthh.xm.ms.entity.domain.Calendar;
 import com.icthh.xm.ms.entity.domain.Comment;
@@ -37,37 +33,28 @@ import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
 import com.icthh.xm.ms.entity.service.ElasticsearchIndexService;
 import java.io.InputStream;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.security.test.context.support.WithMockUser;
-import org.springframework.test.context.junit4.SpringRunner;
-
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
 
 @Slf4j
-@RunWith(SpringRunner.class)
-@SpringBootTest(classes = {
-    EntityApp.class,
-    SecurityBeanOverrideConfiguration.class,
-    WebappTenantOverrideConfiguration.class,
-    TenantContextConfiguration.class
-})
-public class XmEntityServiceIntTest {
+public class XmEntityServiceIntTest extends AbstractSpringBootTest {
 
     @Autowired
     private TenantContextHolder tenantContextHolder;
@@ -97,7 +84,7 @@ public class XmEntityServiceIntTest {
     private XmAuthenticationContext context;
 
     @Before
-    public void beforeTransaction() {
+    public void before() {
         TenantContextUtils.setTenant(tenantContextHolder, "RESINTTEST");
         MockitoAnnotations.initMocks(this);
         when(authContextHolder.getContext()).thenReturn(context);
@@ -113,6 +100,7 @@ public class XmEntityServiceIntTest {
     @After
     public void afterTest() {
         tenantContextHolder.getPrivilegedContext().destroyCurrentContext();
+        lepManager.endThreadContext();
     }
 
     private XmEntity createXmEntity() {
@@ -198,13 +186,13 @@ public class XmEntityServiceIntTest {
 
         xmEntityService.delete(entity.getId());
 
-        assertThat(xmEntityRepository.exists(entity.getId())).isFalse();
+        assertThat(xmEntityRepository.existsById(entity.getId())).isFalse();
 
-        assertThat(xmEntityRepository.exists(breakLink.getId())).isTrue();
-        assertThat(xmEntityRepository.exists(cascadeDeleteLink.getId())).isFalse();
+        assertThat(xmEntityRepository.existsById(breakLink.getId())).isTrue();
+        assertThat(xmEntityRepository.existsById(cascadeDeleteLink.getId())).isFalse();
 
-        assertThat(xmEntityRepository.exists(cascadeBreakSubLinks.getId())).isTrue();
-        assertThat(xmEntityRepository.exists(cascadeDeleteSubLinks.getId())).isFalse();
+        assertThat(xmEntityRepository.existsById(cascadeBreakSubLinks.getId())).isTrue();
+        assertThat(xmEntityRepository.existsById(cascadeDeleteSubLinks.getId())).isFalse();
 
         xmEntityService.delete(breakLink.getId());
         xmEntityService.delete(cascadeBreakSubLinks.getId());
@@ -263,15 +251,15 @@ public class XmEntityServiceIntTest {
 
         xmEntityService.delete(entity.getId());
 
-        assertThat(xmEntityRepository.exists(parentEntity.getId())).isTrue();
+        assertThat(xmEntityRepository.existsById(parentEntity.getId())).isTrue();
 
-        assertThat(xmEntityRepository.exists(entity.getId())).isFalse();
+        assertThat(xmEntityRepository.existsById(entity.getId())).isFalse();
 
-        assertThat(xmEntityRepository.exists(breakLink.getId())).isTrue();
-        assertThat(xmEntityRepository.exists(cascadeDeleteLink.getId())).isFalse();
+        assertThat(xmEntityRepository.existsById(breakLink.getId())).isTrue();
+        assertThat(xmEntityRepository.existsById(cascadeDeleteLink.getId())).isFalse();
 
-        assertThat(xmEntityRepository.exists(cascadeBreakSubLinks.getId())).isTrue();
-        assertThat(xmEntityRepository.exists(cascadeDeleteSubLinks.getId())).isFalse();
+        assertThat(xmEntityRepository.existsById(cascadeBreakSubLinks.getId())).isTrue();
+        assertThat(xmEntityRepository.existsById(cascadeDeleteSubLinks.getId())).isFalse();
 
         xmEntityService.delete(breakLink.getId());
         xmEntityService.delete(cascadeBreakSubLinks.getId());
@@ -301,9 +289,9 @@ public class XmEntityServiceIntTest {
 
         xmEntityService.delete(deletedEntity.getId());
 
-        assertThat(xmEntityRepository.exists(otherEntity.getId())).isTrue();
-        assertThat(xmEntityRepository.exists(sharedEntity.getId())).isTrue();
-        assertThat(xmEntityRepository.exists(deletedEntity.getId())).isFalse();
+        assertThat(xmEntityRepository.existsById(otherEntity.getId())).isTrue();
+        assertThat(xmEntityRepository.existsById(sharedEntity.getId())).isTrue();
+        assertThat(xmEntityRepository.existsById(deletedEntity.getId())).isFalse();
 
         xmEntityService.delete(sharedEntity.getId());
         xmEntityService.delete(otherEntity.getId());
@@ -333,26 +321,48 @@ public class XmEntityServiceIntTest {
     @WithMockUser(authorities = "SUPER-ADMIN")
     public void testAdditionalMapping() {
         elasticsearchIndexService.reindexAll();
+
+        Map<String, Object> xmEntityData = new HashMap<>();
+        xmEntityData.put("targetField", "C-D");
+        xmEntityData.put("notSaveField", "FF-AA");
+
         XmEntity entity1 = new XmEntity().typeKey("TEST_SEARCH").name("A-B").key("E-F")
-            .data(of("targetField", "C-D"));
+            .data(xmEntityData);
         XmEntity entity2 = new XmEntity().typeKey("TEST_SEARCH").name("B-A").key("F-E")
             .data(of("targetField", "D-C"));
         xmEntityService.save(entity1);
         xmEntityService.save(entity2);
-        PageRequest page = new PageRequest(0, 10, new Sort("key"));
+        PageRequest page = PageRequest.of(0, 10, Sort.by("key"));
         Page<XmEntity> search = xmEntityService.search("data.targetField: C-D", page, null);
         assertEquals(search.getContent(), asList(entity1, entity2));
         Page<XmEntity> searchByKey = xmEntityService.search("key: F-E", page, null);
         assertEquals(searchByKey.getContent(), asList(entity2));
+        Page<XmEntity> searchByKeyword = xmEntityService.search("data.targetField.keyword: C-D", page, null);
+        assertEquals(searchByKeyword.getContent(), asList(entity1));
 
-        String mapping = loadFile("config/test-mapping.json");
-        mappingConfiguration.onRefresh("/config/tenants/RESINTTEST/entity/mapping.json", mapping);
-        elasticsearchIndexService.reindexAll();
-
+        reindexWithMapping("config/test-mapping.json");
         Page<XmEntity> searchWithMapping = xmEntityService.search("data.targetField: C-D", page, null);
         assertEquals(searchWithMapping.getContent(), asList(entity1));
         Page<XmEntity> searchByKeyWithMapping = xmEntityService.search("key: F-E", page, null);
+        assertNotEquals(searchByKeyWithMapping.getContent(), asList(entity2));
+
+        reindexWithMapping("config/test-mapping-with-not-analyzed-key.json");
+        searchWithMapping = xmEntityService.search("data.targetField: C-D", page, null);
+        assertEquals(searchWithMapping.getContent(), asList(entity1));
+        searchByKeyWithMapping = xmEntityService.search("key.keyword: F-E", page, null);
         assertEquals(searchByKeyWithMapping.getContent(), asList(entity2));
+
+        reindexWithMapping("config/test-mapping-with-not-save-field.json");
+        searchWithMapping = xmEntityService.search("data.targetField: C-D", page, null);
+        assertNotEquals(searchWithMapping.getContent(), asList(entity1));
+        xmEntityData.remove("notSaveField");
+        assertEquals(searchWithMapping.getContent().get(0).getData(), xmEntityData);
+    }
+
+    private void reindexWithMapping(String mappingPath) {
+        String mapping = loadFile(mappingPath);
+        mappingConfiguration.onRefresh("/config/tenants/RESINTTEST/entity/mapping.json", mapping);
+        elasticsearchIndexService.reindexAll();
     }
 
     @SneakyThrows
