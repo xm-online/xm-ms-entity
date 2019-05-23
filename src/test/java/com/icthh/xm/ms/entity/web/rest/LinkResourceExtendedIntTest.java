@@ -236,7 +236,7 @@ public class LinkResourceExtendedIntTest extends AbstractSpringBootTest {
                        .andExpect(jsonPath("$.[*].target.stateKey").value(everyItem(notNullValue())))
                        .andExpect(jsonPath("$.[*].target.name").value(everyItem(notNullValue())))
                        .andExpect(jsonPath("$.[*].target.startDate").value(everyItem(notNullValue())))
-                       .andExpect(jsonPath("$.[*].target.startDate").value(everyItem(notNullValue())))
+                       .andExpect(jsonPath("$.[*].target.endDate").value(everyItem(notNullValue())))
                        .andExpect(jsonPath("$.[*].target.updateDate").value(everyItem(notNullValue())))
                        .andExpect(jsonPath("$.[*].target.description").value(everyItem(notNullValue())))
                        .andExpect(jsonPath("$.[*].target.createdBy").value(everyItem(notNullValue())))

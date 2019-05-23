@@ -144,11 +144,11 @@ public class XmEntityResourceExtendedIntTest extends AbstractSpringBootTest {
 
     private static final String DEFAULT_NAME = "AAAAAAAAAA";
 
-    private static final Instant DEFAULT_START_DATE = Instant.ofEpochMilli(0L);
+    private static final Instant DEFAULT_START_DATE = Instant.ofEpochMilli(1000L);
 
-    private static final Instant DEFAULT_UPDATE_DATE = Instant.ofEpochMilli(0L);
+    private static final Instant DEFAULT_UPDATE_DATE = Instant.ofEpochMilli(2000L);
 
-    private static final Instant DEFAULT_END_DATE = Instant.ofEpochMilli(0L);
+    private static final Instant DEFAULT_END_DATE = Instant.ofEpochMilli(3000L);
 
     private static final String DEFAULT_AVATAR_URL_PREFIX = "http://xm-avatar.rgw.icthh.test:7480/";
 
@@ -749,19 +749,36 @@ public class XmEntityResourceExtendedIntTest extends AbstractSpringBootTest {
     public void getXmEntitySourcesLinksByTypeKey() throws Exception {
 
         XmEntity target = xmEntityService.save(createEntity().name("TARGET"));
-        XmEntity source1 = xmEntityService.save(createEntity().name("SOURCE1"));
-        XmEntity source2 = xmEntityService.save(createEntity()).name("SOURCE2");
+        XmEntity source1 = xmEntityService.save(createEntity().name("SOURCE1").createdBy("admin"));
+        XmEntity source2 = xmEntityService.save(createEntity().name("SOURCE2").createdBy("admin"));
 
         // should not appear in output
         XmEntity targetOther = xmEntityService.save(createEntity().name("TARGET_OTHER"));
 
+        String lnkName = DEFAULT_NAME;
+        String lnkDescription = DEFAULT_DESCRIPTION;
+        Instant lnkStart = Instant.now();
+        Instant lnkEnd = lnkStart.plusMillis(1000);
+
         source1.getTargets().clear();
-        source1.getTargets().add(new Link().typeKey("LINK1").source(source1).target(target));
-        source1.getTargets().add(new Link().typeKey("LINK1").source(source1).target(targetOther));
+        source1.getTargets().add(new Link().typeKey("LINK1")
+                                           .name(lnkName).description(lnkDescription)
+                                           .startDate(lnkStart).endDate(lnkEnd)
+                                           .source(source1).target(target));
+        source1.getTargets().add(new Link().typeKey("LINK1")
+                                           .name(lnkName).description(lnkDescription)
+                                           .startDate(lnkStart).endDate(lnkEnd)
+                                           .source(source1).target(targetOther));
 
         source2.getTargets().clear();
-        source2.getTargets().add(new Link().typeKey("LINK1").source(source2).target(target));
-        source2.getTargets().add(new Link().typeKey("LINK2").source(source2).target(target));
+        source2.getTargets().add(new Link().typeKey("LINK1")
+                                           .name(lnkName).description(lnkDescription)
+                                           .startDate(lnkStart).endDate(lnkEnd)
+                                           .source(source2).target(target));
+        source2.getTargets().add(new Link().typeKey("LINK2")
+                                           .name(lnkName).description(lnkDescription)
+                                           .startDate(lnkStart).endDate(lnkEnd)
+                                           .source(source2).target(target));
 
         assertNotNull(target.getId());
         assertNotNull(source1.getId());
@@ -776,11 +793,44 @@ public class XmEntityResourceExtendedIntTest extends AbstractSpringBootTest {
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
             .andExpect(jsonPath("$", hasSize(2)))
-            .andExpect(jsonPath("$.[*].typeKey").value(hasItem("LINK1")))
+            .andExpect(jsonPath("$.[*].id").value(everyItem(notNullValue())))
+            .andExpect(jsonPath("$.[*].typeKey").value(everyItem(is("LINK1"))))
+            .andExpect(jsonPath("$.[*].name").value(everyItem(is(lnkName))))
+            .andExpect(jsonPath("$.[*].description").value(everyItem(is(lnkDescription))))
+            .andExpect(jsonPath("$.[*].startDate").value(everyItem(is(lnkStart.toString()))))
+            .andExpect(jsonPath("$.[*].endDate").value(everyItem(is(lnkEnd.toString()))))
             .andExpect(jsonPath("$.[*].target").value(containsInAnyOrder(targetId, targetId)))
+
+            .andExpect(jsonPath("$.[*].source").exists())
             .andExpect(jsonPath("$.[*].source.id").value(containsInAnyOrder(srcId1, srcId2)))
             .andExpect(jsonPath("$.[*].source.name").value(containsInAnyOrder("SOURCE1", "SOURCE2")))
+            .andExpect(jsonPath("$.[*].source.key").value(everyItem(is(DEFAULT_KEY))))
+            .andExpect(jsonPath("$.[*].source.typeKey").value(everyItem(is(DEFAULT_TYPE_KEY))))
+            .andExpect(jsonPath("$.[*].source.stateKey").value(everyItem(is(DEFAULT_STATE_KEY))))
+            .andExpect(jsonPath("$.[*].source.startDate").value(everyItem(is(MOCKED_START_DATE.toString()))))
+            .andExpect(jsonPath("$.[*].source.endDate").value(everyItem(is(DEFAULT_END_DATE.toString()))))
+            .andExpect(jsonPath("$.[*].source.updateDate").value(everyItem(is(MOCKED_UPDATE_DATE.toString()))))
+            .andExpect(jsonPath("$.[*].source.description").value(everyItem(is(DEFAULT_DESCRIPTION))))
+            .andExpect(jsonPath("$.[*].source.createdBy").value(everyItem(is("admin"))))
+            .andExpect(jsonPath("$.[*].source.removed").value(everyItem(is(false))))
+            .andExpect(jsonPath("$.[*].source.data").exists())
+            .andExpect(jsonPath("$.[*].source.data.AAAAAAAAAA").value(everyItem(is("BBBBBBBBBB"))))
+
             .andExpect(jsonPath("$.[*].source.targets").doesNotExist())
+            .andExpect(jsonPath("$.[*].source.sources").doesNotExist())
+            .andExpect(jsonPath("$.[*].source.avatarUrlRelative").doesNotExist())
+            .andExpect(jsonPath("$.[*].source.avatarUrlFull").doesNotExist())
+            .andExpect(jsonPath("$.[*].source.version").doesNotExist())
+            .andExpect(jsonPath("$.[*].source.attachments").doesNotExist())
+            .andExpect(jsonPath("$.[*].source.locations").doesNotExist())
+            .andExpect(jsonPath("$.[*].source.tags").doesNotExist())
+            .andExpect(jsonPath("$.[*].source.calendars").doesNotExist())
+            .andExpect(jsonPath("$.[*].source.ratings").doesNotExist())
+            .andExpect(jsonPath("$.[*].source.comments").doesNotExist())
+            .andExpect(jsonPath("$.[*].source.votes").doesNotExist())
+            .andExpect(jsonPath("$.[*].source.functionContexts").doesNotExist())
+            .andExpect(jsonPath("$.[*].source.events").doesNotExist())
+            .andExpect(jsonPath("$.[*].source.uniqueFields").doesNotExist())
         ;
 
     }
@@ -1956,7 +2006,7 @@ public class XmEntityResourceExtendedIntTest extends AbstractSpringBootTest {
             .andExpect(jsonPath("$.[*].target.stateKey").value(everyItem(is(DEFAULT_STATE_KEY))))
             .andExpect(jsonPath("$.[*].target.name").value(everyItem(is(DEFAULT_NAME))))
             .andExpect(jsonPath("$.[*].target.startDate").value(everyItem(is(tgtStartDate))))
-            .andExpect(jsonPath("$.[*].target.startDate").value(everyItem(is(tgtEndDate))))
+            .andExpect(jsonPath("$.[*].target.endDate").value(everyItem(is(tgtEndDate))))
             .andExpect(jsonPath("$.[*].target.updateDate").value(everyItem(is(tgtUpdateDate))))
             .andExpect(jsonPath("$.[*].target.description").value(everyItem(is(defDescription))))
             .andExpect(jsonPath("$.[*].target.createdBy").value(everyItem(is(tgtCreatedBy))))
@@ -2055,7 +2105,7 @@ public class XmEntityResourceExtendedIntTest extends AbstractSpringBootTest {
             .andExpect(jsonPath("$.[*].target.stateKey").doesNotExist())
             .andExpect(jsonPath("$.[*].target.name").doesNotExist())
             .andExpect(jsonPath("$.[*].target.startDate").doesNotExist())
-            .andExpect(jsonPath("$.[*].target.startDate").doesNotExist())
+            .andExpect(jsonPath("$.[*].target.endDate").doesNotExist())
             .andExpect(jsonPath("$.[*].target.updateDate").doesNotExist())
             .andExpect(jsonPath("$.[*].target.description").doesNotExist())
             .andExpect(jsonPath("$.[*].target.createdBy").doesNotExist())
