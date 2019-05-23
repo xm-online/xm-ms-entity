@@ -400,3 +400,32 @@ types:
               }
             }
           }
+    - key: TEST_LIFECYCLE_TYPE_KEY.SUB.CHILD
+      isApp: false
+      isAbstract: false
+      dataSpec: |
+          {
+            "type": "object",
+            "properties": {
+              "called": {
+                "type": "string"
+              }
+            }
+          }
+      states:
+          - key: STATE1
+            next:
+                - stateKey: STATE2
+          - key: STATE2
+    - key: TEST_LIFECYCLE_TYPE_KEY.SUB.CHILD.SUBCHILD.NEXTCHILD
+      isApp: false
+      isAbstract: false
+      dataSpec: |
+          {
+            "type": "object",
+            "properties": {
+              "called": {
+                "type": "string"
+              }
+            }
+          }

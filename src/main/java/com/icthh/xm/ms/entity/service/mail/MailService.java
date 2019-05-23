@@ -8,7 +8,6 @@ import static org.springframework.context.i18n.LocaleContextHolder.getLocaleCont
 import static org.springframework.context.i18n.LocaleContextHolder.setLocale;
 import static org.springframework.context.i18n.LocaleContextHolder.setLocaleContext;
 
-import com.icthh.xm.commons.config.client.service.TenantConfigService;
 import com.icthh.xm.commons.i18n.spring.service.LocalizationMessageService;
 import com.icthh.xm.commons.logging.aop.IgnoreLogginAspect;
 import com.icthh.xm.commons.logging.util.MdcUtils;
@@ -16,6 +15,8 @@ import com.icthh.xm.commons.tenant.PlainTenant;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
 import com.icthh.xm.commons.tenant.TenantKey;
+import com.icthh.xm.ms.entity.config.XmEntityTenantConfigService;
+import com.icthh.xm.ms.entity.config.XmEntityTenantConfigService.XmEntityTenantConfig.MailSetting;
 import freemarker.template.Configuration;
 import freemarker.template.Template;
 import freemarker.template.TemplateException;
@@ -27,8 +28,9 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import javax.annotation.Resource;
-import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
+import lombok.AllArgsConstructor;
+import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.MessageSource;
@@ -51,18 +53,13 @@ import org.springframework.ui.freemarker.FreeMarkerTemplateUtils;
 @IgnoreLogginAspect
 public class MailService {
 
-    private static final String MAIL_SETTINGS = "mailSettings";
-    private static final String TEMPLATE_NAME = "templateName";
-    private static final String SUBJECT = "subject";
-    private static final String FROM = "from";
-
     private final JHipsterProperties jHipsterProperties;
     private final JavaMailSender javaMailSender;
     private final MessageSource messageSource;
     private final TenantEmailTemplateService tenantEmailTemplateService;
     private final Configuration freeMarkerConfiguration;
     private final TenantContextHolder tenantContextHolder;
-    private final TenantConfigService tenantConfigService;
+    private final XmEntityTenantConfigService tenantConfigService;
     private final LocalizationMessageService localizationMessageService;
 
     @Resource
@@ -223,11 +220,12 @@ public class MailService {
 
                 Template mailTemplate = new Template(templateKey, emailTemplate, freeMarkerConfiguration);
                 String content = FreeMarkerTemplateUtils.processTemplateIntoString(mailTemplate, objectModel);
+                MailParams mailParams = resolve(subject, from, templateName, locale);
                 sendEmail(
                     email,
-                    resolve(SUBJECT, subject, templateName, locale),
+                    mailParams.getSubject(),
                     content,
-                    resolve(FROM, from, templateName, locale),
+                    mailParams.getFrom(),
                     attachmentFilename,
                     dataSource
                 );
@@ -245,29 +243,21 @@ public class MailService {
         return jHipsterProperties.getMail().getFrom().replace("<tenantname>", tenantKey.getValue());
     }
 
-    private String resolve(String key, String defaultValue, String templateName, Locale locale) {
-        Object settings = tenantConfigService.getConfig().get(MAIL_SETTINGS);
+    private MailParams resolve(String subject, String from, String templateName, Locale locale) {
+        MailParams mailParams = new MailParams(subject, from);
+
+        List<MailSetting> settings = tenantConfigService.getXmEntityTenantConfig().getMailSettings();
         LocaleContext localeContext = getLocaleContext();
         setLocale(locale);
 
-        String result = Optional.ofNullable(settings)
-            .filter(List.class::isInstance).map(it -> (List<Object>)it)
-            .flatMap(mailSettings ->
-                mailSettings.stream()
-                    .filter(Map.class::isInstance).map(it -> (Map<String, Object>)it)
-                    // find by templateName
-                    .filter(it -> templateName.equals(it.get(TEMPLATE_NAME)))
-                    .findFirst()
-                    // get from of subject or etc it exists...
-                    .filter(it -> it.containsKey(key))
-                    .map(it -> it.get(key))
-                    // get localized name
-                    .filter(Map.class::isInstance).map(it -> (Map<String, String>)it)
-                    .flatMap(this::getI18nName)
-            ).orElse(defaultValue);
+        mailParams = settings.stream().filter(it -> templateName.equals(it.getTemplateName()))
+                .findFirst()
+                .map(mailSetting -> new MailParams(getI18nName(mailSetting.getSubject()).orElse(subject),
+                                                   getI18nName(mailSetting.getFrom()).orElse(from)))
+                .orElse(mailParams);
 
         setLocaleContext(localeContext);
-        return result;
+        return mailParams;
     }
 
     private Optional<String> getI18nName(Map<String, String> name) {
@@ -315,6 +305,16 @@ public class MailService {
             } else {
                 log.warn("Email could not be sent to user '{}': {}", to, e.getMessage());
             }
+        }
+    }
+
+    @Data
+    private static class MailParams {
+        private String subject;
+        private String from;
+        MailParams(String subject, String from) {
+            this.subject = subject;
+            this.from = from;
         }
     }
 }

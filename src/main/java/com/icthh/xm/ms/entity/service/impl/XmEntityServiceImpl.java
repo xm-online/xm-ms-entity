@@ -45,6 +45,7 @@ import com.icthh.xm.ms.entity.domain.spec.UniqueFieldSpec;
 import com.icthh.xm.ms.entity.domain.template.TemplateParamsHolder;
 import com.icthh.xm.ms.entity.lep.keyresolver.TemplateTypeKeyResolver;
 import com.icthh.xm.ms.entity.lep.keyresolver.TypeKeyResolver;
+import com.icthh.xm.ms.entity.lep.keyresolver.TypeKeyWithExtends;
 import com.icthh.xm.ms.entity.lep.keyresolver.XmEntityTypeKeyResolver;
 import com.icthh.xm.ms.entity.projection.XmEntityIdKeyTypeKey;
 import com.icthh.xm.ms.entity.projection.XmEntityStateProjection;
@@ -65,7 +66,6 @@ import com.icthh.xm.ms.entity.service.XmEntityTemplatesSpecService;
 import com.icthh.xm.ms.entity.service.dto.LinkSourceDto;
 import com.jayway.jsonpath.DocumentContext;
 import com.jayway.jsonpath.JsonPath;
-
 import java.net.URI;
 import java.time.Instant;
 import java.util.Collections;
@@ -76,7 +76,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
-
+import javax.annotation.Nullable;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -84,6 +84,7 @@ import org.apache.commons.lang.text.StrSubstitutor;
 import org.apache.commons.lang3.StringUtils;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -94,7 +95,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.ObjectUtils;
 import org.springframework.web.multipart.MultipartFile;
-import javax.annotation.Nullable;
 
 /**
  * Service Implementation for managing XmEntity.
@@ -121,6 +121,7 @@ public class XmEntityServiceImpl implements XmEntityService {
     private final ObjectMapper objectMapper;
     private final UniqueFieldRepository uniqueFieldRepository;
     private final SpringXmEntityRepository springXmEntityRepository;
+    private final TypeKeyWithExtends typeKeyWithExtends;
 
     private XmEntityServiceImpl self;
 
@@ -133,7 +134,17 @@ public class XmEntityServiceImpl implements XmEntityService {
      */
     @LogicExtensionPoint(value = "Save", resolver = XmEntityTypeKeyResolver.class)
     public XmEntity save(XmEntity xmEntity) {
-        return self.saveXmEntity(xmEntity);
+        // without self for avoid call lep
+        return save(xmEntity, xmEntity.getTypeKey());
+    }
+
+    @LogicExtensionPoint(value = "Save", resolver = TypeKeyResolver.class)
+    public XmEntity save(XmEntity xmEntity, String typeKey) {
+        if (typeKeyWithExtends.doInheritance(typeKey)) {
+            return self.save(xmEntity, typeKeyWithExtends.nextTypeKey(typeKey));
+        } else {
+            return self.saveXmEntity(xmEntity);
+        }
     }
 
     /**
@@ -321,19 +332,24 @@ public class XmEntityServiceImpl implements XmEntityService {
         if (idOrKey.isKey()) {
             throw new IllegalArgumentException("Key mode is not supported yet");
         }
-        return self.getOneEntity(xmEntityRepository.findOne(idOrKey.getId(), embed));
+        XmEntity xmEntity = xmEntityRepository.findOne(idOrKey.getId(), embed);
+        return xmEntity == null ? xmEntity : self.getOneEntity(xmEntity, xmEntity.getTypeKey());
     }
 
 
     private XmEntity findOneById(Long xmEntityId) {
         XmEntity xmEntity = xmEntityRepository.findOneById(xmEntityId);
-        return self.getOneEntity(xmEntity);
+        return xmEntity == null ? xmEntity : self.getOneEntity(xmEntity, xmEntity.getTypeKey());
     }
 
     // need for lep post processing with split script by typeKey
     @LogicExtensionPoint(value = "FindOnePostProcessing", resolver = XmEntityTypeKeyResolver.class)
-    public XmEntity getOneEntity(XmEntity xmEntity) {
-        return xmEntity;
+    public XmEntity getOneEntity(XmEntity xmEntity, String typeKey) {
+        if (typeKeyWithExtends.doInheritance(typeKey)) {
+            return self.getOneEntity(xmEntity, typeKeyWithExtends.nextTypeKey(typeKey));
+        } else {
+            return xmEntity;
+        }
     }
 
     @Override
@@ -368,7 +384,16 @@ public class XmEntityServiceImpl implements XmEntityService {
 
     @LogicExtensionPoint(value = "Delete", resolver = XmEntityTypeKeyResolver.class)
     public void deleteXmEntityByTypeKeyLep(XmEntity xmEntity) {
-        self.deleteXmEntityGeneralLep(xmEntity.getId(), xmEntity);
+        deleteXmEntityWithTypeKeyInheritance(xmEntity, xmEntity.getTypeKey());
+    }
+
+    @LogicExtensionPoint(value = "Delete", resolver = TypeKeyResolver.class)
+    private void deleteXmEntityWithTypeKeyInheritance(XmEntity xmEntity, String typeKey) {
+        if (typeKeyWithExtends.doInheritance(typeKey)) {
+            self.deleteXmEntityWithTypeKeyInheritance(xmEntity, typeKeyWithExtends.nextTypeKey(typeKey));
+        } else {
+            self.deleteXmEntityGeneralLep(xmEntity.getId(), xmEntity);
+        }
     }
 
     @SuppressWarnings("unused")

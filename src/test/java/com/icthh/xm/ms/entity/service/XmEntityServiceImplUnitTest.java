@@ -23,6 +23,7 @@ import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.domain.spec.StateSpec;
 import com.icthh.xm.ms.entity.domain.spec.TypeSpec;
 import com.icthh.xm.ms.entity.domain.spec.UniqueFieldSpec;
+import com.icthh.xm.ms.entity.lep.keyresolver.TypeKeyWithExtends;
 import com.icthh.xm.ms.entity.projection.XmEntityStateProjection;
 import com.icthh.xm.ms.entity.repository.UniqueFieldRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityRepositoryInternal;
@@ -66,6 +67,8 @@ public class XmEntityServiceImplUnitTest extends AbstractUnitTest {
     TenantConfigService tenantConfigService;
     @Mock
     UniqueFieldRepository uniqueFieldRepository;
+    @Mock
+    TypeKeyWithExtends typeKeyWithExtends;
 
     @Spy
     private ObjectMapper mapper = new ObjectMapper();
@@ -78,6 +81,7 @@ public class XmEntityServiceImplUnitTest extends AbstractUnitTest {
 
     @Test
     public void setUniqFieldIfExists() {
+        when(typeKeyWithExtends.doInheritance(TEST_TYPE_KEY)).thenReturn(false);
         when(startUpdateDateGenerationStrategy.preProcessStartUpdateDates(any(), any(), any(), any(), any(), any()))
             .thenReturn(Optional.of(new XmEntity()));
 

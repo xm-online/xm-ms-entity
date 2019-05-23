@@ -54,6 +54,7 @@ import com.icthh.xm.ms.entity.AbstractSpringBootTest;
 import com.icthh.xm.ms.entity.config.ApplicationProperties;
 import com.icthh.xm.ms.entity.config.Constants;
 import com.icthh.xm.ms.entity.config.InternalTransactionService;
+import com.icthh.xm.ms.entity.config.XmEntityTenantConfigService;
 import com.icthh.xm.ms.entity.domain.Attachment;
 import com.icthh.xm.ms.entity.domain.Calendar;
 import com.icthh.xm.ms.entity.domain.Content;
@@ -63,6 +64,7 @@ import com.icthh.xm.ms.entity.domain.Location;
 import com.icthh.xm.ms.entity.domain.Tag;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.domain.ext.IdOrKey;
+import com.icthh.xm.ms.entity.lep.keyresolver.TypeKeyWithExtends;
 import com.icthh.xm.ms.entity.repository.SpringXmEntityRepository;
 import com.icthh.xm.ms.entity.repository.UniqueFieldRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityPermittedRepository;
@@ -276,7 +278,7 @@ public class XmEntityResourceExtendedIntTest extends AbstractSpringBootTest {
     ObjectMapper objectMapper;
 
     @Autowired
-    TenantConfigService tenantConfigService;
+    XmEntityTenantConfigService tenantConfigService;
 
     @Autowired
     XmEntityPermittedSearchRepository xmEntityPermittedSearchRepository;
@@ -346,7 +348,8 @@ public class XmEntityResourceExtendedIntTest extends AbstractSpringBootTest {
                                                                       authContextHolder,
                                                                       objectMapper,
                                                                       mock(UniqueFieldRepository.class),
-                                                                      springXmEntityRepository);
+                                                                      springXmEntityRepository,
+                                                                      new TypeKeyWithExtends(tenantConfigService));
 
         xmEntityService.setSelf(xmEntityService);
         this.xmEntityService = xmEntityService;

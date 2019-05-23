@@ -3,7 +3,6 @@ package com.icthh.xm.ms.entity.service;
 import static com.google.common.collect.ImmutableMap.of;
 import static com.google.common.collect.Maps.newHashMap;
 import static com.icthh.xm.ms.entity.security.access.DynamicPermissionCheckService.CONFIG_SECTION;
-import static com.icthh.xm.ms.entity.security.access.DynamicPermissionCheckService.DYNAMIC_FUNCTION_PERMISSION_FEATURE;
 import static com.icthh.xm.ms.entity.util.CustomCollectionUtils.nullSafe;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
@@ -21,6 +20,8 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.icthh.xm.commons.config.client.config.XmConfigProperties;
 import com.icthh.xm.commons.config.client.repository.CommonConfigRepository;
 import com.icthh.xm.commons.config.client.repository.TenantConfigRepository;
 import com.icthh.xm.commons.config.client.service.TenantConfigService;
@@ -33,6 +34,7 @@ import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantKey;
 import com.icthh.xm.ms.entity.AbstractUnitTest;
 import com.icthh.xm.ms.entity.config.ApplicationProperties;
+import com.icthh.xm.ms.entity.config.XmEntityTenantConfigService;
 import com.icthh.xm.ms.entity.config.tenant.LocalXmEntitySpecService;
 import com.icthh.xm.ms.entity.domain.spec.AttachmentSpec;
 import com.icthh.xm.ms.entity.domain.spec.FunctionSpec;
@@ -63,6 +65,8 @@ import org.mockito.Spy;
 import org.springframework.core.io.ClassPathResource;
 
 public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
+
+    private static final String DYNAMIC_FUNCTION_PERMISSION_FEATURE = "dynamicPermissionCheckEnabled";
 
     private static final String TENANT = "TEST";
 
@@ -98,8 +102,15 @@ public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
     @InjectMocks
     @Spy
     private DynamicPermissionCheckService dynamicPermissionCheckService;
-    @Mock
-    private TenantConfigService tenantConfig;
+    @Spy
+    private XmEntityTenantConfigService tenantConfig = new XmEntityTenantConfigService(new XmConfigProperties(),
+                                                                                       tenantContextHolder());
+
+    private TenantContextHolder tenantContextHolder() {
+        TenantContextHolder mock = mock(TenantContextHolder.class);
+        when(mock.getTenantKey()).thenReturn("XM");
+        return mock;
+    }
 
     @Before
     @SneakyThrows
@@ -146,7 +157,7 @@ public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
     @Test
     public void testFindAllTypes() {
 
-        given(tenantConfig.getConfig()).willReturn(newHashMap());
+        prepareConfig(newHashMap());
         List<TypeSpec> types = xmEntitySpecService.findAllTypes();
         assertNotNull(types);
         assertEquals(5, types.size());
@@ -160,9 +171,14 @@ public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
 
     }
 
+    @SneakyThrows
+    public void prepareConfig(Map<String, Object> map) {
+        tenantConfig.onRefresh("/config/tenants/XM/tenant-config.yml", new ObjectMapper().writeValueAsString(map));
+    }
+
     @Test
     public void testFindAllTypesWithFunctionFilterAndNoPrivilege() {
-        given(tenantConfig.getConfig()).willReturn(getMockedConfig(CONFIG_SECTION,
+        prepareConfig(getMockedConfig(CONFIG_SECTION,
             DYNAMIC_FUNCTION_PERMISSION_FEATURE, Boolean.TRUE));
 
         List<TypeSpec> types = xmEntitySpecService.findAllTypes();
@@ -179,7 +195,7 @@ public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
 
     @Test
     public void testFindAllAppTypes() {
-        given(tenantConfig.getConfig()).willReturn(newHashMap());
+        prepareConfig(newHashMap());
         List<TypeSpec> types = xmEntitySpecService.findAllAppTypes();
         assertNotNull(types);
         assertEquals(3, types.size());
@@ -193,7 +209,7 @@ public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
 
     @Test
     public void testFindAllAppTypesWithFunctionFilterAndNoPrivilege() {
-        given(tenantConfig.getConfig()).willReturn(getMockedConfig(CONFIG_SECTION,
+        prepareConfig(getMockedConfig(CONFIG_SECTION,
             DYNAMIC_FUNCTION_PERMISSION_FEATURE, Boolean.TRUE));
         List<TypeSpec> types = xmEntitySpecService.findAllAppTypes();
         assertNotNull(types);
@@ -209,7 +225,7 @@ public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
 
     @Test
     public void testFindAllNonAbstractTypes() {
-        given(tenantConfig.getConfig()).willReturn(newHashMap());
+        prepareConfig(newHashMap());
         List<TypeSpec> types = xmEntitySpecService.findAllNonAbstractTypes();
         assertNotNull(types);
         assertEquals(4, types.size());
@@ -223,7 +239,7 @@ public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
 
     @Test
     public void testFindAllNonAbstractTypesWithFunctionFilterAndNoPrivilege() {
-        given(tenantConfig.getConfig()).willReturn(getMockedConfig(CONFIG_SECTION,
+        prepareConfig(getMockedConfig(CONFIG_SECTION,
             DYNAMIC_FUNCTION_PERMISSION_FEATURE, Boolean.TRUE));
 
         List<TypeSpec> types = xmEntitySpecService.findAllNonAbstractTypes();
