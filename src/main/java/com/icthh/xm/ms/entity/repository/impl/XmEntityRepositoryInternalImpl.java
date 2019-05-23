@@ -1,18 +1,16 @@
 package com.icthh.xm.ms.entity.repository.impl;
 
-import com.icthh.xm.commons.config.client.service.TenantConfigService;
+import com.icthh.xm.ms.entity.config.XmEntityTenantConfigService;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.projection.XmEntityIdKeyTypeKey;
 import com.icthh.xm.ms.entity.projection.XmEntityStateProjection;
 import com.icthh.xm.ms.entity.projection.XmEntityVersion;
 import com.icthh.xm.ms.entity.repository.SpringXmEntityRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityRepositoryInternal;
-
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Example;
@@ -29,7 +27,7 @@ import org.springframework.stereotype.Component;
 public class XmEntityRepositoryInternalImpl implements XmEntityRepositoryInternal {
 
     private final SpringXmEntityRepository springXmEntityRepository;
-    private final TenantConfigService tenantConfigService;
+    private final XmEntityTenantConfigService tenantConfigService;
 
     @Override
     public XmEntity findOneByIdForUpdate(@Param("id") Long id) {
@@ -281,8 +279,6 @@ public class XmEntityRepositoryInternalImpl implements XmEntityRepositoryInterna
     }
 
     private boolean isEntityVersionEnabled() {
-        return Optional.ofNullable(tenantConfigService.getConfig().get("entityVersionControl"))
-            .filter(it -> it instanceof Map).map(Map.class::cast)
-            .map(it -> it.get("enabled")).map(it -> (boolean) it).orElse(false);
+        return tenantConfigService.getXmEntityTenantConfig().getEntityVersionControl().getEnabled();
     }
 }

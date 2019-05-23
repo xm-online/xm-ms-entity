@@ -13,22 +13,29 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.io.ByteStreams;
+import com.icthh.xm.commons.config.client.config.XmConfigProperties;
 import com.icthh.xm.commons.config.client.service.TenantConfigService;
 import com.icthh.xm.commons.i18n.spring.service.LocalizationMessageService;
 import com.icthh.xm.commons.tenant.PrivilegedTenantContext;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantKey;
 import com.icthh.xm.ms.entity.AbstractUnitTest;
+import com.icthh.xm.ms.entity.config.XmEntityTenantConfigService;
 import com.icthh.xm.ms.entity.service.mail.MailService;
 import com.icthh.xm.ms.entity.service.mail.TenantEmailTemplateService;
 import freemarker.template.Configuration;
+import java.util.Map;
 import lombok.SneakyThrows;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.core.io.ByteArrayResource;
@@ -44,7 +51,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
-@RunWith(MockitoJUnitRunner.class)
 public class MailServiceUnitTest extends AbstractUnitTest {
 
     private static final String MAIL_SETTINGS = "mailSettings";
@@ -73,11 +79,17 @@ public class MailServiceUnitTest extends AbstractUnitTest {
     @Spy
     private Configuration freeMarkerConfiguration = new Configuration(Configuration.VERSION_2_3_0);
     @Mock
-    private TenantConfigService tenantConfigService;
-    @Mock
     private LocalizationMessageService localizationMessageService;
-    @Mock
-    private TenantContextHolder tenantContextHolder;
+    private TenantContextHolder tenantContextHolder = mock(TenantContextHolder.class);
+    @Spy
+    private XmEntityTenantConfigService tenantConfigService;
+
+    @Before
+    public void before() {
+        tenantConfigService = new XmEntityTenantConfigService(new XmConfigProperties(), tenantContextHolder);
+        MockitoAnnotations.initMocks(this);
+        when(tenantContextHolder.getTenantKey()).thenReturn("XM");
+    }
 
     @Test
     @SneakyThrows
@@ -94,7 +106,7 @@ public class MailServiceUnitTest extends AbstractUnitTest {
     @Test
     @SneakyThrows
     public void ifInConfigMailSettingsNoListReturnDefault() {
-        when(tenantConfigService.getConfig()).thenReturn(new HashMap<String, Object>() {{
+        prepareConfig(new HashMap<String, Object>() {{
             put(MAIL_SETTINGS, new HashMap<>());
         }});
 
@@ -129,13 +141,12 @@ public class MailServiceUnitTest extends AbstractUnitTest {
     @Test
     @SneakyThrows
     public void ifInConfigNoTemplateReturnDefault() {
-        when(tenantConfigService.getConfig()).thenReturn(
-            of(MAIL_SETTINGS, asList(of(
-                TEMPLATE_NAME, "OTHER_TEMPLATE",
-                SUBJECT, of(ENGLISH.getLanguage(), "otherSubject"),
-                FROM, of(ENGLISH.getLanguage(), "otherFrom")
-            )))
-        );
+        Map<String, Object> map = of(MAIL_SETTINGS, asList(of(
+            TEMPLATE_NAME, "OTHER_TEMPLATE",
+            SUBJECT, of(ENGLISH.getLanguage(), "otherSubject"),
+            FROM, of(ENGLISH.getLanguage(), "otherFrom"))));
+
+        prepareConfig(map);
 
         MimeMessage mock = sendEmail();
 
@@ -146,14 +157,15 @@ public class MailServiceUnitTest extends AbstractUnitTest {
         verify(javaMailSender).send(mock);
     }
 
+    @SneakyThrows
+    public void prepareConfig(Map<String, Object> map) {
+        tenantConfigService.onRefresh("/config/tenants/XM/tenant-config.yml", new ObjectMapper().writeValueAsString(map));
+    }
+
     @Test
     @SneakyThrows
     public void ifInConfigNoFieldReturnDefault() {
-        when(tenantConfigService.getConfig()).thenReturn(
-            of(MAIL_SETTINGS, asList(of(
-                TEMPLATE_NAME, EMAIL_TEMPLATE
-            )))
-        );
+        prepareConfig(of(MAIL_SETTINGS, asList(of(TEMPLATE_NAME, EMAIL_TEMPLATE))));
 
         MimeMessage mock = sendEmail();
 
@@ -170,7 +182,7 @@ public class MailServiceUnitTest extends AbstractUnitTest {
         when(localizationMessageService.getMessage("tr subject key")).thenReturn("subject value");
         when(localizationMessageService.getMessage("tr from key")).thenReturn("fromvalue (From value caption)");
 
-        when(tenantConfigService.getConfig()).thenReturn(
+        prepareConfig(
             of(MAIL_SETTINGS, asList(of(
                 TEMPLATE_NAME, EMAIL_TEMPLATE,
                 SUBJECT, of(TRANSLATION_KEY, "tr subject key", ENGLISH.getLanguage(), "en subject", FRANCE.getLanguage(), "fr subject"),
@@ -190,7 +202,7 @@ public class MailServiceUnitTest extends AbstractUnitTest {
     @Test
     @SneakyThrows
     public void ifInConfigNoTranslationKeyReturnByLocale() {
-        when(tenantConfigService.getConfig()).thenReturn(
+        prepareConfig(
             of(MAIL_SETTINGS, asList(of(
                 TEMPLATE_NAME, EMAIL_TEMPLATE,
                 SUBJECT, of(ENGLISH.getLanguage(), "en subject", FRANCE.getLanguage(), "fr subject"),
@@ -210,7 +222,7 @@ public class MailServiceUnitTest extends AbstractUnitTest {
     @Test
     @SneakyThrows
     public void ifInConfigNoTranslationKeyAndNoTranslationsByLocaleReturnEn() {
-        when(tenantConfigService.getConfig()).thenReturn(
+        prepareConfig(
             of(MAIL_SETTINGS, asList(of(
                 TEMPLATE_NAME, EMAIL_TEMPLATE,
                 SUBJECT, of(ENGLISH.getLanguage(), "en subject"),
@@ -230,7 +242,7 @@ public class MailServiceUnitTest extends AbstractUnitTest {
     @Test
     @SneakyThrows
     public void testSubjectConfiguration() {
-        when(tenantConfigService.getConfig()).thenReturn(
+        prepareConfig(
             of(MAIL_SETTINGS, asList(of(
                 TEMPLATE_NAME, "EMAIL_TEMPLATE",
                 SUBJECT, of(FRANCE.getLanguage(), "otherSubject")
@@ -249,7 +261,7 @@ public class MailServiceUnitTest extends AbstractUnitTest {
     @Test
     @SneakyThrows
     public void testFromConfiguration() {
-        when(tenantConfigService.getConfig()).thenReturn(
+        prepareConfig(
             of(MAIL_SETTINGS, asList(of(
                 TEMPLATE_NAME, "EMAIL_TEMPLATE",
                 FROM, of(FRANCE.getLanguage(), "otherFrom@yopmail.com (France caption)")
@@ -268,7 +280,7 @@ public class MailServiceUnitTest extends AbstractUnitTest {
     @Test
     @SneakyThrows
     public void testSubjectAndFromConfiguration() {
-        when(tenantConfigService.getConfig()).thenReturn(
+        prepareConfig(
             of(MAIL_SETTINGS, asList(of(
                 TEMPLATE_NAME, "EMAIL_TEMPLATE",
                 SUBJECT, of(FRANCE.getLanguage(), "otherSubject"),
@@ -288,7 +300,7 @@ public class MailServiceUnitTest extends AbstractUnitTest {
     @Test
     @SneakyThrows
     public void testSendEmailWithAttachment()  {
-        when(tenantConfigService.getConfig()).thenReturn(new HashMap<String, Object>() {{
+        prepareConfig(new HashMap<String, Object>() {{
             put(MAIL_SETTINGS, new HashMap<>());
         }});
 

@@ -3,7 +3,6 @@ package com.icthh.xm.ms.entity.security.access;
 import static com.google.common.collect.Maps.newHashMap;
 import static com.google.common.collect.Sets.newHashSet;
 import static com.icthh.xm.ms.entity.security.access.DynamicPermissionCheckService.CONFIG_SECTION;
-import static com.icthh.xm.ms.entity.security.access.DynamicPermissionCheckService.DYNAMIC_FUNCTION_PERMISSION_FEATURE;
 import static com.icthh.xm.ms.entity.security.access.DynamicPermissionCheckService.FeatureContext;
 import static com.icthh.xm.ms.entity.service.impl.FunctionServiceImpl.FUNCTION_CALL_PRIV;
 import static com.icthh.xm.ms.entity.service.impl.FunctionServiceImpl.XM_ENITITY_FUNCTION_CALL_PRIV;
@@ -11,14 +10,21 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.util.Lists.newArrayList;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.icthh.xm.commons.config.client.config.XmConfigProperties;
 import com.icthh.xm.commons.config.client.service.TenantConfigService;
 import com.icthh.xm.commons.permission.constants.RoleConstant;
 import com.icthh.xm.commons.permission.domain.Permission;
 import com.icthh.xm.commons.permission.service.PermissionCheckService;
+import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.ms.entity.AbstractUnitTest;
+import com.icthh.xm.ms.entity.config.XmEntityTenantConfigService;
 import com.icthh.xm.ms.entity.domain.spec.FunctionSpec;
 import com.icthh.xm.ms.entity.domain.spec.TypeSpec;
+import lombok.SneakyThrows;
 import org.assertj.core.api.Assertions;
 import org.junit.After;
 import org.junit.Before;
@@ -37,10 +43,20 @@ import java.util.stream.Collectors;
 @RunWith(MockitoJUnitRunner.class)
 public class DynamicPermissionCheckServiceUnitTest extends AbstractUnitTest {
 
+    private static final String DYNAMIC_FUNCTION_PERMISSION_FEATURE = "dynamicPermissionCheckEnabled";
+
     @Mock
     private PermissionCheckService permissionCheckService;
-    @Mock
-    private TenantConfigService tenantConfig;
+    @Spy
+    private XmEntityTenantConfigService tenantConfig = new XmEntityTenantConfigService(new XmConfigProperties(),
+                                                                                       tenantContextHolder());
+
+    private TenantContextHolder tenantContextHolder() {
+        TenantContextHolder mock = mock(TenantContextHolder.class);
+        when(mock.getTenantKey()).thenReturn("XM");
+        return mock;
+    }
+
     @InjectMocks
     @Spy
     private DynamicPermissionCheckService dynamicPermissionCheckService;
@@ -79,7 +95,7 @@ public class DynamicPermissionCheckServiceUnitTest extends AbstractUnitTest {
 
     @Test
     public void assertCallBasicCheckIfTenantConfigNotProvided() {
-        given(tenantConfig.getConfig()).willReturn(newHashMap());
+        prepareConfig(newHashMap());
         given(permissionCheckService.hasPermission(null, "X")).willReturn(true);
         boolean result = dynamicPermissionCheckService.checkContextPermission(FeatureContext.FUNCTION, "X", "Y");
         Assertions.assertThat(result).isTrue();
@@ -95,7 +111,7 @@ public class DynamicPermissionCheckServiceUnitTest extends AbstractUnitTest {
         final Map config = getMockedConfig(CONFIG_SECTION,
             DYNAMIC_FUNCTION_PERMISSION_FEATURE, Boolean.TRUE);
 
-        given(tenantConfig.getConfig()).willReturn(config);
+        prepareConfig(config);
         //privilege == X.Y, assume hasPermission = true
         given(permissionCheckService.hasPermission(null, "X.Y")).willReturn(true);
         boolean result = dynamicPermissionCheckService.checkContextPermission(FeatureContext.FUNCTION, "X", "Y");
@@ -129,7 +145,7 @@ public class DynamicPermissionCheckServiceUnitTest extends AbstractUnitTest {
     @Test
     public void resultNotChangedIfFunctionFilterFeatureIsOff() {
 
-        given(tenantConfig.getConfig()).willReturn(newHashMap());
+        prepareConfig(newHashMap());
         final List<Boolean> someList = newArrayList(Boolean.TRUE, Boolean.FALSE, Boolean.TRUE, Boolean.FALSE);
 
         List<Boolean> resultList = dynamicPermissionCheckService
@@ -144,7 +160,7 @@ public class DynamicPermissionCheckServiceUnitTest extends AbstractUnitTest {
         final Map<String, Object> config = getMockedConfig(CONFIG_SECTION,
                                                            DYNAMIC_FUNCTION_PERMISSION_FEATURE, Boolean.TRUE);
 
-        given(tenantConfig.getConfig()).willReturn(config);
+        prepareConfig(config);
 
         Set<String> rolesPrivileges = newHashSet(XM_ENITITY_FUNCTION_CALL_PRIV + ".F1", FUNCTION_CALL_PRIV + ".F3");
         given(dynamicPermissionCheckService.getRoleFunctionPermissions()).willReturn(rolesPrivileges);
@@ -259,5 +275,10 @@ public class DynamicPermissionCheckServiceUnitTest extends AbstractUnitTest {
         section.put(featureName, status);
         map.put(configSectionName, section);
         return map;
+    }
+
+    @SneakyThrows
+    public void prepareConfig(Map<String, Object> map) {
+        tenantConfig.onRefresh("/config/tenants/XM/tenant-config.yml", new ObjectMapper().writeValueAsString(map));
     }
 }

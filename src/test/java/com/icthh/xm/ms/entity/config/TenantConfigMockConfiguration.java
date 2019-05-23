@@ -7,6 +7,7 @@ import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import com.icthh.xm.commons.config.client.config.XmConfigProperties;
 import com.icthh.xm.commons.config.client.repository.CommonConfigRepository;
 import com.icthh.xm.commons.config.client.repository.TenantConfigRepository;
 import com.icthh.xm.commons.config.client.repository.TenantListRepository;
@@ -19,6 +20,7 @@ import com.icthh.xm.ms.entity.service.EntityCustomPrivilegeService;
 import com.icthh.xm.ms.entity.service.XmEntitySpecService;
 import lombok.SneakyThrows;
 import org.apache.commons.io.IOUtils;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ClassPathResource;
@@ -61,6 +63,11 @@ public class TenantConfigMockConfiguration {
     }
 
     @Bean
+    public XmConfigProperties xmConfigProperties() {
+        return mock(XmConfigProperties.class);
+    }
+
+    @Bean
     public TenantConfigRepository tenantConfigRepository() {
         return mock(TenantConfigRepository.class);
     }
@@ -85,6 +92,7 @@ public class TenantConfigMockConfiguration {
     }
 
     @Bean
+    @ConditionalOnMissingBean(TenantConfigService.class)
     public TenantConfigService tenantContigService() {
         return mock(TenantConfigService.class);
     }
