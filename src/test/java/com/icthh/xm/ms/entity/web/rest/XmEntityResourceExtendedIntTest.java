@@ -42,6 +42,7 @@ import com.fasterxml.jackson.annotation.PropertyAccessor;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.github.bohnman.squiggly.web.SquigglyRequestFilter;
 import com.google.common.collect.ImmutableMap;
 import com.icthh.xm.commons.config.client.service.TenantConfigService;
 import com.icthh.xm.commons.i18n.error.web.ExceptionTranslator;
@@ -281,6 +282,9 @@ public class XmEntityResourceExtendedIntTest extends AbstractSpringBootTest {
     @Autowired
     XmEntityPermittedSearchRepository xmEntityPermittedSearchRepository;
 
+    @Autowired
+    SquigglyRequestFilter requestFilter;
+
     @Mock
     private XmAuthenticationContextHolder authContextHolder;
 
@@ -370,11 +374,14 @@ public class XmEntityResourceExtendedIntTest extends AbstractSpringBootTest {
                                                   .setCustomArgumentResolvers(pageableArgumentResolver)
                                                   .setControllerAdvice(exceptionTranslator)
                                                   .setValidator(validator)
-                                                  .setMessageConverters(jacksonMessageConverter).build();
+                                                  .setMessageConverters(jacksonMessageConverter)
+                                                  .addFilter(requestFilter)
+                                                  .build();
 
         xmEntityIncoming = createEntityComplexIncoming();
 
         objectMapper.configure(SerializationFeature.INDENT_OUTPUT, true);
+        objectMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
     }
 
     @After
@@ -1595,17 +1602,20 @@ public class XmEntityResourceExtendedIntTest extends AbstractSpringBootTest {
 
         String targetJson = jacksonMessageConverter.getObjectMapper().writeValueAsString(target);
         log.info("Target JSON {}", targetJson);
+//        log.info("Taget with Utils: " + new String(TestUtil.convertObjectToJsonBytes(target)));
         String sourceJson = jacksonMessageConverter.getObjectMapper().writeValueAsString(source);
         log.info("Source JSON {}", sourceJson);
         restXmEntityMockMvc.perform(put("/api/xm-entities")
                                         .contentType(TestUtil.APPLICATION_JSON_UTF8)
-                                        .content(TestUtil.convertObjectToJsonBytes(target)))
+                                        .content(targetJson.getBytes()))
+//                                        .content(TestUtil.convertObjectToJsonBytes(target)))
                            .andDo(r -> log.info(r.getResponse().getContentAsString()))
                            .andExpect(status().is2xxSuccessful());
 
         restXmEntityMockMvc.perform(put("/api/xm-entities")
                                         .contentType(TestUtil.APPLICATION_JSON_UTF8)
-                                        .content(TestUtil.convertObjectToJsonBytes(source)))
+                                        .content(sourceJson.getBytes()))
+//                                        .content(TestUtil.convertObjectToJsonBytes(source)))
                            .andDo(r -> log.info(r.getResponse().getContentAsString()))
                            .andExpect(status().is2xxSuccessful());
     }
@@ -1955,7 +1965,6 @@ public class XmEntityResourceExtendedIntTest extends AbstractSpringBootTest {
             .andExpect(jsonPath("$.[*].target.avatarUrlFull").doesNotExist())
             .andExpect(jsonPath("$.[*].target.version").doesNotExist())
             .andExpect(jsonPath("$.[*].target.targets").doesNotExist())
-            .andExpect(jsonPath("$.[*].target.targets").doesNotExist())
             .andExpect(jsonPath("$.[*].target.sources").doesNotExist())
             .andExpect(jsonPath("$.[*].target.attachments").doesNotExist())
             .andExpect(jsonPath("$.[*].target.locations").doesNotExist())
@@ -1970,6 +1979,107 @@ public class XmEntityResourceExtendedIntTest extends AbstractSpringBootTest {
         ;
 
     }
+
+    @Test
+    @Transactional
+    @SneakyThrows
+    public void testGetLinkTargetsFilteredSerialization() {
+
+        String tgtTypeKey = "ACCOUNT.USER";
+        String tgtCreatedBy = "admin";
+
+        XmEntity source = xmEntityRepository.saveAndFlush(createComplexEntityPersistable().typeKey("ACCOUNT.ADMIN"));
+        XmEntity target1 = xmEntityRepository.saveAndFlush(createComplexEntityPersistable().typeKey(tgtTypeKey)
+                                                                                           .createdBy(tgtCreatedBy));
+        XmEntity target2 = xmEntityRepository.saveAndFlush(createComplexEntityPersistable().typeKey(tgtTypeKey)
+                                                                                           .createdBy(tgtCreatedBy));
+
+        String defDescription = DEFAULT_DESCRIPTION;
+        String lnTypekey = DEFAULT_LN_TARGET_KEY;
+        String lnName = DEFAULT_LN_TARGET_NAME;
+        Instant lnStartDate = DEFAULT_LN_TARGET_START_DATE;
+        Instant lnEndDate = Instant.ofEpochMilli(lnStartDate.toEpochMilli() + 100L);
+
+        source.getTargets().add(new Link()
+                                    .typeKey(lnTypekey)
+                                    .name(lnName)
+                                    .description(defDescription)
+                                    .startDate(lnStartDate)
+                                    .endDate(lnEndDate)
+                                    .target(target1)
+                                    .source(source));
+
+        source.getTargets().add(new Link()
+                                    .typeKey(lnTypekey)
+                                    .name(lnName)
+                                    .description(defDescription)
+                                    .startDate(lnStartDate)
+                                    .endDate(lnEndDate)
+                                    .target(target2)
+                                    .source(source)
+        );
+
+        xmEntityRepository.saveAndFlush(source);
+
+        assertNotNull(source.getId());
+        assertNotNull(target1.getId());
+        assertNotNull(target2.getId());
+        Integer[] linIds = source.getTargets().stream()
+                                 .map(Link::getId)
+                                 .map(Long::intValue)
+                                 .toArray(Integer[]::new);
+
+        int srcId = source.getId().intValue();
+
+        String fields = "id,typeKey,name,source,target.attachments.contentUrl,target.attachments.data";
+
+        performGet("/api/xm-entities/{id}/links/targets?typeKey={typeKey}&fields={fields}", srcId, tgtTypeKey, fields)
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+            .andExpect(jsonPath("$", hasSize(2)))
+            .andExpect(jsonPath("$.[*].id").value(containsInAnyOrder(linIds)))
+            .andExpect(jsonPath("$.[*].typeKey").value(everyItem(is(lnTypekey))))
+            .andExpect(jsonPath("$.[*].name").value(everyItem(is(lnName))))
+            .andExpect(jsonPath("$.[*].description").doesNotExist())
+            .andExpect(jsonPath("$.[*].startDate").doesNotExist())
+            .andExpect(jsonPath("$.[*].endDate").doesNotExist())
+            .andExpect(jsonPath("$.[*].source").value(everyItem(is(srcId))))
+
+            .andExpect(jsonPath("$.[*].target").exists())
+            .andExpect(jsonPath("$.[*].target.id").doesNotExist())
+            .andExpect(jsonPath("$.[*].target.key").doesNotExist())
+            .andExpect(jsonPath("$.[*].target.typeKey").doesNotExist())
+            .andExpect(jsonPath("$.[*].target.stateKey").doesNotExist())
+            .andExpect(jsonPath("$.[*].target.name").doesNotExist())
+            .andExpect(jsonPath("$.[*].target.startDate").doesNotExist())
+            .andExpect(jsonPath("$.[*].target.startDate").doesNotExist())
+            .andExpect(jsonPath("$.[*].target.updateDate").doesNotExist())
+            .andExpect(jsonPath("$.[*].target.description").doesNotExist())
+            .andExpect(jsonPath("$.[*].target.createdBy").doesNotExist())
+            .andExpect(jsonPath("$.[*].target.removed").doesNotExist())
+            .andExpect(jsonPath("$.[*].target.data").doesNotExist())
+            .andExpect(jsonPath("$.[*].target.data.AAAAAAAAAA").value(everyItem(is("BBBBBBBBBB"))))
+
+            .andExpect(jsonPath("$.[*].target.avatarUrlRelative").doesNotExist())
+            .andExpect(jsonPath("$.[*].target.avatarUrlFull").doesNotExist())
+            .andExpect(jsonPath("$.[*].target.version").doesNotExist())
+            .andExpect(jsonPath("$.[*].target.targets").doesNotExist())
+            .andExpect(jsonPath("$.[*].target.sources").doesNotExist())
+            .andExpect(jsonPath("$.[*].target.attachments").exists())
+            .andExpect(jsonPath("$.[*].target.attachments.contentUrl").value(everyItem(is("content url"))))
+            .andExpect(jsonPath("$.[*].target.locations").doesNotExist())
+            .andExpect(jsonPath("$.[*].target.tags").doesNotExist())
+            .andExpect(jsonPath("$.[*].target.calendars").doesNotExist())
+            .andExpect(jsonPath("$.[*].target.ratings").doesNotExist())
+            .andExpect(jsonPath("$.[*].target.comments").doesNotExist())
+            .andExpect(jsonPath("$.[*].target.votes").doesNotExist())
+            .andExpect(jsonPath("$.[*].target.functionContexts").doesNotExist())
+            .andExpect(jsonPath("$.[*].target.events").doesNotExist())
+            .andExpect(jsonPath("$.[*].target.uniqueFields").doesNotExist())
+        ;
+
+    }
+
 
     private XmEntity createComplexEntityPersistable() {
 

@@ -6,6 +6,7 @@ import static org.hamcrest.Matchers.everyItem;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
+import static org.junit.Assert.assertFalse;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -268,6 +269,8 @@ public class LinkResourceExtendedIntTest extends AbstractSpringBootTest {
         // Initialize the database
         link.getTarget().setCreatedBy("admin");
         linkRepository.saveAndFlush(link);
+
+        assertFalse(link.getTarget().isRemoved());
 
         // Get the link
         restLinkMockMvc.perform(get("/api/links/{id}", link.getId()))

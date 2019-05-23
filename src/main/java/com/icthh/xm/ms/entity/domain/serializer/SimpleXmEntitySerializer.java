@@ -9,11 +9,13 @@ import org.springframework.boot.jackson.JsonObjectSerializer;
 import java.io.IOException;
 import java.time.Instant;
 
+@Deprecated
 public class SimpleXmEntitySerializer extends JsonObjectSerializer<XmEntity> {
 
-    private void write(JsonGenerator jsonGenerator, String field, Object value) throws IOException {
+    private void write(JsonGenerator jsonGenerator, SerializerProvider provider, String field, Object value)
+    throws IOException {
         if (value != null) {
-            jsonGenerator.writeObjectField(field, value);
+            provider.defaultSerializeField(field, value, jsonGenerator);
         }
     }
 
@@ -30,19 +32,19 @@ public class SimpleXmEntitySerializer extends JsonObjectSerializer<XmEntity> {
             return;
         }
 
-        write(jsonGenerator, "id", value.getId());
-        write(jsonGenerator, "key", value.getKey());
-        write(jsonGenerator, "typeKey", value.getTypeKey());
-        write(jsonGenerator, "stateKey", value.getStateKey());
-        write(jsonGenerator, "name", value.getName());
+        write(jsonGenerator, provider, "id", value.getId());
+        write(jsonGenerator, provider, "key", value.getKey());
+        write(jsonGenerator, provider, "typeKey", value.getTypeKey());
+        write(jsonGenerator, provider, "stateKey", value.getStateKey());
+        write(jsonGenerator, provider, "name", value.getName());
         writeInstant(jsonGenerator, provider, "startDate", value.getStartDate());
         writeInstant(jsonGenerator, provider, "updateDate", value.getUpdateDate());
         writeInstant(jsonGenerator, provider, "endDate", value.getEndDate());
-        write(jsonGenerator, "avatarUrl", value.getAvatarUrl());
-        write(jsonGenerator, "description", value.getDescription());
-        write(jsonGenerator, "data", value.getData());
-        write(jsonGenerator, "removed", value.isRemoved());
-        write(jsonGenerator, "createdBy", value.getCreatedBy());
+        write(jsonGenerator, provider, "avatarUrl", value.getAvatarUrl());
+        write(jsonGenerator, provider, "description", value.getDescription());
+        write(jsonGenerator, provider, "data", value.getData());
+        write(jsonGenerator, provider, "removed", value.isRemoved());
+        write(jsonGenerator, provider, "createdBy", value.getCreatedBy());
     }
 
 }
