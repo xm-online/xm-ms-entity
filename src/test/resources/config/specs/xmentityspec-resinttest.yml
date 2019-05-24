@@ -400,3 +400,97 @@ types:
               }
             }
           }
+    - key: ACCOUNT.TEST_MAX_LINK
+      isApp: false
+      isAbstract: false
+      links:
+            - key: LINK_KEY_1
+              builderType: NEW
+              typeKey: TEST_MAX_LINK_1
+              max: 1
+            - key: LINK_KEY_2
+              builderType: NEW
+              typeKey: TEST_MAX_LINK_1
+              max: 3
+            - key: LINK_KEY_3
+              builderType: NEW
+              typeKey: ACCOUNTING
+    - key: ACCOUNT.TEST_MAX_LINK_1
+      isApp: false
+      isAbstract: false
+      links:
+            - key: LINK_KEY_1
+              builderType: NEW
+              typeKey: ACCOUNT.USER
+              max: 2
+            - key: LINK_KEY_2
+              builderType: NEW
+              typeKey: ACCOUNT.USER
+              max: 3
+            - key: LINK_KEY_3
+              builderType: NEW
+              typeKey: ACCOUNTING
+              max: 5
+    - key: ACCOUNT.TEST_MAX_LINK_2
+      isApp: false
+      isAbstract: false
+      links:
+            - key: LINK_KEY_1
+              builderType: NEW
+              typeKey: ACCOUNT.USER
+              max: 2
+            - key: LINK_KEY_2
+              builderType: NEW
+              typeKey: ACCOUNT.USER
+            - key: LINK_KEY_3
+              builderType: NEW
+              typeKey: ACCOUNTING
+              max: 5
+    - key: ACCOUNT.SOURCE_A
+      isApp: false
+      isAbstract: false
+      links:
+            - key: LINK_KEY_1
+              builderType: NEW
+              typeKey: ACCOUNT.SOURCE_B
+              max: 1
+            - key: LINK_KEY_2
+              builderType: NEW
+              typeKey: ACCOUNT.SOURCE_B
+              max: 1
+            - key: LINK_KEY_3
+              builderType: NEW
+              typeKey: ACCOUNTING
+              max: 1
+    - key: ACCOUNT.SOURCE_A_2
+      isApp: false
+      isAbstract: false
+      links:
+            - key: LINK_KEY_1
+              builderType: NEW
+              typeKey: ACCOUNT.SOURCE_B
+              max: 2
+            - key: LINK_KEY_2
+              builderType: NEW
+              max: 1
+              typeKey: ACCOUNT.SOURCE_B
+            - key: LINK_KEY_3
+              builderType: NEW
+              typeKey: ACCOUNTING
+              max: 1
+    - key: ACCOUNT.SOURCE_B
+      isApp: false
+      isAbstract: false
+      links:
+            - key: LINK_KEY_1
+              builderType: NEW
+              typeKey: ACCOUNT.USER
+              max: 2
+            - key: LINK_KEY_2
+              builderType: NEW
+              typeKey: ACCOUNT.USER
+              max: 1
+            - key: LINK_KEY_3
+              builderType: NEW
+              typeKey: ACCOUNT.SOURCE_B
+              max: 1

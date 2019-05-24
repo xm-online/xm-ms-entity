@@ -185,137 +185,42 @@ public class XmEntityServiceImplUnitTest extends AbstractUnitTest {
             }
         };
     }
-
-    @Test(expected = BusinessException.class)
-    public void assertMaxLinksValueSource() {
-        XmEntity source = new XmEntity().typeKey("XM_ENTITY_TYPE_KEY");
-        source.setId(951L);
-        XmEntity source2 = new XmEntity().typeKey("XM_ENTITY_TYPE_KEY2");
-        source2.setId(952L);
-        XmEntity testEntity = new XmEntity().typeKey("XM_ENTITY_TYPE_KEY");
-        preparationForAssertMaxLinksValueSource(source, source2, testEntity);
-        when(xmEntitySpecService.findLink(source.getTypeKey(), "LINK_TYPE_KEY")).thenReturn(createLinkSpeckOptional(4));
-        when(xmEntitySpecService.findLink(source2.getTypeKey(), "LINK_TYPE_KEY1")).thenReturn(createLinkSpeckOptional(0));
-        xmEntityService.save(testEntity);
-    }
-
     @Test
-    public void assertMaxLinksValueSourceOk() {
-        XmEntity source = new XmEntity().typeKey("XM_ENTITY_TYPE_KEY");
-        source.setId(951L);
-        XmEntity source2 = new XmEntity().typeKey("XM_ENTITY_TYPE_KEY2");
-        source2.setId(952L);
-        XmEntity testEntity = new XmEntity().typeKey("XM_ENTITY_TYPE_KEY");
-        preparationForAssertMaxLinksValueSource(source, source2, testEntity);
-        when(xmEntitySpecService.findLink(source.getTypeKey(), "LINK_TYPE_KEY")).thenReturn(createLinkSpeckOptional(4));
-        when(xmEntitySpecService.findLink(source2.getTypeKey(), "LINK_TYPE_KEY1")).thenReturn(createLinkSpeckOptional(3));
-        assertEquals(xmEntityService.save(testEntity), testEntity);
-        verifyAssertMaxLinksValue(testEntity);
-    }
+    public void assertSourceEntityMaxLinkValue() {
 
-    @Test(expected = BusinessException.class)
-    public void assertMaxLinksValueTarget() {
-        XmEntity testEntity = new XmEntity().typeKey("XM_ENTITY_TYPE_KEY");
-        XmEntity target = new XmEntity().typeKey("XM_ENTITY_TYPE_KEY");
-        preparationForAssertMaxLinksValueTarget(testEntity, target);
-        when(xmEntitySpecService.findLink(testEntity.getTypeKey(), "LINK_TYPE_KEY")).thenReturn(createLinkSpeckOptional(2));
-        when(xmEntitySpecService.findLink(testEntity.getTypeKey(), "LINK_TYPE_KEY1")).thenReturn(createLinkSpeckOptional(1));
-        xmEntityService.save(testEntity);
-    }
+        XmEntity testEntity = new XmEntity().typeKey("XM_TEST_ENTITY");
+        XmEntity source1 = new XmEntity().typeKey("XM_SOURCE_ENTITY");
+        source1.setId(1L);
+        XmEntity source2 = new XmEntity().typeKey("XM_SOURCE_ENTITY");
+        source2.setId(2L);
 
-    @Test
-    public void assertMaxLinksValueTargetOk() {
-        XmEntity testEntity = new XmEntity().typeKey("XM_ENTITY_TYPE_KEY");
-        XmEntity target = new XmEntity().typeKey("XM_ENTITY_TYPE_KEY");
-        preparationForAssertMaxLinksValueTarget(testEntity, target);
-        when(xmEntitySpecService.findLink(testEntity.getTypeKey(), "LINK_TYPE_KEY")).thenReturn(createLinkSpeckOptional(3));
-        when(xmEntitySpecService.findLink(testEntity.getTypeKey(), "LINK_TYPE_KEY1")).thenReturn(createLinkSpeckOptional(1));
-        assertEquals(testEntity, xmEntityService.save(testEntity));
-        verifyAssertMaxLinksValue(testEntity);
-    }
+        Link link1 = new Link().typeKey("LINK_TYPE_KEY").source(source1).target(testEntity);
+        Link link11 = new Link().typeKey("LINK_TYPE_KEY").source(source1).target(testEntity);
+        Link link2 = new Link().typeKey("LINK_TYPE_KEY").source(source2).target(testEntity);
+        Link linkOld = new Link().typeKey("LINK_TYPE_KEY").source(source2).target(testEntity);
+        linkOld.setId(1L);
 
-    @Test
-    public void testSaveXmentityWithOutId() {
-        XmEntity source = new XmEntity();
-        source.setId(951L);
-        XmEntity source2 = new XmEntity().typeKey("XM_ENTITY_TYPE_KEY2");
-        source2.setId(952L);
-        XmEntity testEntity = new XmEntity().typeKey("XM_ENTITY_TYPE_KEY");
-        preparationForAssertMaxLinksValueSource(source, source2, testEntity);
-        when(xmEntitySpecService.findLink(source.getTypeKey(), "LINK_TYPE_KEY")).thenReturn(createLinkSpeckOptional(5));
-        when(xmEntitySpecService.findLink(source2.getTypeKey(), "LINK_TYPE_KEY1")).thenReturn(createLinkSpeckOptional(3));
-        assertEquals(xmEntityService.save(testEntity), testEntity);
-    }
+        Set<Link> testSources = new HashSet<>();
+        testSources.add(link1);
+        testSources.add(link11);
+        testSources.add(link2);
+        testSources.add(linkOld);
+        testEntity.setSources(testSources);
 
-    private void verifyAssertMaxLinksValue(XmEntity testEntity) {
-        verify(authContextHolder).getContext();
-        verify(context).getUserKey();
-        verify(xmEntityRepository).save(testEntity);
-    }
-
-    private void preparationForAssertMaxLinksValueTarget(XmEntity testEntity, XmEntity target) {
-        Link newLink = new Link().typeKey("LINK_TYPE_KEY").source(testEntity).target(target);
-        Link link1 = new Link().typeKey("LINK_TYPE_KEY").source(testEntity).target(target);
-        link1.setId(3L);
-        Link link2 = new Link().typeKey("LINK_TYPE_KEY").source(testEntity).target(target);
-        link2.setId(4L);
-        Link link3 = new Link().typeKey("LINK_TYPE_KEY1").source(testEntity).target(target);
-        link3.setId(6L);
-
-        Set<Link> linkss = new HashSet<>();
-        linkss.add(link1);
-        linkss.add(link2);
-        linkss.add(link3);
-        linkss.add(newLink);
-        linkss.forEach(it -> testEntity.addTargets(it));
-
-        when(authContextHolder.getContext()).thenReturn(context);
-        when(context.getUserKey()).thenReturn(Optional.of("userKey"));
-        when(xmEntityRepository.save(testEntity)).thenReturn(testEntity);
-    }
-
-    private void preparationForAssertMaxLinksValueSource(XmEntity source, XmEntity source2, XmEntity testEntity) {
-        Link link1 = new Link().typeKey("LINK_TYPE_KEY").source(source).target(testEntity);
-        Link link2 = new Link().typeKey("LINK_TYPE_KEY").source(source).target(testEntity);
-        Link link3 = new Link().typeKey("LINK_TYPE_KEY1").source(source2).target(testEntity);
-
-        Link link4 = new Link().typeKey("LINK_TYPE_KEY").source(source).target(testEntity);
-        link4.setId(3L);
-        Link link5 = new Link().typeKey("LINK_TYPE_KEY").source(source).target(testEntity);
-        link5.setId(4L);
-        Link link6 = new Link().typeKey("LINK_TYPE_KEY1").source(source).target(testEntity);
-        link6.setId(6L);
-        Link link7 = new Link().typeKey("LINK_TYPE_KEY1").source(source).target(testEntity);
-        link7.setId(7L);
-
-        Set<Link> linkss = new HashSet<>();
-        linkss.add(link4);
-        linkss.add(link5);
-        linkss.add(link6);
-        source.setTargets(linkss);
-        Set<Link> links = new HashSet<>();
-        links.add(link1);
-        links.add(link2);
-        links.add(link3);
-        links.add(link7);
-        testEntity.setSources(links);
-
-        List<Long> sourceIds = new LinkedList<>();
-        sourceIds.add(source.getId());
-        sourceIds.add(source.getId());
-        sourceIds.add(source2.getId());
+        List<Long> sourceIds = new ArrayList<>();
+        sourceIds.add(1L);
+        sourceIds.add(2L);
 
         List<XmEntityStateProjection> projectionList = new ArrayList<>();
-        projectionList.add(mockEntityProjection("XM_ENTITY_TYPE_KEY"));
-        projectionList.add(mockEntityProjection("XM_ENTITY_TYPE_KEY"));
-        projectionList.add(mockEntityProjection("XM_ENTITY_TYPE_KEY2"));
+        projectionList.add(mockEntityProjection("XM_SOURCE_ENTITY"));
+        projectionList.add(mockEntityProjection("XM_SOURCE_ENTITY"));
 
         when(authContextHolder.getContext()).thenReturn(context);
         when(context.getUserKey()).thenReturn(Optional.of("userKey"));
         when(xmEntityRepository.findAllStateProjectionByIdIn(sourceIds)).thenReturn(projectionList);
-        when(xmEntityRepository.save(testEntity)).thenReturn(testEntity);
+        when(linkRepository.countBySourceIdAndTypeKey(source1.getId(), "LINK_TYPE_KEY")).thenReturn(0);
+        xmEntityService.save(testEntity);
     }
-
     private Optional<LinkSpec> createLinkSpeckOptional(int maxValue) {
         LinkSpec linkSpec = new LinkSpec();
         linkSpec.setMax(maxValue);

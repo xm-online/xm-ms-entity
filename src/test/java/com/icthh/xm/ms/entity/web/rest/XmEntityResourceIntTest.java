@@ -41,6 +41,7 @@ import com.icthh.xm.ms.entity.config.Constants;
 import com.icthh.xm.ms.entity.config.InternalTransactionService;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.domain.spec.StateSpec;
+import com.icthh.xm.ms.entity.repository.LinkRepository;
 import com.icthh.xm.ms.entity.repository.SpringXmEntityRepository;
 import com.icthh.xm.ms.entity.repository.UniqueFieldRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityPermittedRepository;
@@ -143,6 +144,9 @@ public class XmEntityResourceIntTest extends AbstractSpringBootTest {
 
     @Autowired
     private XmEntityRepositoryInternal xmEntityRepository;
+
+    @Autowired
+    private LinkRepository linkRepository;
 
     @Autowired
     private SpringXmEntityRepository springXmEntityRepository;
@@ -275,7 +279,7 @@ public class XmEntityResourceIntTest extends AbstractSpringBootTest {
                                                       authContextHolder,
                                                       objectMapper,
                                                       mock(UniqueFieldRepository.class),
-                                                      springXmEntityRepository);
+                                                      springXmEntityRepository, linkRepository);
         xmEntityServiceImpl.setSelf(xmEntityServiceImpl);
 
         this.xmEntityServiceImpl = xmEntityServiceImpl;

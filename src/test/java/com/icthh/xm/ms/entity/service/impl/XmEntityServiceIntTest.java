@@ -371,4 +371,35 @@ public class XmEntityServiceIntTest extends AbstractSpringBootTest {
         return IOUtils.toString(cfgInputStream, UTF_8);
     }
 
+    @Test
+    @SneakyThrows
+    public void zxc() {
+
+        XmEntity deletedEntity = xmEntityService.save(new XmEntity().name(" ").key(randomUUID()).typeKey("TEST_DELETE_NEW_LINK"));
+        XmEntity otherEntity = xmEntityService.save(new XmEntity().name(" ").key(randomUUID()).typeKey("TEST_DELETE_SEARCH_LINK"));
+        XmEntity sharedEntity = xmEntityService.save(new XmEntity().name(" ").key(randomUUID()).typeKey("TARGET_ENTITY"));
+
+        Link newLink = new Link();
+        newLink.setTypeKey("newLink");
+        newLink.setTarget(sharedEntity);
+        deletedEntity.addTargets(newLink);
+
+        Link searchLink = new Link();
+        searchLink.setTypeKey("cascadeDeleteLinks");
+        searchLink.setTarget(sharedEntity);
+        otherEntity.addTargets(searchLink);
+
+        xmEntityService.save(deletedEntity);
+        xmEntityService.save(otherEntity);
+
+        xmEntityService.delete(deletedEntity.getId());
+
+        assertThat(xmEntityRepository.existsById(otherEntity.getId())).isTrue();
+        assertThat(xmEntityRepository.existsById(sharedEntity.getId())).isTrue();
+        assertThat(xmEntityRepository.existsById(deletedEntity.getId())).isFalse();
+
+        xmEntityService.delete(sharedEntity.getId());
+        xmEntityService.delete(otherEntity.getId());
+    }
+
 }

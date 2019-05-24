@@ -178,7 +178,7 @@ public class EntityServiceImplIntTest extends AbstractSpringBootTest {
             authContextHolder,
             objectMapper,
             mock(UniqueFieldRepository.class),
-            springXmEntityRepository);
+            springXmEntityRepository, linkRepository);
         xmEntityService.setSelf(xmEntityService);
 
         lepManager.beginThreadContext(ctx -> {
