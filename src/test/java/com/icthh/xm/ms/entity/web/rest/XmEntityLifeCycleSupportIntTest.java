@@ -30,8 +30,10 @@ import com.icthh.xm.ms.entity.service.ProfileService;
 import com.icthh.xm.ms.entity.service.TenantService;
 import com.icthh.xm.ms.entity.service.impl.XmEntityServiceImpl;
 import java.io.InputStream;
+import java.lang.reflect.Field;
 import java.net.URI;
 import java.util.HashMap;
+import java.util.Map;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -52,6 +54,7 @@ import org.springframework.test.context.transaction.BeforeTransaction;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.ReflectionUtils;
 import org.springframework.validation.Validator;
 
 @Slf4j
@@ -135,6 +138,12 @@ public class XmEntityLifeCycleSupportIntTest extends AbstractSpringBootTest {
             .setControllerAdvice(exceptionTranslator)
             .setValidator(validator)
             .setMessageConverters(jacksonMessageConverter).build();
+
+        // Think how to do it better
+        Field field = ReflectionUtils.findField(XmLepScriptConfigServerResourceLoader.class, "scriptResources");
+        field.setAccessible(true);
+        Map lepsMap = (Map) field.get(leps);
+        lepsMap.clear();
     }
 
     void initLeps() {
@@ -220,6 +229,7 @@ public class XmEntityLifeCycleSupportIntTest extends AbstractSpringBootTest {
     @Transactional
     @SneakyThrows
     public void testExtendsTypeKey() {
+
         leps.onRefresh(PATTERN + "ChangeState$$around.groovy", loadFile("config/testlep/ChangeState$$around.groovy"));
         addLep(PATTERN, "TEST_LIFECYCLE_TYPE_KEY");
         addLep(PATTERN, "TEST_LIFECYCLE_TYPE_KEY$SUB");
