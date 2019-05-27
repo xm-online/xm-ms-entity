@@ -32,7 +32,9 @@ import com.icthh.xm.ms.entity.service.impl.XmEntityServiceImpl;
 import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -106,6 +108,8 @@ public class XmEntityLifeCycleSupportIntTest extends AbstractSpringBootTest {
     @Autowired
     private XmEntityTenantConfigService xmEntityTenantConfigService;
 
+    private List<String> lepsForCleanUp = new ArrayList<>();
+
     @BeforeTransaction
     public void beforeTransaction() {
         TenantContextUtils.setTenant(tenantContextHolder, "RESINTTEST");
@@ -167,6 +171,7 @@ public class XmEntityLifeCycleSupportIntTest extends AbstractSpringBootTest {
         String lepBody = loadFile("config/testlep/ChangeState$$TEST_LIFECYCLE_TYPE_KEY$$around.groovy");
         lepBody = StrSubstitutor.replace(lepBody, of("lepName", lepName));
         leps.onRefresh(pattern + "chained/ChangeState$$" + lepName + "$$around.groovy", lepBody);
+        lepsForCleanUp.add(pattern + "Save$$" + lepName + "$$around.groovy");
     }
 
     @SneakyThrows
@@ -178,6 +183,7 @@ public class XmEntityLifeCycleSupportIntTest extends AbstractSpringBootTest {
     @After
     @Override
     public void finalize() {
+        lepsForCleanUp.forEach(it -> leps.onRefresh(it, null));
         xmEntityTenantConfigService.getXmEntityTenantConfig().getLep().setEnableInheritanceTypeKey(false);
         lepManager.endThreadContext();
         tenantContextHolder.getPrivilegedContext().destroyCurrentContext();
