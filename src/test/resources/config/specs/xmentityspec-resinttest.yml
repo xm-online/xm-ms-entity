@@ -494,3 +494,19 @@ types:
               builderType: NEW
               typeKey: ACCOUNT.SOURCE_B
               max: 1
+    - key: ACCOUNT.SOURCE_B_2
+      isApp: false
+      isAbstract: false
+      links:
+            - key: LINK_KEY_1
+              builderType: NEW
+              typeKey: ACCOUNT.USER
+              max: 2
+            - key: LINK_KEY_2
+              builderType: NEW
+              typeKey: ACCOUNT.USER
+              max: 2
+            - key: LINK_KEY_3
+              builderType: NEW
+              typeKey: ACCOUNT.SOURCE_B
+              max: 2

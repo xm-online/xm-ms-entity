@@ -203,37 +203,31 @@ public class XmEntityServiceImpl implements XmEntityService {
         if (xmEntity.getSources().isEmpty()) {
             return;
         }
-
-        Set<Link> sources = xmEntity.getSources();
-        Set<Link> newLinks = sources.stream().filter(Link::isNew).collect(toSet());
+        Set<Link> newLinks = xmEntity.getSources().stream().filter(Link::isNew).collect(toSet());
         Set<Link> newUniqLinks = new HashSet<>();
-
         makeLinkListUniq(newLinks, newUniqLinks);
-
         List<Long> sourceIds = newUniqLinks.stream().map(Link::getSource).map(XmEntity::getId).collect(toList());
         Set<Long> uniqId = new HashSet<>(sourceIds);
         sourceIds.clear();
         sourceIds.addAll(uniqId);
 
         List<String> sourceTypeKey = xmEntityRepository.findAllStateProjectionByIdIn(sourceIds)
-                .stream().map(XmEntityStateProjection::getTypeKey).collect(toList());
-
+            .stream().map(XmEntityStateProjection::getTypeKey).collect(toList());
         Map<Long, String> sourceIdsAndTypeKeys = IntStream.range(0, (sourceIds.size())).boxed()
             .collect(toMap(sourceIds::get, sourceTypeKey::get));
-
         newUniqLinks.forEach(it -> linkCount(it.getTypeKey(),
-                                            it.getSource(),
-                                            newLinks,
-                                            sourceIdsAndTypeKeys));
+            it.getSource(),
+            newLinks,
+            sourceIdsAndTypeKeys));
     }
 
     private void makeLinkListUniq(Set<Link> newLinks, Set<Link> newUniqLinks) {
-
         for (Link link : newLinks) {
             if (newLinks.stream().filter(it -> it.getTypeKey().equals(link.getTypeKey()) && it.getSource().equals(link.getSource())).count() == 1) {
                 newUniqLinks.add(link);
             } else {
-                newUniqLinks.add(newLinks.stream().filter(it -> it.getTypeKey().equals(link.getTypeKey()) && it.getSource().equals(link.getSource())).findFirst().get());
+                newUniqLinks.add(newLinks.stream().filter(it -> it.getTypeKey().equals(link.getTypeKey())
+                    && it.getSource().equals(link.getSource())).findFirst().get());
             }
         }
     }
@@ -246,10 +240,8 @@ public class XmEntityServiceImpl implements XmEntityService {
         Predicate<Link> checkTypeKeyPredicate = it -> it.getTypeKey().equals(newLinkTypeKey);
         Long newLinkCount = newLinks.stream().filter(it -> it.getSource().getId().equals(source.getId()))
             .filter(checkTypeKeyPredicate).count();
-
         Long countOfSourceTarget = (long) linkRepository.countBySourceIdAndTypeKey(source.getId(), newLinkTypeKey);
         newLinkValidate(newLinkTypeKey, sourceIdsAndTypeKeys.get(source.getId()), (newLinkCount + countOfSourceTarget));
-
     }
 
     private void newLinkValidate(String newLinkTypeKey, String sourceTypeKey, Long linkCount) {
@@ -276,11 +268,11 @@ public class XmEntityServiceImpl implements XmEntityService {
         Set<String> newLinkTypeKeys = targets.stream().filter(Link::isNew).map(Link::getTypeKey).collect(toSet());
         Map<String, Integer> linkTypeKeyAndCount = new HashMap<>();
         for (String newLinkTypeKey : newLinkTypeKeys) {
-            if (!xmEntity.isNew()) {
-                int linkCount = linkRepository.countBySourceIdAndTypeKey(xmEntity.getId(), newLinkTypeKey);
+            if (xmEntity.isNew()) {
+                int linkCount = (int) targets.stream().filter(it -> it.getTypeKey().equals(newLinkTypeKey)).count();
                 linkTypeKeyAndCount.put(newLinkTypeKey, linkCount);
             } else {
-                int linkCount = (int) targets.stream().filter(it -> it.getTypeKey().equals(newLinkTypeKey)).count();
+                int linkCount = linkRepository.countBySourceIdAndTypeKey(xmEntity.getId(), newLinkTypeKey);
                 linkTypeKeyAndCount.put(newLinkTypeKey, linkCount);
             }
         }
