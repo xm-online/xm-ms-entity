@@ -34,6 +34,7 @@ import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
 import com.icthh.xm.ms.entity.service.ElasticsearchIndexService;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -88,6 +89,8 @@ public class XmEntityServiceIntTest extends AbstractSpringBootTest {
     @Mock
     private XmAuthenticationContext context;
 
+    private List<String> lepsForCleanUp = new ArrayList<>();
+
     @Before
     public void before() {
         TenantContextUtils.setTenant(tenantContextHolder, "RESINTTEST");
@@ -111,6 +114,7 @@ public class XmEntityServiceIntTest extends AbstractSpringBootTest {
 
     @After
     public void afterTest() {
+        lepsForCleanUp.forEach(it -> leps.onRefresh(it, null));
         tenantContextHolder.getPrivilegedContext().destroyCurrentContext();
         lepManager.endThreadContext();
     }
@@ -119,6 +123,7 @@ public class XmEntityServiceIntTest extends AbstractSpringBootTest {
         String lepBody = loadFile("config/testlep/Save$$TEST_LIFECYCLE_TYPE_KEY$$around.groovy");
         lepBody = StrSubstitutor.replace(lepBody, of("lepName", lepName));
         leps.onRefresh(pattern + "Save$$" + lepName + "$$around.groovy", lepBody);
+        lepsForCleanUp.add(pattern + "Save$$" + lepName + "$$around.groovy");
     }
 
     private XmEntity createXmEntity() {
