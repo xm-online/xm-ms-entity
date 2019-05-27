@@ -2,6 +2,7 @@ package com.icthh.xm.ms.entity.web.rest;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
+import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.everyItem;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
@@ -222,32 +223,31 @@ public class LinkResourceExtendedIntTest extends AbstractSpringBootTest {
                        .andDo(this::printMvcResult)
                        .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
                        .andExpect(jsonPath("$", hasSize(1)))
-                       .andExpect(jsonPath("$.[*].id").value(everyItem(is(link.getId().intValue()))))
-                       .andExpect(jsonPath("$.[*].typeKey").value(everyItem(is(LinkResourceIntTest.DEFAULT_TYPE_KEY))))
-                       .andExpect(jsonPath("$.[*].name").value(everyItem(is(LinkResourceIntTest.DEFAULT_NAME))))
-                       .andExpect(jsonPath("$.[*].description").value(everyItem(is(LinkResourceIntTest.DEFAULT_DESCRIPTION))))
-                       .andExpect(jsonPath("$.[*].startDate").value(everyItem(is(LinkResourceIntTest.DEFAULT_START_DATE.toString()))))
-                       .andExpect(jsonPath("$.[*].endDate").value(everyItem(is(LinkResourceIntTest.DEFAULT_END_DATE.toString()))))
+                       .andExpect(jsonPath("$.[*].id", containsInAnyOrder(link.getId().intValue())))
+                       .andExpect(jsonPath("$.[*].typeKey", containsInAnyOrder(LinkResourceIntTest.DEFAULT_TYPE_KEY)))
+                       .andExpect(jsonPath("$.[*].name", containsInAnyOrder(LinkResourceIntTest.DEFAULT_NAME)))
+                       .andExpect(jsonPath("$.[*].description", containsInAnyOrder(LinkResourceIntTest.DEFAULT_DESCRIPTION)))
+                       .andExpect(jsonPath("$.[*].startDate", containsInAnyOrder(LinkResourceIntTest.DEFAULT_START_DATE.toString())))
+                       .andExpect(jsonPath("$.[*].endDate", containsInAnyOrder(LinkResourceIntTest.DEFAULT_END_DATE.toString())))
 
                        .andExpect(jsonPath("$.[*].target").exists())
-                       .andExpect(jsonPath("$.[*].target.id").value(everyItem(notNullValue())))
-                       .andExpect(jsonPath("$.[*].target.key").value(everyItem(notNullValue())))
-                       .andExpect(jsonPath("$.[*].target.typeKey").value(everyItem(notNullValue())))
-                       .andExpect(jsonPath("$.[*].target.stateKey").value(everyItem(notNullValue())))
-                       .andExpect(jsonPath("$.[*].target.name").value(everyItem(notNullValue())))
-                       .andExpect(jsonPath("$.[*].target.startDate").value(everyItem(notNullValue())))
-                       .andExpect(jsonPath("$.[*].target.endDate").value(everyItem(notNullValue())))
-                       .andExpect(jsonPath("$.[*].target.updateDate").value(everyItem(notNullValue())))
-                       .andExpect(jsonPath("$.[*].target.description").value(everyItem(notNullValue())))
-                       .andExpect(jsonPath("$.[*].target.createdBy").value(everyItem(notNullValue())))
-                       .andExpect(jsonPath("$.[*].target.removed").value(everyItem(notNullValue())))
+                       .andExpect(jsonPath("$.[*].target.id", hasSize(1)))
+                       .andExpect(jsonPath("$.[*].target.key", hasSize(1)))
+                       .andExpect(jsonPath("$.[*].target.typeKey", hasSize(1)))
+                       .andExpect(jsonPath("$.[*].target.stateKey", hasSize(1)))
+                       .andExpect(jsonPath("$.[*].target.name", hasSize(1)))
+                       .andExpect(jsonPath("$.[*].target.startDate", hasSize(1)))
+                       .andExpect(jsonPath("$.[*].target.endDate", hasSize(1)))
+                       .andExpect(jsonPath("$.[*].target.updateDate", hasSize(1)))
+                       .andExpect(jsonPath("$.[*].target.description", hasSize(1)))
+                       .andExpect(jsonPath("$.[*].target.createdBy", hasSize(1)))
+                       .andExpect(jsonPath("$.[*].target.removed", hasSize(1)))
                        .andExpect(jsonPath("$.[*].target.data").exists())
-                       .andExpect(jsonPath("$.[*].target.data.AAAAAAAAAA").value(everyItem(notNullValue())))
+                       .andExpect(jsonPath("$.[*].target.data.AAAAAAAAAA", hasSize(1)))
 
                        .andExpect(jsonPath("$.[*].target.avatarUrlRelative").doesNotExist())
                        .andExpect(jsonPath("$.[*].target.avatarUrlFull").doesNotExist())
                        .andExpect(jsonPath("$.[*].target.version").doesNotExist())
-                       .andExpect(jsonPath("$.[*].target.targets").doesNotExist())
                        .andExpect(jsonPath("$.[*].target.targets").doesNotExist())
                        .andExpect(jsonPath("$.[*].target.sources").doesNotExist())
                        .andExpect(jsonPath("$.[*].target.attachments").doesNotExist())
@@ -290,7 +290,7 @@ public class LinkResourceExtendedIntTest extends AbstractSpringBootTest {
                        .andExpect(jsonPath("$.target.stateKey").value(notNullValue()))
                        .andExpect(jsonPath("$.target.name").value(notNullValue()))
                        .andExpect(jsonPath("$.target.startDate").value(notNullValue()))
-                       .andExpect(jsonPath("$.target.startDate").value(notNullValue()))
+                       .andExpect(jsonPath("$.target.endDate").value(notNullValue()))
                        .andExpect(jsonPath("$.target.updateDate").value(notNullValue()))
                        .andExpect(jsonPath("$.target.description").value(notNullValue()))
                        .andExpect(jsonPath("$.target.createdBy").value(notNullValue()))
@@ -301,7 +301,6 @@ public class LinkResourceExtendedIntTest extends AbstractSpringBootTest {
                        .andExpect(jsonPath("$.target.avatarUrlRelative").doesNotExist())
                        .andExpect(jsonPath("$.target.avatarUrlFull").doesNotExist())
                        .andExpect(jsonPath("$.target.version").doesNotExist())
-                       .andExpect(jsonPath("$.target.targets").doesNotExist())
                        .andExpect(jsonPath("$.target.targets").doesNotExist())
                        .andExpect(jsonPath("$.target.sources").doesNotExist())
                        .andExpect(jsonPath("$.target.attachments").doesNotExist())
@@ -320,6 +319,10 @@ public class LinkResourceExtendedIntTest extends AbstractSpringBootTest {
     @SneakyThrows
     private void printMvcResult(MvcResult result) {
         log.info("MVC result: {}", result.getResponse().getContentAsString());
+    }
+
+    private static Object[] two(Object single) {
+        return new Object[]{single, single};
     }
 
 }

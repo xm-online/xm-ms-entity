@@ -22,9 +22,9 @@ public class XmSquigglyContextProvider extends RequestSquigglyContextProvider {
 
     @Override
     protected String customizeFilter(final String filter, final HttpServletRequest request, final Class beanClass) {
-        System.out.println(
-            "customizeFilter $$$$$$$$$$$$$$$ URL: " + request.getContextPath() + " beanClass = " + beanClass
-            + " filter incoming: " + filter);
+//        System.out.println(
+//            "customizeFilter $$$$$$$$$$$$$$$ URL: " + request.getContextPath() + " beanClass = " + beanClass
+//            + " filter incoming: " + filter);
         return applyFilter(filter, request, beanClass);
 
     }
@@ -39,7 +39,7 @@ public class XmSquigglyContextProvider extends RequestSquigglyContextProvider {
         boolean isOutOfHttpScope = request == null && response == null;
         boolean filteringEnabled = isOutOfHttpScope || isFilteringEnabled(request, response);
 
-        System.out.println("$$$$$$$$$$$ isFilteringEnabled: " + filteringEnabled);
+//        System.out.println("$$$$$$$$$$$ isFilteringEnabled: " + filteringEnabled);
         return filteringEnabled;
     }
 
@@ -57,7 +57,7 @@ public class XmSquigglyContextProvider extends RequestSquigglyContextProvider {
 //        String filter = getRequest() == null ? resolveFilter(beanClass) : super.getFilter(beanClass);
         String filter = getRequest() == null ? defaultFilter : super.getFilter(beanClass);
 
-        System.out.println("resolved filter by class: " + beanClass + " filter = " + filter);
+//        System.out.println("resolved filter by class: " + beanClass + " filter = " + filter);
 
         return filter;
     }

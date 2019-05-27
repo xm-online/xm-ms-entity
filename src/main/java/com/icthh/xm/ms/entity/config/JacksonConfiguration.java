@@ -4,21 +4,27 @@ import com.fasterxml.jackson.datatype.hibernate5.Hibernate5Module;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.fasterxml.jackson.module.afterburner.AfterburnerModule;
+import com.github.bohnman.squiggly.Squiggly;
 import com.github.bohnman.squiggly.web.SquigglyRequestFilter;
 import com.icthh.xm.ms.entity.domain.Link;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.service.XmSquigglyContextProvider;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
 import org.springframework.boot.autoconfigure.jackson.Jackson2ObjectMapperBuilderCustomizer;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.converter.HttpMessageConverter;
+import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.http.converter.json.SpringHandlerInstantiator;
 
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
+@Slf4j
 @Configuration
 public class JacksonConfiguration {
 
@@ -84,7 +90,7 @@ public class JacksonConfiguration {
                                + ",target.stateKey"
                                + ",target.name"
                                + ",target.startDate"
-                               + ",target.startDate"
+                               + ",target.endDate"
                                + ",target.updateDate"
                                + ",target.description"
                                + ",target.createdBy"
@@ -120,7 +126,7 @@ public class JacksonConfiguration {
                                             + ",target.stateKey"
                                             + ",target.name"
                                             + ",target.startDate"
-                                            + ",target.startDate"
+                                            + ",target.endDate"
                                             + ",target.updateDate"
                                             + ",target.description"
                                             + ",target.createdBy"
@@ -130,6 +136,24 @@ public class JacksonConfiguration {
                                                 + ",-targets.target.targets");
 
         return new XmSquigglyContextProvider(defaultFilterByBean, defaultFilter);
+    }
+
+    @Bean
+    public HttpMessageConverterCustomizer httpMessageConverterCustomizer () {
+        return converters -> converters
+            .stream()
+            .filter(httpMessageConverter -> MappingJackson2HttpMessageConverter.class.isAssignableFrom(
+                httpMessageConverter.getClass()))
+            .map(MappingJackson2HttpMessageConverter.class::cast)
+            .peek(mc -> log.info(
+                "Init Squiggly filter for message converter: {} and objectMapper: {}", mc, mc.getObjectMapper()))
+            .forEach(mc -> Squiggly.init(mc.getObjectMapper(), xmSquigglyContextProvider()));
+    }
+
+    public interface HttpMessageConverterCustomizer {
+
+        void customize(List<HttpMessageConverter<?>> converters);
+
     }
 
 }

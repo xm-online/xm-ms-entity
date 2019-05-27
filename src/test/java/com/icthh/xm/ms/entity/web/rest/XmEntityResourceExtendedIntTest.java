@@ -104,7 +104,6 @@ import lombok.val;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.mutable.MutableObject;
-import org.hamcrest.Matchers;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -793,28 +792,28 @@ public class XmEntityResourceExtendedIntTest extends AbstractSpringBootTest {
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
             .andExpect(jsonPath("$", hasSize(2)))
-            .andExpect(jsonPath("$.[*].id").value(everyItem(notNullValue())))
-            .andExpect(jsonPath("$.[*].typeKey").value(everyItem(is("LINK1"))))
-            .andExpect(jsonPath("$.[*].name").value(everyItem(is(lnkName))))
-            .andExpect(jsonPath("$.[*].description").value(everyItem(is(lnkDescription))))
-            .andExpect(jsonPath("$.[*].startDate").value(everyItem(is(lnkStart.toString()))))
-            .andExpect(jsonPath("$.[*].endDate").value(everyItem(is(lnkEnd.toString()))))
-            .andExpect(jsonPath("$.[*].target").value(containsInAnyOrder(targetId, targetId)))
+            .andExpect(jsonPath("$.[*].id", hasSize(2)))
+            .andExpect(jsonPath("$.[*].typeKey", containsInAnyOrder(two("LINK1"))))
+            .andExpect(jsonPath("$.[*].name", containsInAnyOrder(two(lnkName))))
+            .andExpect(jsonPath("$.[*].description", containsInAnyOrder(two(lnkDescription))))
+            .andExpect(jsonPath("$.[*].startDate", containsInAnyOrder(two(lnkStart.toString()))))
+            .andExpect(jsonPath("$.[*].endDate", containsInAnyOrder(two(lnkEnd.toString()))))
+            .andExpect(jsonPath("$.[*].target", containsInAnyOrder(two(targetId))))
 
             .andExpect(jsonPath("$.[*].source").exists())
             .andExpect(jsonPath("$.[*].source.id").value(containsInAnyOrder(srcId1, srcId2)))
             .andExpect(jsonPath("$.[*].source.name").value(containsInAnyOrder("SOURCE1", "SOURCE2")))
-            .andExpect(jsonPath("$.[*].source.key").value(everyItem(is(DEFAULT_KEY))))
-            .andExpect(jsonPath("$.[*].source.typeKey").value(everyItem(is(DEFAULT_TYPE_KEY))))
-            .andExpect(jsonPath("$.[*].source.stateKey").value(everyItem(is(DEFAULT_STATE_KEY))))
-            .andExpect(jsonPath("$.[*].source.startDate").value(everyItem(is(MOCKED_START_DATE.toString()))))
-            .andExpect(jsonPath("$.[*].source.endDate").value(everyItem(is(DEFAULT_END_DATE.toString()))))
-            .andExpect(jsonPath("$.[*].source.updateDate").value(everyItem(is(MOCKED_UPDATE_DATE.toString()))))
-            .andExpect(jsonPath("$.[*].source.description").value(everyItem(is(DEFAULT_DESCRIPTION))))
-            .andExpect(jsonPath("$.[*].source.createdBy").value(everyItem(is("admin"))))
-            .andExpect(jsonPath("$.[*].source.removed").value(everyItem(is(false))))
+            .andExpect(jsonPath("$.[*].source.key", containsInAnyOrder(two(DEFAULT_KEY))))
+            .andExpect(jsonPath("$.[*].source.typeKey", containsInAnyOrder(two(DEFAULT_TYPE_KEY))))
+            .andExpect(jsonPath("$.[*].source.stateKey", containsInAnyOrder(two(DEFAULT_STATE_KEY))))
+            .andExpect(jsonPath("$.[*].source.startDate", containsInAnyOrder(two(MOCKED_START_DATE.toString()))))
+            .andExpect(jsonPath("$.[*].source.endDate", containsInAnyOrder(two(DEFAULT_END_DATE.toString()))))
+            .andExpect(jsonPath("$.[*].source.updateDate", containsInAnyOrder(two(MOCKED_UPDATE_DATE.toString()))))
+            .andExpect(jsonPath("$.[*].source.description", containsInAnyOrder(two(DEFAULT_DESCRIPTION))))
+            .andExpect(jsonPath("$.[*].source.createdBy", containsInAnyOrder(two("admin"))))
+            .andExpect(jsonPath("$.[*].source.removed", containsInAnyOrder(two(false))))
             .andExpect(jsonPath("$.[*].source.data").exists())
-            .andExpect(jsonPath("$.[*].source.data.AAAAAAAAAA").value(everyItem(is("BBBBBBBBBB"))))
+            .andExpect(jsonPath("$.[*].source.data.AAAAAAAAAA", containsInAnyOrder(two("BBBBBBBBBB"))))
 
             .andExpect(jsonPath("$.[*].source.targets").doesNotExist())
             .andExpect(jsonPath("$.[*].source.sources").doesNotExist())
@@ -1992,27 +1991,27 @@ public class XmEntityResourceExtendedIntTest extends AbstractSpringBootTest {
             .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
             .andExpect(jsonPath("$", hasSize(2)))
             .andExpect(jsonPath("$.[*].id").value(containsInAnyOrder(linIds)))
-            .andExpect(jsonPath("$.[*].typeKey").value(everyItem(is(lnTypekey))))
-            .andExpect(jsonPath("$.[*].name").value(everyItem(is(lnName))))
-            .andExpect(jsonPath("$.[*].description").value(everyItem(is(defDescription))))
-            .andExpect(jsonPath("$.[*].startDate").value(everyItem(is(lnStartDate.toString()))))
-            .andExpect(jsonPath("$.[*].endDate").value(everyItem(is(lnEndDate.toString()))))
-            .andExpect(jsonPath("$.[*].source").value(everyItem(is(srcId))))
+            .andExpect(jsonPath("$.[*].typeKey", containsInAnyOrder(two(lnTypekey))))
+            .andExpect(jsonPath("$.[*].name", containsInAnyOrder(two(lnName))))
+            .andExpect(jsonPath("$.[*].description", containsInAnyOrder(two(defDescription))))
+            .andExpect(jsonPath("$.[*].startDate", containsInAnyOrder(two(lnStartDate.toString()))))
+            .andExpect(jsonPath("$.[*].endDate", containsInAnyOrder(two(lnEndDate.toString()))))
+            .andExpect(jsonPath("$.[*].source", containsInAnyOrder(two(srcId))))
 
             .andExpect(jsonPath("$.[*].target").exists())
             .andExpect(jsonPath("$.[*].target.id").value(containsInAnyOrder(target1Id, target2Id)))
-            .andExpect(jsonPath("$.[*].target.key").value(everyItem(is(DEFAULT_KEY))))
-            .andExpect(jsonPath("$.[*].target.typeKey").value(everyItem(is(tgtTypeKey))))
-            .andExpect(jsonPath("$.[*].target.stateKey").value(everyItem(is(DEFAULT_STATE_KEY))))
-            .andExpect(jsonPath("$.[*].target.name").value(everyItem(is(DEFAULT_NAME))))
-            .andExpect(jsonPath("$.[*].target.startDate").value(everyItem(is(tgtStartDate))))
-            .andExpect(jsonPath("$.[*].target.endDate").value(everyItem(is(tgtEndDate))))
-            .andExpect(jsonPath("$.[*].target.updateDate").value(everyItem(is(tgtUpdateDate))))
-            .andExpect(jsonPath("$.[*].target.description").value(everyItem(is(defDescription))))
-            .andExpect(jsonPath("$.[*].target.createdBy").value(everyItem(is(tgtCreatedBy))))
-            .andExpect(jsonPath("$.[*].target.removed").value(everyItem(is(false))))
+            .andExpect(jsonPath("$.[*].target.key", containsInAnyOrder(two(DEFAULT_KEY))))
+            .andExpect(jsonPath("$.[*].target.typeKey", containsInAnyOrder(two(tgtTypeKey))))
+            .andExpect(jsonPath("$.[*].target.stateKey", containsInAnyOrder(two(DEFAULT_STATE_KEY))))
+            .andExpect(jsonPath("$.[*].target.name", containsInAnyOrder(two(DEFAULT_NAME))))
+            .andExpect(jsonPath("$.[*].target.startDate", containsInAnyOrder(two(tgtStartDate))))
+            .andExpect(jsonPath("$.[*].target.endDate", containsInAnyOrder(two(tgtEndDate))))
+            .andExpect(jsonPath("$.[*].target.updateDate", containsInAnyOrder(two(tgtUpdateDate))))
+            .andExpect(jsonPath("$.[*].target.description", containsInAnyOrder(two(defDescription))))
+            .andExpect(jsonPath("$.[*].target.createdBy", containsInAnyOrder(two(tgtCreatedBy))))
+            .andExpect(jsonPath("$.[*].target.removed", containsInAnyOrder(two(false))))
             .andExpect(jsonPath("$.[*].target.data").exists())
-            .andExpect(jsonPath("$.[*].target.data.AAAAAAAAAA").value(everyItem(is("BBBBBBBBBB"))))
+            .andExpect(jsonPath("$.[*].target.data.AAAAAAAAAA", containsInAnyOrder(two("BBBBBBBBBB"))))
 
             .andExpect(jsonPath("$.[*].target.avatarUrlRelative").doesNotExist())
             .andExpect(jsonPath("$.[*].target.avatarUrlFull").doesNotExist())
@@ -2091,12 +2090,12 @@ public class XmEntityResourceExtendedIntTest extends AbstractSpringBootTest {
             .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
             .andExpect(jsonPath("$", hasSize(2)))
             .andExpect(jsonPath("$.[*].id").value(containsInAnyOrder(linIds)))
-            .andExpect(jsonPath("$.[*].typeKey").value(everyItem(is(lnTypekey))))
-            .andExpect(jsonPath("$.[*].name").value(everyItem(is(lnName))))
+            .andExpect(jsonPath("$.[*].typeKey", containsInAnyOrder(two(lnTypekey))))
+            .andExpect(jsonPath("$.[*].name", containsInAnyOrder(two(lnName))))
             .andExpect(jsonPath("$.[*].description").doesNotExist())
             .andExpect(jsonPath("$.[*].startDate").doesNotExist())
             .andExpect(jsonPath("$.[*].endDate").doesNotExist())
-            .andExpect(jsonPath("$.[*].source").value(everyItem(is(srcId))))
+            .andExpect(jsonPath("$.[*].source", containsInAnyOrder(two(srcId))))
 
             .andExpect(jsonPath("$.[*].target").exists())
             .andExpect(jsonPath("$.[*].target.id").doesNotExist())
@@ -2111,7 +2110,7 @@ public class XmEntityResourceExtendedIntTest extends AbstractSpringBootTest {
             .andExpect(jsonPath("$.[*].target.createdBy").doesNotExist())
             .andExpect(jsonPath("$.[*].target.removed").doesNotExist())
             .andExpect(jsonPath("$.[*].target.data").doesNotExist())
-            .andExpect(jsonPath("$.[*].target.data.AAAAAAAAAA").value(everyItem(is("BBBBBBBBBB"))))
+            .andExpect(jsonPath("$.[*].target.data.AAAAAAAAAA").doesNotExist())
 
             .andExpect(jsonPath("$.[*].target.avatarUrlRelative").doesNotExist())
             .andExpect(jsonPath("$.[*].target.avatarUrlFull").doesNotExist())
@@ -2119,7 +2118,7 @@ public class XmEntityResourceExtendedIntTest extends AbstractSpringBootTest {
             .andExpect(jsonPath("$.[*].target.targets").doesNotExist())
             .andExpect(jsonPath("$.[*].target.sources").doesNotExist())
             .andExpect(jsonPath("$.[*].target.attachments").exists())
-            .andExpect(jsonPath("$.[*].target.attachments.contentUrl").value(everyItem(is("content url"))))
+            .andExpect(jsonPath("$.[*].target.attachments.[*].contentUrl", containsInAnyOrder(two("content url"))))
             .andExpect(jsonPath("$.[*].target.locations").doesNotExist())
             .andExpect(jsonPath("$.[*].target.tags").doesNotExist())
             .andExpect(jsonPath("$.[*].target.calendars").doesNotExist())
@@ -2144,6 +2143,10 @@ public class XmEntityResourceExtendedIntTest extends AbstractSpringBootTest {
 
         return entity;
 
+    }
+
+    private static Object[] two(Object single) {
+        return new Object[]{single, single};
     }
 
 }

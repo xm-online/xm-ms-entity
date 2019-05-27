@@ -1,6 +1,5 @@
 package com.icthh.xm.ms.entity.config;
 
-import com.github.bohnman.squiggly.Squiggly;
 import com.icthh.xm.commons.lep.spring.web.LepInterceptor;
 import com.icthh.xm.commons.web.spring.TenantInterceptor;
 import com.icthh.xm.commons.web.spring.TenantVerifyInterceptor;
@@ -11,7 +10,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import com.icthh.xm.ms.entity.service.XmSquigglyContextProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Configuration;
@@ -34,20 +32,20 @@ public class WebMvcConfiguration extends XmWebMvcConfigurerAdapter {
     private final ApplicationProperties applicationProperties;
     private final LepInterceptor lepInterceptor;
     private final TenantVerifyInterceptor tenantVerifyInterceptor;
-    private final XmSquigglyContextProvider xmSquigglyContextProvider;
+    private final JacksonConfiguration.HttpMessageConverterCustomizer httpMessageConverterCustomizer;
 
     public WebMvcConfiguration(TenantInterceptor tenantInterceptor,
                                XmLoggingInterceptor xmLoggingInterceptor,
                                ApplicationProperties applicationProperties,
                                LepInterceptor lepInterceptor,
                                TenantVerifyInterceptor tenantVerifyInterceptor,
-                               XmSquigglyContextProvider xmSquigglyContextProvider) {
+                               JacksonConfiguration.HttpMessageConverterCustomizer httpMessageConverterCustomizer) {
         super(tenantInterceptor, xmLoggingInterceptor);
 
         this.applicationProperties = applicationProperties;
         this.lepInterceptor = lepInterceptor;
         this.tenantVerifyInterceptor = tenantVerifyInterceptor;
-        this.xmSquigglyContextProvider = xmSquigglyContextProvider;
+        this.httpMessageConverterCustomizer = httpMessageConverterCustomizer;
     }
 
     @Override
@@ -79,8 +77,8 @@ public class WebMvcConfiguration extends XmWebMvcConfigurerAdapter {
             MediaType.parseMediaType("text/csv"),
             MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"));
 
-        // add Squiggly dynamic json filter possibility to message converters.
-        initSquigglyFilterToJacksonMessageConverter(converters);
+        customizeMessageConverters(converters);
+
         super.configureMessageConverters(converters);
     }
 
@@ -100,12 +98,7 @@ public class WebMvcConfiguration extends XmWebMvcConfigurerAdapter {
         converter.setSupportedMediaTypes(mediaTypes);
     }
 
-    private void initSquigglyFilterToJacksonMessageConverter(List<HttpMessageConverter<?>> converters) {
-        converters.stream()
-                  .filter(httpMessageConverter -> MappingJackson2HttpMessageConverter.class.isAssignableFrom(
-                      httpMessageConverter.getClass()))
-                  .map(MappingJackson2HttpMessageConverter.class::cast)
-                  .peek(mc -> LOGGER.info("Init Squiggly filter for message converter: {} and objectMapper: {}", mc, mc.getObjectMapper()))
-                  .forEach(mc -> Squiggly.init(mc.getObjectMapper(), xmSquigglyContextProvider));
+    private void customizeMessageConverters(List<HttpMessageConverter<?>> converters) {
+        httpMessageConverterCustomizer.customize(converters);
     }
 }

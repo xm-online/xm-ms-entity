@@ -9,7 +9,6 @@ import org.springframework.boot.jackson.JsonObjectSerializer;
 import java.io.IOException;
 import java.time.Instant;
 
-@Deprecated
 public class SimpleXmEntitySerializer extends JsonObjectSerializer<XmEntity> {
 
     private void write(JsonGenerator jsonGenerator, SerializerProvider provider, String field, Object value)
