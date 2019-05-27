@@ -143,11 +143,6 @@ public class XmEntityLifeCycleSupportIntTest extends AbstractSpringBootTest {
             .setValidator(validator)
             .setMessageConverters(jacksonMessageConverter).build();
 
-        // Think how to do it better
-        Field field = ReflectionUtils.findField(XmLepScriptConfigServerResourceLoader.class, "scriptResources");
-        field.setAccessible(true);
-        Map lepsMap = (Map) field.get(leps);
-        lepsMap.clear();
     }
 
     void initLeps() {
