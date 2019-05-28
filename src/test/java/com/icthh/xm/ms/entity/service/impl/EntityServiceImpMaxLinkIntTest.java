@@ -179,7 +179,7 @@ public class EntityServiceImpMaxLinkIntTest extends AbstractSpringBootTest {
     @Test
     @Transactional
     public void testUpdateTargetsOk() {
-        XmEntity savedEntity = createEntity(null,"ACCOUNT.TEST_MAX_LINK");
+        XmEntity savedEntity = createEntity(null, "ACCOUNT.TEST_MAX_LINK");
 
         XmEntity target1 = xmEntityRepository.save(createEntity(null, "ACCOUNT.USER"));
         XmEntity target2 = xmEntityRepository.save(createEntity(null, "ACCOUNT.USER"));
@@ -216,10 +216,10 @@ public class EntityServiceImpMaxLinkIntTest extends AbstractSpringBootTest {
     @Test(expected = BusinessException.class)
     @Transactional
     public void testUpdateTargetsError() {
-        XmEntity savedEntity = xmEntityRepository.save(createEntity(null,"ACCOUNT.TEST_MAX_LINK"));
-        XmEntity target1 = xmEntityRepository.save(createEntity(1l,"ACCOUNT.USER"));
-        XmEntity target2 = xmEntityRepository.save(createEntity(2l,"ACCOUNT.USER"));
-        XmEntity target3 = xmEntityRepository.save(createEntity(3l,"ACCOUNT.USER"));
+        XmEntity savedEntity = xmEntityRepository.save(createEntity(null, "ACCOUNT.TEST_MAX_LINK"));
+        XmEntity target1 = xmEntityRepository.save(createEntity(1l, "ACCOUNT.USER"));
+        XmEntity target2 = xmEntityRepository.save(createEntity(2l, "ACCOUNT.USER"));
+        XmEntity target3 = xmEntityRepository.save(createEntity(3l, "ACCOUNT.USER"));
         savedEntity.addTargets(createLink(savedEntity, target1, "LINK_KEY_1"));
         xmEntityRepository.save(savedEntity);
         Set<Link> targets = new HashSet<>();
@@ -257,67 +257,32 @@ public class EntityServiceImpMaxLinkIntTest extends AbstractSpringBootTest {
     public void testUpdateSourceEmptyBDError() {
         XmEntity savedEntity = createEntity(null,"ACCOUNT.SOURCE_B");
 
-        XmEntity source1 = xmEntityRepository.save(createEntity(2l, "ACCOUNT.SOURCE_B"));
-        XmEntity source2 = xmEntityRepository.save(createEntity(3l, "ACCOUNT.SOURCE_B"));
-        XmEntity source3 = xmEntityRepository.save(createEntity(4l, "ACCOUNT.SOURCE_A"));
-        XmEntity source4 = xmEntityRepository.save(createEntity(5l, "ACCOUNT.SOURCE_A"));
+        createGraph(savedEntity, "ACCOUNT.SOURCE_B", "ACCOUNT.SOURCE_B",
+            "ACCOUNT.SOURCE_A", "ACCOUNT.SOURCE_A", false, "");
 
-        Set<Link> sources = new HashSet<>();
-        sources.add(createLink(source1, savedEntity, "LINK_KEY_3"));
-        sources.add(createLink(source2, savedEntity, "LINK_KEY_3"));
-        sources.add(createLink(source3, savedEntity, "LINK_KEY_2"));
-
-        sources.add(createLink(source4, savedEntity, "LINK_KEY_1"));
-        sources.add(createLink(source4, savedEntity, "LINK_KEY_1"));
-        sources.add(createLink(source4, savedEntity, "LINK_KEY_2"));
-        savedEntity.setSources(sources);
         xmEntityService.save(savedEntity);
+
     }
 
     @Test
     @Transactional
     public void testUpdateSourceEmptyBDOk() {
-        XmEntity savedEntity = createEntity(null,"ACCOUNT.SOURCE_B");
-
-        XmEntity source1 = xmEntityRepository.save(createEntity(2l, "ACCOUNT.SOURCE_B"));
-        XmEntity source2 = xmEntityRepository.save(createEntity(3l, "ACCOUNT.SOURCE_B"));
-        XmEntity source3 = xmEntityRepository.save(createEntity(4l, "ACCOUNT.SOURCE_A_2"));
-        XmEntity source4 = xmEntityRepository.save(createEntity(5l, "ACCOUNT.SOURCE_A_2"));
-        Set<Link> sources = new HashSet<>();
-        sources.add(createLink(source1, savedEntity, "LINK_KEY_3"));
-        sources.add(createLink(source2, savedEntity, "LINK_KEY_3"));
-        sources.add(createLink(source3, savedEntity, "LINK_KEY_2"));
-
-        sources.add(createLink(source4, savedEntity, "LINK_KEY_1"));
-        sources.add(createLink(source4, savedEntity, "LINK_KEY_1"));
-        sources.add(createLink(source4, savedEntity, "LINK_KEY_2"));
-        savedEntity.setSources(sources);
+        XmEntity savedEntity = createEntity(null, "ACCOUNT.SOURCE_B");
+        createGraph(savedEntity, "ACCOUNT.SOURCE_B", "ACCOUNT.SOURCE_B",
+            "ACCOUNT.SOURCE_A_2", "ACCOUNT.SOURCE_A_2", false, "");
         xmEntityService.save(savedEntity);
     }
 
     @Test(expected = BusinessException.class)
     @Transactional
     public void testUpdateSourceInBDGraphError1() {
-        XmEntity entity = createEntity(null,"ACCOUNT.SOURCE_B");
-        xmEntityRepository.save(entity);
-        XmEntity source1 = xmEntityRepository.save(createEntity(2l, "ACCOUNT.SOURCE_B"));
-        XmEntity source2 = xmEntityRepository.save(createEntity(3l, "ACCOUNT.SOURCE_B"));
-        XmEntity source3 = xmEntityRepository.save(createEntity(4l, "ACCOUNT.SOURCE_A_2"));
-        XmEntity source4 = xmEntityRepository.save(createEntity(5l, "ACCOUNT.SOURCE_A_2"));
-        Set<Link> sources = new HashSet<>();
-        sources.add(linkRepository.save(createLink(source1, entity, "LINK_KEY_3")));
-        sources.add(linkRepository.save(createLink(source2, entity, "LINK_KEY_3")));
-        sources.add(linkRepository.save(createLink(source3, entity, "LINK_KEY_2")));
-
-        sources.add(linkRepository.save(createLink(source4, entity, "LINK_KEY_1")));
-        sources.add(linkRepository.save(createLink(source4, entity, "LINK_KEY_1")));
-        sources.add(linkRepository.save(createLink(source4, entity, "LINK_KEY_2")));
-        entity.setSources(sources);
+        XmEntity entity = createEntity(null, "ACCOUNT.SOURCE_B");
         xmEntityRepository.save(entity);
 
-        //---------------------------------
+        XmEntity source4 = createGraph(entity, "ACCOUNT.SOURCE_B", "ACCOUNT.SOURCE_B",
+            "ACCOUNT.SOURCE_A_2", "ACCOUNT.SOURCE_A_2", true, "source4");
 
-        XmEntity savedEntity = createEntity(null,"ACCOUNT.SOURCE_B");
+        XmEntity savedEntity = createEntity(null, "ACCOUNT.SOURCE_B");
         Link link = createLink(source4, savedEntity, "LINK_KEY_2");
         savedEntity.addSources(link);
         xmEntityService.save(savedEntity);
@@ -326,35 +291,68 @@ public class EntityServiceImpMaxLinkIntTest extends AbstractSpringBootTest {
     @Test
     @Transactional
     public void testUpdateSourceOk1() {
-        XmEntity entity = createEntity(null,"ACCOUNT.SOURCE_B");
-        xmEntityRepository.save(entity);
-        XmEntity source1 = xmEntityRepository.save(createEntity(2l, "ACCOUNT.SOURCE_B_2"));
-        XmEntity source2 = xmEntityRepository.save(createEntity(3l, "ACCOUNT.SOURCE_B"));
-        XmEntity source3 = xmEntityRepository.save(createEntity(4l, "ACCOUNT.SOURCE_A_2"));
-        XmEntity source4 = xmEntityRepository.save(createEntity(5l, "ACCOUNT.TEST_MAX_LINK_1"));
-        Set<Link> sources = new HashSet<>();
-        sources.add(linkRepository.save(createLink(source1, entity, "LINK_KEY_3")));
-        sources.add(linkRepository.save(createLink(source2, entity, "LINK_KEY_3")));
-        sources.add(linkRepository.save(createLink(source3, entity, "LINK_KEY_2")));
-
-        sources.add(linkRepository.save(createLink(source4, entity, "LINK_KEY_1")));
-        sources.add(linkRepository.save(createLink(source4, entity, "LINK_KEY_1")));
-        sources.add(linkRepository.save(createLink(source4, entity, "LINK_KEY_2")));
-        entity.setSources(sources);
+        XmEntity entity = createEntity(null, "ACCOUNT.SOURCE_B");
         xmEntityRepository.save(entity);
 
-        //---------------------------------
+        XmEntity source1 = createGraph(entity, "ACCOUNT.SOURCE_B_2", "ACCOUNT.SOURCE_B",
+            "ACCOUNT.SOURCE_A_2", "ACCOUNT.TEST_MAX_LINK_1", true, "source1");
 
-        XmEntity savedEntity = createEntity(null,"ACCOUNT.SOURCE_B");
+        XmEntity savedEntity = createEntity(null, "ACCOUNT.SOURCE_B");
         XmEntity source5 = xmEntityRepository.save(createEntity(6l, "ACCOUNT.SOURCE_B"));
         savedEntity.addSources(createLink(source1, savedEntity, "LINK_KEY_3"));
         savedEntity.addSources(createLink(source5, savedEntity, "LINK_KEY_3"));
         xmEntityService.save(savedEntity);
+    }
 
-        XmEntity savedEntity2 = createEntity(null,"ACCOUNT.SOURCE_B");
+    @Test
+    @Transactional
+    public void testUpdateSourceOk2() {
+        XmEntity entity = createEntity(null, "ACCOUNT.SOURCE_B");
+        xmEntityRepository.save(entity);
+
+        XmEntity source4 = createGraph(entity, "ACCOUNT.SOURCE_B_2", "ACCOUNT.SOURCE_B",
+            "ACCOUNT.SOURCE_A_2", "ACCOUNT.TEST_MAX_LINK_1", true, "source4");
+
+        XmEntity savedEntity2 = createEntity(null, "ACCOUNT.SOURCE_B");
         Link link = createLink(source4, savedEntity2, "LINK_KEY_2");
         savedEntity2.addSources(link);
         xmEntityService.save(savedEntity2);
+    }
+
+    private XmEntity createGraph(XmEntity target, String sourceTypeKey1, String sourceTypeKey2, String sourceTypeKey3,
+                                 String sourceTypeKey4, boolean saveLinks, String returnEntity) {
+
+        XmEntity source1 = xmEntityRepository.save(createEntity(2l, sourceTypeKey1));
+        XmEntity source2 = xmEntityRepository.save(createEntity(3l, sourceTypeKey2));
+        XmEntity source3 = xmEntityRepository.save(createEntity(4l, sourceTypeKey3));
+        XmEntity source4 = xmEntityRepository.save(createEntity(5l, sourceTypeKey4));
+        Set<Link> sources = new HashSet<>();
+        if (saveLinks) {
+            sources.add(linkRepository.save(createLink(source1, target, "LINK_KEY_3")));
+            sources.add(linkRepository.save(createLink(source2, target, "LINK_KEY_3")));
+            sources.add(linkRepository.save(createLink(source3, target, "LINK_KEY_2")));
+
+            sources.add(linkRepository.save(createLink(source4, target, "LINK_KEY_1")));
+            sources.add(linkRepository.save(createLink(source4, target, "LINK_KEY_1")));
+            sources.add(linkRepository.save(createLink(source4, target, "LINK_KEY_2")));
+            target.setSources(sources);
+            xmEntityRepository.save(target);
+        } else {
+            sources.add(createLink(source1, target, "LINK_KEY_3"));
+            sources.add(createLink(source2, target, "LINK_KEY_3"));
+            sources.add(createLink(source3, target, "LINK_KEY_2"));
+
+            sources.add(createLink(source4, target, "LINK_KEY_1"));
+            sources.add(createLink(source4, target, "LINK_KEY_1"));
+            sources.add(createLink(source4, target, "LINK_KEY_2"));
+            target.setSources(sources);
+        }
+        if (returnEntity.equals("source1")) {
+            return source1;
+        } else if (returnEntity.equals("source4")) {
+            return source4;
+        }
+        return null;
     }
 
     private Link createLink(XmEntity source, XmEntity target, String linkTypeKey) {
@@ -368,7 +366,7 @@ public class EntityServiceImpMaxLinkIntTest extends AbstractSpringBootTest {
 
     private XmEntity createEntity(Long id, String typeKey) {
         XmEntity entity = new XmEntity();
-        if(id != null) {
+        if (id != null) {
             entity.setId(id);
         }
         entity.setName("Name");
@@ -381,7 +379,6 @@ public class EntityServiceImpMaxLinkIntTest extends AbstractSpringBootTest {
             .put("AAAAAAAAAA", "BBBBBBBBBB").build());
         return entity;
     }
-
 
 
 }

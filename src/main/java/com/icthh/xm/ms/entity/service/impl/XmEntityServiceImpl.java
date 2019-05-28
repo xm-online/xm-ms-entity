@@ -255,8 +255,8 @@ public class XmEntityServiceImpl implements XmEntityService {
             return;
         }
         if (linkCount > linkSpec.getMax()) {
-            throw new BusinessException("Link with type key " + newLinkTypeKey
-                + " already has the maximum number of items.");
+            throw new BusinessException("In entity with type key " + sourceTypeKey
+                + " link with type key " + newLinkTypeKey + " already has the maximum number of items.");
         }
     }
 
