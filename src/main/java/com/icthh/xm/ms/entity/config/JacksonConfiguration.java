@@ -19,7 +19,8 @@ import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.http.converter.json.SpringHandlerInstantiator;
 
-import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -28,8 +29,12 @@ import java.util.Map;
 @Configuration
 public class JacksonConfiguration {
 
+    private static final Collection<String> JSON_FILTER_APPLIED_URI = Collections.singletonList(
+        "/api/xm-entities/*/links/targets");
+
     /**
      * Support for Java date and time API.
+     *
      * @return the corresponding Jackson module.
      */
     @Bean
@@ -41,7 +46,6 @@ public class JacksonConfiguration {
     public Jdk8Module jdk8TimeModule() {
         return new Jdk8Module();
     }
-
 
     /*
      * Support for Hibernate types in Jackson.
@@ -67,57 +71,23 @@ public class JacksonConfiguration {
     }
 
     @Bean
-    public SquigglyRequestFilter squigglyRequestFilter(){
+    public SquigglyRequestFilter squigglyRequestFilter() {
         return new SquigglyRequestFilter();
     }
 
     @Bean
     public FilterRegistrationBean filterRegistrationBean() {
-        System.out.println("##### create filter register bean");
         FilterRegistrationBean<SquigglyRequestFilter> filter = new FilterRegistrationBean<>();
         filter.setFilter(squigglyRequestFilter());
         filter.setOrder(1);
-        filter.setUrlPatterns(Arrays.asList("/api/xm-entities/*/links/targets"));
+        filter.setUrlPatterns(JSON_FILTER_APPLIED_URI);
+        log.info("create Squiggly filter register with UREs: {}", JSON_FILTER_APPLIED_URI);
         return filter;
     }
 
     @Bean
     public XmSquigglyContextProvider xmSquigglyContextProvider() {
 
-        String defaultFilter = "**,target.id"
-                               + ",target.key"
-                               + ",target.typeKey"
-                               + ",target.stateKey"
-                               + ",target.name"
-                               + ",target.startDate"
-                               + ",target.endDate"
-                               + ",target.updateDate"
-                               + ",target.description"
-                               + ",target.createdBy"
-                               + ",target.removed"
-                               + ",target.data"
-//                               + ",-target.version"
-//                               + ",-target.targets"
-//                               + ",-target.sources"
-//                               + ",-target.attachments"
-//                               + ",-target.locations"
-//                               + ",-target.tags"
-//                               + ",-target.calendars"
-//                               + ",-target.ratings"
-//                               + ",-target.comments"
-//                               + ",-target.votes"
-//                               + ",-target.functionContexts"
-//                               + ",-target.events"
-//                               + ",-target.uniqueFields"
-                               + ",-targets.target.sources"
-                               + ",-targets.target.targets";
-
-//        String defaultFilter = "-super";
-
-//        String defaultFilter = "**";
-
-
-        // TODO think about default filter per beanClass.
         Map<Class, String> defaultFilterByBean = new HashMap<>();
 
         defaultFilterByBean.put(Link.class, "**,target.id"
@@ -132,28 +102,33 @@ public class JacksonConfiguration {
                                             + ",target.createdBy"
                                             + ",target.removed"
                                             + ",target.data");
-        defaultFilterByBean.put(XmEntity.class, "-targets.target.sources"
+        defaultFilterByBean.put(XmEntity.class, "**,-targets.target.sources"
                                                 + ",-targets.target.targets");
 
-        return new XmSquigglyContextProvider(defaultFilterByBean, defaultFilter);
+        return new XmSquigglyContextProvider(defaultFilterByBean);
     }
 
     @Bean
-    public HttpMessageConverterCustomizer httpMessageConverterCustomizer () {
-        return converters -> converters
-            .stream()
-            .filter(httpMessageConverter -> MappingJackson2HttpMessageConverter.class.isAssignableFrom(
-                httpMessageConverter.getClass()))
-            .map(MappingJackson2HttpMessageConverter.class::cast)
-            .peek(mc -> log.info(
-                "Init Squiggly filter for message converter: {} and objectMapper: {}", mc, mc.getObjectMapper()))
-            .forEach(mc -> Squiggly.init(mc.getObjectMapper(), xmSquigglyContextProvider()));
+    public HttpMessageConverterCustomizer httpMessageConverterCustomizer() {
+
+        Class<MappingJackson2HttpMessageConverter> expectedClass = MappingJackson2HttpMessageConverter.class;
+
+        return converters -> converters.stream()
+                                       .filter(mc -> expectedClass.isAssignableFrom(mc.getClass()))
+                                       .map(expectedClass::cast)
+                                       .forEach(this::initSquiggly);
     }
 
     public interface HttpMessageConverterCustomizer {
 
         void customize(List<HttpMessageConverter<?>> converters);
 
+    }
+
+    private void initSquiggly(MappingJackson2HttpMessageConverter converter) {
+        log.info("Init Squiggly filter for message converter: {} and objectMapper: {}",
+                 converter, converter.getObjectMapper());
+        Squiggly.init(converter.getObjectMapper(), xmSquigglyContextProvider());
     }
 
 }
