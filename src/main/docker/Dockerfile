@@ -7,7 +7,7 @@ ENV XMX=1024m \
 
 EXPOSE 8081 5701/udp
 
-ENTRYPOINT /entrypoint.sh
+ENTRYPOINT ["/entrypoint.sh"]
 
 RUN apt-get update \
         && apt-get install -y --no-install-recommends --no-install-suggests zip unzip \
