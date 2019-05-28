@@ -6,6 +6,7 @@ import static org.mockito.Mockito.when;
 
 import com.icthh.xm.commons.config.client.config.XmConfigProperties;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
+import com.icthh.xm.ms.entity.AbstractUnitTest;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
@@ -13,7 +14,7 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.class)
-public class XmEntityTenantConfigServiceUnitTest {
+public class XmEntityTenantConfigServiceUnitTest extends AbstractUnitTest {
 
     @Mock
     TenantContextHolder tenantContextHolder;
