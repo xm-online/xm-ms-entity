@@ -181,9 +181,9 @@ public class EntityServiceImpMaxLinkIntTest extends AbstractSpringBootTest {
     public void testUpdateTargetsOk() {
         XmEntity savedEntity = createEntity(null,"ACCOUNT.TEST_MAX_LINK");
 
-        XmEntity target1 = createEntity(null, "ACCOUNT.USER");
-        XmEntity target2 = createEntity(null, "ACCOUNT.USER");
-        XmEntity target3 = createEntity(null, "ACCOUNT.USER");
+        XmEntity target1 = xmEntityRepository.save(createEntity(null, "ACCOUNT.USER"));
+        XmEntity target2 = xmEntityRepository.save(createEntity(null, "ACCOUNT.USER"));
+        XmEntity target3 = xmEntityRepository.save(createEntity(null, "ACCOUNT.USER"));
 
         Set<Link> targets = new HashSet<>();
         targets.add(createLink(savedEntity, target1, "LINK_KEY_1"));
@@ -252,9 +252,6 @@ public class EntityServiceImpMaxLinkIntTest extends AbstractSpringBootTest {
         xmEntityService.save(savedEntity);
     }
 
-
-
-
     @Test(expected = BusinessException.class)
     @Transactional
     public void testUpdateSourceEmptyBDError() {
@@ -276,6 +273,7 @@ public class EntityServiceImpMaxLinkIntTest extends AbstractSpringBootTest {
         savedEntity.setSources(sources);
         xmEntityService.save(savedEntity);
     }
+
     @Test
     @Transactional
     public void testUpdateSourceEmptyBDOk() {
@@ -296,10 +294,6 @@ public class EntityServiceImpMaxLinkIntTest extends AbstractSpringBootTest {
         savedEntity.setSources(sources);
         xmEntityService.save(savedEntity);
     }
-
-
-
-    //-----------------------------------------
 
     @Test(expected = BusinessException.class)
     @Transactional
@@ -362,9 +356,6 @@ public class EntityServiceImpMaxLinkIntTest extends AbstractSpringBootTest {
         savedEntity2.addSources(link);
         xmEntityService.save(savedEntity2);
     }
-
-
-
 
     private Link createLink(XmEntity source, XmEntity target, String linkTypeKey) {
         Link link = new Link();
