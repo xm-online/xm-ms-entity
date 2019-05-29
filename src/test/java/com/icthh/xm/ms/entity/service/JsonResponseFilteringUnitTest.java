@@ -61,7 +61,7 @@ import java.util.List;
 })
 public class JsonResponseFilteringUnitTest extends AbstractWebMvcTest {
 
-    private long sequence = 0L;
+    private static long SEQUENCE = 0L;
 
     @MockBean
     private XmEntityService xmEntityService;
@@ -334,7 +334,7 @@ public class JsonResponseFilteringUnitTest extends AbstractWebMvcTest {
     }
 
     @SneakyThrows
-    private ResultActions assertLinkStructure(ResultActions actions, int expectedSize) {
+    static ResultActions assertLinkStructure(ResultActions actions, int expectedSize) {
         return actions.andExpect(jsonPath("$", hasSize(expectedSize)))
                       .andExpect(jsonPath("$.[*].id", hasSize(expectedSize)))
                       .andExpect(jsonPath("$.[*].typeKey", hasSize(expectedSize)))
@@ -376,7 +376,7 @@ public class JsonResponseFilteringUnitTest extends AbstractWebMvcTest {
                       .andExpect(jsonPath("$.[*].target.uniqueFields").doesNotExist());
     }
 
-    private XmEntity createMockResultEntity(String typeKey) {
+    static XmEntity createMockResultEntity(String typeKey) {
         XmEntity entity = createEntityComplexIncoming()
             .typeKey(typeKey)
             .createdBy("admin");
@@ -388,7 +388,7 @@ public class JsonResponseFilteringUnitTest extends AbstractWebMvcTest {
         return entity;
     }
 
-    private void addTargetLink(XmEntity source, XmEntity target) {
+    static void addTargetLink(XmEntity source, XmEntity target) {
         Link link = new Link()
             .typeKey("LINK")
             .name("link name")
@@ -401,8 +401,8 @@ public class JsonResponseFilteringUnitTest extends AbstractWebMvcTest {
         source.getTargets().add(link);
     }
 
-    private long nextId() {
-        return ++sequence;
+    private static long nextId() {
+        return ++SEQUENCE;
     }
 
     private Object[] two(Object single) {

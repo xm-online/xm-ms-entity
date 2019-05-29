@@ -19,10 +19,13 @@ public class XmSquigglyContextProvider extends RequestSquigglyContextProvider {
     private static final String HTTP_FILTER_PARAM_NAME = "fields";
 
     private final Map<Class, String> defaultFilterByBean;
+    private final XmSquigglyFilterCustomizer squigglyFilterCustomizer;
 
-    public XmSquigglyContextProvider(final Map<Class, String> defaultFilterByBean) {
+    public XmSquigglyContextProvider(final Map<Class, String> defaultFilterByBean,
+                                     final XmSquigglyFilterCustomizer squigglyFilterCustomizer) {
         super(HTTP_FILTER_PARAM_NAME, TO_REPLACE_FILTER);
         this.defaultFilterByBean = Collections.unmodifiableMap(defaultFilterByBean);
+        this.squigglyFilterCustomizer = squigglyFilterCustomizer;
     }
 
     @Override
@@ -33,7 +36,7 @@ public class XmSquigglyContextProvider extends RequestSquigglyContextProvider {
 
         String updatedFilter = super.customizeFilter(filter, request, beanClass);
 
-        return applyFilter(updatedFilter, request, beanClass);
+        return squigglyFilterCustomizer.customizeFilter(updatedFilter, request, beanClass);
 
     }
 
@@ -61,13 +64,6 @@ public class XmSquigglyContextProvider extends RequestSquigglyContextProvider {
             return customizeFilter(TO_REPLACE_FILTER, beanClass);
         }
         return super.getFilter(beanClass);
-    }
-
-    // TODO add LEP here
-    public String applyFilter(final String filter, final HttpServletRequest request, final Class beanClass) {
-        log.debug("apply json filter for URL: {}, class: {}, current filter: {}",
-                  getRequestUri(request), beanClass, filter);
-        return filter;
     }
 
     private String getRequestUri(HttpServletRequest request) {

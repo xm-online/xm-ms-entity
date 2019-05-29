@@ -9,6 +9,7 @@ import com.github.bohnman.squiggly.web.SquigglyRequestFilter;
 import com.icthh.xm.ms.entity.domain.Link;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.service.XmSquigglyContextProvider;
+import com.icthh.xm.ms.entity.service.XmSquigglyFilterCustomizer;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
 import org.springframework.boot.autoconfigure.jackson.Jackson2ObjectMapperBuilderCustomizer;
@@ -86,6 +87,11 @@ public class JacksonConfiguration {
     }
 
     @Bean
+    public XmSquigglyFilterCustomizer xmSquigglyFilterCustomizer(){
+        return new XmSquigglyFilterCustomizer();
+    }
+
+    @Bean
     public XmSquigglyContextProvider xmSquigglyContextProvider() {
 
         Map<Class, String> defaultFilterByBean = new HashMap<>();
@@ -105,7 +111,7 @@ public class JacksonConfiguration {
         defaultFilterByBean.put(XmEntity.class, "**,-targets.target.sources"
                                                 + ",-targets.target.targets");
 
-        return new XmSquigglyContextProvider(defaultFilterByBean);
+        return new XmSquigglyContextProvider(defaultFilterByBean, xmSquigglyFilterCustomizer());
     }
 
     @Bean
