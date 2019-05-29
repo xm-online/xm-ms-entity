@@ -3,9 +3,7 @@ package com.icthh.xm.ms.entity.web.rest;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 import static org.hamcrest.Matchers.containsInAnyOrder;
-import static org.hamcrest.Matchers.everyItem;
 import static org.hamcrest.Matchers.hasSize;
-import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.Assert.assertFalse;
 import static org.mockito.Mockito.when;
@@ -319,10 +317,6 @@ public class LinkResourceExtendedIntTest extends AbstractSpringBootTest {
     @SneakyThrows
     private void printMvcResult(MvcResult result) {
         log.info("MVC result: {}", result.getResponse().getContentAsString());
-    }
-
-    private static Object[] two(Object single) {
-        return new Object[]{single, single};
     }
 
 }

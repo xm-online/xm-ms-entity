@@ -6,7 +6,6 @@ import org.springframework.stereotype.Component;
 
 import java.util.Collections;
 import java.util.Map;
-import java.util.Optional;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -32,7 +31,7 @@ public class XmSquigglyContextProvider extends RequestSquigglyContextProvider {
     protected String customizeFilter(final String filter, final HttpServletRequest request, final Class beanClass) {
 
         log.debug("customize json filter for URL: {}, class: {}, current filter: {}",
-                  getRequestUri(request), beanClass, filter);
+                  request != null ? request.getRequestURI() : null, beanClass, filter);
 
         String updatedFilter = super.customizeFilter(filter, request, beanClass);
 
@@ -66,9 +65,4 @@ public class XmSquigglyContextProvider extends RequestSquigglyContextProvider {
         return super.getFilter(beanClass);
     }
 
-    private String getRequestUri(HttpServletRequest request) {
-        return Optional.ofNullable(request)
-                       .map(HttpServletRequest::getRequestURI)
-                       .orElse(null);
-    }
 }

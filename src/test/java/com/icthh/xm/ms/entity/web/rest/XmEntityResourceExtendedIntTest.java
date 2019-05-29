@@ -20,7 +20,6 @@ import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.everyItem;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.hasSize;
-import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.nullValue;
 import static org.hibernate.validator.internal.util.CollectionHelper.asSet;
@@ -44,7 +43,6 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.github.bohnman.squiggly.web.SquigglyRequestFilter;
 import com.google.common.collect.ImmutableMap;
-import com.icthh.xm.commons.config.client.service.TenantConfigService;
 import com.icthh.xm.commons.i18n.error.web.ExceptionTranslator;
 import com.icthh.xm.commons.security.XmAuthenticationContext;
 import com.icthh.xm.commons.security.XmAuthenticationContextHolder;
@@ -1654,20 +1652,17 @@ public class XmEntityResourceExtendedIntTest extends AbstractSpringBootTest {
 
         String targetJson = jacksonMessageConverter.getObjectMapper().writeValueAsString(target);
         log.info("Target JSON {}", targetJson);
-//        log.info("Taget with Utils: " + new String(TestUtil.convertObjectToJsonBytes(target)));
         String sourceJson = jacksonMessageConverter.getObjectMapper().writeValueAsString(source);
         log.info("Source JSON {}", sourceJson);
         restXmEntityMockMvc.perform(put("/api/xm-entities")
                                         .contentType(TestUtil.APPLICATION_JSON_UTF8)
                                         .content(targetJson.getBytes()))
-//                                        .content(TestUtil.convertObjectToJsonBytes(target)))
                            .andDo(r -> log.info(r.getResponse().getContentAsString()))
                            .andExpect(status().is2xxSuccessful());
 
         restXmEntityMockMvc.perform(put("/api/xm-entities")
                                         .contentType(TestUtil.APPLICATION_JSON_UTF8)
                                         .content(sourceJson.getBytes()))
-//                                        .content(TestUtil.convertObjectToJsonBytes(source)))
                            .andDo(r -> log.info(r.getResponse().getContentAsString()))
                            .andExpect(status().is2xxSuccessful());
     }
@@ -2131,7 +2126,6 @@ public class XmEntityResourceExtendedIntTest extends AbstractSpringBootTest {
         ;
 
     }
-
 
     private XmEntity createComplexEntityPersistable() {
 

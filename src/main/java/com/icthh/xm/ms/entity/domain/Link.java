@@ -77,7 +77,6 @@ public class Link implements Serializable {
 
     @ManyToOne(optional = false)
     @NotNull
-//    @JsonSerialize(using = SimpleXmEntitySerializer.class)
     private XmEntity target;
 
     @ManyToOne(optional = false)

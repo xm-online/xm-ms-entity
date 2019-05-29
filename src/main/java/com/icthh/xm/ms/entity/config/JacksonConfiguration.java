@@ -30,8 +30,8 @@ import java.util.Map;
 @Configuration
 public class JacksonConfiguration {
 
-    private static final Collection<String> JSON_FILTER_APPLIED_URI = Collections.singletonList(
-        "/api/xm-entities/*/links/targets");
+    private static final Collection<String> JSON_FILTER_APPLIED_URI =
+        Collections.singletonList("/api/xm-entities/*/links/targets");
 
     /**
      * Support for Java date and time API.

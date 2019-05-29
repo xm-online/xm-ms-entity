@@ -77,7 +77,7 @@ public class WebMvcConfiguration extends XmWebMvcConfigurerAdapter {
             MediaType.parseMediaType("text/csv"),
             MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"));
 
-        customizeMessageConverters(converters);
+        httpMessageConverterCustomizer.customize(converters);
 
         super.configureMessageConverters(converters);
     }
@@ -96,9 +96,5 @@ public class WebMvcConfiguration extends XmWebMvcConfigurerAdapter {
         ArrayList<MediaType> mediaTypes = new ArrayList<>(converter.getSupportedMediaTypes());
         mediaTypes.addAll(additionalMediaTypes);
         converter.setSupportedMediaTypes(mediaTypes);
-    }
-
-    private void customizeMessageConverters(List<HttpMessageConverter<?>> converters) {
-        httpMessageConverterCustomizer.customize(converters);
     }
 }
