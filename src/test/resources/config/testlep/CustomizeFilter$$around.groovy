@@ -1,4 +1,5 @@
 import com.icthh.xm.ms.entity.domain.Link
+import com.icthh.xm.ms.entity.domain.XmEntity
 import org.springframework.util.AntPathMatcher
 
 import javax.servlet.http.HttpServletRequest
@@ -15,6 +16,8 @@ println "### INSIDE CustomizeFilter LEP: beanClass = $beanClass"
 
 if (matcher.match('/api/xm-entities/{id}/links/targets', request.requestURI) && Link.class == beanClass) {
     filter = ['name', 'source', 'id'].join(',')
+} else if (request.requestURI == '/api/xm-entities' && XmEntity.class == beanClass){
+    filter = ['id', 'key', 'typeKey'].join(',')
 }
 println "### INSIDE CustomizeFilter LEP: applied filter = $filter"
 filter

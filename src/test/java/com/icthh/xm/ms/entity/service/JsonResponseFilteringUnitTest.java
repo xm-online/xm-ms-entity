@@ -50,7 +50,6 @@ import java.util.Collections;
 import java.util.List;
 
 @Slf4j
-//@EnableSpringDataWebSupport
 @WebMvcTest(controllers = {XmEntityResource.class, LinkResource.class})
 @ContextConfiguration(classes = {
     JacksonConfiguration.class,
@@ -117,7 +116,6 @@ public class JsonResponseFilteringUnitTest extends AbstractWebMvcTest {
                                       .setControllerAdvice(exceptionTranslator)
                                       .setMessageConverters(jacksonMessageConverter)
                                       .setCustomArgumentResolvers(pageableArgumentResolver)
-                                      // TODO define URL patterns
                                       .addFilter(httpFilter)
                                       .build();
 

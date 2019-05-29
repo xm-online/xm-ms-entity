@@ -7,6 +7,8 @@ import static com.icthh.xm.ms.entity.service.JsonResponseFilteringUnitTest.asser
 import static com.icthh.xm.ms.entity.service.JsonResponseFilteringUnitTest.createMockResultEntity;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.hamcrest.Matchers.hasSize;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.isA;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -50,6 +52,11 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.EnableAspectJAutoProxy;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
+import org.springframework.data.web.config.EnableSpringDataWebSupport;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.test.context.ContextConfiguration;
@@ -61,6 +68,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -77,6 +85,7 @@ import java.util.List;
     AspectForLepInBeanDetection.class
 })
 @EnableAspectJAutoProxy
+@EnableSpringDataWebSupport
 public class JsonResponseFilteringLepUnitTest extends AbstractWebMvcTest {
 
     // XmEntityResource config
@@ -101,6 +110,9 @@ public class JsonResponseFilteringLepUnitTest extends AbstractWebMvcTest {
 
     @Autowired
     private ExceptionTranslator exceptionTranslator;
+
+    @Autowired
+    private PageableHandlerMethodArgumentResolver pageableArgumentResolver;
 
     private MockMvc mockMvc;
 
@@ -142,6 +154,7 @@ public class JsonResponseFilteringLepUnitTest extends AbstractWebMvcTest {
         this.mockMvc = MockMvcBuilders.standaloneSetup(xmEntityResource)
                                       .setControllerAdvice(exceptionTranslator)
                                       .setMessageConverters(jacksonMessageConverter)
+                                      .setCustomArgumentResolvers(pageableArgumentResolver)
                                       .addFilter(httpFilter)
                                       .build();
 
@@ -178,7 +191,7 @@ public class JsonResponseFilteringLepUnitTest extends AbstractWebMvcTest {
 
     @Test
     @SneakyThrows
-    public void testLinksFilterAppliedWithLep() {
+    public void testLinksFilterByLepApplied() {
 
         String targetTypeKey = "ACCOUNT.USER";
 
@@ -218,6 +231,60 @@ public class JsonResponseFilteringLepUnitTest extends AbstractWebMvcTest {
             .andExpect(jsonPath("$.[*].startDate").doesNotExist())
             .andExpect(jsonPath("$.[*].endDate").doesNotExist())
             .andExpect(jsonPath("$.[*].target").doesNotExist());
+
+    }
+
+    @Test
+    @SneakyThrows
+    public void testXmEntityFilterByLepApplied() {
+
+        String targetTypeKey = "ACCOUNT.USER";
+
+        XmEntity entity1 = createMockResultEntity(targetTypeKey);
+        XmEntity entity2 = createMockResultEntity(targetTypeKey);
+
+        Page<XmEntity> result = new PageImpl<>(Arrays.asList(entity1, entity2));
+
+        when(xmEntityService.findAll(isA(Pageable.class), any(), any())).thenReturn(result);
+
+        performGet("/api/xm-entities?size=10")
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+            .andExpect(jsonPath("$.[*].key", hasSize(2)))
+            .andExpect(jsonPath("$.[*].typeKey", hasSize(2)))
+            .andExpect(jsonPath("$.[*].stateKey", hasSize(2)))
+            .andExpect(jsonPath("$.[*].name", hasSize(2)))
+            .andExpect(jsonPath("$.[*].description", hasSize(2)))
+            .andExpect(jsonPath("$.[*].startDate", hasSize(2)))
+            .andExpect(jsonPath("$.[*].endDate", hasSize(2)))
+            .andExpect(jsonPath("$.[*].data", hasSize(2)))
+            .andExpect(jsonPath("$.[*].avatarUrl", hasSize(2)))
+            .andExpect(jsonPath("$.[*].attachments.[*].typeKey", hasSize(2)))
+            .andExpect(jsonPath("$.[*].attachments.[*].content.value", hasSize(2)))
+            .andExpect(jsonPath("$.[*].locations.[*].typeKey", hasSize(2)))
+            .andExpect(jsonPath("$.[*].tags.[*].typeKey", hasSize(2)))
+        ;
+
+        initLeps(true);
+
+        performGet("/api/xm-entities?size=10")
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+            .andExpect(jsonPath("$", hasSize(2)))
+            .andExpect(jsonPath("$.[*].id", hasSize(2)))
+            .andExpect(jsonPath("$.[*].key", hasSize(2)))
+            .andExpect(jsonPath("$.[*].typeKey", hasSize(2)))
+            .andExpect(jsonPath("$.[*].stateKey").doesNotExist())
+            .andExpect(jsonPath("$.[*].name").doesNotExist())
+            .andExpect(jsonPath("$.[*].description").doesNotExist())
+            .andExpect(jsonPath("$.[*].startDate").doesNotExist())
+            .andExpect(jsonPath("$.[*].endDate").doesNotExist())
+            .andExpect(jsonPath("$.[*].data").doesNotExist())
+            .andExpect(jsonPath("$.[*].attachments").doesNotExist())
+            .andExpect(jsonPath("$.[*].locations").doesNotExist())
+            .andExpect(jsonPath("$.[*].tags").doesNotExist())
+            .andExpect(jsonPath("$.[*].avatarUrl").doesNotExist())
+        ;
 
     }
 
