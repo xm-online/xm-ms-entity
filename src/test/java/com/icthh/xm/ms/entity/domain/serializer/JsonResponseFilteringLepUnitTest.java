@@ -1,10 +1,10 @@
-package com.icthh.xm.ms.entity.service;
+package com.icthh.xm.ms.entity.domain.serializer;
 
 import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_AUTH_CONTEXT;
 import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_TENANT_CONTEXT;
-import static com.icthh.xm.ms.entity.service.JsonResponseFilteringUnitTest.addTargetLink;
-import static com.icthh.xm.ms.entity.service.JsonResponseFilteringUnitTest.assertLinkStructure;
-import static com.icthh.xm.ms.entity.service.JsonResponseFilteringUnitTest.createMockResultEntity;
+import static com.icthh.xm.ms.entity.domain.serializer.JsonResponseFilteringUnitTest.addTargetLink;
+import static com.icthh.xm.ms.entity.domain.serializer.JsonResponseFilteringUnitTest.assertLinkStructure;
+import static com.icthh.xm.ms.entity.domain.serializer.JsonResponseFilteringUnitTest.createMockResultEntity;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.hamcrest.Matchers.hasSize;
 import static org.mockito.ArgumentMatchers.any;
@@ -37,6 +37,10 @@ import com.icthh.xm.ms.entity.domain.Link;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.domain.ext.IdOrKey;
 import com.icthh.xm.ms.entity.repository.kafka.ProfileEventProducer;
+import com.icthh.xm.ms.entity.service.FunctionService;
+import com.icthh.xm.ms.entity.service.ProfileService;
+import com.icthh.xm.ms.entity.service.TenantService;
+import com.icthh.xm.ms.entity.service.XmEntityService;
 import com.icthh.xm.ms.entity.web.rest.XmEntityResource;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
