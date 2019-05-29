@@ -1,4 +1,4 @@
-package com.icthh.xm.ms.entity.service;
+package com.icthh.xm.ms.entity.domain.serializer;
 
 import com.icthh.xm.commons.lep.LogicExtensionPoint;
 import com.icthh.xm.commons.lep.spring.LepService;

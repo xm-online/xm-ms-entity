@@ -1,4 +1,4 @@
-package com.icthh.xm.ms.entity.service;
+package com.icthh.xm.ms.entity.domain.serializer;
 
 import com.github.bohnman.squiggly.web.RequestSquigglyContextProvider;
 import lombok.extern.slf4j.Slf4j;
