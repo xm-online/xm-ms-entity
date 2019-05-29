@@ -545,7 +545,7 @@ public class XmEntityResourceExtendedIntTest extends AbstractSpringBootTest {
         return mapper.writeValueAsBytes(object);
     }
 
-    private XmEntity convertJsonToOnject(String json) throws IOException {
+    private XmEntity convertJsonToObject(String json) throws IOException {
         return objectMapper.readValue(json, XmEntity.class);
     }
 
@@ -1880,7 +1880,7 @@ public class XmEntityResourceExtendedIntTest extends AbstractSpringBootTest {
             .andReturn()
         ;
 
-        XmEntity toUpdate = convertJsonToOnject(result.getResponse().getContentAsString());
+        XmEntity toUpdate = convertJsonToObject(result.getResponse().getContentAsString());
         toUpdate.setAvatarUrl(DEFAULT_AVATAR_URL_PREFIX + "bbbbb.jpg");
         toUpdate.setName("new_name1");
 
@@ -1912,7 +1912,7 @@ public class XmEntityResourceExtendedIntTest extends AbstractSpringBootTest {
         // Validate the XmEntity in Elasticsearch
         XmEntity xmEntityEs = xmEntitySearchRepository.findById(valueOf(id.toString()))
                                                       .orElseThrow(NullPointerException::new);
-        XmEntity testXmEntity = convertJsonToOnject(result.getResponse().getContentAsString());
+        XmEntity testXmEntity = convertJsonToObject(result.getResponse().getContentAsString());
         assertThat(xmEntityEs).isEqualToIgnoringGivenFields(testXmEntity,
                                                             "version",
                                                             "avatarUrlRelative",
