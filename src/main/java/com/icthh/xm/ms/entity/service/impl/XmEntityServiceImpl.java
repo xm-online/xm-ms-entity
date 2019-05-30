@@ -1,21 +1,5 @@
 package com.icthh.xm.ms.entity.service.impl;
 
-import static com.icthh.xm.ms.entity.domain.spec.LinkSpec.NEW_BUILDER_TYPE;
-import static com.icthh.xm.ms.entity.domain.spec.LinkSpec.SEARCH_BUILDER_TYPE;
-import static com.icthh.xm.ms.entity.util.CustomCollectionUtils.nullSafe;
-import static com.jayway.jsonpath.Configuration.defaultConfiguration;
-import static com.jayway.jsonpath.Option.SUPPRESS_EXCEPTIONS;
-import static java.util.Collections.emptyList;
-import static java.util.Collections.singletonList;
-import static java.util.Optional.ofNullable;
-import static java.util.stream.Collectors.toList;
-import static java.util.stream.Collectors.toMap;
-import static java.util.stream.Collectors.toSet;
-import static org.apache.commons.collections.MapUtils.isEmpty;
-import static org.apache.commons.lang3.StringUtils.isBlank;
-import static org.apache.commons.lang3.StringUtils.isNoneBlank;
-import static org.springframework.beans.BeanUtils.isSimpleValueType;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.icthh.xm.commons.exceptions.BusinessException;
 import com.icthh.xm.commons.exceptions.EntityNotFoundException;
@@ -89,18 +73,33 @@ import org.springframework.web.multipart.MultipartFile;
 import javax.annotation.Nullable;
 import java.net.URI;
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.IntStream;
+
+import static com.icthh.xm.ms.entity.domain.spec.LinkSpec.NEW_BUILDER_TYPE;
+import static com.icthh.xm.ms.entity.domain.spec.LinkSpec.SEARCH_BUILDER_TYPE;
+import static com.icthh.xm.ms.entity.util.CustomCollectionUtils.nullSafe;
+import static com.jayway.jsonpath.Configuration.defaultConfiguration;
+import static com.jayway.jsonpath.Option.SUPPRESS_EXCEPTIONS;
+import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
+import static java.util.Optional.ofNullable;
+import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toMap;
+import static java.util.stream.Collectors.toSet;
+import static org.apache.commons.collections.MapUtils.isEmpty;
+import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.apache.commons.lang3.StringUtils.isNoneBlank;
+import static org.springframework.beans.BeanUtils.isSimpleValueType;
 
 /**
  * Service Implementation for managing XmEntity.
@@ -174,8 +173,8 @@ public class XmEntityServiceImpl implements XmEntityService {
             }
         }
 
-        assertSourceEntityMaxLinkValue(xmEntity);
-        assertEntityTargetsMaxValue(xmEntity);
+        assertEntitySourcesMaxLinkValue(xmEntity);
+        assertEntityTargetsMaxLinkValue(xmEntity);
 
         // FIXME It is hack to link each tag with entity before persisting. may be there is more elegant solution.
         xmEntity.updateXmEntityReference(xmEntity.getAttachments(), Attachment::setXmEntity);
@@ -199,18 +198,19 @@ public class XmEntityServiceImpl implements XmEntityService {
         return xmEntityRepository.save(xmEntity);
     }
 
-    private void assertSourceEntityMaxLinkValue(XmEntity xmEntity) {
+    private void assertEntitySourcesMaxLinkValue(XmEntity xmEntity) {
         if (xmEntity.getSources().isEmpty()) {
             return;
         }
         Set<Link> newLinks = xmEntity.getSources().stream().filter(Link::isNew).collect(toSet());
-        Set<Link> newUniqLinks = new HashSet<>();
-        makeLinkListUniq(newLinks, newUniqLinks);
-        List<Long> sourceIds = newUniqLinks.stream().map(Link::getSource).map(XmEntity::getId).collect(toList());
-        Set<Long> uniqId = new HashSet<>(sourceIds);
-        sourceIds.clear();
-        sourceIds.addAll(uniqId);
-
+        Set<Link> newUniqLinks = new TreeSet<>((l1, l2) -> {
+            if (l1.getTypeKey().equals(l2.getTypeKey()) && l1.getSource().getId().equals(l2.getSource().getId())) {
+                return 0;
+            }
+            return 1;
+        });
+        newUniqLinks.addAll(newLinks);
+        List<Long> sourceIds = newUniqLinks.stream().map(Link::getSource).map(XmEntity::getId).distinct().collect(toList());
         List<String> sourceTypeKey = xmEntityRepository.findAllStateProjectionByIdIn(sourceIds)
             .stream().map(XmEntityStateProjection::getTypeKey).collect(toList());
         Map<Long, String> sourceIdsAndTypeKeys = IntStream.range(0, (sourceIds.size())).boxed()
@@ -219,17 +219,6 @@ public class XmEntityServiceImpl implements XmEntityService {
             it.getSource(),
             newLinks,
             sourceIdsAndTypeKeys));
-    }
-
-    private void makeLinkListUniq(Set<Link> newLinks, Set<Link> newUniqLinks) {
-        for (Link link : newLinks) {
-            if (newLinks.stream().filter(it -> it.getTypeKey().equals(link.getTypeKey()) && it.getSource().equals(link.getSource())).count() == 1) {
-                newUniqLinks.add(link);
-            } else {
-                newUniqLinks.add(newLinks.stream().filter(it -> it.getTypeKey().equals(link.getTypeKey())
-                    && it.getSource().equals(link.getSource())).findFirst().get());
-            }
-        }
     }
 
     private void linkCount(String newLinkTypeKey,
@@ -260,7 +249,7 @@ public class XmEntityServiceImpl implements XmEntityService {
         }
     }
 
-    private void assertEntityTargetsMaxValue(XmEntity xmEntity) {
+    private void assertEntityTargetsMaxLinkValue(XmEntity xmEntity) {
         if (xmEntity.getTargets().isEmpty()) {
             return;
         }
