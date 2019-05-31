@@ -9,6 +9,7 @@ import com.icthh.xm.commons.web.spring.config.XmWebMvcConfigurerAdapter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Configuration;
@@ -31,18 +32,20 @@ public class WebMvcConfiguration extends XmWebMvcConfigurerAdapter {
     private final ApplicationProperties applicationProperties;
     private final LepInterceptor lepInterceptor;
     private final TenantVerifyInterceptor tenantVerifyInterceptor;
+    private final JacksonConfiguration.HttpMessageConverterCustomizer httpMessageConverterCustomizer;
 
-    public WebMvcConfiguration(
-                    TenantInterceptor tenantInterceptor,
-                    XmLoggingInterceptor xmLoggingInterceptor,
-                    ApplicationProperties applicationProperties,
-                    LepInterceptor lepInterceptor,
-                    TenantVerifyInterceptor tenantVerifyInterceptor) {
+    public WebMvcConfiguration(TenantInterceptor tenantInterceptor,
+                               XmLoggingInterceptor xmLoggingInterceptor,
+                               ApplicationProperties applicationProperties,
+                               LepInterceptor lepInterceptor,
+                               TenantVerifyInterceptor tenantVerifyInterceptor,
+                               JacksonConfiguration.HttpMessageConverterCustomizer httpMessageConverterCustomizer) {
         super(tenantInterceptor, xmLoggingInterceptor);
 
         this.applicationProperties = applicationProperties;
         this.lepInterceptor = lepInterceptor;
         this.tenantVerifyInterceptor = tenantVerifyInterceptor;
+        this.httpMessageConverterCustomizer = httpMessageConverterCustomizer;
     }
 
     @Override
@@ -73,6 +76,9 @@ public class WebMvcConfiguration extends XmWebMvcConfigurerAdapter {
         addSupportedMediaTypesTo(converters, MappingJackson2HttpMessageConverter.class,
             MediaType.parseMediaType("text/csv"),
             MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"));
+
+        httpMessageConverterCustomizer.customize(converters);
+
         super.configureMessageConverters(converters);
     }
 

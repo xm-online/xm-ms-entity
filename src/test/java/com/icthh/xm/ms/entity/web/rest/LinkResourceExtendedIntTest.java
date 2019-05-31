@@ -2,11 +2,19 @@ package com.icthh.xm.ms.entity.web.rest;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
+import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.notNullValue;
+import static org.junit.Assert.assertFalse;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.icthh.xm.commons.i18n.error.web.ExceptionTranslator;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
@@ -18,6 +26,8 @@ import com.icthh.xm.ms.entity.repository.XmEntityRepository;
 import com.icthh.xm.ms.entity.repository.search.PermittedSearchRepository;
 import com.icthh.xm.ms.entity.service.LinkService;
 import com.icthh.xm.ms.entity.service.impl.StartUpdateDateGenerationStrategy;
+import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -26,10 +36,12 @@ import org.mockito.Spy;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
+import org.springframework.http.MediaType;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.transaction.BeforeTransaction;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.Validator;
@@ -43,6 +55,7 @@ import javax.persistence.EntityManager;
  *
  * @see LinkResource
  */
+@Slf4j
 @WithMockUser(authorities = {"SUPER-ADMIN"})
 public class LinkResourceExtendedIntTest extends AbstractSpringBootTest {
 
@@ -81,6 +94,9 @@ public class LinkResourceExtendedIntTest extends AbstractSpringBootTest {
     @Autowired
     private XmEntityRepository xmEntityRepository;
 
+    @Autowired
+    private ObjectMapper objectMapper;
+
     @Spy
     private StartUpdateDateGenerationStrategy startUpdateDateGenerationStrategy;
 
@@ -116,6 +132,8 @@ public class LinkResourceExtendedIntTest extends AbstractSpringBootTest {
                                               .setMessageConverters(jacksonMessageConverter).build();
 
         link = LinkResourceIntTest.createEntity(em);
+
+        objectMapper.configure(SerializationFeature.INDENT_OUTPUT, true);
 
     }
 
@@ -171,7 +189,7 @@ public class LinkResourceExtendedIntTest extends AbstractSpringBootTest {
 
     @Test
     @Transactional
-    public void checkStartDateIsRequiredInDb() throws Exception {
+    public void checkStartDateIsRequiredInDb() {
 
         Link o = linkService.save(link);
         // set the field null
@@ -187,6 +205,118 @@ public class LinkResourceExtendedIntTest extends AbstractSpringBootTest {
                 .containsIgnoringCase("NULL not allowed for column \"START_DATE\"");
         }
 
+    }
+
+    @Test
+    @Transactional
+    @WithMockUser(authorities = "SUPER-ADMIN")
+    public void getAllLinks() throws Exception {
+        // Initialize the database
+        link.getTarget().setCreatedBy("admin");
+        linkRepository.saveAndFlush(link);
+
+        // Get all the linkList
+        restLinkMockMvc.perform(get("/api/links?sort=id,desc"))
+                       .andExpect(status().isOk())
+                       .andDo(this::printMvcResult)
+                       .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+                       .andExpect(jsonPath("$", hasSize(1)))
+                       .andExpect(jsonPath("$.[*].id", containsInAnyOrder(link.getId().intValue())))
+                       .andExpect(jsonPath("$.[*].typeKey", containsInAnyOrder(LinkResourceIntTest.DEFAULT_TYPE_KEY)))
+                       .andExpect(jsonPath("$.[*].name", containsInAnyOrder(LinkResourceIntTest.DEFAULT_NAME)))
+                       .andExpect(jsonPath("$.[*].description", containsInAnyOrder(LinkResourceIntTest.DEFAULT_DESCRIPTION)))
+                       .andExpect(jsonPath("$.[*].startDate", containsInAnyOrder(LinkResourceIntTest.DEFAULT_START_DATE.toString())))
+                       .andExpect(jsonPath("$.[*].endDate", containsInAnyOrder(LinkResourceIntTest.DEFAULT_END_DATE.toString())))
+
+                       .andExpect(jsonPath("$.[*].target").exists())
+                       .andExpect(jsonPath("$.[*].target.id", hasSize(1)))
+                       .andExpect(jsonPath("$.[*].target.key", hasSize(1)))
+                       .andExpect(jsonPath("$.[*].target.typeKey", hasSize(1)))
+                       .andExpect(jsonPath("$.[*].target.stateKey", hasSize(1)))
+                       .andExpect(jsonPath("$.[*].target.name", hasSize(1)))
+                       .andExpect(jsonPath("$.[*].target.startDate", hasSize(1)))
+                       .andExpect(jsonPath("$.[*].target.endDate", hasSize(1)))
+                       .andExpect(jsonPath("$.[*].target.updateDate", hasSize(1)))
+                       .andExpect(jsonPath("$.[*].target.description", hasSize(1)))
+                       .andExpect(jsonPath("$.[*].target.createdBy", hasSize(1)))
+                       .andExpect(jsonPath("$.[*].target.removed", hasSize(1)))
+                       .andExpect(jsonPath("$.[*].target.data").exists())
+                       .andExpect(jsonPath("$.[*].target.data.AAAAAAAAAA", hasSize(1)))
+
+                       .andExpect(jsonPath("$.[*].target.avatarUrlRelative").doesNotExist())
+                       .andExpect(jsonPath("$.[*].target.avatarUrlFull").doesNotExist())
+                       .andExpect(jsonPath("$.[*].target.version").doesNotExist())
+                       .andExpect(jsonPath("$.[*].target.targets").doesNotExist())
+                       .andExpect(jsonPath("$.[*].target.sources").doesNotExist())
+                       .andExpect(jsonPath("$.[*].target.attachments").doesNotExist())
+                       .andExpect(jsonPath("$.[*].target.locations").doesNotExist())
+                       .andExpect(jsonPath("$.[*].target.tags").doesNotExist())
+                       .andExpect(jsonPath("$.[*].target.calendars").doesNotExist())
+                       .andExpect(jsonPath("$.[*].target.ratings").doesNotExist())
+                       .andExpect(jsonPath("$.[*].target.comments").doesNotExist())
+                       .andExpect(jsonPath("$.[*].target.votes").doesNotExist())
+                       .andExpect(jsonPath("$.[*].target.functionContexts").doesNotExist())
+                       .andExpect(jsonPath("$.[*].target.events").doesNotExist())
+                       .andExpect(jsonPath("$.[*].target.uniqueFields").doesNotExist())
+        ;
+    }
+
+    @Test
+    @Transactional
+    public void getLink() throws Exception {
+        // Initialize the database
+        link.getTarget().setCreatedBy("admin");
+        linkRepository.saveAndFlush(link);
+
+        assertFalse(link.getTarget().isRemoved());
+
+        // Get the link
+        restLinkMockMvc.perform(get("/api/links/{id}", link.getId()))
+                       .andExpect(status().isOk())
+                       .andDo(this::printMvcResult)
+                       .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+                       .andExpect(jsonPath("$.id").value(link.getId().intValue()))
+                       .andExpect(jsonPath("$.typeKey").value(LinkResourceIntTest.DEFAULT_TYPE_KEY))
+                       .andExpect(jsonPath("$.name").value(LinkResourceIntTest.DEFAULT_NAME))
+                       .andExpect(jsonPath("$.description").value(LinkResourceIntTest.DEFAULT_DESCRIPTION))
+                       .andExpect(jsonPath("$.startDate").value(LinkResourceIntTest.DEFAULT_START_DATE.toString()))
+                       .andExpect(jsonPath("$.endDate").value(LinkResourceIntTest.DEFAULT_END_DATE.toString()))
+                       .andExpect(jsonPath("$.target").exists())
+                       .andExpect(jsonPath("$.target.id").value(notNullValue()))
+                       .andExpect(jsonPath("$.target.key").value(notNullValue()))
+                       .andExpect(jsonPath("$.target.typeKey").value(notNullValue()))
+                       .andExpect(jsonPath("$.target.stateKey").value(notNullValue()))
+                       .andExpect(jsonPath("$.target.name").value(notNullValue()))
+                       .andExpect(jsonPath("$.target.startDate").value(notNullValue()))
+                       .andExpect(jsonPath("$.target.endDate").value(notNullValue()))
+                       .andExpect(jsonPath("$.target.updateDate").value(notNullValue()))
+                       .andExpect(jsonPath("$.target.description").value(notNullValue()))
+                       .andExpect(jsonPath("$.target.createdBy").value(notNullValue()))
+                       .andExpect(jsonPath("$.target.removed").value(notNullValue()))
+                       .andExpect(jsonPath("$.target.data").exists())
+                       .andExpect(jsonPath("$.target.data.AAAAAAAAAA").value(notNullValue()))
+
+                       .andExpect(jsonPath("$.target.avatarUrlRelative").doesNotExist())
+                       .andExpect(jsonPath("$.target.avatarUrlFull").doesNotExist())
+                       .andExpect(jsonPath("$.target.version").doesNotExist())
+                       .andExpect(jsonPath("$.target.targets").doesNotExist())
+                       .andExpect(jsonPath("$.target.sources").doesNotExist())
+                       .andExpect(jsonPath("$.target.attachments").doesNotExist())
+                       .andExpect(jsonPath("$.target.locations").doesNotExist())
+                       .andExpect(jsonPath("$.target.tags").doesNotExist())
+                       .andExpect(jsonPath("$.target.calendars").doesNotExist())
+                       .andExpect(jsonPath("$.target.ratings").doesNotExist())
+                       .andExpect(jsonPath("$.target.comments").doesNotExist())
+                       .andExpect(jsonPath("$.target.votes").doesNotExist())
+                       .andExpect(jsonPath("$.target.functionContexts").doesNotExist())
+                       .andExpect(jsonPath("$.target.events").doesNotExist())
+                       .andExpect(jsonPath("$.target.uniqueFields").doesNotExist())
+        ;
+    }
+
+    @SneakyThrows
+    private void printMvcResult(MvcResult result) {
+        log.info("MVC result: {}", result.getResponse().getContentAsString());
     }
 
 }
