@@ -41,7 +41,6 @@ import com.fasterxml.jackson.annotation.PropertyAccessor;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import com.github.bohnman.squiggly.web.SquigglyRequestFilter;
 import com.google.common.collect.ImmutableMap;
 import com.icthh.xm.commons.i18n.error.web.ExceptionTranslator;
 import com.icthh.xm.commons.security.XmAuthenticationContext;
@@ -53,6 +52,7 @@ import com.icthh.xm.ms.entity.AbstractSpringBootTest;
 import com.icthh.xm.ms.entity.config.ApplicationProperties;
 import com.icthh.xm.ms.entity.config.Constants;
 import com.icthh.xm.ms.entity.config.InternalTransactionService;
+import com.icthh.xm.ms.entity.config.WebMvcConfiguration;
 import com.icthh.xm.ms.entity.config.XmEntityTenantConfigService;
 import com.icthh.xm.ms.entity.domain.Attachment;
 import com.icthh.xm.ms.entity.domain.Calendar;
@@ -63,6 +63,7 @@ import com.icthh.xm.ms.entity.domain.Location;
 import com.icthh.xm.ms.entity.domain.Tag;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.domain.ext.IdOrKey;
+import com.icthh.xm.ms.entity.domain.serializer.XmSquigglyInterceptor;
 import com.icthh.xm.ms.entity.lep.keyresolver.TypeKeyWithExtends;
 import com.icthh.xm.ms.entity.repository.SpringXmEntityRepository;
 import com.icthh.xm.ms.entity.repository.UniqueFieldRepository;
@@ -282,7 +283,7 @@ public class XmEntityResourceExtendedIntTest extends AbstractSpringBootTest {
     XmEntityPermittedSearchRepository xmEntityPermittedSearchRepository;
 
     @Autowired
-    SquigglyRequestFilter requestFilter;
+    XmSquigglyInterceptor xmSquigglyInterceptor;
 
     @Mock
     private XmAuthenticationContextHolder authContextHolder;
@@ -375,7 +376,8 @@ public class XmEntityResourceExtendedIntTest extends AbstractSpringBootTest {
                                                   .setControllerAdvice(exceptionTranslator)
                                                   .setValidator(validator)
                                                   .setMessageConverters(jacksonMessageConverter)
-                                                  .addFilter(requestFilter)
+                                                  .addMappedInterceptors(WebMvcConfiguration.getJsonFilterAllowedURIs(),
+                                                                         xmSquigglyInterceptor)
                                                   .build();
 
         xmEntityIncoming = createEntityComplexIncoming();

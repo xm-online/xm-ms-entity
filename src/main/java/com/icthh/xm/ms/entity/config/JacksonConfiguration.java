@@ -5,23 +5,20 @@ import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.fasterxml.jackson.module.afterburner.AfterburnerModule;
 import com.github.bohnman.squiggly.Squiggly;
-import com.github.bohnman.squiggly.web.SquigglyRequestFilter;
 import com.icthh.xm.ms.entity.domain.Link;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.domain.serializer.XmSquigglyContextProvider;
 import com.icthh.xm.ms.entity.domain.serializer.XmSquigglyFilterCustomizer;
+import com.icthh.xm.ms.entity.domain.serializer.XmSquigglyInterceptor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
 import org.springframework.boot.autoconfigure.jackson.Jackson2ObjectMapperBuilderCustomizer;
-import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.http.converter.json.SpringHandlerInstantiator;
 
-import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -29,9 +26,6 @@ import java.util.Map;
 @Slf4j
 @Configuration
 public class JacksonConfiguration {
-
-    private static final Collection<String> JSON_FILTER_APPLIED_URI =
-        Collections.singletonList("/api/xm-entities/*/links/targets");
 
     /**
      * Support for Java date and time API.
@@ -72,18 +66,8 @@ public class JacksonConfiguration {
     }
 
     @Bean
-    public SquigglyRequestFilter squigglyRequestFilter() {
-        return new SquigglyRequestFilter();
-    }
-
-    @Bean
-    public FilterRegistrationBean filterRegistrationBean() {
-        FilterRegistrationBean<SquigglyRequestFilter> filter = new FilterRegistrationBean<>();
-        filter.setFilter(squigglyRequestFilter());
-        filter.setOrder(1);
-        filter.setUrlPatterns(JSON_FILTER_APPLIED_URI);
-        log.info("create Squiggly filter register with UREs: {}", JSON_FILTER_APPLIED_URI);
-        return filter;
+    public XmSquigglyInterceptor xmSquigglyInterceptor(){
+        return new XmSquigglyInterceptor();
     }
 
     @Bean
