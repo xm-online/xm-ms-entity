@@ -33,40 +33,54 @@ public class ChainedLifecycleLepStrategy implements LifecycleLepStrategy {
     private ChainedLifecycleLepStrategy internal;
 
     @LogicExtensionPoint(value = "ChangeState", resolver = ChangeStateTransitionLepKeyResolver.class)
-    public XmEntity changeStateByTransition(IdOrKey idOrKey, String baseTypeKey, String xmEntityTypeKey, String prevStateKey, String nextStateKey, Map<String, Object> context) {
+    public XmEntity changeStateByTransition(IdOrKey idOrKey, String xmEntityTypeKey, String prevStateKey, String nextStateKey, Map<String, Object> context, String baseTypeKey) {
         if (typeKeyWithExtends.doInheritance(xmEntityTypeKey)) {
             String nextTypeKey = typeKeyWithExtends.nextTypeKey(xmEntityTypeKey);
-            return internal.changeStateByTransition(idOrKey, baseTypeKey, nextTypeKey, prevStateKey, nextStateKey, context);
+            return internal.changeStateByTransition(idOrKey, nextTypeKey, prevStateKey, nextStateKey, context, baseTypeKey);
         } else {
-            return internal.changeStateByTargetState(idOrKey, baseTypeKey, baseTypeKey, nextStateKey, context);
+            return internal.changeStateByTargetState(idOrKey, baseTypeKey, nextStateKey, context);
         }
     }
 
     @LogicExtensionPoint(value = "ChangeState", resolver = ChangeStateTargetStateLepKeyResolver.class)
-    public XmEntity changeStateByTargetState(IdOrKey idOrKey, String baseTypeKey, String xmEntityTypeKey, String nextStateKey, Map<String, Object> context) {
+    public XmEntity changeStateByTargetState(IdOrKey idOrKey, String xmEntityTypeKey, String nextStateKey, Map<String, Object> context, String baseTypeKey) {
         if (typeKeyWithExtends.doInheritance(xmEntityTypeKey)) {
             String nextTypeKey = typeKeyWithExtends.nextTypeKey(xmEntityTypeKey);
-            return internal.changeStateByTargetState(idOrKey, baseTypeKey, nextTypeKey, nextStateKey, context);
+            return internal.changeStateByTargetState(idOrKey, nextTypeKey, nextStateKey, context, baseTypeKey);
         } else {
-            return internal.changeStateByXmEntity(idOrKey, baseTypeKey, baseTypeKey, nextStateKey, context);
+            return internal.changeStateByXmEntity(idOrKey, baseTypeKey, nextStateKey, context);
         }
     }
 
     @LogicExtensionPoint(value = "ChangeState", resolver = TargetEntityTypeLepKeyResolver.class)
-    public XmEntity changeStateByXmEntity(IdOrKey idOrKey, String baseTypeKey, String xmEntityTypeKey, String nextStateKey, Map<String, Object> context) {
+    public XmEntity changeStateByXmEntity(IdOrKey idOrKey, String xmEntityTypeKey, String nextStateKey, Map<String, Object> context, String baseTypeKey) {
         if (typeKeyWithExtends.doInheritance(xmEntityTypeKey)) {
             String nextTypeKey = typeKeyWithExtends.nextTypeKey(xmEntityTypeKey);
-            return internal.changeStateByXmEntity(idOrKey, baseTypeKey, nextTypeKey, nextStateKey, context);
+            return internal.changeStateByXmEntity(idOrKey, nextTypeKey, nextStateKey, context, baseTypeKey);
         } else {
             return lifeCycleService.changeState(idOrKey, nextStateKey, context);
         }
     }
 
-    @Override
-    public XmEntity changeState(IdOrKey idOrKey, String xmEntityTypeKey, String prevStateKey, String nextStateKey, Map<String, Object> context) {
-        return internal.changeStateByTransition(idOrKey, xmEntityTypeKey, xmEntityTypeKey, prevStateKey, nextStateKey, context);
+    @LogicExtensionPoint(value = "ChangeState", resolver = ChangeStateTransitionLepKeyResolver.class)
+    public XmEntity changeStateByTransition(IdOrKey idOrKey, String xmEntityTypeKey, String prevStateKey, String nextStateKey, Map<String, Object> context) {
+        return changeStateByTransition(idOrKey, xmEntityTypeKey, prevStateKey, nextStateKey, context, xmEntityTypeKey);
     }
 
+    @LogicExtensionPoint(value = "ChangeState", resolver = ChangeStateTargetStateLepKeyResolver.class)
+    public XmEntity changeStateByTargetState(IdOrKey idOrKey, String xmEntityTypeKey, String nextStateKey, Map<String, Object> context) {
+        return changeStateByTargetState(idOrKey, xmEntityTypeKey, nextStateKey, context, xmEntityTypeKey);
+    }
+
+    @LogicExtensionPoint(value = "ChangeState", resolver = TargetEntityTypeLepKeyResolver.class)
+    public XmEntity changeStateByXmEntity(IdOrKey idOrKey, String xmEntityTypeKey, String nextStateKey, Map<String, Object> context) {
+        return changeStateByXmEntity(idOrKey, xmEntityTypeKey, nextStateKey, context, xmEntityTypeKey);
+    }
+
+    @Override
+    public XmEntity changeState(IdOrKey idOrKey, String xmEntityTypeKey, String prevStateKey, String nextStateKey, Map<String, Object> context) {
+        return internal.changeStateByTransition(idOrKey, xmEntityTypeKey, prevStateKey, nextStateKey, context);
+    }
 }
 
 
