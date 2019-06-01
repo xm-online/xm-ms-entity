@@ -333,17 +333,22 @@ public class XmEntityServiceImpl implements XmEntityService {
             throw new IllegalArgumentException("Key mode is not supported yet");
         }
         XmEntity xmEntity = xmEntityRepository.findOne(idOrKey.getId(), embed);
-        return xmEntity == null ? xmEntity : self.getOneEntity(xmEntity, xmEntity.getTypeKey());
+        return xmEntity == null ? xmEntity : self.getOneEntity(xmEntity);
     }
 
 
     private XmEntity findOneById(Long xmEntityId) {
         XmEntity xmEntity = xmEntityRepository.findOneById(xmEntityId);
-        return xmEntity == null ? xmEntity : self.getOneEntity(xmEntity, xmEntity.getTypeKey());
+        return xmEntity == null ? xmEntity : self.getOneEntity(xmEntity);
     }
 
     // need for lep post processing with split script by typeKey
     @LogicExtensionPoint(value = "FindOnePostProcessing", resolver = XmEntityTypeKeyResolver.class)
+    public XmEntity getOneEntity(XmEntity xmEntity) {
+        return getOneEntity(xmEntity, xmEntity.getTypeKey());
+    }
+
+    @LogicExtensionPoint(value = "FindOnePostProcessing", resolver = TypeKeyResolver.class)
     public XmEntity getOneEntity(XmEntity xmEntity, String typeKey) {
         if (typeKeyWithExtends.doInheritance(typeKey)) {
             return self.getOneEntity(xmEntity, typeKeyWithExtends.nextTypeKey(typeKey));

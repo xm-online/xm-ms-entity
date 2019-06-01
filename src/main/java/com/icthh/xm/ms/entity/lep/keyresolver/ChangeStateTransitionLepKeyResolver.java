@@ -27,8 +27,8 @@ public class ChangeStateTransitionLepKeyResolver extends AppendLepKeyResolver {
                                          LepMethod method,
                                          LepManagerService managerService) {
         String translatedXmEntityTypeKey = translateToLepConvention(getRequiredStrParam(method, "xmEntityTypeKey"));
-        String translatedNextStateKey = translateToLepConvention(getRequiredStrParam(method, "nextStateKey"));
         String translatedPrevStateKey = translateToLepConvention(getRequiredStrParam(method, "prevStateKey"));
+        String translatedNextStateKey = translateToLepConvention(getRequiredStrParam(method, "nextStateKey"));
 
         return new String[] {
             translatedXmEntityTypeKey,

@@ -143,6 +143,7 @@ public class XmEntityLifeCycleSupportIntTest extends AbstractSpringBootTest {
             .setValidator(validator)
             .setMessageConverters(jacksonMessageConverter).build();
 
+        uninitLeps();
     }
 
     void initLeps() {
@@ -162,6 +163,23 @@ public class XmEntityLifeCycleSupportIntTest extends AbstractSpringBootTest {
         }
     }
 
+    void uninitLeps() {
+
+        val testLeps = new String[]{
+            "ChangeState$$TEST_LIFECYCLE$$around.groovy",
+            "ChangeState$$TEST_LIFECYCLE$$STATE4$$around.groovy",
+            "ChangeState$$TEST_LIFECYCLE$$STATE5$$STATE6$$around.groovy",
+            "ChangeState$$TEST_LIFECYCLE$$STATE6$$STATE7$$around.groovy",
+            "ChangeState$$TEST_LIFECYCLE$$STATE7$$around.groovy"
+        };
+
+        leps.onRefresh(PATTERN + "ChangeState$$around.groovy", null);
+
+        for (val lep: testLeps) {
+            leps.onRefresh(PATTERN + "chained/" + lep, null);
+        }
+    }
+
     private void addLep(String pattern, String lepName) {
         String lepBody = loadFile("config/testlep/ChangeState$$TEST_LIFECYCLE_TYPE_KEY$$around.groovy");
         lepBody = StrSubstitutor.replace(lepBody, of("lepName", lepName));
@@ -178,6 +196,7 @@ public class XmEntityLifeCycleSupportIntTest extends AbstractSpringBootTest {
     @After
     @Override
     public void finalize() {
+        uninitLeps();
         lepsForCleanUp.forEach(it -> leps.onRefresh(it, null));
         xmEntityTenantConfigService.getXmEntityTenantConfig().getLep().setEnableInheritanceTypeKey(false);
         lepManager.endThreadContext();
