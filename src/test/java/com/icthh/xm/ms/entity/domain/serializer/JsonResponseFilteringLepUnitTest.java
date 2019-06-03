@@ -18,7 +18,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import com.github.bohnman.squiggly.web.SquigglyRequestFilter;
 import com.icthh.xm.commons.i18n.error.web.ExceptionTranslator;
 import com.icthh.xm.commons.i18n.spring.service.LocalizationMessageService;
 import com.icthh.xm.commons.lep.XmLepScriptConfigServerResourceLoader;
@@ -33,6 +32,7 @@ import com.icthh.xm.lep.api.LepManager;
 import com.icthh.xm.ms.entity.AbstractWebMvcTest;
 import com.icthh.xm.ms.entity.config.JacksonConfiguration;
 import com.icthh.xm.ms.entity.config.LepConfiguration;
+import com.icthh.xm.ms.entity.config.WebMvcConfiguration;
 import com.icthh.xm.ms.entity.domain.Link;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.domain.ext.IdOrKey;
@@ -125,7 +125,7 @@ public class JsonResponseFilteringLepUnitTest extends AbstractWebMvcTest {
     private ObjectMapper objectMapper;
 
     @Autowired
-    private SquigglyRequestFilter httpFilter;
+    XmSquigglyInterceptor xmSquigglyInterceptor;
 
     @Autowired
     private JacksonConfiguration.HttpMessageConverterCustomizer httpMessageConverterCustomizer;
@@ -159,7 +159,8 @@ public class JsonResponseFilteringLepUnitTest extends AbstractWebMvcTest {
                                       .setControllerAdvice(exceptionTranslator)
                                       .setMessageConverters(jacksonMessageConverter)
                                       .setCustomArgumentResolvers(pageableArgumentResolver)
-                                      .addFilter(httpFilter)
+                                      .addMappedInterceptors(WebMvcConfiguration.getJsonFilterAllowedURIs(),
+                                                             xmSquigglyInterceptor)
                                       .build();
 
         lepManager.beginThreadContext(ctx -> {
@@ -240,7 +241,7 @@ public class JsonResponseFilteringLepUnitTest extends AbstractWebMvcTest {
 
     @Test
     @SneakyThrows
-    public void testXmEntityFilterByLepApplied() {
+    public void testXmEntityFilterByLepDisabled() {
 
         String targetTypeKey = "ACCOUNT.USER";
 
@@ -278,16 +279,18 @@ public class JsonResponseFilteringLepUnitTest extends AbstractWebMvcTest {
             .andExpect(jsonPath("$.[*].id", hasSize(2)))
             .andExpect(jsonPath("$.[*].key", hasSize(2)))
             .andExpect(jsonPath("$.[*].typeKey", hasSize(2)))
-            .andExpect(jsonPath("$.[*].stateKey").doesNotExist())
-            .andExpect(jsonPath("$.[*].name").doesNotExist())
-            .andExpect(jsonPath("$.[*].description").doesNotExist())
-            .andExpect(jsonPath("$.[*].startDate").doesNotExist())
-            .andExpect(jsonPath("$.[*].endDate").doesNotExist())
-            .andExpect(jsonPath("$.[*].data").doesNotExist())
-            .andExpect(jsonPath("$.[*].attachments").doesNotExist())
-            .andExpect(jsonPath("$.[*].locations").doesNotExist())
-            .andExpect(jsonPath("$.[*].tags").doesNotExist())
-            .andExpect(jsonPath("$.[*].avatarUrl").doesNotExist())
+            .andExpect(jsonPath("$.[*].stateKey", hasSize(2)))
+            .andExpect(jsonPath("$.[*].name", hasSize(2)))
+            .andExpect(jsonPath("$.[*].description", hasSize(2)))
+            .andExpect(jsonPath("$.[*].startDate", hasSize(2)))
+            .andExpect(jsonPath("$.[*].endDate", hasSize(2)))
+            .andExpect(jsonPath("$.[*].data", hasSize(2)))
+            .andExpect(jsonPath("$.[*].attachments", hasSize(2)))
+            .andExpect(jsonPath("$.[*].attachments.[*].typeKey", hasSize(2)))
+            .andExpect(jsonPath("$.[*].attachments.[*].content.value", hasSize(2)))
+            .andExpect(jsonPath("$.[*].locations", hasSize(2)))
+            .andExpect(jsonPath("$.[*].tags", hasSize(2)))
+            .andExpect(jsonPath("$.[*].avatarUrl", hasSize(2)))
         ;
 
     }

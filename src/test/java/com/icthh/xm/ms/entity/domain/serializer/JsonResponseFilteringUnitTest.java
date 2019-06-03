@@ -13,11 +13,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import com.github.bohnman.squiggly.web.SquigglyRequestFilter;
 import com.icthh.xm.commons.i18n.error.web.ExceptionTranslator;
 import com.icthh.xm.commons.i18n.spring.service.LocalizationMessageService;
 import com.icthh.xm.ms.entity.AbstractWebMvcTest;
 import com.icthh.xm.ms.entity.config.JacksonConfiguration;
+import com.icthh.xm.ms.entity.config.WebMvcConfiguration;
 import com.icthh.xm.ms.entity.domain.Link;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.domain.ext.IdOrKey;
@@ -104,7 +104,7 @@ public class JsonResponseFilteringUnitTest extends AbstractWebMvcTest {
     private ObjectMapper objectMapper;
 
     @Autowired
-    private SquigglyRequestFilter httpFilter;
+    private XmSquigglyInterceptor xmSquigglyInterceptor;
 
     @Autowired
     private JacksonConfiguration.HttpMessageConverterCustomizer httpMessageConverterCustomizer;
@@ -121,7 +121,8 @@ public class JsonResponseFilteringUnitTest extends AbstractWebMvcTest {
                                       .setControllerAdvice(exceptionTranslator)
                                       .setMessageConverters(jacksonMessageConverter)
                                       .setCustomArgumentResolvers(pageableArgumentResolver)
-                                      .addFilter(httpFilter)
+                                      .addMappedInterceptors(WebMvcConfiguration.getJsonFilterAllowedURIs(),
+                                                             xmSquigglyInterceptor)
                                       .build();
 
     }
