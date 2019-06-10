@@ -1,5 +1,6 @@
 package com.icthh.xm.ms.entity.util;
 
+import static com.icthh.xm.commons.tenant.TenantContextUtils.assertTenantKeyValid;
 import static com.icthh.xm.ms.entity.config.Constants.DDL_CREATE_SCHEMA;
 
 import java.sql.Connection;
@@ -23,6 +24,7 @@ public final class DatabaseUtil {
      * @param name       schema name
      */
     public static void createSchema(DataSource dataSource, String name) {
+        assertTenantKeyValid(name);
         try (Connection connection = dataSource.getConnection();
              Statement statement = connection.createStatement()) {
             statement.executeUpdate(String.format(DDL_CREATE_SCHEMA, name));
