@@ -124,8 +124,7 @@ public class FunctionContextResourceExtendedIntTest extends AbstractSpringBootTe
     }
 
     @After
-    @Override
-    public void finalize() {
+    public void tearDown() {
         tenantContextHolder.getPrivilegedContext().destroyCurrentContext();
     }
 

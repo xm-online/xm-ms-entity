@@ -306,8 +306,7 @@ public class XmEntityResourceIntTest extends AbstractSpringBootTest {
     }
 
     @After
-    @Override
-    public void finalize() {
+    public void tearDown() {
         lepManager.endThreadContext();
         tenantContextHolder.getPrivilegedContext().destroyCurrentContext();
     }

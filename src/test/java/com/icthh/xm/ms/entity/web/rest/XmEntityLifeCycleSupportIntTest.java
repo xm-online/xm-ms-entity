@@ -194,8 +194,7 @@ public class XmEntityLifeCycleSupportIntTest extends AbstractSpringBootTest {
     }
 
     @After
-    @Override
-    public void finalize() {
+    public void tearDown() {
         uninitLeps();
         lepsForCleanUp.forEach(it -> leps.onRefresh(it, null));
         xmEntityTenantConfigService.getXmEntityTenantConfig().getLep().setEnableInheritanceTypeKey(false);
