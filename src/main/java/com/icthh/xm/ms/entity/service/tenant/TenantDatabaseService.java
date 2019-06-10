@@ -1,5 +1,6 @@
 package com.icthh.xm.ms.entity.service.tenant;
 
+import static com.icthh.xm.commons.tenant.TenantContextUtils.assertTenantKeyValid;
 import static com.icthh.xm.ms.entity.config.Constants.CHANGE_LOG_PATH;
 import static org.apache.commons.lang3.time.StopWatch.createStarted;
 
@@ -82,6 +83,7 @@ public class TenantDatabaseService {
     public void dropSchema(String tenantKey) {
         StopWatch stopWatch = createStarted();
         log.info("START - SETUP:DeleteTenant:liquibase tenantKey={}", tenantKey);
+        assertTenantKeyValid(tenantKey);
         try (Connection connection = dataSource.getConnection();
              Statement statement = connection.createStatement()) {
             statement.executeUpdate(String.format(schemaDropResolver.getSchemaDropCommand(), tenantKey));
