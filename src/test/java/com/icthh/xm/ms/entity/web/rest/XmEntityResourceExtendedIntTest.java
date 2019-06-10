@@ -2129,6 +2129,108 @@ public class XmEntityResourceExtendedIntTest extends AbstractSpringBootTest {
 
     }
 
+    @Test
+    @SneakyThrows
+    @WithMockUser(authorities = "SUPER-ADMIN")
+    @Transactional
+    public void testSaveXmEntityToElasticNoCycleJson() {
+
+        String createdBy = "admin";
+
+        XmEntity source = xmEntityRepository.saveAndFlush(createComplexEntityPersistable().typeKey("ACCOUNT.ADMIN"))
+                                            .createdBy(createdBy);
+        XmEntity target = xmEntityRepository.saveAndFlush(createComplexEntityPersistable().typeKey("ACCOUNT.USER"))
+                                            .createdBy(createdBy);
+
+        String defDescription = DEFAULT_DESCRIPTION;
+        String lnTypekey = DEFAULT_LN_TARGET_KEY;
+        String lnName = DEFAULT_LN_TARGET_NAME;
+        Instant lnStartDate = DEFAULT_LN_TARGET_START_DATE;
+        Instant lnEndDate = Instant.ofEpochMilli(lnStartDate.toEpochMilli() + 100L);
+
+        source.getTargets().add(new Link()
+                                    .typeKey(lnTypekey)
+                                    .name(lnName)
+                                    .description(defDescription)
+                                    .startDate(lnStartDate)
+                                    .endDate(lnEndDate)
+                                    .target(target)
+                                    .source(source));
+
+        // add cyclic Link
+        target.getTargets().add(new Link()
+                                    .typeKey(lnTypekey)
+                                    .name(lnName)
+                                    .description(defDescription)
+                                    .startDate(lnStartDate)
+                                    .endDate(lnEndDate)
+                                    .target(source)
+                                    .source(target)
+        );
+
+        xmEntitySearchRepository.save(source);
+
+        assertNotNull(source.getId());
+        Integer srcId = source.getId().intValue();
+        String tgtStartDate = DEFAULT_START_DATE.toString();
+        String tgtUpdateDate = DEFAULT_UPDATE_DATE.toString();
+        String tgtEndDate = DEFAULT_END_DATE.toString();
+
+        performGet("/api/_search/xm-entities?query=id:{id}", source.getId())
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+            .andExpect(jsonPath("$", hasSize(1)))
+            .andExpect(jsonPath("$.[*].id", containsInAnyOrder(srcId)))
+            .andExpect(jsonPath("$.[*].typeKey", containsInAnyOrder("ACCOUNT.ADMIN")))
+            .andExpect(jsonPath("$.[*].key", containsInAnyOrder(DEFAULT_KEY)))
+            .andExpect(jsonPath("$.[*].name", containsInAnyOrder(DEFAULT_NAME)))
+            .andExpect(jsonPath("$.[*].description", containsInAnyOrder(DEFAULT_DESCRIPTION)))
+            .andExpect(jsonPath("$.[*].startDate", containsInAnyOrder(tgtStartDate)))
+            .andExpect(jsonPath("$.[*].endDate", containsInAnyOrder(tgtEndDate)))
+            .andExpect(jsonPath("$.[*].updateDate", containsInAnyOrder(tgtUpdateDate)))
+            .andExpect(jsonPath("$.[*].source").doesNotExist())
+            .andExpect(jsonPath("$.[*].data.AAAAAAAAAA", containsInAnyOrder("BBBBBBBBBB")))
+            .andExpect(jsonPath("$.[*].removed", containsInAnyOrder(false)))
+            .andExpect(jsonPath("$.[*].version", containsInAnyOrder(1)))
+            .andExpect(jsonPath("$.[*].avatarUrl").exists())
+
+            .andExpect(jsonPath("$.[*].calendars").exists())
+            .andExpect(jsonPath("$.[*].ratings").exists())
+            .andExpect(jsonPath("$.[*].comments").exists())
+            .andExpect(jsonPath("$.[*].attachments.[*].id").exists())
+            .andExpect(jsonPath("$.[*].locations.[*].id").exists())
+            .andExpect(jsonPath("$.[*].tags.[*].id").exists())
+
+            .andExpect(jsonPath("$.[*].targets", hasSize(1)))
+            .andExpect(jsonPath("$.[*].targets.[*].source", containsInAnyOrder(srcId)))
+            .andExpect(jsonPath("$.[*].targets.[*].target", hasSize(1)))
+            .andExpect(jsonPath("$.[*].targets.[*].target.id", hasSize(1)))
+            .andExpect(jsonPath("$.[*].targets.[*].target.key", containsInAnyOrder(DEFAULT_KEY)))
+            .andExpect(jsonPath("$.[*].targets.[*].target.typeKey", containsInAnyOrder("ACCOUNT.USER")))
+            .andExpect(jsonPath("$.[*].targets.[*].target.stateKey", containsInAnyOrder(DEFAULT_STATE_KEY)))
+            .andExpect(jsonPath("$.[*].targets.[*].target.name", containsInAnyOrder(DEFAULT_NAME)))
+            .andExpect(jsonPath("$.[*].targets.[*].target.startDate", containsInAnyOrder(tgtStartDate)))
+            .andExpect(jsonPath("$.[*].targets.[*].target.endDate", containsInAnyOrder(tgtEndDate)))
+            .andExpect(jsonPath("$.[*].targets.[*].target.updateDate", containsInAnyOrder(tgtUpdateDate)))
+            .andExpect(jsonPath("$.[*].targets.[*].target.description", containsInAnyOrder(defDescription)))
+            .andExpect(jsonPath("$.[*].targets.[*].target.createdBy", containsInAnyOrder(createdBy)))
+            .andExpect(jsonPath("$.[*].targets.[*].target.removed").doesNotExist())
+            .andExpect(jsonPath("$.[*].targets.[*].target.data").exists())
+            .andExpect(jsonPath("$.[*].targets.[*].target.data.AAAAAAAAAA", containsInAnyOrder("BBBBBBBBBB")))
+
+            .andExpect(jsonPath("$.[*].targets.[*].target.calendars").exists())
+            .andExpect(jsonPath("$.[*].targets.[*].target.ratings").exists())
+            .andExpect(jsonPath("$.[*].targets.[*].target.comments").exists())
+            .andExpect(jsonPath("$.[*].targets.[*].target.attachments.[*].id").exists())
+            .andExpect(jsonPath("$.[*].targets.[*].target.locations.[*].id").exists())
+            .andExpect(jsonPath("$.[*].targets.[*].target.tags.[*].id").exists())
+
+            .andExpect(jsonPath("$.[*].targets.[*].target.targets").doesNotExist())
+            .andExpect(jsonPath("$.[*].targets.[*].target.sources").doesNotExist())
+        ;
+
+    }
+
     private XmEntity createComplexEntityPersistable() {
 
         XmEntity entity = createEntityComplexIncoming();
