@@ -3,6 +3,8 @@ package com.icthh.xm.ms.entity.config.elasticsearch;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.bohnman.squiggly.Squiggly;
+import com.github.bohnman.squiggly.context.provider.SquigglyContextProvider;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
 import com.icthh.xm.ms.entity.config.ApplicationProperties;
@@ -22,9 +24,10 @@ public class ElasticsearchConfiguration {
 
     @Bean
     public ElasticsearchTemplate elasticsearchTemplate(Client client,
-                                                       Jackson2ObjectMapperBuilder jackson2ObjectMapperBuilder) {
+                                                       Jackson2ObjectMapperBuilder jackson2ObjectMapperBuilder,
+                                                       SquigglyContextProvider contextProvider) {
         ObjectMapper objectMapper = jackson2ObjectMapperBuilder.createXmlMapper(false).build();
-        return new ElasticsearchTemplate(client, new CustomEntityMapper(objectMapper));
+        return new ElasticsearchTemplate(client, new CustomEntityMapper(objectMapper, contextProvider));
     }
 
     @Component("indexName")
@@ -59,11 +62,13 @@ public class ElasticsearchConfiguration {
 
         private ObjectMapper objectMapper;
 
-        public CustomEntityMapper(ObjectMapper objectMapper) {
+        public CustomEntityMapper(ObjectMapper objectMapper,
+                                  final SquigglyContextProvider contextProvider) {
             this.objectMapper = objectMapper;
             objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
             objectMapper.configure(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY, true);
             objectMapper.addMixIn(Content.class, ContentValueFilter.class);
+            Squiggly.init(objectMapper, contextProvider);
         }
 
         @Override

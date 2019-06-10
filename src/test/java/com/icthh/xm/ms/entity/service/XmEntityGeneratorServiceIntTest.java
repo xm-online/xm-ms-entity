@@ -76,8 +76,7 @@ public class XmEntityGeneratorServiceIntTest extends AbstractSpringBootTest {
     }
 
     @After
-    @Override
-    public void finalize() {
+    public void tearDown() {
         tenantContextHolder.getPrivilegedContext().destroyCurrentContext();
     }
 
