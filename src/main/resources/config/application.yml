@@ -204,6 +204,7 @@ application:
             access-key-secret:
         s3:
             bucket:
+            bucket-prefix:
     elasticSchemaSuffix: ""
 
 # ===================================================================

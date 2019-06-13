@@ -81,6 +81,7 @@ public class ApplicationProperties {
         @Setter
         public static class S3 {
 
+            private String bucketPrefix;
             private String bucket;
         }
     }

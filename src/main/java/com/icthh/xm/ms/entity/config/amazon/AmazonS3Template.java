@@ -2,6 +2,7 @@ package com.icthh.xm.ms.entity.config.amazon;
 
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.ClientConfiguration;
+import com.amazonaws.HttpMethod;
 import com.amazonaws.Protocol;
 import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.BasicAWSCredentials;
@@ -9,13 +10,19 @@ import com.amazonaws.client.builder.AwsClientBuilder.EndpointConfiguration;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import com.amazonaws.services.s3.model.CannedAccessControlList;
+import com.amazonaws.services.s3.model.CreateBucketRequest;
+import com.amazonaws.services.s3.model.GeneratePresignedUrlRequest;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.services.s3.transfer.TransferManager;
 import com.amazonaws.services.s3.transfer.TransferManagerBuilder;
 import com.amazonaws.services.s3.transfer.Upload;
+import com.amazonaws.services.s3.transfer.model.UploadResult;
+import com.icthh.xm.ms.entity.config.ApplicationProperties;
+import java.net.URL;
 import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
@@ -26,11 +33,14 @@ import java.net.URLConnection;
 @RequiredArgsConstructor
 public class AmazonS3Template {
 
+    private static final String FILE_NAME_ATTRIBUTE = "fileName";
+
     private final String bucket;
     private final String endpoint;
     private final String region;
     private final String accessKeyId;
     private final String accessKeySecret;
+    private final ApplicationProperties appProp;
 
     private AmazonS3 amazonS3;
     private TransferManager transferManager;
@@ -44,9 +54,11 @@ public class AmazonS3Template {
     public void save(String key, InputStream inputStream) throws IOException {
         ObjectMetadata metadata = new ObjectMetadata();
         metadata.setContentType(URLConnection.guessContentTypeFromStream(inputStream));
+
         PutObjectRequest request = new PutObjectRequest(bucket, key, inputStream, metadata);
         request.setCannedAcl(CannedAccessControlList.PublicRead);
         request.getRequestClientOptions().setReadLimit(Integer.MAX_VALUE);
+
         Upload upload = getTransferManager().upload(request);
         try {
             upload.waitForUploadResult();
@@ -58,6 +70,76 @@ public class AmazonS3Template {
             // continue interrupt
             throw new IllegalStateException(ex);
         }
+    }
+
+    /**
+     * Save a file using authenticated session credentials.
+     *
+     * @param bucket      os the name of the s3 bucket
+     * @param key         is the name of the file to save in the bucket
+     * @param inputStream is the file that will be saved
+     */
+    @SneakyThrows
+    public String save(String bucket, String key, InputStream inputStream, String fileName) {
+        ObjectMetadata metadata = new ObjectMetadata();
+        metadata.setContentType(URLConnection.guessContentTypeFromStream(inputStream));
+        metadata.addUserMetadata(FILE_NAME_ATTRIBUTE, fileName);
+
+        PutObjectRequest request = new PutObjectRequest(bucket, key, inputStream, metadata);
+        request.getRequestClientOptions().setReadLimit(Integer.MAX_VALUE);
+
+        Upload upload = getTransferManager().upload(request);
+        try {
+            UploadResult uploadResult = upload.waitForUploadResult();
+            return uploadResult.getKey();
+        } catch (AmazonClientException ex) {
+            throw new IOException(ex);
+        } catch (InterruptedException ex) {
+            // reset interrupted status
+            Thread.currentThread().interrupt();
+            // continue interrupt
+            throw new IllegalStateException(ex);
+        }
+    }
+
+    /**
+     *
+     * @param bucketPrefix - using for separate dev int prod env
+     * @param bucket - bucket name
+     * @return
+     */
+    public String createBucketIfNotExist(String bucketPrefix, String bucket) {
+        String formattedBucketName = prepareBucketName(bucketPrefix, bucket);
+
+        if (getAmazonS3Client().doesBucketExist(formattedBucketName)) {
+            log.info("Bucket: {} exist", formattedBucketName);
+        } else {
+            String region = appProp.getAmazon().getAws().getRegion();
+            log.info("Bucket: {} will be created in region {}", formattedBucketName, region);
+            getAmazonS3Client().createBucket(new CreateBucketRequest(formattedBucketName, region));
+        }
+
+        return formattedBucketName;
+    }
+
+    @SneakyThrows
+    public URL createExpirableLink(String bucket, String key, Long expireTimeMillis) {
+
+        java.util.Date expiration = new java.util.Date();
+        long expTimeMillis = expiration.getTime();
+        expTimeMillis += expireTimeMillis;
+        expiration.setTime(expTimeMillis);
+
+        GeneratePresignedUrlRequest generatePresignedUrlRequest =  new GeneratePresignedUrlRequest(bucket, key)
+            .withMethod(HttpMethod.GET)
+            .withExpiration(expiration);
+        return getAmazonS3Client().generatePresignedUrl(generatePresignedUrlRequest);
+    }
+
+    private String prepareBucketName(String bucketPrefix, String bucket) {
+        String formatted = bucketPrefix + bucket.toLowerCase().replace("_", "-");
+        log.info("Formatted bucket name: {}", formatted);
+        return formatted;
     }
 
     /**
