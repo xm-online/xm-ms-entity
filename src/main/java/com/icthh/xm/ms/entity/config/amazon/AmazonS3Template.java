@@ -19,15 +19,13 @@ import com.amazonaws.services.s3.transfer.TransferManager;
 import com.amazonaws.services.s3.transfer.TransferManagerBuilder;
 import com.amazonaws.services.s3.transfer.Upload;
 import com.amazonaws.services.s3.transfer.model.UploadResult;
-import com.icthh.xm.ms.entity.config.ApplicationProperties;
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
+import java.net.URLConnection;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URLConnection;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -40,7 +38,6 @@ public class AmazonS3Template {
     private final String region;
     private final String accessKeyId;
     private final String accessKeySecret;
-    private final ApplicationProperties appProp;
 
     private AmazonS3 amazonS3;
     private TransferManager transferManager;
@@ -114,7 +111,6 @@ public class AmazonS3Template {
         if (getAmazonS3Client().doesBucketExist(formattedBucketName)) {
             log.info("Bucket: {} exist", formattedBucketName);
         } else {
-            String region = appProp.getAmazon().getAws().getRegion();
             log.info("Bucket: {} will be created in region {}", formattedBucketName, region);
             getAmazonS3Client().createBucket(new CreateBucketRequest(formattedBucketName, region));
         }
