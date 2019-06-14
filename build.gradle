@@ -328,6 +328,10 @@ dependencies {
     testCompile "com.mattbertolini:liquibase-slf4j"
     testCompile "org.hamcrest:hamcrest-library"
     testCompile "io.gatling.highcharts:gatling-charts-highcharts:${gatling_version}"
+
+    testCompile 'com.adobe.testing:s3mock-junit4:2.0.11'
+    testCompile "org.testcontainers:testcontainers:1.10.1"
+
     //jhipster-needle-gradle-dependency - JHipster will add additional dependencies here
 }
 
