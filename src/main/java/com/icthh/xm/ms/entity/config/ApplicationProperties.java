@@ -51,6 +51,9 @@ public class ApplicationProperties {
     private String dbSchemaSuffix;
     private String elasticSchemaSuffix;
 
+    private Integer requestCacheLimit;
+    private List<String> requestCacheIgnoredPathList = Collections.emptyList();
+
     @Getter
     @Setter
     public static class Amazon {
@@ -81,6 +84,7 @@ public class ApplicationProperties {
         @Setter
         public static class S3 {
 
+            private String bucketPrefix;
             private String bucket;
         }
     }

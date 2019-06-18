@@ -204,7 +204,9 @@ application:
             access-key-secret:
         s3:
             bucket:
+            bucket-prefix:
     elasticSchemaSuffix: ""
+    requestCacheIgnoredPathList: /api/contents/*
 
 # ===================================================================
 # Timeline specific properties

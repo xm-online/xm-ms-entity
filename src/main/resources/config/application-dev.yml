@@ -156,6 +156,7 @@ application:
             access-key-secret:
         s3:
             bucket: xm-avatar
+            bucket-prefix: dev
 
 ## ==================================================================
 ##   uncomment to read LEPs from flocal file storage
