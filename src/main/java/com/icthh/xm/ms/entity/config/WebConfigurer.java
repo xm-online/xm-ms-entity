@@ -24,7 +24,7 @@ import org.springframework.web.filter.CorsFilter;
 import javax.servlet.*;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
-
+import org.springframework.web.multipart.commons.CommonsMultipartResolver;
 
 /**
  * Configuration of web application with Servlet 3.0 APIs.
@@ -126,6 +126,14 @@ public class WebConfigurer implements ServletContextInitializer, WebServerFactor
             source.registerCorsConfiguration("/v2/api-docs", config);
         }
         return new CorsFilter(source);
+    }
+
+    @Bean(name = "multipartResolver")
+    public CommonsMultipartResolver multipartResolver(ApplicationProperties applicationProperties) {
+        CommonsMultipartResolver multipartResolver = new CommonsMultipartResolver();
+        multipartResolver.setMaxUploadSizePerFile(applicationProperties.getMaxUploadFileSize());
+        multipartResolver.setMaxUploadSize(applicationProperties.getMaxUploadSize());
+        return multipartResolver;
     }
 
     /**

@@ -206,7 +206,9 @@ application:
             bucket:
             bucket-prefix:
     elasticSchemaSuffix: ""
-    requestCacheIgnoredPathList: /api/contents/*
+    requestCacheIgnoredPathPatternList: /api/functions/*/upload
+    maxUploadFileSize: 1073741824
+    maxUploadSize: 1073741824
 
 # ===================================================================
 # Timeline specific properties

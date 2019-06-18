@@ -429,3 +429,9 @@ types:
               }
             }
           }
+    - key: TEST_UPLOAD
+      name: { en: "TEST_UPLOAD" }
+      isApp: false
+      isAbstract: false
+      functions:
+          - key: UPLOAD
