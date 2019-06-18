@@ -206,7 +206,7 @@ application:
             bucket:
             bucket-prefix:
     elasticSchemaSuffix: ""
-    requestCacheIgnoredPathList:
+    requestCacheIgnoredPathList: /api/contents/*
 
 # ===================================================================
 # Timeline specific properties
