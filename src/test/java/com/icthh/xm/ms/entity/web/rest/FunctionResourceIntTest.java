@@ -116,7 +116,7 @@ public class FunctionResourceIntTest extends AbstractSpringBootTest {
     public void testFailFunctionWithNoJsonRequest() {
         MockMultipartFile file = new MockMultipartFile("file", "orig", "text/plain", "test no json content" .getBytes(UTF_8));
         mockMvc.perform(multipart("/api/functions/UPLOAD").file(file))
-               .andDo(print()
+               .andDo(print())
                .andExpect(status().is5xxServerError());
     }
 
