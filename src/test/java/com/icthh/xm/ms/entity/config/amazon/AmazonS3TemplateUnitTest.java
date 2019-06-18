@@ -10,6 +10,7 @@ import com.github.dockerjava.api.command.CreateContainerCmd;
 import com.github.dockerjava.api.model.ExposedPort;
 import com.github.dockerjava.api.model.PortBinding;
 import com.github.dockerjava.api.model.Ports;
+import com.icthh.xm.ms.entity.AbstractUnitTest;
 import com.icthh.xm.ms.entity.config.ApplicationProperties;
 import java.io.IOException;
 import java.io.InputStream;
@@ -24,7 +25,7 @@ import org.junit.Test;
 import org.testcontainers.containers.GenericContainer;
 
 @Slf4j
-public class AmazonS3TemplateIntTest{
+public class AmazonS3TemplateUnitTest extends AbstractUnitTest {
 
     private final ApplicationProperties applicationProperties = new ApplicationProperties();
     private final AmazonS3Template s3Template = new AmazonS3Template(applicationProperties, this::createS3Client);
