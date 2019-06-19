@@ -24,7 +24,12 @@ public class DefaultAmazonS3ClientFactory implements AmazonS3ClientFactory {
     private final ApplicationProperties applicationProperties;
 
     @Getter
-    private final AmazonS3 amazonS3 = createAmazonS3Client();
+    private final AmazonS3 amazonS3;
+
+    public DefaultAmazonS3ClientFactory(ApplicationProperties applicationProperties) {
+        this.applicationProperties = applicationProperties;
+        this.amazonS3 = createAmazonS3Client();
+    }
 
     protected AmazonS3 createAmazonS3Client() {
         Aws aws = applicationProperties.getAmazon().getAws();
