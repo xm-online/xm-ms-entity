@@ -18,7 +18,6 @@ import org.springframework.stereotype.Component;
 @Lazy
 @Slf4j
 @Component
-@RequiredArgsConstructor
 public class DefaultAmazonS3ClientFactory implements AmazonS3ClientFactory {
 
     private final ApplicationProperties applicationProperties;
