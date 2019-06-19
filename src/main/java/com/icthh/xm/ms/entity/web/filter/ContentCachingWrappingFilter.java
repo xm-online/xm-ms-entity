@@ -47,7 +47,7 @@ public class ContentCachingWrappingFilter extends OncePerRequestFilter {
 
     private boolean isIgnoredRequest(HttpServletRequest request) {
         String path = request.getServletPath();
-        List<String> ignoredPatterns = applicationProperties.getRequestCacheIgnoredPathList();
+        List<String> ignoredPatterns = applicationProperties.getRequestCacheIgnoredPathPatternList();
         if (ignoredPatterns != null && path != null) {
             for (String pattern : ignoredPatterns) {
                 if (matcher.match(pattern, path)) {

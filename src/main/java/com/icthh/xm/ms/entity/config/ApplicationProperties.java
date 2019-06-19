@@ -52,7 +52,9 @@ public class ApplicationProperties {
     private String elasticSchemaSuffix;
 
     private Integer requestCacheLimit;
-    private List<String> requestCacheIgnoredPathList = Collections.emptyList();
+    private List<String> requestCacheIgnoredPathPatternList = Collections.emptyList();
+    private Integer maxUploadFileSize;
+    private Integer maxUploadSize;
 
     @Getter
     @Setter
