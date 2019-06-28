@@ -76,6 +76,10 @@ types:
           - key: TYPEKEY
             events:
                 - key: TYPEKEY
+      links:
+          - key: LINK.TARGET
+            builderType: NEW
+            typeKey: ACCOUNT.ADMIN
     - key: ACCOUNT.USER
       name: { en: "User" }
       isApp: false

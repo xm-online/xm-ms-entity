@@ -49,7 +49,8 @@ public final class DatabaseUtil {
                     try {
                         task.accept(xmEntity);
                     } catch (Exception e) {
-                        log.error("Error save entity to elastic {}", xmEntity, e);
+                        log.error("Error in afterCompletion stage during transaction synchronization for entity: {}",
+                                  xmEntity, e);
                     }
                 }
             }

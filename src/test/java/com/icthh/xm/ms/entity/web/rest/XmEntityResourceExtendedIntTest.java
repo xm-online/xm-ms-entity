@@ -474,7 +474,7 @@ public class XmEntityResourceExtendedIntTest extends AbstractSpringBootTest {
      * Performs REST result to log.
      */
     private void printMvcResult(MvcResult result) throws UnsupportedEncodingException {
-        log.info("MVC result: {}", result.getResponse().getContentAsString());
+                log.info("MVC result: {}", result.getResponse().getContentAsString());
     }
 
     /**
@@ -626,7 +626,7 @@ public class XmEntityResourceExtendedIntTest extends AbstractSpringBootTest {
         XmEntity xmEntityEs = xmEntitySearchRepository.findById(valueOf(testXmEntity.getId().toString()))
                                                       .orElseThrow(NullPointerException::new);
         assertThat(xmEntityEs).isEqualToIgnoringGivenFields(testXmEntity, "avatarUrlRelative");
-
+        xmEntityService.delete(testXmEntity.getId());
     }
 
     @Test
@@ -691,6 +691,7 @@ public class XmEntityResourceExtendedIntTest extends AbstractSpringBootTest {
         XmEntity xmEntityEs = xmEntitySearchRepository.findById(valueOf(resultXmEntity.getId().toString()))
                                                       .orElseThrow(NullPointerException::new);
         assertThat(xmEntityEs).isEqualToIgnoringGivenFields(resultXmEntity, "avatarUrlRelative");
+        xmEntityService.delete(resultXmEntity.getId());
 
     }
 
@@ -759,6 +760,9 @@ public class XmEntityResourceExtendedIntTest extends AbstractSpringBootTest {
                                                       .orElseThrow(NullPointerException::new);
         // TODO - may be compare avatarUrl too ?
         assertThat(xmEntityEs).isEqualToIgnoringGivenFields(testXmEntity, "sources", "avatarUrlRelative");
+        testXmEntity.getSources().forEach(it -> linkService.delete(it.getId()));
+        xmEntityService.delete(testXmEntity.getId());
+        testXmEntity.getSources().clear();
     }
 
     @Test
@@ -1036,6 +1040,7 @@ public class XmEntityResourceExtendedIntTest extends AbstractSpringBootTest {
                                                       .orElseThrow(NullPointerException::new);
         assertThat(xmEntityEs).isEqualToIgnoringGivenFields(testXmEntity, "avatarUrlRelative");
         assertThat(xmEntityEs.getData()).isEqualTo(LARGE_DATA);
+        xmEntityService.delete(testXmEntity.getId());
     }
 
     @Test
@@ -1953,7 +1958,7 @@ public class XmEntityResourceExtendedIntTest extends AbstractSpringBootTest {
         // TODO: fix: old avatarUrl inside elasticsearch after save
 //        assertEquals(testXmEntity.getAvatarUrl(), xmEntityEs.getAvatarUrl());
 //        assertEquals(testXmEntity.getAvatarUrlRelative(), xmEntityEs.getAvatarUrlRelative());
-
+        xmEntityService.delete(id.longValue());
     }
 
     @Test
