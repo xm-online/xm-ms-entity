@@ -1,5 +1,7 @@
 package com.icthh.xm.ms.entity.domain.listener;
 
+import static com.icthh.xm.ms.entity.util.DatabaseUtil.runAfterTransaction;
+
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.domain.spec.TypeSpec;
 import com.icthh.xm.ms.entity.repository.search.XmEntitySearchRepository;
@@ -42,7 +44,7 @@ public class XmEntityElasticSearchListener {
     void onPostPersistOrUpdate(XmEntity entity) {
         if (isFeatureEnabled(entity, TypeSpec::getIndexAfterSaveEnabled)) {
             log.debug("Save xm entity to elastic {}", entity);
-            xmEntitySearchRepository.save(entity);
+            runAfterTransaction(entity, xmEntitySearchRepository::save);
         }
     }
 
@@ -50,7 +52,7 @@ public class XmEntityElasticSearchListener {
     void onPostRemove(XmEntity entity) {
         if(isFeatureEnabled(entity, TypeSpec::getIndexAfterDeleteEnabled)){
             log.debug("Delete xm entity from elastic {}", entity);
-            xmEntitySearchRepository.delete(entity);
+            runAfterTransaction(entity, xmEntitySearchRepository::delete);
         }
     }
 

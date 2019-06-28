@@ -16,6 +16,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.icthh.xm.commons.exceptions.BusinessException;
 import com.icthh.xm.commons.i18n.error.web.ExceptionTranslator;
 import com.icthh.xm.commons.lep.XmLepScriptConfigServerResourceLoader;
 import com.icthh.xm.commons.security.XmAuthenticationContext;
@@ -24,7 +25,9 @@ import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.lep.api.LepManager;
 import com.icthh.xm.ms.entity.AbstractSpringBootTest;
 import com.icthh.xm.ms.entity.domain.XmEntity;
+import com.icthh.xm.ms.entity.repository.XmEntityRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityRepositoryInternal;
+import com.icthh.xm.ms.entity.service.SeparateTransactionExecutor;
 import com.icthh.xm.ms.entity.service.impl.XmEntityServiceImpl;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -100,6 +103,14 @@ public class XmEntitySearchIntTest extends AbstractSpringBootTest {
 
     @Autowired
     private ObjectMapper objectMapper;
+
+    @Autowired
+    private SeparateTransactionExecutor transactionExecutor;
+
+    @Autowired
+    private XmEntityRepositoryInternal repository;
+
+    //private Enti
 
     @Before
     @SneakyThrows
@@ -192,6 +203,32 @@ public class XmEntitySearchIntTest extends AbstractSpringBootTest {
         assertTrue(readValue.isEmpty());
 
         destroyLeps();
+    }
+
+    @Test
+    @SneakyThrows
+    @WithMockUser(authorities = "SUPER-ADMIN")
+    public void testRollbackedTransactionNotLeaveEntitiesInElasticAfterFlash() {
+
+        try {
+            transactionExecutor.doInSeparateTransaction(() -> {
+                XmEntity account = createEntity("ACCOUNT");
+                xmEntityService.save(account);
+                repository.flush();
+                throw new BusinessException("");
+            });
+        } catch (BusinessException e) {
+            // it's expected business exception, but not for assertion
+        }
+
+        String contentAsString = restXmEntityMockMvc
+            .perform(get("/api/_search/xm-entities?query=DEFAULT_NAME&page=0&size=10")
+                         .contentType(TestUtil.APPLICATION_JSON_UTF8))
+            .andDo(print())
+            .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+
+        List<XmEntity> readValue = buildObjectMapper().readValue(contentAsString, new TypeReference<List<XmEntity>>(){});
+        assertTrue(readValue.isEmpty());
     }
 
     @Test
