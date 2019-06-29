@@ -110,8 +110,6 @@ public class XmEntitySearchIntTest extends AbstractSpringBootTest {
     @Autowired
     private XmEntityRepositoryInternal repository;
 
-    //private Enti
-
     @Before
     @SneakyThrows
     public void setup() {
