@@ -31,4 +31,8 @@ public interface FunctionService {
      */
     FunctionContext execute(String functionKey, Map<String, Object> functionInput);
 
+    FunctionContext evaluate(String functionSourceCode, Map<String, Object> functionInput);
+
+    FunctionContext evaluate(String functionSourceCode, IdOrKey idOrKey, Map<String, Object> functionInput);
+
 }

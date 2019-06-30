@@ -53,6 +53,9 @@ public final class Constants {
 
     public static final String TRANSLATION_KEY = "trKey";
 
+    public static final String FUNCTION_WITH_XM_ENTITY_PREFIX = "FunctionWithXmEntity";
+    public static final String FUNCTION_PREFIX = "Function";
+
     private Constants() {
     }
 }

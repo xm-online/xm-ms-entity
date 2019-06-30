@@ -1,20 +1,24 @@
 package com.icthh.xm.ms.entity.web.rest;
 
 import static com.google.common.collect.ImmutableMap.of;
+import static com.icthh.xm.commons.permission.constants.RoleConstant.SUPER_ADMIN;
+import static com.icthh.xm.ms.entity.security.SecurityUtils.getCurrentUserRole;
 
 import com.codahale.metrics.annotation.Timed;
 import com.icthh.xm.ms.entity.domain.FunctionContext;
+import com.icthh.xm.ms.entity.domain.ext.IdOrKey;
 import com.icthh.xm.ms.entity.service.FunctionService;
 import com.icthh.xm.ms.entity.web.rest.util.HeaderUtil;
 import java.net.URI;
+import java.security.Principal;
 import java.util.List;
 import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import lombok.SneakyThrows;
-import org.apache.commons.io.IOUtils;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -35,6 +39,7 @@ import org.springframework.web.servlet.ModelAndView;
 public class FunctionResource {
 
     private static final String ENTITY_NAME_FUNCTION_CONTEXT = "functionContext";
+    public static final String FUNCTION_SOURCE_CODE = "functionSourceCode";
 
     private final FunctionService functionService;
 
@@ -109,5 +114,31 @@ public class FunctionResource {
         Map<String, Object> functionInput = of("httpServletRequest", httpServletRequest, "files", files);
         FunctionContext result = functionService.execute(functionKey, functionInput);
         return ResponseEntity.ok().body(result.functionResult());
+    }
+
+    @Timed
+    @PostMapping(value = "/functions/system/evaluate")
+    @SneakyThrows
+    public ResponseEntity<Object> evaluateOneTimeFunction(@RequestBody Map<String, Object> functionInput) {
+        assertIsSuperAdmin();
+        String functionSourceCode = String.valueOf(functionInput.get(FUNCTION_SOURCE_CODE));
+        FunctionContext result = functionService.evaluate(functionSourceCode, functionInput);
+        return ResponseEntity.ok().body(result.functionResult());
+    }
+
+    @Timed
+    @PostMapping(value = "/functions/{idOrKey}/system/evaluate")
+    @SneakyThrows
+    public ResponseEntity<Object> evaluateOneTimeFunction(@PathVariable("idOrKey") IdOrKey idOrKey,
+                                                          @RequestBody Map<String, Object> functionInput) {
+        assertIsSuperAdmin();
+        String functionSourceCode = String.valueOf(functionInput.get(FUNCTION_SOURCE_CODE));
+        FunctionContext result = functionService.evaluate(functionSourceCode, idOrKey, functionInput);
+        return ResponseEntity.ok().body(result.functionResult());
+    }
+
+    private void assertIsSuperAdmin() {
+        getCurrentUserRole().filter(SUPER_ADMIN::equals)
+            .orElseThrow(() -> new AccessDeniedException("Evaluate one time function can only super admin"));
     }
 }
