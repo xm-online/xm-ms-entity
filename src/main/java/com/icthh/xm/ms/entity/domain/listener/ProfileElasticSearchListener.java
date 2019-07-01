@@ -1,7 +1,8 @@
 package com.icthh.xm.ms.entity.domain.listener;
 
+import static com.icthh.xm.ms.entity.util.DatabaseUtil.runAfterTransaction;
+
 import com.icthh.xm.ms.entity.domain.Profile;
-import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.repository.search.XmEntitySearchRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,13 +33,13 @@ public class ProfileElasticSearchListener {
     @PostUpdate
     void onPostPersistOrUpdate(Profile profile) {
         log.debug("Save xm entity to elastic {}", profile.getXmentity());
-        xmEntitySearchRepository.save(profile.getXmentity());
+        runAfterTransaction(profile.getXmentity(), xmEntitySearchRepository::save);
     }
 
     @PostRemove
     void onPostRemove(Profile profile) {
         log.debug("Delete xm entity from elastic {}", profile.getXmentity());
-        xmEntitySearchRepository.delete(profile.getXmentity());
+        runAfterTransaction(profile.getXmentity(), xmEntitySearchRepository::delete);
     }
 
 }

@@ -124,6 +124,9 @@ public class ElasticsearchIndexResourceIntTest extends AbstractSpringBootTest {
     @Autowired
     private XmEntitySpecService xmEntitySpecService;
 
+    @Autowired
+    private SeparateTransactionExecutor transactionExecutor;
+
     private ElasticsearchIndexService elasticsearchIndexService;
 
     @Mock
@@ -261,10 +264,11 @@ public class ElasticsearchIndexResourceIntTest extends AbstractSpringBootTest {
     @Transactional
     public void autoIndexAfterSaveDisabled() {
 
-        when(xmEntitySpecServiceMock.getTypeSpecByKey(DEFAULT_TYPE_KEY))
-            .thenReturn(createTypeSpecWith(false));
-
-        Long id = createAndFlush();
+        Long id = transactionExecutor.doInSeparateTransaction(() -> {
+            when(xmEntitySpecServiceMock.getTypeSpecByKey(DEFAULT_TYPE_KEY))
+                .thenReturn(createTypeSpecWith(false));
+            return createAndFlush();
+        });
 
         mockMvc.perform(get("/api/_search/xm-entities?query=id:{id}", id))
                .andExpect(status().isOk())
@@ -279,10 +283,11 @@ public class ElasticsearchIndexResourceIntTest extends AbstractSpringBootTest {
     @Transactional
     public void autoIndexAfterSaveEnabled() {
 
-        when(xmEntitySpecServiceMock.getTypeSpecByKey(DEFAULT_TYPE_KEY))
-            .thenReturn(createTypeSpecWith(true));
-
-        Long id = createAndFlush();
+        Long id = transactionExecutor.doInSeparateTransaction(() -> {
+            when(xmEntitySpecServiceMock.getTypeSpecByKey(DEFAULT_TYPE_KEY))
+                .thenReturn(createTypeSpecWith(true));
+            return createAndFlush();
+        });
 
         mockMvc.perform(get("/api/_search/xm-entities?query=id:{id}", id))
                .andExpect(status().isOk())
@@ -298,10 +303,11 @@ public class ElasticsearchIndexResourceIntTest extends AbstractSpringBootTest {
     @Transactional
     public void autoIndexAfterDeleteDisabled() {
 
-        when(xmEntitySpecServiceMock.getTypeSpecByKey(DEFAULT_TYPE_KEY))
-            .thenReturn(createTypeSpecWith(true, false));
-
-        Long id = createAndFlush();
+        Long id = transactionExecutor.doInSeparateTransaction(() -> {
+            when(xmEntitySpecServiceMock.getTypeSpecByKey(DEFAULT_TYPE_KEY))
+                .thenReturn(createTypeSpecWith(true, false));
+            return createAndFlush();
+        });
 
         mockMvc.perform(get("/api/_search/xm-entities?query=id:{id}", id))
                .andExpect(status().isOk())
@@ -311,8 +317,11 @@ public class ElasticsearchIndexResourceIntTest extends AbstractSpringBootTest {
                .andExpect(jsonPath("$.[0].id").value(id))
         ;
 
-        xmEntityService.delete(id);
-        assertFalse(xmEntityRepositoryInternal.existsById(id));
+        transactionExecutor.doInSeparateTransaction(() -> {
+            xmEntityService.delete(id);
+            assertFalse(xmEntityRepositoryInternal.existsById(id));
+            return null;
+        });
 
         mockMvc.perform(get("/api/_search/xm-entities?query=id:{id}", id))
                .andExpect(status().isOk())
@@ -328,10 +337,11 @@ public class ElasticsearchIndexResourceIntTest extends AbstractSpringBootTest {
     @Transactional
     public void autoIndexAfterDeleteEnabled() {
 
-        when(xmEntitySpecServiceMock.getTypeSpecByKey(DEFAULT_TYPE_KEY))
-            .thenReturn(createTypeSpecWith(true, true));
-
-        Long id = createAndFlush();
+        Long id = transactionExecutor.doInSeparateTransaction(() -> {
+            when(xmEntitySpecServiceMock.getTypeSpecByKey(DEFAULT_TYPE_KEY))
+                .thenReturn(createTypeSpecWith(true, true));
+            return createAndFlush();
+        });
 
         mockMvc.perform(get("/api/_search/xm-entities?query=id:{id}", id))
                .andExpect(status().isOk())
@@ -341,8 +351,11 @@ public class ElasticsearchIndexResourceIntTest extends AbstractSpringBootTest {
                .andExpect(jsonPath("$.[0].id").value(id))
         ;
 
-        xmEntityService.delete(id);
-        assertFalse(xmEntityRepositoryInternal.existsById(id));
+        transactionExecutor.doInSeparateTransaction(() -> {
+            xmEntityService.delete(id);
+            assertFalse(xmEntityRepositoryInternal.existsById(id));
+            return null;
+        });
 
         mockMvc.perform(get("/api/_search/xm-entities?query=id:{id}", id))
                .andExpect(status().isOk())
