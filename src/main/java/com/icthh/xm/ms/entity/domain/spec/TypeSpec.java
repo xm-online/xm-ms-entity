@@ -15,7 +15,7 @@ import java.util.Map;
 import java.util.Set;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonPropertyOrder({"key", "name", "nameValidationPattern", "descriptionPattern", "pluralName", "isApp", "isAbstract",
+@JsonPropertyOrder({"key", "name", "namePattern", "nameValidationPattern", "descriptionPattern", "pluralName", "isApp", "isAbstract",
     "isAvatarEnabled", "isKeyRequired", "isNameRequired", "fastSearch", "icon", "dataSpec", "dataForm", "functions", "access", "attachments", "calendars",
     "links", "locations", "ratings", "states", "tags"})
 @Data
@@ -28,6 +28,8 @@ public class TypeSpec {
     private String key;
     @JsonProperty("name")
     private Map<String, String> name;
+    @JsonProperty("namePattern")
+    private String namePattern;
     @JsonProperty("nameValidationPattern")
     private String nameValidationPattern;
     @JsonProperty("descriptionPattern")

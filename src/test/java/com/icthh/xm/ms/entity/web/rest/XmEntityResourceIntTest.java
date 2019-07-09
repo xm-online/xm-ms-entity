@@ -55,6 +55,7 @@ import com.icthh.xm.ms.entity.service.FunctionService;
 import com.icthh.xm.ms.entity.service.LifecycleLepStrategyFactory;
 import com.icthh.xm.ms.entity.service.LinkService;
 import com.icthh.xm.ms.entity.service.ProfileService;
+import com.icthh.xm.ms.entity.service.SimpleTemplateProcessor;
 import com.icthh.xm.ms.entity.service.StorageService;
 import com.icthh.xm.ms.entity.service.TenantService;
 import com.icthh.xm.ms.entity.service.XmEntitySpecService;
@@ -278,7 +279,8 @@ public class XmEntityResourceIntTest extends AbstractSpringBootTest {
                                                       objectMapper,
                                                       mock(UniqueFieldRepository.class),
                                                       springXmEntityRepository,
-                                                      new TypeKeyWithExtends(tenantConfigService));
+                                                      new TypeKeyWithExtends(tenantConfigService),
+                                                      new SimpleTemplateProcessor(objectMapper));
         xmEntityServiceImpl.setSelf(xmEntityServiceImpl);
 
         this.xmEntityServiceImpl = xmEntityServiceImpl;
