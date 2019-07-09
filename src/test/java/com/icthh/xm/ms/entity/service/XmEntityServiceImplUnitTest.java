@@ -227,12 +227,12 @@ public class XmEntityServiceImplUnitTest extends AbstractUnitTest {
         entity.setData(of("a", of("b", of("c", of("d", "dvalue", "e", asList("e1", "e2"))))));
         entity.setCreatedBy("test");
 
-        String namePattern = "Name generate from ${id} and ${stateKey} and ${data.a.b.c.d.f} and ${data.a.b.c} and ${data.a.b.c.k} and ${data.a.b.c.e[1]} and ${data.a.b.c.e[2]}";
+        String namePattern = "Name generate from ${id} and ${key:unknown} and ${stateKey} and ${data.a.b.c.d.f} and ${data.a.b.c} and ${data.a.b.c.k} and ${data.a.b.c.e[1]} and ${data.a.b.c.e[2]}";
         TypeSpec typeSpec = TypeSpec.builder().namePattern(namePattern).build();
         when(xmEntitySpecService.findTypeByKey("TEST_TYPE_KEY")).thenReturn(typeSpec);
 
         xmEntityService.save(entity);
         log.info(entity.getName());
-        assertEquals("Name generate from 15 and TEST_S_K and  and {d=dvalue, e=[\"e1\",\"e2\"]} and  and e2 and ", entity.getName());
+        assertEquals("Name generate from 15 and unknown and TEST_S_K and  and {d=dvalue, e=[\"e1\",\"e2\"]} and  and e2 and ", entity.getName());
     }
 }

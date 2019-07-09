@@ -26,7 +26,11 @@ public class SimpleTemplateProcessor {
         DocumentContext document = JsonPath.using(defaultConfiguration().addOptions(SUPPRESS_EXCEPTIONS)).parse(json);
         StringSubstitutor sub = new StringSubstitutor();
         sub.setVariableResolver(key -> {
-            return String.valueOf(firstNonNull((Object) document.read(key), ""));
+            String defaultValue = "";
+            if (key.contains(":")) {
+                defaultValue = key.split(":")[1];
+            }
+            return String.valueOf(firstNonNull((Object) document.read(key), defaultValue));
         });
         String result = sub.replace(template);
         log.debug("Template {}, params {}, result {}", template, json, result);
