@@ -59,6 +59,7 @@ import com.icthh.xm.ms.entity.service.LifecycleLepStrategy;
 import com.icthh.xm.ms.entity.service.LifecycleLepStrategyFactory;
 import com.icthh.xm.ms.entity.service.LinkService;
 import com.icthh.xm.ms.entity.service.ProfileService;
+import com.icthh.xm.ms.entity.service.SimpleTemplateProcessor;
 import com.icthh.xm.ms.entity.service.StorageService;
 import com.icthh.xm.ms.entity.service.XmEntityService;
 import com.icthh.xm.ms.entity.service.XmEntitySpecService;
@@ -122,6 +123,7 @@ public class XmEntityServiceImpl implements XmEntityService {
     private final UniqueFieldRepository uniqueFieldRepository;
     private final SpringXmEntityRepository springXmEntityRepository;
     private final TypeKeyWithExtends typeKeyWithExtends;
+    private final SimpleTemplateProcessor simpleTemplateProcessors;
 
     private XmEntityServiceImpl self;
 
@@ -193,11 +195,16 @@ public class XmEntityServiceImpl implements XmEntityService {
         nullSafe(xmEntity.getSources()).forEach(link ->
             link.setSource(xmEntityRepository.getOne(link.getSource().getId())));
         processUniqueField(xmEntity, oldEntity);
-
-        // TODO: amedved: use saveAndFlash() here because old entity was returned if use save()
-        // as a result old data may be persisted to elasticsearch
+        processName(xmEntity);
 
         return xmEntityRepository.save(xmEntity);
+    }
+
+    private void processName(XmEntity xmEntity) {
+        TypeSpec typeByKey = xmEntitySpecService.findTypeByKey(xmEntity.getTypeKey());
+        if (StringUtils.isNotEmpty(typeByKey.getNamePattern())) {
+            xmEntity.setName(simpleTemplateProcessors.processTemplate(typeByKey.getNamePattern(), xmEntity));
+        }
     }
 
     private void preventRenameTenant(XmEntity xmEntity, XmEntity oldEntity) {
