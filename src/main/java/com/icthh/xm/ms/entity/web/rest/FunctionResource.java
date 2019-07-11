@@ -121,7 +121,7 @@ public class FunctionResource {
     @SneakyThrows
     public ResponseEntity<Object> evaluateOneTimeFunction(@RequestBody Map<String, Object> functionInput) {
         assertIsSuperAdmin();
-        String functionSourceCode = String.valueOf(functionInput.get(FUNCTION_SOURCE_CODE));
+        String functionSourceCode = String.valueOf(functionInput.remove(FUNCTION_SOURCE_CODE));
         FunctionContext result = functionService.evaluate(functionSourceCode, functionInput);
         return ResponseEntity.ok().body(result.functionResult());
     }
@@ -132,7 +132,7 @@ public class FunctionResource {
     public ResponseEntity<Object> evaluateOneTimeFunction(@PathVariable("idOrKey") IdOrKey idOrKey,
                                                           @RequestBody Map<String, Object> functionInput) {
         assertIsSuperAdmin();
-        String functionSourceCode = String.valueOf(functionInput.get(FUNCTION_SOURCE_CODE));
+        String functionSourceCode = String.valueOf(functionInput.remove(FUNCTION_SOURCE_CODE));
         FunctionContext result = functionService.evaluate(functionSourceCode, idOrKey, functionInput);
         return ResponseEntity.ok().body(result.functionResult());
     }

@@ -58,7 +58,7 @@ public class FunctionServiceImplUnitTest extends AbstractUnitTest {
         functionContextService = Mockito.mock(FunctionContextService.class);
         dynamicPermissionCheckService = Mockito.mock(DynamicPermissionCheckService.class);
         functionService = new FunctionServiceImpl(xmEntitySpecService, xmEntityService,
-            functionExecutorService, functionContextService, dynamicPermissionCheckService);
+            functionExecutorService, functionContextService, dynamicPermissionCheckService, null, null, null);
     }
 
     @Test

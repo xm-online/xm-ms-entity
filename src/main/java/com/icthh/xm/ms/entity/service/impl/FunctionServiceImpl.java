@@ -1,6 +1,7 @@
 package com.icthh.xm.ms.entity.service.impl;
 
 import static com.icthh.xm.ms.entity.config.Constants.FUNCTION_PREFIX;
+import static com.icthh.xm.ms.entity.config.Constants.FUNCTION_WITH_XM_ENTITY_PREFIX;
 
 import com.icthh.xm.commons.exceptions.EntityNotFoundException;
 import com.icthh.xm.commons.lep.XmLepScriptConfigServerResourceLoader;
@@ -11,13 +12,17 @@ import com.icthh.xm.ms.entity.domain.ext.IdOrKey;
 import com.icthh.xm.ms.entity.domain.spec.FunctionSpec;
 import com.icthh.xm.ms.entity.projection.XmEntityIdKeyTypeKey;
 import com.icthh.xm.ms.entity.projection.XmEntityStateProjection;
+import com.icthh.xm.ms.entity.repository.OneTimeFunctionKeyPool;
+import com.icthh.xm.ms.entity.repository.OneTimeFunctionKeyPool.OneTimeFunctionKey;
 import com.icthh.xm.ms.entity.security.access.DynamicPermissionCheckService;
 import com.icthh.xm.ms.entity.service.FunctionContextService;
 import com.icthh.xm.ms.entity.service.FunctionExecutorService;
 import com.icthh.xm.ms.entity.service.FunctionService;
+import com.icthh.xm.ms.entity.service.SeparateTransactionExecutor;
 import com.icthh.xm.ms.entity.service.XmEntityService;
 import com.icthh.xm.ms.entity.service.XmEntitySpecService;
 import com.icthh.xm.ms.entity.util.CustomCollectionUtils;
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
@@ -25,7 +30,10 @@ import java.util.Objects;
 import java.util.UUID;
 import java.util.function.Function;
 import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.IOUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -44,7 +52,7 @@ public class FunctionServiceImpl implements FunctionService {
     public static String FUNCTION_CALL_PRIV = "FUNCTION.CALL";
     public static String XM_ENITITY_FUNCTION_CALL_PRIV = "XMENTITY.FUNCTION.EXECUTE";
     public static String TENANT_KEY_PLACEHOLDER = "{tenant-key}";
-    public static String XM_ENTITY_FUNCTION_PATH = "/config/tenant/{tenant-key}/entity/lep/function/";
+    public static String XM_ENTITY_FUNCTION_PATH = "/config/tenants/{tenant-key}/entity/lep/function/";
 
     private final XmEntitySpecService xmEntitySpecService;
     private final XmEntityService xmEntityService;
@@ -53,6 +61,7 @@ public class FunctionServiceImpl implements FunctionService {
     private final DynamicPermissionCheckService dynamicPermissionCheckService;
     private final XmLepScriptConfigServerResourceLoader scriptResourceLoader;
     private final TenantContextHolder tenantContextHolder;
+    private final OneTimeFunctionKeyPool oneTimeFunctionIdPool;
 
     /**
      * {@inheritDoc}
@@ -72,36 +81,6 @@ public class FunctionServiceImpl implements FunctionService {
         Map<String, Object> data = functionExecutorService.execute(functionKey, vInput);
 
         return processFunctionResult(functionKey,  data, functionSpec);
-    }
-
-    @Override
-    public FunctionContext evaluate(String functionSourceCode, Map<String, Object> functionInput) {
-        return oneTimeFunction(functionSourceCode, (functionKey) ->
-            functionExecutorService.execute(functionKey, functionInput));
-    }
-
-    @Override
-    public FunctionContext evaluate(String functionSourceCode,
-                                    IdOrKey idOrKey,
-                                    Map<String, Object> functionInput) {
-        // get type key
-        XmEntityStateProjection projection = xmEntityService.findStateProjectionById(idOrKey).orElseThrow(
-            () -> new EntityNotFoundException("XmEntity with idOrKey [" + idOrKey + "] not found"));
-        return oneTimeFunction(functionSourceCode, (functionKey) ->
-            functionExecutorService.execute(functionKey, idOrKey, projection.getTypeKey(), functionInput));
-    }
-
-    private FunctionContext oneTimeFunction(String functionSourceCode, Function<String, Map<String, Object>> function) {
-        String functionKey = UUID.randomUUID().toString().replace("-", "");
-        String tenantKey = tenantContextHolder.getTenantKey();
-        String lepPath = TENANT_KEY_PLACEHOLDER.replace(TENANT_KEY_PLACEHOLDER, tenantKey);
-        lepPath = lepPath + FUNCTION_PREFIX + "$$" + functionKey + "$$tenant.groovy";
-        try {
-            scriptResourceLoader.onRefresh(lepPath, functionSourceCode);
-            return processFunctionResult(functionKey, function.apply(functionKey), new FunctionSpec());
-        } finally {
-            scriptResourceLoader.onRefresh(lepPath, null);
-        }
     }
 
     /**
@@ -135,6 +114,42 @@ public class FunctionServiceImpl implements FunctionService {
 
         return processFunctionResult(functionKey, idOrKey, data, functionSpec);
 
+    }
+
+    @Autowired
+    private SeparateTransactionExecutor transactionExecutor;
+    @Override
+    public FunctionContext evaluate(String functionSourceCode, Map<String, Object> functionInput) {
+        return oneTimeFunction(functionSourceCode, FUNCTION_PREFIX, (functionKey) ->
+            functionExecutorService.execute(functionKey, functionInput));
+    }
+
+    @Override
+    public FunctionContext evaluate(String functionSourceCode,
+                                    IdOrKey idOrKey,
+                                    Map<String, Object> functionInput) {
+        // get type key
+        XmEntityStateProjection projection = xmEntityService.findStateProjectionById(idOrKey).orElseThrow(
+            () -> new EntityNotFoundException("XmEntity with idOrKey [" + idOrKey + "] not found"));
+        return oneTimeFunction(functionSourceCode, FUNCTION_WITH_XM_ENTITY_PREFIX, (functionKey) ->
+            functionExecutorService.execute(functionKey, idOrKey, projection.getTypeKey(), functionInput));
+    }
+
+    @SneakyThrows
+    private FunctionContext oneTimeFunction(String functionSourceCode, String functionPrefix,
+                                            Function<String, Map<String, Object>> function) {
+        String tenantKey = tenantContextHolder.getTenantKey();
+        try (OneTimeFunctionKey key = oneTimeFunctionIdPool.take()) {
+            String functionKey = key.getId();
+            String lepPath = XM_ENTITY_FUNCTION_PATH.replace(TENANT_KEY_PLACEHOLDER, tenantKey);
+            lepPath = lepPath + functionPrefix + "$$" + functionKey + "$$tenant.groovy";
+            try {
+                scriptResourceLoader.onRefresh(lepPath, functionSourceCode);
+                return processFunctionResult(functionKey, function.apply(functionKey), new FunctionSpec());
+            } finally {
+                scriptResourceLoader.onRefresh(lepPath, null);
+            }
+        }
     }
 
     /**

@@ -209,6 +209,7 @@ application:
     requestCacheIgnoredPathPatternList: /api/functions/*/upload
     maxUploadFileSize: 1073741824
     maxUploadSize: 1073741824
+    oneTimeFunctionsPoolSize: 100
 
 # ===================================================================
 # Timeline specific properties

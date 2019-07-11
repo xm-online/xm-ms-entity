@@ -1,14 +1,23 @@
 package com.icthh.xm.ms.entity.web.rest;
 
+import static com.google.common.collect.ImmutableMap.of;
 import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_AUTH_CONTEXT;
 import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_TENANT_CONTEXT;
+import static com.icthh.xm.ms.entity.service.impl.FunctionServiceImpl.TENANT_KEY_PLACEHOLDER;
+import static com.icthh.xm.ms.entity.service.impl.FunctionServiceImpl.XM_ENTITY_FUNCTION_PATH;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.concurrent.TimeUnit.NANOSECONDS;
+import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.icthh.xm.commons.i18n.error.web.ExceptionTranslator;
 import com.icthh.xm.commons.lep.XmLepScriptConfigServerResourceLoader;
 import com.icthh.xm.commons.security.XmAuthenticationContextHolder;
@@ -16,10 +25,29 @@ import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
 import com.icthh.xm.lep.api.LepManager;
 import com.icthh.xm.ms.entity.AbstractSpringBootTest;
+import com.icthh.xm.ms.entity.domain.FunctionContext;
+import com.icthh.xm.ms.entity.domain.spec.FunctionSpec;
+import com.icthh.xm.ms.entity.repository.OneTimeFunctionKeyPool;
+import com.icthh.xm.ms.entity.service.FunctionExecutorService;
 import java.io.InputStream;
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Function;
 import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.time.StopWatch;
+import org.codehaus.groovy.control.CompilerConfiguration;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -27,18 +55,20 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
+import org.springframework.http.MediaType;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.transaction.BeforeTransaction;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
-
 
 @WithMockUser(authorities = {"SUPER-ADMIN"})
 @Transactional
+@Slf4j
 public class FunctionResourceIntTest extends AbstractSpringBootTest {
 
     private MockMvc mockMvc;
@@ -65,6 +95,9 @@ public class FunctionResourceIntTest extends AbstractSpringBootTest {
 
     @Autowired
     private ExceptionTranslator exceptionTranslator;
+
+    @Autowired
+    private ObjectMapper objectMapper;
 
     @BeforeTransaction
     public void beforeTransaction() {
@@ -95,7 +128,7 @@ public class FunctionResourceIntTest extends AbstractSpringBootTest {
     }
 
     void initLeps(boolean loadData) {
-        String body = "return [result: lepContext.inArgs.functionInput.files[0].getInputStream().text]";
+        String body = "Thread.sleep(2000); return [result: lepContext.inArgs.functionInput.files[0].getInputStream().text]";
         leps.onRefresh("/config/tenants/RESINTTEST/entity/lep/function/Function$$UPLOAD$$tenant.groovy", loadData ? body : null);
     }
 
@@ -130,4 +163,49 @@ public class FunctionResourceIntTest extends AbstractSpringBootTest {
                .andExpect(status().isOk());
     }
 
+    @Test
+    @SneakyThrows
+    public void testOneTimeFunction() {
+        ExecutorService executorService = Executors.newFixedThreadPool(16);
+        Set<String> functionKeys = new HashSet<>();
+        List<Future<String>> results = new ArrayList<>();
+
+        SecurityContext context = SecurityContextHolder.getContext();
+
+        for (byte counter = 0; counter < 50; counter++) {
+            byte i = counter;
+            results.add(executorService.submit(() -> runOneTimeFunction("name" + i, i, context)));
+        }
+
+        for (Future<String> result: results) {
+            functionKeys.add(result.get());
+        }
+
+        // assert reusing function keys, for avoid OOE
+        assertEquals(functionKeys.size(), 3);
+    }
+
+    @SneakyThrows
+    private String runOneTimeFunction(String name, int value, SecurityContext context) {
+        setup();
+        beforeTransaction();
+        SecurityContextHolder.setContext(context);
+        String body = "\"return [" + name + ":lepContext.inArgs.functionInput.param, functionKey:lepContext.inArgs.functionKey]\",";
+        String response = mockMvc.perform(post("/api/functions/system/evaluate").content(
+            "{" + "\"functionSourceCode\": " + body + "\"param\": " + value + "}")
+            .contentType(MediaType.APPLICATION_JSON))
+            .andDo(print())
+            .andExpect(status().isOk())
+            // assert correct work with reusing function keys
+            .andExpect(jsonPath("$.data." + name).value(value))
+            .andReturn().getResponse().getContentAsString();
+        String functionKey = objectMapper.readValue(response, FunctionContext.class).getData()
+            .get("functionKey").toString();
+        destroy();
+        return functionKey;
+    }
+
+    static {
+        CompilerConfiguration.DEFAULT.setMinimumRecompilationInterval(0);
+    }
 }
