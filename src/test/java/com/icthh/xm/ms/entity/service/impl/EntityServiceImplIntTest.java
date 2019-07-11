@@ -65,10 +65,13 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.transaction.BeforeTransaction;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
-
 import java.math.BigInteger;
 import java.net.URI;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
+import javax.persistence.EntityManager;
 
 @Slf4j
 public class EntityServiceImplIntTest extends AbstractSpringBootTest {
@@ -110,6 +113,9 @@ public class EntityServiceImplIntTest extends AbstractSpringBootTest {
 
     @Autowired
     private LepManager lepManager;
+
+    @Autowired
+    private EntityManager entityManager;
 
     @Autowired
     private XmEntityPermittedSearchRepository permittedSearchRepository;
@@ -178,7 +184,7 @@ public class EntityServiceImplIntTest extends AbstractSpringBootTest {
             authContextHolder,
             objectMapper,
             mock(UniqueFieldRepository.class),
-            springXmEntityRepository, linkRepository);
+            springXmEntityRepository, entityManager);
         xmEntityService.setSelf(xmEntityService);
 
         lepManager.beginThreadContext(ctx -> {

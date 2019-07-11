@@ -1,5 +1,21 @@
 package com.icthh.xm.ms.entity.service.impl;
 
+import static com.icthh.xm.ms.entity.domain.spec.LinkSpec.NEW_BUILDER_TYPE;
+import static com.icthh.xm.ms.entity.domain.spec.LinkSpec.SEARCH_BUILDER_TYPE;
+import static com.icthh.xm.ms.entity.util.CustomCollectionUtils.nullSafe;
+import static com.jayway.jsonpath.Configuration.defaultConfiguration;
+import static com.jayway.jsonpath.Option.SUPPRESS_EXCEPTIONS;
+import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
+import static java.util.Optional.ofNullable;
+import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toMap;
+import static java.util.stream.Collectors.toSet;
+import static org.apache.commons.collections.MapUtils.isEmpty;
+import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.apache.commons.lang3.StringUtils.isNoneBlank;
+import static org.springframework.beans.BeanUtils.isSimpleValueType;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.icthh.xm.commons.exceptions.BusinessException;
 import com.icthh.xm.commons.exceptions.EntityNotFoundException;
@@ -14,6 +30,7 @@ import com.icthh.xm.ms.entity.domain.Calendar;
 import com.icthh.xm.ms.entity.domain.Comment;
 import com.icthh.xm.ms.entity.domain.FileFormatEnum;
 import com.icthh.xm.ms.entity.domain.Link;
+import com.icthh.xm.ms.entity.domain.LinkDetails;
 import com.icthh.xm.ms.entity.domain.Location;
 import com.icthh.xm.ms.entity.domain.Rating;
 import com.icthh.xm.ms.entity.domain.SimpleExportXmEntityDto;
@@ -34,7 +51,6 @@ import com.icthh.xm.ms.entity.lep.keyresolver.TypeKeyResolver;
 import com.icthh.xm.ms.entity.lep.keyresolver.XmEntityTypeKeyResolver;
 import com.icthh.xm.ms.entity.projection.XmEntityIdKeyTypeKey;
 import com.icthh.xm.ms.entity.projection.XmEntityStateProjection;
-import com.icthh.xm.ms.entity.repository.LinkRepository;
 import com.icthh.xm.ms.entity.repository.SpringXmEntityRepository;
 import com.icthh.xm.ms.entity.repository.UniqueFieldRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityPermittedRepository;
@@ -69,12 +85,12 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.ObjectUtils;
 import org.springframework.web.multipart.MultipartFile;
-
-import javax.annotation.Nullable;
 import java.net.URI;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
+import java.util.Comparator;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -82,24 +98,9 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.function.Consumer;
-import java.util.function.Predicate;
-import java.util.stream.IntStream;
-
-import static com.icthh.xm.ms.entity.domain.spec.LinkSpec.NEW_BUILDER_TYPE;
-import static com.icthh.xm.ms.entity.domain.spec.LinkSpec.SEARCH_BUILDER_TYPE;
-import static com.icthh.xm.ms.entity.util.CustomCollectionUtils.nullSafe;
-import static com.jayway.jsonpath.Configuration.defaultConfiguration;
-import static com.jayway.jsonpath.Option.SUPPRESS_EXCEPTIONS;
-import static java.util.Collections.emptyList;
-import static java.util.Collections.singletonList;
-import static java.util.Optional.ofNullable;
-import static java.util.stream.Collectors.toList;
-import static java.util.stream.Collectors.toMap;
-import static java.util.stream.Collectors.toSet;
-import static org.apache.commons.collections.MapUtils.isEmpty;
-import static org.apache.commons.lang3.StringUtils.isBlank;
-import static org.apache.commons.lang3.StringUtils.isNoneBlank;
-import static org.springframework.beans.BeanUtils.isSimpleValueType;
+import javax.annotation.Nullable;
+import javax.persistence.EntityManager;
+import javax.persistence.Query;
 
 /**
  * Service Implementation for managing XmEntity.
@@ -126,7 +127,7 @@ public class XmEntityServiceImpl implements XmEntityService {
     private final ObjectMapper objectMapper;
     private final UniqueFieldRepository uniqueFieldRepository;
     private final SpringXmEntityRepository springXmEntityRepository;
-    private final LinkRepository linkRepository;
+    private final EntityManager em;
 
     private XmEntityServiceImpl self;
 
@@ -203,49 +204,57 @@ public class XmEntityServiceImpl implements XmEntityService {
             return;
         }
         Set<Link> newLinks = xmEntity.getSources().stream().filter(Link::isNew).collect(toSet());
-        Set<Link> newUniqLinks = new TreeSet<>((l1, l2) -> {
-            if (l1.getTypeKey().equals(l2.getTypeKey()) && l1.getSource().getId().equals(l2.getSource().getId())) {
-                return 0;
-            }
-            return 1;
-        });
+        Set<Link> newUniqLinks = new TreeSet<>(Comparator.comparing(Link::getTypeKey).thenComparing((l -> l.getSource().getId())));
         newUniqLinks.addAll(newLinks);
         List<Long> sourceIds = newUniqLinks.stream().map(Link::getSource).map(XmEntity::getId).distinct().collect(toList());
-        List<String> sourceTypeKey = xmEntityRepository.findAllStateProjectionByIdIn(sourceIds)
-            .stream().map(XmEntityStateProjection::getTypeKey).collect(toList());
-        Map<Long, String> sourceIdsAndTypeKeys = IntStream.range(0, (sourceIds.size())).boxed()
-            .collect(toMap(sourceIds::get, sourceTypeKey::get));
-        newUniqLinks.forEach(it -> linkCount(it.getTypeKey(),
-            it.getSource(),
-            newLinks,
-            sourceIdsAndTypeKeys));
+        Set<LinkDetails> details = new HashSet<>();
+        for (Link link : newLinks){
+            long linkCount = newLinks.stream().filter(it -> it.getSource().getId().equals(link.getSource().getId()))
+                .filter(it -> it.getTypeKey().equals(link.getTypeKey())).count();
+            details.add(new LinkDetails(link.getTypeKey(), link.getSource().getTypeKey(), linkCount));
+        }
+        List<LinkDetails> linkDetails = executeQueryForSource(sourceIds, newUniqLinks.stream().map(Link::getTypeKey).distinct().collect(toList()));
+        for (LinkDetails l : details) {
+            if (linkDetails.contains(l)){
+                linkDetails.stream().filter(it -> it.equals(l)).map(it -> it.count(it.getCount() + l.getCount())).collect(toList());
+            }
+            else {
+                linkDetails.add(l);
+            }
+        }
+        newLinkValidate(linkDetails);
     }
 
-    private void linkCount(String newLinkTypeKey,
-                           XmEntity source,
-                           Set<Link> newLinks,
-                           Map<Long, String> sourceIdsAndTypeKeys) {
-
-        Predicate<Link> checkTypeKeyPredicate = it -> it.getTypeKey().equals(newLinkTypeKey);
-        Long newLinkCount = newLinks.stream().filter(it -> it.getSource().getId().equals(source.getId()))
-            .filter(checkTypeKeyPredicate).count();
-        Long countOfSourceTarget = (long) linkRepository.countBySourceIdAndTypeKey(source.getId(), newLinkTypeKey);
-        newLinkValidate(newLinkTypeKey, sourceIdsAndTypeKeys.get(source.getId()), (newLinkCount + countOfSourceTarget));
+    private List<LinkDetails> executeQueryForSource(List<Long> linkSourcesId, List<String> linkTypeKeys) {
+        try {
+            Query query = em.createQuery("SELECT new com.icthh.xm.ms.entity.domain.LinkDetails(l.typeKey, l.source.typeKey, COUNT(l)) " +
+                "FROM Link l " +
+                "WHERE l.typeKey IN :linkTypeKeys " +
+                "AND l.source.id IN :linkSourcesId " +
+                "GROUP BY l.typeKey, l.source.id");
+            query.setParameter("linkTypeKeys", linkTypeKeys).setParameter("linkSourcesId", linkSourcesId);
+            List<LinkDetails> linkDetails = query.getResultList();
+            return linkDetails;
+        } finally {
+            em.close();
+        }
     }
 
-    private void newLinkValidate(String newLinkTypeKey, String sourceTypeKey, Long linkCount) {
-        Optional<LinkSpec> linkSpecOptional = xmEntitySpecService.findLink(sourceTypeKey, newLinkTypeKey);
-        boolean present = linkSpecOptional.isPresent();
-        if (!present) {
-            return;
-        }
-        LinkSpec linkSpec = linkSpecOptional.get();
-        if (linkSpec.getMax() == null || linkSpec.getMax() < 0) {
-            return;
-        }
-        if (linkCount > linkSpec.getMax()) {
-            throw new BusinessException("In entity with type key " + sourceTypeKey
-                + " link with type key " + newLinkTypeKey + " already has the maximum number of items.");
+    private void newLinkValidate(List<LinkDetails> linkDetails) {
+        for (LinkDetails l : linkDetails) {
+            Optional<LinkSpec> linkSpecOptional = xmEntitySpecService.findLink(l.getSourceTypeKey(), l.getTypeKey());
+            boolean present = linkSpecOptional.isPresent();
+            if (!present) {
+                return;
+            }
+            LinkSpec linkSpec = linkSpecOptional.get();
+            if (linkSpec.getMax() == null || linkSpec.getMax() < 0) {
+                return;
+            }
+            if (l.getCount() > linkSpec.getMax()) {
+                throw new BusinessException("In entity with type key " + l.getSourceTypeKey()
+                    + " link with type key " + l.getTypeKey() + " already has the maximum number of items.");
+            }
         }
     }
 
@@ -253,32 +262,34 @@ public class XmEntityServiceImpl implements XmEntityService {
         if (xmEntity.getTargets().isEmpty()) {
             return;
         }
+        String sorceTypeKey = xmEntity.getTypeKey();
         Set<Link> targets = xmEntity.getTargets();
-        Set<String> newLinkTypeKeys = targets.stream().filter(Link::isNew).map(Link::getTypeKey).collect(toSet());
-        Map<String, Integer> linkTypeKeyAndCount = new HashMap<>();
-        for (String newLinkTypeKey : newLinkTypeKeys) {
+
+        Set<LinkDetails> details = new HashSet<>();
             if (xmEntity.isNew()) {
-                int linkCount = (int) targets.stream().filter(it -> it.getTypeKey().equals(newLinkTypeKey)).count();
-                linkTypeKeyAndCount.put(newLinkTypeKey, linkCount);
+                for (Link link : targets) {
+                    long linkCount = targets.stream().filter(it -> it.getTypeKey().equals(link.getTypeKey())).count();
+                    details.add(new LinkDetails(link.getTypeKey(), sorceTypeKey, linkCount));
+                }
+                List<LinkDetails> linkDetails = new ArrayList<>(details);
+                newLinkValidate(linkDetails);
             } else {
-                int linkCount = linkRepository.countBySourceIdAndTypeKey(xmEntity.getId(), newLinkTypeKey);
-                linkTypeKeyAndCount.put(newLinkTypeKey, linkCount);
+                newLinkValidate(executeQueryForTarget(xmEntity.getId(), targets.stream().map(Link::getTypeKey).collect(toList())));
             }
         }
-        for (String linkTypeKey : linkTypeKeyAndCount.keySet()) {
-            Optional<LinkSpec> linkSpecOptional = xmEntitySpecService.findLink(xmEntity.getTypeKey(), linkTypeKey);
-            boolean present = linkSpecOptional.isPresent();
-            if (!present) {
-                continue;
-            }
-            LinkSpec linkSpec = linkSpecOptional.get();
-            if (linkSpec.getMax() == null || linkSpec.getMax() < 0) {
-                continue;
-            }
-            if (linkTypeKeyAndCount.get(linkTypeKey) > linkSpec.getMax()) {
-                throw new BusinessException("Link with type key " + linkTypeKey
-                    + " already has the maximum number of items.");
-            }
+
+    private List<LinkDetails> executeQueryForTarget(Long sourceId, List<String> linkTypeKeys) {
+        try {
+            Query query = em.createQuery("SELECT new com.icthh.xm.ms.entity.domain.LinkDetails(l.typeKey, l.source.typeKey, COUNT(l)) " +
+                "FROM Link l " +
+                "WHERE l.typeKey IN :linkTypeKeys " +
+                "AND l.source.id IN :sourceId " +
+                "GROUP BY l.typeKey, l.source.id");
+            query.setParameter("linkTypeKeys", linkTypeKeys).setParameter("sourceId", sourceId);
+            List<LinkDetails> linkDetails = query.getResultList();
+            return linkDetails;
+        } finally {
+            em.close();
         }
     }
 

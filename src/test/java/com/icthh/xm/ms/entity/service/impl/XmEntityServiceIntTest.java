@@ -32,12 +32,6 @@ import com.icthh.xm.ms.entity.domain.Vote;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
 import com.icthh.xm.ms.entity.service.ElasticsearchIndexService;
-import java.io.InputStream;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
@@ -52,6 +46,12 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.security.test.context.support.WithMockUser;
+import java.io.InputStream;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 @Slf4j
 public class XmEntityServiceIntTest extends AbstractSpringBootTest {
@@ -370,36 +370,4 @@ public class XmEntityServiceIntTest extends AbstractSpringBootTest {
         InputStream cfgInputStream = new ClassPathResource(path).getInputStream();
         return IOUtils.toString(cfgInputStream, UTF_8);
     }
-
-    @Test
-    @SneakyThrows
-    public void zxc() {
-
-        XmEntity deletedEntity = xmEntityService.save(new XmEntity().name(" ").key(randomUUID()).typeKey("TEST_DELETE_NEW_LINK"));
-        XmEntity otherEntity = xmEntityService.save(new XmEntity().name(" ").key(randomUUID()).typeKey("TEST_DELETE_SEARCH_LINK"));
-        XmEntity sharedEntity = xmEntityService.save(new XmEntity().name(" ").key(randomUUID()).typeKey("TARGET_ENTITY"));
-
-        Link newLink = new Link();
-        newLink.setTypeKey("newLink");
-        newLink.setTarget(sharedEntity);
-        deletedEntity.addTargets(newLink);
-
-        Link searchLink = new Link();
-        searchLink.setTypeKey("cascadeDeleteLinks");
-        searchLink.setTarget(sharedEntity);
-        otherEntity.addTargets(searchLink);
-
-        xmEntityService.save(deletedEntity);
-        xmEntityService.save(otherEntity);
-
-        xmEntityService.delete(deletedEntity.getId());
-
-        assertThat(xmEntityRepository.existsById(otherEntity.getId())).isTrue();
-        assertThat(xmEntityRepository.existsById(sharedEntity.getId())).isTrue();
-        assertThat(xmEntityRepository.existsById(deletedEntity.getId())).isFalse();
-
-        xmEntityService.delete(sharedEntity.getId());
-        xmEntityService.delete(otherEntity.getId());
-    }
-
 }

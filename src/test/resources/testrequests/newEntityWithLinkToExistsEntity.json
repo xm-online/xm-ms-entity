@@ -7,7 +7,8 @@
       "typeKey": "TEST_SAVE_WITH_LINK_LINK_KEY",
       "name": "some link name",
       "source": {
-          "id": %d
+          "id": %d,
+          "typeKey": "TEST_SAVE_WITH_LINK_EXISTS_ENTITY"
       }
     }
   ]

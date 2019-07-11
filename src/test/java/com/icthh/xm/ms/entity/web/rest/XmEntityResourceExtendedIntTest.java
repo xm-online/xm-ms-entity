@@ -262,6 +262,9 @@ public class XmEntityResourceExtendedIntTest extends AbstractSpringBootTest {
     XmEntityPermittedRepository xmEntityPermittedRepository;
 
     @Autowired
+    private EntityManager entityManager;
+
+    @Autowired
     LinkService linkService;
 
     @Autowired
@@ -344,7 +347,7 @@ public class XmEntityResourceExtendedIntTest extends AbstractSpringBootTest {
                                                                       authContextHolder,
                                                                       objectMapper,
                                                                       mock(UniqueFieldRepository.class),
-                                                                      springXmEntityRepository, linkRepository);
+                                                                      springXmEntityRepository, entityManager);
 
         xmEntityService.setSelf(xmEntityService);
         this.xmEntityService = xmEntityService;

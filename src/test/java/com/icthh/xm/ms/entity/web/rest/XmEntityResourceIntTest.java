@@ -216,6 +216,9 @@ public class XmEntityResourceIntTest extends AbstractSpringBootTest {
     @Mock
     private XmAuthenticationContext context;
 
+    @Autowired
+    private EntityManager entityManager;
+
     @Spy
     private StartUpdateDateGenerationStrategy startUpdateDateGenerationStrategy;
 
@@ -279,7 +282,7 @@ public class XmEntityResourceIntTest extends AbstractSpringBootTest {
                                                       authContextHolder,
                                                       objectMapper,
                                                       mock(UniqueFieldRepository.class),
-                                                      springXmEntityRepository, linkRepository);
+                                                      springXmEntityRepository, entityManager);
         xmEntityServiceImpl.setSelf(xmEntityServiceImpl);
 
         this.xmEntityServiceImpl = xmEntityServiceImpl;
