@@ -3,6 +3,7 @@ package com.icthh.xm.ms.entity.config;
 import com.icthh.xm.commons.config.client.service.TenantConfigService;
 import com.icthh.xm.commons.lep.commons.CommonsService;
 import com.icthh.xm.commons.permission.service.PermissionCheckService;
+import com.icthh.xm.ms.entity.config.RestTemplateConfiguration.PathTimeoutHttpComponentsClientHttpRequestFactory;
 import com.icthh.xm.ms.entity.config.amazon.AmazonS3Template;
 import com.icthh.xm.ms.entity.lep.TenantLepResource;
 import com.icthh.xm.ms.entity.lep.XmEntityMsLepProcessingApplicationListener;
@@ -47,7 +48,8 @@ public class LepAppEventListenerConfiguration {
         CommentService commentService,
         TenantConfigService tenantConfigService,
         AttachmentService attachmentService,
-        @Qualifier("loadBalancedRestTemplate") RestTemplate restTemplate,
+        @Qualifier("loadBalancedRestTemplateWithTimeout") RestTemplate loadBalancedRestTemplateWithTimeout,
+        PathTimeoutHttpComponentsClientHttpRequestFactory requestFactory,
         LocationService locationService,
         TagService tagService,
         ProfileEventProducer profileEventProducer,
@@ -62,10 +64,10 @@ public class LepAppEventListenerConfiguration {
 
         return new XmEntityMsLepProcessingApplicationListener(xmEntityService,
                         xmTenantLifecycleService, xmEntityRepository, profileService, linkService,
-                        mailService, tenantConfigService, attachmentService, restTemplate,
-                        locationService, tagService, profileEventProducer, commentService, commonsService,
-                        permissionCheckService, eventService, calendarService, tenantLepResource, amazonS3Template,
-                        elasticsearchTemplate, permittedSearchRepository, elasticsearchIndexService,
+                        mailService, tenantConfigService, attachmentService, loadBalancedRestTemplateWithTimeout,
+                        requestFactory, locationService, tagService, profileEventProducer, commentService,
+                        commonsService, permissionCheckService, eventService, calendarService, tenantLepResource,
+                        amazonS3Template, elasticsearchTemplate, permittedSearchRepository, elasticsearchIndexService,
                         transactionExecutor);
     }
 
