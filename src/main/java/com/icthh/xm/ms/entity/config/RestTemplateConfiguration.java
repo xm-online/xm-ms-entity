@@ -89,7 +89,7 @@ public class RestTemplateConfiguration {
         @Data
         @Builder
         @AllArgsConstructor
-        @EqualsAndHashCode
+        @EqualsAndHashCode(of = {"httpMethod", "pathPattern"})
         public static class PathTimeoutConfig {
             private HttpMethod httpMethod;
             private String pathPattern;
