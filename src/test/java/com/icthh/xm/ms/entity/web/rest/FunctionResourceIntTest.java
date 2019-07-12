@@ -129,5 +129,4 @@ public class FunctionResourceIntTest extends AbstractSpringBootTest {
                .andExpect(jsonPath("$.data.result").value("test no json content"))
                .andExpect(status().isOk());
     }
-
 }

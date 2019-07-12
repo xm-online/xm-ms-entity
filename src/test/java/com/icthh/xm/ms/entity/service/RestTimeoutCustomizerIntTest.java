@@ -20,16 +20,15 @@ import org.junit.ClassRule;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.boot.test.mock.mockito.SpyBean;
-import org.springframework.cloud.client.loadbalancer.LoadBalancerClient;
 import org.springframework.cloud.netflix.ribbon.StaticServerList;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.test.context.ContextConfiguration;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
 
 @Slf4j
+@ContextConfiguration(classes = RestTimeoutCustomizerIntTest.TestConfiguration.class)
 public class RestTimeoutCustomizerIntTest extends AbstractSpringBootTest {
 
     @Qualifier("loadBalancedRestTemplateWithTimeout")
@@ -70,7 +69,6 @@ public class RestTimeoutCustomizerIntTest extends AbstractSpringBootTest {
         verify(getRequestedFor(urlMatching("/test/sleep")));
     }
 
-    @Configuration
     public static class TestConfiguration {
 
         @Bean
