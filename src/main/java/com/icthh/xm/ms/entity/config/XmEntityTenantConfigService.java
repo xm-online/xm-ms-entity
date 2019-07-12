@@ -90,7 +90,6 @@ public class XmEntityTenantConfigService extends TenantConfigService {
         @Data
         public static class LepSetting {
             private Boolean enableInheritanceTypeKey = false;
-            private Boolean enableOneTimeFunction = false;
         }
     }
 
