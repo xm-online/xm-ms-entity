@@ -18,6 +18,7 @@ import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
 import com.icthh.xm.lep.api.LepManager;
 import com.icthh.xm.ms.entity.AbstractSpringBootTest;
+import com.icthh.xm.ms.entity.config.XmEntityTenantConfigService;
 import com.icthh.xm.ms.entity.domain.FunctionContext;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -35,6 +36,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
 import org.springframework.http.MediaType;
@@ -81,6 +83,9 @@ public class FunctionResourceIntTest extends AbstractSpringBootTest {
     @Autowired
     private ObjectMapper objectMapper;
 
+    @Autowired
+    private XmEntityTenantConfigService xmEntityTenantConfigService;
+
     @BeforeTransaction
     public void beforeTransaction() {
         TenantContextUtils.setTenant(tenantContextHolder, "RESINTTEST");
@@ -102,6 +107,7 @@ public class FunctionResourceIntTest extends AbstractSpringBootTest {
                                                   .setMessageConverters(jacksonMessageConverter).build();
 
         initLeps(true);
+        xmEntityTenantConfigService.getXmEntityTenantConfig().getLep().setOneTimeFunction(true);
     }
 
     @After
@@ -169,9 +175,10 @@ public class FunctionResourceIntTest extends AbstractSpringBootTest {
 
     @SneakyThrows
     private String runOneTimeFunction(String name, int value, SecurityContext context) {
-        setup();
         beforeTransaction();
         SecurityContextHolder.setContext(context);
+        setup();
+
         String body = "\"return [" + name + ":lepContext.inArgs.functionInput.param, functionKey:lepContext.inArgs.functionKey]\",";
         String response = mockMvc.perform(post("/api/functions/system/evaluate").content(
             "{" + "\"functionSourceCode\": " + body + "\"param\": " + value + "}")

@@ -15,6 +15,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.icthh.xm.commons.i18n.error.web.ExceptionTranslator;
 import com.icthh.xm.commons.i18n.spring.service.LocalizationMessageService;
 import com.icthh.xm.ms.entity.AbstractWebMvcTest;
+import com.icthh.xm.ms.entity.config.XmEntityTenantConfigService;
 import com.icthh.xm.ms.entity.domain.FunctionContext;
 import com.icthh.xm.ms.entity.service.FunctionService;
 import lombok.SneakyThrows;
@@ -44,6 +45,9 @@ public class FunctionResourceMvcIntTest extends AbstractWebMvcTest {
 
     @MockBean
     private LocalizationMessageService localizationMessageService;
+
+    @MockBean
+    private XmEntityTenantConfigService xmEntityTenantConfigService;
 
     @Before
     public void setup() {

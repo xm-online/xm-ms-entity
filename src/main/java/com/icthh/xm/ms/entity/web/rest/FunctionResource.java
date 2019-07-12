@@ -5,6 +5,7 @@ import static com.icthh.xm.commons.permission.constants.RoleConstant.SUPER_ADMIN
 import static com.icthh.xm.ms.entity.security.SecurityUtils.getCurrentUserRole;
 
 import com.codahale.metrics.annotation.Timed;
+import com.icthh.xm.ms.entity.config.XmEntityTenantConfigService;
 import com.icthh.xm.ms.entity.domain.FunctionContext;
 import com.icthh.xm.ms.entity.domain.ext.IdOrKey;
 import com.icthh.xm.ms.entity.service.FunctionService;
@@ -14,6 +15,7 @@ import java.security.Principal;
 import java.util.List;
 import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
+import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.MediaType;
@@ -36,16 +38,14 @@ import org.springframework.web.servlet.ModelAndView;
  */
 @RestController
 @RequestMapping("/api")
+@AllArgsConstructor
 public class FunctionResource {
 
     private static final String ENTITY_NAME_FUNCTION_CONTEXT = "functionContext";
     public static final String FUNCTION_SOURCE_CODE = "functionSourceCode";
 
     private final FunctionService functionService;
-
-    public FunctionResource(@Qualifier("functionService") FunctionService functionService) {
-        this.functionService = functionService;
-    }
+    private final XmEntityTenantConfigService tenantConfigService;
 
     @Timed
     @GetMapping("/functions/{functionKey:.+}")
@@ -120,6 +120,7 @@ public class FunctionResource {
     @PostMapping(value = "/functions/system/evaluate")
     @SneakyThrows
     public ResponseEntity<Object> evaluateOneTimeFunction(@RequestBody Map<String, Object> functionInput) {
+        assertFeatureEnabled();
         assertIsSuperAdmin();
         String functionSourceCode = String.valueOf(functionInput.remove(FUNCTION_SOURCE_CODE));
         FunctionContext result = functionService.evaluate(functionSourceCode, functionInput);
@@ -131,10 +132,17 @@ public class FunctionResource {
     @SneakyThrows
     public ResponseEntity<Object> evaluateOneTimeFunction(@PathVariable("idOrKey") IdOrKey idOrKey,
                                                           @RequestBody Map<String, Object> functionInput) {
+        assertFeatureEnabled();
         assertIsSuperAdmin();
         String functionSourceCode = String.valueOf(functionInput.remove(FUNCTION_SOURCE_CODE));
         FunctionContext result = functionService.evaluate(functionSourceCode, idOrKey, functionInput);
         return ResponseEntity.ok().body(result.functionResult());
+    }
+
+    private void assertFeatureEnabled() {
+        if (!tenantConfigService.getXmEntityTenantConfig().getLep().getOneTimeFunction()) {
+            throw new AccessDeniedException("One time function feature disabled.");
+        }
     }
 
     private void assertIsSuperAdmin() {
