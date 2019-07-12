@@ -1,12 +1,15 @@
 package com.icthh.xm.ms.entity.config;
 
 import com.icthh.xm.commons.lep.TenantScriptStorage;
+import com.icthh.xm.commons.lep.XmGroovyScriptEngineProviderStrategy;
 import com.icthh.xm.commons.lep.spring.EnableLepServices;
 import com.icthh.xm.commons.lep.spring.web.WebLepSpringConfiguration;
+import com.icthh.xm.lep.api.ContextsHolder;
 import com.icthh.xm.ms.entity.lep.keyresolver.FunctionLepKeyResolver;
 import com.icthh.xm.ms.entity.lep.keyresolver.FunctionWithXmEntityLepKeyResolver;
 import com.icthh.xm.ms.entity.lep.keyresolver.SystemQueueConsumerLepKeyResolver;
 import com.icthh.xm.ms.entity.service.XmEntityLifeCycleService;
+import groovy.util.GroovyScriptEngine;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
@@ -47,6 +50,19 @@ public class LepConfiguration extends WebLepSpringConfiguration {
     @Bean
     public SystemQueueConsumerLepKeyResolver systemQueueConsumerLepKeyResolver() {
         return new SystemQueueConsumerLepKeyResolver();
+    }
+
+    @Bean
+    public XmGroovyScriptEngineProviderStrategy xmGroovyScriptEngineProviderStrategy() {
+        return new XmGroovyScriptEngineProviderStrategy(scriptNameLepResourceKeyMapper()) {
+            @Override
+            protected void initGroovyScriptEngine(GroovyScriptEngine engine, ContextsHolder contextsHolder) {
+                super.initGroovyScriptEngine(engine, contextsHolder);
+                // need for one time function, when two function execution with same key, in 100ms window
+                // groovy will be compile only after lep updates, not every time
+                engine.getConfig().setMinimumRecompilationInterval(0);
+            }
+        };
     }
 
 }

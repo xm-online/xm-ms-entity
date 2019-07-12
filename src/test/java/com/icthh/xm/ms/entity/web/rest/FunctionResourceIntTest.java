@@ -204,8 +204,4 @@ public class FunctionResourceIntTest extends AbstractSpringBootTest {
         destroy();
         return functionKey;
     }
-
-    static {
-        CompilerConfiguration.DEFAULT.setMinimumRecompilationInterval(0);
-    }
 }
