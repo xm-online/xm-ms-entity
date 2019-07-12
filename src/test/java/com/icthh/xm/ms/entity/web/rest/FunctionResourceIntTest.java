@@ -148,7 +148,7 @@ public class FunctionResourceIntTest extends AbstractSpringBootTest {
     @Test
     @SneakyThrows
     public void testOneTimeFunction() {
-        ExecutorService executorService = Executors.newFixedThreadPool(16);
+        ExecutorService executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
         Set<String> functionKeys = new HashSet<>();
         List<Future<String>> results = new ArrayList<>();
 
