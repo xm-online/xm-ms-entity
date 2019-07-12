@@ -4,7 +4,6 @@ import static java.util.stream.Collectors.toList;
 import static java.util.stream.Stream.generate;
 
 import com.icthh.xm.ms.entity.config.ApplicationProperties;
-import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -44,8 +43,6 @@ public class OneTimeFunctionKeyPool {
 
         @Getter
         private final String id = UUID.randomUUID().toString().replace("-", "");;
-
-        private volatile long lastUserTimeMillis;
 
         @Override
         public void close() {
