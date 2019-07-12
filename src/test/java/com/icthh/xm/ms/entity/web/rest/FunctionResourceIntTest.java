@@ -110,7 +110,7 @@ public class FunctionResourceIntTest extends AbstractSpringBootTest {
     }
 
     void initLeps(boolean loadData) {
-        String body = "Thread.sleep(2000); return [result: lepContext.inArgs.functionInput.files[0].getInputStream().text]";
+        String body = "return [result: lepContext.inArgs.functionInput.files[0].getInputStream().text]";
         leps.onRefresh("/config/tenants/RESINTTEST/entity/lep/function/Function$$UPLOAD$$tenant.groovy", loadData ? body : null);
     }
 
