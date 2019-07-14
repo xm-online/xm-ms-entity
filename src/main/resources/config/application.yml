@@ -204,7 +204,11 @@ application:
             access-key-secret:
         s3:
             bucket:
+            bucket-prefix:
     elasticSchemaSuffix: ""
+    requestCacheIgnoredPathPatternList: /api/functions/*/upload
+    maxUploadFileSize: 1073741824
+    maxUploadSize: 1073741824
 
 # ===================================================================
 # Timeline specific properties

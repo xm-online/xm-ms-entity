@@ -1,5 +1,6 @@
 package com.icthh.xm.ms.entity.web.rest;
 
+import static com.google.common.collect.ImmutableMap.of;
 import static org.springframework.web.servlet.HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE;
 import static org.springframework.web.servlet.HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE;
 
@@ -7,10 +8,15 @@ import com.codahale.metrics.annotation.Timed;
 import com.icthh.xm.ms.entity.domain.FunctionContext;
 import com.icthh.xm.ms.entity.service.FunctionService;
 import com.icthh.xm.ms.entity.web.rest.util.HeaderUtil;
+import java.net.URI;
+import java.util.List;
+import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
+import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.util.AntPathMatcher;
@@ -22,10 +28,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.ModelAndView;
-
-import java.net.URI;
-import java.util.Map;
 
 /**
  * The {@link FunctionResource} class.
@@ -106,7 +110,6 @@ public class FunctionResource {
         return null;
     }
 
-
     @Timed
     @GetMapping("/functions/**")
     public ResponseEntity<Object> callGetFunction(HttpServletRequest request,
@@ -133,6 +136,18 @@ public class FunctionResource {
     public ModelAndView callMvcFunction(HttpServletRequest request,
                                         @RequestBody(required = false) Map<String, Object> functionInput) {
         return self.callMvcFunction(getFunctionKey(request), functionInput);
+    }
+
+    @Timed
+    @PostMapping(value = "/functions/{functionKey:.+}/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasPermission({'functionKey': #functionKey}, 'FUNCTION.UPLOAD.CALL')")
+    @SneakyThrows
+    public ResponseEntity<Object> callUploadFunction(@PathVariable("functionKey") String functionKey,
+                                                     @RequestParam(value = "file", required = false) List<MultipartFile> files,
+                                                     HttpServletRequest httpServletRequest) {
+        Map<String, Object> functionInput = of("httpServletRequest", httpServletRequest, "files", files);
+        FunctionContext result = functionService.execute(functionKey, functionInput);
+        return ResponseEntity.ok().body(result.functionResult());
     }
 
     public static String getFunctionKey(HttpServletRequest request) {

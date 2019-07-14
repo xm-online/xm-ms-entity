@@ -39,8 +39,10 @@ import com.icthh.xm.ms.entity.AbstractSpringBootTest;
 import com.icthh.xm.ms.entity.config.ApplicationProperties;
 import com.icthh.xm.ms.entity.config.Constants;
 import com.icthh.xm.ms.entity.config.InternalTransactionService;
+import com.icthh.xm.ms.entity.config.XmEntityTenantConfigService;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.domain.spec.StateSpec;
+import com.icthh.xm.ms.entity.lep.keyresolver.TypeKeyWithExtends;
 import com.icthh.xm.ms.entity.repository.SpringXmEntityRepository;
 import com.icthh.xm.ms.entity.repository.UniqueFieldRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityPermittedRepository;
@@ -53,6 +55,7 @@ import com.icthh.xm.ms.entity.service.FunctionService;
 import com.icthh.xm.ms.entity.service.LifecycleLepStrategyFactory;
 import com.icthh.xm.ms.entity.service.LinkService;
 import com.icthh.xm.ms.entity.service.ProfileService;
+import com.icthh.xm.ms.entity.service.SimpleTemplateProcessor;
 import com.icthh.xm.ms.entity.service.StorageService;
 import com.icthh.xm.ms.entity.service.TenantService;
 import com.icthh.xm.ms.entity.service.XmEntitySpecService;
@@ -201,7 +204,7 @@ public class XmEntityResourceIntTest extends AbstractSpringBootTest {
     XmEntityPermittedSearchRepository xmEntityPermittedSearchRepository;
 
     @Autowired
-    TenantConfigService tenantConfigService;
+    XmEntityTenantConfigService tenantConfigService;
 
     @Autowired
     ObjectMapper objectMapper;
@@ -275,7 +278,9 @@ public class XmEntityResourceIntTest extends AbstractSpringBootTest {
                                                       authContextHolder,
                                                       objectMapper,
                                                       mock(UniqueFieldRepository.class),
-                                                      springXmEntityRepository);
+                                                      springXmEntityRepository,
+                                                      new TypeKeyWithExtends(tenantConfigService),
+                                                      new SimpleTemplateProcessor(objectMapper));
         xmEntityServiceImpl.setSelf(xmEntityServiceImpl);
 
         this.xmEntityServiceImpl = xmEntityServiceImpl;
@@ -303,8 +308,7 @@ public class XmEntityResourceIntTest extends AbstractSpringBootTest {
     }
 
     @After
-    @Override
-    public void finalize() {
+    public void tearDown() {
         lepManager.endThreadContext();
         tenantContextHolder.getPrivilegedContext().destroyCurrentContext();
     }

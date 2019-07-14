@@ -57,19 +57,19 @@ import javax.persistence.EntityManager;
 @WithMockUser(authorities = {"SUPER-ADMIN"})
 public class LinkResourceIntTest extends AbstractSpringBootTest {
 
-    private static final String DEFAULT_TYPE_KEY = "AAAAAAAAAA";
+    public static final String DEFAULT_TYPE_KEY = "AAAAAAAAAA";
     private static final String UPDATED_TYPE_KEY = "BBBBBBBBBB";
 
-    private static final String DEFAULT_NAME = "AAAAAAAAAA";
+    public static final String DEFAULT_NAME = "AAAAAAAAAA";
     private static final String UPDATED_NAME = "BBBBBBBBBB";
 
-    private static final String DEFAULT_DESCRIPTION = "AAAAAAAAAA";
+    public static final String DEFAULT_DESCRIPTION = "AAAAAAAAAA";
     private static final String UPDATED_DESCRIPTION = "BBBBBBBBBB";
 
-    private static final Instant DEFAULT_START_DATE = Instant.ofEpochMilli(0L);
+    public static final Instant DEFAULT_START_DATE = Instant.ofEpochMilli(0L);
     private static final Instant UPDATED_START_DATE = Instant.now().truncatedTo(ChronoUnit.MILLIS);
 
-    private static final Instant DEFAULT_END_DATE = Instant.ofEpochMilli(0L);
+    public static final Instant DEFAULT_END_DATE = Instant.ofEpochMilli(0L);
     private static final Instant UPDATED_END_DATE = Instant.now().truncatedTo(ChronoUnit.MILLIS);
 
     @Autowired
@@ -150,8 +150,7 @@ public class LinkResourceIntTest extends AbstractSpringBootTest {
     }
 
     @After
-    @Override
-    public void finalize() {
+    public void tearDown() {
         lepManager.endThreadContext();
         tenantContextHolder.getPrivilegedContext().destroyCurrentContext();
     }

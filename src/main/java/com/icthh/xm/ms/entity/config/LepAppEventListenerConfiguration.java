@@ -17,6 +17,7 @@ import com.icthh.xm.ms.entity.service.EventService;
 import com.icthh.xm.ms.entity.service.LinkService;
 import com.icthh.xm.ms.entity.service.LocationService;
 import com.icthh.xm.ms.entity.service.ProfileService;
+import com.icthh.xm.ms.entity.service.SeparateTransactionExecutor;
 import com.icthh.xm.ms.entity.service.TagService;
 import com.icthh.xm.ms.entity.service.XmEntityService;
 import com.icthh.xm.ms.entity.service.XmTenantLifecycleService;
@@ -56,15 +57,16 @@ public class LepAppEventListenerConfiguration {
         AmazonS3Template amazonS3Template,
         ElasticsearchTemplate elasticsearchTemplate,
         PermittedSearchRepository permittedSearchRepository,
-        ElasticsearchIndexService elasticsearchIndexService) {
+        ElasticsearchIndexService elasticsearchIndexService,
+        SeparateTransactionExecutor transactionExecutor) {
 
         return new XmEntityMsLepProcessingApplicationListener(xmEntityService,
                         xmTenantLifecycleService, xmEntityRepository, profileService, linkService,
                         mailService, tenantConfigService, attachmentService, restTemplate,
                         locationService, tagService, profileEventProducer, commentService, commonsService,
                         permissionCheckService, eventService, calendarService, tenantLepResource, amazonS3Template,
-                        elasticsearchTemplate, permittedSearchRepository, elasticsearchIndexService);
-
+                        elasticsearchTemplate, permittedSearchRepository, elasticsearchIndexService,
+                        transactionExecutor);
     }
 
 }

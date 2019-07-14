@@ -23,6 +23,7 @@ import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.domain.spec.StateSpec;
 import com.icthh.xm.ms.entity.domain.spec.TypeSpec;
 import com.icthh.xm.ms.entity.domain.spec.UniqueFieldSpec;
+import com.icthh.xm.ms.entity.lep.keyresolver.TypeKeyWithExtends;
 import com.icthh.xm.ms.entity.projection.XmEntityStateProjection;
 import com.icthh.xm.ms.entity.repository.UniqueFieldRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityRepositoryInternal;
@@ -45,6 +46,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.MockitoJUnitRunner;
+import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @RunWith(MockitoJUnitRunner.class)
@@ -66,9 +68,13 @@ public class XmEntityServiceImplUnitTest extends AbstractUnitTest {
     TenantConfigService tenantConfigService;
     @Mock
     UniqueFieldRepository uniqueFieldRepository;
+    @Mock
+    TypeKeyWithExtends typeKeyWithExtends;
 
     @Spy
     private ObjectMapper mapper = new ObjectMapper();
+    @Spy
+    private SimpleTemplateProcessor templateProcessor = new SimpleTemplateProcessor(mapper);
 
     @Before
     public void before(){
@@ -78,6 +84,7 @@ public class XmEntityServiceImplUnitTest extends AbstractUnitTest {
 
     @Test
     public void setUniqFieldIfExists() {
+        when(typeKeyWithExtends.doInheritance(TEST_TYPE_KEY)).thenReturn(false);
         when(startUpdateDateGenerationStrategy.preProcessStartUpdateDates(any(), any(), any(), any(), any(), any()))
             .thenReturn(Optional.of(new XmEntity()));
 
@@ -204,5 +211,24 @@ public class XmEntityServiceImplUnitTest extends AbstractUnitTest {
         objectMapper.readValue("{}", FunctionContext.class);
         objectMapper.readValue("{}", Comment.class);
         objectMapper.readValue(json, Link.class);
+    }
+
+    @Test
+    @Transactional
+    public void nameTemplateTest() throws Exception {
+        XmEntity entity = new XmEntity();
+        entity.setTypeKey("TEST_TYPE_KEY");
+        entity.setId(15L);
+        entity.setStateKey("TEST_S_K");
+        entity.setData(of("a", of("b", of("c", of("d", "dvalue", "e", asList("e1", "e2"))))));
+        entity.setCreatedBy("test");
+
+        String namePattern = "Name generate from ${id} and ${key:unknown} and ${stateKey} and ${data.a.b.c.d.f} and ${data.a.b.c} and ${data.a.b.c.k} and ${data.a.b.c.e[1]} and ${data.a.b.c.e[2]}";
+        TypeSpec typeSpec = TypeSpec.builder().namePattern(namePattern).build();
+        when(xmEntitySpecService.findTypeByKey("TEST_TYPE_KEY")).thenReturn(typeSpec);
+
+        xmEntityService.save(entity);
+        log.info(entity.getName());
+        assertEquals("Name generate from 15 and unknown and TEST_S_K and  and {d=dvalue, e=[\"e1\",\"e2\"]} and  and e2 and ", entity.getName());
     }
 }

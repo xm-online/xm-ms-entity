@@ -19,6 +19,7 @@ import com.icthh.xm.commons.tenant.TenantContextUtils;
 import com.icthh.xm.lep.api.LepManager;
 import com.icthh.xm.ms.entity.AbstractSpringBootTest;
 import com.icthh.xm.ms.entity.config.MappingConfiguration;
+import com.icthh.xm.ms.entity.config.XmEntityTenantConfigService;
 import com.icthh.xm.ms.entity.domain.Attachment;
 import com.icthh.xm.ms.entity.domain.Calendar;
 import com.icthh.xm.ms.entity.domain.Comment;
@@ -32,7 +33,9 @@ import com.icthh.xm.ms.entity.domain.Vote;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
 import com.icthh.xm.ms.entity.service.ElasticsearchIndexService;
+import com.icthh.xm.ms.entity.service.SeparateTransactionExecutor;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -41,6 +44,7 @@ import java.util.Set;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.text.StrSubstitutor;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -77,11 +81,19 @@ public class XmEntityServiceIntTest extends AbstractSpringBootTest {
     @Autowired
     private MappingConfiguration mappingConfiguration;
 
+    @Autowired
+    private SeparateTransactionExecutor transactionExecutor;
+
+    @Autowired
+    private XmEntityTenantConfigService xmEntityTenantConfigService;
+
     @Mock
     private XmAuthenticationContextHolder authContextHolder;
 
     @Mock
     private XmAuthenticationContext context;
+
+    private List<String> lepsForCleanUp = new ArrayList<>();
 
     @Before
     public void before() {
@@ -94,13 +106,28 @@ public class XmEntityServiceIntTest extends AbstractSpringBootTest {
             ctx.setValue(THREAD_CONTEXT_KEY_TENANT_CONTEXT, tenantContextHolder.getContext());
             ctx.setValue(THREAD_CONTEXT_KEY_AUTH_CONTEXT, authContextHolder.getContext());
         });
+
+        String pattern = "/config/tenants/RESINTTEST/entity/lep/service/entity/";
+        addLep(pattern, "TEST_LIFECYCLE_TYPE_KEY");
+        addLep(pattern, "TEST_LIFECYCLE_TYPE_KEY$SUB");
+        addLep(pattern, "TEST_LIFECYCLE_TYPE_KEY$SUB$CHILD");
+        addLep(pattern, "TEST_LIFECYCLE_TYPE_KEY$SUB$CHILD$SUBCHILD");
+        addLep(pattern, "TEST_LIFECYCLE_TYPE_KEY$SUB$CHILD$SUBCHILD$NEXTCHILD");
     }
 
 
     @After
     public void afterTest() {
+        lepsForCleanUp.forEach(it -> leps.onRefresh(it, null));
         tenantContextHolder.getPrivilegedContext().destroyCurrentContext();
         lepManager.endThreadContext();
+    }
+
+    private void addLep(String pattern, String lepName) {
+        String lepBody = loadFile("config/testlep/Save$$TEST_LIFECYCLE_TYPE_KEY$$around.groovy");
+        lepBody = StrSubstitutor.replace(lepBody, of("lepName", lepName));
+        leps.onRefresh(pattern + "Save$$" + lepName + "$$around.groovy", lepBody);
+        lepsForCleanUp.add(pattern + "Save$$" + lepName + "$$around.groovy");
     }
 
     private XmEntity createXmEntity() {
@@ -145,6 +172,26 @@ public class XmEntityServiceIntTest extends AbstractSpringBootTest {
                 new Comment().message("2").userKey("1")
             ));
         return xmEntity;
+    }
+
+    @Test
+    public void testSaveWithTypeKeyInheritance() {
+        xmEntityTenantConfigService.getXmEntityTenantConfig().getLep().setEnableInheritanceTypeKey(true);
+        try {
+            XmEntity xmEntity = new XmEntity().key(randomUUID().toString());
+            xmEntity.name("name");
+            HashMap<String, Object> data = new HashMap<>();
+            data.put("called", "");
+            xmEntity.setData(data);
+            xmEntity.setTypeKey("TEST_LIFECYCLE_TYPE_KEY.SUB.CHILD.SUBCHILD.NEXTCHILD");
+            XmEntity savedEntity = xmEntityService.save(xmEntity);
+            log.info("{}", savedEntity);
+            assertEquals(" TEST_LIFECYCLE_TYPE_KEY TEST_LIFECYCLE_TYPE_KEY$SUB TEST_LIFECYCLE_TYPE_KEY$SUB$CHILD" +
+                         " TEST_LIFECYCLE_TYPE_KEY$SUB$CHILD$SUBCHILD TEST_LIFECYCLE_TYPE_KEY$SUB$CHILD$SUBCHILD$NEXTCHILD",
+                         savedEntity.getData().get("called"));
+        } finally {
+            xmEntityTenantConfigService.getXmEntityTenantConfig().getLep().setEnableInheritanceTypeKey(false);
+        }
     }
 
     @Test
@@ -369,6 +416,96 @@ public class XmEntityServiceIntTest extends AbstractSpringBootTest {
     public static String loadFile(String path) {
         InputStream cfgInputStream = new ClassPathResource(path).getInputStream();
         return IOUtils.toString(cfgInputStream, UTF_8);
+    }
+
+    @Test
+    public void ifGlobalTransactionThrowExceptionSeparateTransactionAlreadyCommited() {
+        class TestException extends RuntimeException{}
+        List<Long> ids = new ArrayList<>();
+        String inSeparateTransaction = "inSeparateTransaction";
+        String inGlobalTransaction = "inGlobalTransaction";
+
+        try {
+            transactionExecutor.doInSeparateTransaction(() -> {
+                ids.add(xmEntityService.save(new XmEntity().name(inGlobalTransaction).key(randomUUID())
+                                                           .typeKey("TARGET_ENTITY")).getId());
+                ids.add(xmEntityService.save(new XmEntity().name(inGlobalTransaction).key(randomUUID())
+                                                           .typeKey("TARGET_ENTITY")).getId());
+                transactionExecutor.doInSeparateTransaction(() -> {
+                    ids.add(xmEntityService.save(new XmEntity().name(inSeparateTransaction).key(randomUUID())
+                                                               .typeKey("TARGET_ENTITY")).getId());
+                    return null;
+                });
+                ids.add(xmEntityService.save(new XmEntity().name(inGlobalTransaction).key(randomUUID())
+                                                           .typeKey("TARGET_ENTITY")).getId());
+                throw new TestException();
+            });
+        } catch (TestException e) {
+            log.info("All is ok");
+        }
+        List<XmEntity> allEntitis = xmEntityRepository.findAllById(ids);
+        log.info("{}", allEntitis);
+        assertEquals(allEntitis.size(), 1);
+        allEntitis.forEach(it -> assertEquals(it.getName(), inSeparateTransaction));
+
+    }
+
+
+    @Test
+    public void ifSeparateTransactionThrowExceptionGlobalTransactionWillSuccessCommit() {
+        class TestException extends RuntimeException{}
+        List<Long> ids = new ArrayList<>();
+        String inSeparateTransaction = "inSeparateTransaction";
+        String inGlobalTransaction = "inGlobalTransaction";
+
+        transactionExecutor.doInSeparateTransaction(() -> {
+            ids.add(xmEntityService.save(new XmEntity().name(inGlobalTransaction).key(randomUUID())
+                                                       .typeKey("TARGET_ENTITY")).getId());
+            ids.add(xmEntityService.save(new XmEntity().name(inGlobalTransaction).key(randomUUID())
+                                                       .typeKey("TARGET_ENTITY")).getId());
+            try {
+                transactionExecutor.doInSeparateTransaction(() -> {
+                    ids.add(xmEntityService.save(new XmEntity().name(inSeparateTransaction).key(randomUUID())
+                                                               .typeKey("TARGET_ENTITY")).getId());
+                    throw new TestException();
+                });
+            } catch (TestException e) {
+                log.info("All is ok");
+            }
+            ids.add(xmEntityService.save(new XmEntity().name(inGlobalTransaction).key(randomUUID())
+                                                       .typeKey("TARGET_ENTITY")).getId());
+            return null;
+        });
+
+        List<XmEntity> allEntitis = xmEntityRepository.findAllById(ids);
+        log.info("{}", allEntitis);
+        assertEquals(allEntitis.size(), 3);
+        allEntitis.forEach(it -> assertEquals(it.getName(), inGlobalTransaction));
+    }
+
+    @Test
+    public void testDoInSeparateTransaction() {
+        List<Long> ids = new ArrayList<>();
+        String inSeparateTransaction = "inSeparateTransaction";
+        String inGlobalTransaction = "inGlobalTransaction";
+
+        transactionExecutor.doInSeparateTransaction(() -> {
+            ids.add(xmEntityService.save(new XmEntity().name(inGlobalTransaction).key(randomUUID())
+                                                       .typeKey("TARGET_ENTITY")).getId());
+            ids.add(xmEntityService.save(new XmEntity().name(inGlobalTransaction).key(randomUUID())
+                                                       .typeKey("TARGET_ENTITY")).getId());
+            transactionExecutor.doInSeparateTransaction(() -> {
+                ids.add(xmEntityService.save(new XmEntity().name(inSeparateTransaction).key(randomUUID())
+                                                           .typeKey("TARGET_ENTITY")).getId());
+                return null;
+            });
+            ids.add(xmEntityService.save(new XmEntity().name(inGlobalTransaction).key(randomUUID())
+                                                       .typeKey("TARGET_ENTITY")).getId());
+            return null;
+        });
+        List<XmEntity> allEntitis = xmEntityRepository.findAllById(ids);
+        log.info("{}", allEntitis);
+        assertEquals(allEntitis.size(), 4);
     }
 
 }

@@ -23,6 +23,7 @@ public final class LepXmEntityMsConstants {
     public static final String BINDING_SUB_KEY_SERVICE_CALENDAR_SERVICE = "calendarService";
     public static final String BINDING_SUB_KEY_SERVICE_LEP_RESOURCE = "lepResource";
     public static final String BINDING_SUB_KEY_SERVICE_ELASTICSEARCH_INDEXS = "elasticsearchIndexService";
+    public static final String BINDING_SUB_KEY_SERVICE_SEPARATE_TRANSACTION_EXECUTOR = "separateTransactionExecutor";
 
     public static final String BINDING_KEY_REPOSITORIES = "repositories";
     public static final String BINDING_SUB_KEY_REPOSITORY_XM_ENTITY = "xmEntity";

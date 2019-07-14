@@ -27,4 +27,9 @@ if ("TEST_LIFECYCLE" == entity.getTypeKey()) {
     entity.setStateKey(nextStateKey)
 }
 
+if ("TEST_LIFECYCLE_TYPE_KEY.SUB.CHILD" == entity.getTypeKey()) {
+    entity.getData().called = entity.getData().called + ' root';
+    entity.setStateKey(nextStateKey)
+}
+
 return xmEntityService.save(entity)
