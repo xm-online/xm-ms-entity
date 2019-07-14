@@ -26,6 +26,7 @@ import com.icthh.xm.ms.entity.domain.spec.TypeSpec;
 import com.icthh.xm.ms.entity.domain.spec.UniqueFieldSpec;
 import com.icthh.xm.ms.entity.domain.spec.XmEntitySpec;
 import com.icthh.xm.ms.entity.security.access.DynamicPermissionCheckService;
+import com.icthh.xm.ms.entity.service.privileges.custom.EntityCustomPrivilegeService;
 import com.icthh.xm.ms.entity.util.CustomCollectionUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
@@ -122,7 +123,7 @@ public class XmEntitySpecService implements RefreshableConfiguration {
             XmEntitySpec spec = mapper.readValue(config, XmEntitySpec.class);
             Map<String, TypeSpec> value = toTypeSpecsMap(spec);
             types.put(tenant, value);
-            entityCustomPrivilegeService.updateApplicationPermission(value, tenant);
+            entityCustomPrivilegeService.updateCustomPermission(value, tenant);
             log.info("Specification was for tenant {} updated", tenant);
         } catch (Exception e) {
             log.error("Error read xm specification from path " + updatedKey, e);

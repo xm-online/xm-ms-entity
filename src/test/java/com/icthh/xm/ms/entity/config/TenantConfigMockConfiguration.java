@@ -16,7 +16,7 @@ import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.web.spring.TenantVerifyInterceptor;
 import com.icthh.xm.ms.entity.config.tenant.LocalXmEntitySpecService;
 import com.icthh.xm.ms.entity.security.access.DynamicPermissionCheckService;
-import com.icthh.xm.ms.entity.service.EntityCustomPrivilegeService;
+import com.icthh.xm.ms.entity.service.privileges.custom.EntityCustomPrivilegeService;
 import com.icthh.xm.ms.entity.service.XmEntitySpecService;
 import lombok.SneakyThrows;
 import org.apache.commons.io.IOUtils;

@@ -15,7 +15,6 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.ArgumentMatchers.refEq;
-import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -24,7 +23,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.icthh.xm.commons.config.client.config.XmConfigProperties;
 import com.icthh.xm.commons.config.client.repository.CommonConfigRepository;
 import com.icthh.xm.commons.config.client.repository.TenantConfigRepository;
-import com.icthh.xm.commons.config.client.service.TenantConfigService;
 import com.icthh.xm.commons.config.domain.Configuration;
 import com.icthh.xm.commons.permission.config.PermissionProperties;
 import com.icthh.xm.commons.permission.domain.Role;
@@ -47,6 +45,8 @@ import com.icthh.xm.ms.entity.domain.spec.TagSpec;
 import com.icthh.xm.ms.entity.domain.spec.TypeSpec;
 import com.icthh.xm.ms.entity.domain.spec.UniqueFieldSpec;
 import com.icthh.xm.ms.entity.security.access.DynamicPermissionCheckService;
+import com.icthh.xm.ms.entity.service.privileges.custom.ApplicationCustomPrivilegesExtractor;
+import com.icthh.xm.ms.entity.service.privileges.custom.EntityCustomPrivilegeService;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
@@ -135,7 +135,8 @@ public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
                                             new EntityCustomPrivilegeService(
                                                 commonConfigRepository,
                                                 permissionProperties,
-                                                roleService
+                                                roleService,
+                                                asList(new ApplicationCustomPrivilegesExtractor())
                                             ),
                                             dynamicPermissionCheckService);
     }
