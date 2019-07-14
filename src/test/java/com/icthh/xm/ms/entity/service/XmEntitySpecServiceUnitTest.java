@@ -33,6 +33,7 @@ import com.icthh.xm.commons.tenant.TenantKey;
 import com.icthh.xm.ms.entity.AbstractUnitTest;
 import com.icthh.xm.ms.entity.config.ApplicationProperties;
 import com.icthh.xm.ms.entity.config.XmEntityTenantConfigService;
+import com.icthh.xm.ms.entity.config.XmEntityTenantConfigService.XmEntityTenantConfig;
 import com.icthh.xm.ms.entity.config.tenant.LocalXmEntitySpecService;
 import com.icthh.xm.ms.entity.domain.spec.AttachmentSpec;
 import com.icthh.xm.ms.entity.domain.spec.FunctionSpec;
@@ -47,6 +48,8 @@ import com.icthh.xm.ms.entity.domain.spec.UniqueFieldSpec;
 import com.icthh.xm.ms.entity.security.access.DynamicPermissionCheckService;
 import com.icthh.xm.ms.entity.service.privileges.custom.ApplicationCustomPrivilegesExtractor;
 import com.icthh.xm.ms.entity.service.privileges.custom.EntityCustomPrivilegeService;
+import com.icthh.xm.ms.entity.service.privileges.custom.FunctionCustomPrivilegesExtractor;
+import com.icthh.xm.ms.entity.service.privileges.custom.FunctionWithXmEntityCustomPrivilegesExtractor;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
@@ -129,6 +132,7 @@ public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
 
     private XmEntitySpecService createXmEntitySpecService(ApplicationProperties applicationProperties,
                                                                 TenantContextHolder tenantContextHolder) {
+
         return new LocalXmEntitySpecService(tenantConfigRepository,
                                             applicationProperties,
                                             tenantContextHolder,
@@ -136,7 +140,11 @@ public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
                                                 commonConfigRepository,
                                                 permissionProperties,
                                                 roleService,
-                                                asList(new ApplicationCustomPrivilegesExtractor())
+                                                asList(
+                                                    new ApplicationCustomPrivilegesExtractor(),
+                                                    new FunctionCustomPrivilegesExtractor(tenantConfig),
+                                                    new FunctionWithXmEntityCustomPrivilegesExtractor(tenantConfig)
+                                                )
                                             ),
                                             dynamicPermissionCheckService);
     }
@@ -416,6 +424,31 @@ public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
             "ROLE_ADMIN", new Role(),
             "ROLE_AGENT", new Role()
         ));
+
+        xmEntitySpecService.getTypeSpecs();
+
+        verify(commonConfigRepository).getConfig(isNull(), eq(asList(privilegesPath, permissionPath)));
+        verify(commonConfigRepository).updateConfigFullPath(refEq(new Configuration(privilegesPath, privileges)), isNull());
+        verify(commonConfigRepository).updateConfigFullPath(refEq(new Configuration(permissionPath, permissions)), isNull());
+    }
+
+    @Test
+    @SneakyThrows
+    public void testCreateCustomerPrivilegesWithFunctions() {
+        XmEntityTenantConfig config = new XmEntityTenantConfig();
+        when(tenantConfig.getXmEntityTenantConfig("TEST")).thenReturn(config);
+        config.getEntityFunctions().setDynamicPermissionCheckEnabled(true);
+
+        String permissions = readFile("config/privileges/new-permission.yml");
+        String privileges = readFile("config/privileges/new-privileges.yml");
+
+        String privilegesPath = PRIVILEGES_PATH;
+        String permissionPath = PERMISSION_PATH;
+        when(commonConfigRepository.getConfig(isNull(), eq(asList(privilegesPath, permissionPath)))).thenReturn(null);
+        when(roleService.getRoles("TEST")).thenReturn(of(
+            "ROLE_ADMIN", new Role(),
+            "ROLE_AGENT", new Role()
+                                                        ));
 
         xmEntitySpecService.getTypeSpecs();
 

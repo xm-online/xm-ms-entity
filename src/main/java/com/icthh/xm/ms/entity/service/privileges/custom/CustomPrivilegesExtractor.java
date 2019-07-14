@@ -30,6 +30,10 @@ public interface CustomPrivilegesExtractor {
         return NONE;
     }
 
+    default boolean isEnabled(String tenantKey) {
+        return true;
+    }
+
     enum DefaultPrivilegesValue {
         NONE, ENABLED, DISABLED;
     }

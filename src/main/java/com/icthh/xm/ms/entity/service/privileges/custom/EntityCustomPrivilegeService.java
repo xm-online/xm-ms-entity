@@ -59,7 +59,7 @@ public class EntityCustomPrivilegeService {
         Map<String, Configuration> configs = commonConfigRepository.getConfig(null, paths);
         configs = configs != null ? configs : new HashMap<>();
 
-        updateCustomPrivileges(specs, privilegesPath, configs.get(privilegesPath));
+        updateCustomPrivileges(specs, privilegesPath, configs.get(privilegesPath), tenantKey);
         setNewPermissionsDefaultValue(specs, tenantKey, permissionsSpecPath, configs.get(permissionsSpecPath));
     }
 
@@ -68,13 +68,12 @@ public class EntityCustomPrivilegeService {
     }
 
     @SneakyThrows
-    private void updateCustomPrivileges(Map<String, TypeSpec> specs,
-                                        String privilegesPath,
-                                        Configuration customPrivileges) {
+    private void updateCustomPrivileges(Map<String, TypeSpec> specs, String privilegesPath,
+                                        Configuration customPrivileges, String tenantKey) {
 
-        Map<String, List<Map<String, Object>>> privileges = getPrivilegesConfig(customPrivileges);
+        val privileges = getPrivilegesConfig(customPrivileges);
 
-        addCustomPrivileges(specs, privileges);
+        addCustomPrivileges(specs, privileges, tenantKey);
 
         String content = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(privileges);
         if (DigestUtils.sha1Hex(content).equals(sha1Hex(customPrivileges))) {
@@ -85,10 +84,22 @@ public class EntityCustomPrivilegeService {
     }
 
     private void addCustomPrivileges(Map<String, TypeSpec> specs,
-                                     Map<String, List<Map<String, Object>>> privileges) {
+                                     Map<String, List<Map<String, Object>>> privileges,
+                                     String tenantKey) {
+        Map<String, List<Map<String, Object>>> customPrivileges = new HashMap<>();
         for(CustomPrivilegesExtractor privilegesExtractor: privilegesExtractors) {
-            privileges.put(privilegesExtractor.getSectionName(), privilegesExtractor.toPrivileges(specs));
+            if (!privilegesExtractor.isEnabled(tenantKey)) {
+                continue;
+            }
+
+            List<Map<String, Object>> value = privilegesExtractor.toPrivileges(specs);
+            if (customPrivileges.containsKey(privilegesExtractor.getSectionName())) {
+                customPrivileges.get(privilegesExtractor.getSectionName()).addAll(value);
+            } else {
+                customPrivileges.put(privilegesExtractor.getSectionName(), value);
+            }
         }
+        privileges.putAll(customPrivileges);
     }
 
     private Map<String, List<Map<String, Object>>> getPrivilegesConfig(

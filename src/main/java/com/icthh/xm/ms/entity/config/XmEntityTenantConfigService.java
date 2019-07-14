@@ -59,6 +59,11 @@ public class XmEntityTenantConfigService extends TenantConfigService {
         return configs.get(tenantKey);
     }
 
+    public XmEntityTenantConfig getXmEntityTenantConfig(String tenantKey) {
+        configs.computeIfAbsent(tenantKey, (key) -> new XmEntityTenantConfig());
+        return configs.get(tenantKey);
+    }
+
     /**
      * Configuration class for enable/disable tenant level feature in xm-entity.
      */
