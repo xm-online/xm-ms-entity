@@ -332,6 +332,8 @@ dependencies {
     testCompile 'com.adobe.testing:s3mock-junit4:2.0.11'
     testCompile "org.testcontainers:testcontainers:1.10.1"
 
+    testCompile "com.github.tomakehurst:wiremock-jre8:2.23.2"
+
     //jhipster-needle-gradle-dependency - JHipster will add additional dependencies here
 }
 
