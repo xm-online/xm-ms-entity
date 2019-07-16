@@ -2,11 +2,17 @@ package com.icthh.xm.ms.entity.domain;
 
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
-
-import javax.persistence.*;
-import javax.validation.constraints.*;
 import java.io.Serializable;
+import java.util.Arrays;
 import java.util.Objects;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.SequenceGenerator;
+import javax.persistence.Table;
+import javax.validation.constraints.NotNull;
 
 /**
  * Represents Attachment content. Content can be extracted separately from the attachment.
@@ -77,7 +83,7 @@ public class Content implements Serializable {
     public String toString() {
         return "Content{" +
             "id=" + getId() +
-            ", value='" + getValue() + "'" +
+            ", value='" + Arrays.toString(getValue()) + "'" +
             "}";
     }
 }
