@@ -1,5 +1,8 @@
 package com.icthh.xm.ms.entity.util;
 
+import com.icthh.xm.commons.exceptions.BusinessException;
+import com.mortennobel.imagescaling.AdvancedResizeOp.UnsharpenMask;
+import com.mortennobel.imagescaling.ResampleOp;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -7,11 +10,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-
 import javax.imageio.ImageIO;
-
-import com.mortennobel.imagescaling.AdvancedResizeOp.UnsharpenMask;
-import com.mortennobel.imagescaling.ResampleOp;
 
 public class ImageResizeUtil {
 
@@ -21,6 +20,10 @@ public class ImageResizeUtil {
 
     public static InputStream resize(InputStream is, int newSize) throws IOException {
         BufferedImage sourceImage = ImageIO.read(is);
+
+        if (sourceImage == null) {
+            throw new BusinessException("Source image is null");
+        }
 
         Integer newHeight;
         Integer newWidth;
