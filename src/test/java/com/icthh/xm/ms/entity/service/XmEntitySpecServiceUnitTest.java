@@ -387,6 +387,13 @@ public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
         }
     }
 
+
+    private void enableDynamicPermissionCheck() {
+        XmEntityTenantConfig config = new XmEntityTenantConfig();
+        when(tenantConfig.getXmEntityTenantConfig("TEST")).thenReturn(config);
+        config.getEntityFunctions().setDynamicPermissionCheckEnabled(true);
+    }
+
     @Test
     @SneakyThrows
     public void testUpdateCustomerPrivileges() {
@@ -395,12 +402,30 @@ public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
         String permissions = readFile("config/privileges/mock-privileges.yml");
         String expectedPermissions = readFile("config/privileges/mock-expected-privileges.yml");
 
+        testUpdateCustomerPrivileges(customPrivileges, expectedCustomPrivileges, permissions, expectedPermissions);
+    }
+
+    @Test
+    @SneakyThrows
+    public void testUpdateCustomerPrivilegesWithEntity() {
+        enableDynamicPermissionCheck();
+
+        String customPrivileges = readFile("config/privileges/custom-privileges-with-function.yml");
+        String expectedCustomPrivileges = readFile("config/privileges/expected-custom-privileges-with-function.yml");
+        String permissions = readFile("config/privileges/mock-privileges.yml");
+        String expectedPermissions = readFile("config/privileges/mock-expected-privileges.yml");
+
+        testUpdateCustomerPrivileges(customPrivileges, expectedCustomPrivileges, permissions, expectedPermissions);
+    }
+
+    private void testUpdateCustomerPrivileges(String customPrivileges, String expectedCustomPrivileges,
+                                             String permissions, String expectedPermissions) {
         String privilegesPath = PRIVILEGES_PATH;
         String permissionPath = PERMISSION_PATH;
         Map<String, Configuration> configs = of(
             privilegesPath, new Configuration(privilegesPath, customPrivileges),
             permissionPath, new Configuration(permissionPath, permissions)
-        );
+                                               );
         when(commonConfigRepository.getConfig(isNull(), eq(asList(privilegesPath, permissionPath)))).thenReturn(configs);
         when(roleService.getRoles("TEST")).thenReturn(of("TEST_ROLE", new Role()));
 
@@ -413,62 +438,67 @@ public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
 
     @Test
     @SneakyThrows
-    public void testCreateCustomerPrivileges() {
+    public void testCreateCustomPrivileges() {
         String permissions = readFile("config/privileges/new-permission.yml");
         String privileges = readFile("config/privileges/new-privileges.yml");
 
-        String privilegesPath = PRIVILEGES_PATH;
-        String permissionPath = PERMISSION_PATH;
-        when(commonConfigRepository.getConfig(isNull(), eq(asList(privilegesPath, permissionPath)))).thenReturn(null);
-        when(roleService.getRoles("TEST")).thenReturn(of(
-            "ROLE_ADMIN", new Role(),
-            "ROLE_AGENT", new Role()
-        ));
-
-        xmEntitySpecService.getTypeSpecs();
-
-        verify(commonConfigRepository).getConfig(isNull(), eq(asList(privilegesPath, permissionPath)));
-        verify(commonConfigRepository).updateConfigFullPath(refEq(new Configuration(privilegesPath, privileges)), isNull());
-        verify(commonConfigRepository).updateConfigFullPath(refEq(new Configuration(permissionPath, permissions)), isNull());
+        testCreateCustomPrivileges(permissions, privileges);
     }
 
     @Test
     @SneakyThrows
     public void testCreateCustomerPrivilegesWithFunctions() {
-        XmEntityTenantConfig config = new XmEntityTenantConfig();
-        when(tenantConfig.getXmEntityTenantConfig("TEST")).thenReturn(config);
-        config.getEntityFunctions().setDynamicPermissionCheckEnabled(true);
+        enableDynamicPermissionCheck();
 
         String permissions = readFile("config/privileges/new-permission.yml");
-        String privileges = readFile("config/privileges/new-privileges.yml");
+        String privileges = readFile("config/privileges/new-privileges-with-functions.yml");
 
+        testCreateCustomPrivileges(permissions, privileges);
+    }
+
+    private void testCreateCustomPrivileges(String permissions, String privileges) {
         String privilegesPath = PRIVILEGES_PATH;
         String permissionPath = PERMISSION_PATH;
         when(commonConfigRepository.getConfig(isNull(), eq(asList(privilegesPath, permissionPath)))).thenReturn(null);
-        when(roleService.getRoles("TEST")).thenReturn(of(
-            "ROLE_ADMIN", new Role(),
-            "ROLE_AGENT", new Role()
-                                                        ));
+        when(roleService.getRoles("TEST")).thenReturn(of("ROLE_ADMIN", new Role(), "ROLE_AGENT", new Role()));
 
         xmEntitySpecService.getTypeSpecs();
 
         verify(commonConfigRepository).getConfig(isNull(), eq(asList(privilegesPath, permissionPath)));
-        verify(commonConfigRepository).updateConfigFullPath(refEq(new Configuration(privilegesPath, privileges)), isNull());
-        verify(commonConfigRepository).updateConfigFullPath(refEq(new Configuration(permissionPath, permissions)), isNull());
+        verify(commonConfigRepository)
+            .updateConfigFullPath(refEq(new Configuration(privilegesPath, privileges)), isNull());
+        verify(commonConfigRepository)
+            .updateConfigFullPath(refEq(new Configuration(permissionPath, permissions)), isNull());
     }
 
     @Test
     @SneakyThrows
-    public void testupdateRealPermissionFile() {
+    public void testUpdateRealPermissionFile() {
         String permissions = readFile("config/privileges/permissions.yml");
         String privileges = readFile("config/privileges/new-privileges.yml");
         String expectedPermissions = readFile("config/privileges/expected-permissions.yml");
 
+        testUpdateRealPermissionFile(permissions, privileges, expectedPermissions);
+    }
+
+    @Test
+    @SneakyThrows
+    public void testUpdateRealPermissionFileWithXmEntity() {
+        enableDynamicPermissionCheck();
+
+        String permissions = readFile("config/privileges/permissions.yml");
+        String privileges = readFile("config/privileges/new-privileges-with-functions.yml");
+        String expectedPermissions = readFile("config/privileges/expected-permissions.yml");
+
+        testUpdateRealPermissionFile(permissions, privileges, expectedPermissions);
+    }
+
+    public void testUpdateRealPermissionFile(String permissions, String privileges, String expectedPermissions) {
         String privilegesPath = PRIVILEGES_PATH;
         String permissionPath = PERMISSION_PATH;
         Map<String, Configuration> configs = of(
             permissionPath, new Configuration(permissionPath, permissions)
-        );
+                                               );
         when(commonConfigRepository.getConfig(isNull(), eq(asList(privilegesPath, permissionPath)))).thenReturn(configs);
         when(roleService.getRoles("TEST")).thenReturn(of(
             "ROLE_ADMIN", new Role(),
@@ -480,12 +510,6 @@ public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
         verify(commonConfigRepository).getConfig(isNull(), eq(asList(privilegesPath, permissionPath)));
         verify(commonConfigRepository).updateConfigFullPath(refEq(new Configuration(privilegesPath, privileges)), isNull());
         verify(commonConfigRepository).updateConfigFullPath(refEq(new Configuration(permissionPath, expectedPermissions)), eq(sha1Hex(permissions)));
-    }
-
-    private FunctionSpec newFunction(String key) {
-        FunctionSpec f = new FunctionSpec();
-        f.setKey(key);
-        return f;
     }
 
     private String readFile(String path1) throws IOException {
