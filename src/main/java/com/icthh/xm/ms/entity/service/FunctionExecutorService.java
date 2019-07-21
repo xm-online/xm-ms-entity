@@ -4,8 +4,6 @@ import com.icthh.xm.commons.lep.LogicExtensionPoint;
 import com.icthh.xm.commons.lep.spring.LepService;
 import com.icthh.xm.ms.entity.domain.ext.IdOrKey;
 import com.icthh.xm.ms.entity.lep.keyresolver.FunctionLepKeyResolver;
-import com.icthh.xm.ms.entity.lep.keyresolver.FunctionWithXmEntityLepKeyResolver;
-
 import java.util.Map;
 
 /**
@@ -23,7 +21,7 @@ public interface FunctionExecutorService {
      * @param functionInput   function input context
      * @return function result data
      */
-    @LogicExtensionPoint(value = "FunctionWithXmEntity", resolver = FunctionWithXmEntityLepKeyResolver.class)
+    @LogicExtensionPoint(value = "FunctionWithXmEntity", resolver = FunctionLepKeyResolver.class)
     Map<String, Object> execute(String functionKey,
                                 IdOrKey idOrKey,
                                 String xmEntityTypeKey,

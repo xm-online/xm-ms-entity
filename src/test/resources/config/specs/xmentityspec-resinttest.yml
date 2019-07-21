@@ -439,3 +439,13 @@ types:
       isAbstract: false
       functions:
           - key: UPLOAD
+    - key: TEST_FUNCTION_WITH_PACKAGE
+      name: { en: "TEST_FUNCTION_WITH_PACKAGE" }
+      isApp: false
+      isAbstract: false
+      isNameRequired: false
+      isKeyRequired: false
+      functions:
+          - key: package/FUNCTION.PACKAGE-TEST
+          - key: package/FUNCTION-WITH-ENTITY.PACKAGE-TEST
+            withEntityId: true

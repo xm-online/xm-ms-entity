@@ -332,7 +332,7 @@ public class XmEntityResource {
     public ResponseEntity<Object> executeFunction(@PathVariable String idOrKey,
                                                   HttpServletRequest request,
                                                   @RequestBody(required = false) Map<String, Object> functionInput) {
-        return xmEntityResource.executeFunction(idOrKey, getFunctionKey(request), functionInput);
+        return xmEntityResource.executePostFunction(idOrKey, getFunctionKey(request), functionInput);
     }
 
     @GetMapping("/xm-entities/{idOrKey}/links/targets")

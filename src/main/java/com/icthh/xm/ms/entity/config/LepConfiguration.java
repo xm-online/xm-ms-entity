@@ -4,7 +4,6 @@ import com.icthh.xm.commons.lep.TenantScriptStorage;
 import com.icthh.xm.commons.lep.spring.EnableLepServices;
 import com.icthh.xm.commons.lep.spring.web.WebLepSpringConfiguration;
 import com.icthh.xm.ms.entity.lep.keyresolver.FunctionLepKeyResolver;
-import com.icthh.xm.ms.entity.lep.keyresolver.FunctionWithXmEntityLepKeyResolver;
 import com.icthh.xm.ms.entity.lep.keyresolver.SystemQueueConsumerLepKeyResolver;
 import com.icthh.xm.ms.entity.service.XmEntityLifeCycleService;
 import org.springframework.beans.factory.annotation.Value;
@@ -32,11 +31,6 @@ public class LepConfiguration extends WebLepSpringConfiguration {
     @Override
     protected TenantScriptStorage getTenantScriptStorageType() {
         return tenantScriptStorageType;
-    }
-
-    @Bean
-    public FunctionWithXmEntityLepKeyResolver functionWithXmEntityLepKeyResolver() {
-        return new FunctionWithXmEntityLepKeyResolver();
     }
 
     @Bean

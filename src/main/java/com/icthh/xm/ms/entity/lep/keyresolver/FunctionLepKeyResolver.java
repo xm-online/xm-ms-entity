@@ -26,7 +26,7 @@ public class FunctionLepKeyResolver extends SeparatorSegmentedLepKeyResolver {
         String functionKey = getRequiredParam(method, PARAM_FUNCTION_KEY, String.class);
         int index = functionKey.lastIndexOf("/") + 1;
 
-        String name = functionKey.substring(index);
+        String name = translateToLepConvention(functionKey.substring(index));
         String separator = inBaseKey.getSeparator();
         String pathToFunction = functionKey.substring(0, index);
         String group = inBaseKey.getGroupKey().getId() + separator + pathToFunction.replaceAll("/", separator) +
