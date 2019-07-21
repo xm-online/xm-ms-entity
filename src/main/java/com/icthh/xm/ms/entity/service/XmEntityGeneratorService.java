@@ -22,15 +22,8 @@ import com.icthh.xm.ms.entity.domain.spec.LocationSpec;
 import com.icthh.xm.ms.entity.domain.spec.NextSpec;
 import com.icthh.xm.ms.entity.domain.spec.TagSpec;
 import com.icthh.xm.ms.entity.domain.spec.TypeSpec;
-import lombok.SneakyThrows;
-import lombok.extern.slf4j.Slf4j;
-import lombok.val;
-import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang3.RandomUtils;
-import org.springframework.core.io.ClassPathResource;
-import org.springframework.stereotype.Service;
-
 import java.io.InputStream;
+import java.security.SecureRandom;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -38,10 +31,16 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.IntStream;
+import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
+import lombok.val;
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.RandomUtils;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.stereotype.Service;
 
 @Service
 @Slf4j
@@ -75,9 +74,10 @@ public class XmEntityGeneratorService {
         this.mapper = mapper;
     }
 
+    @SneakyThrows
     private TypeSpec getRandomTypeSpec(String rootTypeKey) {
         List<TypeSpec> availableTypeSpecs = xmEntitySpecService.findNonAbstractTypesByPrefix(rootTypeKey);
-        return availableTypeSpecs.get(new Random().nextInt(availableTypeSpecs.size()));
+        return availableTypeSpecs.get(SecureRandom.getInstanceStrong().nextInt(availableTypeSpecs.size()));
     }
 
     public XmEntity generateXmEntity(String rootTypeKey) {
@@ -123,7 +123,8 @@ public class XmEntityGeneratorService {
         Set<Location> result = new HashSet<>();
 
         List<Location> originalLocationStubs = getLocationStubs();
-        val locationStubs = originalLocationStubs.stream().filter(l -> RandomUtils.nextBoolean()).collect(toList());
+        val locationStubs = originalLocationStubs.stream().filter(l -> new SecureRandom().nextBoolean())
+                                                          .collect(toList());
         if (isEmpty(locationStubs)) {
             int randomLocationPosition = RandomUtils.nextInt(0, originalLocationStubs.size() - 1);
             Location randomLocationStub = originalLocationStubs.get(randomLocationPosition);
@@ -182,9 +183,10 @@ public class XmEntityGeneratorService {
         return IOUtils.toString(inputStream, UTF_8);
     }
 
+    @SneakyThrows
     private static String generateXmEntityState(XmEntitySpecService xmEntitySpecService, TypeSpec typeSpec) {
         List<NextSpec> next = xmEntitySpecService.next(typeSpec.getKey(), null);
-        return next.isEmpty() ? null : next.get(new Random().nextInt(next.size())).getStateKey();
+        return next.isEmpty() ? null : next.get(SecureRandom.getInstanceStrong().nextInt(next.size())).getStateKey();
     }
 
     private static Instant generateXmEntityStartDate() {
@@ -231,6 +233,7 @@ public class XmEntityGeneratorService {
         return data;
     }
 
+    @SneakyThrows
     private Object randomDataValue(String type, Map<String, Object> fieldSpec) {
         Object fieldValue = null;
         switch (type) {
@@ -238,10 +241,10 @@ public class XmEntityGeneratorService {
                 fieldValue = randomAnyString();
                 break;
             case "number":
-                fieldValue = RandomUtils.nextInt();
+                fieldValue = SecureRandom.getInstanceStrong().nextInt();
                 break;
             case "boolean":
-                fieldValue = RandomUtils.nextBoolean();
+                fieldValue = SecureRandom.getInstanceStrong().nextBoolean();
                 break;
             case "object":
                 fieldValue = generateXmEntityData(fieldSpec);
@@ -255,13 +258,15 @@ public class XmEntityGeneratorService {
         return RANDOM_STRINGS.get(RandomUtils.nextInt(0, RANDOM_STRINGS.size() - 1));
     }
 
+    @SneakyThrows
     private static <T> Collection<T> randomCollectionElement(Collection<T> inCollection) {
         if (isEmpty(inCollection)) {
             return emptySet();
         }
 
         Set<Integer> tagPositions = new HashSet<>();
-        IntStream.range(0, inCollection.size() - 1).filter(t -> RandomUtils.nextBoolean()).forEach(tagPositions::add);
+        IntStream.range(0, inCollection.size() - 1).filter(t -> new SecureRandom().nextBoolean())
+                                                   .forEach(tagPositions::add);
         tagPositions.add(RandomUtils.nextInt(0, inCollection.size() - 1));
 
         log.debug("get tags in positions {}", tagPositions);
