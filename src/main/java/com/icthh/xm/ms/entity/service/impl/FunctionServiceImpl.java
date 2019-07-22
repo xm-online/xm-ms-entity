@@ -72,8 +72,7 @@ public class FunctionServiceImpl implements FunctionService {
 
         // execute function
         Map<String, Object> data = functionExecutorService.execute(functionKey, vInput);
-
-        return processFunctionResult(functionKey,  data, functionSpec);
+        return processFunctionResult(functionKey, data, functionSpec);
     }
 
     /**
@@ -89,7 +88,7 @@ public class FunctionServiceImpl implements FunctionService {
         Map<String, Object> vInput = CustomCollectionUtils.emptyIfNull(functionInput);
 
         dynamicPermissionCheckService.checkContextPermission(DynamicPermissionCheckService.FeatureContext.FUNCTION,
-            XM_ENITITY_FUNCTION_CALL_PRIV , functionKey);
+            XM_ENITITY_FUNCTION_CALL_PRIV, functionKey);
 
         // get type key
         XmEntityStateProjection projection = xmEntityService.findStateProjectionById(idOrKey).orElseThrow(
@@ -104,9 +103,7 @@ public class FunctionServiceImpl implements FunctionService {
 
         // execute function
         Map<String, Object> data = functionExecutorService.execute(functionKey, idOrKey, projection.getTypeKey(), vInput);
-
         return processFunctionResult(functionKey, idOrKey, data, functionSpec);
-
     }
 
     /**

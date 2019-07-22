@@ -5,20 +5,19 @@ import static org.junit.Assert.assertNotNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import com.icthh.xm.commons.lep.XmLepConstants;
 import com.icthh.xm.lep.api.LepKey;
 import com.icthh.xm.lep.api.LepManagerService;
 import com.icthh.xm.lep.api.LepMethod;
 import com.icthh.xm.lep.api.MethodSignature;
 import com.icthh.xm.lep.api.commons.SeparatorSegmentedLepKey;
-import com.icthh.xm.commons.lep.XmLepConstants;
 import com.icthh.xm.ms.entity.AbstractUnitTest;
+import java.util.Arrays;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-
-import java.util.Arrays;
 
 /**
  * The {@link FunctionWithXmEntityLepKeyResolverUnitTest} class.
@@ -29,7 +28,7 @@ public class FunctionWithXmEntityLepKeyResolverUnitTest extends AbstractUnitTest
     public ExpectedException expectedEx = ExpectedException.none();
 
     private SeparatorSegmentedLepKey initialExtensionKey;
-    private FunctionWithXmEntityLepKeyResolver resolver;
+    private FunctionLepKeyResolver resolver;
     private LepManagerService managerService;
     private LepMethod lepMethod;
 
@@ -38,7 +37,7 @@ public class FunctionWithXmEntityLepKeyResolverUnitTest extends AbstractUnitTest
         initialExtensionKey = new SeparatorSegmentedLepKey(XmLepConstants.EXTENSION_KEY_SEPARATOR,
                                                            Arrays.asList("xm", "entity", "function", "Function"),
                                                            XmLepConstants.EXTENSION_KEY_GROUP_MODE);
-        resolver = new FunctionWithXmEntityLepKeyResolver();
+        resolver = new FunctionLepKeyResolver();
         managerService = null;
 
         lepMethod = mock(LepMethod.class);

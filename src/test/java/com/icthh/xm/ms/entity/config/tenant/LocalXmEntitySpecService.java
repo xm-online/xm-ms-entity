@@ -8,7 +8,7 @@ import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.ms.entity.config.ApplicationProperties;
 import com.icthh.xm.ms.entity.domain.spec.TypeSpec;
 import com.icthh.xm.ms.entity.security.access.DynamicPermissionCheckService;
-import com.icthh.xm.ms.entity.service.EntityCustomPrivilegeService;
+import com.icthh.xm.ms.entity.service.privileges.custom.EntityCustomPrivilegeService;
 import com.icthh.xm.ms.entity.service.XmEntitySpecService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

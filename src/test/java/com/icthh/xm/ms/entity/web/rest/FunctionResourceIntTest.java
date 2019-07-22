@@ -2,9 +2,12 @@ package com.icthh.xm.ms.entity.web.rest;
 
 import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_AUTH_CONTEXT;
 import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_TENANT_CONTEXT;
+import static com.icthh.xm.ms.entity.web.rest.XmEntityResourceIntTest.createEntity;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -16,6 +19,8 @@ import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
 import com.icthh.xm.lep.api.LepManager;
 import com.icthh.xm.ms.entity.AbstractSpringBootTest;
+import com.icthh.xm.ms.entity.domain.XmEntity;
+import com.icthh.xm.ms.entity.service.impl.XmEntityServiceImpl;
 import java.io.InputStream;
 import java.util.List;
 import lombok.SneakyThrows;
@@ -58,6 +63,12 @@ public class FunctionResourceIntTest extends AbstractSpringBootTest {
     private FunctionResource functionResource;
 
     @Autowired
+    private XmEntityResource xmEntityResource;
+
+    @Autowired
+    private XmEntityServiceImpl xmEntityService;
+
+    @Autowired
     private MappingJackson2HttpMessageConverter jacksonMessageConverter;
 
     @Autowired
@@ -81,7 +92,7 @@ public class FunctionResourceIntTest extends AbstractSpringBootTest {
             ctx.setValue(THREAD_CONTEXT_KEY_AUTH_CONTEXT, authContextHolder.getContext());
         });
 
-        this.mockMvc = MockMvcBuilders.standaloneSetup(functionResource)
+        this.mockMvc = MockMvcBuilders.standaloneSetup(functionResource, xmEntityResource)
                                                   .setCustomArgumentResolvers(pageableArgumentResolver)
                                                   .setControllerAdvice(exceptionTranslator)
                                                   .setMessageConverters(jacksonMessageConverter).build();
@@ -96,7 +107,11 @@ public class FunctionResourceIntTest extends AbstractSpringBootTest {
 
     void initLeps(boolean loadData) {
         String body = "return [result: lepContext.inArgs.functionInput.files[0].getInputStream().text]";
-        leps.onRefresh("/config/tenants/RESINTTEST/entity/lep/function/Function$$UPLOAD$$tenant.groovy", loadData ? body : null);
+        String functionPrefix = "/config/tenants/RESINTTEST/entity/lep/function/";
+        leps.onRefresh(functionPrefix + "Function$$UPLOAD$$tenant.groovy", loadData ? body : null);
+        String packageTestBody = "return lepContext.inArgs";
+        leps.onRefresh(functionPrefix + "package/Function$$FUNCTION$PACKAGE_TEST$$tenant.groovy", loadData ? packageTestBody : null);
+        leps.onRefresh(functionPrefix + "package/FunctionWithXmEntity$$FUNCTION_WITH_ENTITY$PACKAGE_TEST$$tenant.groovy", loadData ? packageTestBody : null);
     }
 
     @SneakyThrows
@@ -129,4 +144,38 @@ public class FunctionResourceIntTest extends AbstractSpringBootTest {
                .andExpect(jsonPath("$.data.result").value("test no json content"))
                .andExpect(status().isOk());
     }
+
+    @Test
+    @Transactional
+    @SneakyThrows
+    public void testFunctionWithPackage() {
+        String functionApi = "/api/functions/";
+        String functionKey = "package/FUNCTION.PACKAGE-TEST";
+        mockMvc.perform(post(functionApi + functionKey))
+            .andDo(print())
+            .andExpect(jsonPath("$.data.functionKey").value(functionKey))
+            .andExpect(status().is2xxSuccessful());
+        mockMvc.perform(get(functionApi + functionKey))
+            .andDo(print())
+            .andExpect(jsonPath("$.data.functionKey").value(functionKey))
+            .andExpect(status().is2xxSuccessful());
+        mockMvc.perform(put(functionApi + functionKey))
+            .andDo(print())
+            .andExpect(jsonPath("$.data.functionKey").value(functionKey))
+            .andExpect(status().is2xxSuccessful());
+
+        Long id = xmEntityService.save(new XmEntity().typeKey("TEST_FUNCTION_WITH_PACKAGE")).getId();
+
+        String functionWithEntityApi = "/api/xm-entities/" + id +"/functions/";
+        String functionWithEntityKey = "package/FUNCTION-WITH-ENTITY.PACKAGE-TEST";
+        mockMvc.perform(post(functionWithEntityApi + functionWithEntityKey))
+            .andDo(print())
+            .andExpect(jsonPath("$.data.functionKey").value(functionWithEntityKey))
+            .andExpect(status().is2xxSuccessful());
+        mockMvc.perform(get(functionWithEntityApi + functionWithEntityKey))
+            .andDo(print())
+            .andExpect(jsonPath("$.data.functionKey").value(functionWithEntityKey))
+            .andExpect(status().is2xxSuccessful());
+    }
+
 }

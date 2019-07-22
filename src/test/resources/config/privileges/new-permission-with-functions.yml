@@ -1,0 +1,58 @@
+---
+applications:
+  ROLE_ADMIN:
+  - privilegeKey: "APPLICATION.TYPE1"
+    disabled: false
+    deleted: false
+    envCondition: null
+    resourceCondition: null
+    reactionStrategy: null
+  - privilegeKey: "APPLICATION.TYPE2"
+    disabled: false
+    deleted: false
+    envCondition: null
+    resourceCondition: null
+    reactionStrategy: null
+  - privilegeKey: "APPLICATION.TYPE3"
+    disabled: false
+    deleted: false
+    envCondition: null
+    resourceCondition: null
+    reactionStrategy: null
+  - privilegeKey: "XMENTITY.FUNCTION.EXECUTE.FUNCTION2"
+    disabled: false
+    deleted: false
+    envCondition: null
+    resourceCondition: null
+    reactionStrategy: null
+  - privilegeKey: "FUNCTION.CALL.FUNCTION1"
+    disabled: false
+    deleted: false
+    envCondition: null
+    resourceCondition: null
+    reactionStrategy: null
+  - privilegeKey: "FUNCTION.CALL.GET-OPENED-ORDERS"
+    disabled: true
+    deleted: false
+    envCondition: null
+    resourceCondition: null
+    reactionStrategy: null
+  ROLE_AGENT:
+  - privilegeKey: "APPLICATION.TYPE1"
+    disabled: false
+    deleted: false
+    envCondition: null
+    resourceCondition: null
+    reactionStrategy: null
+  - privilegeKey: "APPLICATION.TYPE2"
+    disabled: false
+    deleted: false
+    envCondition: null
+    resourceCondition: null
+    reactionStrategy: null
+  - privilegeKey: "APPLICATION.TYPE3"
+    disabled: false
+    deleted: false
+    envCondition: null
+    resourceCondition: null
+    reactionStrategy: null
