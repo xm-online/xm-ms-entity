@@ -57,7 +57,7 @@ public class EntityCustomPrivilegeService {
         log.info("Get config from {} and {}", privilegesPath, permissionsSpecPath);
         List<String> paths = asList(privilegesPath, permissionsSpecPath);
         Map<String, Configuration> configs = commonConfigRepository.getConfig(null, paths);
-        configs = configs != null ? configs : new HashMap<>();
+        configs = configs == null ? new HashMap<>() : configs;
 
         updateCustomPrivileges(specs, privilegesPath, configs.get(privilegesPath), tenantKey);
         setNewPermissionsDefaultValue(specs, tenantKey, permissionsSpecPath, configs.get(permissionsSpecPath));
@@ -151,14 +151,12 @@ public class EntityCustomPrivilegeService {
             }
 
             String sectionName = privilegesExtractor.getSectionName();
-            permissions.computeIfAbsent(sectionName, key -> new TreeMap<>());
-            val permission = permissions.getOrDefault(sectionName, new TreeMap<>());
+            val permission = permissions.computeIfAbsent(sectionName, key -> new TreeMap<>());
 
             Map<String, Role> roles = roleService.getRoles(tenantKey);
-            roles = roles != null ? roles : new HashMap<>();
+            roles = roles == null ? new HashMap<>() : roles;
             for (String role : roles.keySet()) {
-                permission.computeIfAbsent(role, key -> new TreeSet<>());
-                TreeSet<Permission> rolePermissions = permission.get(role);
+                TreeSet<Permission> rolePermissions = permission.computeIfAbsent(role, key -> new TreeSet<>());
                 String privilegePrefix = privilegesExtractor.getPrivilegePrefix();
 
                 privilegesExtractor.toPrivilegesList(spec)
@@ -183,7 +181,7 @@ public class EntityCustomPrivilegeService {
         return permissions;
     }
 
-    private Predicate<Permission> not(Predicate<Permission> o) {
+    private static Predicate<Permission> not(Predicate<Permission> o) {
         return o.negate();
     }
 

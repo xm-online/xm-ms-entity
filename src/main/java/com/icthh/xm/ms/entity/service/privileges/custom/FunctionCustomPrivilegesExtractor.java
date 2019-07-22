@@ -44,7 +44,7 @@ public class FunctionCustomPrivilegesExtractor implements CustomPrivilegesExtrac
     public List<String> toPrivilegesList(Map<String, TypeSpec> specs) {
         return specs.values().stream()
                              .map(TypeSpec::getFunctions)
-                             .filter(not(Objects::isNull))
+                             .filter(Objects::nonNull)
                              .flatMap(List::stream)
                              .distinct()// avoid duplication function key after extends entity specs
                              .filter(this::filterFunctions)

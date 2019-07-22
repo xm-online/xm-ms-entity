@@ -60,8 +60,7 @@ public class XmEntityTenantConfigService extends TenantConfigService {
     }
 
     public XmEntityTenantConfig getXmEntityTenantConfig(String tenantKey) {
-        configs.computeIfAbsent(tenantKey, (key) -> new XmEntityTenantConfig());
-        return configs.get(tenantKey);
+        return configs.computeIfAbsent(tenantKey, (key) -> new XmEntityTenantConfig());
     }
 
     /**
