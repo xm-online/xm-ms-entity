@@ -1,10 +1,13 @@
 package com.icthh.xm.ms.entity.service;
 
+import com.icthh.xm.commons.exceptions.BusinessException;
 import com.icthh.xm.commons.lep.LogicExtensionPoint;
 import com.icthh.xm.commons.lep.spring.LepService;
 import com.icthh.xm.commons.permission.annotation.FindWithPermission;
 import com.icthh.xm.commons.permission.repository.PermittedRepository;
 import com.icthh.xm.ms.entity.domain.Attachment;
+import com.icthh.xm.ms.entity.domain.XmEntity;
+import com.icthh.xm.ms.entity.domain.spec.AttachmentSpec;
 import com.icthh.xm.ms.entity.repository.AttachmentRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
 import com.icthh.xm.ms.entity.repository.search.PermittedSearchRepository;
@@ -16,6 +19,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.function.Predicate;
+import java.util.stream.Stream;
 
 /**
  * Service Implementation for managing Attachment.
@@ -26,6 +31,8 @@ import java.util.List;
 @RequiredArgsConstructor
 public class AttachmentService {
 
+    private static final long MAX_ATTACHMENTS = 100;
+
     private final AttachmentRepository attachmentRepository;
 
     private final PermittedRepository permittedRepository;
@@ -35,6 +42,8 @@ public class AttachmentService {
     private final StartUpdateDateGenerationStrategy startUpdateDateGenerationStrategy;
 
     private final XmEntityRepository xmEntityRepository;
+
+    private final XmEntitySpecService xmEntitySpecService;
 
     /**
      * Save a attachment.
@@ -50,7 +59,20 @@ public class AttachmentService {
                                                               attachmentRepository,
                                                               Attachment::setStartDate,
                                                               Attachment::getStartDate);
-        attachment.setXmEntity(xmEntityRepository.getOne(attachment.getXmEntity().getId()));
+
+        XmEntity entity = xmEntityRepository.getOne(attachment.getXmEntity().getId());
+
+        AttachmentSpec spec = getSpec(entity, attachment);
+
+        //check only for addingNew
+        if (attachment.getId() == null && spec.getMax() != null) {
+            //forbid to add element if spec.max = 0
+            assertZeroRestriction(spec);
+            //forbid to add element if spec.max <= addedSize
+            assertLimitRestriction(spec, entity);
+        }
+
+        attachment.setXmEntity(entity);
 
         if (attachment.getContent() != null) {
             byte[] content = attachment.getContent().getValue();
@@ -117,4 +139,29 @@ public class AttachmentService {
     public List<Attachment> search(String query, String privilegeKey) {
         return permittedSearchRepository.search(query, Attachment.class, privilegeKey);
     }
+
+    protected AttachmentSpec getSpec(XmEntity entity, Attachment attachment) {
+        return xmEntitySpecService
+            .findAttachment(entity.getTypeKey(), attachment.getTypeKey())
+            .orElseThrow(
+                () -> new IllegalArgumentException("Spec.Attachment not found for entity type key " + entity.getTypeKey()
+                    + " and function key: " + attachment.getTypeKey())
+            );
+    }
+
+    protected void assertZeroRestriction(AttachmentSpec spec) {
+        if (Integer.valueOf(0).equals(spec.getMax())) {
+            throw new BusinessException("Spec for " + spec.getKey() + " allows to add " + spec.getMax() + " elements");
+        }
+    }
+
+    protected void assertLimitRestriction(AttachmentSpec spec, XmEntity entity) {
+        Predicate<Attachment> filterByType = (Attachment item) -> spec.getKey().equals(item.getTypeKey());
+        Stream<Attachment> attachmentStream = entity.getAttachments().stream().filter(filterByType);
+
+        if (attachmentStream.count() >= spec.getMax()) {
+            throw new BusinessException("Spec for " + spec.getKey() + " allows to add " + spec.getMax() + " elements");
+        }
+    }
+
 }
