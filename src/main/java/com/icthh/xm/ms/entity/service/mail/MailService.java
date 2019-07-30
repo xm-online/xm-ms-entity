@@ -11,6 +11,7 @@ import static org.springframework.context.i18n.LocaleContextHolder.setLocaleCont
 import com.icthh.xm.commons.i18n.spring.service.LocalizationMessageService;
 import com.icthh.xm.commons.logging.aop.IgnoreLogginAspect;
 import com.icthh.xm.commons.logging.util.MdcUtils;
+import com.icthh.xm.commons.mail.provider.MailProviderService;
 import com.icthh.xm.commons.tenant.PlainTenant;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
@@ -29,7 +30,6 @@ import java.util.Map;
 import java.util.Optional;
 import javax.annotation.Resource;
 import javax.mail.internet.MimeMessage;
-import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -54,7 +54,7 @@ import org.springframework.ui.freemarker.FreeMarkerTemplateUtils;
 public class MailService {
 
     private final JHipsterProperties jHipsterProperties;
-    private final JavaMailSender javaMailSender;
+    private final MailProviderService mailProviderService;
     private final MessageSource messageSource;
     private final TenantEmailTemplateService tenantEmailTemplateService;
     private final Configuration freeMarkerConfiguration;
@@ -227,7 +227,8 @@ public class MailService {
                     content,
                     mailParams.getFrom(),
                     attachmentFilename,
-                    dataSource
+                    dataSource,
+                    mailProviderService.getJavaMailSender(tenantKey.getValue())
                 );
             } catch (TemplateException e) {
                 throw new IllegalStateException("Mail template rendering failed");
@@ -278,7 +279,8 @@ public class MailService {
                    String content,
                    String from,
                    String attachmentFilename,
-                   InputStreamSource dataSource) {
+                   InputStreamSource dataSource,
+                   JavaMailSender javaMailSender) {
 
         // Prepare message using a Spring helper
         MimeMessage mimeMessage = javaMailSender.createMimeMessage();

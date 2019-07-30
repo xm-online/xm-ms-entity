@@ -2,22 +2,22 @@ package com.icthh.xm.ms.entity.service;
 
 import static com.google.common.collect.ImmutableMap.of;
 import static com.icthh.xm.ms.entity.config.Constants.TRANSLATION_KEY;
-import static java.util.Arrays.asList;
 import static java.util.Collections.emptyMap;
+import static java.util.Collections.singletonList;
 import static java.util.Locale.ENGLISH;
 import static java.util.Locale.FRANCE;
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.io.ByteStreams;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.icthh.xm.commons.config.client.config.XmConfigProperties;
-import com.icthh.xm.commons.config.client.service.TenantConfigService;
 import com.icthh.xm.commons.i18n.spring.service.LocalizationMessageService;
+import com.icthh.xm.commons.mail.provider.MailProviderService;
 import com.icthh.xm.commons.tenant.PrivilegedTenantContext;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantKey;
@@ -26,31 +26,29 @@ import com.icthh.xm.ms.entity.config.XmEntityTenantConfigService;
 import com.icthh.xm.ms.entity.service.mail.MailService;
 import com.icthh.xm.ms.entity.service.mail.TenantEmailTemplateService;
 import freemarker.template.Configuration;
-import java.util.Map;
 import lombok.SneakyThrows;
+import org.apache.commons.io.IOUtils;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
-import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.mail.javamail.JavaMailSender;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import javax.activation.DataSource;
 import javax.mail.BodyPart;
 import javax.mail.Message;
 import javax.mail.Multipart;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
 
+@SuppressWarnings("unused")
 public class MailServiceUnitTest extends AbstractUnitTest {
 
     private static final String MAIL_SETTINGS = "mailSettings";
@@ -72,8 +70,10 @@ public class MailServiceUnitTest extends AbstractUnitTest {
     @InjectMocks
     private MailService mailService;
 
-    @Mock
-    private JavaMailSender javaMailSender;
+    private JavaMailSender javaMailSender = mock(JavaMailSender.class);
+
+    @Spy
+    private MailProviderService mailProviderService = new MailProviderService(javaMailSender);
     @Mock
     private TenantEmailTemplateService tenantEmailTemplateService;
     @Spy
@@ -107,7 +107,7 @@ public class MailServiceUnitTest extends AbstractUnitTest {
     @SneakyThrows
     public void ifInConfigMailSettingsNoListReturnDefault() {
         prepareConfig(new HashMap<String, Object>() {{
-            put(MAIL_SETTINGS, new HashMap<>());
+            put(MAIL_SETTINGS, singletonList(new HashMap<>()));
         }});
 
         MimeMessage mock = sendEmail();
@@ -141,7 +141,7 @@ public class MailServiceUnitTest extends AbstractUnitTest {
     @Test
     @SneakyThrows
     public void ifInConfigNoTemplateReturnDefault() {
-        Map<String, Object> map = of(MAIL_SETTINGS, asList(of(
+        Map<String, Object> map = of(MAIL_SETTINGS, singletonList(of(
             TEMPLATE_NAME, "OTHER_TEMPLATE",
             SUBJECT, of(ENGLISH.getLanguage(), "otherSubject"),
             FROM, of(ENGLISH.getLanguage(), "otherFrom"))));
@@ -158,14 +158,15 @@ public class MailServiceUnitTest extends AbstractUnitTest {
     }
 
     @SneakyThrows
-    public void prepareConfig(Map<String, Object> map) {
-        tenantConfigService.onRefresh("/config/tenants/XM/tenant-config.yml", new ObjectMapper().writeValueAsString(map));
+    private void prepareConfig(Map<String, Object> map) {
+        tenantConfigService.onRefresh("/config/tenants/XM/tenant-config.yml",
+                                      new ObjectMapper(new YAMLFactory()).writeValueAsString(map));
     }
 
     @Test
     @SneakyThrows
     public void ifInConfigNoFieldReturnDefault() {
-        prepareConfig(of(MAIL_SETTINGS, asList(of(TEMPLATE_NAME, EMAIL_TEMPLATE))));
+        prepareConfig(of(MAIL_SETTINGS, singletonList(of(TEMPLATE_NAME, EMAIL_TEMPLATE))));
 
         MimeMessage mock = sendEmail();
 
@@ -183,7 +184,7 @@ public class MailServiceUnitTest extends AbstractUnitTest {
         when(localizationMessageService.getMessage("tr from key")).thenReturn("fromvalue (From value caption)");
 
         prepareConfig(
-            of(MAIL_SETTINGS, asList(of(
+            of(MAIL_SETTINGS, singletonList(of(
                 TEMPLATE_NAME, EMAIL_TEMPLATE,
                 SUBJECT, of(TRANSLATION_KEY, "tr subject key", ENGLISH.getLanguage(), "en subject", FRANCE.getLanguage(), "fr subject"),
                 FROM, of(TRANSLATION_KEY, "tr from key", ENGLISH.getLanguage(), "en from", FRANCE.getLanguage(), "frfrom")
@@ -203,7 +204,7 @@ public class MailServiceUnitTest extends AbstractUnitTest {
     @SneakyThrows
     public void ifInConfigNoTranslationKeyReturnByLocale() {
         prepareConfig(
-            of(MAIL_SETTINGS, asList(of(
+            of(MAIL_SETTINGS, singletonList(of(
                 TEMPLATE_NAME, EMAIL_TEMPLATE,
                 SUBJECT, of(ENGLISH.getLanguage(), "en subject", FRANCE.getLanguage(), "fr subject"),
                 FROM, of(ENGLISH.getLanguage(), "en from", FRANCE.getLanguage(), "frfrom")
@@ -223,7 +224,7 @@ public class MailServiceUnitTest extends AbstractUnitTest {
     @SneakyThrows
     public void ifInConfigNoTranslationKeyAndNoTranslationsByLocaleReturnEn() {
         prepareConfig(
-            of(MAIL_SETTINGS, asList(of(
+            of(MAIL_SETTINGS, singletonList(of(
                 TEMPLATE_NAME, EMAIL_TEMPLATE,
                 SUBJECT, of(ENGLISH.getLanguage(), "en subject"),
                 FROM, of(ENGLISH.getLanguage(), "enfrom")
@@ -243,7 +244,7 @@ public class MailServiceUnitTest extends AbstractUnitTest {
     @SneakyThrows
     public void testSubjectConfiguration() {
         prepareConfig(
-            of(MAIL_SETTINGS, asList(of(
+            of(MAIL_SETTINGS, singletonList(of(
                 TEMPLATE_NAME, "EMAIL_TEMPLATE",
                 SUBJECT, of(FRANCE.getLanguage(), "otherSubject")
             )))
@@ -262,7 +263,7 @@ public class MailServiceUnitTest extends AbstractUnitTest {
     @SneakyThrows
     public void testFromConfiguration() {
         prepareConfig(
-            of(MAIL_SETTINGS, asList(of(
+            of(MAIL_SETTINGS, singletonList(of(
                 TEMPLATE_NAME, "EMAIL_TEMPLATE",
                 FROM, of(FRANCE.getLanguage(), "otherFrom@yopmail.com (France caption)")
             )))
@@ -281,7 +282,7 @@ public class MailServiceUnitTest extends AbstractUnitTest {
     @SneakyThrows
     public void testSubjectAndFromConfiguration() {
         prepareConfig(
-            of(MAIL_SETTINGS, asList(of(
+            of(MAIL_SETTINGS, singletonList(of(
                 TEMPLATE_NAME, "EMAIL_TEMPLATE",
                 SUBJECT, of(FRANCE.getLanguage(), "otherSubject"),
                 FROM, of(FRANCE.getLanguage(), "otherFrom@yopmail.com (France caption)")
@@ -301,7 +302,7 @@ public class MailServiceUnitTest extends AbstractUnitTest {
     @SneakyThrows
     public void testSendEmailWithAttachment()  {
         prepareConfig(new HashMap<String, Object>() {{
-            put(MAIL_SETTINGS, new HashMap<>());
+            put(MAIL_SETTINGS, singletonList(new HashMap<>()));
         }});
 
         MimeMessage mock = sendEmailWithAttachment();
@@ -353,7 +354,7 @@ public class MailServiceUnitTest extends AbstractUnitTest {
         assertEquals(FILE_NAME, dataSource.getName());
         assertEquals(TEXT_CSV, dataSource.getContentType());
 
-        byte[] arrayFromInputStream = ByteStreams.toByteArray(dataSource.getInputStream());
-        assertTrue(Arrays.equals(FILE_BYTE_ARRAY, arrayFromInputStream));
+        byte[] arrayFromInputStream = IOUtils.toByteArray(dataSource.getInputStream());
+        assertArrayEquals(FILE_BYTE_ARRAY, arrayFromInputStream);
     }
 }
