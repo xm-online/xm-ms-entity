@@ -19,6 +19,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
@@ -30,6 +31,9 @@ import java.util.stream.Stream;
 @Transactional
 @RequiredArgsConstructor
 public class AttachmentService {
+
+    public static final String ZERO_RESTRICTION = "error.attachment.zero";
+    public static final String MAX_RESTRICTION = "error.attachment.max";
 
     private static final long MAX_ATTACHMENTS = 100;
 
@@ -53,7 +57,7 @@ public class AttachmentService {
      */
     @LogicExtensionPoint("Save")
     public Attachment save(Attachment attachment) {
-
+        Objects.nonNull(attachment);
         startUpdateDateGenerationStrategy.preProcessStartDate(attachment,
                                                               attachment.getId(),
                                                               attachmentRepository,
@@ -141,6 +145,7 @@ public class AttachmentService {
     }
 
     protected AttachmentSpec getSpec(XmEntity entity, Attachment attachment) {
+        Objects.nonNull(entity);
         return xmEntitySpecService
             .findAttachment(entity.getTypeKey(), attachment.getTypeKey())
             .orElseThrow(
@@ -151,7 +156,7 @@ public class AttachmentService {
 
     protected void assertZeroRestriction(AttachmentSpec spec) {
         if (Integer.valueOf(0).equals(spec.getMax())) {
-            throw new BusinessException("Spec for " + spec.getKey() + " allows to add " + spec.getMax() + " elements");
+            throw new BusinessException(ZERO_RESTRICTION, "Spec for " + spec.getKey() + " allows to add " + spec.getMax() + " elements");
         }
     }
 
@@ -160,7 +165,7 @@ public class AttachmentService {
         Stream<Attachment> attachmentStream = entity.getAttachments().stream().filter(filterByType);
 
         if (attachmentStream.count() >= spec.getMax()) {
-            throw new BusinessException("Spec for " + spec.getKey() + " allows to add " + spec.getMax() + " elements");
+            throw new BusinessException(MAX_RESTRICTION, "Spec for " + spec.getKey() + " allows to add " + spec.getMax() + " elements");
         }
     }
 
