@@ -1,5 +1,6 @@
 package com.icthh.xm.ms.entity.service;
 
+import com.google.common.collect.Lists;
 import com.icthh.xm.commons.exceptions.BusinessException;
 import com.icthh.xm.commons.permission.repository.PermittedRepository;
 import com.icthh.xm.ms.entity.AbstractUnitTest;
@@ -25,6 +26,7 @@ import static org.hamcrest.CoreMatchers.is;
 
 import static org.hamcrest.Matchers.hasProperty;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 public class AttachmentServiceImplUnitTest  extends AbstractUnitTest {
@@ -215,6 +217,62 @@ public class AttachmentServiceImplUnitTest  extends AbstractUnitTest {
         when(attachmentRepository.save(any())).thenReturn(result);
 
         assertThat(attachmentService.save(a).getId()).isEqualTo(222L);
+    }
+
+    @Test
+    public void findAll() {
+        Attachment a = new Attachment();
+        when(permittedRepository.findAll(Attachment.class, "P1")).thenReturn(Lists.newArrayList(a ,a));
+        assertThat(attachmentService.findAll("P1").size()).isEqualTo(2);
+    }
+
+    @Test
+    public void search() {
+        Attachment a = new Attachment();
+        when(permittedSearchRepository.search("Q", Attachment.class, "P")).thenReturn(Lists.newArrayList(a, a));
+        assertThat(attachmentService.search("Q", "P").size()).isEqualTo(2);
+    }
+
+    @Test
+    public void getById() {
+        Attachment a = new Attachment();
+        a.setId(1L);
+        when(attachmentRepository.findById(1L)).thenReturn(Optional.of(a));
+        assertThat(attachmentService.getOne(1L).get().getId()).isEqualTo(1L);
+        assertThat(attachmentService.getOne(2L).isPresent()).isEqualTo(false);
+    }
+
+    @Test
+    public void findById() {
+        Attachment a = new Attachment();
+        a.setId(1L);
+        when(attachmentRepository.findById(1L)).thenReturn(Optional.of(a));
+        assertThat(attachmentService.findOne(1L).getId()).isEqualTo(1L);
+        assertThat(attachmentService.findOne(2L)).isNull();
+    }
+
+    @Test
+    public void getByIdWithContext() {
+        Attachment a = new Attachment();
+        a.setId(1L);
+        when(attachmentRepository.findById(1L)).thenReturn(Optional.of(a));
+        assertThat(attachmentService.getOneWithContent(1L).get().getId()).isEqualTo(1L);
+        assertThat(attachmentService.getOneWithContent(2L).isPresent()).isEqualTo(false);
+    }
+
+    @Test
+    public void findByIdWithContext() {
+        Attachment a = new Attachment();
+        a.setId(1L);
+        when(attachmentRepository.findById(1L)).thenReturn(Optional.of(a));
+        assertThat(attachmentService.findOneWithContent(1L).getId()).isEqualTo(1L);
+        assertThat(attachmentService.findOneWithContent(2L)).isNull();
+    }
+
+    @Test
+    public void shouldDeleteItem() {
+        attachmentService.delete(1L);
+        verify(attachmentRepository, Mockito.times(1)).deleteById(1L);
     }
 
 }

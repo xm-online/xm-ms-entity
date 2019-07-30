@@ -14,12 +14,12 @@ import com.icthh.xm.ms.entity.repository.search.PermittedSearchRepository;
 import com.icthh.xm.ms.entity.service.impl.StartUpdateDateGenerationStrategy;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.codec.digest.DigestUtils;
-import org.hibernate.Hibernate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
@@ -101,14 +101,41 @@ public class AttachmentService {
      *
      * @param id the id of the entity
      * @return the entity
+     *
+     * @deprecated: use getOneWithContent to avoid null check
      */
     @Transactional(readOnly = true)
+    @Deprecated
     public Attachment findOneWithContent(Long id) {
+        return getOneWithContent(id).orElse(null);
+    }
+
+    /**
+     *  Get one attachment by id.
+     *
+     * @param id the id of the entity
+     * @return attachment
+     *
+     * @Deprecated: use #getOneWithContent to avoid null check
+     */
+    @Transactional(readOnly = true)
+    public Optional<Attachment> getOneWithContent(Long id) {
         return attachmentRepository.findById(id)
-            .map(att -> {
-                Hibernate.initialize(att.getContent());
-                return att;
-            }).orElse(null);
+            .map(AttachmentRepository::enrich);
+    }
+
+    /**
+     * Get one attachment by id with content.
+     *
+     * @param id the id of the entity
+     * @return the entity
+     *
+     * @deprecated: use #getOne to avoid null check
+     */
+    @Transactional(readOnly = true)
+    @Deprecated
+    public Attachment findOne(Long id) {
+        return getOne(id).orElse(null);
     }
 
     /**
@@ -118,8 +145,8 @@ public class AttachmentService {
      * @return the entity
      */
     @Transactional(readOnly = true)
-    public Attachment findOne(Long id) {
-        return attachmentRepository.findById(id).orElse(null);
+    public Optional<Attachment> getOne(Long id) {
+        return attachmentRepository.findById(id);
     }
 
     /**
