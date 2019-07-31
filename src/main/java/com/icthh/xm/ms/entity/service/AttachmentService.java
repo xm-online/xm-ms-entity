@@ -138,7 +138,7 @@ public class AttachmentService {
     @Transactional(readOnly = true)
     @Deprecated
     public Attachment findOne(Long id) {
-        return getOne(id).orElse(null);
+        return findById(id).orElse(null);
     }
 
     /**
@@ -148,7 +148,7 @@ public class AttachmentService {
      * @return the entity
      */
     @Transactional(readOnly = true)
-    public Optional<Attachment> getOne(Long id) {
+    public Optional<Attachment> findById(Long id) {
         return attachmentRepository.findById(id);
     }
 
