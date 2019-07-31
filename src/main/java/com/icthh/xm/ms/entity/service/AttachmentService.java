@@ -1,6 +1,7 @@
 package com.icthh.xm.ms.entity.service;
 
 import com.icthh.xm.commons.exceptions.BusinessException;
+import com.icthh.xm.commons.exceptions.EntityNotFoundException;
 import com.icthh.xm.commons.lep.LogicExtensionPoint;
 import com.icthh.xm.commons.lep.spring.LepService;
 import com.icthh.xm.commons.permission.annotation.FindWithPermission;
@@ -65,7 +66,7 @@ public class AttachmentService {
                                                               Attachment::getStartDate);
 
         XmEntity entity = xmEntityRepository.findById(attachment.getXmEntity().getId()).orElseThrow(
-            () -> new IllegalArgumentException("No entity found by id: " + attachment.getXmEntity().getId())
+            () -> new EntityNotFoundException("No entity found by id: " + attachment.getXmEntity().getId())
         );
 
 
@@ -179,7 +180,7 @@ public class AttachmentService {
         return xmEntitySpecService
             .findAttachment(entity.getTypeKey(), attachment.getTypeKey())
             .orElseThrow(
-                () -> new IllegalArgumentException("Spec.Attachment not found for entity type key " + entity.getTypeKey()
+                () -> new EntityNotFoundException("Spec.Attachment not found for entity type key " + entity.getTypeKey()
                     + " and attachment key: " + attachment.getTypeKey())
             );
     }

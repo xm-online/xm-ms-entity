@@ -2,6 +2,7 @@ package com.icthh.xm.ms.entity.service;
 
 import com.google.common.collect.Lists;
 import com.icthh.xm.commons.exceptions.BusinessException;
+import com.icthh.xm.commons.exceptions.EntityNotFoundException;
 import com.icthh.xm.commons.permission.repository.PermittedRepository;
 import com.icthh.xm.ms.entity.AbstractUnitTest;
 import com.icthh.xm.ms.entity.domain.Attachment;
@@ -85,7 +86,7 @@ public class AttachmentServiceImplUnitTest  extends AbstractUnitTest {
         e.setTypeKey("TYPE");
         Attachment a = new Attachment();
         a.setTypeKey("TYPE.A");
-        exception.expect(IllegalArgumentException.class);
+        exception.expect(EntityNotFoundException.class);
         exception.expectMessage(containsString("Spec.Attachment"));
         attachmentService.getSpec(e, a);
     }
@@ -227,8 +228,8 @@ public class AttachmentServiceImplUnitTest  extends AbstractUnitTest {
         Attachment a = new Attachment();
         a.setId(1L);
         when(attachmentRepository.findById(1L)).thenReturn(Optional.of(a));
-        assertThat(attachmentService.getOne(1L).get().getId()).isEqualTo(1L);
-        assertThat(attachmentService.getOne(2L).isPresent()).isEqualTo(false);
+        assertThat(attachmentService.findById(1L).get().getId()).isEqualTo(1L);
+        assertThat(attachmentService.findById(2L).isPresent()).isEqualTo(false);
     }
 
     @Test
