@@ -37,6 +37,8 @@ types:
       locations:
           - key: AAAAAAAAAA
           - key: BBBBBBBBBB
+          - key: CCCCCCCCCC
+            max: 1
       ratings:
           - key: AAAAAAAAAA
           - key: BBBBBBBBBB
