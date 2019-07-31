@@ -65,7 +65,7 @@ public class AttachmentService {
                                                               Attachment::getStartDate);
 
         XmEntity entity = xmEntityRepository.findById(attachment.getXmEntity().getId()).orElseThrow(
-            () -> new IllegalArgumentException("No entity found by " + attachment.getXmEntity().getId())
+            () -> new IllegalArgumentException("No entity found by id: " + attachment.getXmEntity().getId())
         );
 
 
@@ -180,7 +180,7 @@ public class AttachmentService {
             .findAttachment(entity.getTypeKey(), attachment.getTypeKey())
             .orElseThrow(
                 () -> new IllegalArgumentException("Spec.Attachment not found for entity type key " + entity.getTypeKey()
-                    + " and function key: " + attachment.getTypeKey())
+                    + " and attachment key: " + attachment.getTypeKey())
             );
     }
 
