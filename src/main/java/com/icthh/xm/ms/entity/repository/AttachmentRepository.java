@@ -16,6 +16,8 @@ public interface AttachmentRepository extends JpaRepository<Attachment, Long>, R
     @Override
     Attachment findResourceById(Object id);
 
+    int countByXmEntityIdAndTypeKey(long xmEntityId, String typeKey);
+
     static Attachment enrich(Attachment att) {
         Hibernate.initialize(att.getContent());
         return att;

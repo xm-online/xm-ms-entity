@@ -35,8 +35,6 @@ public class AttachmentService {
     public static final String ZERO_RESTRICTION = "error.attachment.zero";
     public static final String MAX_RESTRICTION = "error.attachment.max";
 
-    private static final long MAX_ATTACHMENTS = 100;
-
     private final AttachmentRepository attachmentRepository;
 
     private final PermittedRepository permittedRepository;
@@ -58,13 +56,18 @@ public class AttachmentService {
     @LogicExtensionPoint("Save")
     public Attachment save(Attachment attachment) {
         Objects.nonNull(attachment);
+        Objects.nonNull(attachment.getXmEntity());
+        Objects.nonNull(attachment.getXmEntity().getId());
         startUpdateDateGenerationStrategy.preProcessStartDate(attachment,
                                                               attachment.getId(),
                                                               attachmentRepository,
                                                               Attachment::setStartDate,
                                                               Attachment::getStartDate);
 
-        XmEntity entity = xmEntityRepository.getOne(attachment.getXmEntity().getId());
+        XmEntity entity = xmEntityRepository.findById(attachment.getXmEntity().getId()).orElseThrow(
+            () -> new IllegalArgumentException("No entity found by " + attachment.getXmEntity().getId())
+        );
+
 
         AttachmentSpec spec = getSpec(entity, attachment);
 
@@ -188,10 +191,7 @@ public class AttachmentService {
     }
 
     protected void assertLimitRestriction(AttachmentSpec spec, XmEntity entity) {
-        Predicate<Attachment> filterByType = (Attachment item) -> spec.getKey().equals(item.getTypeKey());
-        Stream<Attachment> attachmentStream = entity.getAttachments().stream().filter(filterByType);
-
-        if (attachmentStream.count() >= spec.getMax()) {
+        if (attachmentRepository.countByXmEntityIdAndTypeKey(entity.getId(), spec.getKey()) >= spec.getMax()) {
             throw new BusinessException(MAX_RESTRICTION, "Spec for " + spec.getKey() + " allows to add " + spec.getMax() + " elements");
         }
     }

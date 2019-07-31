@@ -72,23 +72,10 @@ public class AttachmentServiceImplUnitTest  extends AbstractUnitTest {
         spec.setMax(1);
         spec.setKey("KEY1");
         XmEntity e = new XmEntity();
-        Attachment a1 = new Attachment();
-        a1.setTypeKey("KEY1");
-        e.addAttachments(a1);
+        e.setId(1L);
+        when(attachmentRepository.countByXmEntityIdAndTypeKey(1L, "KEY1")).thenReturn(1);
         exception.expect(BusinessException.class);
         exception.expect(hasProperty("code", is(AttachmentService.MAX_RESTRICTION)));
-        attachmentService.assertLimitRestriction(spec, e);
-    }
-
-    @Test
-    public void shouldPassForOtherCodes() {
-        AttachmentSpec spec = new AttachmentSpec();
-        spec.setMax(1);
-        spec.setKey("KEY1");
-        XmEntity e = new XmEntity();
-        Attachment a1 = new Attachment();
-        a1.setTypeKey("KEY2");
-        e.addAttachments(a1);
         attachmentService.assertLimitRestriction(spec, e);
     }
 
@@ -140,7 +127,7 @@ public class AttachmentServiceImplUnitTest  extends AbstractUnitTest {
         AttachmentSpec spec = new AttachmentSpec();
         spec.setKey("A.T");
 
-        when(xmEntityRepository.getOne(1L)).thenReturn(e);
+        when(xmEntityRepository.findById(1L)).thenReturn(Optional.of(e));
         when(xmEntitySpecService.findAttachment("T", "A.T")).thenReturn(Optional.of(spec));
         when(attachmentRepository.save(any())).thenReturn(result);
 
@@ -175,9 +162,10 @@ public class AttachmentServiceImplUnitTest  extends AbstractUnitTest {
         a1.setTypeKey("A.T");
         mocked.addAttachments(a1);
 
-        when(xmEntityRepository.getOne(1L)).thenReturn(mocked);
+        when(xmEntityRepository.findById(1L)).thenReturn(Optional.of(mocked));
         when(xmEntitySpecService.findAttachment("T", "A.T")).thenReturn(Optional.of(spec));
         when(attachmentRepository.save(any())).thenReturn(result);
+        when(attachmentRepository.countByXmEntityIdAndTypeKey(1L, "A.T")).thenReturn(1);
 
         exception.expect(BusinessException.class);
         exception.expect(hasProperty("code", is(AttachmentService.MAX_RESTRICTION)));
@@ -185,7 +173,7 @@ public class AttachmentServiceImplUnitTest  extends AbstractUnitTest {
     }
 
     @Test
-    public void shouldSaveWithOfCondition() {
+    public void shouldSaveWithOkCondition() {
         XmEntity e = new XmEntity();
         e.setTypeKey("T");
         e.setId(1L);
@@ -212,9 +200,10 @@ public class AttachmentServiceImplUnitTest  extends AbstractUnitTest {
         a1.setTypeKey("A.T");
         mocked.addAttachments(a1);
 
-        when(xmEntityRepository.getOne(1L)).thenReturn(mocked);
+        when(xmEntityRepository.findById(1L)).thenReturn(Optional.of(mocked));
         when(xmEntitySpecService.findAttachment("T", "A.T")).thenReturn(Optional.of(spec));
         when(attachmentRepository.save(any())).thenReturn(result);
+        when(attachmentRepository.countByXmEntityIdAndTypeKey(1L, "A.T")).thenReturn(1);
 
         assertThat(attachmentService.save(a).getId()).isEqualTo(222L);
     }

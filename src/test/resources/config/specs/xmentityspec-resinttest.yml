@@ -34,6 +34,10 @@ types:
       attachments:
           - key: AAAAAAAAAA
           - key: BBBBBBBBBB
+          - key: CCCCCCCCCC
+            max: 0
+          - key: DDDDDDDDDD
+            max: 1
       locations:
           - key: AAAAAAAAAA
           - key: BBBBBBBBBB
