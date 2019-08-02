@@ -17,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 @Slf4j
 @Service
@@ -64,13 +65,13 @@ public class LocationService {
     public Location save(Location location) {
         log.debug("Request to save location : {}", location);
 
-        Objects.nonNull(location);
-        Objects.nonNull(location.getXmEntity());
-        Objects.nonNull(location.getXmEntity().getId());
-
-        XmEntity entity = xmEntityRepository.findById(location.getXmEntity().getId()).orElseThrow(
-            () -> new EntityNotFoundException("No entity found by id: " + location.getXmEntity().getId())
-        );
+        XmEntity entity = Optional.ofNullable(location)
+            .map(Location::getXmEntity)
+            .map(XmEntity::getId)
+            .flatMap(xmEntityRepository::findById)
+            .orElseThrow(
+                () -> new EntityNotFoundException("No entity found by id")
+            );
 
         LocationSpec spec = getSpec(entity, location);
 
@@ -86,7 +87,7 @@ public class LocationService {
     }
 
     protected LocationSpec getSpec(XmEntity entity, Location location) {
-        Objects.nonNull(entity);
+        Objects.requireNonNull(entity);
         return xmEntitySpecService
             .findLocation(entity.getTypeKey(), location.getTypeKey())
             .orElseThrow(
