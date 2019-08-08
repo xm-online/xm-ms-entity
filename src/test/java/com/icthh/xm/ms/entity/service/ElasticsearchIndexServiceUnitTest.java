@@ -8,6 +8,7 @@ import static org.mockito.Mockito.when;
 
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.ms.entity.AbstractUnitTest;
+import com.icthh.xm.ms.entity.config.IndexConfiguration;
 import com.icthh.xm.ms.entity.config.MappingConfiguration;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.repository.XmEntityRepositoryInternal;
@@ -44,6 +45,8 @@ public class ElasticsearchIndexServiceUnitTest extends AbstractUnitTest {
     TenantContextHolder tenantContextHolder;
     @Mock
     MappingConfiguration mappingConfiguration;
+    @Mock
+    IndexConfiguration indexConfiguration;
 
     @Before
     public void before() {

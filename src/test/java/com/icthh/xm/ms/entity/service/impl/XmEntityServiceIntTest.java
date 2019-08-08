@@ -9,6 +9,7 @@ import static java.util.UUID.randomUUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.mockito.Mockito.when;
 
 import com.icthh.xm.commons.lep.XmLepScriptConfigServerResourceLoader;
@@ -18,6 +19,7 @@ import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
 import com.icthh.xm.lep.api.LepManager;
 import com.icthh.xm.ms.entity.AbstractSpringBootTest;
+import com.icthh.xm.ms.entity.config.IndexConfiguration;
 import com.icthh.xm.ms.entity.config.MappingConfiguration;
 import com.icthh.xm.ms.entity.config.XmEntityTenantConfigService;
 import com.icthh.xm.ms.entity.domain.Attachment;
@@ -40,7 +42,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
 import java.util.Set;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -56,6 +57,7 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.elasticsearch.ElasticsearchException;
 import org.springframework.security.test.context.support.WithMockUser;
 
 @Slf4j
@@ -84,6 +86,9 @@ public class XmEntityServiceIntTest extends AbstractSpringBootTest {
 
     @Autowired
     private SeparateTransactionExecutor transactionExecutor;
+
+    @Autowired
+    private IndexConfiguration indexConfiguration;
 
     @Autowired
     private XmEntityTenantConfigService xmEntityTenantConfigService;
@@ -411,16 +416,30 @@ public class XmEntityServiceIntTest extends AbstractSpringBootTest {
     @WithMockUser(authorities = "SUPER-ADMIN")
     public void testIndexConfiguration() {
         elasticsearchIndexService.reindexAll();
-        Map<String, Object> xmEntityData = new HashMap<>();
 
+        Map<String, Object> xmEntityData = new HashMap<>();
         for (int i = 0; i < 1000; i++) {
             xmEntityData.put("key-" + i, "value-" + i);
         }
-        XmEntity entity = new XmEntity().typeKey("TEST_SEARCH").name("A-B").key("E-F")
-            .data(xmEntityData);
-        xmEntityService.save(entity);
-        //elasticsearchIndexService.reindexAll();
+        XmEntity entity = new XmEntity().typeKey("TEST_SEARCH")
+                                        .name("A-B")
+                                        .key("E-F")
+                                        .data(xmEntityData);
+        entity = xmEntityService.save(entity);
 
+        Map<String, String> elasticFailedDocument = null;
+        try {
+            elasticsearchIndexService.reindexAll();
+        } catch (ElasticsearchException e) {
+            elasticFailedDocument = e.getFailedDocuments();
+        }
+
+        assertNotNull(elasticFailedDocument);
+        assertEquals(entity.getId().toString(), elasticFailedDocument.entrySet().iterator().next().getKey());
+
+        String config = loadFile("config/elastic_config.json");
+        indexConfiguration.onRefresh("/config/tenants/RESINTTEST/entity/index_config.json", config);
+        elasticsearchIndexService.reindexAll();
     }
 
     private void reindexWithMapping(String mappingPath) {

@@ -15,21 +15,21 @@ import org.springframework.util.AntPathMatcher;
 
 @Slf4j
 @Service
-public class ElasticConfiguration /*implements RefreshableConfiguration*/ {
+public class IndexConfiguration implements RefreshableConfiguration {
 
 
- //   private final ConcurrentHashMap<String, String> configuration = new ConcurrentHashMap<>();
-  //  private final AntPathMatcher matcher = new AntPathMatcher();
+    private final ConcurrentHashMap<String, String> configuration = new ConcurrentHashMap<>();
+    private final AntPathMatcher matcher = new AntPathMatcher();
 
- //   private final TenantContextHolder tenantContextHolder;
-  /*  private final String mappingPath;
+    private final TenantContextHolder tenantContextHolder;
+    private final String mappingPath;
 
 
-    public ElasticConfiguration(TenantContextHolder tenantContextHolder,
+    public IndexConfiguration(TenantContextHolder tenantContextHolder,
                                 @Value("${spring.application.name}") String appName) {
 
         this.tenantContextHolder = tenantContextHolder;
-        this.mappingPath = "/config/tenants/{tenantName}/" + appName + "/elastic_config.json";
+        this.mappingPath = "/config/tenants/{tenantName}/" + appName + "/index_config.json";
     }
 
     public void onRefresh(final String updatedKey, final String config) {
@@ -56,15 +56,14 @@ public class ElasticConfiguration /*implements RefreshableConfiguration*/ {
             this.onRefresh(configKey, configValue);
         }
     }
-*/
     public boolean isConfigExists() {
-       // return configuration.containsKey(getRequiredTenantKeyValue(this.tenantContextHolder));
-        return false;
+       return configuration.containsKey(getRequiredTenantKeyValue(this.tenantContextHolder));
+
     }
 
     public String getConfiguration() {
-      //  return configuration.get(getRequiredTenantKeyValue(this.tenantContextHolder));
-        return null;
+       return configuration.get(getRequiredTenantKeyValue(this.tenantContextHolder));
+
 
     }
 }

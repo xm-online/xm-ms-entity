@@ -6,7 +6,7 @@ import com.icthh.xm.commons.logging.util.MdcUtils;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
 import com.icthh.xm.commons.tenant.TenantKey;
-import com.icthh.xm.ms.entity.config.ElasticConfiguration;
+import com.icthh.xm.ms.entity.config.IndexConfiguration;
 import com.icthh.xm.ms.entity.config.MappingConfiguration;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.repository.XmEntityRepositoryInternal;
@@ -60,7 +60,7 @@ public class ElasticsearchIndexService {
     private final ElasticsearchTemplate elasticsearchTemplate;
     private final TenantContextHolder tenantContextHolder;
     private final MappingConfiguration mappingConfiguration;
-    private final ElasticConfiguration elasticConfiguration;
+    private final IndexConfiguration indexConfiguration;
     private final Executor executor;
 
     @Setter(AccessLevel.PACKAGE)
@@ -73,14 +73,14 @@ public class ElasticsearchIndexService {
                                      ElasticsearchTemplate elasticsearchTemplate,
                                      TenantContextHolder tenantContextHolder,
                                      MappingConfiguration mappingConfiguration,
-                                     ElasticConfiguration elasticConfiguration,
+                                     IndexConfiguration indexConfiguration,
                                      @Qualifier("taskExecutor") Executor executor) {
         this.xmEntityRepositoryInternal = xmEntityRepositoryInternal;
         this.xmEntitySearchRepository = xmEntitySearchRepository;
         this.elasticsearchTemplate = elasticsearchTemplate;
         this.tenantContextHolder = tenantContextHolder;
         this.mappingConfiguration = mappingConfiguration;
-        this.elasticConfiguration = elasticConfiguration;
+        this.indexConfiguration = indexConfiguration;
         this.executor = executor;
     }
 
@@ -245,9 +245,8 @@ public class ElasticsearchIndexService {
 
         elasticsearchTemplate.deleteIndex(clazz);
         try {
-
-            if (elasticConfiguration.isConfigExists()) {
-                elasticsearchTemplate.createIndex(clazz, elasticConfiguration.getConfiguration());
+            if (indexConfiguration.isConfigExists()) {
+                elasticsearchTemplate.createIndex(clazz, indexConfiguration.getConfiguration());
             } else {
                 elasticsearchTemplate.createIndex(clazz);
             }
