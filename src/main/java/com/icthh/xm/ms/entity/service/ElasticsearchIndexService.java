@@ -259,7 +259,6 @@ public class ElasticsearchIndexService {
         } else {
             elasticsearchTemplate.putMapping(clazz);
         }
-
         log.info("elasticsearch index was recreated for {} in {} ms",
                  XmEntity.class.getSimpleName(), stopWatch.getTime());
     }

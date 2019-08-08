@@ -3,12 +3,10 @@ package com.icthh.xm.ms.entity.config;
 import static com.icthh.xm.commons.tenant.TenantContextUtils.getRequiredTenantKeyValue;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.icthh.xm.commons.config.client.api.RefreshableConfiguration;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import java.util.concurrent.ConcurrentHashMap;
 import lombok.extern.slf4j.Slf4j;
-import org.mapstruct.MapperConfig;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.AntPathMatcher;
@@ -17,16 +15,13 @@ import org.springframework.util.AntPathMatcher;
 @Service
 public class IndexConfiguration implements RefreshableConfiguration {
 
-
     private final ConcurrentHashMap<String, String> configuration = new ConcurrentHashMap<>();
     private final AntPathMatcher matcher = new AntPathMatcher();
-
     private final TenantContextHolder tenantContextHolder;
     private final String mappingPath;
 
-
     public IndexConfiguration(TenantContextHolder tenantContextHolder,
-                                @Value("${spring.application.name}") String appName) {
+                             @Value("${spring.application.name}") String appName) {
 
         this.tenantContextHolder = tenantContextHolder;
         this.mappingPath = "/config/tenants/{tenantName}/" + appName + "/index_config.json";
@@ -56,14 +51,12 @@ public class IndexConfiguration implements RefreshableConfiguration {
             this.onRefresh(configKey, configValue);
         }
     }
-    public boolean isConfigExists() {
-       return configuration.containsKey(getRequiredTenantKeyValue(this.tenantContextHolder));
 
+    public boolean isConfigExists() {
+        return configuration.containsKey(getRequiredTenantKeyValue(this.tenantContextHolder));
     }
 
     public String getConfiguration() {
-       return configuration.get(getRequiredTenantKeyValue(this.tenantContextHolder));
-
-
+        return configuration.get(getRequiredTenantKeyValue(this.tenantContextHolder));
     }
 }
