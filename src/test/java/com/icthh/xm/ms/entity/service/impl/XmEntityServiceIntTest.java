@@ -40,6 +40,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.Set;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -404,6 +405,22 @@ public class XmEntityServiceIntTest extends AbstractSpringBootTest {
         assertNotEquals(searchWithMapping.getContent(), asList(entity1));
         xmEntityData.remove("notSaveField");
         assertEquals(searchWithMapping.getContent().get(0).getData(), xmEntityData);
+    }
+
+    @Test
+    @WithMockUser(authorities = "SUPER-ADMIN")
+    public void testIndexConfiguration() {
+        elasticsearchIndexService.reindexAll();
+        Map<String, Object> xmEntityData = new HashMap<>();
+
+        for (int i = 0; i < 1000; i++) {
+            xmEntityData.put("key-" + i, "value-" + i);
+        }
+        XmEntity entity = new XmEntity().typeKey("TEST_SEARCH").name("A-B").key("E-F")
+            .data(xmEntityData);
+        xmEntityService.save(entity);
+        //elasticsearchIndexService.reindexAll();
+
     }
 
     private void reindexWithMapping(String mappingPath) {
