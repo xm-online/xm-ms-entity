@@ -6,6 +6,7 @@ import com.icthh.xm.commons.logging.util.MdcUtils;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
 import com.icthh.xm.commons.tenant.TenantKey;
+import com.icthh.xm.ms.entity.config.IndexConfiguration;
 import com.icthh.xm.ms.entity.config.MappingConfiguration;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.repository.XmEntityRepositoryInternal;
@@ -59,6 +60,7 @@ public class ElasticsearchIndexService {
     private final ElasticsearchTemplate elasticsearchTemplate;
     private final TenantContextHolder tenantContextHolder;
     private final MappingConfiguration mappingConfiguration;
+    private final IndexConfiguration indexConfiguration;
     private final Executor executor;
 
     @Setter(AccessLevel.PACKAGE)
@@ -71,12 +73,14 @@ public class ElasticsearchIndexService {
                                      ElasticsearchTemplate elasticsearchTemplate,
                                      TenantContextHolder tenantContextHolder,
                                      MappingConfiguration mappingConfiguration,
+                                     IndexConfiguration indexConfiguration,
                                      @Qualifier("taskExecutor") Executor executor) {
         this.xmEntityRepositoryInternal = xmEntityRepositoryInternal;
         this.xmEntitySearchRepository = xmEntitySearchRepository;
         this.elasticsearchTemplate = elasticsearchTemplate;
         this.tenantContextHolder = tenantContextHolder;
         this.mappingConfiguration = mappingConfiguration;
+        this.indexConfiguration = indexConfiguration;
         this.executor = executor;
     }
 
@@ -241,7 +245,11 @@ public class ElasticsearchIndexService {
 
         elasticsearchTemplate.deleteIndex(clazz);
         try {
-            elasticsearchTemplate.createIndex(clazz);
+            if (indexConfiguration.isConfigExists()) {
+                elasticsearchTemplate.createIndex(clazz, indexConfiguration.getConfiguration());
+            } else {
+                elasticsearchTemplate.createIndex(clazz);
+            }
         } catch (ResourceAlreadyExistsException e) {
             log.info("Do nothing. Index was already concurrently recreated by some other service");
         }
