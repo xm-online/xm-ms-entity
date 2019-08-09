@@ -27,6 +27,7 @@ import com.icthh.xm.ms.entity.repository.AttachmentRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
 import com.icthh.xm.ms.entity.repository.search.PermittedSearchRepository;
 import com.icthh.xm.ms.entity.service.AttachmentService;
+import com.icthh.xm.ms.entity.service.XmEntitySpecService;
 import com.icthh.xm.ms.entity.service.impl.StartUpdateDateGenerationStrategy;
 import org.junit.After;
 import org.junit.Before;
@@ -111,6 +112,9 @@ public class AttachmentResourceIntTest extends AbstractSpringBootTest {
     private XmEntityRepository xmEntityRepository;
 
     @Autowired
+    private XmEntitySpecService xmEntitySpecService;
+
+    @Autowired
     private EntityManager em;
 
     private AttachmentService attachmentService;
@@ -152,7 +156,8 @@ public class AttachmentResourceIntTest extends AbstractSpringBootTest {
                                                   permittedRepository,
                                                   permittedSearchRepository,
                                                   startUpdateDateGenerationStrategy,
-                                                  xmEntityRepository);
+                                                  xmEntityRepository,
+                                                  xmEntitySpecService);
 
         AttachmentResource attachmentResourceMock = new AttachmentResource(attachmentService, attachmentResource);
         this.restAttachmentMockMvc = MockMvcBuilders.standaloneSetup(attachmentResourceMock)
@@ -161,7 +166,7 @@ public class AttachmentResourceIntTest extends AbstractSpringBootTest {
             .setValidator(validator)
             .setMessageConverters(jacksonMessageConverter).build();
 
-        attachment = createEntity(em);
+        attachment = createEntity(em, DEFAULT_TYPE_KEY);
     }
 
     @Before
@@ -181,9 +186,19 @@ public class AttachmentResourceIntTest extends AbstractSpringBootTest {
      * This is a static method, as tests for other entities might also need it,
      * if they test an entity which requires the current entity.
      */
-    public static Attachment createEntity(EntityManager em) {
-        Attachment attachment = new Attachment()
-            .typeKey(DEFAULT_TYPE_KEY)
+    public static Attachment createEntity(EntityManager em, String typeKey) {
+        Attachment attachment = createAttachment(typeKey);
+        // Add required entity
+        XmEntity xmEntity = XmEntityResourceIntTest.createEntity();
+        em.persist(xmEntity);
+        em.flush();
+        attachment.setXmEntity(xmEntity);
+        return attachment;
+    }
+
+    public static Attachment createAttachment(String typeKey) {
+         Attachment attachment = new Attachment()
+            .typeKey(typeKey)
             .name(DEFAULT_NAME)
             .contentUrl(DEFAULT_CONTENT_URL)
             .description(DEFAULT_DESCRIPTION)
@@ -191,12 +206,7 @@ public class AttachmentResourceIntTest extends AbstractSpringBootTest {
             .endDate(DEFAULT_END_DATE)
             .valueContentType(DEFAULT_VALUE_CONTENT_TYPE)
             .valueContentSize(DEFAULT_VALUE_CONTENT_SIZE);
-        // Add required entity
-        XmEntity xmEntity = XmEntityResourceIntTest.createEntity();
-        em.persist(xmEntity);
-        em.flush();
-        attachment.setXmEntity(xmEntity);
-        return attachment;
+         return attachment;
     }
 
     @Test
@@ -222,6 +232,58 @@ public class AttachmentResourceIntTest extends AbstractSpringBootTest {
         assertThat(testAttachment.getEndDate()).isEqualTo(DEFAULT_END_DATE);
         assertThat(testAttachment.getValueContentType()).isEqualTo(DEFAULT_VALUE_CONTENT_TYPE);
         assertThat(testAttachment.getValueContentSize()).isEqualTo(DEFAULT_VALUE_CONTENT_SIZE);
+    }
+
+    @Test
+    @Transactional
+    public void shouldFailForZeroSpecAttachment() throws Exception {
+        Attachment a = createEntity(em, "CCCCCCCCCC");
+        int databaseSizeBeforeCreate = attachmentRepository.findAll().size();
+
+        // Create the Attachment
+        restAttachmentMockMvc.perform(post("/api/attachments")
+            .contentType(TestUtil.APPLICATION_JSON_UTF8)
+            .content(TestUtil.convertObjectToJsonBytes(a)))
+            .andExpect(status().is4xxClientError())
+            .andExpect(jsonPath("$.error").value(AttachmentService.ZERO_RESTRICTION));
+
+        // Validate the Attachment in the database
+        List<Attachment> attachmentList = attachmentRepository.findAll();
+        assertThat(attachmentList).hasSize(databaseSizeBeforeCreate);
+    }
+
+    @Test
+    @Transactional
+    public void shouldFailForSecondSpecAttachment() throws Exception {
+        Attachment a = createEntity(em, "DDDDDDDDDD");
+        int databaseSizeBeforeCreate = attachmentRepository.findAll().size();
+
+        // Create the Attachment
+        restAttachmentMockMvc.perform(post("/api/attachments")
+            .contentType(TestUtil.APPLICATION_JSON_UTF8)
+            .content(TestUtil.convertObjectToJsonBytes(a)))
+            .andExpect(status().is2xxSuccessful());
+
+        // Validate the Attachment in the database
+        List<Attachment> attachmentList = attachmentRepository.findAll();
+        assertThat(attachmentList).hasSize(databaseSizeBeforeCreate + 1);
+
+        Attachment b = createAttachment("DDDDDDDDDD");
+        XmEntity e = XmEntityResourceIntTest.createEntity();
+        //e.setTypeKey("DDDDDDDDDD");
+        e.setId(a.getXmEntity().getId());
+        b.setXmEntity(e);
+        // Create the Attachment
+        restAttachmentMockMvc.perform(post("/api/attachments")
+            .contentType(TestUtil.APPLICATION_JSON_UTF8)
+            .content(TestUtil.convertObjectToJsonBytes(b)))
+            .andExpect(status().is4xxClientError())
+            .andExpect(jsonPath("$.error").value(AttachmentService.MAX_RESTRICTION));
+
+        // Validate the Attachment in the database
+        attachmentList = attachmentRepository.findAll();
+        assertThat(attachmentList).hasSize(databaseSizeBeforeCreate + 1);
+
     }
 
     @Test

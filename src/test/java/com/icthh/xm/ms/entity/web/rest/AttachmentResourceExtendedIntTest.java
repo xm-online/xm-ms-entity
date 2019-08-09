@@ -27,6 +27,7 @@ import com.icthh.xm.ms.entity.repository.AttachmentRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
 import com.icthh.xm.ms.entity.repository.search.PermittedSearchRepository;
 import com.icthh.xm.ms.entity.service.AttachmentService;
+import com.icthh.xm.ms.entity.service.XmEntitySpecService;
 import com.icthh.xm.ms.entity.service.impl.StartUpdateDateGenerationStrategy;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.junit.After;
@@ -96,6 +97,9 @@ public class AttachmentResourceExtendedIntTest extends AbstractSpringBootTest {
     @Autowired
     private XmEntityRepository xmEntityRepository;
 
+    @Autowired
+    private XmEntitySpecService xmEntitySpecService;
+
     @Spy
     private StartUpdateDateGenerationStrategy startUpdateDateGenerationStrategy;
 
@@ -121,7 +125,8 @@ public class AttachmentResourceExtendedIntTest extends AbstractSpringBootTest {
             permittedRepository,
             permittedSearchRepository,
             startUpdateDateGenerationStrategy,
-            xmEntityRepository);
+            xmEntityRepository,
+            xmEntitySpecService);
 
         AttachmentResource attachmentResourceMock = new AttachmentResource(attachmentService, attachmentResource);
         this.restAttachmentMockMvc = MockMvcBuilders.standaloneSetup(attachmentResourceMock)
