@@ -77,7 +77,7 @@ public class XmEntityGeneratorService {
     @SneakyThrows
     private TypeSpec getRandomTypeSpec(String rootTypeKey) {
         List<TypeSpec> availableTypeSpecs = xmEntitySpecService.findNonAbstractTypesByPrefix(rootTypeKey);
-        return availableTypeSpecs.get(SecureRandom.getInstanceStrong().nextInt(availableTypeSpecs.size()));
+        return availableTypeSpecs.get(new SecureRandom().nextInt(availableTypeSpecs.size()));
     }
 
     public XmEntity generateXmEntity(String rootTypeKey) {
@@ -186,7 +186,7 @@ public class XmEntityGeneratorService {
     @SneakyThrows
     private static String generateXmEntityState(XmEntitySpecService xmEntitySpecService, TypeSpec typeSpec) {
         List<NextSpec> next = xmEntitySpecService.next(typeSpec.getKey(), null);
-        return next.isEmpty() ? null : next.get(SecureRandom.getInstanceStrong().nextInt(next.size())).getStateKey();
+        return next.isEmpty() ? null : next.get(new SecureRandom().nextInt(next.size())).getStateKey();
     }
 
     private static Instant generateXmEntityStartDate() {
@@ -241,10 +241,10 @@ public class XmEntityGeneratorService {
                 fieldValue = randomAnyString();
                 break;
             case "number":
-                fieldValue = SecureRandom.getInstanceStrong().nextInt();
+                fieldValue = new SecureRandom().nextInt();
                 break;
             case "boolean":
-                fieldValue = SecureRandom.getInstanceStrong().nextBoolean();
+                fieldValue = new SecureRandom().nextBoolean();
                 break;
             case "object":
                 fieldValue = generateXmEntityData(fieldSpec);
