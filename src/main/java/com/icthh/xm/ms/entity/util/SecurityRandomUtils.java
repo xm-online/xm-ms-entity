@@ -17,7 +17,7 @@ public class SecurityRandomUtils {
     }
 
     public static int generateRandomInt() {
-        return new SecureRandom().nextInt();
+        return generateRandomInt(Integer.MAX_VALUE);
     }
 
     public static boolean generateRandomBoolean() {
