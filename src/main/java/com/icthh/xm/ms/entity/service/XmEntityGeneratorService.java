@@ -1,6 +1,9 @@
 package com.icthh.xm.ms.entity.service;
 
 import static com.icthh.xm.commons.exceptions.ErrorConstants.ERR_METHOD_NOT_SUPPORTED;
+import static com.icthh.xm.ms.entity.util.SecurityRandomUtils.generateRandomBoolean;
+import static com.icthh.xm.ms.entity.util.SecurityRandomUtils.generateRandomInt;
+import static com.icthh.xm.ms.entity.util.SecurityRandomUtils.generateRandomString;
 import static java.lang.Integer.min;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Collections.emptyMap;
@@ -11,7 +14,6 @@ import static org.apache.commons.lang.StringUtils.isEmpty;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.type.CollectionType;
-import com.google.common.collect.ImmutableList;
 import com.icthh.xm.commons.exceptions.BusinessException;
 import com.icthh.xm.commons.security.XmAuthenticationContextHolder;
 import com.icthh.xm.ms.entity.config.Constants;
@@ -23,7 +25,6 @@ import com.icthh.xm.ms.entity.domain.spec.NextSpec;
 import com.icthh.xm.ms.entity.domain.spec.TagSpec;
 import com.icthh.xm.ms.entity.domain.spec.TypeSpec;
 import java.io.InputStream;
-import java.security.SecureRandom;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -48,9 +49,6 @@ public class XmEntityGeneratorService {
 
     private static final String GENERATOR_VERSION = "2.0.2";
 
-    private static final ImmutableList<String> RANDOM_STRINGS = ImmutableList.of(
-        "other", "another", "different", "second", "new", "fresh", "any", "whatever"
-    );
     private static final int MAX_TAGS_BY_TYPE = 10;
     private static final String LOCATIONS_FOR_GENERATOR_JSON = "locations-for-generator.json";
     private static final String REQUIRED = "required";
@@ -74,10 +72,9 @@ public class XmEntityGeneratorService {
         this.mapper = mapper;
     }
 
-    @SneakyThrows
     private TypeSpec getRandomTypeSpec(String rootTypeKey) {
         List<TypeSpec> availableTypeSpecs = xmEntitySpecService.findNonAbstractTypesByPrefix(rootTypeKey);
-        return availableTypeSpecs.get(new SecureRandom().nextInt(availableTypeSpecs.size()));
+        return availableTypeSpecs.get(generateRandomInt(availableTypeSpecs.size()));
     }
 
     public XmEntity generateXmEntity(String rootTypeKey) {
@@ -123,7 +120,7 @@ public class XmEntityGeneratorService {
         Set<Location> result = new HashSet<>();
 
         List<Location> originalLocationStubs = getLocationStubs();
-        val locationStubs = originalLocationStubs.stream().filter(l -> new SecureRandom().nextBoolean())
+        val locationStubs = originalLocationStubs.stream().filter(l -> generateRandomBoolean())
                                                           .collect(toList());
         if (isEmpty(locationStubs)) {
             int randomLocationPosition = RandomUtils.nextInt(0, originalLocationStubs.size() - 1);
@@ -145,7 +142,7 @@ public class XmEntityGeneratorService {
 
     private void updateLocationStubToLocation(LocationSpec locationSpec, Location locationStub) {
 
-        locationStub.typeKey(locationSpec.getKey()).name(randomAnyString() + " locations");
+        locationStub.typeKey(locationSpec.getKey()).name(generateRandomString() + " locations");
 
         if (RandomUtils.nextInt(1, 10) < 5) {
             locationStub.addressLine1(null).addressLine2(null).city(null).region(null);
@@ -167,7 +164,7 @@ public class XmEntityGeneratorService {
     }
 
     private Tag createTag(TagSpec tagSpec, int nameIndex) {
-        return new Tag().typeKey(tagSpec.getKey()).name(randomAnyString() + " tag " + nameIndex)
+        return new Tag().typeKey(tagSpec.getKey()).name(generateRandomString() + " tag " + nameIndex)
             .startDate(Instant.now());
     }
 
@@ -183,10 +180,9 @@ public class XmEntityGeneratorService {
         return IOUtils.toString(inputStream, UTF_8);
     }
 
-    @SneakyThrows
     private static String generateXmEntityState(XmEntitySpecService xmEntitySpecService, TypeSpec typeSpec) {
         List<NextSpec> next = xmEntitySpecService.next(typeSpec.getKey(), null);
-        return next.isEmpty() ? null : next.get(new SecureRandom().nextInt(next.size())).getStateKey();
+        return next.isEmpty() ? null : next.get(generateRandomInt(next.size())).getStateKey();
     }
 
     private static Instant generateXmEntityStartDate() {
@@ -233,18 +229,17 @@ public class XmEntityGeneratorService {
         return data;
     }
 
-    @SneakyThrows
     private Object randomDataValue(String type, Map<String, Object> fieldSpec) {
         Object fieldValue = null;
         switch (type) {
             case "string":
-                fieldValue = randomAnyString();
+                fieldValue = generateRandomString();
                 break;
             case "number":
-                fieldValue = new SecureRandom().nextInt();
+                fieldValue = generateRandomInt();
                 break;
             case "boolean":
-                fieldValue = new SecureRandom().nextBoolean();
+                fieldValue = generateRandomBoolean();
                 break;
             case "object":
                 fieldValue = generateXmEntityData(fieldSpec);
@@ -254,10 +249,6 @@ public class XmEntityGeneratorService {
         return fieldValue;
     }
 
-    private static String randomAnyString() {
-        return RANDOM_STRINGS.get(RandomUtils.nextInt(0, RANDOM_STRINGS.size() - 1));
-    }
-
     @SneakyThrows
     private static <T> Collection<T> randomCollectionElement(Collection<T> inCollection) {
         if (isEmpty(inCollection)) {
@@ -265,7 +256,7 @@ public class XmEntityGeneratorService {
         }
 
         Set<Integer> tagPositions = new HashSet<>();
-        IntStream.range(0, inCollection.size() - 1).filter(t -> new SecureRandom().nextBoolean())
+        IntStream.range(0, inCollection.size() - 1).filter(t -> generateRandomBoolean())
                                                    .forEach(tagPositions::add);
         tagPositions.add(RandomUtils.nextInt(0, inCollection.size() - 1));
 
