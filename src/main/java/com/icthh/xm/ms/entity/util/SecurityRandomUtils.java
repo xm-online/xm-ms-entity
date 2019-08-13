@@ -25,7 +25,7 @@ public class SecurityRandomUtils {
     }
 
     public static String generateRandomString() {
-        return RANDOM_STRINGS.get(generateRandomInt(RANDOM_STRINGS.size() - 1));
+        return RANDOM_STRINGS.get(generateRandomInt(RANDOM_STRINGS.size()));
     }
 
 }
