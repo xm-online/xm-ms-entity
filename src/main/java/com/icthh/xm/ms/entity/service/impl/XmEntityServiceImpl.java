@@ -38,10 +38,7 @@ import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.domain.converter.EntityToCsvConverterUtils;
 import com.icthh.xm.ms.entity.domain.converter.EntityToExcelConverterUtils;
 import com.icthh.xm.ms.entity.domain.ext.IdOrKey;
-import com.icthh.xm.ms.entity.domain.spec.LinkSpec;
-import com.icthh.xm.ms.entity.domain.spec.StateSpec;
-import com.icthh.xm.ms.entity.domain.spec.TypeSpec;
-import com.icthh.xm.ms.entity.domain.spec.UniqueFieldSpec;
+import com.icthh.xm.ms.entity.domain.spec.*;
 import com.icthh.xm.ms.entity.domain.template.TemplateParamsHolder;
 import com.icthh.xm.ms.entity.lep.keyresolver.TemplateTypeKeyResolver;
 import com.icthh.xm.ms.entity.lep.keyresolver.TypeKeyResolver;
@@ -566,19 +563,16 @@ public class XmEntityServiceImpl implements XmEntityService {
         log.debug("Multipart file stored with name {}", storedFileName);
 
         String targetTypeKey = entity.getTypeKey();
-        TypeSpec typeSpec = xmEntitySpecService.findTypeByKey(targetTypeKey);
-        if (typeSpec == null || ObjectUtils.isEmpty(typeSpec.getAttachments())) {
-            throw new IllegalStateException("Attachment type key not found for entity " + targetTypeKey);
-        }
+        TypeSpec typeSpec = xmEntitySpecService.getTypeSpecByKey(targetTypeKey)
+            .orElseThrow(() -> new IllegalStateException("Attachment type key not found for entity " + targetTypeKey));
 
         //get first attachment spec type for now
-        String attachmentTypeKey = typeSpec.getAttachments().stream().findFirst()
-            .orElseThrow(() -> new IllegalArgumentException("Attachment typeKey not found for key " + targetTypeKey))
-            .getKey();
-        log.debug("Attachment type key {}", attachmentTypeKey);
+        AttachmentSpec attachmentSpec = typeSpec.getAttachments().stream().findFirst()
+            .orElseThrow(() -> new IllegalArgumentException("Attachment typeKey not found for key " + targetTypeKey));
+        log.debug("Attachment type key {}", attachmentSpec.getKey());
 
         Attachment attachment = attachmentService.save(new Attachment()
-            .typeKey(attachmentTypeKey)
+            .typeKey(attachmentSpec.getKey())
             .name(file.getOriginalFilename())
             .contentUrl(storedFileName)
             .startDate(Instant.now())

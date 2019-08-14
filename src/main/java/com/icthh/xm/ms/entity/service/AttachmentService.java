@@ -15,6 +15,7 @@ import com.icthh.xm.ms.entity.repository.search.PermittedSearchRepository;
 import com.icthh.xm.ms.entity.service.impl.StartUpdateDateGenerationStrategy;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,6 +34,7 @@ public class AttachmentService {
 
     public static final String ZERO_RESTRICTION = "error.attachment.zero";
     public static final String MAX_RESTRICTION = "error.attachment.max";
+    public static final String SIZE_RESTRICTION = "error.attachment.size";
 
     private final AttachmentRepository attachmentRepository;
 
@@ -81,6 +83,9 @@ public class AttachmentService {
         attachment.setXmEntity(entity);
 
         if (attachment.getContent() != null) {
+            //limit attachment size by spec
+            assertSizeRestriction(spec, attachment);
+
             byte[] content = attachment.getContent().getValue();
             attachment.setContentChecksum(DigestUtils.sha256Hex(content));
         }
@@ -192,6 +197,18 @@ public class AttachmentService {
     protected void assertLimitRestriction(AttachmentSpec spec, XmEntity entity) {
         if (attachmentRepository.countByXmEntityIdAndTypeKey(entity.getId(), spec.getKey()) >= spec.getMax()) {
             throw new BusinessException(MAX_RESTRICTION, "Spec for " + spec.getKey() + " allows to add " + spec.getMax() + " elements");
+        }
+    }
+
+    protected void assertSizeRestriction(AttachmentSpec spec, Attachment attachment) {
+        if (!StringUtils.isNumeric(spec.getSize())) {
+            return;
+        }
+
+        Long size = Long.valueOf(spec.getSize());
+
+        if (attachment.getValueContentSize() > size) {
+            throw new BusinessException(SIZE_RESTRICTION, "Spec for " + spec.getKey() + " allows to add " + (size) + "KB elements");
         }
     }
 
