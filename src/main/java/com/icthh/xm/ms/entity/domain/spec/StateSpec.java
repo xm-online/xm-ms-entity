@@ -12,7 +12,7 @@ import java.util.Map;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({ "key", "name", "icon", "color", "next" })
 @Data
-public class StateSpec {
+public class StateSpec implements ISpec {
 
     @JsonProperty("key")
     private String key;

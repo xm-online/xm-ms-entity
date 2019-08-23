@@ -4,10 +4,9 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import com.icthh.xm.ms.entity.service.ISpecVisitor;
+import com.icthh.xm.ms.entity.util.CustomCollectionUtils;
+import lombok.*;
 
 import java.util.HashSet;
 import java.util.List;
@@ -22,12 +21,14 @@ import java.util.Set;
 @Builder(toBuilder = true)
 @AllArgsConstructor
 @NoArgsConstructor
-public class TypeSpec {
+public class TypeSpec implements IUiEvaluatedSpec {
 
     @JsonProperty("key")
     private String key;
     @JsonProperty("name")
     private Map<String, String> name;
+    @JsonProperty("uiActionSpec")
+    private Set<UiActionSpec> uiActionSpec;
     @JsonProperty("namePattern")
     private String namePattern;
     @JsonProperty("nameValidationPattern")
@@ -97,4 +98,13 @@ public class TypeSpec {
     @Builder.Default
     @JsonIgnore
     private Set<UniqueFieldSpec> uniqueFields = new HashSet<>();
+
+
+    @Override
+    public void accept(ISpecVisitor visitor) {
+        setUiActionSpec(visitor.visit(this));
+        if (!CustomCollectionUtils.nullSafe(tags).isEmpty()) {
+            tags.stream().forEach(tag -> tag.accept(visitor));
+        }
+    }
 }
