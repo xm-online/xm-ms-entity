@@ -11,8 +11,16 @@ public enum UiActionSpec {
         return Sets.immutableEnumSet(READ);
     }
 
-    public static Set<UiActionSpec> all() {
+    public static Set<UiActionSpec> crud() {
         return Sets.immutableEnumSet(READ, CREATE, UPDATE, DELETE);
+    }
+
+    public static Set<UiActionSpec> execute() {
+        return Sets.immutableEnumSet(EXECUTE);
+    }
+
+    public static Set<UiActionSpec> all() {
+        return Sets.immutableEnumSet(CREATE, UPDATE, EXECUTE, DELETE, READ);
     }
 
 }
