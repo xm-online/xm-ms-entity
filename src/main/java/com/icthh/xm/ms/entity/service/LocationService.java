@@ -5,6 +5,7 @@ import com.icthh.xm.commons.lep.spring.LepService;
 import com.icthh.xm.commons.permission.annotation.FindWithPermission;
 import com.icthh.xm.commons.permission.repository.PermittedRepository;
 import com.icthh.xm.ms.entity.domain.Location;
+import com.icthh.xm.ms.entity.lep.keyresolver.LocationTypeKeyResolver;
 import com.icthh.xm.ms.entity.repository.LocationRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
 import com.icthh.xm.ms.entity.repository.search.PermittedSearchRepository;
@@ -32,6 +33,7 @@ public class LocationService {
     private final XmEntityRepository xmEntityRepository;
 
     @Transactional(readOnly = true)
+    @LogicExtensionPoint("FindById")
     public Optional<Location> findById(Long id) {
         return locationRepository.findById(id);
     }
@@ -62,7 +64,7 @@ public class LocationService {
      * @param location the location to save
      * @return the persisted XmEntity
      */
-    @LogicExtensionPoint("Save")
+    @LogicExtensionPoint(value = "Save", resolver = LocationTypeKeyResolver.class)
     public Location save(Location location) {
         log.debug("Request to save location : {}", location);
         location.setXmEntity(xmEntityRepository.getOne(location.getXmEntity().getId()));
