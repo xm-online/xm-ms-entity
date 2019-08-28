@@ -12,9 +12,9 @@ public class LocationTypeKeyResolver extends AppendLepKeyResolver {
     @Override
     protected String[] getAppendSegments(SeparatorSegmentedLepKey baseKey, LepMethod method, LepManagerService managerService) {
         Location location = getRequiredParam(method, "location", Location.class);
-        String translatedXmEntityTypeKey = translateToLepConvention(location.getTypeKey());
+        String translatedLocationTypeKey  = translateToLepConvention(location.getTypeKey());
         return new String[] {
-            translatedXmEntityTypeKey
+            translatedLocationTypeKey
         };
     }
 }
