@@ -1,5 +1,7 @@
 package com.icthh.xm.ms.entity.web.rest;
 
+import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_AUTH_CONTEXT;
+import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_TENANT_CONTEXT;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.notNullValue;
@@ -12,8 +14,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.icthh.xm.commons.i18n.error.web.ExceptionTranslator;
+import com.icthh.xm.commons.security.XmAuthenticationContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
+import com.icthh.xm.lep.api.LepManager;
 import com.icthh.xm.ms.entity.AbstractSpringBootTest;
 import com.icthh.xm.ms.entity.domain.Location;
 import com.icthh.xm.ms.entity.domain.XmEntity;
@@ -96,6 +100,9 @@ public class LocationResourceIntTest extends AbstractSpringBootTest {
     @Autowired
     private TenantContextHolder tenantContextHolder;
 
+    @Autowired
+    private XmAuthenticationContextHolder authContextHolder;
+
     private MockMvc restLocationMockMvc;
 
     private Location location;
@@ -106,6 +113,9 @@ public class LocationResourceIntTest extends AbstractSpringBootTest {
     @Autowired
     private LocationService locationService;
 
+    @Autowired
+    private LepManager lepManager;
+
     @BeforeTransaction
     public void beforeTransaction() {
         TenantContextUtils.setTenant(tenantContextHolder, "RESINTTEST");
@@ -113,9 +123,14 @@ public class LocationResourceIntTest extends AbstractSpringBootTest {
 
     @Before
     public void setup() {
+
+        lepManager.beginThreadContext(ctx -> {
+            ctx.setValue(THREAD_CONTEXT_KEY_TENANT_CONTEXT, tenantContextHolder.getContext());
+            ctx.setValue(THREAD_CONTEXT_KEY_AUTH_CONTEXT, authContextHolder.getContext());
+        });
+
         MockitoAnnotations.initMocks(this);
-        LocationResource locationResourceMock = new LocationResource(locationRepository,
-                        locationResource, locationService);
+        LocationResource locationResourceMock = new LocationResource(locationResource, locationService);
         this.restLocationMockMvc = MockMvcBuilders.standaloneSetup(locationResourceMock)
             .setCustomArgumentResolvers(pageableArgumentResolver)
             .setControllerAdvice(exceptionTranslator)

@@ -4,7 +4,6 @@ import com.codahale.metrics.annotation.Timed;
 import com.icthh.xm.commons.exceptions.BusinessException;
 import com.icthh.xm.commons.exceptions.ErrorConstants;
 import com.icthh.xm.ms.entity.domain.Location;
-import com.icthh.xm.ms.entity.repository.LocationRepository;
 import com.icthh.xm.ms.entity.service.LocationService;
 import com.icthh.xm.ms.entity.web.rest.util.HeaderUtil;
 import com.icthh.xm.ms.entity.web.rest.util.RespContentUtil;
@@ -24,7 +23,6 @@ import org.springframework.web.bind.annotation.RestController;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
-import java.util.Optional;
 import javax.validation.Valid;
 
 /**
@@ -36,15 +34,12 @@ public class LocationResource {
 
     private static final String ENTITY_NAME = "location";
 
-    private final LocationRepository locationRepository;
     private final LocationResource locationResource;
     private final LocationService locationService;
 
     public LocationResource(
-                    LocationRepository locationRepository,
                     @Lazy LocationResource locationResource,
                     LocationService locationService) {
-        this.locationRepository = locationRepository;
         this.locationResource = locationResource;
         this.locationService = locationService;
     }
@@ -115,8 +110,7 @@ public class LocationResource {
     @Timed
     @PostAuthorize("hasPermission({'returnObject': returnObject.body}, 'LOCATION.GET_LIST.ITEM')")
     public ResponseEntity<Location> getLocation(@PathVariable Long id) {
-        Location location = locationRepository.findById(id).orElse(null);
-        return RespContentUtil.wrapOrNotFound(Optional.ofNullable(location));
+        return RespContentUtil.wrapOrNotFound(locationService.findById(id));
     }
 
     /**
@@ -129,7 +123,7 @@ public class LocationResource {
     @Timed
     @PreAuthorize("hasPermission({'id': #id}, 'location', 'LOCATION.DELETE')")
     public ResponseEntity<Void> deleteLocation(@PathVariable Long id) {
-        locationRepository.deleteById(id);
+        locationService.delete(id);
         return ResponseEntity.ok().headers(HeaderUtil.createEntityDeletionAlert(ENTITY_NAME, id.toString())).build();
     }
 }
