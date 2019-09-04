@@ -120,14 +120,14 @@ public class FunctionResource {
     @Timed
     @PostMapping("/functions/**")
     public ResponseEntity<Object> callFunction(HttpServletRequest request,
-                                               @RequestParam(required = false) Map<String, Object> functionInput) {
+                                               @RequestBody(required = false) Map<String, Object> functionInput) {
         return self.callFunction(getFunctionKey(request), functionInput);
     }
 
     @Timed
     @PutMapping("/functions/**")
     public ResponseEntity<Object> callPutFunction(HttpServletRequest request,
-                                                  @RequestParam(required = false) Map<String, Object> functionInput) {
+                                                  @RequestBody(required = false) Map<String, Object> functionInput) {
         return self.callPutFunction(getFunctionKey(request), functionInput);
     }
 
