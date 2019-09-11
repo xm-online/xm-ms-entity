@@ -105,6 +105,7 @@ spring:
                     starttls.required: false
     liquibase:
         default-schema: XM
+        change-log: classpath:config/liquibase/master.xml
 server:
     servlet:
         session:

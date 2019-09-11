@@ -1,16 +1,12 @@
-package com.icthh.xm.ms.entity.service.tenant;
-
-import static org.apache.commons.lang3.time.StopWatch.createStarted;
+package com.icthh.xm.ms.entity.service.tenant.provisioner;
 
 import com.icthh.xm.commons.gen.model.Tenant;
-import com.icthh.xm.commons.logging.aop.IgnoreLogginAspect;
-import com.icthh.xm.commons.tenant.PrivilegedTenantContext;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
+import com.icthh.xm.commons.tenantendpoint.provisioner.TenantProvisioner;
 import com.icthh.xm.ms.entity.config.Constants;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.time.StopWatch;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
 import org.springframework.core.type.filter.AnnotationTypeFilter;
@@ -23,18 +19,39 @@ import java.util.function.Consumer;
 @Service
 @Slf4j
 @AllArgsConstructor
-@IgnoreLogginAspect
-public class TenantElasticService {
+public class TenantElasticsearchProvisioner implements TenantProvisioner {
 
     private final ElasticsearchTemplate elasticsearchTemplate;
     private final TenantContextHolder tenantContextHolder;
 
-    private PrivilegedTenantContext getPrivilegedTenantContext() {
-        return tenantContextHolder.getPrivilegedContext();
+    /**
+     * Create elastic indexes for tenant.
+     *
+     * @param tenant the tenant
+     */
+    @Override
+    public void createTenant(final Tenant tenant) {
+        executeInTenantContext(tenant.getTenantKey(), () -> createTenantDocuments(tenant));
+    }
+
+    @Override
+    public void manageTenant(final String tenantKey, final String state) {
+        log.info("Nothing to do with Elasticsearch during manage tenant: {}, state = {}", tenantKey, state);
+    }
+
+    /**
+     * Delete indexes for tenant.
+     *
+     * @param tenantKey tenant key
+     */
+    @Override
+    public void deleteTenant(final String tenantKey) {
+        executeInTenantContext(tenantKey, () -> deleteTenantDocuments(tenantKey));
     }
 
     private void executeInTenantContext(String tenantKey, Runnable runnable) {
-        getPrivilegedTenantContext().execute(TenantContextUtils.buildTenant(tenantKey), runnable);
+        tenantContextHolder.getPrivilegedContext().execute(TenantContextUtils.buildTenant(tenantKey), runnable);
+
     }
 
     private static void forEachDomainDocument(Consumer<BeanDefinition> consumer) {
@@ -44,27 +61,13 @@ public class TenantElasticService {
         provider.findCandidateComponents(Constants.DOMAIN_PACKAGE).forEach(consumer);
     }
 
-    /**
-     * Create elastic indexes for tenant.
-     *
-     * @param tenant the tenant
-     */
-    public void create(Tenant tenant) {
-        final StopWatch stopWatch = createStarted();
-        log.info("START - SETUP:CreateTenant:elastic index={}", tenant.getTenantKey());
-        executeInTenantContext(tenant.getTenantKey(), () -> {
-            createTenant(tenant);
-        });
-        log.info("STOP - SETUP:CreateTenant:elastic index={}, time={}ms", tenant.getTenantKey(),
-                 stopWatch.getTime());
-    }
-
-    private void createTenant(Tenant tenant) {
+    private void createTenantDocuments(Tenant tenant) {
         forEachDomainDocument(beanDefinition -> {
             try {
                 Class<?> cl = Class.forName(beanDefinition.getBeanClassName());
                 elasticsearchTemplate.createIndex(cl);
                 elasticsearchTemplate.putMapping(cl);
+                log.info("created elasticsearch index for class: {}", cl);
             } catch (ClassNotFoundException e) {
                 log.error("Error while index {} creation for tenant {}",
                           beanDefinition.getBeanClassName(),
@@ -74,28 +77,14 @@ public class TenantElasticService {
         });
     }
 
-    /**
-     * Delete indexes for tenant.
-     *
-     * @param tenantKey tenant key
-     */
-    public void delete(final String tenantKey) {
-        final StopWatch stopWatch = createStarted();
-        log.info("START - SETUP:DeleteTenant:elastic index={}", tenantKey);
-        executeInTenantContext(tenantKey, () -> {
-            deleteTenant(tenantKey);
-        });
-        log.info("STOP - SETUP:DeleteTenant:elastic index={}, time={}ms", tenantKey, stopWatch.getTime());
-    }
-
-    private void deleteTenant(String tenantKey) {
+    private void deleteTenantDocuments(String tenantKey) {
         forEachDomainDocument(beanDefinition -> {
             try {
                 Class<?> cl = Class.forName(beanDefinition.getBeanClassName());
                 elasticsearchTemplate.deleteIndex(cl);
+                log.info("deleted elasticsearch index for class: {}", cl);
             } catch (ClassNotFoundException e) {
-                log.error("Error while index {} deletion for tenant {}",
-                          beanDefinition.getBeanClassName(), tenantKey);
+                log.error("Error while index {} deletion for tenant {}", beanDefinition.getBeanClassName(), tenantKey);
                 throw new IllegalStateException(e);
             }
         });

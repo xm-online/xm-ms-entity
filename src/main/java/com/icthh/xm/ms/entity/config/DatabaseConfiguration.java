@@ -88,43 +88,47 @@ public class DatabaseConfiguration {
         liquibase.setContexts(liquibaseProperties.getContexts());
         liquibase.setDefaultSchema(liquibaseProperties.getDefaultSchema());
         liquibase.setDropFirst(liquibaseProperties.isDropFirst());
+        liquibase.setChangeLogParameters(liquibaseProperties.getParameters());
         if (env.acceptsProfiles(JHipsterConstants.SPRING_PROFILE_NO_LIQUIBASE)) {
             liquibase.setShouldRun(false);
         } else {
             liquibase.setShouldRun(liquibaseProperties.isEnabled());
-            log.debug("Configuring Liquibase");
+            log.info("Configuring Liquibase");
         }
         return liquibase;
     }
 
     @Bean
     @DependsOn("liquibase")
-    public MultiTenantSpringLiquibase multiTenantLiquibase(
-        DataSource dataSource,
-        LiquibaseProperties liquibaseProperties) {
+    public MultiTenantSpringLiquibase multiTenantLiquibase(DataSource dataSource,
+                                                           LiquibaseProperties liquibaseProperties) {
+        List<String> schemas = getSchemas();
         MultiTenantSpringLiquibase liquibase = new XmMultiTenantSpringLiquibase();
         liquibase.setDataSource(dataSource);
         liquibase.setChangeLog(CHANGE_LOG_PATH);
         liquibase.setContexts(liquibaseProperties.getContexts());
         liquibase.setDefaultSchema(liquibaseProperties.getDefaultSchema());
         liquibase.setDropFirst(liquibaseProperties.isDropFirst());
-        liquibase.setSchemas(getSchemas());
+        liquibase.setSchemas(schemas);
+        liquibase.setParameters(liquibaseProperties.getParameters());
         if (env.acceptsProfiles(JHipsterConstants.SPRING_PROFILE_NO_LIQUIBASE)) {
             liquibase.setShouldRun(false);
         } else {
             liquibase.setShouldRun(liquibaseProperties.isEnabled());
-            log.debug("Configuring Liquibase");
+            log.info("Configuring multi-tenant Liquibase for [{}] schemas", schemas.size());
         }
         return liquibase;
     }
 
     private void createSchemas(DataSource dataSource) {
         if (jpaProperties.getProperties().containsKey(DB_SCHEMA_CREATION_ENABLED)
-            && !Boolean.valueOf(jpaProperties.getProperties().get(DB_SCHEMA_CREATION_ENABLED))) {
+            && !Boolean.parseBoolean(jpaProperties.getProperties().get(DB_SCHEMA_CREATION_ENABLED))) {
             log.info("Schema creation for {} jpa provider is disabled", jpaProperties.getDatabase());
             return;
         }
-        for (String schema : getSchemas()) {
+        List<String> schemas = getSchemas();
+        log.info("Create [{}] schemas for all tenants before liquibase migration", schemas.size());
+        for (String schema : schemas) {
             try {
                 DatabaseUtil.createSchema(dataSource, schema);
             } catch (Exception e) {
@@ -155,19 +159,16 @@ public class DatabaseConfiguration {
     }
 
     @Bean
-    public LocalContainerEntityManagerFactoryBean entityManagerFactory(
-        DataSource dataSource,
-        MultiTenantConnectionProvider multiTenantConnectionProviderImpl,
-        CurrentTenantIdentifierResolver currentTenantIdentifierResolverImpl,
-        LocalValidatorFactoryBean localValidatorFactoryBean) {
-
-        Map<String, Object> properties = new HashMap<>();
-        properties.putAll(jpaProperties.getHibernateProperties(new HibernateSettings()));
+    public LocalContainerEntityManagerFactoryBean entityManagerFactory(DataSource dataSource,
+                                                                       MultiTenantConnectionProvider multiTenantConnectionProviderImpl,
+                                                                       CurrentTenantIdentifierResolver currentTenantIdentifierResolverImpl,
+                                                                       LocalValidatorFactoryBean localValidatorFactoryBean) {
+        Map<String, Object> properties = new HashMap<>(jpaProperties.getHibernateProperties(new HibernateSettings()));
         properties.put(org.hibernate.cfg.Environment.MULTI_TENANT, MultiTenancyStrategy.SCHEMA);
-        properties
-            .put(org.hibernate.cfg.Environment.MULTI_TENANT_CONNECTION_PROVIDER, multiTenantConnectionProviderImpl);
-        properties
-            .put(org.hibernate.cfg.Environment.MULTI_TENANT_IDENTIFIER_RESOLVER, currentTenantIdentifierResolverImpl);
+        properties.put(org.hibernate.cfg.Environment.MULTI_TENANT_CONNECTION_PROVIDER,
+                       multiTenantConnectionProviderImpl);
+        properties.put(org.hibernate.cfg.Environment.MULTI_TENANT_IDENTIFIER_RESOLVER,
+                       currentTenantIdentifierResolverImpl);
 
         properties.put(JPA_VALIDATION_FACTORY, localValidatorFactoryBean);
 
