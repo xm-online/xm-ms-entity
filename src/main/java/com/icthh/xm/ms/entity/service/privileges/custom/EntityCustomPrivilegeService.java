@@ -1,6 +1,6 @@
 package com.icthh.xm.ms.entity.service.privileges.custom;
 
-import static com.icthh.xm.commons.config.client.repository.TenantConfigRepository.TENANT_NAME;
+import static com.icthh.xm.commons.config.client.repository.TenantConfigRepository.PATH_CONFIG_TENANT;
 import static com.icthh.xm.ms.entity.service.privileges.custom.CustomPrivilegesExtractor.DefaultPrivilegesValue.ENABLED;
 import static com.icthh.xm.ms.entity.service.privileges.custom.CustomPrivilegesExtractor.DefaultPrivilegesValue.NONE;
 import static java.util.Arrays.asList;
@@ -38,7 +38,8 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class EntityCustomPrivilegeService {
 
-    private static final String CUSTOMER_PRIVILEGES_PATH = "/config/tenants/{" + TENANT_NAME + "}/custom-privileges.yml";
+    private static final String TENANT_NAME = "tenantName";
+    private static final String CUSTOMER_PRIVILEGES_PATH = PATH_CONFIG_TENANT + "custom-privileges.yml";
 
     private final ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
 
