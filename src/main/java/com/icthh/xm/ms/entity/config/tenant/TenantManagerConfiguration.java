@@ -12,6 +12,7 @@ import com.icthh.xm.commons.tenantendpoint.provisioner.TenantListProvisioner;
 import com.icthh.xm.ms.entity.config.ApplicationProperties;
 import com.icthh.xm.ms.entity.config.Constants;
 import com.icthh.xm.ms.entity.service.tenant.provisioner.TenantAbilityCheckerProvisioner;
+import com.icthh.xm.ms.entity.service.tenant.provisioner.TenantDefaultUserProfileProvisioner;
 import com.icthh.xm.ms.entity.service.tenant.provisioner.TenantElasticsearchProvisioner;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -32,16 +33,18 @@ public class TenantManagerConfiguration {
     @Bean
     public TenantManager tenantManager(TenantAbilityCheckerProvisioner abilityCheckerProvisioner,
                                        TenantDatabaseProvisioner databaseProvisioner,
+                                       TenantDefaultUserProfileProvisioner profileProvisioner,
                                        TenantConfigProvisioner configProvisioner,
                                        TenantListProvisioner tenantListProvisioner,
                                        TenantElasticsearchProvisioner elasticsearchProvisioner) {
 
         TenantManager manager = TenantManager.builder()
-                                             .service(abilityCheckerProvisioner) // should be first in sequence!
+                                             .service(abilityCheckerProvisioner) // should be first in the sequence!
                                              .service(tenantListProvisioner)
                                              .service(databaseProvisioner)
                                              .service(configProvisioner)
                                              .service(elasticsearchProvisioner)
+                                             .service(profileProvisioner) // should be after config provisioning
                                              .build();
         log.info("Configured tenant manager: {}", manager);
         return manager;
