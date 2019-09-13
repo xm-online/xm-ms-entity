@@ -12,8 +12,8 @@ import com.icthh.xm.commons.gen.api.TenantsApiController;
 import com.icthh.xm.commons.gen.model.Tenant;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
+import com.icthh.xm.commons.tenantendpoint.TenantManager;
 import com.icthh.xm.ms.entity.AbstractSpringBootTest;
-import com.icthh.xm.ms.entity.service.TenantService;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -51,7 +51,7 @@ public class TenantResourceIntTest extends AbstractSpringBootTest {
     private DataSource dataSource;
 
     @Autowired
-    private TenantService tenantService;
+    private TenantManager tenantManager;
 
     @Autowired
     private TenantContextHolder tenantContextHolder;
@@ -66,7 +66,7 @@ public class TenantResourceIntTest extends AbstractSpringBootTest {
     @Before
     public void setup() {
         MockitoAnnotations.initMocks(this);
-        TenantsApi controller = new TenantsApiController(new TenantResource(tenantService));
+        TenantsApi controller = new TenantsApiController(new TenantResource(tenantManager));
         this.mockMvc = MockMvcBuilders
             .standaloneSetup(controller)
             .setControllerAdvice(exceptionTranslator)
