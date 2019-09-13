@@ -39,12 +39,12 @@ public class TenantManagerConfiguration {
                                        TenantElasticsearchProvisioner elasticsearchProvisioner) {
 
         TenantManager manager = TenantManager.builder()
-                                             .service(abilityCheckerProvisioner) // should be first in the sequence!
+                                             .service(abilityCheckerProvisioner)
                                              .service(tenantListProvisioner)
                                              .service(databaseProvisioner)
                                              .service(configProvisioner)
                                              .service(elasticsearchProvisioner)
-                                             .service(profileProvisioner) // should be after config provisioning
+                                             .service(profileProvisioner)
                                              .build();
         log.info("Configured tenant manager: {}", manager);
         return manager;
@@ -71,13 +71,17 @@ public class TenantManagerConfiguration {
         return provisioner;
     }
 
+    String getApplicationName() {
+        return applicationName;
+    }
+
     @SneakyThrows
     private String readResource(String location) {
         return IOUtils.toString(new ClassPathResource(location).getInputStream(), UTF_8);
     }
 
     private String toFullPath(String path) {
-        return toFullPath(applicationName, path);
+        return toFullPath(getApplicationName(), path);
     }
 
     private String toFullPath(String appName, String path) {
