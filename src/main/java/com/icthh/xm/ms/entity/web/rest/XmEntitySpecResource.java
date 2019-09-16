@@ -3,6 +3,7 @@ package com.icthh.xm.ms.entity.web.rest;
 import static org.springframework.http.MediaType.TEXT_PLAIN_VALUE;
 
 import com.codahale.metrics.annotation.Timed;
+import com.icthh.xm.commons.logging.LoggingAspectConfig;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.domain.spec.TypeSpec;
 import com.icthh.xm.ms.entity.service.XmEntityGeneratorService;
@@ -123,6 +124,7 @@ public class XmEntitySpecResource {
      * @return the ResponseEntity with status 201 (Created) and with body the new xmEntity
      * @throws URISyntaxException if the Location URI syntax is incorrect
      */
+    @LoggingAspectConfig(inputExcludeParams = "xmEntitySpec")
     @PostMapping(value = "/xm-entity-specs", consumes = {TEXT_PLAIN_VALUE})
     @Timed
     @PreAuthorize("hasPermission({'xmEntitySpec': #xmEntitySpec}, 'XMENTITY_SPEC.UPDATE')")
