@@ -5,9 +5,9 @@ import static com.icthh.xm.commons.tenantendpoint.provisioner.TenantConfigProvis
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.icthh.xm.commons.config.client.repository.TenantConfigRepository;
+import com.icthh.xm.commons.migration.db.tenant.provisioner.TenantDatabaseProvisioner;
 import com.icthh.xm.commons.tenantendpoint.TenantManager;
 import com.icthh.xm.commons.tenantendpoint.provisioner.TenantConfigProvisioner;
-import com.icthh.xm.commons.tenantendpoint.provisioner.TenantDatabaseProvisioner;
 import com.icthh.xm.commons.tenantendpoint.provisioner.TenantListProvisioner;
 import com.icthh.xm.ms.entity.config.ApplicationProperties;
 import com.icthh.xm.ms.entity.config.Constants;
