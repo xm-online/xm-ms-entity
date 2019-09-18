@@ -52,6 +52,25 @@ public class PermittedSearchRepository {
         return getElasticsearchTemplate().queryForPage(buildQuery(query, pageable, privilegeKey), entityClass);
     }
 
+    /**
+     * Search permitted entities with scroll
+     * @param scrollTimeInMillis The time in millisecond for scroll feature
+     * @param query the elastic query
+     * @param pageable the page info
+     * @param entityClass the search entity class
+     * @param privilegeKey the privilege key
+     * @return permitted entities
+     */
+    public <T> Page<T> search(Long scrollTimeInMillis,
+                              String query,
+                              Pageable pageable,
+                              Class<T> entityClass,
+                              String privilegeKey) {
+        return getElasticsearchTemplate().startScroll(scrollTimeInMillis,
+                                                      buildQuery(query, pageable, privilegeKey),
+                                                      entityClass);
+    }
+
     private SearchQuery buildQuery(String query, Pageable pageable, String privilegeKey) {
         String permittedQuery = buildPermittedQuery(query, privilegeKey);
 
