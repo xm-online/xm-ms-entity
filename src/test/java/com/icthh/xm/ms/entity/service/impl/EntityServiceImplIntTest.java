@@ -59,6 +59,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpEntity;
 import org.springframework.mock.web.MockMultipartFile;
@@ -472,6 +473,43 @@ public class EntityServiceImplIntTest extends AbstractSpringBootTest {
             new UniqueField(null, "$.uniqueField2", "value22", entity2.getTypeKey(), entity2)
         )));
         xmEntityRepository.saveAndFlush(entity2);
+    }
+
+    @Test
+    @Transactional
+    @WithMockUser(authorities = "SUPER-ADMIN")
+    public void testSearchWithScroll() {
+        for (long iter = 0; iter < 20000; iter++) {
+            XmEntity given = createEntity(iter, "SOME.TYPE_KEY1");
+            xmEntitySearchRepository.save(given);
+            xmEntitySearchRepository.refresh();
+        }
+        Page<XmEntity> scrollResult = xmEntityService.search(
+            2000L,
+            "typeKey:SOME.TYPE_KEY1",
+            Pageable.unpaged(),
+            null);
+        assertThat(scrollResult.getTotalElements()).isEqualTo(20000);
+        assertThat(scrollResult.getContent().size()).isEqualTo(20000);
+    }
+
+    @Test
+    @Transactional
+    @WithMockUser(authorities = "SUPER-ADMIN")
+    public void testSearchScrollWithPageable1000() {
+        for (long iter = 0; iter < 15000; iter++) {
+            XmEntity given = createEntity(iter, "SOME.TYPE_KEY2");
+            xmEntitySearchRepository.save(given);
+            xmEntitySearchRepository.refresh();
+        }
+        Page<XmEntity> scrollResult = xmEntityService.search(
+            1000L,
+            "typeKey:SOME.TYPE_KEY2",
+            PageRequest.of(0, 1000),
+            null);
+        assertThat(scrollResult.getTotalElements()).isEqualTo(15000);
+        assertThat(scrollResult.getContent().size()).isEqualTo(15000);
+        assertThat(scrollResult.getTotalPages()).isEqualTo(15);
     }
 
 }

@@ -9,13 +9,16 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
+import org.springframework.data.elasticsearch.core.ScrolledPage;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.data.elasticsearch.core.query.SearchQuery;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Repository;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Slf4j
@@ -66,9 +69,24 @@ public class PermittedSearchRepository {
                               Pageable pageable,
                               Class<T> entityClass,
                               String privilegeKey) {
-        return getElasticsearchTemplate().startScroll(scrollTimeInMillis,
-                                                      buildQuery(query, pageable, privilegeKey),
-                                                      entityClass);
+
+        ScrolledPage<T> scrollResult = (ScrolledPage<T>) getElasticsearchTemplate()
+            .startScroll(scrollTimeInMillis, buildQuery(query, pageable, privilegeKey), entityClass);
+
+        String scrollId = scrollResult.getScrollId();
+        List<T> resultList = new ArrayList<>();
+
+        while (scrollResult.hasContent()) {
+            resultList.addAll(scrollResult.getContent());
+            scrollId = scrollResult.getScrollId();
+
+            scrollResult = (ScrolledPage<T>) getElasticsearchTemplate()
+                .continueScroll(scrollId, scrollTimeInMillis, entityClass);
+        }
+
+        getElasticsearchTemplate().clearScroll(scrollId);
+
+        return new PageImpl<>(resultList, pageable, resultList.size());
     }
 
     private SearchQuery buildQuery(String query, Pageable pageable, String privilegeKey) {
