@@ -1,5 +1,6 @@
 package com.icthh.xm.ms.entity.repository.search;
 
+import static java.util.Objects.nonNull;
 import static org.elasticsearch.index.query.QueryBuilders.queryStringQuery;
 import static org.springframework.data.elasticsearch.core.query.Query.DEFAULT_PAGE;
 
@@ -70,22 +71,26 @@ public class PermittedSearchRepository {
                               Class<T> entityClass,
                               String privilegeKey) {
 
-        ScrolledPage<T> scrollResult = (ScrolledPage<T>) getElasticsearchTemplate()
-            .startScroll(scrollTimeInMillis, buildQuery(query, pageable, privilegeKey), entityClass);
-
-        String scrollId = scrollResult.getScrollId();
+        String scrollId = null;
         List<T> resultList = new ArrayList<>();
+        try {
+            ScrolledPage<T> scrollResult = (ScrolledPage<T>) getElasticsearchTemplate()
+                .startScroll(scrollTimeInMillis, buildQuery(query, pageable, privilegeKey), entityClass);
 
-        while (scrollResult.hasContent()) {
-            resultList.addAll(scrollResult.getContent());
             scrollId = scrollResult.getScrollId();
 
-            scrollResult = (ScrolledPage<T>) getElasticsearchTemplate()
-                .continueScroll(scrollId, scrollTimeInMillis, entityClass);
+            while (scrollResult.hasContent()) {
+                resultList.addAll(scrollResult.getContent());
+                scrollId = scrollResult.getScrollId();
+
+                scrollResult = (ScrolledPage<T>) getElasticsearchTemplate()
+                    .continueScroll(scrollId, scrollTimeInMillis, entityClass);
+            }
+        } finally {
+            if (nonNull(scrollId)) {
+                getElasticsearchTemplate().clearScroll(scrollId);
+            }
         }
-
-        getElasticsearchTemplate().clearScroll(scrollId);
-
         return new PageImpl<>(resultList, pageable, resultList.size());
     }
 

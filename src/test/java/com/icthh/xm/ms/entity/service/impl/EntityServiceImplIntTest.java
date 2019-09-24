@@ -70,6 +70,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigInteger;
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -479,13 +480,15 @@ public class EntityServiceImplIntTest extends AbstractSpringBootTest {
     @Transactional
     @WithMockUser(authorities = "SUPER-ADMIN")
     public void testSearchWithScroll() {
+        List<XmEntity> entityList = new ArrayList<>();
         for (long iter = 0; iter < 20000; iter++) {
             XmEntity given = createEntity(iter, "SOME.TYPE_KEY1");
-            xmEntitySearchRepository.save(given);
-            xmEntitySearchRepository.refresh();
+            entityList.add(given);
         }
+        xmEntitySearchRepository.saveAll(entityList);
+        xmEntitySearchRepository.refresh();
         Page<XmEntity> scrollResult = xmEntityService.search(
-            2000L,
+            50L,
             "typeKey:SOME.TYPE_KEY1",
             Pageable.unpaged(),
             null);
@@ -497,13 +500,15 @@ public class EntityServiceImplIntTest extends AbstractSpringBootTest {
     @Transactional
     @WithMockUser(authorities = "SUPER-ADMIN")
     public void testSearchScrollWithPageable1000() {
+        List<XmEntity> entityList = new ArrayList<>();
         for (long iter = 0; iter < 15000; iter++) {
             XmEntity given = createEntity(iter, "SOME.TYPE_KEY2");
-            xmEntitySearchRepository.save(given);
-            xmEntitySearchRepository.refresh();
+            entityList.add(given);
         }
+        xmEntitySearchRepository.saveAll(entityList);
+        xmEntitySearchRepository.refresh();
         Page<XmEntity> scrollResult = xmEntityService.search(
-            1000L,
+            50L,
             "typeKey:SOME.TYPE_KEY2",
             PageRequest.of(0, 1000),
             null);
