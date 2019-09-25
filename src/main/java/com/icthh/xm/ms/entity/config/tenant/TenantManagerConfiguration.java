@@ -5,13 +5,13 @@ import static com.icthh.xm.commons.tenantendpoint.provisioner.TenantConfigProvis
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.icthh.xm.commons.config.client.repository.TenantConfigRepository;
+import com.icthh.xm.commons.migration.db.tenant.provisioner.TenantDatabaseProvisioner;
 import com.icthh.xm.commons.tenantendpoint.TenantManager;
+import com.icthh.xm.commons.tenantendpoint.provisioner.TenantAbilityCheckerProvisioner;
 import com.icthh.xm.commons.tenantendpoint.provisioner.TenantConfigProvisioner;
-import com.icthh.xm.commons.tenantendpoint.provisioner.TenantDatabaseProvisioner;
 import com.icthh.xm.commons.tenantendpoint.provisioner.TenantListProvisioner;
 import com.icthh.xm.ms.entity.config.ApplicationProperties;
 import com.icthh.xm.ms.entity.config.Constants;
-import com.icthh.xm.ms.entity.service.tenant.provisioner.TenantAbilityCheckerProvisioner;
 import com.icthh.xm.ms.entity.service.tenant.provisioner.TenantDefaultUserProfileProvisioner;
 import com.icthh.xm.ms.entity.service.tenant.provisioner.TenantElasticsearchProvisioner;
 import lombok.SneakyThrows;
