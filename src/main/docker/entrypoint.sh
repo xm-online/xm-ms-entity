@@ -2,7 +2,7 @@
 set -e
 if [ -d "/run/secrets" ]
 then
-    secrets=`ls /run/secrets/ 2>/dev/null |egrep -v '.*_FILE$'`
+    secrets=`find  /run/secrets/ -maxdepth 1 -type f ! -name "*FILE"  -exec basename {} \;`
     for s in $secrets
     do
         echo "set env $s"
