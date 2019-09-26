@@ -476,45 +476,4 @@ public class EntityServiceImplIntTest extends AbstractSpringBootTest {
         xmEntityRepository.saveAndFlush(entity2);
     }
 
-    @Test
-    @Transactional
-    @WithMockUser(authorities = "SUPER-ADMIN")
-    public void testSearchWithScroll() {
-        List<XmEntity> entityList = new ArrayList<>();
-        for (long iter = 0; iter < 20000; iter++) {
-            XmEntity given = createEntity(iter, "SOME.TYPE_KEY1");
-            entityList.add(given);
-        }
-        xmEntitySearchRepository.saveAll(entityList);
-        xmEntitySearchRepository.refresh();
-        Page<XmEntity> scrollResult = xmEntityService.search(
-            50L,
-            "typeKey:SOME.TYPE_KEY1",
-            Pageable.unpaged(),
-            null);
-        assertThat(scrollResult.getTotalElements()).isEqualTo(20000);
-        assertThat(scrollResult.getContent().size()).isEqualTo(20000);
-    }
-
-    @Test
-    @Transactional
-    @WithMockUser(authorities = "SUPER-ADMIN")
-    public void testSearchScrollWithPageable1000() {
-        List<XmEntity> entityList = new ArrayList<>();
-        for (long iter = 0; iter < 15000; iter++) {
-            XmEntity given = createEntity(iter, "SOME.TYPE_KEY2");
-            entityList.add(given);
-        }
-        xmEntitySearchRepository.saveAll(entityList);
-        xmEntitySearchRepository.refresh();
-        Page<XmEntity> scrollResult = xmEntityService.search(
-            50L,
-            "typeKey:SOME.TYPE_KEY2",
-            PageRequest.of(0, 1000),
-            null);
-        assertThat(scrollResult.getTotalElements()).isEqualTo(15000);
-        assertThat(scrollResult.getContent().size()).isEqualTo(15000);
-        assertThat(scrollResult.getTotalPages()).isEqualTo(15);
-    }
-
 }
