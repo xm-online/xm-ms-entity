@@ -59,7 +59,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpEntity;
 import org.springframework.mock.web.MockMultipartFile;
@@ -70,7 +69,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigInteger;
 import java.net.URI;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
