@@ -482,6 +482,18 @@ public class XmEntityServiceImpl implements XmEntityService {
         return xmEntityPermittedSearchRepository.search(query, pageable, XmEntity.class, privilegeKey);
     }
 
+    @LogicExtensionPoint("SearchScroll")
+    @Override
+    @Transactional(readOnly = true)
+    @FindWithPermission("XMENTITY.SEARCH")
+    public Page<XmEntity> search(Long scrollTimeInMillis, String query, Pageable pageable, String privilegeKey) {
+        return xmEntityPermittedSearchRepository.search(scrollTimeInMillis,
+                                                        query,
+                                                        pageable,
+                                                        XmEntity.class,
+                                                        privilegeKey);
+    }
+
     @Override
     @Transactional(readOnly = true)
     @FindWithPermission("XMENTITY.SEARCH")

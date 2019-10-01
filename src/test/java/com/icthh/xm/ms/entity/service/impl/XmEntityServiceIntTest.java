@@ -38,6 +38,7 @@ import com.icthh.xm.ms.entity.service.ElasticsearchIndexService;
 import com.icthh.xm.ms.entity.service.SeparateTransactionExecutor;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -47,6 +48,7 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.text.StrSubstitutor;
+import org.elasticsearch.action.search.SearchPhaseExecutionException;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -542,6 +544,64 @@ public class XmEntityServiceIntTest extends AbstractSpringBootTest {
         List<XmEntity> allEntitis = xmEntityRepository.findAllById(ids);
         log.info("{}", allEntitis);
         assertEquals(allEntitis.size(), 4);
+    }
+
+    @Test(expected = SearchPhaseExecutionException.class)
+    @WithMockUser(authorities = "SUPER-ADMIN")
+    public void testSearchFailWithMaxResultWindow1000() {
+        elasticsearchIndexService.reindexAll();
+
+        saveXmEntities();
+
+        String config = loadFile("config/elastic_config.json");
+        indexConfiguration.onRefresh("/config/tenants/RESINTTEST/entity/index_config.json", config);
+        elasticsearchIndexService.reindexAll();
+
+        Page<XmEntity> pageResult = xmEntityService.search("typeKey:TEST_SEARCH", PageRequest.of(0, 1001), null);
+        List<XmEntity> zeroPageContent = pageResult.getContent();
+        assertThat(pageResult.getTotalPages()).isEqualTo(1);
+        assertThat(zeroPageContent.size()).isEqualTo(2);
+
+        indexConfiguration.onRefresh("/config/tenants/RESINTTEST/entity/index_config.json", null);
+    }
+
+    @Test
+    @WithMockUser(authorities = "SUPER-ADMIN")
+    public void testSearchWithScroll() {
+        elasticsearchIndexService.reindexAll();
+
+        saveXmEntities();
+
+        String config = loadFile("config/elastic_config.json");
+        indexConfiguration.onRefresh("/config/tenants/RESINTTEST/entity/index_config.json", config);
+        elasticsearchIndexService.reindexAll();
+
+        Page<XmEntity> scrollResult = xmEntityService.search(
+            50L,
+            "typeKey:TEST_SEARCH",
+            PageRequest.of(0, 1000),
+            null);
+        assertThat(scrollResult.getTotalElements()).isEqualTo(2);
+        assertThat(scrollResult.getContent().size()).isEqualTo(2);
+        assertThat(scrollResult.getTotalPages()).isEqualTo(1);
+
+        indexConfiguration.onRefresh("/config/tenants/RESINTTEST/entity/index_config.json", null);
+    }
+
+    private void saveXmEntities() {
+        Map<String, Object> xmEntityData = new HashMap<>();
+        xmEntityData.put("key", "value");
+        List<XmEntity> entityList = new ArrayList<>();
+        for (int i = 0; i < 2; i++) {
+            XmEntity entity = new XmEntity().typeKey("TEST_SEARCH")
+                .name("A-B" + i)
+                .key("E-F" + i)
+                .data(xmEntityData)
+                .startDate(new Date().toInstant())
+                .updateDate(new Date().toInstant());
+            entityList.add(entity);
+        }
+        xmEntityRepository.saveAll(entityList);
     }
 
 }

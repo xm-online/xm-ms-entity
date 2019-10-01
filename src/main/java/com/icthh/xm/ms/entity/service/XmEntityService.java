@@ -64,6 +64,8 @@ public interface XmEntityService extends ResourceRepository {
                           Pageable pageable,
                           String privilegeKey);
 
+    Page<XmEntity> search(Long scrollTimeInMillis, String query, Pageable pageable, String privilegeKey);
+
     @Deprecated
     XmEntity profile();
 
