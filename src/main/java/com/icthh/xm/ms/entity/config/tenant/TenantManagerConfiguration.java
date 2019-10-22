@@ -4,7 +4,11 @@ import static com.icthh.xm.commons.config.domain.Configuration.of;
 import static com.icthh.xm.commons.tenantendpoint.provisioner.TenantConfigProvisioner.prependTenantPath;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.icthh.xm.commons.config.client.repository.TenantConfigRepository;
+import com.icthh.xm.commons.config.client.service.TenantConfigService;
 import com.icthh.xm.commons.migration.db.tenant.provisioner.TenantDatabaseProvisioner;
 import com.icthh.xm.commons.tenantendpoint.TenantManager;
 import com.icthh.xm.commons.tenantendpoint.provisioner.TenantAbilityCheckerProvisioner;
@@ -22,10 +26,13 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.core.io.ClassPathResource;
 
 import java.nio.file.Paths;
+import java.util.HashMap;
 
 @Slf4j
 @org.springframework.context.annotation.Configuration
 public class TenantManagerConfiguration {
+
+    private ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
 
     @Value("${spring.application.name}")
     private String applicationName;
@@ -65,6 +72,9 @@ public class TenantManagerConfiguration {
                                                 applicationProperties.getSpecificationWebappName()))
                                .content(readResource(Constants.WEBAPP_CONFIG_PATH))
                                .build())
+            .configuration(of().path(TenantConfigService.DEFAULT_TENANT_CONFIG_PATTERN)
+                               .content(getEmptyYml())
+                               .build())
             .build();
 
         log.info("Configured tenant config provisioner: {}", provisioner);
@@ -88,4 +98,7 @@ public class TenantManagerConfiguration {
         return prependTenantPath(Paths.get(appName, path).toString());
     }
 
+    private String getEmptyYml() throws JsonProcessingException {
+        return mapper.writeValueAsString(new HashMap<>());
+    }
 }
