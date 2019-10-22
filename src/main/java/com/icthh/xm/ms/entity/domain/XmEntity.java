@@ -1,9 +1,11 @@
 package com.icthh.xm.ms.entity.domain;
 
+import static com.icthh.xm.ms.entity.config.Constants.REGEX_EOL;
 import static javax.persistence.CascadeType.ALL;
 import static javax.persistence.CascadeType.MERGE;
 import static javax.persistence.CascadeType.PERSIST;
 import static javax.persistence.CascadeType.REMOVE;
+import static org.apache.commons.lang3.StringUtils.removeAll;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -766,7 +768,7 @@ public class XmEntity implements Serializable, Persistable<Long> {
             ", updateDate='" + getUpdateDate() + "'" +
             ", endDate='" + getEndDate() + "'" +
             ", avatarUrl='" + getAvatarUrl() + "'" +
-            ", description='" + getDescription() + "'" +
+            ", description='" + removeAll(getDescription(), REGEX_EOL) + "'" +
             ", data='" + getData() + "'" +
             ", removed='" + isRemoved() + "'" +
             ", createdBy='" + getCreatedBy() + "'" +
