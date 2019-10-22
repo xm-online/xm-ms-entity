@@ -53,6 +53,8 @@ public final class Constants {
 
     public static final String TRANSLATION_KEY = "trKey";
 
+    public static final String REGEX_EOL = "\n";
+
     private Constants() {
     }
 }
