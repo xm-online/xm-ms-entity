@@ -1,31 +1,18 @@
 package com.icthh.xm.ms.entity.config;
 
 import static com.icthh.xm.ms.entity.config.Constants.CHANGE_LOG_PATH;
-import static com.icthh.xm.ms.entity.config.Constants.DB_SCHEMA_CREATION_ENABLED;
 import static org.hibernate.cfg.AvailableSettings.JPA_VALIDATION_FACTORY;
 
 import com.fasterxml.jackson.datatype.hibernate5.Hibernate5Module;
-import com.icthh.xm.commons.config.client.repository.TenantListRepository;
 import com.icthh.xm.commons.migration.db.XmMultiTenantSpringLiquibase;
 import com.icthh.xm.commons.migration.db.XmSpringLiquibase;
 import com.icthh.xm.commons.migration.db.tenant.SchemaResolver;
 import com.icthh.xm.ms.entity.config.elasticsearch.CustomElasticsearchRepositoryFactoryBean;
 import com.icthh.xm.ms.entity.repository.entitygraph.EntityGraphRepositoryImpl;
-import com.icthh.xm.ms.entity.util.DatabaseUtil;
 import io.github.jhipster.config.JHipsterConstants;
-
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
-import javax.sql.DataSource;
-
 import liquibase.integration.spring.MultiTenantSpringLiquibase;
 import liquibase.integration.spring.SpringLiquibase;
 import lombok.RequiredArgsConstructor;
-import org.apache.commons.lang.StringUtils;
 import org.h2.tools.Server;
 import org.hibernate.MultiTenancyStrategy;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
@@ -48,6 +35,12 @@ import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
 import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
+
+import java.sql.SQLException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import javax.sql.DataSource;
 
 @Configuration
 @EnableJpaRepositories(value = "com.icthh.xm.ms.entity.repository",
