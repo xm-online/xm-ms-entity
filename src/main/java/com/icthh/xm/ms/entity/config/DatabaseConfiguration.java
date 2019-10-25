@@ -1,30 +1,18 @@
 package com.icthh.xm.ms.entity.config;
 
 import static com.icthh.xm.ms.entity.config.Constants.CHANGE_LOG_PATH;
-import static com.icthh.xm.ms.entity.config.Constants.DB_SCHEMA_CREATION_ENABLED;
 import static org.hibernate.cfg.AvailableSettings.JPA_VALIDATION_FACTORY;
 
 import com.fasterxml.jackson.datatype.hibernate5.Hibernate5Module;
-import com.icthh.xm.commons.config.client.repository.TenantListRepository;
 import com.icthh.xm.commons.migration.db.XmMultiTenantSpringLiquibase;
 import com.icthh.xm.commons.migration.db.XmSpringLiquibase;
+import com.icthh.xm.commons.migration.db.tenant.SchemaResolver;
 import com.icthh.xm.ms.entity.config.elasticsearch.CustomElasticsearchRepositoryFactoryBean;
 import com.icthh.xm.ms.entity.repository.entitygraph.EntityGraphRepositoryImpl;
-import com.icthh.xm.ms.entity.util.DatabaseUtil;
 import io.github.jhipster.config.JHipsterConstants;
-
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
-import javax.sql.DataSource;
-
 import liquibase.integration.spring.MultiTenantSpringLiquibase;
 import liquibase.integration.spring.SpringLiquibase;
 import lombok.RequiredArgsConstructor;
-import org.apache.commons.lang.StringUtils;
 import org.h2.tools.Server;
 import org.hibernate.MultiTenancyStrategy;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
@@ -48,6 +36,12 @@ import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
 
+import java.sql.SQLException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import javax.sql.DataSource;
+
 @Configuration
 @EnableJpaRepositories(value = "com.icthh.xm.ms.entity.repository",
     repositoryBaseClass = EntityGraphRepositoryImpl.class)
@@ -64,8 +58,7 @@ public class DatabaseConfiguration {
 
     private final Environment env;
     private final JpaProperties jpaProperties;
-    private final TenantListRepository tenantListRepository;
-    private final ApplicationProperties applicationProperties;
+    private final SchemaResolver schemaResolver;
 
     /**
      * Open the TCP port for the H2 database, so it is available remotely.
@@ -81,7 +74,7 @@ public class DatabaseConfiguration {
 
     @Bean
     public SpringLiquibase liquibase(DataSource dataSource, LiquibaseProperties liquibaseProperties) {
-        createSchemas(dataSource);
+        schemaResolver.createSchemas(dataSource);
         SpringLiquibase liquibase = new XmSpringLiquibase();
         liquibase.setDataSource(dataSource);
         liquibase.setChangeLog(CHANGE_LOG_PATH);
@@ -102,7 +95,7 @@ public class DatabaseConfiguration {
     @DependsOn("liquibase")
     public MultiTenantSpringLiquibase multiTenantLiquibase(DataSource dataSource,
                                                            LiquibaseProperties liquibaseProperties) {
-        List<String> schemas = getSchemas();
+        List<String> schemas = schemaResolver.getSchemas();
         MultiTenantSpringLiquibase liquibase = new XmMultiTenantSpringLiquibase();
         liquibase.setDataSource(dataSource);
         liquibase.setChangeLog(CHANGE_LOG_PATH);
@@ -118,34 +111,6 @@ public class DatabaseConfiguration {
             log.info("Configuring multi-tenant Liquibase for [{}] schemas", schemas.size());
         }
         return liquibase;
-    }
-
-    private void createSchemas(DataSource dataSource) {
-        if (jpaProperties.getProperties().containsKey(DB_SCHEMA_CREATION_ENABLED)
-            && !Boolean.parseBoolean(jpaProperties.getProperties().get(DB_SCHEMA_CREATION_ENABLED))) {
-            log.info("Schema creation for {} jpa provider is disabled", jpaProperties.getDatabase());
-            return;
-        }
-        List<String> schemas = getSchemas();
-        log.info("Create [{}] schemas for all tenants before liquibase migration", schemas.size());
-        for (String schema : schemas) {
-            try {
-                DatabaseUtil.createSchema(dataSource, schema);
-            } catch (Exception e) {
-                log.error("Failed to create schema '{}', error: {}", schema, e.getMessage(), e);
-            }
-        }
-    }
-
-    private List<String> getSchemas() {
-        String suffix = applicationProperties.getDbSchemaSuffix();
-        List<String> schemas = new ArrayList<>(tenantListRepository.getTenants());
-
-        if (StringUtils.isNotBlank(suffix)) {
-            return schemas.stream().map((schema) -> (schema.concat(suffix)))
-                .collect(Collectors.toList());
-        }
-        return schemas;
     }
 
     @Bean

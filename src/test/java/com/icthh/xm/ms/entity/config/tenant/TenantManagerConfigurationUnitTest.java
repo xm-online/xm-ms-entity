@@ -85,6 +85,7 @@ public class TenantManagerConfigurationUnitTest extends AbstractUnitTest {
         List<Configuration> configurations = new ArrayList<>();
         configurations.add(Configuration.of().path("/config/tenants/{tenantName}/entity/specification.yml").build());
         configurations.add(Configuration.of().path("/config/tenants/{tenantName}/webapp/public-settings.yml").build());
+        configurations.add(Configuration.of().path("/config/tenants/{tenantName}/tenant-config.yml").build());
 
         verify(tenantConfigRepository).createConfigsFullPath(eq("newtenant"), eq(configurations));
 
