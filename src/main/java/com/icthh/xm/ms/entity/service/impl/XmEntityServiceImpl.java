@@ -20,6 +20,8 @@ import com.icthh.xm.commons.exceptions.EntityNotFoundException;
 import com.icthh.xm.commons.exceptions.ErrorConstants;
 import com.icthh.xm.commons.lep.LogicExtensionPoint;
 import com.icthh.xm.commons.lep.spring.LepService;
+import com.icthh.xm.commons.logging.LoggingAspectConfig;
+import com.icthh.xm.commons.logging.aop.IgnoreLogginAspect;
 import com.icthh.xm.commons.permission.annotation.FindWithPermission;
 import com.icthh.xm.commons.security.XmAuthenticationContextHolder;
 import com.icthh.xm.ms.entity.config.Constants;
@@ -134,12 +136,14 @@ public class XmEntityServiceImpl implements XmEntityService {
      * @param xmEntity the entity to save
      * @return the persisted entity
      */
+    @LoggingAspectConfig(inputExcludeParams = "xmEntity", resultDetails = false)
     @LogicExtensionPoint(value = "Save", resolver = XmEntityTypeKeyResolver.class)
     public XmEntity save(XmEntity xmEntity) {
         // without self for avoid call lep
         return save(xmEntity, xmEntity.getTypeKey());
     }
 
+    @LoggingAspectConfig(inputExcludeParams = "xmEntity", resultDetails = false)
     @LogicExtensionPoint(value = "Save", resolver = TypeKeyResolver.class)
     public XmEntity save(XmEntity xmEntity, String typeKey) {
         if (typeKeyWithExtends.doInheritance(typeKey)) {
@@ -350,11 +354,13 @@ public class XmEntityServiceImpl implements XmEntityService {
     }
 
     // need for lep post processing with split script by typeKey
+    @IgnoreLogginAspect
     @LogicExtensionPoint(value = "FindOnePostProcessing", resolver = XmEntityTypeKeyResolver.class)
     public XmEntity getOneEntity(XmEntity xmEntity) {
         return getOneEntity(xmEntity, xmEntity.getTypeKey());
     }
 
+    @IgnoreLogginAspect
     @LogicExtensionPoint(value = "FindOnePostProcessing", resolver = TypeKeyResolver.class)
     public XmEntity getOneEntity(XmEntity xmEntity, String typeKey) {
         if (typeKeyWithExtends.doInheritance(typeKey)) {
