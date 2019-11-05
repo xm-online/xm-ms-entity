@@ -27,14 +27,15 @@ import static org.codehaus.groovy.runtime.InvokerHelper.asList;
 public class KafkaMetricsSet implements MetricSet {
 
     private final KafkaAdmin kafkaAdmin;
-    private final ApplicationProperties appProperties;
+    private final ApplicationProperties applicationProperties;
 
     @Override
     public Map<String, Metric> getMetrics() {
         Map<String, Metric> metrics = new HashMap<>();
         metrics.put("kafka.connection.success", (Gauge) () -> {
-            String topicName = appProperties.getKafkaSystemTopic();
-            DescribeTopicsOptions describeTopicsOptions = new DescribeTopicsOptions().timeoutMs(appProperties.getConnectionTimeoutTopic());
+            String topicName = applicationProperties.getKafkaSystemTopic();
+            DescribeTopicsOptions describeTopicsOptions = new DescribeTopicsOptions().timeoutMs(
+                applicationProperties.getConnectionTimeoutTopic());
             try(AdminClient adminClient = AdminClient.create(kafkaAdmin.getConfig())) {
                 try {
                     DescribeTopicsResult describeTopicsResult = adminClient.describeTopics(
