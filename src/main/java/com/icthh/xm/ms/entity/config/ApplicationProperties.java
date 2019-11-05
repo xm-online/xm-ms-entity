@@ -55,6 +55,7 @@ public class ApplicationProperties {
     private List<String> requestCacheIgnoredPathPatternList = Collections.emptyList();
     private Integer maxUploadFileSize;
     private Integer maxUploadSize;
+    private Integer connectionTimeoutTopic;
 
     @Getter
     @Setter

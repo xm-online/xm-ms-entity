@@ -24,10 +24,12 @@ import javax.servlet.ServletContext;
 public class EntityMetricsConfiguration extends MetricsConfigurerAdapter implements ServletContextInitializer {
 
     private static final String SCHEDULER = "scheduler";
+    private static final String KAFKA = "kafka";
 
     private final MetricRegistry metricRegistry;
     private final SchedulerMetricsSet schedulerMetricsSet;
     private final JHipsterProperties jHipsterProperties;
+    private final KafkaMetricsSet kafkaMetricsSet;
 
     private HikariDataSource hikariDataSource;
 
@@ -46,6 +48,7 @@ public class EntityMetricsConfiguration extends MetricsConfigurerAdapter impleme
         }
 
         metricRegistry.register(SCHEDULER, schedulerMetricsSet);
+        metricRegistry.register(KAFKA, kafkaMetricsSet);
     }
 
     @Override
