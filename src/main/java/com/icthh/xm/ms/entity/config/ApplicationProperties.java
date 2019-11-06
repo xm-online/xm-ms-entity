@@ -56,6 +56,7 @@ public class ApplicationProperties {
     private Integer maxUploadFileSize;
     private Integer maxUploadSize;
     private Integer connectionTimeoutTopic;
+    private List<String> metricTopics;
 
     @Getter
     @Setter

@@ -13,11 +13,11 @@ import org.springframework.kafka.core.KafkaAdmin;
 import org.springframework.stereotype.Component;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
 import static java.util.Objects.nonNull;
-import static org.codehaus.groovy.runtime.InvokerHelper.asList;
 
 @Component
 @Slf4j
@@ -30,23 +30,23 @@ public class KafkaMetricsSet implements MetricSet {
     @Override
     public Map<String, Metric> getMetrics() {
         Map<String, Metric> metrics = new HashMap<>();
-        metrics.put("connection.success", (Gauge) this::connectionToKafkaIsSuccess);
+        metrics.put("connection.success", (Gauge) this::connectionToKafkaTopicsIsSuccess);
         return metrics;
     }
 
-    public Boolean connectionToKafkaIsSuccess() {
-        String topicName = applicationProperties.getKafkaSystemTopic();
+    public Boolean connectionToKafkaTopicsIsSuccess() {
+        List<String> metricTopics = applicationProperties.getMetricTopics();
         DescribeTopicsOptions describeTopicsOptions = new DescribeTopicsOptions().timeoutMs(
             applicationProperties.getConnectionTimeoutTopic());
         try(AdminClient adminClient = AdminClient.create(kafkaAdmin.getConfig())) {
             try {
                 DescribeTopicsResult describeTopicsResult = adminClient.describeTopics(
-                    asList(topicName),
+                    metricTopics,
                     describeTopicsOptions);
                 Map<String, TopicDescription> topicDescriptionMap = describeTopicsResult.all().get();
                 return nonNull(topicDescriptionMap);
             } catch (InterruptedException | ExecutionException e) {
-                log.warn("Exception when try connect to kafka topic: {}, exception: {}", topicName, e.getMessage());
+                log.warn("Exception when try connect to kafka topics: {}, exception: {}", metricTopics, e.getMessage());
                 return false;
             }
         }

@@ -1,7 +1,7 @@
 package com.icthh.xm.ms.entity.config;
 
 import lombok.SneakyThrows;
-import org.junit.BeforeClass;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -11,7 +11,9 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
+import static java.util.Arrays.asList;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.when;
@@ -29,31 +31,33 @@ public class KafkaMetricsSetTest {
 
     private Map<String, Object> mockConfig = new HashMap<>();
 
-    @BeforeClass
+    @Before
     @SneakyThrows
-    public static void setupAtOnce() {
-        kafkaEmbedded = new KafkaEmbedded(1, true, "test_topic");
-        kafkaEmbedded.setKafkaPorts(9092);
+    public void setup() {
+        if (Objects.isNull(kafkaEmbedded)) {
+            kafkaEmbedded = new KafkaEmbedded(1, true, "test_topic1", "test_topic2");
+            kafkaEmbedded.setKafkaPorts(9092);
+        }
         kafkaEmbedded.before();
     }
 
     @Test
-    public void connectionToKafkaIsSuccess() {
+    public void connectionToKafkaTopicsIsSuccess() {
         KafkaMetricsSet kafkaMetricsSet = initKafkaMetricSet();
-        assertTrue(kafkaMetricsSet.connectionToKafkaIsSuccess());
+        assertTrue(kafkaMetricsSet.connectionToKafkaTopicsIsSuccess());
     }
 
     @Test
     @SneakyThrows
-    public void connectionToKafkaNotSuccess() {
+    public void connectionToKafkaTopicsIsNotSuccess() {
         KafkaMetricsSet kafkaMetricsSet = initKafkaMetricSet();
         kafkaEmbedded.destroy();
-        assertFalse(kafkaMetricsSet.connectionToKafkaIsSuccess());
+        assertFalse(kafkaMetricsSet.connectionToKafkaTopicsIsSuccess());
     }
 
     private KafkaMetricsSet initKafkaMetricSet() {
         mockConfig.put("bootstrap.servers", "localhost:9092");
-        when(applicationProperties.getKafkaSystemTopic()).thenReturn("test_topic");
+        when(applicationProperties.getMetricTopics()).thenReturn(asList("test_topic1", "test_topic2"));
         when(applicationProperties.getConnectionTimeoutTopic()).thenReturn(1000);
         when(kafkaAdmin.getConfig()).thenReturn(mockConfig);
         return new KafkaMetricsSet(kafkaAdmin, applicationProperties);
