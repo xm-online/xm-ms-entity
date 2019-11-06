@@ -9,7 +9,6 @@ import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.admin.DescribeTopicsOptions;
 import org.apache.kafka.clients.admin.DescribeTopicsResult;
 import org.apache.kafka.clients.admin.TopicDescription;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.kafka.core.KafkaAdmin;
 import org.springframework.stereotype.Component;
 
@@ -23,7 +22,6 @@ import static org.codehaus.groovy.runtime.InvokerHelper.asList;
 @Component
 @Slf4j
 @RequiredArgsConstructor
-@ConditionalOnProperty("application.kafka-enabled")
 public class KafkaMetricsSet implements MetricSet {
 
     private final KafkaAdmin kafkaAdmin;
@@ -32,26 +30,26 @@ public class KafkaMetricsSet implements MetricSet {
     @Override
     public Map<String, Metric> getMetrics() {
         Map<String, Metric> metrics = new HashMap<>();
-        metrics.put("kafka.connection.success", (Gauge) () -> {
-            String topicName = applicationProperties.getKafkaSystemTopic();
-            DescribeTopicsOptions describeTopicsOptions = new DescribeTopicsOptions().timeoutMs(
-                applicationProperties.getConnectionTimeoutTopic());
-            try(AdminClient adminClient = AdminClient.create(kafkaAdmin.getConfig())) {
-                try {
-                    DescribeTopicsResult describeTopicsResult = adminClient.describeTopics(
-                        asList(topicName),
-                        describeTopicsOptions);
-                    Map<String, TopicDescription> topicDescriptionMap = describeTopicsResult.all().get();
-                    //TODO after test delete this log
-                    log.info("result topicDescriptionMap: {}", topicDescriptionMap);
-                    return nonNull(topicDescriptionMap);
-                } catch (InterruptedException | ExecutionException e) {
-                    log.warn("Exception when try connect to kafka topic: {}, exception: {}", topicName, e);
-                    return false;
-                }
-            }
-        });
+        metrics.put("connection.success", (Gauge) this::connectionToKafkaIsSuccess);
         return metrics;
+    }
+
+    public Boolean connectionToKafkaIsSuccess() {
+        String topicName = applicationProperties.getKafkaSystemTopic();
+        DescribeTopicsOptions describeTopicsOptions = new DescribeTopicsOptions().timeoutMs(
+            applicationProperties.getConnectionTimeoutTopic());
+        try(AdminClient adminClient = AdminClient.create(kafkaAdmin.getConfig())) {
+            try {
+                DescribeTopicsResult describeTopicsResult = adminClient.describeTopics(
+                    asList(topicName),
+                    describeTopicsOptions);
+                Map<String, TopicDescription> topicDescriptionMap = describeTopicsResult.all().get();
+                return nonNull(topicDescriptionMap);
+            } catch (InterruptedException | ExecutionException e) {
+                log.warn("Exception when try connect to kafka topic: {}, exception: {}", topicName, e.getMessage());
+                return false;
+            }
+        }
     }
 
 }

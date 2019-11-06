@@ -334,6 +334,7 @@ dependencies {
     testCompile "org.testcontainers:testcontainers:1.10.1"
 
     testCompile "com.github.tomakehurst:wiremock-jre8:2.23.2"
+    testCompile "org.springframework.kafka:spring-kafka-test"
 
     //jhipster-needle-gradle-dependency - JHipster will add additional dependencies here
 }
