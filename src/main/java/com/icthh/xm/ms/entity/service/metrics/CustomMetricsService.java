@@ -4,9 +4,9 @@ import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_AUTH_CO
 import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_TENANT_CONTEXT;
 import static java.util.Collections.emptyMap;
 
-import com.codahale.metrics.Metric;
 import com.icthh.xm.commons.lep.LogicExtensionPoint;
 import com.icthh.xm.commons.lep.spring.LepService;
+import com.icthh.xm.commons.logging.util.MdcUtils;
 import com.icthh.xm.commons.security.XmAuthenticationContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
@@ -14,14 +14,15 @@ import com.icthh.xm.lep.api.LepManager;
 import com.icthh.xm.ms.entity.service.metrics.CustomMetricsConfiguration.CustomMetric;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Supplier;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
 @Slf4j
-@Service
+@Component
 @LepService(group = "metrics")
 @RequiredArgsConstructor
 public class CustomMetricsService {
@@ -34,21 +35,32 @@ public class CustomMetricsService {
     private final XmAuthenticationContextHolder authContextHolder;
     private final LepManager lepManager;
 
-    public Object getMetric(String name, CustomMetric config) {
-        if (config.getUpdatePeriodSeconds() == null) {
-            return metricByName(name);
-        }
-        return metricsCache.getOrDefault(tenantContextHolder.getTenantKey(), emptyMap()).get(name);
+    public Object getMetric(String name, CustomMetric config, String tenantKey) {
+        return runInTenantContext(tenantKey, () -> {
+            if (config.getUpdatePeriodSeconds() == null) {
+                return self.metricByName(name);
+            }
+            return metricsCache.getOrDefault(tenantKey, emptyMap()).get(name);
+        });
     }
 
     public void updateMetric(String metricName, String tenant) {
         try {
-            init(tenant);
-            log.info("Receive event {} {}", metricName, tenant);
+            MdcUtils.putRid(MdcUtils.generateRid() + ":" + tenant);
             metricsCache.computeIfAbsent(tenant, (key) -> new ConcurrentHashMap<>());
-            metricsCache.get(tenant).put(metricName, metricByName(metricName));
+            Object metricValue = runInTenantContext(tenant, () -> self.metricByName(metricName));
+            metricsCache.get(tenant).put(metricName, metricValue);
         } catch (Throwable e) {
-            log.error("Error update metric {} {}", metricName, e);
+            log.error("Error update metric", e);
+        } finally {
+            MdcUtils.clear();
+        }
+    }
+
+    private Object runInTenantContext(String tenant, Supplier<Object> operation) {
+        try {
+            init(tenant);
+            return operation.get();
         } finally {
             destroy();
         }
@@ -78,6 +90,5 @@ public class CustomMetricsService {
         log.error("No lep for metric {} found", metricName);
         return null;
     }
-
 
 }

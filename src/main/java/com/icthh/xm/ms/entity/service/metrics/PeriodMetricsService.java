@@ -20,7 +20,12 @@ public class PeriodMetricsService {
     private final ThreadPoolTaskScheduler taskScheduler = new ThreadPoolTaskScheduler();
     private final CustomMetricsService customMetricsService;
 
+    {
+        taskScheduler.initialize();
+    }
+
     public void scheduleCustomMetric(List<CustomMetric> customMetrics, String tenantKey) {
+        metricsTasks.computeIfAbsent(tenantKey, (key) -> new ConcurrentHashMap<>());
         Map<String, ScheduledFuture> scheduledTasks = metricsTasks.get(tenantKey);
         scheduledTasks.values().forEach(it -> it.cancel(false));
 
@@ -29,7 +34,7 @@ public class PeriodMetricsService {
                      .forEach(customMetric -> {
                          Runnable task = () -> customMetricsService.updateMetric(customMetric.getName(), tenantKey);
                          Integer period = customMetric.getUpdatePeriodSeconds();
-                         ScheduledFuture<?> future = taskScheduler.scheduleAtFixedRate(task, period);
+                         ScheduledFuture<?> future = taskScheduler.scheduleAtFixedRate(task, period * 1000);
                          tasks.put(customMetric.getName(), future);
         });
 

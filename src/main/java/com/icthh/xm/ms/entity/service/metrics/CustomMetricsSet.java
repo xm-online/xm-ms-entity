@@ -12,12 +12,13 @@ public class CustomMetricsSet implements MetricSet {
 
     private final CustomMetricsConfiguration configuration;
     private final CustomMetricsService customMetricsService;
+    private final String tenantKey;
 
     @Override
     public Map<String, Metric> getMetrics() {
         Map<String, Metric> metrics = new HashMap<>();
         configuration.getMetrics().forEach(it -> {
-            metrics.put(it.getName(), (Gauge<?>) () -> customMetricsService.getMetric(it.getName(), it));
+            metrics.put(it.getName(), (Gauge<?>) () -> customMetricsService.getMetric(it.getName(), it, tenantKey));
         });
         return metrics;
     }

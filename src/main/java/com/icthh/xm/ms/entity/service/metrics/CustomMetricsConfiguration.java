@@ -22,7 +22,7 @@ import org.springframework.util.AntPathMatcher;
 @Component
 public class CustomMetricsConfiguration implements RefreshableConfiguration {
 
-    private static final String METRICS_SUFFIX = "-METRICS";
+    private static final String METRICS_SUFFIX = ".metrics";
 
     private final ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
     private final ConcurrentHashMap<String, List<CustomMetric>> configuration = new ConcurrentHashMap<>();
@@ -48,7 +48,7 @@ public class CustomMetricsConfiguration implements RefreshableConfiguration {
 
     public void onRefresh(final String updatedKey, final String config) {
         try {
-            String tenant = this.matcher.extractUriTemplateVariables(mappingPath, updatedKey).get("tenantName");
+            String tenant = this.matcher.extractUriTemplateVariables(mappingPath, updatedKey).get("tenantName").toLowerCase();
             if (isBlank(config)) {
                 this.configuration.remove(tenant);
                 periodMetricsService.scheduleCustomMetric(emptyList(), tenant);
@@ -60,7 +60,7 @@ public class CustomMetricsConfiguration implements RefreshableConfiguration {
             log.info("Metric configuration was updated for tenant [{}] by key [{}]", tenant, updatedKey);
             String metricsName = tenant + METRICS_SUFFIX;
             metricRegistry.remove(metricsName);
-            metricRegistry.register(metricsName, new CustomMetricsSet(this, customMetricsService));
+            metricRegistry.register(metricsName, new CustomMetricsSet(this, customMetricsService, tenant));
             periodMetricsService.scheduleCustomMetric(metrics, tenant);
         } catch (Exception e) {
             log.error("Error read metric configuration from path " + updatedKey, e);
@@ -82,7 +82,7 @@ public class CustomMetricsConfiguration implements RefreshableConfiguration {
     }
 
     private String getTenantKeyValue() {
-        return getRequiredTenantKeyValue(tenantContextHolder);
+        return tenantContextHolder.getTenantKey();
     }
 
     @Data
