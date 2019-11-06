@@ -7,6 +7,7 @@ public final class LepXmEntityMsConstants {
 
     public static final String BINDING_KEY_COMMONS = "commons";
     public static final String BINDING_KEY_SERVICES = "services";
+    public static final String BINDING_METRICS_CONTEXT = "metricsContext";
     public static final String BINDING_SUB_KEY_SERVICE_XM_ENTITY = "xmEntity";
     public static final String BINDING_SUB_KEY_SERVICE_XM_TENANT_LC = "xmTenantLifeCycle";
     public static final String BINDING_SUB_KEY_SERVICE_PROFILE = "profileService";
