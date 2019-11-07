@@ -210,7 +210,7 @@ application:
     requestCacheIgnoredPathPatternList: /api/functions/*/upload
     maxUploadFileSize: 1073741824
     maxUploadSize: 1073741824
-    scheduledMetricsPoolSize: 1
+    periodicMetricPoolSize: 1
 
 # ===================================================================
 # Timeline specific properties

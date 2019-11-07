@@ -14,7 +14,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.icthh.xm.commons.config.client.api.RefreshableConfiguration;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -38,12 +37,12 @@ public class CustomMetricsConfiguration implements RefreshableConfiguration {
     private final MetricRegistry metricRegistry;
     private final CustomMetricsService customMetricsService;
     private final TenantContextHolder tenantContextHolder;
-    private final PeriodMetricsService periodMetricsService;
+    private final PeriodicMetricsService periodMetricsService;
     private final String mappingPath;
 
     public CustomMetricsConfiguration(TenantContextHolder tenantContextHolder, MetricRegistry metricRegistry,
                                       CustomMetricsService customMetricsService,
-                                      PeriodMetricsService periodMetricsService,
+                                      PeriodicMetricsService periodMetricsService,
                                       @Value("${spring.application.name}") String appName) {
 
         this.tenantContextHolder = tenantContextHolder;

@@ -13,21 +13,21 @@ import org.springframework.stereotype.Component;
 
 @Slf4j
 @Component
-public class PeriodMetricsService {
+public class PeriodicMetricsService {
 
-    private final Map<String, Map<String, ScheduledFuture>> metricsTasks = new ConcurrentHashMap<>();
+    private final Map<String, Map<String, ScheduledFuture>> metricsTasksByTenant = new ConcurrentHashMap<>();
     private final ThreadPoolTaskScheduler taskScheduler = new ThreadPoolTaskScheduler();
     private final CustomMetricsService customMetricsService;
 
-    public PeriodMetricsService(CustomMetricsService customMetricsService, ApplicationProperties applicationProperties) {
+    public PeriodicMetricsService(CustomMetricsService customMetricsService, ApplicationProperties applicationProperties) {
         this.customMetricsService = customMetricsService;
         taskScheduler.initialize();
-        taskScheduler.setPoolSize(applicationProperties.getScheduledMetricsPoolSize());
+        taskScheduler.setPoolSize(applicationProperties.getPeriodicMetricPoolSize());
     }
 
     public void scheduleCustomMetric(List<CustomMetric> customMetrics, String tenantKey) {
-        metricsTasks.computeIfAbsent(tenantKey, (key) -> new ConcurrentHashMap<>());
-        Map<String, ScheduledFuture> scheduledTasks = metricsTasks.get(tenantKey);
+        metricsTasksByTenant.computeIfAbsent(tenantKey, (key) -> new ConcurrentHashMap<>());
+        Map<String, ScheduledFuture> scheduledTasks = metricsTasksByTenant.get(tenantKey);
         scheduledTasks.values().forEach(it -> it.cancel(false));
 
         Map<String, ScheduledFuture> tasks = new HashMap<>();
@@ -39,7 +39,7 @@ public class PeriodMetricsService {
                          tasks.put(customMetric.getName(), future);
         });
 
-        metricsTasks.put(tenantKey, tasks);
+        metricsTasksByTenant.put(tenantKey, tasks);
     }
 
 }

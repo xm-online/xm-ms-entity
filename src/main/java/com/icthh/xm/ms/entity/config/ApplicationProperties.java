@@ -56,7 +56,7 @@ public class ApplicationProperties {
     private Integer maxUploadFileSize;
     private Integer maxUploadSize;
 
-    private Integer scheduledMetricsPoolSize;
+    private Integer periodicMetricPoolSize;
 
     @Getter
     @Setter

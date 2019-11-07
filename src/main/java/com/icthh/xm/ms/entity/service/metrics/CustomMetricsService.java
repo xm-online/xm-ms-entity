@@ -87,7 +87,7 @@ public class CustomMetricsService {
 
     @LogicExtensionPoint(value = "Metric")
     public Object metric(String metricName) {
-        log.error("No lep for metric {} found", metricName);
+        log.warn("No lep for metric {} found", metricName);
         return null;
     }
 

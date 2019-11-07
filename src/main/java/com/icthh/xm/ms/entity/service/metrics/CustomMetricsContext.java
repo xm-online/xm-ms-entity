@@ -15,8 +15,7 @@ public class CustomMetricsContext {
 
     public Map<String, Object> getMetricsContext() {
         String tenantKey = tenantContextHolder.getTenantKey();
-        metricsContext.computeIfAbsent(tenantKey, (key) -> new ConcurrentHashMap<>());
-        return metricsContext.get(tenantKey);
+        return metricsContext.computeIfAbsent(tenantKey, (key) -> new ConcurrentHashMap<>());
     }
 
 }
