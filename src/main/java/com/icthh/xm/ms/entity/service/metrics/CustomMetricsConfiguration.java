@@ -2,16 +2,23 @@ package com.icthh.xm.ms.entity.service.metrics;
 
 import static com.icthh.xm.commons.tenant.TenantContextUtils.getRequiredTenantKeyValue;
 import static java.util.Collections.emptyList;
+import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
+import com.codahale.metrics.Gauge;
+import com.codahale.metrics.Metric;
 import com.codahale.metrics.MetricRegistry;
+import com.codahale.metrics.MetricSet;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.icthh.xm.commons.config.client.api.RefreshableConfiguration;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -57,14 +64,22 @@ public class CustomMetricsConfiguration implements RefreshableConfiguration {
 
             List<CustomMetric> metrics = mapper.readValue(config, new TypeReference<List<CustomMetric>>() {});
             this.configuration.put(tenant, metrics);
+
             log.info("Metric configuration was updated for tenant [{}] by key [{}]", tenant, updatedKey);
             String metricsName = tenant + METRICS_SUFFIX;
-            metricRegistry.remove(metricsName);
-            metricRegistry.register(metricsName, new CustomMetricsSet(this, customMetricsService, tenant));
+            metricRegistry.removeMatching((name, metric) -> name.startsWith(metricsName));
+
+            Map<String, Metric> metricsMap = metrics.stream().collect(toMap(CustomMetric::getName, toMetric(tenant)));
+            metricRegistry.register(metricsName, (MetricSet) () -> metricsMap);
+
             periodMetricsService.scheduleCustomMetric(metrics, tenant);
         } catch (Exception e) {
             log.error("Error read metric configuration from path " + updatedKey, e);
         }
+    }
+
+    private Function<CustomMetric, Gauge<?>> toMetric(String tenantKey) {
+        return (metric) -> () -> customMetricsService.getMetric(metric.getName(), metric, tenantKey);
     }
 
     public boolean isListeningConfiguration(final String updatedKey) {

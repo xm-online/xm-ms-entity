@@ -1,27 +1,28 @@
 package com.icthh.xm.ms.entity.service.metrics;
 
+import com.icthh.xm.ms.entity.config.ApplicationProperties;
 import com.icthh.xm.ms.entity.service.metrics.CustomMetricsConfiguration.CustomMetric;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledFuture;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.stereotype.Component;
 
 @Slf4j
 @Component
-@RequiredArgsConstructor
 public class PeriodMetricsService {
 
     private final Map<String, Map<String, ScheduledFuture>> metricsTasks = new ConcurrentHashMap<>();
     private final ThreadPoolTaskScheduler taskScheduler = new ThreadPoolTaskScheduler();
     private final CustomMetricsService customMetricsService;
 
-    {
+    public PeriodMetricsService(CustomMetricsService customMetricsService, ApplicationProperties applicationProperties) {
+        this.customMetricsService = customMetricsService;
         taskScheduler.initialize();
+        taskScheduler.setPoolSize(applicationProperties.getScheduledMetricsPoolSize());
     }
 
     public void scheduleCustomMetric(List<CustomMetric> customMetrics, String tenantKey) {

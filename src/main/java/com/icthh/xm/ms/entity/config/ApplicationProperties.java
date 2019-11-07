@@ -56,6 +56,8 @@ public class ApplicationProperties {
     private Integer maxUploadFileSize;
     private Integer maxUploadSize;
 
+    private Integer scheduledMetricsPoolSize;
+
     @Getter
     @Setter
     public static class Amazon {
