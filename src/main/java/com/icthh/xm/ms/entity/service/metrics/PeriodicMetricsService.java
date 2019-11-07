@@ -32,14 +32,17 @@ public class PeriodicMetricsService {
 
         Map<String, ScheduledFuture> tasks = new HashMap<>();
         customMetrics.stream().filter(it -> it.getUpdatePeriodSeconds() != null && it.getUpdatePeriodSeconds() > 0)
-                     .forEach(customMetric -> {
-                         Runnable task = () -> customMetricsService.updateMetric(customMetric.getName(), tenantKey);
-                         Integer period = customMetric.getUpdatePeriodSeconds();
-                         ScheduledFuture<?> future = taskScheduler.scheduleAtFixedRate(task, period * 1000);
-                         tasks.put(customMetric.getName(), future);
-        });
+                     .forEach(customMetric -> schedulerCustomMetric(tenantKey, tasks, customMetric));
 
         metricsTasksByTenant.put(tenantKey, tasks);
+    }
+
+    private void schedulerCustomMetric(String tenantKey, Map<String, ScheduledFuture> tasks,
+                                       CustomMetric customMetric) {
+        Runnable task = () -> customMetricsService.updateMetric(customMetric.getName(), tenantKey);
+        Integer period = customMetric.getUpdatePeriodSeconds();
+        ScheduledFuture<?> future = taskScheduler.scheduleAtFixedRate(task, period * 1000);
+        tasks.put(customMetric.getName(), future);
     }
 
 }

@@ -8,14 +8,13 @@ import com.icthh.xm.commons.lep.LogicExtensionPoint;
 import com.icthh.xm.commons.lep.spring.LepService;
 import com.icthh.xm.commons.logging.util.MdcUtils;
 import com.icthh.xm.commons.security.XmAuthenticationContextHolder;
-import com.icthh.xm.commons.tenant.PlainTenant;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
-import com.icthh.xm.commons.tenant.TenantKey;
 import com.icthh.xm.lep.api.LepManager;
 import com.icthh.xm.ms.entity.service.metrics.CustomMetricsConfiguration.CustomMetric;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Supplier;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -37,7 +36,7 @@ public class CustomMetricsService {
     private final LepManager lepManager;
 
     public Object getMetric(String name, CustomMetric config, String tenantKey) {
-        return tenantContextHolder.getPrivilegedContext().execute(toTenant(tenantKey), () -> {
+        return runInTenantContext(tenantKey, () -> {
             if (config.getUpdatePeriodSeconds() == null) {
                 return self.metricByName(name);
             }
@@ -49,8 +48,7 @@ public class CustomMetricsService {
         try {
             MdcUtils.putRid(MdcUtils.generateRid() + ":" + tenant);
             metricsCache.computeIfAbsent(tenant, (key) -> new ConcurrentHashMap<>());
-            Object metricValue = tenantContextHolder.getPrivilegedContext()
-                                                    .execute(toTenant(tenant), () -> self.metricByName(metricName));
+            Object metricValue = runInTenantContext(tenant, () -> self.metricByName(metricName));
             metricsCache.get(tenant).put(metricName, metricValue);
         } catch (Throwable e) {
             log.error("Error update metric", e);
@@ -59,8 +57,27 @@ public class CustomMetricsService {
         }
     }
 
-    private PlainTenant toTenant(String tenant) {
-        return new PlainTenant(new TenantKey(tenant));
+    private Object runInTenantContext(String tenant, Supplier<Object> operation) {
+        try {
+            init(tenant);
+            return operation.get();
+        } finally {
+            destroy();
+        }
+    }
+
+    private void init(String tenantKey) {
+        TenantContextUtils.setTenant(tenantContextHolder, tenantKey);
+
+        lepManager.beginThreadContext(threadContext -> {
+            threadContext.setValue(THREAD_CONTEXT_KEY_TENANT_CONTEXT, tenantContextHolder.getContext());
+            threadContext.setValue(THREAD_CONTEXT_KEY_AUTH_CONTEXT, authContextHolder.getContext());
+        });
+    }
+
+    private void destroy() {
+        lepManager.endThreadContext();
+        tenantContextHolder.getPrivilegedContext().destroyCurrentContext();
     }
 
     @LogicExtensionPoint(value = "Metric", resolver = MetricKeyResolver.class)
