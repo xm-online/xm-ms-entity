@@ -28,7 +28,7 @@ import org.springframework.util.AntPathMatcher;
 @Component
 public class CustomMetricsConfiguration implements RefreshableConfiguration {
 
-    private static final String METRICS_SUFFIX = ".metrics";
+    private static final String METRICS_SUFFIX = "custom.metrics.";
 
     private final ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
     private final ConcurrentHashMap<String, List<CustomMetric>> configuration = new ConcurrentHashMap<>();
@@ -65,7 +65,7 @@ public class CustomMetricsConfiguration implements RefreshableConfiguration {
             this.configuration.put(tenant, metrics);
 
             log.info("Metric configuration was updated for tenant [{}] by key [{}]", tenant, updatedKey);
-            String metricsName = tenant + METRICS_SUFFIX;
+            String metricsName = METRICS_SUFFIX + tenant;
             metricRegistry.removeMatching((name, metric) -> name.startsWith(metricsName));
 
             Map<String, Metric> metricsMap = metrics.stream().collect(toMap(CustomMetric::getName, toMetric(tenant)));

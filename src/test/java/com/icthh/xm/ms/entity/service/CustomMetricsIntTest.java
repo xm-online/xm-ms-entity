@@ -115,8 +115,8 @@ public class CustomMetricsIntTest extends AbstractSpringBootTest {
         customMetricsConfiguration.onRefresh("/config/tenants/RESINTTEST/entity/metrics.yml",
                                              loadFile("config/metrics.yml"));
 
-        Gauge everyTimeMetric = metricRegistry.getGauges().get("resinttest.metrics.my.every.call.metric");
-        Gauge periodicMetric = metricRegistry.getGauges().get("resinttest.metrics.my.periodic.metric");
+        Gauge everyTimeMetric = metricRegistry.getGauges().get("custom.metrics.resinttest.my.every.call.metric");
+        Gauge periodicMetric = metricRegistry.getGauges().get("custom.metrics.resinttest.my.periodic.metric");
 
         assertNull(periodicMetric.getValue());
         assertNull(periodicMetric.getValue());
