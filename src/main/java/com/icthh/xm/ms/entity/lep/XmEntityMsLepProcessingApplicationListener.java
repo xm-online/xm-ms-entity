@@ -4,6 +4,7 @@ import static com.icthh.xm.ms.entity.lep.LepXmEntityMsConstants.BINDING_KEY_COMM
 import static com.icthh.xm.ms.entity.lep.LepXmEntityMsConstants.BINDING_KEY_REPOSITORIES;
 import static com.icthh.xm.ms.entity.lep.LepXmEntityMsConstants.BINDING_KEY_SERVICES;
 import static com.icthh.xm.ms.entity.lep.LepXmEntityMsConstants.BINDING_KEY_TEMPLATES;
+import static com.icthh.xm.ms.entity.lep.LepXmEntityMsConstants.BINDING_METRICS_CONTEXT;
 import static com.icthh.xm.ms.entity.lep.LepXmEntityMsConstants.BINDING_SUB_KEY_COMMENT_SERVICE;
 import static com.icthh.xm.ms.entity.lep.LepXmEntityMsConstants.BINDING_SUB_KEY_PERMISSION_SERVICE;
 import static com.icthh.xm.ms.entity.lep.LepXmEntityMsConstants.BINDING_SUB_KEY_PROFILE_EVENT_PRODUCER_SERVICE;
@@ -52,6 +53,7 @@ import com.icthh.xm.ms.entity.service.TagService;
 import com.icthh.xm.ms.entity.service.XmEntityService;
 import com.icthh.xm.ms.entity.service.XmTenantLifecycleService;
 import com.icthh.xm.ms.entity.service.mail.MailService;
+import com.icthh.xm.ms.entity.service.metrics.CustomMetricsContext;
 import java.util.HashMap;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
@@ -88,6 +90,7 @@ public class XmEntityMsLepProcessingApplicationListener extends SpringLepProcess
     private final PermittedSearchRepository permittedSearchRepository;
     private final ElasticsearchIndexService elasticsearchIndexService;
     private final SeparateTransactionExecutor transactionExecutor;
+    private final CustomMetricsContext customMetricsContext;
 
     @Override
     protected void bindExecutionContext(ScopedContext executionContext) {
@@ -114,6 +117,8 @@ public class XmEntityMsLepProcessingApplicationListener extends SpringLepProcess
         executionContext.setValue(BINDING_KEY_COMMONS, new CommonsExecutor(commonsService));
 
         executionContext.setValue(BINDING_KEY_SERVICES, services);
+
+        executionContext.setValue(BINDING_METRICS_CONTEXT, customMetricsContext);
 
         // repositories
         Map<String, Object> repositories = new HashMap<>();

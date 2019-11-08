@@ -23,6 +23,7 @@ import com.icthh.xm.ms.entity.service.TagService;
 import com.icthh.xm.ms.entity.service.XmEntityService;
 import com.icthh.xm.ms.entity.service.XmTenantLifecycleService;
 import com.icthh.xm.ms.entity.service.mail.MailService;
+import com.icthh.xm.ms.entity.service.metrics.CustomMetricsContext;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -60,7 +61,8 @@ public class LepAppEventListenerConfiguration {
         ElasticsearchTemplate elasticsearchTemplate,
         PermittedSearchRepository permittedSearchRepository,
         ElasticsearchIndexService elasticsearchIndexService,
-        SeparateTransactionExecutor transactionExecutor) {
+        SeparateTransactionExecutor transactionExecutor,
+        CustomMetricsContext customMetricsContext) {
 
         return new XmEntityMsLepProcessingApplicationListener(xmEntityService,
                         xmTenantLifecycleService, xmEntityRepository, profileService, linkService,
@@ -68,7 +70,7 @@ public class LepAppEventListenerConfiguration {
                         requestFactory, locationService, tagService, profileEventProducer, commentService,
                         commonsService, permissionCheckService, eventService, calendarService, tenantLepResource,
                         amazonS3Template, elasticsearchTemplate, permittedSearchRepository, elasticsearchIndexService,
-                        transactionExecutor);
+                        transactionExecutor, customMetricsContext);
     }
 
 }
