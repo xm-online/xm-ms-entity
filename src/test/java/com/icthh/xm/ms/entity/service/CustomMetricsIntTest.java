@@ -3,7 +3,8 @@ package com.icthh.xm.ms.entity.service;
 import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_AUTH_CONTEXT;
 import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_TENANT_CONTEXT;
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.awaitility.Awaitility.await;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -22,12 +23,9 @@ import com.icthh.xm.ms.entity.service.metrics.CustomMetricsConfiguration;
 import com.icthh.xm.ms.entity.web.rest.XmEntityResource;
 import java.io.InputStream;
 import java.util.Optional;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.LockSupport;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang3.time.StopWatch;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -36,7 +34,6 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.security.test.context.support.WithMockUser;
-import org.springframework.test.annotation.Repeat;
 import org.springframework.test.context.transaction.BeforeTransaction;
 
 /**
@@ -121,28 +118,26 @@ public class CustomMetricsIntTest extends AbstractSpringBootTest {
         assertNull(periodicMetric.getValue());
         assertNull(periodicMetric.getValue());
 
-        Integer one = 1;
-        StopWatch deadline = StopWatch.createStarted();
-        while(!one.equals(periodicMetric.getValue()) && deadline.getTime() < 5000) {
-            Thread.sleep(100);
-        }
+        waitValue(periodicMetric, 1);
         assertEquals(1, periodicMetric.getValue());
-
-        StopWatch stopWatch = StopWatch.createStarted();
-        Integer two = 2;
-        while(!two.equals(periodicMetric.getValue()) && stopWatch.getTime() < 5000) {
-            Thread.sleep(100);
-        }
+        assertEquals(1, periodicMetric.getValue());
+        assertEquals(1, periodicMetric.getValue());
+        waitValue(periodicMetric, 2);
         assertEquals(2, periodicMetric.getValue());
-        long time = stopWatch.getTime();
-        assertTrue(time + " less than 1500", time > 1500);
-        assertTrue(time + " more than 2500", time < 2500);
+        long time = waitValue(periodicMetric, 3);
+        assertEquals(3, periodicMetric.getValue());
+        assertTrue(time + " less than 2000", time/1000_000 > 2000);
+        assertTrue(time + " more than 2100", time/1000_000 < 2100);
 
         assertEquals(1, everyTimeMetric.getValue());
         assertEquals(2, everyTimeMetric.getValue());
         assertEquals(3, everyTimeMetric.getValue());
     }
 
-
+    private long waitValue(Gauge periodicMetric, Integer value) {
+        long startTime = System.nanoTime();
+        await().atMost(4, SECONDS).until(() -> value.equals(periodicMetric.getValue()));
+        return System.nanoTime() - startTime;
+    }
 
 }
