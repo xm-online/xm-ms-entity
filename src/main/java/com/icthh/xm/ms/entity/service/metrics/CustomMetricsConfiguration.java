@@ -36,16 +36,14 @@ public class CustomMetricsConfiguration implements RefreshableConfiguration {
 
     private final MetricRegistry metricRegistry;
     private final CustomMetricsService customMetricsService;
-    private final TenantContextHolder tenantContextHolder;
     private final PeriodicMetricsService periodMetricsService;
     private final String mappingPath;
 
-    public CustomMetricsConfiguration(TenantContextHolder tenantContextHolder, MetricRegistry metricRegistry,
+    public CustomMetricsConfiguration(MetricRegistry metricRegistry,
                                       CustomMetricsService customMetricsService,
                                       PeriodicMetricsService periodMetricsService,
                                       @Value("${spring.application.name}") String appName) {
 
-        this.tenantContextHolder = tenantContextHolder;
         this.metricRegistry = metricRegistry;
         this.customMetricsService = customMetricsService;
         this.periodMetricsService = periodMetricsService;
@@ -54,7 +52,7 @@ public class CustomMetricsConfiguration implements RefreshableConfiguration {
 
     public void onRefresh(final String updatedKey, final String config) {
         try {
-            String tenant = this.matcher.extractUriTemplateVariables(mappingPath, updatedKey).get("tenantName").toLowerCase();
+            String tenant = this.matcher.extractUriTemplateVariables(mappingPath, updatedKey).get("tenantName");
             if (isBlank(config)) {
                 this.configuration.remove(tenant);
                 periodMetricsService.scheduleCustomMetric(emptyList(), tenant);
@@ -65,7 +63,7 @@ public class CustomMetricsConfiguration implements RefreshableConfiguration {
             this.configuration.put(tenant, metrics);
 
             log.info("Metric configuration was updated for tenant [{}] by key [{}]", tenant, updatedKey);
-            String metricsName = METRICS_PREFIX + tenant;
+            String metricsName = METRICS_PREFIX + tenant.toLowerCase();
             metricRegistry.removeMatching((name, metric) -> name.startsWith(metricsName));
 
             Map<String, Metric> metricsMap = metrics.stream().collect(toMap(CustomMetric::getName, toMetric(tenant)));
@@ -89,14 +87,6 @@ public class CustomMetricsConfiguration implements RefreshableConfiguration {
         if (this.isListeningConfiguration(configKey)) {
             this.onRefresh(configKey, configValue);
         }
-    }
-
-    public List<CustomMetric> getMetrics() {
-        return configuration.getOrDefault(getTenantKeyValue(), emptyList());
-    }
-
-    private String getTenantKeyValue() {
-        return tenantContextHolder.getTenantKey();
     }
 
     @Data
