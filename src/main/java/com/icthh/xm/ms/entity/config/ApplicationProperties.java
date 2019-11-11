@@ -58,6 +58,8 @@ public class ApplicationProperties {
 
     private Integer periodicMetricPoolSize;
 
+    private KafkaMetric kafkaMetric;
+
     @Getter
     @Setter
     public static class Amazon {
@@ -106,5 +108,13 @@ public class ApplicationProperties {
     public static class Lep {
         private TenantScriptStorage tenantScriptStorage;
         private String lepResourcePathPattern;
+    }
+
+    @Getter
+    @Setter
+    public static class KafkaMetric {
+       private boolean enabled;
+       private int connectionTimeoutTopic;
+       List<String> metricTopics;
     }
 }
