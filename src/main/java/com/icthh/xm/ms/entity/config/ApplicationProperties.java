@@ -55,6 +55,7 @@ public class ApplicationProperties {
     private List<String> requestCacheIgnoredPathPatternList = Collections.emptyList();
     private Integer maxUploadFileSize;
     private Integer maxUploadSize;
+    private KafkaMetric kafkaMetric;
 
     private Integer periodicMetricPoolSize;
 
@@ -106,5 +107,13 @@ public class ApplicationProperties {
     public static class Lep {
         private TenantScriptStorage tenantScriptStorage;
         private String lepResourcePathPattern;
+    }
+
+    @Getter
+    @Setter
+    public static class KafkaMetric {
+        private Boolean enabled;
+        private Integer connectionTimeoutTopic;
+        private List<String> metricTopics;
     }
 }
