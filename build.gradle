@@ -374,3 +374,4 @@ compileJava {
 }
 processResources.dependsOn cleanResources, bootBuildInfo
 bootBuildInfo.mustRunAfter cleanResources
+
