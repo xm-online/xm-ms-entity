@@ -16,7 +16,7 @@ public class SpelToElasticTranslator implements SpelTranslator {
 
             String dsl = StringUtils.replaceAll(spel, "#returnObject.", "");
             dsl = replaceOperators(dsl);
-            dsl = SpelTranslator.applySubject(dsl, subject);
+            dsl = applySubject(dsl, subject, "\"");
 
             log.debug("SpEL was translated to Elastic DSL for permission filtering: [{}] --> [{}]", spel, dsl);
             return dsl;
@@ -34,7 +34,7 @@ public class SpelToElasticTranslator implements SpelTranslator {
             return spel;
         }
         return spel.replaceAll("==", ":")
-            .replaceAll("&&", " and ")
-            .replaceAll("\\|\\|", " or ");
+            .replaceAll("&&", " AND ")
+            .replaceAll("\\|\\|", " OR ");
     }
 }
