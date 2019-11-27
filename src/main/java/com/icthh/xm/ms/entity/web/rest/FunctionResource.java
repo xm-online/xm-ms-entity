@@ -11,6 +11,7 @@ import com.icthh.xm.ms.entity.web.rest.util.HeaderUtil;
 import java.net.URI;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import javax.servlet.http.HttpServletRequest;
 import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -85,7 +86,7 @@ public class FunctionResource {
     public ResponseEntity<Object> callFunction(@PathVariable("functionKey") String functionKey,
                                                         @RequestBody(required = false) Map<String, Object> functionInput) {
         FunctionContext result = functionService.execute(functionKey, functionInput);
-        return ResponseEntity.created(URI.create("/api/function-contexts/" + result.getId()))
+        return ResponseEntity.created(URI.create("/api/function-contexts/" + Objects.toString(result.getId(), "")))
             .headers(HeaderUtil.createEntityCreationAlert(ENTITY_NAME_FUNCTION_CONTEXT, String.valueOf(result.getId())))
             .body(result.functionResult());
     }
