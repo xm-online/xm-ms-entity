@@ -84,7 +84,7 @@ public class FunctionResource {
     @PostMapping("/functions/{functionKey:.+}")
     @PreAuthorize("hasPermission({'functionKey': #functionKey}, 'FUNCTION.CALL')")
     public ResponseEntity<Object> callFunction(@PathVariable("functionKey") String functionKey,
-                                                        @RequestBody(required = false) Map<String, Object> functionInput) {
+                                               @RequestBody(required = false) Map<String, Object> functionInput) {
         FunctionContext result = functionService.execute(functionKey, functionInput);
         return ResponseEntity.created(URI.create("/api/function-contexts/" + Objects.toString(result.getId(), "")))
             .headers(HeaderUtil.createEntityCreationAlert(ENTITY_NAME_FUNCTION_CONTEXT, String.valueOf(result.getId())))
