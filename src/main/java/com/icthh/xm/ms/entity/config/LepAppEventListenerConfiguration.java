@@ -15,6 +15,7 @@ import com.icthh.xm.ms.entity.service.CalendarService;
 import com.icthh.xm.ms.entity.service.CommentService;
 import com.icthh.xm.ms.entity.service.ElasticsearchIndexService;
 import com.icthh.xm.ms.entity.service.EventService;
+import com.icthh.xm.ms.entity.service.KafkaTemplateDelegate;
 import com.icthh.xm.ms.entity.service.LinkService;
 import com.icthh.xm.ms.entity.service.LocationService;
 import com.icthh.xm.ms.entity.service.ProfileService;
@@ -62,15 +63,16 @@ public class LepAppEventListenerConfiguration {
         PermittedSearchRepository permittedSearchRepository,
         ElasticsearchIndexService elasticsearchIndexService,
         SeparateTransactionExecutor transactionExecutor,
-        CustomMetricsContext customMetricsContext) {
+        CustomMetricsContext customMetricsContext,
+        KafkaTemplateDelegate kafkaTemplateDelegate) {
 
         return new XmEntityMsLepProcessingApplicationListener(xmEntityService,
-                        xmTenantLifecycleService, xmEntityRepository, profileService, linkService,
-                        mailService, tenantConfigService, attachmentService, loadBalancedRestTemplateWithTimeout,
-                        requestFactory, locationService, tagService, profileEventProducer, commentService,
-                        commonsService, permissionCheckService, eventService, calendarService, tenantLepResource,
-                        amazonS3Template, elasticsearchTemplate, permittedSearchRepository, elasticsearchIndexService,
-                        transactionExecutor, customMetricsContext);
+            xmTenantLifecycleService, xmEntityRepository, profileService, linkService,
+            mailService, tenantConfigService, attachmentService, loadBalancedRestTemplateWithTimeout,
+            requestFactory, locationService, tagService, profileEventProducer, commentService,
+            commonsService, permissionCheckService, eventService, calendarService, tenantLepResource,
+            amazonS3Template, elasticsearchTemplate, permittedSearchRepository, elasticsearchIndexService,
+            transactionExecutor, customMetricsContext, kafkaTemplateDelegate);
     }
 
 }
