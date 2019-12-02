@@ -35,7 +35,7 @@ import com.icthh.xm.commons.lep.commons.CommonsExecutor;
 import com.icthh.xm.commons.lep.commons.CommonsService;
 import com.icthh.xm.commons.lep.spring.SpringLepProcessingApplicationListener;
 import com.icthh.xm.commons.permission.service.PermissionCheckService;
-import com.icthh.xm.commons.topic.config.KafkaTemplateDelegate;
+import com.icthh.xm.commons.topic.service.KafkaTemplateService;
 import com.icthh.xm.lep.api.ScopedContext;
 import com.icthh.xm.ms.entity.config.RestTemplateConfiguration.PathTimeoutHttpComponentsClientHttpRequestFactory;
 import com.icthh.xm.ms.entity.config.amazon.AmazonS3Template;
@@ -95,7 +95,7 @@ public class XmEntityMsLepProcessingApplicationListener extends SpringLepProcess
     private final ElasticsearchIndexService elasticsearchIndexService;
     private final SeparateTransactionExecutor transactionExecutor;
     private final CustomMetricsContext customMetricsContext;
-    private final KafkaTemplateDelegate kafkaTemplateDelegate;
+    private final KafkaTemplateService kafkaTemplateService;
 
     @Override
     protected void bindExecutionContext(ScopedContext executionContext) {
@@ -138,7 +138,7 @@ public class XmEntityMsLepProcessingApplicationListener extends SpringLepProcess
         templates.put(BINDING_SUB_KEY_REQUEST_FACTORY, requestFactory);
         templates.put(BINDING_SUB_KEY_TEMPLATE_S3, s3Template);
         templates.put(BINDING_SUB_KEY_TEMPLATE_ELASTIC, elasticsearchTemplate);
-        templates.put(BINDING_SUB_KEY_TEMPLATE_KAFKA, kafkaTemplateDelegate);
+        templates.put(BINDING_SUB_KEY_TEMPLATE_KAFKA, kafkaTemplateService);
 
         executionContext.setValue(BINDING_KEY_TEMPLATES, templates);
     }
