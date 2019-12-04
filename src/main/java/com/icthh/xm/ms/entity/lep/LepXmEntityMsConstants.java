@@ -40,5 +40,4 @@ public final class LepXmEntityMsConstants {
     private LepXmEntityMsConstants() {
         throw new UnsupportedOperationException("Prevent creation for constructor utils class");
     }
-
 }
