@@ -18,6 +18,7 @@ import com.icthh.xm.commons.permission.domain.Role;
 import com.icthh.xm.commons.permission.service.RoleService;
 import com.icthh.xm.ms.entity.domain.spec.TypeSpec;
 import com.icthh.xm.ms.entity.service.privileges.custom.CustomPrivilegesExtractor.DefaultPrivilegesValue;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -25,6 +26,7 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.function.Function;
 import java.util.function.Predicate;
+
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -88,7 +90,7 @@ public class EntityCustomPrivilegeService {
                                      Map<String, List<Map<String, Object>>> privileges,
                                      String tenantKey) {
         Map<String, List<Map<String, Object>>> customPrivileges = new HashMap<>();
-        for(CustomPrivilegesExtractor privilegesExtractor: privilegesExtractors) {
+        for (CustomPrivilegesExtractor privilegesExtractor : privilegesExtractors) {
             if (!privilegesExtractor.isEnabled(tenantKey)) {
                 continue;
             }
@@ -107,8 +109,9 @@ public class EntityCustomPrivilegeService {
         Configuration customPrivileges) throws java.io.IOException {
         Map<String, List<Map<String, Object>>> privileges = new HashMap<>();
         if (isConfigExists(customPrivileges)) {
-            privileges = mapper.readValue(customPrivileges.getContent(), new TypeReference<Map<String, List<Object>>>() {
-            });
+            privileges = mapper.readValue(customPrivileges.getContent(),
+                new TypeReference<Map<String, List<Map<String, Object>>>>() {
+                });
         }
         return privileges;
     }
@@ -145,7 +148,7 @@ public class EntityCustomPrivilegeService {
                                              String tenantKey) {
         val permissions = getPermissionsConfig(permissionConfiguration);
 
-        for(CustomPrivilegesExtractor privilegesExtractor: privilegesExtractors) {
+        for (CustomPrivilegesExtractor privilegesExtractor : privilegesExtractors) {
             DefaultPrivilegesValue defaultValue = privilegesExtractor.getDefaultValue();
             if (defaultValue == NONE) {
                 continue;
@@ -161,10 +164,10 @@ public class EntityCustomPrivilegeService {
                 String privilegePrefix = privilegesExtractor.getPrivilegePrefix();
 
                 privilegesExtractor.toPrivilegesList(spec)
-                                   .stream()
-                                   .map(toPermission(privilegePrefix, defaultValue == ENABLED))
-                                   .filter(not(rolePermissions::contains))
-                                   .forEach(rolePermissions::add);
+                    .stream()
+                    .map(toPermission(privilegePrefix, defaultValue == ENABLED))
+                    .filter(not(rolePermissions::contains))
+                    .forEach(rolePermissions::add);
             }
         }
 
@@ -177,7 +180,8 @@ public class EntityCustomPrivilegeService {
         TreeMap<String, TreeMap<String, TreeSet<Permission>>> permissions = new TreeMap<>();
         if (isConfigExists(permission)) {
             permissions = mapper.readValue(permission.getContent(),
-                new TypeReference<TreeMap<String, TreeMap<String, TreeSet<Permission>>>>() {});
+                new TypeReference<TreeMap<String, TreeMap<String, TreeSet<Permission>>>>() {
+                });
         }
         return permissions;
     }

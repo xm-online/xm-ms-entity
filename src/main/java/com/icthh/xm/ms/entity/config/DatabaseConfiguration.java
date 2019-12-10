@@ -128,7 +128,7 @@ public class DatabaseConfiguration {
                                                                        MultiTenantConnectionProvider multiTenantConnectionProviderImpl,
                                                                        CurrentTenantIdentifierResolver currentTenantIdentifierResolverImpl,
                                                                        LocalValidatorFactoryBean localValidatorFactoryBean) {
-        Map<String, Object> properties = new HashMap<>(jpaProperties.getHibernateProperties(new HibernateSettings()));
+        Map<String, Object> properties = new HashMap<>();
         properties.put(org.hibernate.cfg.Environment.MULTI_TENANT, MultiTenancyStrategy.SCHEMA);
         properties.put(org.hibernate.cfg.Environment.MULTI_TENANT_CONNECTION_PROVIDER,
                        multiTenantConnectionProviderImpl);

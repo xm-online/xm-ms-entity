@@ -244,6 +244,10 @@ dependencies {
     // to use a SNAPSHOT release instead of a stable release
     implementation group: "io.github.jhipster", name: "jhipster-framework"
     implementation "io.dropwizard.metrics:metrics-core"
+    implementation "io.dropwizard.metrics:metrics-json"
+    implementation "io.dropwizard.metrics:metrics-jvm"
+    implementation "io.dropwizard.metrics:metrics-servlet"
+    implementation "io.dropwizard.metrics:metrics-servlets"
     implementation "io.micrometer:micrometer-registry-prometheus"
     implementation "net.logstash.logback:logstash-logback-encoder"
     implementation "com.fasterxml.jackson.datatype:jackson-datatype-hppc"
@@ -326,6 +330,7 @@ dependencies {
     implementation "com.jayway.jsonpath:json-path"
     implementation "com.mortennobel:java-image-scaling:0.8.6"
     implementation 'org.codehaus.groovy.modules.http-builder:http-builder:0.7.1'
+    implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-csv'
 
     implementation("com.icthh.xm.commons:xm-commons-ms-web:${xm_commons_version}") {
         exclude group: "io.github.jhipster", module: "jhipster-framework"
