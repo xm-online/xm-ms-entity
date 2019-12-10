@@ -1,15 +1,21 @@
 package com.icthh.xm.ms.entity;
 
+import com.icthh.xm.commons.i18n.spring.config.CommonMessageSourceConfiguration;
+import com.icthh.xm.commons.logging.util.MdcUtils;
+import com.icthh.xm.commons.tenant.TenantContextHolder;
+import com.icthh.xm.commons.tenant.TenantContextUtils;
+import com.icthh.xm.commons.tenant.TenantKey;
+import com.icthh.xm.commons.tenant.spring.config.TenantContextConfiguration;
 import com.icthh.xm.ms.entity.client.OAuth2InterceptedFeignConfiguration;
 import com.icthh.xm.ms.entity.config.ApplicationProperties;
 import com.icthh.xm.ms.entity.config.DefaultProfileUtil;
 
 import io.github.jhipster.config.JHipsterConstants;
 
+import javax.annotation.PreDestroy;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.InitializingBean;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.liquibase.LiquibaseProperties;
@@ -17,27 +23,35 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.FilterType;
+import org.springframework.context.annotation.Import;
 import org.springframework.core.env.Environment;
 
+import javax.annotation.PostConstruct;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Arrays;
 import java.util.Collection;
 
 @ComponentScan(
-    excludeFilters = @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, classes = OAuth2InterceptedFeignConfiguration.class)
+    value = "com.icthh.xm",
+    excludeFilters = @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE,
+        classes = {OAuth2InterceptedFeignConfiguration.class, CommonMessageSourceConfiguration.class})
 )
 @SpringBootApplication
 @EnableConfigurationProperties({LiquibaseProperties.class, ApplicationProperties.class})
 @EnableDiscoveryClient
-public class EntityApp implements InitializingBean {
+@Import({TenantContextConfiguration.class})
+public class EntityApp {
 
     private static final Logger log = LoggerFactory.getLogger(EntityApp.class);
 
     private final Environment env;
 
-    public EntityApp(Environment env) {
+    private final TenantContextHolder tenantContextHolder;
+
+    public EntityApp(Environment env, TenantContextHolder tenantContextHolder) {
         this.env = env;
+        this.tenantContextHolder = tenantContextHolder;
     }
 
     /**
@@ -47,8 +61,8 @@ public class EntityApp implements InitializingBean {
      * <p>
      * You can find more information on how profiles work with JHipster on <a href="https://www.jhipster.tech/profiles/">https://www.jhipster.tech/profiles/</a>.
      */
-    @Override
-    public void afterPropertiesSet() throws Exception {
+    @PostConstruct
+    public void initApplication() {
         Collection<String> activeProfiles = Arrays.asList(env.getActiveProfiles());
         if (activeProfiles.contains(JHipsterConstants.SPRING_PROFILE_DEVELOPMENT) && activeProfiles.contains(JHipsterConstants.SPRING_PROFILE_PRODUCTION)) {
             log.error("You have misconfigured your application! It should not run " +
@@ -58,14 +72,35 @@ public class EntityApp implements InitializingBean {
             log.error("You have misconfigured your application! It should not " +
                 "run with both the 'dev' and 'cloud' profiles at the same time.");
         }
+
+        initContexts();
+    }
+
+    private void initContexts() {
+        // init tenant context, by default this is XM super tenant
+        TenantContextUtils.setTenant(tenantContextHolder, TenantKey.SUPER);
+
+        // init logger MDC context
+        MdcUtils.putRid(MdcUtils.generateRid() + "::" + TenantKey.SUPER.getValue());
+    }
+
+    @PreDestroy
+    public void destroyApplication() {
+        log.info("\n----------------------------------------------------------\n\t"
+                + "Application {} is closing"
+                + "\n----------------------------------------------------------",
+            env.getProperty("spring.application.name"));
     }
 
     /**
      * Main method, used to run the application.
      *
-     * @param args the command line arguments.
+     * @param args the command line arguments
      */
     public static void main(String[] args) {
+
+        MdcUtils.putRid();
+
         SpringApplication app = new SpringApplication(EntityApp.class);
         DefaultProfileUtil.addDefaultProfile(app);
         Environment env = app.run(args).getEnvironment();

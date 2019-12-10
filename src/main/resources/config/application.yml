@@ -14,142 +14,108 @@
 # http://docs.spring.io/spring-boot/docs/current/reference/html/common-application-properties.html
 # ===================================================================
 
-feign:
-  hystrix:
-    enabled: true
-  # client:
-  #     config:
-  #         default:
-  #             connectTimeout: 5000
-  #             readTimeout: 5000
-
 # See https://github.com/Netflix/Hystrix/wiki/Configuration
-hystrix:
-  command:
-    default:
-      execution:
-        isolation:
-          strategy: SEMAPHORE
-          # See https://github.com/spring-cloud/spring-cloud-netflix/issues/1330
-          # thread:
-          #     timeoutInMilliseconds: 10000
-  shareSecurityContext: true
+#hystrix:
+#    command:
+#        default:
+#            execution:
+#                isolation:
+#                    thread:
+#                        timeoutInMilliseconds: 10000
 
 management:
-  endpoints:
-    web:
-      base-path: /management
-      exposure:
-        include: ['configprops', 'env', 'health', 'info', 'jhimetrics', 'logfile', 'loggers', 'prometheus', 'threaddump']
-  endpoint:
+    endpoints:
+        web:
+            base-path: /management
+            exposure:
+                include: ["configprops", "env", "health", "info", "threaddump", "logfile" ]
+    endpoint:
+        health:
+            show-details: when_authorized
+    info:
+        git:
+            mode: full
     health:
-      show-details: when-authorized
-      roles: 'ROLE_ADMIN'
-    jhimetrics:
-      enabled: true
-  info:
-    git:
-      mode: full
-  health:
-    mail:
-      enabled: false # When using the MailService, configure an SMTP server and set this to true
-  metrics:
-    export:
-      # Prometheus is the default metrics backend
-      prometheus:
-        enabled: true
-        step: 60
-    enable:
-      http: true
-      jvm: true
-      logback: true
-      process: true
-      system: true
-    distribution:
-      percentiles-histogram:
-        all: true
-      percentiles:
-        all: 0, 0.5, 0.75, 0.95, 0.99, 1.0
-    tags:
-      application: ${spring.application.name}
-    web:
-      server:
-        auto-time-requests: true
+        mail:
+            enabled: false # When using the MailService, configure an SMTP server and set this to true
+    metrics:
+        enabled: false # http://micrometer.io/ is disabled by default, as we use http://metrics.dropwizard.io/ instead
 
 spring:
-  autoconfigure:
-    exclude: org.springframework.boot.autoconfigure.data.elasticsearch.ElasticsearchAutoConfiguration,org.springframework.boot.autoconfigure.data.elasticsearch.ElasticsearchDataAutoConfiguration
-  application:
-    name: entity
-  cloud:
-    consul:
-      discovery:
-        healthCheckPath: /management/health
-        instanceId: entity:${spring.application.instance-id:${random.value}}
-        service-name: entity
-      config:
-        watch:
-          enabled: false
-  jmx:
-    enabled: false
-  data:
+    application:
+        name: entity
+    cloud:
+        inetutils:
+            preferredNetworks:
+                - 192.168.
+                - 10.
+        consul:
+            discovery:
+                healthCheckPath: /management/health
+                instanceId: ${spring.application.name}:${spring.application.instance-id:${random.value}}
+            config:
+                watch:
+                    enabled: false
+        stream:
+            kafka:
+                binder:
+                    health-timeout: 5 # kafkaHealthCheck timeout when scheduler-enabled: true, in seconds
+    jackson:
+        serialization.write_dates_as_timestamps: false
+        default-property-inclusion: non_empty
     jpa:
-      repositories:
-        bootstrap-mode: deferred
-  jpa:
-    open-in-view: false
-    properties:
-      hibernate.jdbc.time_zone: UTC
-    hibernate:
-      ddl-auto: none
-      naming:
-        physical-strategy: org.springframework.boot.orm.jpa.hibernate.SpringPhysicalNamingStrategy
-        implicit-strategy: org.springframework.boot.orm.jpa.hibernate.SpringImplicitNamingStrategy
-  messages:
-    basename: i18n/messages
-  main:
-    allow-bean-definition-overriding: true
-  mvc:
-    favicon:
-      enabled: false
-  task:
-    execution:
-      thread-name-prefix: entity-task-
-      pool:
-        core-size: 2
-        max-size: 50
-        queue-capacity: 10000
-    scheduling:
-      thread-name-prefix: entity-scheduling-
-      pool:
-        size: 2
-  thymeleaf:
-    mode: HTML
-  output:
-    ansi:
-      console-available: true
-security:
-  oauth2:
-    client:
-      access-token-uri: http://localhost:9080/auth/realms/jhipster/protocol/openid-connect/token
-      user-authorization-uri: http://localhost:9080/auth/realms/jhipster/protocol/openid-connect/auth
-      client-id: web_app
-      client-secret: web_app
-      scope: openid profile email
-    resource:
-      filter-order: 3
-      user-info-uri: http://localhost:9080/auth/realms/jhipster/protocol/openid-connect/userinfo
-
+        open-in-view: false
+        properties:
+            hibernate.jdbc.time_zone: UTC
+        hibernate:
+            ddl-auto: none
+            naming:
+                physical-strategy: org.springframework.boot.orm.jpa.hibernate.SpringPhysicalNamingStrategy
+                implicit-strategy: org.springframework.boot.orm.jpa.hibernate.SpringImplicitNamingStrategy
+    messages:
+        basename: i18n/messages
+    mvc:
+        favicon:
+            enabled: false
+    thymeleaf:
+        mode: XHTML
+    http:
+        multipart:
+            max-file-size: 20MB
+            max-request-size: 20MB
+    kafka:
+        consumer:
+            group-id: entity
+            key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+            value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+        listener:
+            concurrency: 16
+        producer:
+            key-serializer: org.apache.kafka.common.serialization.StringSerializer
+            value-serializer: org.apache.kafka.common.serialization.StringSerializer
+    mail:
+        host: localhost
+        port: 25
+        protocol: smtp
+        properties:
+            mail:
+                smtp:
+                    starttls.enable: false
+                    auth: false
+                    starttls.required: false
+    liquibase:
+        default-schema: XM
+        change-log: classpath:config/liquibase/master.xml
 server:
-  servlet:
-    session:
-      cookie:
-        http-only: true
+    servlet:
+        session:
+            cookie:
+                http-only: true
 
 # Properties to be exposed on the /info management endpoint
 info:
-  # Comma separated list of profiles that will trigger the ribbon to show
-  display-ribbon-on-profiles: 'dev'
+    # Comma separated list of profiles that will trigger the ribbon to show
+    display-ribbon-on-profiles: "dev"
 
 # ===================================================================
 # JHipster specific properties
@@ -158,29 +124,34 @@ info:
 # ===================================================================
 
 jhipster:
-  clientApp:
-    name: 'entityApp'
-  # By default CORS is disabled. Uncomment to enable.
-  # cors:
-  #     allowed-origins: "*"
-  #     allowed-methods: "*"
-  #     allowed-headers: "*"
-  #     exposed-headers: "Authorization,Link,X-Total-Count"
-  #     allow-credentials: true
-  #     max-age: 1800
-  mail:
-    from: entity@localhost
-  swagger:
-    default-include-pattern: /api/.*
-    title: entity API
-    description: entity API documentation
-    version: 0.0.1
-    terms-of-service-url:
-    contact-name:
-    contact-url:
-    contact-email:
-    license:
-    license-url:
+    clientApp:
+        name: 'entityApp'
+    async:
+        core-pool-size: 2
+        max-pool-size: 50
+        queue-capacity: 10000
+    # By default CORS is disabled. Uncomment to enable.
+    #cors:
+        #allowed-origins: "*"
+        #allowed-methods: "*"
+        #allowed-headers: "*"
+        #exposed-headers: "Authorization,Link,X-Total-Count"
+        #allow-credentials: true
+        #max-age: 1800
+    mail:
+        from: entity@localhost
+    swagger:
+        default-include-pattern: /api/.*
+        title: entity API
+        description: entity API documentation
+        version: 0.0.1
+        terms-of-service-url:
+        contact-name:
+        contact-url:
+        contact-email:
+        license:
+        license-url:
+
 # ===================================================================
 # Application specific properties
 # Add your own application properties here, see the ApplicationProperties class
@@ -189,5 +160,108 @@ jhipster:
 # More documentation is available at:
 # https://www.jhipster.tech/common-application-properties/
 # ===================================================================
+xm-config:
+    enabled: true
+    xm-config-url: http://config
+    kafka-config-topic: config_topic
 
-# application:
+application:
+    scheduler-enabled: false
+    tenant-ignored-path-list: /v2/api-docs, /api/profile-info, /swagger-resources/configuration/ui, /management/health
+    timelines-enabled: true
+    kafka-enabled: true
+    tenant-create-service-list: uaa, gate, timeline, entity, dashboard, balance, scheduler
+    tenant-client-connection-timeout: 2000
+    tenant-client-read-timeout: 40000
+    email-path-pattern: /config/tenants/{tenantName}/entity/emails/{langKey}/{fileName}.ftl
+    webapp-name: webapp
+    specification-webapp-name: settings-public.yml
+    specification-name: xmentityspec.yml
+    specification-path-pattern: /config/tenants/{tenantName}/entity/${application.specification-name}
+    specification-templates-name: search-templates.yml
+    specification-templates-path-pattern: /config/tenants/{tenantName}/entity/${application.specification-templates-name}
+    kafka-system-topic: system_topic
+    kafka-system-queue: system_queue
+    kafka-metadata-max-age: 60000 #in milliseconds
+    db-schema-suffix:
+    retry:
+        max-attempts: 3
+        delay: 1000 #in milliseconds
+        multiplier: 2
+    lep:
+        tenant-script-storage: XM_MS_CONFIG
+        lep-resource-path-pattern: /config/tenants/{tenantName}/entity/lep/resources/**/*
+    amazon:
+        avatar:
+            # XmEntity.avatarUrl should match this pattern to persist only last part into DB, otherwise set to null
+            # Before persisting only last part of the URL (aka fileName) will be persisted
+            pre-persist-url-full-pattern: ^http(s)?:\/\/[a-zA-Z0-9-.]+[.]icthh[.][a-z]+(:\d+)?/[a-zA-Z0-9-.]+$
+            # XmEntity.avatarUrl should match this pattern to return from DB, otherwise set to null
+            # After retrieving from DB URL will be prepended with path prefix to be absolute.
+            post-load-url-part-pattern: ^[a-zA-Z0-9-.]+$
+        aws:
+            endpoint:
+            template:
+            region:
+            access-key-id:
+            access-key-secret:
+        s3:
+            bucket:
+            bucket-prefix:
+    elasticSchemaSuffix: ""
+    requestCacheIgnoredPathPatternList: /api/functions/*/upload
+    maxUploadFileSize: 1073741824
+    maxUploadSize: 1073741824
+    periodicMetricPoolSize: 1
+    kafkaMetric:
+        enabled: true
+        connectionTimeoutTopic: 1000
+        metricTopics: system_topic
+
+# ===================================================================
+# Timeline specific properties
+#
+#    Example:
+# mask-rules: # rule for masking data in request/response (e.g. image content)
+#   - endpoint-to-mask: /api/attachments # endpoint to mask
+#     http-method: POST, PUT # list of http methods of endpoint
+#     path-to-mask: $.content.value # list of json-path variables to mask
+#     mask: <bytes[]> # replacement string
+#     mask-request: true # apply mask to request body
+#     mask-response: true # apply mask to response body
+#
+# ===================================================================
+timelines:
+    mask-rules:
+        - endpoint-to-mask: /api/attachments
+          http-method: POST, PUT
+          path-to-mask: $.content.value
+          mask: <bytes[]>
+          mask-request: true
+          mask-response: true
+        - endpoint-to-mask: /api/attachments/*
+          http-method: GET
+          path-to-mask: $.content.value
+          mask: <bytes[]>
+          mask-response: true
+        - endpoint-to-mask: /api/xm-entity-specs
+          http-method: GET
+          path-to-mask: $.[*]
+          mask: SPECS
+          mask-response: true
+        - endpoint-to-mask: /api/contents
+          http-method: POST, PUT
+          path-to-mask: $.value
+          mask: <bytes[]>
+          mask-request: true
+          mask-response: true
+        - endpoint-to-mask: /api/contents
+          http-method: GET
+          path-to-mask: $.[*].value
+          mask: <bytes[]>
+          mask-response: true
+        - endpoint-to-mask: /api/contents/*
+          http-method: GET
+          path-to-mask: $.value
+          mask: <bytes[]>
+          mask-response: true

@@ -2,7 +2,8 @@
 <!DOCTYPE configuration>
 
 <configuration scan="true">
-    <include resource="org/springframework/boot/logging/logback/base.xml"/>
+
+    <!--<include resource="org/springframework/boot/logging/logback/base.xml"/>-->
 
 <!-- The FILE and ASYNC appenders are here as examples for a production configuration -->
 <!--
@@ -21,24 +22,29 @@
         <queueSize>512</queueSize>
         <appender-ref ref="FILE"/>
     </appender>
-
-    <root level="${logging.level.root}">
-        <appender-ref ref="ASYNC"/>
-    </root>
 -->
+
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <charset>utf-8</charset>
+            <Pattern>%d %-5level [%thread] [%X{rid}] %logger{0}: %msg%n</Pattern>
+        </encoder>
+    </appender>
+
+    <logger name="com.icthh.xm.ms.entity" level="#logback.loglevel#"/>
+
+    <logger name="io.github.jhipster" level="#logback.loglevel#"/>
 
     <logger name="javax.activation" level="WARN"/>
     <logger name="javax.mail" level="WARN"/>
-    <logger name="javax.management.remote" level="WARN"/>
     <logger name="javax.xml.bind" level="WARN"/>
     <logger name="ch.qos.logback" level="WARN"/>
+    <logger name="com.codahale.metrics" level="WARN"/>
     <logger name="com.netflix" level="WARN"/>
-    <logger name="com.netflix.config.sources.URLConfigurationSource" level="ERROR"/>
     <logger name="com.netflix.discovery" level="INFO"/>
     <logger name="com.ryantenney" level="WARN"/>
     <logger name="com.sun" level="WARN"/>
     <logger name="com.zaxxer" level="WARN"/>
-    <logger name="io.searchbox" level="WARN"/>
     <logger name="io.undertow" level="WARN"/>
     <logger name="io.undertow.websockets.jsr" level="ERROR"/>
     <logger name="org.apache" level="WARN"/>
@@ -48,7 +54,6 @@
     <logger name="org.hibernate.validator" level="WARN"/>
     <logger name="org.hibernate" level="WARN"/>
     <logger name="org.hibernate.ejb.HibernatePersistence" level="OFF"/>
-    <logger name="org.postgresql" level="WARN"/>
     <logger name="org.springframework" level="WARN"/>
     <logger name="org.springframework.web" level="WARN"/>
     <logger name="org.springframework.security" level="WARN"/>
@@ -59,15 +64,20 @@
     <logger name="sun.rmi" level="WARN"/>
     <logger name="liquibase" level="WARN"/>
     <logger name="LiquibaseSchemaResolver" level="INFO"/>
-    <logger name="springfox.documentation.schema.property" level="ERROR"/>
     <logger name="sun.net.www" level="INFO"/>
     <logger name="sun.rmi.transport" level="WARN"/>
-
-    <!-- https://logback.qos.ch/manual/configuration.html#shutdownHook and https://jira.qos.ch/browse/LOGBACK-1090 -->
-    <shutdownHook class="ch.qos.logback.core.hook.DelayingShutdownHook"/>
+    <logger name="com.jayway.jsonpath.internal.path" level="INFO"/>
+    <logger name="org.reflections" level="INFO"/>
 
     <contextListener class="ch.qos.logback.classic.jul.LevelChangePropagator">
         <resetJUL>true</resetJUL>
     </contextListener>
+
+    <root level="#logback.loglevel#">
+        <appender-ref ref="STDOUT"/>
+<!--
+        <appender-ref ref="FILE"/>
+-->
+    </root>
 
 </configuration>
