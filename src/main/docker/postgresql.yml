@@ -1,11 +1,11 @@
 version: '2'
 services:
-    entity-postgresql:
-        image: postgres:10.4
-        # volumes:
-        #     - ~/volumes/jhipster/entity/postgresql/:/var/lib/postgresql/data/
-        environment:
-            - POSTGRES_USER=entity
-            - POSTGRES_PASSWORD=
-        ports:
-            - 5433:5432
+  entity-postgresql:
+    image: postgres:11.5
+    # volumes:
+    #     - ~/volumes/jhipster/entity/postgresql/:/var/lib/postgresql/data/
+    environment:
+      - POSTGRES_USER=entity
+      - POSTGRES_PASSWORD=
+    ports:
+      - 5432:5432

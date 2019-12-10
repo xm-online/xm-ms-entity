@@ -7,6 +7,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Optional;
+import java.util.stream.Stream;
 
 /**
  * Utility class for Spring Security.
@@ -19,7 +20,7 @@ public final class SecurityUtils {
     /**
      * Get the login of the current user.
      *
-     * @return the login of the current user
+     * @return the login of the current user.
      */
     public static Optional<String> getCurrentUserLogin() {
         SecurityContext securityContext = SecurityContextHolder.getContext();
@@ -35,11 +36,33 @@ public final class SecurityUtils {
             });
     }
 
-    public static Optional<String> getCurrentUserRole() {
-        SecurityContext securityContext = SecurityContextHolder.getContext();
-        Optional<Authentication> authCtx = Optional.ofNullable(securityContext.getAuthentication());
-        return authCtx.flatMap(authentication -> authentication
-            .getAuthorities().stream().findFirst())
+    /**
+     * Check if a user is authenticated.
+     *
+     * @return true if the user is authenticated, false otherwise.
+     */
+    public static boolean isAuthenticated() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        return authentication != null &&
+            getAuthorities(authentication).noneMatch(AuthoritiesConstants.ANONYMOUS::equals);
+    }
+
+    /**
+     * If the current user has a specific authority (security role).
+     * <p>
+     * The name of this method comes from the {@code isUserInRole()} method in the Servlet API.
+     *
+     * @param authority the authority to check.
+     * @return true if the current user has the authority, false otherwise.
+     */
+    public static boolean isCurrentUserInRole(String authority) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        return authentication != null &&
+            getAuthorities(authentication).anyMatch(authority::equals);
+    }
+
+    private static Stream<String> getAuthorities(Authentication authentication) {
+        return authentication.getAuthorities().stream()
             .map(GrantedAuthority::getAuthority);
     }
 

@@ -1,4 +1,0 @@
----
-- name: my.periodic.metric
-  updatePeriodSeconds: 2
-- name: my.every.call.metric

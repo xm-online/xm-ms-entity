@@ -1,11 +1,9 @@
 ######################
 # Project Specific
 ######################
-/build/www/**
+/build/resources/main/static/**
 /src/test/javascript/coverage/
-/src/test/javascript/PhantomJS*/
-/src/main/resources/.h2.server.properties
-gradle-local.properties
+
 ######################
 # Node
 ######################
@@ -13,6 +11,8 @@ gradle-local.properties
 node_tmp/
 node_modules/
 npm-debug.log.*
+/.awcache/*
+/.cache-loader/*
 
 ######################
 # SASS
@@ -50,6 +50,8 @@ local.properties
 # PDT-specific
 .buildpath
 
+# STS-specific
+/.sts4-cache/*
 ######################
 # Intellij
 ######################
@@ -60,6 +62,7 @@ local.properties
 *.ids
 *.orig
 classes/
+out/
 
 ######################
 # Visual Studio Code
@@ -113,11 +116,11 @@ Desktop.ini
 ######################
 /bin/
 /deploy/
-/out/
+
 ######################
 # Logs
 ######################
-*.log
+*.log*
 
 ######################
 # Others
@@ -126,8 +129,7 @@ Desktop.ini
 *.*~
 *~
 .merge_file*
-*.cache-main
-*.cache-tests
+
 ######################
 # Gradle Wrapper
 ######################
@@ -142,7 +144,3 @@ Desktop.ini
 # ESLint
 ######################
 .eslintcache
-
-src/main/lep-sandbox
-src/test/groovy/com/icthh/xm/lep/tenant
-src/test/resources/lep/custom

@@ -4,29 +4,25 @@
 # ===================================================================
 
 spring:
-    application:
-        name: entity
-    profiles:
-        # The commented value for `active` can be replaced with valid Spring profiles to load.
-        # Otherwise, it will be filled in by gradle when building the WAR file
-        # Either way, it can be overridden by `--spring.profiles.active` value passed in the commandline or `-Dspring.profiles.active` set in `JAVA_OPTS`
-        active: dev
-    cloud:
-        consul:
-            config:
-                fail-fast: false # if not in "prod" profile, do not force to use Spring Cloud Config
-                format: yaml
-                profile-separator: "-"
-            discovery:
-                tags:
-                    - profile=${spring.profiles.active}
-                    - version=${info.project.version:}
-                    - git-version=${git.commit.id.describe:}
-                    - git-commit=${git.commit.id.abbrev:}
-                    - git-branch=${git.branch:}
-            host: localhost
-            port: 8500
-
-info:
-    project:
-        version: #project.version#
+  application:
+    name: entity
+  profiles:
+    # The commented value for `active` can be replaced with valid Spring profiles to load.
+    # Otherwise, it will be filled in by gradle when building the JAR file
+    # Either way, it can be overridden by `--spring.profiles.active` value passed in the commandline or `-Dspring.profiles.active` set in `JAVA_OPTS`
+    active: #spring.profiles.active#
+  cloud:
+    consul:
+      config:
+        fail-fast: false # if not in "prod" profile, do not force to use Spring Cloud Config
+        format: yaml
+        profile-separator: '-'
+      discovery:
+        tags:
+          - profile=${spring.profiles.active}
+          - version=#project.version#
+          - git-version=${git.commit.id.describe:}
+          - git-commit=${git.commit.id.abbrev:}
+          - git-branch=${git.branch:}
+      host: localhost
+      port: 8500

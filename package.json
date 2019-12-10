@@ -1,6 +1,15 @@
 {
+  "name": "entity",
+  "version": "0.0.0",
+  "description": "Description for entity",
+  "private": true,
+  "license": "UNLICENSED",
+  "cacheDirectories": [
+    "node_modules"
+  ],
   "devDependencies": {
-    "generator-jhipster": "5.7.0"
+    "generator-jhipster": "6.5.1",
+    "@openapitools/openapi-generator-cli": "0.0.14-4.0.2"
   },
   "engines": {
     "node": ">=8.9.0"

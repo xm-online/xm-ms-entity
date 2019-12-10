@@ -13,58 +13,71 @@
 # http://docs.spring.io/spring-boot/docs/current/reference/html/common-application-properties.html
 # ===================================================================
 
-
 spring:
-    application:
-        name: entity
-    jackson:
-        serialization.write_dates_as_timestamps: false
-    cache:
-        type: none
-    datasource:
-        type: com.zaxxer.hikari.HikariDataSource
-        url: jdbc:h2:mem:entity;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;LOCK_TIMEOUT=20000
-        name:
-        username:
-        password:
-    jpa:
-        database-platform: io.github.jhipster.domain.util.FixedH2Dialect
-        database: H2
-        open-in-view: false
-        show-sql: true
-        hibernate:
-            ddl-auto: none
-            naming:
-                physical-strategy: org.springframework.boot.orm.jpa.hibernate.SpringPhysicalNamingStrategy
-                implicit-strategy: org.springframework.boot.orm.jpa.hibernate.SpringImplicitNamingStrategy
-        properties:
-            hibernate.id.new_generator_mappings: true
-            hibernate.cache.use_second_level_cache: false
-            hibernate.cache.use_query_cache: false
-            hibernate.generate_statistics: true
-            hibernate.hbm2ddl.auto: validate
-    data:
-        elasticsearch:
-            properties:
-                path:
-                    home: build/elasticsearch
-                    data: build/elasticsearch/data
-    mail:
-        host: localhost
-    messages:
-        basename: i18n/messages
-    mvc:
-        favicon:
-            enabled: false
-    thymeleaf:
-        mode: XHTML
-    liquibase:
-        contexts: test
-        change-log: classpath:config/liquibase/master.xml
+  application:
+    name: entity
+  datasource:
+    type: com.zaxxer.hikari.HikariDataSource
+    url: jdbc:h2:mem:entity;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    name:
+    username:
+    password:
+    hikari:
+      auto-commit: false
+  jpa:
+    database-platform: io.github.jhipster.domain.util.FixedH2Dialect
+    database: H2
+    open-in-view: false
+    show-sql: false
+    hibernate:
+      ddl-auto: none
+      naming:
+        physical-strategy: org.springframework.boot.orm.jpa.hibernate.SpringPhysicalNamingStrategy
+        implicit-strategy: org.springframework.boot.orm.jpa.hibernate.SpringImplicitNamingStrategy
+    properties:
+      hibernate.id.new_generator_mappings: true
+      hibernate.connection.provider_disables_autocommit: true
+      hibernate.cache.use_second_level_cache: false
+      hibernate.cache.use_query_cache: false
+      hibernate.generate_statistics: false
+      hibernate.hbm2ddl.auto: validate
+      hibernate.jdbc.time_zone: UTC
+  data:
+    elasticsearch:
+      properties:
+        path:
+          home: build/elasticsearch
+        # See https://github.com/jhipster/generator-jhipster/issues/10302
+        node:
+          max_local_storage_nodes: 2
+  liquibase:
+    contexts: test
+  mail:
+    host: localhost
+  main:
+    allow-bean-definition-overriding: true
+  messages:
+    basename: i18n/messages
+  mvc:
+    favicon:
+      enabled: false
+  task:
+    execution:
+      thread-name-prefix: entity-task-
+      pool:
+        core-size: 1
+        max-size: 50
+        queue-capacity: 10000
+    scheduling:
+      thread-name-prefix: entity-scheduling-
+      pool:
+        size: 1
+  thymeleaf:
+    mode: HTML
 
 server:
-    port: 10344
-    address: localhost
+  port: 10344
+  address: localhost
 
 # ===================================================================
 # JHipster specific properties
@@ -73,34 +86,32 @@ server:
 # ===================================================================
 
 jhipster:
-    async:
-        core-pool-size: 1
-        max-pool-size: 50
-        queue-capacity: 10000
-    # To test logstash appender
-    logging:
-        logstash:
-            enabled: true
-            host: localhost
-            port: 5000
-            queue-size: 512
-    security:
-        authentication:
-            jwt:
-                # This token must be encoded using Base64 (you can type `echo 'secret-key'|base64` on your command line)
-                base64-secret: b5838c74b2228da2189310693b41bac7c3162d51
-                # Token is valid 24 hours
-                token-validity-in-seconds: 86400
-        client-authorization:
-            access-token-uri: http://uaa/oauth/token
-            token-service-id: uaa
-            client-id: internal
-            client-secret: internal
-    metrics: # DropWizard Metrics configuration, used by MetricsConfiguration
-        jmx.enabled: true
-        logs: # Reports Dropwizard metrics in the logs
-            enabled: true
-            report-frequency: 60 # in seconds
+  clientApp:
+    name: 'entityApp'
+  logging:
+    # To test json console appender
+    use-json-format: true # By default, logs are in Json format
+    logstash:
+      enabled: false
+      host: localhost
+      port: 5000
+      queue-size: 512
+  security:
+    authentication:
+      jwt:
+        # This token must be encoded using Base64 (you can type `echo 'secret-key'|base64` on your command line)
+        base64-secret: MmJjODQ3NmJmYzI0YWIwZmMwNzI1N2IwNmUxZjhmZWJiNDJmN2Y4OTkwNDA5MmYzMzhmMDA0YTY0OWEwYzUyODA2MjU0MzFmZDI2OWIyYzY2OTQyZjAyMTllYzVkYmM2MWViZjkyYjdhOWMzYzNiZDY5MTU4YzM0ZmFjNTkwNDc=
+        # Token is valid 24 hours
+        token-validity-in-seconds: 86400
+    client-authorization:
+      access-token-uri: http://uaa/oauth/token
+      token-service-id: uaa
+      client-id: internal
+      client-secret: internal
+  metrics:
+    logs: # Reports metrics in the logs
+      enabled: true
+      report-frequency: 60 # in seconds
 
 # ===================================================================
 # Application specific properties
@@ -111,32 +122,4 @@ jhipster:
 # https://www.jhipster.tech/common-application-properties/
 # ===================================================================
 
-xm-config:
-    enabled: false
-
-application:
-    scheduler-enabled: false
-    kafka-enabled: false
-    amazon:
-        avatar:
-            pre-persist-url-full-pattern: ^http(s)?:\/\/[a-zA-Z0-9-.]+[.]icthh[.][a-z]+(:\d+)?/[a-zA-Z0-9-.]+$
-            post-load-url-part-pattern: ^[a-zA-Z0-9-.]+$
-        aws:
-            template: http://%s.rgw.icthh.test:7480/
-        s3:
-            bucket: xm-avatar
-    max-avatar-size: 2
-    tenant-client-connection-timeout: 10000
-    tenant-client-read-timeout: 10000
-    specification-path-pattern: /config/tenants/{tenantName}/entity/specs/xmentityspecs.yml
-    specification-templates-path-pattern: /config/tenants/{tenantName}/entity/templates/${application.specification-templates-name}
-    specification-webapp-name: settings-public.yml
-    specification-name: xmentityspec.yml
-    webapp-name: webapp
-    kafka-system-topic: system_topic
-    kafka-system-queue: system_queue
-    lep:
-        tenant-script-storage: XM_MS_CONFIG
-    maxUploadFileSize: 1073741824
-    maxUploadSize: 1073741824
-    periodicMetricPoolSize: 1
+# application:

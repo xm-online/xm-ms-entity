@@ -1,7 +1,0 @@
----
-BY_TYPEKEY_AND_ID:
-    query: typeKey:${typeKey} AND id:${id}
-BY_TYPEKEY:
-    query: ${typeKey}
-UNIQ_DESCRIPTION:
-    query: ${description}

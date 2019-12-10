@@ -1,3 +1,0 @@
----
-BY_TYPEKEY_AND_NAME:
-    query: typeKey:%s AND name:%s

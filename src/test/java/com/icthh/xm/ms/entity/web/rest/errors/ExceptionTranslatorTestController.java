@@ -1,17 +1,11 @@
 package com.icthh.xm.ms.entity.web.rest.errors;
 
-import com.icthh.xm.commons.exceptions.BusinessException;
 import org.springframework.dao.ConcurrencyFailureException;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.AccessDeniedException;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.ResponseStatus;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
-import java.util.Map;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
@@ -27,17 +21,12 @@ public class ExceptionTranslatorTestController {
     public void methodArgument(@Valid @RequestBody TestDTO testDTO) {
     }
 
-    @GetMapping("/test/parameterized-error")
-    public void parameterizedError() {
-        throw new BusinessException("test parameterized error").withParams("param0_value", "param1_value");
+    @GetMapping("/test/missing-servlet-request-part")
+    public void missingServletRequestPartException(@RequestPart String part) {
     }
 
-    @GetMapping("/test/parameterized-error2")
-    public void parameterizedError2() {
-        Map<String, String> params = new HashMap<>();
-        params.put("foo", "foo_value");
-        params.put("bar", "bar_value");
-        throw new BusinessException("test parameterized error", params);
+    @GetMapping("/test/missing-servlet-request-parameter")
+    public void missingServletRequestParameterException(@RequestParam String param) {
     }
 
     @GetMapping("/test/access-denied")
@@ -45,8 +34,13 @@ public class ExceptionTranslatorTestController {
         throw new AccessDeniedException("test access denied!");
     }
 
+    @GetMapping("/test/unauthorized")
+    public void unauthorized() {
+        throw new BadCredentialsException("test authentication failed!");
+    }
+
     @GetMapping("/test/response-status")
-    public void exceptionWithReponseStatus() {
+    public void exceptionWithResponseStatus() {
         throw new TestResponseStatusException();
     }
 
