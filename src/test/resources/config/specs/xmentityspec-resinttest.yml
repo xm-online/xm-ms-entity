@@ -1,0 +1,455 @@
+---
+types:
+    - key: ACCOUNT
+      name: { en: "Account" }
+      isApp: true
+      isAbstract: true
+      dataSpec: |
+                {
+                    "type": "object",
+                    "title": "Data",
+                    "properties": {
+                        "booleanProperties": {
+                            "title": "booleanProperties title",
+                            "type": "boolean"
+                        },
+                        "numberProperties": {
+                            "title": "numberProperties title",
+                            "type": "number"
+                        },
+                        "AAAAAAAAAA": {
+                            "title": "AAAAAAAAAA title",
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "AAAAAAAAAA"
+                    ]
+                }
+      tags:
+          - key: TEST
+            name: { en: "Test Account" }
+          - key: FAVORIT
+            name: { en: "Favorit" }
+      attachments:
+          - key: AAAAAAAAAA
+          - key: BBBBBBBBBB
+          - key: CCCCCCCCCC
+            max: 0
+          - key: DDDDDDDDDD
+            max: 1
+      locations:
+          - key: AAAAAAAAAA
+          - key: BBBBBBBBBB
+      ratings:
+          - key: AAAAAAAAAA
+          - key: BBBBBBBBBB
+      calendars:
+          - key: AAAAAAAAAA
+          - key: BBBBBBBBBB
+      links:
+            - key: TEST.LINK
+              builderType: NEW
+              name: { en: "Link 1", ru: "Связь 1" }
+              icon: local_offer
+              typeKey: TYPE 2
+              max: 10
+      states:
+          - key: STATE1
+            name: { en: "State 1", ru: "Состояние 1" }
+            icon: null
+            color: null
+            next:
+                - stateKey: STATE2
+          - key: STATE2
+            name: { en: "State 2", ru: "Состояние 2" }
+            icon: null
+            color: null
+            next:
+                - stateKey: STATE1
+                - stateKey: STATE3
+          - key: STATE3
+            name: { en: "State 3", ru: "Состояние 3" }
+            icon: highlight_off
+            color: null
+    - key: ACCOUNT.ADMIN
+      name: { en: "Admin" }
+      isApp: false
+      isAbstract: false
+      calendars:
+          - key: TYPEKEY
+            events:
+                - key: TYPEKEY
+      links:
+          - key: LINK.TARGET
+            builderType: NEW
+            typeKey: ACCOUNT.ADMIN
+    - key: ACCOUNT.USER
+      name: { en: "User" }
+      isApp: false
+      isAbstract: false
+    - key: ACCOUNT.OWNER
+      name: { en: "Owner" }
+      isApp: false
+      isAbstract: false
+    - key: ACCOUNTING
+      name: { en: "ACCOUNTING" }
+      isApp: false
+      isAbstract: false
+    - key: RESOURCE.XM-TENANT
+      name: { en: "RESOURCE.XM-TENANT" }
+      isApp: false
+      isAbstract: false
+    - key: TEST_LIFECYCLE
+      name: { en: "Test lifecycle", ru: "test" }
+      isApp: false
+      isAbstract: false
+      states:
+          - key: STATE1
+            next:
+                - stateKey: STATE2
+          - key: STATE2
+            next:
+                - stateKey: STATE3
+          - key: STATE3
+            next:
+                - stateKey: STATE4
+          - key: STATE4
+            next:
+                - stateKey: STATE5
+          - key: STATE5
+            next:
+                - stateKey: STATE6
+          - key: STATE6
+            next:
+                - stateKey: STATE7
+          - key: STATE7
+      dataSpec: |
+                {
+                    "type": "object",
+                    "properties": {
+                        "updateState": {
+                            "type": "number"
+                        },
+                        "updateByTransition": {
+                            "type": "number"
+                        },
+                        "updateByTargetState": {
+                            "type": "number"
+                        },
+                        "updateByEntity": {
+                            "type": "number"
+                        }
+                    }
+                }
+    - key: TEST_DELETE_PARENT
+      isApp: false
+      isAbstract: false
+      links:
+            - key: testLink
+              builderType: SEARCH
+              typeKey: TEST_DELETE
+    - key: TEST_DELETE
+      name: { en: "TEST_DELETE" }
+      isApp: false
+      isAbstract: false
+      functions:
+          - key: A
+      attachments:
+          - key: A
+
+      calendars:
+          - key: A
+            events:
+                - key: B
+      locations:
+          - key: A
+      ratings:
+          - key: A
+      tags:
+          - key: A
+      comments:
+          - key: A
+      links:
+            - key: cascadeDeleteLinks
+              builderType: NEW
+              typeKey: TEST_LIFECYCLE_LINK_NEW
+            - key: breakLinks
+              builderType: SEARCH
+              typeKey: TEST_LIFECYCLE_LINK_SEARCH
+
+    - key: TEST_LIFECYCLE_LINK_NEW
+      isApp: false
+      isAbstract: false
+      links:
+            - key: cascadeDeleteSubLinks
+              builderType: NEW
+              typeKey: TEST_LIFECYCLE_LINK_NEW
+            - key: cascadeBreakSubLinks
+              builderType: SEARCH
+              typeKey: TEST_LIFECYCLE_LINK_SEARCH
+    - key: TEST_LIFECYCLE_LINK_SEARCH
+      isApp: false
+      isAbstract: false
+    - key: TEST_LIFECYCLE_SUBLINK_NEW
+      isApp: false
+      isAbstract: false
+    - key: TEST_LIFECYCLE_SUBLINK_SEARCH
+      isApp: false
+      isAbstract: false
+
+    - key: TEST_DELETE_NEW_LINK
+      isApp: false
+      isAbstract: false
+      links:
+            - key: newLink
+              builderType: NEW
+              typeKey: TARGET_ENTITY
+
+    - key: TEST_DELETE_SEARCH_LINK
+      isApp: false
+      isAbstract: false
+      links:
+            - key: searchLink
+              builderType: SEARCH
+              typeKey: TARGET_ENTITY
+
+    - key: TARGET_ENTITY
+      isApp: false
+      isAbstract: false
+    - key: TEST_SAVE_AND_PROCEED
+      isApp: false
+      isAbstract: false
+
+    - key: TEST_SAVE_RUN
+      isApp: false
+      isAbstract: false
+    - key: TEST_NOT_RUN_SAVE
+      isApp: false
+      isAbstract: false
+
+    - key: TEST_DELETE_AND_PROCEED
+      isApp: false
+      isAbstract: false
+      states:
+          - key: STATE1
+      dataSpec: |
+                {
+                    "type": "object",
+                    "properties": {
+                        "runGeneralScriptDELETE": {
+                            "type": "number"
+                        },
+                        "runDeleteProceed": {
+                            "type": "number"
+                        },
+                        "runDeleteRun": {
+                            "type": "number"
+                        }
+                    }
+                }
+    - key: TEST_DELETE_RUN
+      isApp: false
+      isAbstract: false
+      states:
+          - key: STATE1
+      dataSpec: |
+                {
+                    "type": "object",
+                    "properties": {
+                        "runGeneralScriptDELETE": {
+                            "type": ["number", "null"]
+                        },
+                        "runDeleteProceed": {
+                            "type": ["number", "null"]
+                        },
+                        "runDeleteRun": {
+                            "type": ["number", "null"]
+                        }
+                    }
+                }
+    - key: TEST_NOT_RUN_DELETE
+      isApp: false
+      isAbstract: false
+      states:
+          - key: STATE1
+      dataSpec: |
+                {
+                    "type": "object",
+                    "properties": {
+                        "runGeneralScriptDELETE": {
+                            "type": ["number", "null"]
+                        },
+                        "runDeleteProceed": {
+                            "type": ["number", "null"]
+                        },
+                        "runDeleteRun": {
+                            "type": ["number", "null"]
+                        }
+                    }
+                }
+    - key: TEST_UNIQ_FIELDS
+      isApp: false
+      isAbstract: false
+      dataSpec: |
+                {
+                  "type": "object",
+                  "properties": {
+                    "field": {
+                      "type": "number"
+                    },
+                    "uniqField": {
+                      "unique": true,
+                      "type": [
+                        "number",
+                        "null"
+                      ]
+                    },
+                    "uniqObject": {
+                      "type": "object",
+                      "unique": true,
+                      "properties": {
+                        "notUniqueField": {
+                          "type": [
+                            "number",
+                            "null"
+                          ]
+                        },
+                        "uniqueField": {
+                          "unique": true,
+                          "type": [
+                            "number",
+                            "null"
+                          ]
+                        }
+                      }
+                    },
+                    "notUniqObject": {
+                      "type": "object",
+                      "properties": {
+                        "notUniqueField": {
+                          "type": [
+                            "number",
+                            "null"
+                          ]
+                        },
+                        "uniqueField": {
+                          "unique": true,
+                          "type": [
+                            "number",
+                            "null"
+                          ]
+                        }
+                      }
+                    }
+                  }
+                }
+    - key: TEST_UNIQUE_FIELD
+      isApp: false
+      isAbstract: false
+      dataSpec: |
+                {
+                  "type": "object",
+                  "properties": {
+                    "uniqueField": {
+                      "unique": true,
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "uniqueField2": {
+                      "unique": true,
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    }
+                  }
+                }
+    - key: ENTITY1
+      isApp: false
+      isAbstract: false
+      isNameRequired: false
+      isKeyRequired: false
+      links:
+            - key: en1en2
+              builderType: SEARCH
+              typeKey: ENTITY2
+    - key: ENTITY2
+      isApp: false
+      isAbstract: false
+      isNameRequired: true
+      isKeyRequired: true
+      links:
+            - key: en2en1
+              builderType: SEARCH
+              typeKey: ENTITY1
+    - key: TEST_SAVE_WITH_LINK_EXISTS_ENTITY
+      isAbstract: false
+      links:
+            - key: TEST_SAVE_WITH_LINK_LINK_KEY
+              builderType: NEW
+              typeKey: TEST_SAVE_WITH_LINK_NEW_ENTITY
+    - key: TEST_SAVE_WITH_LINK_NEW_ENTITY
+      isAbstract: false
+    - key: ENTITY_WITH_AVATAR
+      isApp: false
+      isAbstract: false
+    - key: TEST_SEARCH
+      isApp: false
+      isAbstract: false
+      dataSpec: |
+          {
+            "type": "object",
+            "properties": {
+              "targetField": {
+                "type": "string"
+              }
+            }
+          }
+    - key: TEST_LIFECYCLE_TYPE_KEY.SUB.CHILD
+      isApp: false
+      isAbstract: false
+      dataSpec: |
+          {
+            "type": "object",
+            "properties": {
+              "called": {
+                "type": "string"
+              }
+            }
+          }
+      states:
+          - key: STATE1
+            next:
+                - stateKey: STATE2
+          - key: STATE2
+    - key: TEST_LIFECYCLE_TYPE_KEY.SUB.CHILD.SUBCHILD.NEXTCHILD
+      isApp: false
+      isAbstract: false
+      dataSpec: |
+          {
+            "type": "object",
+            "properties": {
+              "called": {
+                "type": "string"
+              }
+            }
+          }
+    - key: TEST_UPLOAD
+      name: { en: "TEST_UPLOAD" }
+      isApp: false
+      isAbstract: false
+      functions:
+          - key: UPLOAD
+    - key: TEST_FUNCTION_WITH_PACKAGE
+      name: { en: "TEST_FUNCTION_WITH_PACKAGE" }
+      isApp: false
+      isAbstract: false
+      isNameRequired: false
+      isKeyRequired: false
+      functions:
+          - key: package/FUNCTION.PACKAGE-TEST
+          - key: package/FUNCTION-WITH-ENTITY.PACKAGE-TEST
+            withEntityId: true

@@ -1,5 +1,9 @@
 package com.icthh.xm.ms.entity.config;
 
+import static org.mockito.Mockito.mock;
+
+import com.icthh.xm.ms.entity.config.RestTemplateConfiguration.PathTimeoutHttpComponentsClientHttpRequestFactory;
+import javax.annotation.PostConstruct;
 import org.springframework.cloud.client.loadbalancer.RestTemplateCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -9,8 +13,8 @@ import org.springframework.security.oauth2.provider.token.store.JwtAccessTokenCo
 import org.springframework.web.client.RestTemplate;
 
 /**
- * Overrides UAA specific beans, so they do not interfere the testing.
- * This configuration must be included in {@code @SpringBootTest} in order to take effect.
+ * Overrides UAA specific beans, so they do not interfere the testing
+ * This configuration must be included in @SpringBootTest in order to take effect.
  */
 @Configuration
 public class SecurityBeanOverrideConfiguration {
@@ -18,18 +22,25 @@ public class SecurityBeanOverrideConfiguration {
     @Bean
     @Primary
     public TokenStore tokenStore() {
-        return null;
+        return mock(TokenStore.class);
     }
 
     @Bean
     @Primary
     public JwtAccessTokenConverter jwtAccessTokenConverter() {
-        return null;
+        return mock(JwtAccessTokenConverter.class);
     }
 
     @Bean
     @Primary
     public RestTemplate loadBalancedRestTemplate(RestTemplateCustomizer customizer) {
-        return null;
+        return mock(RestTemplate.class);
     }
+
+    @PostConstruct
+    public void postConstruct(){
+        // Need system error to see when contect is recreated during dunning test from gradle
+        System.err.println(" ===================== SecurityBeanOverrideConfiguration inited !!! =======================");
+    }
+
 }

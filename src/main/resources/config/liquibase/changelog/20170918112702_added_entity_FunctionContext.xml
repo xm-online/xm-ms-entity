@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd
+                        http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd">
+
+    <property name="now" value="now()" dbms="h2"/>
+
+    <property name="now" value="current_timestamp" dbms="postgresql"/>
+
+    <property name="floatType" value="float4" dbms="postgresql, h2"/>
+    <property name="floatType" value="float" dbms="mysql, oracle, mssql"/>
+
+    <property name="textType" value="varchar" dbms="postgresql, h2"/>
+    <property name="textType" value="text" dbms="oracle"/>
+
+    <!--
+        Added the entity FunctionContext.
+    -->
+    <changeSet id="20170918112702-1" author="jhipster">
+        <createTable tableName="function_context">
+            <column name="id" type="bigint" autoIncrement="${autoIncrement}">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="jhi_key" type="varchar(255)">
+                <constraints nullable="false" />
+            </column>
+
+            <column name="type_key" type="varchar(255)">
+                <constraints nullable="false" />
+            </column>
+
+            <column name="description" type="varchar(255)">
+                <constraints nullable="true" />
+            </column>
+
+            <column name="start_date" type="timestamp">
+                <constraints nullable="false" />
+            </column>
+
+            <column name="update_date" type="timestamp">
+                <constraints nullable="true" />
+            </column>
+
+            <column name="end_date" type="timestamp">
+                <constraints nullable="true" />
+            </column>
+
+            <column name="data" type="${textType}">
+                <constraints nullable="true" />
+            </column>
+
+            <column name="xm_entity_id" type="bigint">
+                <constraints nullable="true" />
+            </column>
+
+            <!-- jhipster-needle-liquibase-add-column - JHipster will add columns here, do not remove-->
+        </createTable>
+        <dropDefaultValue tableName="function_context" columnName="start_date" columnDataType="datetime"/>
+        <dropDefaultValue tableName="function_context" columnName="update_date" columnDataType="datetime"/>
+        <dropDefaultValue tableName="function_context" columnName="end_date" columnDataType="datetime"/>
+
+    </changeSet>
+</databaseChangeLog>

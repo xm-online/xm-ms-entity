@@ -1,0 +1,30 @@
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.4.xsd
+                        http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd">
+
+    <property name="now" value="now()" dbms="h2"/>
+
+    <property name="now" value="current_timestamp" dbms="postgresql"/>
+
+    <property name="floatType" value="float4" dbms="postgresql, h2"/>
+    <property name="floatType" value="float" dbms="mysql, oracle, mssql"/>
+
+    <changeSet id="20170711154147-1" author="ssenko">
+        <addColumn tableName="attachment">
+            <column name="value_content_type" type="varchar(255)"></column>
+        </addColumn>
+        <addColumn tableName="attachment">
+            <column name="value_content_size" type="bigint"></column>
+        </addColumn>
+        <dropNotNullConstraint columnName="content_url" tableName="attachment" columnDataType="varchar(255)"/>
+    </changeSet>
+
+    <changeSet id="20170711154147-2" author="ssenko">
+        <dropColumn tableName="content" columnName="jhi_value_content_type">
+        </dropColumn>
+    </changeSet>
+
+</databaseChangeLog>

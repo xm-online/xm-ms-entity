@@ -1,0 +1,25 @@
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+
+    <property name="uuid_function" value="MD5(random()::text)" dbms="postgresql"/>
+    <property name="uuid_function" value="sys_guid()" dbms="oracle"/>
+    <property name="uuid_function" value="random_uuid()" dbms="h2"/>
+
+    <changeSet id="20170828084400" author="ekashina">
+        <addColumn tableName="comment">
+            <column name="user_key" type="varchar(255)" defaultValueComputed="${uuid_function}">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+        <addColumn tableName="vote">
+            <column name="user_key" type="varchar(255)" defaultValueComputed="${uuid_function}">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+        <dropColumn columnName="login" tableName="comment"/>
+        <dropColumn columnName="login" tableName="vote"/>
+    </changeSet>
+
+</databaseChangeLog>

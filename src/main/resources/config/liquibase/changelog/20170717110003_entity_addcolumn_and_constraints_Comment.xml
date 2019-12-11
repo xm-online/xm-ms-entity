@@ -1,0 +1,28 @@
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd
+                        http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd">
+
+    <changeSet id="20170717110003-1" author="amedvedchuk">
+        <addColumn tableName="comment">
+            <column name="login" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="20170717110003-2" author="amedvedchuk">
+        <dropForeignKeyConstraint baseTableName="comment" constraintName="fk_comment_author_id"/>
+        <renameColumn tableName="comment" oldColumnName="author_id" newColumnName="xm_entity_id"/>
+        <addNotNullConstraint tableName="comment" columnName="xm_entity_id" columnDataType="bigint"/>
+        <addForeignKeyConstraint baseColumnNames="xm_entity_id"
+                                 baseTableName="comment"
+                                 constraintName="fk_comment_xm_entity_id"
+                                 referencedColumnNames="id"
+                                 referencedTableName="xm_entity"/>
+    </changeSet>
+
+
+</databaseChangeLog>

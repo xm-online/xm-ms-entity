@@ -1,0 +1,5 @@
+---
+applications:
+- key: "APPLICATION.TYPE1"
+- key: "APPLICATION.TYPE2"
+- key: "APPLICATION.TYPE3"

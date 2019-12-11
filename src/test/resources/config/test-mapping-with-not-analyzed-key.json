@@ -1,0 +1,22 @@
+{
+    "properties": {
+        "key": {
+            "type": "string",
+            "fielddata": true,
+            "fields": {
+                "keyword": {
+                    "type": "keyword"
+                }
+            }
+        },
+        "data": {
+            "type": "object",
+            "properties": {
+                "targetField": {
+                    "type": "string",
+                    "index": "not_analyzed"
+                }
+            }
+        }
+    }
+}

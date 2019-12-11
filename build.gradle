@@ -17,6 +17,7 @@ plugins {
     id "maven-publish"
     id "idea"
     id "jacoco"
+    id "checkstyle"
     id "org.springframework.boot"
     id "com.google.cloud.tools.jib"
     id "com.gorylenko.gradle-git-properties"
@@ -35,13 +36,12 @@ version = "0.0.1-SNAPSHOT"
 
 description = ""
 
-sourceCompatibility=1.8
-targetCompatibility=1.8
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
 assert System.properties["java.specification.version"] == "1.8" || "11" || "12" || "13"
 
 apply plugin: 'war'
 apply plugin: 'pmd'
-apply plugin: 'checkstyle'
 apply from: "gradle/docker.gradle"
 apply from: "gradle/sonar.gradle"
 //jhipster-needle-gradle-apply-from - JHipster will add additional gradle scripts to be applied here
@@ -86,7 +86,7 @@ if (OperatingSystem.current().isWindows()) {
         doFirst {
             manifest {
                 def classpath = sourceSets.main.runtimeClasspath.files
-                attributes "Class-Path": classpath.collect {f -> f.toURI().toString()}.join(" ")
+                attributes "Class-Path": classpath.collect { f -> f.toURI().toString() }.join(" ")
             }
         }
     }
@@ -214,12 +214,6 @@ liquibase {
     runList = project.ext.runList
 }
 
-checkstyle {
-    toolVersion '${checkstyle_version}'
-    configFile file("checkstyle.xml")
-    checkstyleTest.enabled = false
-}
-
 nohttp {
     source.include "build.gradle", "README.md"
 }
@@ -238,11 +232,11 @@ repositories {
 
 dependencies {
     // import JHipster dependencies BOM
-    implementation platform("io.github.jhipster:jhipster-dependencies:${jhipster_dependencies_version}" )
+    implementation platform("io.github.jhipster:jhipster-dependencies:${jhipster_dependencies_version}")
 
     // Use ", version: jhipster_dependencies_version, changing: true" if you want
     // to use a SNAPSHOT release instead of a stable release
-    implementation group: "io.github.jhipster", name: "jhipster-framework"
+    implementation "io.github.jhipster:jhipster-framework"
     implementation "io.dropwizard.metrics:metrics-core"
     implementation "io.dropwizard.metrics:metrics-json"
     implementation "io.dropwizard.metrics:metrics-jvm"
@@ -282,7 +276,7 @@ dependencies {
     runtimeOnly "de.dentrassi.elasticsearch:log4j2-mock:${log4j2_mock_version}"
     // end of Spring Data Jest dependencies
     implementation "org.springframework.boot:spring-boot-starter-security"
-    implementation ("org.springframework.boot:spring-boot-starter-web") {
+    implementation("org.springframework.boot:spring-boot-starter-web") {
         exclude module: "spring-boot-starter-tomcat"
     }
     implementation "org.springframework.boot:spring-boot-starter-undertow"
@@ -303,7 +297,7 @@ dependencies {
     implementation "org.springframework.security.oauth:spring-security-oauth2"
     implementation "org.springframework.security:spring-security-jwt"
     implementation "org.glassfish.jaxb:jaxb-runtime:${jaxb_runtime_version}"
-    implementation ("io.springfox:springfox-swagger2") {
+    implementation("io.springfox:springfox-swagger2") {
         exclude module: "mapstruct"
     }
     implementation "io.springfox:springfox-bean-validators"
@@ -315,7 +309,7 @@ dependencies {
     annotationProcessor "org.mapstruct:mapstruct-processor:${mapstruct_version}"
     annotationProcessor "org.hibernate:hibernate-jpamodelgen:${hibernate_version}"
     annotationProcessor "org.glassfish.jaxb:jaxb-runtime:${jaxb_runtime_version}"
-    annotationProcessor ("org.springframework.boot:spring-boot-configuration-processor:${spring_boot_version}") {
+    annotationProcessor("org.springframework.boot:spring-boot-configuration-processor:${spring_boot_version}") {
         exclude group: "com.vaadin.external.google", module: "android-json"
     }
     // XM custom dependencies
@@ -352,10 +346,12 @@ dependencies {
     implementation "com.github.bohnman:squiggly-filter-jackson:${squiggly_filter_version}"
 
     // test dependencies
+    testCompileOnly "org.projectlombok:lombok:${lombok_version}"
+    testAnnotationProcessor "org.projectlombok:lombok:${lombok_version}"
     testImplementation "com.jayway.jsonpath:json-path"
     testImplementation "io.cucumber:cucumber-junit"
     testImplementation "io.cucumber:cucumber-spring"
-    testImplementation ("org.springframework.boot:spring-boot-starter-test") {
+    testImplementation("org.springframework.boot:spring-boot-starter-test") {
         exclude module: "junit"
         exclude group: "com.vaadin.external.google", module: "android-json"
     }
@@ -372,6 +368,10 @@ dependencies {
     testImplementation "com.h2database:h2"
     liquibaseRuntime "com.h2database:h2"
     //jhipster-needle-gradle-dependency - JHipster will add additional dependencies here
+    testImplementation "com.adobe.testing:s3mock-junit4:2.0.11"
+    testImplementation "org.testcontainers:testcontainers:1.10.1"
+    testImplementation "org.awaitility:awaitility:3.1.5"
+    testImplementation "com.github.tomakehurst:wiremock-jre8:2.23.2"
 }
 
 checkstyle {
@@ -381,7 +381,7 @@ checkstyle {
 }
 
 spotbugs {
-
+    ignoreFailures = true
 }
 
 pmd {

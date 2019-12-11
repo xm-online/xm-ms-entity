@@ -1,62 +1,65 @@
 package com.icthh.xm.ms.entity.web.rest;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.hamcrest.Description;
 import org.hamcrest.TypeSafeDiagnosingMatcher;
-import org.springframework.format.datetime.standard.DateTimeFormatterRegistrar;
-import org.springframework.format.support.DefaultFormattingConversionService;
-import org.springframework.format.support.FormattingConversionService;
 import org.springframework.http.MediaType;
 
 import java.io.IOException;
-import java.time.ZonedDateTime;
+import java.nio.charset.Charset;
+import java.time.Instant;
 import java.time.format.DateTimeParseException;
-import java.util.List;
-
-import javax.persistence.EntityManager;
-import javax.persistence.TypedQuery;
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Root;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Utility class for testing REST controllers.
  */
-public final class TestUtil {
+public class TestUtil {
 
-    private static final ObjectMapper mapper = createObjectMapper();
-
-    /** MediaType for JSON UTF8 */
-    public static final MediaType APPLICATION_JSON_UTF8 = MediaType.APPLICATION_JSON_UTF8;
-
-    private static ObjectMapper createObjectMapper() {
-        ObjectMapper mapper = new ObjectMapper();
-        mapper.setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
-        mapper.registerModule(new JavaTimeModule());
-        return mapper;
-    }
+    /**
+     * MediaType for JSON UTF8
+     */
+    public static final MediaType APPLICATION_JSON_UTF8 = new MediaType(
+        MediaType.APPLICATION_JSON.getType(),
+        MediaType.APPLICATION_JSON.getSubtype(), Charset.forName("utf8"));
 
     /**
      * Convert an object to JSON byte array.
      *
-     * @param object the object to convert.
-     * @return the JSON byte array.
+     * @param object the object to convert
+     * @return the JSON byte array
      * @throws IOException
      */
     public static byte[] convertObjectToJsonBytes(Object object) throws IOException {
+        ObjectMapper mapper = getObjectMapper();
+
         return mapper.writeValueAsBytes(object);
+    }
+
+    public static <T> T convertJsonBytesToObject(byte[] bytes, Class<T> clazz) throws IOException {
+        ObjectMapper mapper = getObjectMapper();
+
+        return mapper.readValue(bytes, clazz);
+    }
+
+    private static ObjectMapper getObjectMapper() {
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
+
+        JavaTimeModule module = new JavaTimeModule();
+        mapper.registerModule(module);
+        return mapper;
     }
 
     /**
      * Create a byte array with a specific size filled with specified data.
      *
-     * @param size the size of the byte array.
-     * @param data the data to put in the byte array.
-     * @return the JSON byte array.
+     * @param size the size of the byte array
+     * @param data the data to put in the byte array
+     * @return the JSON byte array
      */
     public static byte[] createByteArray(int size, String data) {
         byte[] byteArray = new byte[size];
@@ -69,25 +72,25 @@ public final class TestUtil {
     /**
      * A matcher that tests that the examined string represents the same instant as the reference datetime.
      */
-    public static class ZonedDateTimeMatcher extends TypeSafeDiagnosingMatcher<String> {
+    public static class InstantMatcher extends TypeSafeDiagnosingMatcher<String> {
 
-        private final ZonedDateTime date;
+        private final Instant date;
 
-        public ZonedDateTimeMatcher(ZonedDateTime date) {
+        public InstantMatcher(Instant date) {
             this.date = date;
         }
 
         @Override
         protected boolean matchesSafely(String item, Description mismatchDescription) {
             try {
-                if (!date.isEqual(ZonedDateTime.parse(item))) {
+                if (!date.equals(Instant.parse(item))) {
                     mismatchDescription.appendText("was ").appendValue(item);
                     return false;
                 }
                 return true;
             } catch (DateTimeParseException e) {
                 mismatchDescription.appendText("was ").appendValue(item)
-                    .appendText(", which could not be parsed as a ZonedDateTime");
+                    .appendText(", which could not be parsed as a Instant");
                 return false;
             }
 
@@ -100,18 +103,20 @@ public final class TestUtil {
     }
 
     /**
-     * Creates a matcher that matches when the examined string represents the same instant as the reference datetime.
-     * @param date the reference datetime against which the examined string is checked.
+     * Creates a matcher that matches when the examined string reprensents the same instant as the reference datetime
+     *
+     * @param date the reference datetime against which the examined string is checked
      */
-    public static ZonedDateTimeMatcher sameInstant(ZonedDateTime date) {
-        return new ZonedDateTimeMatcher(date);
+    public static InstantMatcher sameInstant(Instant date) {
+        return new InstantMatcher(date);
     }
 
     /**
      * Verifies the equals/hashcode contract on the domain object.
      */
-    public static <T> void equalsVerifier(Class<T> clazz) throws Exception {
-        T domainObject1 = clazz.getConstructor().newInstance();
+    @SuppressWarnings("unchecked")
+    public static void equalsVerifier(Class clazz) throws Exception {
+        Object domainObject1 = clazz.getConstructor().newInstance();
         assertThat(domainObject1.toString()).isNotNull();
         assertThat(domainObject1).isEqualTo(domainObject1);
         assertThat(domainObject1.hashCode()).isEqualTo(domainObject1.hashCode());
@@ -120,39 +125,9 @@ public final class TestUtil {
         assertThat(domainObject1).isNotEqualTo(testOtherObject);
         assertThat(domainObject1).isNotEqualTo(null);
         // Test with an instance of the same class
-        T domainObject2 = clazz.getConstructor().newInstance();
+        Object domainObject2 = clazz.getConstructor().newInstance();
         assertThat(domainObject1).isNotEqualTo(domainObject2);
         // HashCodes are equals because the objects are not persisted yet
         assertThat(domainObject1.hashCode()).isEqualTo(domainObject2.hashCode());
     }
-
-    /**
-     * Create a {@link FormattingConversionService} which use ISO date format, instead of the localized one.
-     * @return the {@link FormattingConversionService}.
-     */
-    public static FormattingConversionService createFormattingConversionService() {
-        DefaultFormattingConversionService dfcs = new DefaultFormattingConversionService ();
-        DateTimeFormatterRegistrar registrar = new DateTimeFormatterRegistrar();
-        registrar.setUseIsoFormat(true);
-        registrar.registerFormatters(dfcs);
-        return dfcs;
-    }
-
-    /**
-     * Makes a an executes a query to the EntityManager finding all stored objects.
-     * @param <T> The type of objects to be searched
-     * @param em The instance of the EntityManager
-     * @param clss The class type to be searched
-     * @return A list of all found objects
-     */
-    public static <T> List<T> findAll(EntityManager em, Class<T> clss) {
-        CriteriaBuilder cb = em.getCriteriaBuilder();
-        CriteriaQuery<T> cq = cb.createQuery(clss);
-        Root<T> rootEntry = cq.from(clss);
-        CriteriaQuery<T> all = cq.select(rootEntry);
-        TypedQuery<T> allQuery = em.createQuery(all);
-        return allQuery.getResultList();
-    }
-
-    private TestUtil() {}
 }

@@ -1,0 +1,1104 @@
+---
+types:
+    - key: ACCOUNT
+      name: { en: "Account", ru: "Учетная запись" }
+      isApp: true
+      isAbstract: true
+      fastSearch:
+          - query: typeKey:ACCOUNT* AND stateKey:NEW
+            name: { en: "New", ru: "Новые" }
+          - query: typeKey:ACCOUNT* AND stateKey:ACTIVE
+            name: { en: "Active", ru: "Активные" }
+      icon: account_balance_wallet
+      functions:
+          - key: ACCOUNT.REDEEM-VOUCHER
+            name: { en: "Redeem Voucher", ru: "Погасить Ваучер" }
+            isShowFormWithoutData: false
+            contextDataSpec: |
+                             {
+                                 "type": "object",
+                                 "properties": {
+                                       "attemptedDate": {
+                                           "title": "Attempted Date",
+                                           "type": "string"
+                                       },
+                                       "isSuccess": {
+                                           "title": "Is Success",
+                                           "type": "boolean"
+                                       },
+                                       "voucherSerial": {
+                                           "title": "Voucher Serial",
+                                           "type": "string"
+                                       },
+                                       "enteredSecret": {
+                                           "title": "Entered Secret",
+                                           "type": "string"
+                                       }
+                                   }
+                             }
+          - key: ACCOUNT.EXTRACT-LINKEDIN-PROFILE
+            name: { en: "Extract LinkedIn profile", ru: "Получить LinkedIn профиль" }
+            isShowFormWithoutData: false
+            inputSpec: |
+                       {
+                           "type": "object",
+                           "title": "functionContext",
+                           "properties": {
+                               "linkedInProfileUrl": { "type": "string", "title": "LinkedIn profile URL" },
+                           }
+                       }
+            contextDataSpec: |
+                             {
+                                 "type": "object",
+                                 "properties": {
+                                     "memberConnections": { "type": "string", "title": "Member connections" },
+                                     "fullName": { "type": "string", "title": "Full name" },
+                                     "location": { "type": "string", "title": "Location" },
+                                     "current": { "type": "string", "title": "Current" },
+                                     "pictureUrl": { "type": "string", "format": "uri", "title": "Picture URL" },
+                                     "summary": { "type": "string", "title": "Summary" },
+
+                                     "skills":    { "type": "array", "items": { "type": "string" }, "title": "Skills" },
+                                     "languages": { "type": "array", "items": { "type": "string" }, "title": "Languages" },
+
+                                     "experience": {
+                                         "type": "object",
+                                         "title": "Experience",
+                                         "properties": {
+                                             "current": {
+                                                 "type": "array",
+                                                 "title": "Current experiences",
+                                                 "items": {
+                                                     "type": "object",
+                                                     "title": "Current experience",
+                                                     "properties": {
+                                                         "title": { "type": "string", "title": "Title" },
+                                                         "org": { "type": "string", "title": "Org" },
+                                                         "dateRange": { "type": "string", "title": "Date range" },
+                                                         "location": { "type": "string", "title": "Location" },
+                                                         "description": { "type": "string", "title": "Description" },
+                                                         "logoUrl": { "type": "string", "format": "uri", "title": "Logo" },
+                                                     }
+                                                 }
+                                             },
+
+                                             "past": {
+                                                 "type": "array",
+                                                 "title": "Past experiences",
+                                                 "items": {
+                                                     "type": "object",
+                                                     "title": "Past experience",
+                                                     "properties": {
+                                                         "title": { "type": "string", "title": "Title" },
+                                                         "org": { "type": "string", "title": "Org" },
+                                                         "dateRange": { "type": "string", "title": "Date range" },
+                                                         "location": { "type": "string", "title": "Location" },
+                                                         "description": { "type": "string", "title": "Description" },
+                                                         "logoUrl": { "type": "string", "format": "uri", "title": "Logo" },
+                                                     }
+                                                 }
+                                             },
+                                         },
+                                     },
+
+                                     "education": {
+                                         "type": "array",
+                                         "title": "Educations",
+                                         "items": {
+                                             "type": "object",
+                                             "title": "Education",
+                                             "properties": {
+                                                 "title": { "type": "string", "title": "Title" },
+                                                 "org": { "type": "string", "title": "Org" },
+                                                 "dateRange": { "type": "string", "title": "Date range" },
+                                                 "description": { "type": "string", "title": "Description" },
+                                                 "logoUrl": { "type": "string", "format": "uri", "title": "Logo" },
+                                             }
+                                         }
+                                     },
+
+                                     "recommendations": { "type": "array", "items": { "type": "string" }, "title": "Recommendations" },
+
+                                     "volunteering": {
+                                         "type": "array",
+                                         "title": "Volunteering",
+                                         "items": {
+                                             "type": "object",
+                                             "title": "Volunteer",
+                                             "properties": {
+                                                 "title": { "type": "string", "title": "Title" },
+                                                 "org": { "type": "string", "title": "Org" },
+                                                 "dateRange": { "type": "string", "title": "Date range" },
+                                                 "description": { "type": "string", "title": "Description" },
+                                                 "cause": { "type": "string", "title": "Cause" },
+                                             }
+                                         },
+                                     },
+
+                                     "certifications": {
+                                         "type": "array",
+                                         "title": "Certifications",
+                                         "items": {
+                                             "type": "object",
+                                             "title": "Certificate",
+                                             "properties": {
+                                                 "title": { "type": "string", "title": "Title" },
+                                                 "org": { "type": "string", "title": "Org" },
+                                                 "dateRange": { "type": "string", "title": "Date range" },
+                                                 "description": { "type": "string", "title": "Description" },
+                                                 "url": { "type": "string", "format": "uri", "title": "URL" },
+                                                 "logoUrl": { "type": "string", "format": "uri", "title": "Logo" },
+                                             }
+                                         },
+                                     },
+
+                                     "awards": {
+                                         "type": "array",
+                                         "title": "Awards",
+                                         "items": {
+                                             "type": "object",
+                                             "title": "Award",
+                                             "properties": {
+                                                 "title": { "type": "string", "title": "Title" },
+                                                 "org": { "type": "string", "title": "Org" },
+                                                 "dateRange": { "type": "string", "title": "Date range" },
+                                                 "description": { "type": "string", "title": "Description" },
+                                             }
+                                         },
+                                     },
+
+                                     "projects": {
+                                         "type": "array",
+                                         "title": "Projects",
+                                         "items": {
+                                             "type": "object",
+                                             "title": "Project",
+                                             "properties": {
+                                                 "title": { "type": "string", "title": "Title" },
+                                                 "dateRange": { "type": "string", "title": "Date range" },
+                                                 "description": { "type": "string", "title": "Description" },
+                                             }
+                                         },
+                                     },
+
+                                     "interests": { "type": "array", "items": { "type": "string" }, "title": "Interests" },
+                                 }
+                             }
+            contextDataForm: |
+                             {
+                                 "layout": [
+                                     {
+                                         "key": "summary",
+                                         "title": "<h3>Summary</h3>",
+                                         "type": "textarea",
+                                         "readonly": true
+                                     },
+                                     {
+                                         "key": "education",
+                                         "title": "<h3>Education</h3>",
+                                         "type": "array",
+                                         "readonly": true,
+                                         "items": [
+                                             {
+                                                 "items": [
+                                                     {
+                                                         "key": "education[].dateRange",
+                                                         "title": "Date range",
+                                                         "readonly": true
+                                                     },
+                                                     {
+                                                         "key": "education[].org",
+                                                         "title": "Organization",
+                                                         "readonly": true
+                                                     },
+                                                     {
+                                                         "key": "education[].title",
+                                                         "title": "Title",
+                                                         "readonly": true
+                                                     },
+                                                     {
+                                                         "key": "education[].description",
+                                                         "title": "Description",
+                                                         "type": "textarea",
+                                                         "readonly": true
+                                                     }
+                                                 ]
+                                             }
+                                         ]
+                                     },
+                                     {
+                                         "key": "experience",
+                                         "title": "<h3>Current Experience</h3>",
+                                         "type": "array",
+                                         "readonly": true,
+                                         "items": [
+                                             {
+                                                 "items": [
+                                                     {
+                                                         "key": "experience.current[].dateRange",
+                                                         "title": "Date range",
+                                                         "readonly": true
+                                                     },
+                                                     {
+                                                         "key": "experience.current[].org",
+                                                         "title": "Organization",
+                                                         "readonly": true
+                                                     },
+                                                     {
+                                                         "key": "experience.current[].title",
+                                                         "title": "Title",
+                                                         "readonly": true
+                                                     },
+                                                     {
+                                                         "key": "experience.current[].description",
+                                                         "title": "Description",
+                                                         "type": "textarea",
+                                                         "readonly": true
+                                                     },
+                                                     {
+                                                         "key": "experience.current[].location",
+                                                         "title": "Location",
+                                                         "readonly": true
+                                                     }
+                                                 ]
+                                             }
+                                         ]
+                                     },
+                                     {
+                                         "key": "experience",
+                                         "title": "<h3>Past Experience</h3>",
+                                         "type": "array",
+                                         "readonly": true,
+                                         "items": [
+                                             {
+                                                 "items": [
+                                                     {
+                                                         "key": "experience.past[].dateRange",
+                                                         "title": "Date range",
+                                                         "readonly": true
+                                                     },
+                                                     {
+                                                         "key": "experience.past[].org",
+                                                         "title": "Organization",
+                                                         "readonly": true
+                                                     },
+                                                     {
+                                                         "key": "experience.past[].title",
+                                                         "title": "Title",
+                                                         "readonly": true
+                                                     },
+                                                     {
+                                                         "key": "experience.past[].description",
+                                                         "title": "Description",
+                                                         "type": "textarea",
+                                                         "readonly": true
+                                                     },
+                                                     {
+                                                         "key": "experience.past[].location",
+                                                         "title": "Location",
+                                                         "readonly": true
+                                                     }
+                                                 ]
+                                             }
+                                         ]
+                                     }
+                                 ]
+                             }
+      states:
+          - key: NEW
+            name: { en: "New", ru: "Новый" }
+            icon: fiber_new
+            color: '#FFEB3B'
+            next:
+                - stateKey: VERIFIED
+                  name: { en: "Verify", ru: "Проверить" }
+                - stateKey: REJECTED
+                  name: { en: "Reject", ru: "Отклонить" }
+          - key: VERIFIED
+            name: { en: "Verified", ru: "Проверенный" }
+            icon: verified_user
+            color: '#CDDC39'
+            next:
+                - stateKey: ACTIVE
+                  name: { en: "Activate", ru: "Активировать" }
+          - key: ACTIVE
+            name: { en: "Active", ru: "Активный" }
+            icon: play_arrow
+            color: '#4CAF50'
+            next:
+                - stateKey: BLOCKED
+                  name: { en: "Block", ru: "Блокировать" }
+                - stateKey: RETIRED
+                  name: { en: "Retire", ru: "Удалить" }
+          - key: REJECTED
+            name: { en: "Rejected", ru: "Отклоненный" }
+            icon: close
+            color: '#FF5722'
+          - key: RETIRED
+            name: { en: "Retired", ru: "Удаленный" }
+            icon: stop
+            color: '#000000'
+          - key: BLOCKED
+            name: { en: "Blocked", ru: "Блокированный" }
+            icon: pause
+            color: '#795548'
+            next:
+                - stateKey: ACTIVE
+                  name: { en: "Activate", ru: "Активировать" }
+      links:
+          - key: ACCOUNT.CHILD
+            builderType: SEARCH
+            name: { en: "Child", ru: "Потомок" }
+            icon: child_friendly
+            typeKey: ACCOUNT
+            max: 10
+    - key: ACCOUNT.ADMIN
+      name: { en: "Admin", ru: "Администратор" }
+      isApp: false
+      isAbstract: false
+    - key: ACCOUNT.SERVICEMAN
+      name: { en: "Serviceman", ru: "Мастер по ремонту" }
+      isApp: false
+      isAbstract: false
+    - key: ACCOUNT.USER
+      name: { en: "User",  ru: "Пользователь" }
+      isApp: false
+      isAbstract: false
+    - key: ACCOUNT.DISPATCHER
+      name: { en: "Dispatcher", ru: "Диспетчер" }
+      isApp: false
+      isAbstract: false
+    - key: ACCOUNT.INSPECTOR
+      name: { en: "Inspector", ru: "Инспектор" }
+      isApp: false
+      isAbstract: false
+    - key: ACCOUNT.OWNER
+      name: { en: "Owner", ru: "Владелец" }
+      isApp: false
+      isAbstract: false
+    - key: ACCOUNT.ENGINEER
+      name: { en: "Engineer", ru: "Инженер" }
+      isApp: false
+      isAbstract: false
+    - key: ACCOUNT.FINANCIER
+      name: { en: "Financier", ru: "Финансист" }
+      isApp: false
+      isAbstract: false
+    - key: RESOURCE
+      name: { en: "Resource", ru: "Ресурс" }
+      isApp: false
+      isAbstract: true
+    - key: RESOURCE.CAR
+      name: { en: "Car", ru: "Автомобиль" }
+      isApp: true
+      isAbstract: false
+      fastSearch:
+          - query: typeKey:RESOURCE.CAR* AND data.registrationNumber:AA*
+            name: { en: "Registered in Kyiv", ru: "Зарегистрированные в Киеве" }
+      icon: directions_car
+      comments:
+          - key: DEFAULT
+            name: { en: "Comments", ru: "Комментарии" }
+      ratings:
+          - key: RATING1
+            name: { en: "Thumb rating", ru: "Большой палец" }
+            style: THUMB
+            votes: 1
+      dataSpec: |
+                {
+                    "type": "object",
+                    "properties": {
+                        "vin": {
+                            "title": "VIN",
+                            "type": "string"
+                        },
+                        "registrationNumber": {
+                            "title": "Registration Number",
+                            "type": "string"
+                        },
+                        "isMoving": {
+                            "title": "Is Moving",
+                            "type": "boolean"
+                        },
+                        "isDoorClosed": {
+                            "title": "Is Door Closed",
+                            "type": "boolean"
+                        },
+                        "isCharging": {
+                            "title": "Is Charging",
+                            "type": "boolean"
+                        },
+                        "batteryLevel": {
+                            "title": "Battery Level",
+                            "type": "number"
+                        },
+                        "modificationDate": {
+                            "title": "Modification Date",
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "vin",
+                        "registrationNumber"
+                    ]
+                }
+      dataForm: |
+                [
+                    "vin",
+                    "registrationNumber",
+                    {
+                        "type": "flex",
+                        "flex-flow": "row wrap",
+                        "fxLayoutGap": "12px",
+                        "items": [ "isMoving", "isDoorClosed", "isCharging" ]
+                    },
+                    "batteryLevel",
+                    "modificationDate",
+                    {
+                        "type": "submit",
+                        "style": "btn-primary",
+                        "title": "SAVE"
+                    }
+                ]
+      locations:
+          - key: RESOURCE.CAR.CURRENT-LOCATION
+            name: { en: "Current location", ru: "Текущее местоположение" }
+            max: 1
+      states:
+          - key: NEW
+            name: { en: "New", ru: "Новый" }
+            icon: fiber_new
+            color: '#FFEB3B'
+            next:
+                - stateKey: AVAILABLE
+                  name: { en: "Make available", ru: "Сделать доступной" }
+                - stateKey: RETIRED
+                  name: { en: "Retire", ru: "Удалить" }
+          - key: AVAILABLE
+            name: { en: "Available", ru: "Доступный" }
+            icon: check_box_outline_blank
+            color: '#CDDC39'
+            next:
+                - stateKey: RESERVED
+                  name: { en: "Reserve", ru: "Зарезервировать" }
+                - stateKey: RETIRED
+                  name: { en: "Retire", ru: "Удалить" }
+                - stateKey: SERVICE-REQUIRED
+                  name: { en: "Service required", ru: "Требуется обслуживание" }
+          - key: RESERVED
+            name: { en: "Reserved", ru: "Зарезервированный" }
+            icon: check_box
+            color: '#8BC34A'
+            next:
+                - stateKey: AVAILABLE
+                  name: { en: "Make available", ru: "Сделать доступной" }
+                - stateKey: IN-USE
+                  name: { en: "Start to use", ru: "Начать использовать" }
+          - key: IN-USE
+            name: { en: "In use", ru: "В использовании" }
+            icon: play_arrow
+            color: '#4CAF50'
+            next:
+                - stateKey: AVAILABLE
+                  name: { en: "Make available", ru: "Сделать доступной" }
+          - key: RETIRED
+            name: { en: "Retired", ru: "Удаленный" }
+            icon: stop
+            color: '#000000'
+          - key: SERVICE-REQUIRED
+            name: { en: "Service required", ru: "Требуется обслуживание" }
+            icon: report
+            color: '#FF9800'
+            next:
+                - stateKey: AVAILABLE
+                  name: { en: "Make available", ru: "Сделать доступной" }
+                - stateKey: IN-SERVICE
+                  name: { en: "In service", ru: "На обслуживание" }
+          - key: IN-SERVICE
+            name: { en: "In service", ru: "На обслуживание" }
+            icon: report
+            color: '#FFC107'
+            next:
+                - stateKey: AVAILABLE
+                  name: { en: "Make available", ru: "Сделать доступной" }
+                - stateKey: RETIRED
+                  name: { en: "Retire", ru: "Удалить" }
+      tags:
+          - key: DEFAULT
+            name: { en: "", ru: "" }
+    - key: RESOURCE.CHARGING-STATION
+      name: { en: "Charging point", ru: "Зарядная станция" }
+      isApp: true
+      isAbstract: false
+      icon: ev_station
+      ratings:
+          - key: RATING2
+            name: { en: "5STARS rating", ru: "Рейтинг 5 звезд" }
+            style: 5STARS
+            votes: 1
+      calendars:
+          - key: RESOURCE.CHARGING-STATION.RESERVATION
+            name: { en: "Reservation", ru: "Резервация" }
+            events:
+                - key: EVENT1
+                  name: { en: "Reservation", ru: "Резервация" }
+    - key: RESOURCE.DROP-OFF-POINT
+      name: { en: "Drop-off point", ru: "Точка возврата" }
+      isApp: true
+      isAbstract: false
+      icon: local_parking
+    - key: RESOURCE.XM-TENANT
+      name: { en: "Tenant", ru: "Тенант" }
+      isApp: true
+      isAbstract: false
+      icon: web
+      states:
+          - key: NEW
+            name: { en: "New", ru: "Новый" }
+            icon: fiber_new
+            color: '#FFEB3B'
+            next:
+                - stateKey: ACTIVE
+                  name: { en: "Activate", ru: "Активировать" }
+          - key: ACTIVE
+            name: { en: "Active", ru: "Активный" }
+            icon: play_arrow
+            color: '#4CAF50'
+            next:
+                - stateKey: SUSPENDED
+                  name: { en: "Suspend", ru: "Приостановить" }
+          - key: SUSPENDED
+            name: { en: "Suspended", ru: "Приостановленный" }
+            icon: stop
+            color: '#795548'
+            next:
+                - stateKey: ACTIVE
+                  name: { en: "Activate", ru: "Активировать" }
+      dataSpec: |
+                {
+                   "type": "object",
+                   "title": "Data",
+                   "properties": {
+                       "uaa": {
+                           "title": "Uaa",
+                           "type": "object",
+                           "properties": {
+                               "create" : {
+                                    "title": "Create",
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {"title": "Success", "type": "boolean"},
+                                        "errorMessage": {"title": "Error message", "type": ["string","null"]}
+                                    }
+                               },
+                               "delete" : {
+                                    "title": "Delete",
+                                    "type": "object",
+                                    "properties": {
+                                         "success": {"title": "Success", "type": "boolean"},
+                                         "errorMessage": {"title": "Error message", "type": ["string","null"]}
+                                     }
+                               }
+                           }
+                        },
+                        "entity": {
+                           "title": "Entity",
+                           "type": "object",
+                           "properties": {
+                                 "create" : {
+                                     "title": "Create",
+                                     "type": "object",
+                                     "properties": {
+                                          "success": {"title": "Success", "type": "boolean"},
+                                          "errorMessage": {"title": "Error message", "type": ["string","null"]}
+                                     }
+                                 },
+                                  "delete" : {
+                                     "title": "Delete",
+                                     "type": "object",
+                                     "properties": {
+                                          "success": {"title": "Success", "type": "boolean"},
+                                          "errorMessage": {"title": "Error message", "type": ["string","null"]}
+                                     }
+                                  }
+                            }
+                        },
+                        "gate": {
+                           "title": "Gate",
+                           "type": "object",
+                           "properties": {
+                               "create" : {
+                                    "title": "Create",
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {"title": "Success", "type": "boolean"},
+                                        "errorMessage": {"title": "Error message", "type": ["string","null"]}
+                                    }
+                               },
+                               "delete" : {
+                                    "title": "Delete",
+                                    "type": "object",
+                                    "properties": {
+                                         "success": {"title": "Success", "type": "boolean"},
+                                         "errorMessage": {"title": "Error message", "type": ["string","null"]}
+                                     }
+                               }
+                           }
+                        },
+                        "dashboard": {
+                           "title": "Dashboard",
+                           "type": "object",
+                           "properties": {
+                                 "create" : {
+                                     "title": "Create",
+                                     "type": "object",
+                                     "properties": {
+                                          "success": {"title": "Success", "type": "boolean"},
+                                          "errorMessage": {"title": "Error message", "type": ["string","null"]}
+                                     }
+                                 },
+                                  "delete" : {
+                                     "title": "Delete",
+                                     "type": "object",
+                                     "properties": {
+                                          "success": {"title": "Success", "type": "boolean"},
+                                          "errorMessage": {"title": "Error message", "type": ["string","null"]}
+                                     }
+                                  }
+                            }
+                        },
+                        "timeline": {
+                           "title": "Timeline",
+                           "type": "object",
+                           "properties": {
+                                 "create" : {
+                                     "title": "Create",
+                                     "type": "object",
+                                     "properties": {
+                                          "success": {"title": "Success", "type": "boolean"},
+                                          "errorMessage": {"title": "Error message", "type": ["string","null"]}
+                                     }
+                                 },
+                                  "delete" : {
+                                     "title": "Delete",
+                                     "type": "object",
+                                     "properties": {
+                                          "success": {"title": "Success", "type": "boolean"},
+                                          "errorMessage": {"title": "Error message", "type": ["string","null"]}
+                                     }
+                                  }
+                            }
+                        }
+                   }
+                }
+    - key: RESOURCE.VOUCHER
+      name: { en: "Voucher", ru: "Ваучер" }
+      isApp: true
+      isAbstract: false
+      icon: credit_card
+      states:
+          - key: NEW
+            name: { en: "New", ru: "Новый" }
+            icon: fiber_new
+            color: '#FFEB3B'
+            next:
+                - stateKey: ACTIVE
+                  name: { en: "Activate", ru: "Активировать" }
+          - key: ACTIVE
+            name: { en: "Active", ru: "Активный" }
+            icon: play_arrow
+            color: '#4CAF50'
+            next:
+                - stateKey: USED
+                  name: { en: "Use", ru: "Использовать" }
+          - key: USED
+            name: { en: "Used", ru: "Использованный" }
+            icon: stop
+            color: '#000000'
+          - key: BLOCKED
+            name: { en: "Blocked", ru: "Блокированный" }
+            icon: pause
+            color: '#795548'
+            next:
+              - stateKey: ACTIVE
+                name: { en: "Activate", ru: "Активировать" }
+      dataSpec: |
+                {
+                    "type": "object",
+                    "properties": {
+                        "serial": {
+                            "title": "Serial Number",
+                            "type": "string"
+                        },
+                        "secret": {
+                            "title": "Secret",
+                            "type": "string"
+                        },
+                        "value": {
+                            "title": "Value",
+                            "type": "number"
+                        },
+                        "usedBy": {
+                            "title": "Used By",
+                            "type": "string"
+                        },
+                        "usedDate": {
+                            "title": "Used Date",
+                            "type": "string"
+                        },
+                        "expirationDate": {
+                            "title": "Expiration Date",
+                            "type": "boolean"
+                        }
+                    },
+                    "required": [
+                        "serial",
+                        "secret",
+                        "value"
+                    ]
+                }
+      dataForm: |
+                [
+                    "serial",
+                    "secret",
+                    "value",
+                    "usedBy",
+                    "usedDate",
+                    "expirationDate",
+                    {
+                        "type": "submit",
+                        "style": "btn-primary",
+                        "title": "SAVE"
+                    }
+                ]
+    - key: PRODUCT-OFFERING
+      name: { en: "Offering", ru: "Предложение" }
+      isApp: true
+      isAbstract: true
+      icon: local_offer
+    - key: PRODUCT-OFFERING.CAMPAIGN
+      name: { en: "Campaign", ru: "Кампания" }
+      isApp: false
+      isAbstract: false
+    - key: PRODUCT-OFFERING.RATE-PLAN
+      name: { en: "Rate plan", ru: "Тарифный план" }
+      isApp: false
+      isAbstract: false
+      links:
+          - key: PRODUCT-OFFERING.RATE-PLAN.PRICE
+            builderType: NEW
+            name: { en: "Price", ru: "Цена" }
+            icon: local_offer
+            typeKey: PRICE
+            max: 10
+    - key: PRICE
+      name: { en: "Price", ru: "Цена" }
+      isApp: false
+      isAbstract: true
+    - key: PRICE.ONE-TIME-FEE
+      name: { en: "One time fee", ru: "Одноразовая плата" }
+      isApp: false
+      isAbstract: false
+    - key: PRICE.USAGE
+      name: { en: "Usage", ru: "Использование" }
+      isApp: false
+      isAbstract: false
+    - key: PRICE.RECURRING-FEE
+      name: { en: "Recurring fee", ru: "Периодическая плата" }
+      isApp: false
+      isAbstract: false
+    - key: PRICE.DISCOUNT
+      name: { en: "Discount", ru: "Cкидка" }
+      isApp: false
+      isAbstract: false
+    - key: PRICE.ALLOWANCE
+      name: { en: "Allowance", ru: "Прибавка" }
+      isApp: false
+      isAbstract: false
+    - key: PRODUCT-OFFERING.RENT-CAR
+      name: { en: "Rent car", ru: "Арендовать машину" }
+      isApp: false
+      isAbstract: false
+      states:
+          - key: NEW
+            name: { en: "New", ru: "Новый" }
+            icon: fiber_new
+            color: '#FFEB3B'
+            next:
+                - stateKey: LAUNCHED
+                  name: { en: "Launch", ru: "Запустить" }
+          - key: LAUNCHED
+            name: { en: "Launched", ru: "Запущен" }
+            icon: play_arrow
+            color: '#4CAF50'
+            next:
+                - stateKey: CLOSED
+                  name: { en: "Close", ru: "Закрыть" }
+          - key: CLOSED
+            name: { en: "Closed", ru: "Закрыт" }
+            icon: stop
+            color: '#000000'
+    - key: PRODUCT
+      name: { en: "Product", ru: "Продукт" }
+      isApp: true
+      isAbstract: false
+      icon: shop
+    - key: PRODUCT.RENT-CAR
+      name: { en: "Rent car", ru: "Аренда машины" }
+      isApp: false
+      isAbstract: false
+      states:
+          - key: NEW
+            name: { en: "New", ru: "Новый" }
+            icon: fiber_new
+            color: '#FFEB3B'
+            next:
+                - stateKey: RENT-STARTED
+                  name: { en: "Start rent", ru: "Начать аренду" }
+                - stateKey: CANCELED
+          - key: RENT-STARTED
+            name: { en: "Rent started", ru: "Aренда" }
+            icon: play_arrow
+            color: '#4CAF50'
+            next:
+                - stateKey: RENT-PAUSED
+                  name: { en: "Pause rent", ru: "Приостановить аренду" }
+                - stateKey: RENT-FINISHED
+                  name: { en: "Finish rent", ru: "Закончить аренду" }
+          - key: RENT-FINISHED
+            name: { en: "Rent finished", ru: "Аренда завершена" }
+            icon: stop
+            color: '#000000'
+          - key: RENT-PAUSED
+            name: { en: "Rent paused", ru: "Арендная приостановлена" }
+            icon: pause
+            color: '#795548'
+            next:
+                - stateKey: RENT-STARTED
+                  name: { en: "Start rent", ru: "Начать аренду" }
+          - key: CANCELED
+            name: { en: "Canceled", ru: "Отменена" }
+            icon: close
+            color: '#FF5722'
+      links:
+          - key: PRODUCT.RENT-CAR.CAR
+            builderType: SEARCH
+            name: { en: "Car", ru: "Автомобиль" }
+            icon: directions_car
+            typeKey: RESOURCE.CAR
+            max: 10
+          - key: PRODUCT.RENT-CAR.PRODUCT-OFFERING
+            builderType: SEARCH
+            name: { en: "Car", ru: "Автомобиль" }
+            icon: local_offer
+            typeKey: PRODUCT-OFFERING
+            max: 10
+    - key: PRODUCT.CAR-SHARE
+      name: { en: "Car share", ru: "Аренда машины" }
+      isApp: false
+      isAbstract: false
+      dataSpec: |
+          {
+              "type": "object",
+              "title": "Data",
+              "properties": {
+                  "birthday": {
+                      "title": "Birthday",
+                      "type": "string"
+                  },
+                  "city": {
+                      "title": "City",
+                      "type": "string"
+                  },
+                  "address": {
+                      "title": "Address",
+                      "type": "string"
+                  }
+              },
+              "required": [
+                  "birthday",
+                  "city",
+                  "address"
+              ]
+          }
+    - key: AGREEMENT
+      name: { en: "Agreement", ru: "Соглашение" }
+      isApp: true
+      isAbstract: true
+      icon: assignment
+    - key: AGREEMENT.GENERAL
+      name: { en: "General agreement", ru: "Общее соглашение" }
+      isApp: false
+      isAbstract: false
+    - key: TASK
+      name: { en: "Task", ru: "Задача" }
+      isApp: true
+      isAbstract: true
+      icon: assignment_turned_in
+      states:
+          - key: TODO
+            name: { en: "TODO", ru: "TODO" }
+            icon: play_arrow
+            color: '#4CAF50'
+            next:
+                - stateKey: DONE
+                  name: { en: "DONE", ru: "DONE" }
+                - stateKey: REJECTED
+                  name: { en: "To rejected", ru: "Отклонить" }
+          - key: DONE
+            name: { en: "DONE", ru: "DONE" }
+            icon: stop
+            color: '#000000'
+            next:
+                - stateKey: TODO
+                  name: { en: "TODO", ru: "TODO" }
+                - stateKey: REJECTED
+                  name: { en: "To rejected", ru: "Отклонить" }
+          - key: REJECTED
+            name: { en: "Rejected", ru: "Отклонена" }
+            icon: close
+            color: '#FF5722'
+            next:
+                - stateKey: TODO
+                  name: { en: "TODO", ru: "TODO" }
+                - stateKey: DONE
+                  name: { en: "DONE", ru: "DONE" }
+    - key: TASK.NEW-FEATURE
+      name: { en: "New feature", ru: "Новая функция" }
+      isApp: false
+      isAbstract: false
+    - key: TASK.UX-UI
+      name: { en: "UX/UI", ru: "UX/UI" }
+      isApp: false
+      isAbstract: false
+    - key: TASK.CONFIGURATION
+      name: { en: "Configuration", ru: "Конфигурация" }
+      isApp: false
+      isAbstract: false
+    - key: TASK.DEFECT
+      name: { en: "Defect", ru: "Дефект" }
+      isApp: false
+      isAbstract: false
+    - key: HANDLING
+      name: { en: "Handling", ru: "Обращение" }
+      isApp: true
+      isAbstract: true
+      icon: call_to_action
+    - key: HANDLING.INCIDENT
+      name: { en: "Incident", ru: "Инцидент" }
+      isApp: false
+      isAbstract: false
+    - key: DAMAGE
+      name: { en: "Damage", ru: "Повреждение" }
+      isApp: true
+      isAbstract: false
+      icon: warning
+      attachments:
+          - key: DAMAGE.PHOTO
+            name: { en: "Damage photo", ru: "Фотография повреждения" }
+            contentTypes:
+                - 'image/gif'
+                - 'image/jpeg'
+                - 'image/png'
+                - 'image/tiff'
+    - key: ORDER
+      name: { en: "Order", ru: "Заказ" }
+      isApp: false
+      isAbstract: false
+    - key: CHANNEL-PRESENTATION
+      name: { en: "Channel presentation", ru: "Представление каналов" }
+      isApp: false
+      isAbstract: false
+    - key: LOGIN.NICKNAME
+      name: { en: "Nickname", ru: "Никнейм" }
+      isApp: false
+      isAbstract: false
+    - key: LOGIN.MSISDN
+      name: { en: "MSISDN", ru: "MSISDN" }
+      isApp: false
+      isAbstract: false
+    - key: LOGIN.EMAIL
+      name: { en: "Email", ru: "Email" }
+      isApp: false
+      isAbstract: false
+    - key: RESOURCE.FIELD
+      name: { en: "Field", ru: "Поле" }
+      isApp: true
+      isAbstract: false
+      icon: border_outer
+      functions:
+          - key: AREA.SQUARE
+            name: { en: "Square", ru: "Площадь" }
+            contextDataSpec: |
+                             {
+                                "type":"object",
+                                "properties":{
+                                   "polygons":{
+                                      "items":{
+                                         "properties":{
+                                            "fillColor":{
+                                               "title":"The fillcolor schema",
+                                               "type":"string"
+                                            },
+                                            "fillOpacity":{
+                                               "title":"The fillopacity schema",
+                                               "type":"number"
+                                            },
+                                            "paths":{
+                                               "items":{
+                                                  "properties":{
+                                                     "lat":{
+                                                        "title":"The lat schema",
+                                                        "type":"number"
+                                                     },
+                                                     "lng":{
+                                                        "title":"The lng schema",
+                                                        "type":"number"
+                                                     }
+                                                  },
+                                                  "type":"object"
+                                               },
+                                               "type":"array"
+                                            },
+                                            "strokeColor":{
+                                               "title":"The strokecolor schema",
+                                               "type":"string"
+                                            },
+                                            "strokeOpacity":{
+                                               "title":"The strokeopacity schema",
+                                               "type":"number"
+                                            },
+                                            "strokeWeight":{
+                                               "title":"The strokeweight schema",
+                                               "type":"integer"
+                                            }
+                                         },
+                                         "type":"object"
+                                      },
+                                      "type":"array"
+                                   }
+                                }
+                             }
+    - key: TEST_UNIQUE_FIELD
+      isApp: false
+      isAbstract: false
+      dataSpec: |
+                {
+                  "type": "object",
+                  "properties": {
+                    "uniqueField": {
+                      "unique": true,
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "uniqueField2": {
+                      "unique": true,
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    }
+                  }
+                }
