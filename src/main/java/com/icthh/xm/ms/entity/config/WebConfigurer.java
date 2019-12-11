@@ -82,7 +82,6 @@ public class WebConfigurer implements ServletContextInitializer, WebServerFactor
          * for more information.
          */
         if (serverProperties.getHttp2().isEnabled() && server instanceof UndertowServletWebServerFactory) {
-
             ((UndertowServletWebServerFactory) server)
                 .addBuilderCustomizers(builder ->
                     builder.setServerOption(UndertowOptions.ENABLE_HTTP2, true));

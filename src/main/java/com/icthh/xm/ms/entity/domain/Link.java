@@ -17,6 +17,7 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.PrePersist;
 import javax.persistence.SequenceGenerator;
@@ -77,6 +78,7 @@ public class Link implements Serializable {
 
     @ManyToOne(optional = false)
     @NotNull
+    @JoinColumn(name = "target_id", nullable = false)
     private XmEntity target;
 
     @ManyToOne(optional = false)
@@ -84,6 +86,7 @@ public class Link implements Serializable {
     @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id", resolver =
         XmEntityObjectIdResolver.class)
     @JsonIdentityReference(alwaysAsId = true) // otherwise first ref as POJO, others as id
+    @JoinColumn(name = "source_id", nullable = false)
     private XmEntity source;
 
     public Link() {

@@ -17,38 +17,47 @@
 spring:
     application:
         name: entity
+    main:
+      allow-bean-definition-overriding: true
     jackson:
         serialization.write_dates_as_timestamps: false
     cache:
         type: none
     datasource:
         type: com.zaxxer.hikari.HikariDataSource
-        url: jdbc:h2:mem:entity;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;LOCK_TIMEOUT=20000
+        url: jdbc:h2:~/entity;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;LOCK_TIMEOUT=20000
         name:
         username:
         password:
+        hikari:
+          auto-commit: false
     jpa:
-        database-platform: io.github.jhipster.domain.util.FixedH2Dialect
-        database: H2
-        open-in-view: false
-        show-sql: true
-        hibernate:
-            ddl-auto: none
-            naming:
-                physical-strategy: org.springframework.boot.orm.jpa.hibernate.SpringPhysicalNamingStrategy
-                implicit-strategy: org.springframework.boot.orm.jpa.hibernate.SpringImplicitNamingStrategy
-        properties:
-            hibernate.id.new_generator_mappings: true
-            hibernate.cache.use_second_level_cache: false
-            hibernate.cache.use_query_cache: false
-            hibernate.generate_statistics: true
-            hibernate.hbm2ddl.auto: validate
+      database-platform: io.github.jhipster.domain.util.FixedH2Dialect
+      database: H2
+      open-in-view: false
+      show-sql: false
+      hibernate:
+        ddl-auto: none
+        naming:
+          physical-strategy: org.springframework.boot.orm.jpa.hibernate.SpringPhysicalNamingStrategy
+          implicit-strategy: org.springframework.boot.orm.jpa.hibernate.SpringImplicitNamingStrategy
+      properties:
+        hibernate.model.generator_name_as_sequence_name: false # see org.hibernate.cfg.AvailableSettings.PREFER_GENERATOR_NAME_AS_DEFAULT_SEQUENCE_NAME
+        hibernate.id.new_generator_mappings: true
+        hibernate.connection.provider_disables_autocommit: true
+        hibernate.cache.use_second_level_cache: false
+        hibernate.cache.use_query_cache: false
+        hibernate.generate_statistics: false
+        hibernate.hbm2ddl.auto: validate
+        hibernate.jdbc.time_zone: UTC
     data:
         elasticsearch:
             properties:
                 path:
-                    home: build/elasticsearch
-                    data: build/elasticsearch/data
+                  home: build/elasticsearch
+                 # See https://github.com/jhipster/generator-jhipster/issues/10302
+                node:
+                  max_local_storage_nodes: 2
     mail:
         host: localhost
     messages:
@@ -73,6 +82,8 @@ server:
 # ===================================================================
 
 jhipster:
+    clientApp:
+      name: 'entityApp'
     async:
         core-pool-size: 1
         max-pool-size: 50
@@ -96,11 +107,6 @@ jhipster:
             token-service-id: uaa
             client-id: internal
             client-secret: internal
-    metrics: # DropWizard Metrics configuration, used by MetricsConfiguration
-        jmx.enabled: true
-        logs: # Reports Dropwizard metrics in the logs
-            enabled: true
-            report-frequency: 60 # in seconds
 
 # ===================================================================
 # Application specific properties
