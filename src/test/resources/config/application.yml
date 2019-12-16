@@ -25,7 +25,7 @@ spring:
         type: none
     datasource:
         type: com.zaxxer.hikari.HikariDataSource
-        url: jdbc:h2:~/entity;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;LOCK_TIMEOUT=20000
+        url: jdbc:h2:mem:entity;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;LOCK_TIMEOUT=20000
         name:
         username:
         password:
@@ -55,9 +55,6 @@ spring:
             properties:
                 path:
                   home: build/elasticsearch
-                 # See https://github.com/jhipster/generator-jhipster/issues/10302
-                node:
-                  max_local_storage_nodes: 2
     mail:
         host: localhost
     messages:
