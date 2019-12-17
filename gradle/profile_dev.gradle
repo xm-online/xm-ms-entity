@@ -5,6 +5,10 @@ configurations {
     }
 }
 
+ext {
+    logbackLoglevel = "INFO"
+}
+
 dependencies {
     developmentOnly "org.springframework.boot:spring-boot-devtools"
     implementation "com.h2database:h2"
@@ -42,6 +46,11 @@ processResources {
     filesMatching("**/bootstrap.yml") {
         filter {
             it.replace("#spring.profiles.active#", profiles)
+        }
+    }
+    filesMatching('**/logback-spring.xml') {
+        filter {
+            it.replace('#logback.loglevel#', logbackLoglevel)
         }
     }
 }

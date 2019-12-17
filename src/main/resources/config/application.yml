@@ -44,6 +44,8 @@ management:
 spring:
     application:
         name: entity
+    main:
+      allow-bean-definition-overriding: true
     cloud:
         inetutils:
             preferredNetworks:

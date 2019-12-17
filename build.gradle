@@ -36,9 +36,9 @@ version = "0.0.1-SNAPSHOT"
 
 description = ""
 
-sourceCompatibility = 1.8
-targetCompatibility = 1.8
-assert System.properties["java.specification.version"] == "1.8" || "11" || "12" || "13"
+sourceCompatibility = 11
+targetCompatibility = 11
+assert System.properties["java.specification.version"] == "11" || "12" || "13"
 
 apply plugin: 'war'
 apply plugin: 'pmd'
@@ -297,6 +297,7 @@ dependencies {
         exclude module: "mapstruct"
     }
     implementation "io.springfox:springfox-bean-validators"
+    implementation "com.h2database:h2"
     implementation "org.postgresql:postgresql"
     liquibaseRuntime "org.postgresql:postgresql"
     implementation "org.mapstruct:mapstruct:${mapstruct_version}"
