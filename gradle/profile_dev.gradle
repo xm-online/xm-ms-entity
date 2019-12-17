@@ -6,7 +6,7 @@ configurations {
 }
 
 ext {
-    logbackLoglevel = "INFO"
+    logbackLoglevel = "DEBUG"
 }
 
 dependencies {
