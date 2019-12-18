@@ -35,13 +35,13 @@ public class UniqueField implements Serializable {
     @SequenceGenerator(name = "sequenceGenerator")
     private Long id;
 
-    @Column(name = "field_json_path")
+    @Column(name = "field_json_path", nullable = false)
     private String fieldJsonPath;
 
-    @Column(name = "field_value")
+    @Column(name = "field_value", nullable = false)
     private String fieldValue;
 
-    @Column(name = "entity_type_key")
+    @Column(name = "entity_type_key", nullable = false)
     private String entityTypeKey;
 
     @NotNull

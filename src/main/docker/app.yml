@@ -1,31 +1,31 @@
 version: '2'
 services:
-  entity-app:
-    image: entity
-    environment:
-      - _JAVA_OPTIONS=-Xmx512m -Xms256m
-      - SPRING_PROFILES_ACTIVE=prod,swagger
-      - MANAGEMENT_METRICS_EXPORT_PROMETHEUS_ENABLED=true
-      - SPRING_CLOUD_CONSUL_HOST=consul
-      - SPRING_CLOUD_CONSUL_PORT=8500
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://entity-postgresql:5432/entity
-      - JHIPSTER_SLEEP=30 # gives time for other services to boot before the application
-      - SPRING_DATA_JEST_URI=http://entity-elasticsearch:9200
-      - SPRING_ELASTICSEARCH_REST_URIS=http://entity-elasticsearch:9200
-  entity-postgresql:
-    extends:
-      file: postgresql.yml
-      service: entity-postgresql
-  entity-elasticsearch:
-    extends:
-      file: elasticsearch.yml
-      service: entity-elasticsearch
-  consul:
-    extends:
-      file: consul.yml
-      service: consul
+    entity-app:
+        image: entity
+        environment:
+            - _JAVA_OPTIONS=-Xmx512m -Xms256m
+            - SPRING_PROFILES_ACTIVE=prod,swagger
+            - MANAGEMENT_METRICS_EXPORT_PROMETHEUS_ENABLED=true
+            - SPRING_CLOUD_CONSUL_HOST=consul
+            - SPRING_CLOUD_CONSUL_PORT=8500
+            - SPRING_DATASOURCE_URL=jdbc:postgresql://entity-postgresql:5432/entity
+            - JHIPSTER_SLEEP=30 # gives time for other services to boot before the application
+            - SPRING_DATA_JEST_URI=http://entity-elasticsearch:9200
+            - SPRING_ELASTICSEARCH_REST_URIS=http://entity-elasticsearch:9200
+    entity-postgresql:
+        extends:
+            file: postgresql.yml
+            service: entity-postgresql
+    entity-elasticsearch:
+        extends:
+            file: elasticsearch.yml
+            service: entity-elasticsearch
+    consul:
+        extends:
+            file: consul.yml
+            service: consul
 
-  consul-config-loader:
-    extends:
-      file: consul.yml
-      service: consul-config-loader
+    consul-config-loader:
+        extends:
+            file: consul.yml
+            service: consul-config-loader

@@ -28,6 +28,8 @@ plugins {
     id "org.sonarqube"
     id "io.spring.nohttp"
     id "com.github.spotbugs"
+    id "war"
+    id "pmd"
     //jhipster-needle-gradle-plugins - JHipster will add additional gradle plugins here
 }
 
@@ -40,8 +42,6 @@ sourceCompatibility = 11
 targetCompatibility = 11
 assert System.properties["java.specification.version"] == "11" || "12" || "13"
 
-apply plugin: 'war'
-apply plugin: 'pmd'
 apply from: "gradle/docker.gradle"
 apply from: "gradle/sonar.gradle"
 //jhipster-needle-gradle-apply-from - JHipster will add additional gradle scripts to be applied here
