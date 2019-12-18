@@ -12,7 +12,6 @@ This application is configured for Service Discovery and Configuration with Cons
 
 For details about gradle script properties substitution see Readme of [Gradle Properties Plugin][].
 
-
 ## Development
 
 To start your application in the dev profile, simply run:
