@@ -100,10 +100,11 @@ defaultTasks "bootRun"
 
 bootWar {
     mainClassName = 'com.icthh.xm.ms.entity.EntityApp'
-}
-
-war {
-
+    manifest {
+        attributes(
+            "Implementation-Version": archiveVersion
+        )
+    }
 }
 
 springBoot {

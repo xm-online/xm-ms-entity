@@ -17,7 +17,7 @@ ENV SPRING_OUTPUT_ANSI_ENABLED=ALWAYS \
                -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.local.only=false \
                -Dcom.sun.management.jmxremote.rmi.port=19999 -Dcom.sun.management.jmxremote.port=19999 \
                --add-opens=java.base/java.lang=ALL-UNNAMED --add-opens=java.base/java.lang.invoke=ALL-UNNAMED"
-# --add-opens skip warning for groovy lib, see https://issues.apache.org/jira/browse/GROOVY-8339
+# --add-opens fix issues with illegal reflective access operation in groovy lib, will be fixed in next groovy releases
 # add directly the war
 ADD build/libs/*.war /app.war
 
