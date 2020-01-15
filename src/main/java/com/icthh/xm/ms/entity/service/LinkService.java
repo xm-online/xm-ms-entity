@@ -3,6 +3,7 @@ package com.icthh.xm.ms.entity.service;
 import com.icthh.xm.commons.lep.LogicExtensionPoint;
 import com.icthh.xm.commons.lep.spring.LepService;
 import com.icthh.xm.commons.permission.annotation.FindWithPermission;
+import com.icthh.xm.commons.permission.annotation.PrivilegeDescription;
 import com.icthh.xm.ms.entity.domain.Link;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.repository.LinkPermittedRepository;
@@ -77,6 +78,7 @@ public class LinkService {
     @Transactional(readOnly = true)
     @FindWithPermission("LINK.GET_LIST")
     @LogicExtensionPoint("FindAll")
+    @PrivilegeDescription("Privilege to get all the links")
     public Page<Link> findAll(Pageable pageable, String privilegeKey) {
         return permittedRepository.findAll(pageable, Link.class, privilegeKey);
     }
@@ -120,6 +122,7 @@ public class LinkService {
 
     @FindWithPermission("LINK.SOURCE.GET_LIST")
     @Transactional(readOnly = true)
+    @PrivilegeDescription("Privilege to get all the sources")
     public Page<Link> findSourceByTargetIdAndTypeKey(Pageable pageable, Long id, Set<String> typeKey, String
         privilegeKey) {
         return permittedRepository.findAllByTargetIdAndTypeKeyIn(pageable, id, typeKey, privilegeKey);
@@ -144,6 +147,7 @@ public class LinkService {
      */
     @Transactional(readOnly = true)
     @FindWithPermission("LINK.SEARCH")
+    @PrivilegeDescription("Privilege to search for the link corresponding to the query")
     public Page<Link> search(String query, Pageable pageable, String privilegeKey) {
         return permittedSearchRepository.search(query, pageable, Link.class, privilegeKey);
     }

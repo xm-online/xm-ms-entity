@@ -1,6 +1,7 @@
 package com.icthh.xm.ms.entity.web.rest;
 
 import com.codahale.metrics.annotation.Timed;
+import com.icthh.xm.commons.permission.annotation.PrivilegeDescription;
 import com.icthh.xm.ms.entity.domain.FunctionContext;
 import com.icthh.xm.ms.entity.service.FunctionContextService;
 import com.icthh.xm.ms.entity.web.rest.util.HeaderUtil;
@@ -53,6 +54,7 @@ public class FunctionContextResource {
     @PostMapping("/function-contexts")
     @Timed
     @PreAuthorize("hasPermission({'functionContext': #functionContext}, 'FUNCTION_CONTEXT.CREATE')")
+    @PrivilegeDescription("Privilege to create a new functionContext")
     public ResponseEntity<FunctionContext> createFunctionContext(@Valid @RequestBody FunctionContext functionContext) throws URISyntaxException {
         if (functionContext.getId() != null) {
             return ResponseEntity.badRequest().headers(HeaderUtil.createFailureAlert(ENTITY_NAME, "idexists", "A new functionContext cannot already have an ID")).body(null);
@@ -75,6 +77,7 @@ public class FunctionContextResource {
     @PutMapping("/function-contexts")
     @Timed
     @PreAuthorize("hasPermission({'id': #functionContext.id, 'newFunctionContext': #functionContext}, 'functionContext', 'FUNCTION_CONTEXT.UPDATE')")
+    @PrivilegeDescription("Privilege to updates an existing functionContext")
     public ResponseEntity<FunctionContext> updateFunctionContext(@Valid @RequestBody FunctionContext functionContext) throws URISyntaxException {
         if (functionContext.getId() == null) {
             //in order to call method with permissions check
@@ -106,6 +109,7 @@ public class FunctionContextResource {
     @GetMapping("/function-contexts/{id}")
     @Timed
     @PostAuthorize("hasPermission({'returnObject': returnObject.body}, 'FUNCTION_CONTEXT.GET_LIST.ITEM')")
+    @PrivilegeDescription("Privilege to get the functionContext by id")
     public ResponseEntity<FunctionContext> getFunctionContext(@PathVariable Long id) {
         FunctionContext functionContext = functionContextService.findOne(id);
         return ResponseUtil.wrapOrNotFound(Optional.ofNullable(functionContext));
@@ -120,6 +124,7 @@ public class FunctionContextResource {
     @DeleteMapping("/function-contexts/{id}")
     @Timed
     @PreAuthorize("hasPermission({'id': #id}, 'functionContext', 'FUNCTION_CONTEXT.DELETE')")
+    @PrivilegeDescription("Privilege to delete the functionContext by id")
     public ResponseEntity<Void> deleteFunctionContext(@PathVariable Long id) {
         functionContextService.delete(id);
         return ResponseEntity.ok().headers(HeaderUtil.createEntityDeletionAlert(ENTITY_NAME, id.toString())).build();

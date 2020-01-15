@@ -1,6 +1,7 @@
 package com.icthh.xm.ms.entity.web.rest;
 
 import com.codahale.metrics.annotation.Timed;
+import com.icthh.xm.commons.permission.annotation.PrivilegeDescription;
 import com.icthh.xm.ms.entity.domain.Profile;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.service.ProfileService;
@@ -37,6 +38,7 @@ public class ProfileResource {
     @GetMapping("/profile")
     @Timed
     @PostAuthorize("hasPermission({'returnObject': returnObject.body}, 'ENTITY.PROFILE.SELF.GET')")
+    @PrivilegeDescription("Privilege to get the profile")
     public ResponseEntity<XmEntity> getProfile() {
         Profile profile = profileService.getSelfProfile();
         return RespContentUtil.wrapOrNotFound(Optional.ofNullable(profile).map(Profile::getXmentity));
@@ -52,6 +54,7 @@ public class ProfileResource {
     @PutMapping("/profile")
     @Timed
     @PostAuthorize("hasPermission({'returnObject': returnObject.body}, 'ENTITY.PROFILE.SELF.UPDATE')")
+    @PrivilegeDescription("Privilege to update the profile")
     public ResponseEntity<XmEntity> updateProfile(@Valid @RequestBody XmEntity xmEntity) {
         XmEntity result = profileService.updateProfile(xmEntity);
 
@@ -61,6 +64,7 @@ public class ProfileResource {
     @GetMapping("/profile/{userKey}")
     @Timed
     @PostAuthorize("hasPermission({'returnObject': returnObject.body}, 'ENTITY.PROFILE.GET_LIST.ITEM')")
+    @PrivilegeDescription("Privilege to get the profile by userKey")
     public ResponseEntity<XmEntity> getProfile(@PathVariable("userKey") String userKey) {
         Profile profile = profileService.getProfile(userKey);
         return RespContentUtil.wrapOrNotFound(Optional.ofNullable(profile).map(Profile::getXmentity));

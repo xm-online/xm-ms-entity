@@ -3,6 +3,7 @@ package com.icthh.xm.ms.entity.service;
 import com.icthh.xm.commons.lep.LogicExtensionPoint;
 import com.icthh.xm.commons.lep.spring.LepService;
 import com.icthh.xm.commons.permission.annotation.FindWithPermission;
+import com.icthh.xm.commons.permission.annotation.PrivilegeDescription;
 import com.icthh.xm.commons.permission.repository.PermittedRepository;
 import com.icthh.xm.ms.entity.domain.Calendar;
 import com.icthh.xm.ms.entity.repository.CalendarRepository;
@@ -60,6 +61,7 @@ public class CalendarService {
     @Transactional(readOnly = true)
     @FindWithPermission("CALENDAR.GET_LIST")
     @LogicExtensionPoint("FindAll")
+    @PrivilegeDescription("Privilege to get all the calendars")
     public List<Calendar> findAll(String privilegeKey) {
         return permittedRepository.findAll(Calendar.class, privilegeKey);
     }
@@ -95,6 +97,7 @@ public class CalendarService {
     @Transactional(readOnly = true)
     @FindWithPermission("CALENDAR.SEARCH")
     @LogicExtensionPoint("Search")
+    @PrivilegeDescription("Privilege to search for the calendar corresponding to the query")
     public List<Calendar> search(String query, String privilegeKey) {
         return permittedSearchRepository.search(query, Calendar.class, privilegeKey);
     }

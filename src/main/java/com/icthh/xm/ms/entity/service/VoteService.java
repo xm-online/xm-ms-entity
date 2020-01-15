@@ -1,6 +1,7 @@
 package com.icthh.xm.ms.entity.service;
 
 import com.icthh.xm.commons.permission.annotation.FindWithPermission;
+import com.icthh.xm.commons.permission.annotation.PrivilegeDescription;
 import com.icthh.xm.commons.permission.repository.PermittedRepository;
 import com.icthh.xm.ms.entity.domain.Vote;
 import com.icthh.xm.ms.entity.repository.VoteRepository;
@@ -58,6 +59,7 @@ public class VoteService {
     }
 
     @FindWithPermission("VOTE.GET_LIST")
+    @PrivilegeDescription("Privilege to get all the votes")
     public Page<Vote> findAll(Pageable pageable, String privilegeKey) {
         return permittedRepository.findAll(pageable, Vote.class, privilegeKey);
     }
@@ -70,6 +72,7 @@ public class VoteService {
      */
     @Transactional(readOnly = true)
     @FindWithPermission("VOTE.SEARCH")
+    @PrivilegeDescription("Privilege to search for the votes corresponding to the query")
     public Page<Vote> search(String query, Pageable pageable, String privilegeKey) {
         return permittedSearchRepository.search(query, pageable, Vote.class, privilegeKey);
     }

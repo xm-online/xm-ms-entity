@@ -1,6 +1,7 @@
 package com.icthh.xm.ms.entity.service.impl;
 
 import com.icthh.xm.commons.permission.annotation.FindWithPermission;
+import com.icthh.xm.commons.permission.annotation.PrivilegeDescription;
 import com.icthh.xm.commons.permission.repository.PermittedRepository;
 import com.icthh.xm.ms.entity.domain.FunctionContext;
 import com.icthh.xm.ms.entity.repository.FunctionContextRepository;
@@ -58,6 +59,7 @@ public class FunctionContextServiceImpl implements FunctionContextService {
      */
     @Transactional(readOnly = true)
     @FindWithPermission("FUNCTION_CONTEXT.GET_LIST")
+    @PrivilegeDescription("Privilege to get all the functionContexts")
     public List<FunctionContext> findAll(String privilegeKey) {
         return permittedRepository.findAll(FunctionContext.class, privilegeKey);
     }
@@ -90,6 +92,7 @@ public class FunctionContextServiceImpl implements FunctionContextService {
      */
     @Transactional(readOnly = true)
     @FindWithPermission("FUNCTION_CONTEXT.SEARCH")
+    @PrivilegeDescription("Privilege to search for the functionContext corresponding to the query")
     public List<FunctionContext> search(String query, String privilegeKey) {
         return permittedSearchRepository.search(query, FunctionContext.class, privilegeKey);
     }

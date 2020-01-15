@@ -2,10 +2,10 @@ package com.icthh.xm.ms.entity.service;
 
 import static com.google.common.collect.ImmutableMap.of;
 
-import com.google.common.collect.ImmutableMap;
 import com.icthh.xm.commons.lep.LogicExtensionPoint;
 import com.icthh.xm.commons.lep.spring.LepService;
 import com.icthh.xm.commons.permission.annotation.FindWithPermission;
+import com.icthh.xm.commons.permission.annotation.PrivilegeDescription;
 import com.icthh.xm.commons.permission.repository.PermittedRepository;
 import com.icthh.xm.commons.security.XmAuthenticationContextHolder;
 import com.icthh.xm.ms.entity.domain.Comment;
@@ -64,6 +64,7 @@ public class CommentService {
     @Transactional(readOnly = true)
     @FindWithPermission("COMMENT.GET_LIST")
     @LogicExtensionPoint("FindAll")
+    @PrivilegeDescription("Privilege to get all the comments")
     public Page<Comment> findAll(Pageable pageable, String privilegeKey) {
         return permittedRepository.findAll(pageable, Comment.class, privilegeKey);
     }
@@ -100,6 +101,7 @@ public class CommentService {
     @Transactional(readOnly = true)
     @FindWithPermission("COMMENT.SEARCH")
     @LogicExtensionPoint("Search")
+    @PrivilegeDescription("Privilege to search for the comment corresponding to the query")
     public Page<Comment> search(String query, Pageable pageable, String privilegeKey) {
         return permittedSearchRepository.search(query, pageable, Comment.class, privilegeKey);
     }
@@ -107,6 +109,7 @@ public class CommentService {
     @Transactional(readOnly = true)
     @FindWithPermission("COMMENT.GET_LIST.BY_XM_ENTITY")
     @LogicExtensionPoint("FindByXmEntity")
+    @PrivilegeDescription("Privilege to search for the comment by xmEntity id")
     public Page<Comment> findByXmEntity(Long id, Pageable pageable, String privilegeKey) {
         return permittedRepository.findByCondition("returnObject.xmEntity.id = :id", of("id", id), pageable, Comment.class, privilegeKey);
     }

@@ -8,6 +8,7 @@ import com.codahale.metrics.annotation.Timed;
 import com.google.common.collect.Maps;
 import com.icthh.xm.commons.exceptions.BusinessException;
 import com.icthh.xm.commons.exceptions.ErrorConstants;
+import com.icthh.xm.commons.permission.annotation.PrivilegeDescription;
 import com.icthh.xm.ms.entity.config.Constants;
 import com.icthh.xm.ms.entity.domain.FunctionContext;
 import com.icthh.xm.ms.entity.domain.Link;
@@ -108,6 +109,7 @@ public class XmEntityResource {
     @PostMapping("/xm-entities")
     @Timed
     @PreAuthorize("hasPermission({'xmEntity': #xmEntity}, 'XMENTITY.CREATE')")
+    @PrivilegeDescription("Privilege to create a tenant")
     public ResponseEntity<XmEntity> createXmEntity(@Valid @RequestBody XmEntity xmEntity) throws URISyntaxException {
         if (xmEntity.getId() != null) {
             throw new BusinessException(ErrorConstants.ERR_BUSINESS_IDEXISTS,
@@ -137,6 +139,7 @@ public class XmEntityResource {
     @PutMapping("/xm-entities")
     @Timed
     @PreAuthorize("hasPermission({'id': #xmEntity.id, 'newXmEntity': #xmEntity}, 'xmEntity', 'XMENTITY.UPDATE')")
+    @PrivilegeDescription("Privilege to updates an existing xmEntity")
     public ResponseEntity<XmEntity> updateXmEntity(@Valid @RequestBody XmEntity xmEntity) throws URISyntaxException {
         if (xmEntity.getId() == null) {
             //in order to call method with permissions check
@@ -185,6 +188,7 @@ public class XmEntityResource {
     @GetMapping("/xm-entities/{idOrKey}")
     @Timed
     @PostAuthorize("hasPermission({'returnObject': returnObject.body}, 'XMENTITY.GET_LIST.ITEM')")
+    @PrivilegeDescription("Privilege to get the xmEntity by id")
     public ResponseEntity<XmEntity> getXmEntity(@PathVariable String idOrKey,
                                                 @RequestParam(required = false) List<String> embed) {
         XmEntity xmEntity;
@@ -206,6 +210,7 @@ public class XmEntityResource {
     @DeleteMapping("/xm-entities/{id}")
     @Timed
     @PreAuthorize("hasPermission({'id': #id}, 'xmEntity', 'XMENTITY.DELETE')")
+    @PrivilegeDescription("Privilege to delete the xmEntity by id")
     public ResponseEntity<Void> deleteXmEntity(@PathVariable Long id) {
         xmEntityService.delete(id);
         return ResponseEntity.ok().headers(HeaderUtil.createEntityDeletionAlert(ENTITY_NAME, id.toString())).build();
@@ -221,6 +226,7 @@ public class XmEntityResource {
     @GetMapping("/_search/xm-entities")
     @Timed
     @PreAuthorize("hasPermission({'query': #query}, 'XMENTITY.SEARCH.QUERY')")
+    @PrivilegeDescription("Privilege to search for the xmEntity corresponding to the query")
     public ResponseEntity<List<XmEntity>> searchXmEntities(
             @RequestParam String query,
             @ApiParam Pageable pageable) {
@@ -234,6 +240,7 @@ public class XmEntityResource {
     @GetMapping("/_search-with-template/xm-entities")
     @Timed
     @PreAuthorize("hasPermission({'template': #template}, 'XMENTITY.SEARCH.TEMPLATE')")
+    @PrivilegeDescription("Privilege to search for the xmEntity by template")
     public ResponseEntity<List<XmEntity>> searchXmEntities(
         @RequestParam String template,
         @ApiParam TemplateParamsHolder templateParamsHolder,
@@ -248,6 +255,7 @@ public class XmEntityResource {
     @GetMapping("/_search-with-typekey/xm-entities")
     @Timed
     @PreAuthorize("hasPermission({'typeKey': #typeKey, 'query': #query}, 'XMENTITY.SEARCH.TYPEKEY.QUERY')")
+    @PrivilegeDescription("Privilege to search for the xmEntity corresponding to the query(not required) and typeKey")
     public ResponseEntity<List<XmEntity>> searchByTypeKeyAndQuery(
             @RequestParam String typeKey,
             @RequestParam(required = false) String query,
@@ -262,6 +270,7 @@ public class XmEntityResource {
     @GetMapping("/_search-with-typekey-and-template/xm-entities")
     @Timed
     @PreAuthorize("hasPermission({'typeKey': #typeKey, 'template': #template}, 'XMENTITY.SEARCH.TYPEKEY.TEMPLATE')")
+    @PrivilegeDescription("Privilege to search for the xmEntity corresponding to the template(not required) and typeKey")
     public ResponseEntity<List<XmEntity>> searchByTypeKeyAndQuery(
         @RequestParam String typeKey,
         @RequestParam(required = false) String template,
@@ -278,6 +287,7 @@ public class XmEntityResource {
     @GetMapping("/xm-entities/profile")
     @Timed
     @PostAuthorize("hasPermission({'returnObject': returnObject.body}, 'XMENTITY.GET_PROFILE')")
+    @PrivilegeDescription("Privilege to get xmEntity profile")
     public ResponseEntity<XmEntity> getXmEntity() {
         XmEntity xmEntity = xmEntityService.profile();
         return RespContentUtil.wrapOrNotFound(Optional.ofNullable(xmEntity));
@@ -295,6 +305,7 @@ public class XmEntityResource {
     @GetMapping("/xm-entities/{idOrKey}/functions/{functionKey:.+}")
     @PreAuthorize("hasPermission({'idOrKey': #idOrKey, 'id': #functionKey, 'context': #context}, "
         + "'xmEntity.function', 'XMENTITY.FUNCTION.EXECUTE')")
+    @PrivilegeDescription("Privilege to execute get xmEntity function")
     public ResponseEntity<Object> executeGetFunction(@PathVariable String idOrKey,
                                                      @PathVariable String functionKey,
                                                      @RequestParam(required = false) Map<String, Object> functionInput) {
@@ -313,6 +324,7 @@ public class XmEntityResource {
     @PostMapping("/xm-entities/{idOrKey}/functions/{functionKey:.+}")
     @PreAuthorize("hasPermission({'idOrKey': #idOrKey, 'id': #functionKey, 'context': #context}, "
         + "'xmEntity.function', 'XMENTITY.FUNCTION.EXECUTE')")
+    @PrivilegeDescription("Privilege to execute post xmEntity function")
     public ResponseEntity<Object> executePostFunction(@PathVariable String idOrKey,
                                                            @PathVariable String functionKey,
                                                            @RequestBody(required = false) Map<String, Object> functionInput) {
@@ -338,6 +350,7 @@ public class XmEntityResource {
     @GetMapping("/xm-entities/{idOrKey}/links/targets")
     @Timed
     @PostFilter("hasPermission({'returnObject': filterObject, 'log': false}, 'XMENTITY.LINK.TARGET.GET_LIST')")
+    @PrivilegeDescription("Privilege to get all the targets")
     public List<Link> getLinkTargets(@PathVariable String idOrKey, @RequestParam(required = false) String typeKey) {
         return xmEntityService.getLinkTargets(IdOrKey.of(idOrKey), typeKey);
     }
@@ -345,6 +358,7 @@ public class XmEntityResource {
     @PostMapping("/xm-entities/{idOrKey}/links/targets")
     @Timed
     @PreAuthorize("hasPermission({'idOrKey':#idOrKey, 'link':#link, 'file':#file}, 'XMENTITY.LINK.TARGET.CREATE')")
+    @PrivilegeDescription("Privilege to save target")
     public ResponseEntity<Link> saveLinkTarget(@PathVariable String idOrKey,
                                                @RequestPart("link") Link link,
                                                @RequestPart(value = "file", required = false) MultipartFile file) {
@@ -356,6 +370,7 @@ public class XmEntityResource {
     @Timed
     @PreAuthorize("hasPermission({'idOrKey':#idOrKey, 'id':#targetId, 'link':#link, 'file':#file}, "
         + "'xmEntity.link.target', 'XMENTITY.LINK.TARGET.UPDATE')")
+    @PrivilegeDescription("Privilege to update an existing target")
     public ResponseEntity<Link> updateLinkTarget(@PathVariable String idOrKey,
                                                  @PathVariable String targetId,
                                                  @RequestPart("link") Link link,
@@ -367,6 +382,7 @@ public class XmEntityResource {
     @DeleteMapping("/xm-entities/{idOrKey}/links/targets/{targetId}")
     @Timed
     @PreAuthorize("hasPermission({'idOrKey':#idOrKey, 'id':#targetId}, 'xmEntity.link.target', 'XMENTITY.LINK.TARGET.DELETE')")
+    @PrivilegeDescription("Privilege to delete the target by id")
     public ResponseEntity<Void> deleteLinkTarget(@PathVariable String idOrKey, @PathVariable String targetId) {
         xmEntityService.deleteLinkTarget(IdOrKey.of(idOrKey), targetId);
         return ResponseEntity.ok().build();
@@ -375,6 +391,7 @@ public class XmEntityResource {
     @GetMapping("/xm-entities/{idOrKey}/links/sources")
     @Timed
     @PostFilter("hasPermission({'returnObject': filterObject, 'log': false}, 'XMENTITY.LINK.SOURCE.GET_LIST')")
+    @PrivilegeDescription("Privilege to get all xmEntity sources")
     public List<Link> getLinkSources(@PathVariable String idOrKey, @RequestParam(required = false) String typeKey) {
         return xmEntityService.getLinkSources(IdOrKey.of(idOrKey), typeKey);
     }
@@ -405,6 +422,7 @@ public class XmEntityResource {
     @Timed
     @PutMapping("/xm-entities/{id}/states")
     @PreAuthorize("hasPermission({'id':#id, 'xmEntity':#xmEntity}, 'xmEntity.state', 'XMENTITY.STATE.UPDATE')")
+    @PrivilegeDescription("Privilege to update xmEntity state")
     public ResponseEntity<XmEntity> updateXmEntityState(@PathVariable String id,
                                                         @RequestBody XmEntity xmEntity)
         throws URISyntaxException {
@@ -415,6 +433,7 @@ public class XmEntityResource {
     @Timed
     @PutMapping("/xm-entities/{idOrKey}/states/{stateKey}")
     @PreAuthorize("hasPermission({'id': #idOrKey, 'stateKey':#stateKey, 'context':#context}, 'xmEntity', 'XMENTITY.STATE')")
+    @PrivilegeDescription("Privilege to update xmEntity state")
     public ResponseEntity<XmEntity> updateXmEntityState(@PathVariable String idOrKey,
                                                         @PathVariable String stateKey,
                                                         @RequestBody(required = false) Map<String, Object> context) {
@@ -433,6 +452,7 @@ public class XmEntityResource {
     @Timed
     @PostMapping("/xm-entities/{idOrKey}/avatar")
     @PreAuthorize("hasPermission({'idOrKey':#idOrKey, 'multipartFile':#multipartFile}, 'XMENTITY.AVATAR.UPDATE')")
+    @PrivilegeDescription("Privilege to update avatar")
     public ResponseEntity<Void> updateAvatar(@PathVariable String idOrKey,
                                              @RequestParam("file") MultipartFile multipartFile)
         throws IOException {
@@ -446,6 +466,7 @@ public class XmEntityResource {
     @Timed
     @PostMapping("/xm-entities/self/avatar")
     @PreAuthorize("hasPermission({'multipartFile': #multipartFile}, 'XMENTITY.SELF.AVATAR.UPDATE')")
+    @PrivilegeDescription("Privilege to update self avatar")
     public ResponseEntity<Void> updateSelfAvatar(@RequestParam("file") MultipartFile multipartFile) throws IOException {
         HttpEntity<Resource> avatarEntity = XmHttpEntityUtils.buildAvatarHttpEntity(multipartFile);
         URI uri = xmEntityService.updateAvatar(IdOrKey.SELF, avatarEntity);
@@ -464,6 +485,7 @@ public class XmEntityResource {
     @Timed
     @PutMapping(path = "/xm-entities/{idOrKey}/avatar", consumes = "image/*")
     @PreAuthorize("hasPermission({'idOrKey':#idOrKey, 'fileName':#fileName, 'request':#request}, 'XMENTITY.AVATAR.UPDATE')")
+    @PrivilegeDescription("Privilege to update avatar")
     public ResponseEntity<Void> updateAvatar(@PathVariable String idOrKey,
                                              @RequestHeader(value = XM_HEADER_CONTENT_NAME, required = false)
                                                  String fileName,
@@ -477,6 +499,7 @@ public class XmEntityResource {
     @Timed
     @PutMapping(path = "/xm-entities/self/avatar", consumes = "image/*")
     @PreAuthorize("hasPermission({'fileName':#fileName, 'request':#request}, 'XMENTITY.SELF.AVATAR.UPDATE')")
+    @PrivilegeDescription("Privilege to update self avatar")
     public ResponseEntity<Void> updateSelfAvatar(@RequestHeader(value = XM_HEADER_CONTENT_NAME, required = false)
                                                      String fileName,
                                                  HttpServletRequest request) throws IOException {
@@ -502,6 +525,7 @@ public class XmEntityResource {
     @Timed
     @GetMapping("/xm-entities/export")
     @PreAuthorize("hasPermission({'fileFormat':#fileFormat, 'typeKey':#typeKey}, 'XMENTITY.EXPORT.FILE')")
+    @PrivilegeDescription("Privilege to export all xmEntities by typeKey in specific file format")
     public ResponseEntity<byte[]> exportEntities(
                     @ApiParam(name = "fileFormat", value = "Specify file format to download(csv, xlsx, etc)")
                     @RequestParam String fileFormat,

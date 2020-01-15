@@ -3,6 +3,7 @@ package com.icthh.xm.ms.entity.service;
 import com.icthh.xm.commons.lep.LogicExtensionPoint;
 import com.icthh.xm.commons.lep.spring.LepService;
 import com.icthh.xm.commons.permission.annotation.FindWithPermission;
+import com.icthh.xm.commons.permission.annotation.PrivilegeDescription;
 import com.icthh.xm.commons.permission.repository.PermittedRepository;
 import com.icthh.xm.ms.entity.domain.Location;
 import com.icthh.xm.ms.entity.lep.keyresolver.LocationTypeKeyResolver;
@@ -41,6 +42,7 @@ public class LocationService {
     @FindWithPermission("LOCATION.GET_LIST")
     @LogicExtensionPoint("FindAll")
     @Transactional(readOnly = true)
+    @PrivilegeDescription("Privilege to get all the locations")
     public List<Location> findAll(String privilegeKey) {
         return permittedRepository.findAll(Location.class, privilegeKey);
     }
@@ -53,6 +55,7 @@ public class LocationService {
      */
     @Transactional(readOnly = true)
     @FindWithPermission("LOCATION.SEARCH")
+    @PrivilegeDescription("Privilege to search for the location corresponding to the query")
     public List<Location> search(String query, String privilegeKey) {
         return permittedSearchRepository.search(query, Location.class, privilegeKey);
     }

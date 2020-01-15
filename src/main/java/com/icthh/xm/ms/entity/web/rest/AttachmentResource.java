@@ -3,6 +3,7 @@ package com.icthh.xm.ms.entity.web.rest;
 import com.codahale.metrics.annotation.Timed;
 import com.icthh.xm.commons.exceptions.BusinessException;
 import com.icthh.xm.commons.exceptions.ErrorConstants;
+import com.icthh.xm.commons.permission.annotation.PrivilegeDescription;
 import com.icthh.xm.ms.entity.domain.Attachment;
 import com.icthh.xm.ms.entity.service.AttachmentService;
 import com.icthh.xm.ms.entity.web.rest.util.HeaderUtil;
@@ -55,6 +56,7 @@ public class AttachmentResource {
     @PostMapping("/attachments")
     @Timed
     @PreAuthorize("hasPermission({'attachment': #attachment}, 'ATTACHMENT.CREATE')")
+    @PrivilegeDescription("Privilege to create a new attachment")
     public ResponseEntity<Attachment> createAttachment(@Valid @RequestBody Attachment attachment) throws URISyntaxException {
         if (attachment.getId() != null) {
             throw new BusinessException(ErrorConstants.ERR_BUSINESS_IDEXISTS,
@@ -78,6 +80,7 @@ public class AttachmentResource {
     @PutMapping("/attachments")
     @Timed
     @PreAuthorize("hasPermission({'id': #attachment.id, 'newAttachment': #attachment}, 'attachment', 'ATTACHMENT.UPDATE')")
+    @PrivilegeDescription("Privilege to update an existing attachment")
     public ResponseEntity<Attachment> updateAttachment(@Valid @RequestBody Attachment attachment) throws URISyntaxException {
         if (attachment.getId() == null) {
             //in order to call method with permissions check
@@ -109,6 +112,7 @@ public class AttachmentResource {
     @GetMapping("/attachments/{id}")
     @Timed
     @PostAuthorize("hasPermission({'returnObject': returnObject.body}, 'ATTACHMENT.GET_LIST.ITEM')")
+    @PrivilegeDescription("Privilege to get attachment by id")
     public ResponseEntity<Attachment> getAttachment(@PathVariable Long id) {
         Attachment attachment = attachmentService.findOneWithContent(id);
         return RespContentUtil.wrapOrNotFound(Optional.ofNullable(attachment));
@@ -123,6 +127,7 @@ public class AttachmentResource {
     @DeleteMapping("/attachments/{id}")
     @Timed
     @PreAuthorize("hasPermission({'id': #id}, 'attachment', 'ATTACHMENT.DELETE')")
+    @PrivilegeDescription("Privilege to delete attachment by id")
     public ResponseEntity<Void> deleteAttachment(@PathVariable Long id) {
         attachmentService.delete(id);
         return ResponseEntity.ok().headers(HeaderUtil.createEntityDeletionAlert(ENTITY_NAME, id.toString())).build();

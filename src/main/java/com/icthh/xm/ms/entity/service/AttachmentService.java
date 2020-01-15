@@ -6,6 +6,7 @@ import com.icthh.xm.commons.lep.LogicExtensionPoint;
 import com.icthh.xm.commons.lep.spring.LepService;
 import com.icthh.xm.commons.permission.annotation.FindWithPermission;
 import com.icthh.xm.commons.permission.repository.PermittedRepository;
+import com.icthh.xm.commons.permission.annotation.PrivilegeDescription;
 import com.icthh.xm.ms.entity.domain.Attachment;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.domain.spec.AttachmentSpec;
@@ -94,6 +95,7 @@ public class AttachmentService {
      */
     @Transactional(readOnly = true)
     @FindWithPermission("ATTACHMENT.GET_LIST")
+    @PrivilegeDescription("Privilege to get all the attachments")
     public List<Attachment> findAll(String privilegeKey) {
         return permittedRepository.findAll(Attachment.class, privilegeKey);
     }
@@ -169,6 +171,7 @@ public class AttachmentService {
      */
     @Transactional(readOnly = true)
     @FindWithPermission("ATTACHMENT.SEARCH")
+    @PrivilegeDescription("Privilege to search for the attachment corresponding to the query")
     public List<Attachment> search(String query, String privilegeKey) {
         return permittedSearchRepository.search(query, Attachment.class, privilegeKey);
     }

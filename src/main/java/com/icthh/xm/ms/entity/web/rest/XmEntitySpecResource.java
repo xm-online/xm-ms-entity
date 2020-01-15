@@ -4,6 +4,7 @@ import static org.springframework.http.MediaType.TEXT_PLAIN_VALUE;
 
 import com.codahale.metrics.annotation.Timed;
 import com.icthh.xm.commons.logging.LoggingAspectConfig;
+import com.icthh.xm.commons.permission.annotation.PrivilegeDescription;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.domain.spec.TypeSpec;
 import com.icthh.xm.ms.entity.service.XmEntityGeneratorService;
@@ -78,6 +79,7 @@ public class XmEntitySpecResource {
     @GetMapping("/xm-entity-specs")
     @Timed
     @PostFilter("hasPermission({'returnObject': filterObject, 'log': false}, 'XMENTITY_SPEC.GET')")
+    @PrivilegeDescription("Privilege to get the typeSpecs")
     public List<TypeSpec> getTypeSpecs(@ApiParam XmEntitySpecResource.Filter filter) {
         log.debug("REST request to get a list of TypeSpec");
 
@@ -96,6 +98,7 @@ public class XmEntitySpecResource {
     @GetMapping("/xm-entity-specs/{key}")
     @Timed
     @PostAuthorize("hasPermission({'returnObject': returnObject.body}, 'XMENTITY_SPEC.GET_LIST.ITEM')")
+    @PrivilegeDescription("Privilege to get the typeSpec by key")
     public ResponseEntity<TypeSpec> getTypeSpec(@PathVariable String key) {
         log.debug("REST request to get TypeSpec : {}", key);
         return RespContentUtil.wrapOrNotFound(xmEntitySpecService.getTypeSpecByKey(key));
@@ -110,6 +113,7 @@ public class XmEntitySpecResource {
     @PostMapping("/xm-entity-specs/generate-xm-entity")
     @Timed
     @PreAuthorize("hasPermission({'rootTypeKey': #rootTypeKey}, 'XMENTITY_SPEC.GENERATE')")
+    @PrivilegeDescription("Privilege to generate a new xmEntity spec")
     public ResponseEntity<XmEntity> generateXmEntity(@ApiParam String rootTypeKey) throws URISyntaxException {
         log.debug("REST request to generate XmEntity");
         XmEntity result = xmEntityGeneratorService.generateXmEntity(rootTypeKey != null ? rootTypeKey : "");
@@ -128,6 +132,7 @@ public class XmEntitySpecResource {
     @PostMapping(value = "/xm-entity-specs", consumes = {TEXT_PLAIN_VALUE})
     @Timed
     @PreAuthorize("hasPermission({'xmEntitySpec': #xmEntitySpec}, 'XMENTITY_SPEC.UPDATE')")
+    @PrivilegeDescription("Privilege to update an existing xmEntity spec")
     public ResponseEntity<XmEntity> updateXmEntitySpec(@RequestBody String xmEntitySpec) {
         xmEntitySpecService.updateXmEntitySpec(xmEntitySpec);
         return ResponseEntity.ok().build();

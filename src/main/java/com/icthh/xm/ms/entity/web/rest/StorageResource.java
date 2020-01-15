@@ -4,8 +4,8 @@ import static com.icthh.xm.commons.exceptions.ErrorConstants.ERR_VALIDATION;
 
 import com.codahale.metrics.annotation.Timed;
 import com.icthh.xm.commons.exceptions.BusinessException;
+import com.icthh.xm.commons.permission.annotation.PrivilegeDescription;
 import com.icthh.xm.ms.entity.config.ApplicationProperties;
-import com.icthh.xm.ms.entity.repository.backend.StorageRepository;
 import com.icthh.xm.ms.entity.service.StorageService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -34,6 +34,7 @@ public class StorageResource {
     @PostMapping("/objects")
     @Timed
     @PreAuthorize("hasPermission({'size': #size, 'multipartFile': #multipartFile}, 'STORAGE.OBJECT.CREATE')")
+    @PrivilegeDescription("Privilege to create a storage object")
     public ResponseEntity<String> createContent(@RequestParam(required = false) Integer size,
         @RequestParam("file") MultipartFile multipartFile)
         throws URISyntaxException {
