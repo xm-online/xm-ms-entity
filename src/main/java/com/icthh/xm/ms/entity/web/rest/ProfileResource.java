@@ -38,7 +38,7 @@ public class ProfileResource {
     @GetMapping("/profile")
     @Timed
     @PostAuthorize("hasPermission({'returnObject': returnObject.body}, 'ENTITY.PROFILE.SELF.GET')")
-    @PrivilegeDescription("Privilege to get the profile")
+    @PrivilegeDescription("Privilege to get current user profile")
     public ResponseEntity<XmEntity> getProfile() {
         Profile profile = profileService.getSelfProfile();
         return RespContentUtil.wrapOrNotFound(Optional.ofNullable(profile).map(Profile::getXmentity));
@@ -54,7 +54,7 @@ public class ProfileResource {
     @PutMapping("/profile")
     @Timed
     @PostAuthorize("hasPermission({'returnObject': returnObject.body}, 'ENTITY.PROFILE.SELF.UPDATE')")
-    @PrivilegeDescription("Privilege to update the profile")
+    @PrivilegeDescription("Privilege to update the profile of current user")
     public ResponseEntity<XmEntity> updateProfile(@Valid @RequestBody XmEntity xmEntity) {
         XmEntity result = profileService.updateProfile(xmEntity);
 

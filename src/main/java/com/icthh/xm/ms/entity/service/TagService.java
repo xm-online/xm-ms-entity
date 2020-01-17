@@ -70,6 +70,7 @@ public class TagService {
      *  @param query the query of the search
      *  @return the list of entities
      */
+    @Deprecated
     @Transactional(readOnly = true)
     @FindWithPermission("TAG.SEARCH")
     @PrivilegeDescription("Privilege to search for the tags corresponding to the query")

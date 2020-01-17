@@ -188,7 +188,7 @@ public class XmEntityResource {
     @GetMapping("/xm-entities/{idOrKey}")
     @Timed
     @PostAuthorize("hasPermission({'returnObject': returnObject.body}, 'XMENTITY.GET_LIST.ITEM')")
-    @PrivilegeDescription("Privilege to get the xmEntity by id")
+    @PrivilegeDescription("Privilege to get the xmEntity by id or key")
     public ResponseEntity<XmEntity> getXmEntity(@PathVariable String idOrKey,
                                                 @RequestParam(required = false) List<String> embed) {
         XmEntity xmEntity;
@@ -240,7 +240,7 @@ public class XmEntityResource {
     @GetMapping("/_search-with-template/xm-entities")
     @Timed
     @PreAuthorize("hasPermission({'template': #template}, 'XMENTITY.SEARCH.TEMPLATE')")
-    @PrivilegeDescription("Privilege to search for the xmEntity by template")
+    @PrivilegeDescription("Privilege to search for the xmEntity by query template")
     public ResponseEntity<List<XmEntity>> searchXmEntities(
         @RequestParam String template,
         @ApiParam TemplateParamsHolder templateParamsHolder,
@@ -287,7 +287,7 @@ public class XmEntityResource {
     @GetMapping("/xm-entities/profile")
     @Timed
     @PostAuthorize("hasPermission({'returnObject': returnObject.body}, 'XMENTITY.GET_PROFILE')")
-    @PrivilegeDescription("Privilege to get xmEntity profile")
+    @PrivilegeDescription("Privilege to get xmEntity of current user profile")
     public ResponseEntity<XmEntity> getXmEntity() {
         XmEntity xmEntity = xmEntityService.profile();
         return RespContentUtil.wrapOrNotFound(Optional.ofNullable(xmEntity));
@@ -305,7 +305,7 @@ public class XmEntityResource {
     @GetMapping("/xm-entities/{idOrKey}/functions/{functionKey:.+}")
     @PreAuthorize("hasPermission({'idOrKey': #idOrKey, 'id': #functionKey, 'context': #context}, "
         + "'xmEntity.function', 'XMENTITY.FUNCTION.EXECUTE')")
-    @PrivilegeDescription("Privilege to execute get xmEntity function")
+    @PrivilegeDescription("Privilege to execute get function on xmEntity")
     public ResponseEntity<Object> executeGetFunction(@PathVariable String idOrKey,
                                                      @PathVariable String functionKey,
                                                      @RequestParam(required = false) Map<String, Object> functionInput) {
@@ -324,7 +324,7 @@ public class XmEntityResource {
     @PostMapping("/xm-entities/{idOrKey}/functions/{functionKey:.+}")
     @PreAuthorize("hasPermission({'idOrKey': #idOrKey, 'id': #functionKey, 'context': #context}, "
         + "'xmEntity.function', 'XMENTITY.FUNCTION.EXECUTE')")
-    @PrivilegeDescription("Privilege to execute post xmEntity function")
+    @PrivilegeDescription("Privilege to execute post function on xmEntity")
     public ResponseEntity<Object> executePostFunction(@PathVariable String idOrKey,
                                                            @PathVariable String functionKey,
                                                            @RequestBody(required = false) Map<String, Object> functionInput) {
@@ -350,7 +350,7 @@ public class XmEntityResource {
     @GetMapping("/xm-entities/{idOrKey}/links/targets")
     @Timed
     @PostFilter("hasPermission({'returnObject': filterObject, 'log': false}, 'XMENTITY.LINK.TARGET.GET_LIST')")
-    @PrivilegeDescription("Privilege to get all the targets")
+    @PrivilegeDescription("Privilege to get all target links with entities referenced by indicated entity")
     public List<Link> getLinkTargets(@PathVariable String idOrKey, @RequestParam(required = false) String typeKey) {
         return xmEntityService.getLinkTargets(IdOrKey.of(idOrKey), typeKey);
     }
@@ -358,7 +358,7 @@ public class XmEntityResource {
     @PostMapping("/xm-entities/{idOrKey}/links/targets")
     @Timed
     @PreAuthorize("hasPermission({'idOrKey':#idOrKey, 'link':#link, 'file':#file}, 'XMENTITY.LINK.TARGET.CREATE')")
-    @PrivilegeDescription("Privilege to save target")
+    @PrivilegeDescription("Privilege to add target link to indicated xmEntity")
     public ResponseEntity<Link> saveLinkTarget(@PathVariable String idOrKey,
                                                @RequestPart("link") Link link,
                                                @RequestPart(value = "file", required = false) MultipartFile file) {
@@ -370,7 +370,7 @@ public class XmEntityResource {
     @Timed
     @PreAuthorize("hasPermission({'idOrKey':#idOrKey, 'id':#targetId, 'link':#link, 'file':#file}, "
         + "'xmEntity.link.target', 'XMENTITY.LINK.TARGET.UPDATE')")
-    @PrivilegeDescription("Privilege to update an existing target")
+    @PrivilegeDescription("Privilege to update an existing target link in the entity")
     public ResponseEntity<Link> updateLinkTarget(@PathVariable String idOrKey,
                                                  @PathVariable String targetId,
                                                  @RequestPart("link") Link link,
@@ -382,7 +382,7 @@ public class XmEntityResource {
     @DeleteMapping("/xm-entities/{idOrKey}/links/targets/{targetId}")
     @Timed
     @PreAuthorize("hasPermission({'idOrKey':#idOrKey, 'id':#targetId}, 'xmEntity.link.target', 'XMENTITY.LINK.TARGET.DELETE')")
-    @PrivilegeDescription("Privilege to delete the target by id")
+    @PrivilegeDescription("Privilege to delete target link from")
     public ResponseEntity<Void> deleteLinkTarget(@PathVariable String idOrKey, @PathVariable String targetId) {
         xmEntityService.deleteLinkTarget(IdOrKey.of(idOrKey), targetId);
         return ResponseEntity.ok().build();
@@ -391,7 +391,7 @@ public class XmEntityResource {
     @GetMapping("/xm-entities/{idOrKey}/links/sources")
     @Timed
     @PostFilter("hasPermission({'returnObject': filterObject, 'log': false}, 'XMENTITY.LINK.SOURCE.GET_LIST')")
-    @PrivilegeDescription("Privilege to get all xmEntity sources")
+    @PrivilegeDescription("Privilege to get all source links with entities referenced by indicated entity")
     public List<Link> getLinkSources(@PathVariable String idOrKey, @RequestParam(required = false) String typeKey) {
         return xmEntityService.getLinkSources(IdOrKey.of(idOrKey), typeKey);
     }
@@ -466,7 +466,7 @@ public class XmEntityResource {
     @Timed
     @PostMapping("/xm-entities/self/avatar")
     @PreAuthorize("hasPermission({'multipartFile': #multipartFile}, 'XMENTITY.SELF.AVATAR.UPDATE')")
-    @PrivilegeDescription("Privilege to update self avatar")
+    @PrivilegeDescription("Privilege to update avatar of current user")
     public ResponseEntity<Void> updateSelfAvatar(@RequestParam("file") MultipartFile multipartFile) throws IOException {
         HttpEntity<Resource> avatarEntity = XmHttpEntityUtils.buildAvatarHttpEntity(multipartFile);
         URI uri = xmEntityService.updateAvatar(IdOrKey.SELF, avatarEntity);
@@ -499,7 +499,7 @@ public class XmEntityResource {
     @Timed
     @PutMapping(path = "/xm-entities/self/avatar", consumes = "image/*")
     @PreAuthorize("hasPermission({'fileName':#fileName, 'request':#request}, 'XMENTITY.SELF.AVATAR.UPDATE')")
-    @PrivilegeDescription("Privilege to update self avatar")
+    @PrivilegeDescription("Privilege to update avatar of current user")
     public ResponseEntity<Void> updateSelfAvatar(@RequestHeader(value = XM_HEADER_CONTENT_NAME, required = false)
                                                      String fileName,
                                                  HttpServletRequest request) throws IOException {

@@ -122,7 +122,7 @@ public class LinkService {
 
     @FindWithPermission("LINK.SOURCE.GET_LIST")
     @Transactional(readOnly = true)
-    @PrivilegeDescription("Privilege to get all the sources")
+    @PrivilegeDescription("Privilege to get all the source links by target entity id and typeKeys")
     public Page<Link> findSourceByTargetIdAndTypeKey(Pageable pageable, Long id, Set<String> typeKey, String
         privilegeKey) {
         return permittedRepository.findAllByTargetIdAndTypeKeyIn(pageable, id, typeKey, privilegeKey);
@@ -145,6 +145,7 @@ public class LinkService {
      *  @param pageable the pagination information
      *  @return the list of entities
      */
+    @Deprecated
     @Transactional(readOnly = true)
     @FindWithPermission("LINK.SEARCH")
     @PrivilegeDescription("Privilege to search for the link corresponding to the query")

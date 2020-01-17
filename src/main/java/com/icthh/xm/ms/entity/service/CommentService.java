@@ -98,6 +98,7 @@ public class CommentService {
      * @param pageable the pagination information
      * @return the list of entities
      */
+    @Deprecated
     @Transactional(readOnly = true)
     @FindWithPermission("COMMENT.SEARCH")
     @LogicExtensionPoint("Search")

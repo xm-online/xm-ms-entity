@@ -70,6 +70,7 @@ public class VoteService {
      *  @param query the query of the search
      *  @return the list of entities
      */
+    @Deprecated
     @Transactional(readOnly = true)
     @FindWithPermission("VOTE.SEARCH")
     @PrivilegeDescription("Privilege to search for the votes corresponding to the query")

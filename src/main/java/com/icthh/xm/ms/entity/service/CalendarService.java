@@ -94,6 +94,7 @@ public class CalendarService {
      *  @param query the query of the search
      *  @return the list of entities
      */
+    @Deprecated
     @Transactional(readOnly = true)
     @FindWithPermission("CALENDAR.SEARCH")
     @LogicExtensionPoint("Search")

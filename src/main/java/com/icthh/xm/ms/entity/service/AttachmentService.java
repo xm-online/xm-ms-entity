@@ -169,6 +169,7 @@ public class AttachmentService {
      *  @param query the query of the search
      *  @return the list of entities
      */
+    @Deprecated
     @Transactional(readOnly = true)
     @FindWithPermission("ATTACHMENT.SEARCH")
     @PrivilegeDescription("Privilege to search for the attachment corresponding to the query")

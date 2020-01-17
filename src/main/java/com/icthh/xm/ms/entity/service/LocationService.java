@@ -53,6 +53,7 @@ public class LocationService {
      * @param query the query of the search
      * @return the list of entities
      */
+    @Deprecated
     @Transactional(readOnly = true)
     @FindWithPermission("LOCATION.SEARCH")
     @PrivilegeDescription("Privilege to search for the location corresponding to the query")

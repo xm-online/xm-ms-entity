@@ -87,6 +87,7 @@ public class RatingService {
      *  @param query the query of the search
      *  @return the list of entities
      */
+    @Deprecated
     @Transactional(readOnly = true)
     @FindWithPermission("RATING.SEARCH")
     @PrivilegeDescription("Privilege to search for the rating corresponding to the query")

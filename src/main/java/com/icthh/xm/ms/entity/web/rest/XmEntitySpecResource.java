@@ -79,7 +79,7 @@ public class XmEntitySpecResource {
     @GetMapping("/xm-entity-specs")
     @Timed
     @PostFilter("hasPermission({'returnObject': filterObject, 'log': false}, 'XMENTITY_SPEC.GET')")
-    @PrivilegeDescription("Privilege to get the typeSpecs")
+    @PrivilegeDescription("Privilege to get the xmEntity specification by filter")
     public List<TypeSpec> getTypeSpecs(@ApiParam XmEntitySpecResource.Filter filter) {
         log.debug("REST request to get a list of TypeSpec");
 
@@ -98,7 +98,7 @@ public class XmEntitySpecResource {
     @GetMapping("/xm-entity-specs/{key}")
     @Timed
     @PostAuthorize("hasPermission({'returnObject': returnObject.body}, 'XMENTITY_SPEC.GET_LIST.ITEM')")
-    @PrivilegeDescription("Privilege to get the typeSpec by key")
+    @PrivilegeDescription("Privilege to get the xmEntity specification by key")
     public ResponseEntity<TypeSpec> getTypeSpec(@PathVariable String key) {
         log.debug("REST request to get TypeSpec : {}", key);
         return RespContentUtil.wrapOrNotFound(xmEntitySpecService.getTypeSpecByKey(key));
@@ -113,7 +113,7 @@ public class XmEntitySpecResource {
     @PostMapping("/xm-entity-specs/generate-xm-entity")
     @Timed
     @PreAuthorize("hasPermission({'rootTypeKey': #rootTypeKey}, 'XMENTITY_SPEC.GENERATE')")
-    @PrivilegeDescription("Privilege to generate a new xmEntity spec")
+    @PrivilegeDescription("Privilege to generate a new random xmEntity with passed type. Used for demo")
     public ResponseEntity<XmEntity> generateXmEntity(@ApiParam String rootTypeKey) throws URISyntaxException {
         log.debug("REST request to generate XmEntity");
         XmEntity result = xmEntityGeneratorService.generateXmEntity(rootTypeKey != null ? rootTypeKey : "");
@@ -132,7 +132,7 @@ public class XmEntitySpecResource {
     @PostMapping(value = "/xm-entity-specs", consumes = {TEXT_PLAIN_VALUE})
     @Timed
     @PreAuthorize("hasPermission({'xmEntitySpec': #xmEntitySpec}, 'XMENTITY_SPEC.UPDATE')")
-    @PrivilegeDescription("Privilege to update an existing xmEntity spec")
+    @PrivilegeDescription("Privilege to update an existing xmEntity specification")
     public ResponseEntity<XmEntity> updateXmEntitySpec(@RequestBody String xmEntitySpec) {
         xmEntitySpecService.updateXmEntitySpec(xmEntitySpec);
         return ResponseEntity.ok().build();
