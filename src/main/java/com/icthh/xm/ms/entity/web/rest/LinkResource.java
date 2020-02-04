@@ -3,6 +3,7 @@ package com.icthh.xm.ms.entity.web.rest;
 import com.codahale.metrics.annotation.Timed;
 import com.icthh.xm.commons.exceptions.BusinessException;
 import com.icthh.xm.commons.exceptions.ErrorConstants;
+import com.icthh.xm.commons.permission.annotation.PrivilegeDescription;
 import com.icthh.xm.ms.entity.domain.Link;
 import com.icthh.xm.ms.entity.service.LinkService;
 import com.icthh.xm.ms.entity.web.rest.util.HeaderUtil;
@@ -24,7 +25,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.net.URI;
@@ -62,6 +62,7 @@ public class LinkResource {
     @PostMapping("/links")
     @Timed
     @PreAuthorize("hasPermission({'link': #link}, 'LINK.CREATE')")
+    @PrivilegeDescription("Privilege to create a new link")
     public ResponseEntity<Link> createLink(@Valid @RequestBody Link link) throws URISyntaxException {
         if (link.getId() != null) {
             throw new BusinessException(ErrorConstants.ERR_BUSINESS_IDEXISTS,
@@ -85,6 +86,7 @@ public class LinkResource {
     @PutMapping("/links")
     @Timed
     @PreAuthorize("hasPermission({'id': #link.id, 'newLink': #link}, 'link', 'LINK.UPDATE')")
+    @PrivilegeDescription("Privilege to updates an existing link")
     public ResponseEntity<Link> updateLink(@Valid @RequestBody Link link) throws URISyntaxException {
         if (link.getId() == null) {
             //in order to call method with permissions check
@@ -119,6 +121,7 @@ public class LinkResource {
     @GetMapping("/links/{id}")
     @Timed
     @PostAuthorize("hasPermission({'returnObject': returnObject.body}, 'LINK.GET_LIST.ITEM')")
+    @PrivilegeDescription("Privilege to get the link by id")
     public ResponseEntity<Link> getLink(@PathVariable Long id) {
         Link link = linkService.findOne(id);
         return RespContentUtil.wrapOrNotFound(Optional.ofNullable(link));
@@ -133,6 +136,7 @@ public class LinkResource {
     @DeleteMapping("/links/{id}")
     @Timed
     @PreAuthorize("hasPermission({'id': #id}, 'link', 'LINK.DELETE')")
+    @PrivilegeDescription("Privilege to delete the link by id")
     public ResponseEntity<Void> deleteLink(@PathVariable Long id) {
         linkService.delete(id);
         return ResponseEntity.ok().headers(HeaderUtil.createEntityDeletionAlert(ENTITY_NAME, id.toString())).build();

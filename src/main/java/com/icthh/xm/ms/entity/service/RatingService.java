@@ -1,6 +1,7 @@
 package com.icthh.xm.ms.entity.service;
 
 import com.icthh.xm.commons.permission.annotation.FindWithPermission;
+import com.icthh.xm.commons.permission.annotation.PrivilegeDescription;
 import com.icthh.xm.commons.permission.repository.PermittedRepository;
 import com.icthh.xm.ms.entity.domain.Rating;
 import com.icthh.xm.ms.entity.repository.RatingRepository;
@@ -55,6 +56,7 @@ public class RatingService {
      */
     @Transactional(readOnly = true)
     @FindWithPermission("RATING.GET_LIST")
+    @PrivilegeDescription("Privilege to get all the ratings")
     public List<Rating> findAll(String privilegeKey) {
         return permittedRepository.findAll(Rating.class, privilegeKey);
     }
@@ -85,8 +87,10 @@ public class RatingService {
      *  @param query the query of the search
      *  @return the list of entities
      */
+    @Deprecated
     @Transactional(readOnly = true)
     @FindWithPermission("RATING.SEARCH")
+    @PrivilegeDescription("Privilege to search for the rating corresponding to the query")
     public List<Rating> search(String query, String privilegeKey) {
         return permittedSearchRepository.search(query, Rating.class, privilegeKey);
     }

@@ -3,6 +3,7 @@ package com.icthh.xm.ms.entity.web.rest;
 import com.codahale.metrics.annotation.Timed;
 import com.icthh.xm.commons.exceptions.BusinessException;
 import com.icthh.xm.commons.exceptions.ErrorConstants;
+import com.icthh.xm.commons.permission.annotation.PrivilegeDescription;
 import com.icthh.xm.ms.entity.domain.Calendar;
 import com.icthh.xm.ms.entity.service.CalendarService;
 import com.icthh.xm.ms.entity.web.rest.util.HeaderUtil;
@@ -55,6 +56,7 @@ public class CalendarResource {
     @PostMapping("/calendars")
     @Timed
     @PreAuthorize("hasPermission({'calendar': #calendar}, 'CALENDAR.CREATE')")
+    @PrivilegeDescription("Privilege to create a new calendar")
     public ResponseEntity<Calendar> createCalendar(@Valid @RequestBody Calendar calendar) throws URISyntaxException {
         if (calendar.getId() != null) {
             throw new BusinessException(ErrorConstants.ERR_BUSINESS_IDEXISTS,
@@ -78,6 +80,7 @@ public class CalendarResource {
     @PutMapping("/calendars")
     @Timed
     @PreAuthorize("hasPermission({'id': #calendar.id, 'newCalendar': #calendar}, 'calendar', 'CALENDAR.UPDATE')")
+    @PrivilegeDescription("Privilege to updates an existing calendar")
     public ResponseEntity<Calendar> updateCalendar(@Valid @RequestBody Calendar calendar) throws URISyntaxException {
         if (calendar.getId() == null) {
             //in order to call method with permissions check
@@ -109,6 +112,7 @@ public class CalendarResource {
     @GetMapping("/calendars/{id}")
     @Timed
     @PostAuthorize("hasPermission({'returnObject': returnObject.body}, 'CALENDAR.GET_LIST.ITEM')")
+    @PrivilegeDescription("Privilege to get the calendar by id")
     public ResponseEntity<Calendar> getCalendar(@PathVariable Long id) {
         Calendar calendar = calendarService.findOne(id);
         return RespContentUtil.wrapOrNotFound(Optional.ofNullable(calendar));
@@ -123,6 +127,7 @@ public class CalendarResource {
     @DeleteMapping("/calendars/{id}")
     @Timed
     @PreAuthorize("hasPermission({'id': #id}, 'calendar', 'CALENDAR.DELETE')")
+    @PrivilegeDescription("Privilege to delete the calendar by id")
     public ResponseEntity<Void> deleteCalendar(@PathVariable Long id) {
         calendarService.delete(id);
         return ResponseEntity.ok().headers(HeaderUtil.createEntityDeletionAlert(ENTITY_NAME, id.toString())).build();

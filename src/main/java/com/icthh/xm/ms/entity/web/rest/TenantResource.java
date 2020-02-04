@@ -2,6 +2,7 @@ package com.icthh.xm.ms.entity.web.rest;
 
 import com.icthh.xm.commons.gen.api.TenantsApiDelegate;
 import com.icthh.xm.commons.gen.model.Tenant;
+import com.icthh.xm.commons.permission.annotation.PrivilegeDescription;
 import com.icthh.xm.commons.tenantendpoint.TenantManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,6 +22,7 @@ public class TenantResource implements TenantsApiDelegate {
 
     @Override
     @PreAuthorize("hasPermission({'tenant':#tenant}, 'ENTITY.TENANT.CREATE')")
+    @PrivilegeDescription("Privilege to create new tenant on entity micro-service")
     public ResponseEntity<Void> addTenant(Tenant tenant) {
         tenantManager.createTenant(tenant);
         return ResponseEntity.ok().build();
@@ -28,6 +30,7 @@ public class TenantResource implements TenantsApiDelegate {
 
     @Override
     @PreAuthorize("hasPermission({'tenantKey':#tenantKey}, 'ENTITY.TENANT.DELETE')")
+    @PrivilegeDescription("Privilege to delete tenant on entity micro-service")
     public ResponseEntity<Void> deleteTenant(String tenantKey) {
         tenantManager.deleteTenant(tenantKey);
         return ResponseEntity.ok().build();
@@ -35,18 +38,21 @@ public class TenantResource implements TenantsApiDelegate {
 
     @Override
     @PostAuthorize("hasPermission(null, 'ENTITY.TENANT.GET_LIST')")
+    @PrivilegeDescription("Privilege to get all tenants on entity micro-service")
     public ResponseEntity<List<Tenant>> getAllTenantInfo() {
         return null;
     }
 
     @Override
     @PostAuthorize("hasPermission({'returnObject': returnObject.body}, 'ENTITY.TENANT.GET_LIST.ITEM')")
+    @PrivilegeDescription("Privilege to get one tenant on entity micro-service")
     public ResponseEntity<Tenant> getTenant(String s) {
         return null;
     }
 
     @Override
     @PreAuthorize("hasPermission({'tenant':#tenant, 'status':#status}, 'ENTITY.TENANT.UPDATE')")
+    @PrivilegeDescription("Privilege to update tenant on entity micro-service")
     public ResponseEntity<Void> manageTenant(String tenant, String status) {
         tenantManager.manageTenant(tenant, status);
         return ResponseEntity.ok().build();
