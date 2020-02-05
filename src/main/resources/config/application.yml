@@ -28,7 +28,7 @@ management:
         web:
             base-path: /management
             exposure:
-                include: ["configprops", "env", "health", "info", "threaddump", "logfile" ]
+                include: ["configprops", "env", "health", "info", "threaddump", "logfile", "jhimetrics", "prometheus" ]
     endpoint:
         health:
             show-details: when_authorized
@@ -41,7 +41,16 @@ management:
         elasticsearch:
             enabled: false
     metrics:
-        enabled: false # http://micrometer.io/ is disabled by default, as we use http://metrics.dropwizard.io/ instead
+        enable:
+            http: true
+            jvm: true
+            logback: true
+            process: true
+            system: true
+        export:
+            prometheus:
+                enabled: true
+                step: 60
 
 spring:
     application:
