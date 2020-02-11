@@ -34,7 +34,6 @@ plugins {
 }
 
 group = "com.icthh.xm.ms.entity"
-version = "2.0.0"
 
 description = ""
 
