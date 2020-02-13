@@ -77,6 +77,7 @@ public class Rating implements Serializable {
     @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id", resolver =
         XmEntityObjectIdResolver.class)
     @JsonIdentityReference(alwaysAsId = true) // otherwise first ref as POJO, others as id
+    @JoinColumn(name = "xm_entity_id", nullable = false)
     private XmEntity xmEntity;
 
     public Long getId() {

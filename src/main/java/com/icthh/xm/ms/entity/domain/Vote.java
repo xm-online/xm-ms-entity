@@ -60,6 +60,7 @@ public class Vote implements Serializable {
 
     @ManyToOne(optional = false)
     @NotNull
+    @JoinColumn(name = "xm_entity_id", nullable = false)
     private XmEntity xmEntity;
 
     public Long getId() {

@@ -20,10 +20,9 @@ spring:
             discovery:
                 tags:
                     - profile=${spring.profiles.active}
-                    - version=${info.project.version:}
-                    - git-version=${git.commit.id.describe:}
-                    - git-commit=${git.commit.id.abbrev:}
+                    - version=${build.version}
                     - git-branch=${git.branch:}
+                    - git-commit=${git.commit.id.abbrev:}
             host: localhost
             port: 8500
 

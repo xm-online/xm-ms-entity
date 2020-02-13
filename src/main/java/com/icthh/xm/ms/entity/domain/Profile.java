@@ -39,7 +39,7 @@ public class Profile implements Serializable {
 
     @OneToOne(optional = false, cascade = CascadeType.ALL)
     @NotNull
-    @JoinColumn(unique = true)
+    @JoinColumn(name = "xmentity_id", unique = true)
     private XmEntity xmentity;
 
     // jhipster-needle-entity-add-field - Jhipster will add fields here, do not remove

@@ -3,6 +3,7 @@ package com.icthh.xm.ms.entity.web.rest;
 import com.codahale.metrics.annotation.Timed;
 import com.icthh.xm.commons.exceptions.BusinessException;
 import com.icthh.xm.commons.exceptions.ErrorConstants;
+import com.icthh.xm.commons.permission.annotation.PrivilegeDescription;
 import com.icthh.xm.ms.entity.domain.Tag;
 import com.icthh.xm.ms.entity.service.TagService;
 import com.icthh.xm.ms.entity.web.rest.util.HeaderUtil;
@@ -55,6 +56,7 @@ public class TagResource {
     @PostMapping("/tags")
     @Timed
     @PreAuthorize("hasPermission({'tag': #tag}, 'TAG.CREATE')")
+    @PrivilegeDescription("Privilege to create a new tag")
     public ResponseEntity<Tag> createTag(@Valid @RequestBody Tag tag) throws URISyntaxException {
         if (tag.getId() != null) {
             throw new BusinessException(ErrorConstants.ERR_BUSINESS_IDEXISTS,
@@ -78,6 +80,7 @@ public class TagResource {
     @PutMapping("/tags")
     @Timed
     @PreAuthorize("hasPermission({'id': #tag.id, 'newTag': #tag}, 'tag', 'TAG.UPDATE')")
+    @PrivilegeDescription("Privilege to updates an existing tag")
     public ResponseEntity<Tag> updateTag(@Valid @RequestBody Tag tag) throws URISyntaxException {
         if (tag.getId() == null) {
             //in order to call method with permissions check
@@ -109,6 +112,7 @@ public class TagResource {
     @GetMapping("/tags/{id}")
     @Timed
     @PostAuthorize("hasPermission({'returnObject': returnObject.body}, 'TAG.GET_LIST.ITEM')")
+    @PrivilegeDescription("Privilege to get the tag by id")
     public ResponseEntity<Tag> getTag(@PathVariable Long id) {
         Tag tag = tagService.findOne(id);
         return RespContentUtil.wrapOrNotFound(Optional.ofNullable(tag));
@@ -123,6 +127,7 @@ public class TagResource {
     @DeleteMapping("/tags/{id}")
     @Timed
     @PreAuthorize("hasPermission({'id': #id}, 'tag', 'TAG.DELETE')")
+    @PrivilegeDescription("Privilege to delete the tag by id")
     public ResponseEntity<Void> deleteTag(@PathVariable Long id) {
         tagService.delete(id);
         return ResponseEntity.ok().headers(HeaderUtil.createEntityDeletionAlert(ENTITY_NAME, id.toString())).build();

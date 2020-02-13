@@ -22,6 +22,7 @@ import io.github.jhipster.config.JHipsterProperties;
 import io.undertow.Undertow;
 import io.undertow.Undertow.Builder;
 import io.undertow.UndertowOptions;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -37,9 +38,11 @@ import javax.servlet.Servlet;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRegistration;
 import javax.servlet.ServletSecurityElement;
+
 import org.h2.server.web.WebServlet;
 import org.junit.Before;
 import org.junit.Test;
+import org.springframework.boot.autoconfigure.web.ServerProperties;
 import org.springframework.boot.web.embedded.undertow.UndertowServletWebServerFactory;
 import org.springframework.http.HttpHeaders;
 import org.springframework.mock.env.MockEnvironment;
@@ -64,6 +67,8 @@ public class WebConfigurerIntTest extends AbstractUnitTest {
 
     private JHipsterProperties props;
 
+    private ServerProperties serverProperties;
+
     private MetricRegistry metricRegistry;
 
     @Before
@@ -76,8 +81,9 @@ public class WebConfigurerIntTest extends AbstractUnitTest {
 
         env = new MockEnvironment();
         props = new JHipsterProperties();
+        serverProperties = new ServerProperties();
 
-        webConfigurer = new WebConfigurer(env, props);
+        webConfigurer = new WebConfigurer(env, serverProperties, props);
         metricRegistry = new MetricRegistry();
         webConfigurer.setMetricRegistry(metricRegistry);
     }
@@ -123,7 +129,7 @@ public class WebConfigurerIntTest extends AbstractUnitTest {
 
     @Test
     public void testUndertowHttp2Enabled() {
-        props.getHttp().setVersion(JHipsterProperties.Http.Version.V_2_0);
+        serverProperties.getHttp2().setEnabled(true);
         UndertowServletWebServerFactory container = new UndertowServletWebServerFactory();
         webConfigurer.customize(container);
         Builder builder = Undertow.builder();

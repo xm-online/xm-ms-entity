@@ -3,6 +3,7 @@ package com.icthh.xm.ms.entity.web.rest;
 import com.codahale.metrics.annotation.Timed;
 import com.icthh.xm.commons.exceptions.BusinessException;
 import com.icthh.xm.commons.exceptions.ErrorConstants;
+import com.icthh.xm.commons.permission.annotation.PrivilegeDescription;
 import com.icthh.xm.ms.entity.domain.Location;
 import com.icthh.xm.ms.entity.service.LocationService;
 import com.icthh.xm.ms.entity.web.rest.util.HeaderUtil;
@@ -55,6 +56,7 @@ public class LocationResource {
     @PostMapping("/locations")
     @Timed
     @PreAuthorize("hasPermission({'location': #location}, 'LOCATION.CREATE')")
+    @PrivilegeDescription("Privilege to create a new location")
     public ResponseEntity<Location> createLocation(@Valid @RequestBody Location location) throws URISyntaxException {
         if (location.getId() != null) {
             throw new BusinessException(ErrorConstants.ERR_BUSINESS_IDEXISTS,
@@ -78,6 +80,7 @@ public class LocationResource {
     @PutMapping("/locations")
     @Timed
     @PreAuthorize("hasPermission({'id': #location.id, 'newLocation': #location}, 'location', 'LOCATION.UPDATE')")
+    @PrivilegeDescription("Privilege to updates an existing location")
     public ResponseEntity<Location> updateLocation(@Valid @RequestBody Location location) throws URISyntaxException {
         if (location.getId() == null) {
             //in order to call method with permissions check
@@ -109,6 +112,7 @@ public class LocationResource {
     @GetMapping("/locations/{id}")
     @Timed
     @PostAuthorize("hasPermission({'returnObject': returnObject.body}, 'LOCATION.GET_LIST.ITEM')")
+    @PrivilegeDescription("Privilege to get the location by id")
     public ResponseEntity<Location> getLocation(@PathVariable Long id) {
         return RespContentUtil.wrapOrNotFound(locationService.findById(id));
     }
@@ -122,6 +126,7 @@ public class LocationResource {
     @DeleteMapping("/locations/{id}")
     @Timed
     @PreAuthorize("hasPermission({'id': #id}, 'location', 'LOCATION.DELETE')")
+    @PrivilegeDescription("Privilege to delete the location by id")
     public ResponseEntity<Void> deleteLocation(@PathVariable Long id) {
         locationService.delete(id);
         return ResponseEntity.ok().headers(HeaderUtil.createEntityDeletionAlert(ENTITY_NAME, id.toString())).build();

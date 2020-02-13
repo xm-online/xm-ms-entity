@@ -66,8 +66,7 @@ spring:
                 http:
                     enabled: true
                 path:
-                    logs: build/elasticsearch/log
-                    data: build/elasticsearch/data
+                    home: build/elasticsearch
     kafka:
         bootstrap-servers: localhost:9092
     mail:
@@ -102,8 +101,6 @@ server:
 # ===================================================================
 
 jhipster:
-    http:
-        version: V_1_1 # To use HTTP/2 you will need SSL support (see above the "server.ssl" configuration)
     # CORS is only enabled by default with the "dev" profile, so BrowserSync can access the API
     cors:
         allowed-origins: "*"
@@ -122,13 +119,9 @@ jhipster:
         from: <tenantname>@xm-online.com
         base-url: http://127.0.0.1:8081
     metrics: # DropWizard Metrics configuration, used by MetricsConfiguration
-        jmx.enabled: true
-        prometheus: # Use the "prometheus" Maven profile to have the Prometheus dependencies
-            enabled: false
-            endpoint: /prometheusMetrics
-        logs: # Reports Dropwizard metrics in the logs
-            enabled: false
-            report-frequency: 60 # in seconds
+        logs: # Reports metrics in the logs
+          enabled: false
+          report-frequency: 60 # in seconds
     logging:
         logstash: # Forward logs to logstash over a socket, used by LoggingConfiguration
             enabled: false

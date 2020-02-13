@@ -3,6 +3,7 @@ package com.icthh.xm.ms.entity.web.rest;
 import com.codahale.metrics.annotation.Timed;
 import com.icthh.xm.commons.exceptions.BusinessException;
 import com.icthh.xm.commons.exceptions.ErrorConstants;
+import com.icthh.xm.commons.permission.annotation.PrivilegeDescription;
 import com.icthh.xm.ms.entity.domain.Content;
 import com.icthh.xm.ms.entity.repository.ContentRepository;
 import com.icthh.xm.ms.entity.service.ContentService;
@@ -19,7 +20,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.net.URI;
@@ -60,6 +60,7 @@ public class ContentResource {
     @PostMapping("/contents")
     @Timed
     @PreAuthorize("hasPermission({'content': #content}, 'CONTENT.CREATE')")
+    @PrivilegeDescription("Privilege to create a new content")
     public ResponseEntity<Content> createContent(@Valid @RequestBody Content content) throws URISyntaxException {
         if (content.getId() != null) {
             throw new BusinessException(ErrorConstants.ERR_BUSINESS_IDEXISTS,
@@ -83,6 +84,7 @@ public class ContentResource {
     @PutMapping("/contents")
     @Timed
     @PreAuthorize("hasPermission({'id': #content.id, 'newContent': #content}, 'content', 'CONTENT.UPDATE')")
+    @PrivilegeDescription("Privilege to updates an existing content")
     public ResponseEntity<Content> updateContent(@Valid @RequestBody Content content) throws URISyntaxException {
         if (content.getId() == null) {
             //in order to call method with permissions check
@@ -114,6 +116,7 @@ public class ContentResource {
     @GetMapping("/contents/{id}")
     @Timed
     @PostAuthorize("hasPermission({'returnObject': returnObject.body}, 'CONTENT.GET_LIST.ITEM')")
+    @PrivilegeDescription("Privilege to get the content by id")
     public ResponseEntity<Content> getContent(@PathVariable Long id) {
         Content content = contentRepository.findById(id).orElse(null);
         return RespContentUtil.wrapOrNotFound(Optional.ofNullable(content));
@@ -128,6 +131,7 @@ public class ContentResource {
     @DeleteMapping("/contents/{id}")
     @Timed
     @PreAuthorize("hasPermission({'id': #id}, 'content', 'CONTENT.DELETE')")
+    @PrivilegeDescription("Privilege to delete the content by id")
     public ResponseEntity<Void> deleteContent(@PathVariable Long id) {
         contentRepository.deleteById(id);
         return ResponseEntity.ok().headers(HeaderUtil.createEntityDeletionAlert(ENTITY_NAME, id.toString())).build();
