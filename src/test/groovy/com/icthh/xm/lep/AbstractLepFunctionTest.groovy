@@ -9,12 +9,14 @@ import com.icthh.xm.lep.api.ContextScopes
 import com.icthh.xm.lep.api.LepProcessingEvent
 import com.icthh.xm.lep.api.LepProcessingListener
 import com.icthh.xm.lep.api.ScopedContext
+import com.icthh.xm.ms.entity.AbstractSpringBootTest
 import com.icthh.xm.ms.entity.EntityApp
 import com.icthh.xm.ms.entity.config.SecurityBeanOverrideConfiguration
 import com.icthh.xm.ms.entity.config.tenant.WebappTenantOverrideConfiguration
 import com.icthh.xm.ms.entity.service.FunctionExecutorService
 import org.junit.After
 import org.junit.Before
+import org.junit.experimental.categories.Category
 import org.junit.runner.RunWith
 import org.mockito.Mock
 import org.mockito.MockitoAnnotations
@@ -38,6 +40,7 @@ import static org.mockito.Mockito.when
         WebappTenantOverrideConfiguration.class
 ])
 @ActiveProfiles('leptest')
+@Category(AbstractSpringBootTest.class)
 abstract class AbstractLepFunctionTest {
 
 
