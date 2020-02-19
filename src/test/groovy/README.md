@@ -31,7 +31,7 @@ ln -s $XM_REPOSITORY_HOME/config/tenants/$tenant_upper/entity/test/ $LEP_TEST_HO
 mkdir -p $LEP_SCRIPT_HOME
 ln -s $XM_REPOSITORY_HOME/config/tenants/$tenant_upper/entity/lep $LEP_SCRIPT_HOME/$tenant
 ```
-## 3. Create tes as extension from LepFunctionBaseTest
+## 3. Create tes as extension from AbstractLepFunctionTest
 
 ## 4. Test LEP scripts in entity service context from IDE or gradle:
 
