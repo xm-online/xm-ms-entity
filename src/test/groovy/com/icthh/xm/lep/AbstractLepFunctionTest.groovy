@@ -93,7 +93,13 @@ abstract class AbstractLepFunctionTest {
                 Map<String, Object> templates = injectTemplates()
                 if (templates) {
                     println "BeforeExecutionEvent: override $BINDING_KEY_TEMPLATES in lepContext: $templates}"
-                    context.setValue(BINDING_KEY_REPOSITORIES, templates)
+                    context.setValue(BINDING_KEY_TEMPLATES, templates)
+                }
+
+                Map<String, Object> commons = injectCommons()
+                if (commons) {
+                    println "BeforeExecutionEvent: override $BINDING_KEY_COMMONS in lepContext: $commons}"
+                    context.setValue(BINDING_KEY_COMMONS, commons)
                 }
             }
         }
@@ -114,7 +120,7 @@ abstract class AbstractLepFunctionTest {
 
     /**
      * Injects map of templates which will be accessible from LEPs as lepContext.templates.<templateName>
-     * @return Services map with keys defined in {@link com.icthh.xm.ms.entity.lep.LepXmEntityMsConstants}.
+     * @return Templates map with keys defined in {@link com.icthh.xm.ms.entity.lep.LepXmEntityMsConstants}.
      */
     protected Map<String, Object> injectTemplates() {
         null
@@ -122,7 +128,7 @@ abstract class AbstractLepFunctionTest {
 
     /**
      * Injects map of repositories which will be accessible from LEPs as lepContext.repositories.<repositoryName>
-     * @return Services map with keys defined in {@link com.icthh.xm.ms.entity.lep.LepXmEntityMsConstants}.
+     * @return Repositories map with keys defined in {@link com.icthh.xm.ms.entity.lep.LepXmEntityMsConstants}.
      */
     protected Map<String, Object> injectRepositories() {
         null
@@ -136,4 +142,11 @@ abstract class AbstractLepFunctionTest {
         null
     }
 
+    /**
+     * Injects map of commons which will be accessible from LEPs as lepContext.commons.<commonName>...
+     * @return Commons map.
+     */
+    protected Map<String, Object> injectCommons() {
+        null
+    }
 }
