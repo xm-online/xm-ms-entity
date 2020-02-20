@@ -14,6 +14,7 @@ buildscript {
 
 plugins {
     id "java"
+    id "groovy"
     id "maven-publish"
     id "idea"
     id "jacoco"
