@@ -37,7 +37,7 @@ ln -s $XM_REPOSITORY_HOME/config/tenants/$tenant_upper/entity/lep $LEP_SCRIPT_HO
 
 Run single test:
 ```
-./gradlew test --tests <MyTestName>
+./gradlew runCategorizedTests --tests <MyTestName>
 ```
 
 ## 5. It is possible to add multiple tenants for parallel testing.
