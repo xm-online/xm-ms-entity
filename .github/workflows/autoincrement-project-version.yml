@@ -30,10 +30,10 @@ jobs:
         event: ${{ github.event.action }}
         event_label_name: ${{ github.event.label.name }}
       run: |
-        if [ "$event" == "opened" ] || ([ "$event" == "unlabeled" ] && [ "$event_label_name" == "no_increment_version" ])
+        if [ "$event" == "opened" ] || ([ "$event" == "unlabeled" ] && [ "$event_label_name" == "do_not_increment_version" ])
         then 
           ./gradlew incrementProjectVersion --no-daemon
-        elif [ "$event" == "labeled" ] && [ "$event_label_name" == "no_increment_version" ]
+        elif [ "$event" == "labeled" ] && [ "$event_label_name" == "do_not_increment_version" ]
         then
           ./gradlew decrementProjectVersion --no-daemon
         fi
