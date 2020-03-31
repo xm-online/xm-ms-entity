@@ -36,7 +36,6 @@ import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
 import com.icthh.xm.ms.entity.service.ElasticsearchIndexService;
 import com.icthh.xm.ms.entity.service.SeparateTransactionExecutor;
-
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Date;
@@ -45,7 +44,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
@@ -197,8 +195,8 @@ public class XmEntityServiceIntTest extends AbstractSpringBootTest {
             XmEntity savedEntity = xmEntityService.save(xmEntity);
             log.info("{}", savedEntity);
             assertEquals(" TEST_LIFECYCLE_TYPE_KEY TEST_LIFECYCLE_TYPE_KEY$SUB TEST_LIFECYCLE_TYPE_KEY$SUB$CHILD" +
-                    " TEST_LIFECYCLE_TYPE_KEY$SUB$CHILD$SUBCHILD TEST_LIFECYCLE_TYPE_KEY$SUB$CHILD$SUBCHILD$NEXTCHILD",
-                savedEntity.getData().get("called"));
+                         " TEST_LIFECYCLE_TYPE_KEY$SUB$CHILD$SUBCHILD TEST_LIFECYCLE_TYPE_KEY$SUB$CHILD$SUBCHILD$NEXTCHILD",
+                         savedEntity.getData().get("called"));
         } finally {
             xmEntityTenantConfigService.getXmEntityTenantConfig().getLep().setEnableInheritanceTypeKey(false);
         }
@@ -275,7 +273,7 @@ public class XmEntityServiceIntTest extends AbstractSpringBootTest {
 
     private <T> Set<T> asSet(T... elements) {
         Set<T> set = new HashSet<>();
-        for (T element : elements) {
+        for(T element: elements) {
             set.add(element);
         }
         return set;
@@ -443,9 +441,9 @@ public class XmEntityServiceIntTest extends AbstractSpringBootTest {
             xmEntityData.put("key-" + i, "value-" + i);
         }
         XmEntity entity = new XmEntity().typeKey("TEST_SEARCH")
-            .name("A-B")
-            .key("E-F")
-            .data(xmEntityData);
+                                        .name("A-B")
+                                        .key("E-F")
+                                        .data(xmEntityData);
         entity = xmEntityService.save(entity);
 
         Map<String, String> elasticFailedDocument = null;
@@ -477,8 +475,7 @@ public class XmEntityServiceIntTest extends AbstractSpringBootTest {
 
     @Test
     public void ifGlobalTransactionThrowExceptionSeparateTransactionAlreadyCommited() {
-        class TestException extends RuntimeException {
-        }
+        class TestException extends RuntimeException{}
         List<Long> ids = new ArrayList<>();
         String inSeparateTransaction = "inSeparateTransaction";
         String inGlobalTransaction = "inGlobalTransaction";
@@ -486,16 +483,16 @@ public class XmEntityServiceIntTest extends AbstractSpringBootTest {
         try {
             transactionExecutor.doInSeparateTransaction(() -> {
                 ids.add(xmEntityService.save(new XmEntity().name(inGlobalTransaction).key(randomUUID())
-                    .typeKey("TARGET_ENTITY")).getId());
+                                                           .typeKey("TARGET_ENTITY")).getId());
                 ids.add(xmEntityService.save(new XmEntity().name(inGlobalTransaction).key(randomUUID())
-                    .typeKey("TARGET_ENTITY")).getId());
+                                                           .typeKey("TARGET_ENTITY")).getId());
                 transactionExecutor.doInSeparateTransaction(() -> {
                     ids.add(xmEntityService.save(new XmEntity().name(inSeparateTransaction).key(randomUUID())
-                        .typeKey("TARGET_ENTITY")).getId());
+                                                               .typeKey("TARGET_ENTITY")).getId());
                     return null;
                 });
                 ids.add(xmEntityService.save(new XmEntity().name(inGlobalTransaction).key(randomUUID())
-                    .typeKey("TARGET_ENTITY")).getId());
+                                                           .typeKey("TARGET_ENTITY")).getId());
                 throw new TestException();
             });
         } catch (TestException e) {
@@ -511,28 +508,27 @@ public class XmEntityServiceIntTest extends AbstractSpringBootTest {
 
     @Test
     public void ifSeparateTransactionThrowExceptionGlobalTransactionWillSuccessCommit() {
-        class TestException extends RuntimeException {
-        }
+        class TestException extends RuntimeException{}
         List<Long> ids = new ArrayList<>();
         String inSeparateTransaction = "inSeparateTransaction";
         String inGlobalTransaction = "inGlobalTransaction";
 
         transactionExecutor.doInSeparateTransaction(() -> {
             ids.add(xmEntityService.save(new XmEntity().name(inGlobalTransaction).key(randomUUID())
-                .typeKey("TARGET_ENTITY")).getId());
+                                                       .typeKey("TARGET_ENTITY")).getId());
             ids.add(xmEntityService.save(new XmEntity().name(inGlobalTransaction).key(randomUUID())
-                .typeKey("TARGET_ENTITY")).getId());
+                                                       .typeKey("TARGET_ENTITY")).getId());
             try {
                 transactionExecutor.doInSeparateTransaction(() -> {
                     ids.add(xmEntityService.save(new XmEntity().name(inSeparateTransaction).key(randomUUID())
-                        .typeKey("TARGET_ENTITY")).getId());
+                                                               .typeKey("TARGET_ENTITY")).getId());
                     throw new TestException();
                 });
             } catch (TestException e) {
                 log.info("All is ok");
             }
             ids.add(xmEntityService.save(new XmEntity().name(inGlobalTransaction).key(randomUUID())
-                .typeKey("TARGET_ENTITY")).getId());
+                                                       .typeKey("TARGET_ENTITY")).getId());
             return null;
         });
 
@@ -550,16 +546,16 @@ public class XmEntityServiceIntTest extends AbstractSpringBootTest {
 
         transactionExecutor.doInSeparateTransaction(() -> {
             ids.add(xmEntityService.save(new XmEntity().name(inGlobalTransaction).key(randomUUID())
-                .typeKey("TARGET_ENTITY")).getId());
+                                                       .typeKey("TARGET_ENTITY")).getId());
             ids.add(xmEntityService.save(new XmEntity().name(inGlobalTransaction).key(randomUUID())
-                .typeKey("TARGET_ENTITY")).getId());
+                                                       .typeKey("TARGET_ENTITY")).getId());
             transactionExecutor.doInSeparateTransaction(() -> {
                 ids.add(xmEntityService.save(new XmEntity().name(inSeparateTransaction).key(randomUUID())
-                    .typeKey("TARGET_ENTITY")).getId());
+                                                           .typeKey("TARGET_ENTITY")).getId());
                 return null;
             });
             ids.add(xmEntityService.save(new XmEntity().name(inGlobalTransaction).key(randomUUID())
-                .typeKey("TARGET_ENTITY")).getId());
+                                                       .typeKey("TARGET_ENTITY")).getId());
             return null;
         });
         List<XmEntity> allEntitis = xmEntityRepository.findAllById(ids);
