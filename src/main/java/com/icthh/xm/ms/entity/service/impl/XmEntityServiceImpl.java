@@ -408,7 +408,7 @@ public class XmEntityServiceImpl implements XmEntityService {
     }
 
     @LogicExtensionPoint(value = "Delete", resolver = TypeKeyResolver.class)
-    private void deleteXmEntityWithTypeKeyInheritance(XmEntity xmEntity, String typeKey) {
+    public void deleteXmEntityWithTypeKeyInheritance(XmEntity xmEntity, String typeKey) {
         if (typeKeyWithExtends.doInheritance(typeKey)) {
             self.deleteXmEntityWithTypeKeyInheritance(xmEntity, typeKeyWithExtends.nextTypeKey(typeKey));
         } else {

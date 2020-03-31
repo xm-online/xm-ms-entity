@@ -203,6 +203,23 @@ public class XmEntityServiceIntTest extends AbstractSpringBootTest {
     }
 
     @Test
+    public void testDeleteWithTypeKeyInheritance() {
+        xmEntityTenantConfigService.getXmEntityTenantConfig().getLep().setEnableInheritanceTypeKey(true);
+        try {
+            XmEntity xmEntity = new XmEntity().key(randomUUID().toString());
+            xmEntity.name("name");
+            HashMap<String, Object> data = new HashMap<>();
+            data.put("called", "");
+            xmEntity.setData(data);
+            xmEntity.setTypeKey("TEST_LIFECYCLE_TYPE_KEY.SUB.CHILD.SUBCHILD.NEXTCHILD");
+            XmEntity savedEntity = xmEntityService.save(xmEntity);
+            xmEntityService.delete(savedEntity.getId());
+        } finally {
+            xmEntityTenantConfigService.getXmEntityTenantConfig().getLep().setEnableInheritanceTypeKey(false);
+        }
+    }
+
+    @Test
     public void testDelete() {
 
         XmEntity entity = xmEntityService.save(createXmEntity());
