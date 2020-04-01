@@ -14,14 +14,6 @@ services:
         secrets:
             - source: ENTITY_SPRING_DATASOURCE_PASSWORD
               target: SPRING_DATASOURCE_PASSWORD
-            - source: APPLICATION_AMAZON_AWS_ACCESS_KEY_ID
-              target: APPLICATION_AMAZON_AWS_ACCESS_KEY_ID
-            - source: APPLICATION_AMAZON_AWS_ACCESS_KEY_SECRET
-              target: APPLICATION_AMAZON_AWS_ACCESS_KEY_SECRET
-            - source: APPLICATION_AMAZON_AWS_TEMPLATE
-              target: APPLICATION_AMAZON_AWS_TEMPLATE
-            - source: APPLICATION_AMAZON_AWS_ENDPOINT
-              target: APPLICATION_AMAZON_AWS_ENDPOINT
         deploy:
             mode: replicated
             replicas: 1
