@@ -27,14 +27,6 @@ services:
 secrets:
     ENTITY_SPRING_DATASOURCE_PASSWORD:
         external: true
-    APPLICATION_AMAZON_AWS_ACCESS_KEY_ID:
-        external: true
-    APPLICATION_AMAZON_AWS_ACCESS_KEY_SECRET:
-        external: true
-    APPLICATION_AMAZON_AWS_TEMPLATE:
-        external: true
-    APPLICATION_AMAZON_AWS_ENDPOINT:
-        external: true
 networks:
     xm2:
         driver: overlay
