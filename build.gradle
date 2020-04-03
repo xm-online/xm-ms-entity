@@ -420,7 +420,8 @@ task incrementProjectVersion {
         PropertiesConfiguration props = new PropertiesConfiguration('gradle.properties')
         String version = props.getProperty("version")
         println "old version: " + version
-        String newVersion = version.tokenize(".")[0].toString() + "." + version.tokenize(".")[1].toString() + "." + (version.tokenize(".")[2].toInteger() + 1).toString()
+        String [] vTokens = version.tokenize(".")
+        String newVersion = "${vTokens[0]}.${vTokens[1]}.${vTokens[2].toInteger() + 1}".toString()
         println "new version: " + newVersion 
         props.setProperty("version", newVersion)
         props.save()
@@ -434,8 +435,9 @@ task decrementProjectVersion(dependsOn: configurations.compile) {
         String version = props.getProperty("version")
         println "old version: " + version
         String newVersion = version
-        if(version.tokenize(".")[2].toInteger() != 0){
-            newVersion = version.tokenize(".")[0].toString() + "." + version.tokenize(".")[1].toString() + "." + (version.tokenize(".")[2].toInteger() - 1).toString()
+        String [] vTokens = version.tokenize(".")
+        if(vTokens[2].toInteger() != 0){
+            newVersion = "${vTokens[0]}.${vTokens[1]}.${vTokens[2].toInteger() - 1}".toString()
         }
         println "new version: " + newVersion
         props.setProperty("version", newVersion)
