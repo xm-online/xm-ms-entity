@@ -144,5 +144,5 @@ Desktop.ini
 .eslintcache
 
 src/main/lep-sandbox
-src/test/groovy/com/icthh/xm/lep/tenant
-src/test/resources/lep/custom
+src/main/lep/
+src/test/lep/
