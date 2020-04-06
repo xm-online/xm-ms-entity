@@ -5,10 +5,10 @@ directory `src/test/resources/lep/custom` is reserved for tenant's LEP scripts s
 
 # Automatic test environment setup
 
-Run lep lest link scanner:
+Run lep lest link scanner (java 11+ is required):
 
 ```
-java com.icthh.xm.ms.entity.LepTestLinkScanner <path/to/xm-config-repository>
+java src/test/java/com/icthh/xm/ms/entity/LepTestLinkScanner.java <path/to/xm-config-repository>
 ```
 
 It will create links to config repository for all tenants where for entity microservice `test` folder exists.
