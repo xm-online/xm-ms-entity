@@ -1,4 +1,4 @@
-language: java
+ranguage: java
 jdk:
 - openjdk11
 install: true
@@ -17,9 +17,10 @@ script:
   - docker login -u $DOCKER_USER -p $DOCKER_PASS
   - export DOCKER_REPO=$(echo  -n $TRAVIS_REPO_SLUG | sed -e 's/^xm-online\//xmonline\//g')
   - export IMAGE_BRANCH=$(echo -n $TRAVIS_BRANCH | sed -e 's/\//-/g')
-  - export PROJECT_VERSION=$(./gradlew -q  getProjectVersion)
+  - export PROJECT_VERSION="$IMAGE_BRANCH"
   - if [ "$IMAGE_BRANCH" == "master" ]; 
     then 
+        PROJECT_VERSION=$(./gradlew -q  getProjectVersion);
         export SONAR_PK=$(echo  -n $TRAVIS_REPO_SLUG | sed -e 's/\//:/g');
         ./gradlew -x test --no-daemon sonarqube -Dsonar.projectKey="$SONAR_PK"
         -Dsonar.projectName="$SONAR_PK" -Dsonar.java.binaries="." -Dsonar.projectVersion="$IMAGE_BRANCH";
@@ -27,7 +28,7 @@ script:
     else
         TAGS="$IMAGE_BRANCH $IMAGE_BRANCH-$TRAVIS_BUILD_NUMBER";
     fi
-  - docker build -t app-docker-img --label commit_id="$TRAVIS_COMMIT" --label commit_message="$TRAVIS_COMMIT_MESSAGE" -f src/main/docker/Dockerfile .
+  - docker build -t app-docker-img --label commit_id="$TRAVIS_COMMIT" --label version="$PROJECT_VERSION" --label build_number="$TRAVIS_BUILD_NUMBER" --label build_url="$TRAVIS_BUILD_WEB_URL" --label git_url="$TRAVIS_REPO_SLUG" --label commit_message="$TRAVIS_COMMIT_MESSAGE" -f src/main/docker/Dockerfile .
   - for TAG in $TAGS;
     do
         docker tag app-docker-img $DOCKER_REPO:$TAG;
@@ -46,3 +47,4 @@ notifications:
   slack:
     rooms:
       secure: eHvxMZJsCw0vBFWkSsL8YIwam4b43HppJ2m9I+QhW6v/oG7LdxxKeDjpTOn7ramXZxxGZEqibA5QjilMqnraPzHy3lqo7x8+LQXMN5sfDI/B6TZmWZ5r2oEr384L3p02xLwalA2I18xjPwWEQFdERL4wzJNvvXIki/T3X3GGi4pglAfyM6gLTsP0H0fA4WSj8e6Z9Ap7B1UD3tcwKk6+9vbJUEmc+HTx6my317hkmbi/I6mXZb9p63q2yvKnjEaU8vlULYls3gPxQDrozLbDMN5dFATS2p5mqrJVNY8r3gcJb0l38eFVzl09YWiNTfEWgT9k1zi3O9FF8GG2VyJQv8i4LGcwZE1Wrdd1iakWugXlHTnROD1wjmgIwN7f0UBX6VXztJ92NXqKus5CkfBioksi45uHLJJFbnz8vMXQCCkidW/VVg91GitMjN1s16JcXbBbQMShpmZ07Jub+zn7pIy2y6xHGQSRe3Z2wf7rI8VjqyH3OnuGT/HLLEaslGWuPTSaswoO1HljG61ttjoPk1czfeABeNQGzmzYgPEVENBRhjr46AR95Thyjbo803B/fsk/uFDVAVrLZZAveqQvl7gNcewLyRetDWKm95GM30Sl8vZkhHXJc9OIHu17QOnsjTKaBa2J6CVTT+E3f6Fc5Pyr4FxfZN/FK99MDf6GWFg=
+

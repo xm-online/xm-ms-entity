@@ -8,7 +8,7 @@ buildscript {
         maven { url "https://repo.spring.io/plugins-release" }
     }
     dependencies {
-        //jhipster-needle-gradle-buildscript-dependency - JHipster will add additional gradle build script plugins here
+        classpath group: 'commons-configuration', name: 'commons-configuration', version: '1.10'
     }
 }
 
@@ -419,5 +419,37 @@ bootBuildInfo.mustRunAfter cleanResources
 task getProjectVersion {
     doLast {
         println project.version
+    }
+}
+
+import org.apache.commons.configuration.PropertiesConfiguration
+
+task incrementProjectVersion {
+    doLast{
+        PropertiesConfiguration props = new PropertiesConfiguration('gradle.properties')
+        String version = props.getProperty("version")
+        println "old version: " + version
+        String [] vTokens = version.tokenize(".")
+        String newVersion = "${vTokens[0]}.${vTokens[1]}.${vTokens[2].toInteger() + 1}".toString()
+        println "new version: " + newVersion 
+        props.setProperty("version", newVersion)
+        props.save()
+    }
+
+}
+
+task decrementProjectVersion(dependsOn: configurations.compile) {
+    doLast{
+        PropertiesConfiguration props = new PropertiesConfiguration('gradle.properties')
+        String version = props.getProperty("version")
+        println "old version: " + version
+        String newVersion = version
+        String [] vTokens = version.tokenize(".")
+        if(vTokens[2].toInteger() != 0){
+            newVersion = "${vTokens[0]}.${vTokens[1]}.${vTokens[2].toInteger() - 1}".toString()
+        }
+        println "new version: " + newVersion
+        props.setProperty("version", newVersion)
+        props.save()
     }
 }
