@@ -9,21 +9,23 @@ import java.util.stream.Stream;
 /**
  * Utility class which scans XM_REPOSITORY_HOME for tests and add all needed symlinks to run those tests.
  * <p/>
- * Candidate to use as simple script by built pipeline thus does ton contains any external dependencies.
+ * Class is used as script by CI pipeline, so MUST NOT not contains any external dependencies.
  */
 public class LepTestLinkScanner {
 
     private static String PROJECT_ROOT = Paths.get("").toAbsolutePath().toString();
     private static String XM_REPOSITORY_HOME;
 
+    private static final String XM_MS_NAME = "entity";
+
     private static final String XM_REPOSITORY_TENANTS = "config/tenants";
-    private static final String XM_REPOSITORY_ENTITY_TEST = "entity/test";
-    private static final String XM_REPOSITORY_ENTITY_LEP = "entity/lep";
+    private static final String XM_REPOSITORY_MS_TEST = XM_MS_NAME + "/test";
+    private static final String XM_REPOSITORY_MS_LEP = XM_MS_NAME + "/lep";
 
-    private static final String LEP_TEST_HOME = "src/test/groovy/com/icthh/xm/lep/tenant";
-    private static final String LEP_SCRIPT_HOME = "src/test/resources/lep/custom";
+    private static final String LEP_TEST_HOME = "src/test/lep";
+    private static final String LEP_SCRIPT_HOME = "src/main/lep";
 
-    private static final String LEP_TEST_EXISTS_REGEX = ".*tenants/.*/entity/test";
+    private static final String LEP_TEST_EXISTS_REGEX = ".*tenants/.*/" + XM_MS_NAME + "/test";
 
     /**
      * Entry point.
@@ -66,26 +68,16 @@ public class LepTestLinkScanner {
         }
 
         static Stream<SymLink> of(Path testsPath) {
-            return Stream.of(createTestLink(testsPath), createLepLink(testsPath));
+            return Stream.of(createLink(testsPath, LEP_TEST_HOME, XM_REPOSITORY_MS_TEST),
+                             createLink(testsPath, LEP_SCRIPT_HOME, XM_REPOSITORY_MS_LEP));
         }
 
-        private static SymLink createTestLink(Path testsPath) {
+        private static SymLink createLink(Path testsPath, String srcHome, String repoMsPath) {
 
             String tenant = extractTenant(testsPath);
 
-            Path from = Paths.get(PROJECT_ROOT, LEP_TEST_HOME, tenant.toLowerCase());
-            Path to = Paths.get(XM_REPOSITORY_HOME, XM_REPOSITORY_TENANTS, tenant, XM_REPOSITORY_ENTITY_TEST);
-
-            return new SymLink(from, to);
-
-        }
-
-        private static SymLink createLepLink(Path testsPath) {
-
-            String tenant = extractTenant(testsPath);
-
-            Path from = Paths.get(PROJECT_ROOT, LEP_SCRIPT_HOME, tenant.toLowerCase());
-            Path to = Paths.get(XM_REPOSITORY_HOME, XM_REPOSITORY_TENANTS, tenant, XM_REPOSITORY_ENTITY_LEP);
+            Path from = Paths.get(PROJECT_ROOT, srcHome, tenant, repoMsPath);
+            Path to = Paths.get(XM_REPOSITORY_HOME, XM_REPOSITORY_TENANTS, tenant, repoMsPath);
 
             return new SymLink(from, to);
         }
