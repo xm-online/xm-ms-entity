@@ -179,7 +179,6 @@ if (!project.hasProperty('runList')) {
 }
 
 group = 'com.icthh.xm.ms.entity'
-version = '0.0.1-SNAPSHOT'
 
 description = ''
 
