@@ -328,7 +328,7 @@ public class MailService {
             content,
             subject,
             email,
-            MdcUtils.getRid(),
+            MdcUtils.generateRid(),
             from,
             null,
             null);
@@ -345,8 +345,6 @@ public class MailService {
      * @param dataSource the {@code javax.activation.DataSource} to take the content from, determining the InputStream
      * and the content type
      */
-
-
     @Async
     public void sendEmailWithContentAndAttachments(
         String content,
@@ -359,7 +357,7 @@ public class MailService {
             content,
             subject,
             email,
-            MdcUtils.getRid(),
+            MdcUtils.generateRid(),
             from,
             attachmentFilename,
             dataSource);
