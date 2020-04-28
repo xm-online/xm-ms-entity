@@ -310,6 +310,88 @@ public class MailService {
         }
     }
 
+    /**
+     * Send mail with raw subject, from and content.
+     *
+     * @param content     the content of email
+     * @param subject     the raw subject
+     * @param email       the to email
+     * @param from        the from email
+     */
+    public void sendEmailWithContent(
+        String content,
+        String subject,
+        String email,
+        String from) {
+        initAndSendEmail(TenantContextUtils.getRequiredTenantKey(tenantContextHolder.getContext()),
+            content,
+            subject,
+            email,
+            MdcUtils.generateRid(),
+            from,
+            null,
+            null);
+    }
+
+    /**
+     * Send mail with raw subject, from and content.
+     *
+     * @param content     the content of email
+     * @param subject     the raw subject
+     * @param email       the to email
+     * @param from        the from email
+     * @param attachmentFilename the name of the attachment as it will appear in the mail
+     * @param dataSource the {@code javax.activation.DataSource} to take the content from, determining the InputStream
+     * and the content type
+     */
+    public void sendEmailWithContentAndAttachments(
+        String content,
+        String subject,
+        String email,
+        String from,
+        String attachmentFilename,
+        InputStreamSource dataSource) {
+        initAndSendEmail(TenantContextUtils.getRequiredTenantKey(tenantContextHolder.getContext()),
+            content,
+            subject,
+            email,
+            MdcUtils.generateRid(),
+            from,
+            attachmentFilename,
+            dataSource);
+    }
+    private void initAndSendEmail(TenantKey tenantKey,
+                                  String content,
+                                  String subject,
+                                  String email,
+                                  String rid,
+                                  String from,
+                                  String attachmentFilename,
+                                  InputStreamSource dataSource) {
+        execForCustomRid(rid, () -> {
+            if (email == null) {
+                log.warn("Can't send email on null address for tenant: {}, email content: {}",
+                    tenantKey.getValue(), content);
+                return;
+            }
+
+            try {
+                tenantContextHolder.getPrivilegedContext().setTenant(new PlainTenant(tenantKey));
+                sendEmail(
+                    email,
+                    subject,
+                    content,
+                    from,
+                    attachmentFilename,
+                    dataSource,
+                    mailProviderService.getJavaMailSender(tenantKey.getValue())
+                );
+            } finally {
+                tenantContextHolder.getPrivilegedContext().destroyCurrentContext();
+            }
+        });
+    }
+
     @Data
     private static class MailParams {
         private String subject;

@@ -19,6 +19,7 @@ import com.icthh.xm.commons.config.client.config.XmConfigProperties;
 import com.icthh.xm.commons.i18n.spring.service.LocalizationMessageService;
 import com.icthh.xm.commons.mail.provider.MailProviderService;
 import com.icthh.xm.commons.tenant.PrivilegedTenantContext;
+import com.icthh.xm.commons.tenant.TenantContext;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantKey;
 import com.icthh.xm.ms.entity.AbstractUnitTest;
@@ -89,6 +90,10 @@ public class MailServiceUnitTest extends AbstractUnitTest {
         tenantConfigService = new XmEntityTenantConfigService(new XmConfigProperties(), tenantContextHolder);
         MockitoAnnotations.initMocks(this);
         when(tenantContextHolder.getTenantKey()).thenReturn("XM");
+        when(tenantContextHolder.getPrivilegedContext()).thenReturn(mock(PrivilegedTenantContext.class));
+        TenantContext mock = mock(TenantContext.class);
+        when(mock.getTenantKey()).thenReturn(java.util.Optional.of(TenantKey.valueOf("XM")));
+        when(tenantContextHolder.getContext()).thenReturn(mock);
     }
 
     @Test
@@ -106,7 +111,7 @@ public class MailServiceUnitTest extends AbstractUnitTest {
     @Test
     @SneakyThrows
     public void ifInConfigMailSettingsNoListReturnDefault() {
-        prepareConfig(new HashMap<String, Object>() {{
+        prepareConfig(new HashMap<>() {{
             put(MAIL_SETTINGS, singletonList(new HashMap<>()));
         }});
 
@@ -301,7 +306,7 @@ public class MailServiceUnitTest extends AbstractUnitTest {
     @Test
     @SneakyThrows
     public void testSendEmailWithAttachment()  {
-        prepareConfig(new HashMap<String, Object>() {{
+        prepareConfig(new HashMap<>() {{
             put(MAIL_SETTINGS, singletonList(new HashMap<>()));
         }});
 
@@ -357,4 +362,41 @@ public class MailServiceUnitTest extends AbstractUnitTest {
         byte[] arrayFromInputStream = IOUtils.toByteArray(dataSource.getInputStream());
         assertArrayEquals(FILE_BYTE_ARRAY, arrayFromInputStream);
     }
+
+    @Test
+    @SneakyThrows
+    public void testSendEmailWithContentAndAttachment()  {
+        prepareConfig(new HashMap<>() {{
+            put(MAIL_SETTINGS, singletonList(new HashMap<>()));
+        }});
+
+        MimeMessage mock = sendEmailWithContentAndAttachment();
+
+        verify(mock).setRecipient(eq(Message.RecipientType.TO),  eq(InternetAddress.parse(TO)[0]));
+        verify(mock).setFrom(eq(InternetAddress.parse(MOCK_FROM)[0]));
+        verify(mock).setSubject(eq(MOCK_SUBJECT), eq("UTF-8"));
+
+        ArgumentCaptor<Multipart> captor = ArgumentCaptor.forClass(Multipart.class);
+        verify(mock).setContent(captor.capture());
+        List<Multipart> multiparts = captor.getAllValues();
+        assertMultipart(multiparts);
+
+        verify(javaMailSender).send(mock);
+    }
+
+    private MimeMessage sendEmailWithContentAndAttachment() {
+        MimeMessage mock = mock(MimeMessage.class);
+        when(javaMailSender.createMimeMessage()).thenReturn(mock);
+
+        mailService.sendEmailWithContentAndAttachments(
+            TEST_TEMPLATE_CONTENT,
+            MOCK_SUBJECT,
+            TO,
+            MOCK_FROM,
+            FILE_NAME,
+            new ByteArrayResource(FILE_BYTE_ARRAY)
+        );
+        return mock;
+    }
+
 }
