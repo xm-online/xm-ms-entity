@@ -318,6 +318,7 @@ public class MailService {
      * @param email       the to email
      * @param from        the from email
      */
+    @Async
     public void sendEmailWithContent(
         String content,
         String subject,
@@ -344,6 +345,7 @@ public class MailService {
      * @param dataSource the {@code javax.activation.DataSource} to take the content from, determining the InputStream
      * and the content type
      */
+    @Async
     public void sendEmailWithContentAndAttachments(
         String content,
         String subject,
@@ -360,6 +362,7 @@ public class MailService {
             attachmentFilename,
             dataSource);
     }
+
     private void initAndSendEmail(TenantKey tenantKey,
                                   String content,
                                   String subject,
