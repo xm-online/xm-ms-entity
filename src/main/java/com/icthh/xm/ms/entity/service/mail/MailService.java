@@ -373,8 +373,8 @@ public class MailService {
                                   InputStreamSource dataSource) {
         execForCustomRid(rid, () -> {
             if (email == null) {
-                log.warn("Can't send email on null address for tenant: {}, email content: {}",
-                    tenantKey.getValue(), content);
+                log.warn("Can't send email on null address for tenant: {}, Email [ subject : {}, to : {} ]",
+                    tenantKey.getValue(), subject, email);
                 return;
             }
 
