@@ -389,6 +389,7 @@ public class MailServiceUnitTest extends AbstractUnitTest {
         when(javaMailSender.createMimeMessage()).thenReturn(mock);
 
         mailService.sendEmailWithContentAndAttachments(
+            TenantKey.valueOf(TENANT_KEY),
             TEST_TEMPLATE_CONTENT,
             MOCK_SUBJECT,
             TO,

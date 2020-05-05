@@ -320,11 +320,12 @@ public class MailService {
      */
     @Async
     public void sendEmailWithContent(
+        TenantKey tenantKey,
         String content,
         String subject,
         String email,
         String from) {
-        initAndSendEmail(TenantContextUtils.getRequiredTenantKey(tenantContextHolder.getContext()),
+        initAndSendEmail(tenantKey,
             content,
             subject,
             email,
@@ -347,13 +348,14 @@ public class MailService {
      */
     @Async
     public void sendEmailWithContentAndAttachments(
+        TenantKey tenantKey,
         String content,
         String subject,
         String email,
         String from,
         String attachmentFilename,
         InputStreamSource dataSource) {
-        initAndSendEmail(TenantContextUtils.getRequiredTenantKey(tenantContextHolder.getContext()),
+        initAndSendEmail(tenantKey,
             content,
             subject,
             email,
