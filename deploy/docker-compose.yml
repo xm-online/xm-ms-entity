@@ -1,7 +1,7 @@
 version: '3.3'
 services:
     entity-app:
-        image: xmonline/xm-ms-entity:${IMAGE_TAG:-latest}
+        image: xmonline/xm-ms-entity:${IMAGE_XM_MS_ENTITY_TAG:-latest}
         networks:
             - xm2
         env_file:
