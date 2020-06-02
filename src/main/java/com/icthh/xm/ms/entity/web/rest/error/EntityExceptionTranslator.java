@@ -32,8 +32,6 @@ public class EntityExceptionTranslator {
     public ParameterizedErrorVM processParameterizedValidationError(DataIntegrityViolationException dataIntegrityViolationException) {
         String code = "error.unique.constrain";
         Map<String, String> exParams = new HashMap();
-        String causeMessage = dataIntegrityViolationException.getCause().getMessage();
-        exParams.put("causeMessage", causeMessage);
         String message = this.localizationMessageService.getMessage(code, exParams, false, dataIntegrityViolationException.getMessage());
         return new ParameterizedErrorVM(code, message, exParams);
     }
