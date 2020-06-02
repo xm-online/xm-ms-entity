@@ -1,10 +1,5 @@
 package com.icthh.xm.ms.entity.web.rest.errors;
 
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
 import com.icthh.xm.commons.exceptions.ErrorConstants;
 import com.icthh.xm.commons.i18n.error.web.ExceptionTranslator;
 import com.icthh.xm.ms.entity.AbstractSpringBootTest;
@@ -15,6 +10,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
  * Test class for the ExceptionTranslator controller advice.
@@ -116,6 +116,6 @@ public class ExceptionTranslatorIntTest extends AbstractSpringBootTest {
         mockMvc.perform(get("/test/unique-constrain-error"))
             .andExpect(status().isBadRequest())
             .andExpect(jsonPath("$.error").value("error.unique.constrain"))
-            .andExpect(jsonPath("$.error_description").value("DataIntegrityViolationException"));
+            .andExpect(jsonPath("$.error_description").value("error.unique.constrain"));
     }
 }

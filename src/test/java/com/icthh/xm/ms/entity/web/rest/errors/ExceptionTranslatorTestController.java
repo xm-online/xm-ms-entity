@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 import javax.validation.Valid;
@@ -77,7 +78,7 @@ public class ExceptionTranslatorTestController {
 
     @GetMapping("/test/unique-constrain-error")
     public void uniqueConstrainError() {
-        throw new DataIntegrityViolationException("DataIntegrityViolationException");
+        throw new DataIntegrityViolationException("DataIntegrityViolationException", new SQLException("Unique constrain error", "23005"));
     }
 
 
