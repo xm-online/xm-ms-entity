@@ -8,6 +8,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.icthh.xm.commons.exceptions.ErrorConstants;
 import com.icthh.xm.commons.i18n.error.web.ExceptionTranslator;
 import com.icthh.xm.ms.entity.AbstractSpringBootTest;
+import com.icthh.xm.ms.entity.web.rest.error.EntityExceptionTranslator;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,12 +29,15 @@ public class ExceptionTranslatorIntTest extends AbstractSpringBootTest {
     @Autowired
     private ExceptionTranslator exceptionTranslator;
 
+    @Autowired
+    private EntityExceptionTranslator entityExceptionTranslator;
+
     private MockMvc mockMvc;
 
     @Before
     public void setup() {
         mockMvc = MockMvcBuilders.standaloneSetup(controller)
-            .setControllerAdvice(exceptionTranslator)
+            .setControllerAdvice(exceptionTranslator, entityExceptionTranslator)
             .build();
     }
 
@@ -105,5 +109,13 @@ public class ExceptionTranslatorIntTest extends AbstractSpringBootTest {
             .andExpect(status().isInternalServerError())
             .andExpect(jsonPath("$.error").value(ErrorConstants.ERR_INTERNAL_SERVER_ERROR))
             .andExpect(jsonPath("$.error_description").value("Internal server error, please try later"));
+    }
+
+    @Test
+    public void testUniqueConstrainError() throws Exception {
+        mockMvc.perform(get("/test/unique-constrain-error"))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.error").value("error.unique.constrain"))
+            .andExpect(jsonPath("$.error_description").value("DataIntegrityViolationException"));
     }
 }
