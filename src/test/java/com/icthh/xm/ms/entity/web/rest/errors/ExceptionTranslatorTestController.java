@@ -76,7 +76,7 @@ public class ExceptionTranslatorTestController {
     public static class TestResponseStatusException extends RuntimeException {
     }
 
-    @GetMapping("/test/unique-constrain-error")
+    @GetMapping("/test/integrity-constraint-violation-error")
     public void uniqueConstrainError() {
         throw new DataIntegrityViolationException("DataIntegrityViolationException", new SQLException("Unique constrain error", "23005"));
     }
