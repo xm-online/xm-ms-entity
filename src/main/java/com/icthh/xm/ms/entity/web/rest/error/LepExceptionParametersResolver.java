@@ -17,7 +17,7 @@ public class LepExceptionParametersResolver {
 
     @LogicExtensionPoint("ExtractParameters")
     public Map<String, String> extractParameters(Throwable throwable) {
-        log.error("No handlers for extractParameters");
+        log.warn("No handlers for extractParameters");
         return new HashMap<>();
     }
 }

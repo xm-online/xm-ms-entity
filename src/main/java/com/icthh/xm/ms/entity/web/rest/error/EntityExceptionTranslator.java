@@ -12,7 +12,6 @@ import org.springframework.core.annotation.Order;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -25,8 +24,8 @@ import java.sql.SQLException;
 @Order(value = Ordered.HIGHEST_PRECEDENCE)
 public class EntityExceptionTranslator {
 
-    private static final String integrity_constraint_violation_group_code = "23";
-    private static final String integrity_constraint_violation_message_code = "error.db.";
+    private static final String INTEGRITY_CONSTRAINT_VIOLATION_GROUP_CODE = "23";
+    private static final String INTEGRITY_CONSTRAINT_VIOLATION_MESSAGE_CODE = "error.db.";
 
     private final LocalizationMessageService localizationMessageService;
     private final ExceptionTranslator exceptionTranslator;
@@ -39,10 +38,10 @@ public class EntityExceptionTranslator {
         Throwable root = Throwables.getRootCause(dataIntegrityViolationException);
         if (root instanceof SQLException) {
             String sqlState = ((SQLException) root).getSQLState();
-            if (sqlState != null && sqlState.startsWith(integrity_constraint_violation_group_code)) {
+            if (sqlState != null && sqlState.startsWith(INTEGRITY_CONSTRAINT_VIOLATION_GROUP_CODE)) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ParameterizedErrorVM(sqlState,
                     localizationMessageService
-                        .getMessage(integrity_constraint_violation_message_code.concat(sqlState)),
+                        .getMessage(INTEGRITY_CONSTRAINT_VIOLATION_MESSAGE_CODE.concat(sqlState)),
                     lepExceptionParametersResolver.extractParameters(root)));
             }
         }
