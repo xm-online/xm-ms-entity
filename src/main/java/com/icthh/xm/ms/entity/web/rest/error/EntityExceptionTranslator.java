@@ -25,7 +25,8 @@ import java.sql.SQLException;
 public class EntityExceptionTranslator {
 
     private static final String INTEGRITY_CONSTRAINT_VIOLATION_GROUP_CODE = "23";
-    private static final String INTEGRITY_CONSTRAINT_VIOLATION_MESSAGE_CODE = "error.db.";
+    private static final String INTEGRITY_CONSTRAINT_VIOLATION_MESSAGE_CODE = "error.db.dataIntegrityViolation.";
+    private static final String INTEGRITY_CONSTRAINT_VIOLATION_ERROR_CODE_PREFIX = "error.db.";
 
     private final LocalizationMessageService localizationMessageService;
     private final ExceptionTranslator exceptionTranslator;
@@ -39,7 +40,8 @@ public class EntityExceptionTranslator {
         if (root instanceof SQLException) {
             String sqlState = ((SQLException) root).getSQLState();
             if (sqlState != null && sqlState.startsWith(INTEGRITY_CONSTRAINT_VIOLATION_GROUP_CODE)) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ParameterizedErrorVM(sqlState,
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ParameterizedErrorVM(
+                    INTEGRITY_CONSTRAINT_VIOLATION_ERROR_CODE_PREFIX.concat(sqlState),
                     localizationMessageService
                         .getMessage(INTEGRITY_CONSTRAINT_VIOLATION_MESSAGE_CODE.concat(sqlState)),
                     lepExceptionParametersResolver.extractParameters(root)));

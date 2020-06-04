@@ -172,18 +172,18 @@ public class ExceptionTranslatorIntTest extends AbstractSpringBootTest {
     @Test
     @Transactional
     public void testDataViolationError() throws Exception {
-        lepLoader.onRefresh("/config/tenants/RESINTTEST/entity/lep/service/translator/ExtractParameters$$around.groovy",
+        lepLoader.onRefresh("/config/tenants/RESINTTEST/entity/lep/service/exceptiontranslator/ExtractParameters$$around.groovy",
             "return ['field_json_path':'$.email', 'field_value':'sdfasdf@gmail.com', 'entity_type_key':'PARTY.INDIVIDUAL']");
 
         mockMvc.perform(get("/test/integrity-constraint-violation-error"))
             .andExpect(status().isBadRequest())
-            .andExpect(jsonPath("$.error").value("23005"))
-            .andExpect(jsonPath("$.error_description").value("error.db.23005"))
+            .andExpect(jsonPath("$.error").value("error.db.23005"))
+            .andExpect(jsonPath("$.error_description").value("error.db.dataIntegrityViolation.23005"))
             .andExpect(jsonPath("$.params.field_json_path").value("$.email"))
             .andExpect(jsonPath("$.params.field_value").value("sdfasdf@gmail.com"))
             .andExpect(jsonPath("$.params.entity_type_key").value("PARTY.INDIVIDUAL"));
 
-        lepLoader.onRefresh("/config/tenants/RESINTTEST/entity/lep/service/translator/ExtractParameters$$around.groovy",
+        lepLoader.onRefresh("/config/tenants/RESINTTEST/entity/lep/service/exceptiontranslator/ExtractParameters$$around.groovy",
             "lepContext.lep.proceed(lepContext.lep.getMethodArgValues())");
     }
 }

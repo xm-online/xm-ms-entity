@@ -12,12 +12,12 @@ import java.util.Map;
 @Slf4j
 @Component
 @Transactional(readOnly = true)
-@LepService(group = "service.translator")
+@LepService(group = "service.exceptiontranslator")
 public class LepExceptionParametersResolver {
 
     @LogicExtensionPoint("ExtractParameters")
     public Map<String, String> extractParameters(Throwable throwable) {
-        log.warn("No handlers for extractParameters");
+        log.info("No handlers for extractParameters");
         return new HashMap<>();
     }
 }
