@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import java.sql.SQLException;
+import java.util.Map;
 
 @Slf4j
 @ControllerAdvice
@@ -25,8 +26,7 @@ import java.sql.SQLException;
 public class EntityExceptionTranslator {
 
     private static final String INTEGRITY_CONSTRAINT_VIOLATION_GROUP_CODE = "23";
-    private static final String INTEGRITY_CONSTRAINT_VIOLATION_MESSAGE_CODE = "error.db.dataIntegrityViolation.";
-    private static final String INTEGRITY_CONSTRAINT_VIOLATION_ERROR_CODE_PREFIX = "error.db.";
+    private static final String INTEGRITY_CONSTRAINT_VIOLATION_ERROR_CODE_PREFIX = "error.db.dataIntegrityViolation.";
 
     private final LocalizationMessageService localizationMessageService;
     private final ExceptionTranslator exceptionTranslator;
@@ -37,23 +37,31 @@ public class EntityExceptionTranslator {
     @ResponseBody
     public ResponseEntity<ParameterizedErrorVM> processParameterizedValidationError(DataIntegrityViolationException dataIntegrityViolationException) {
         Throwable root = Throwables.getRootCause(dataIntegrityViolationException);
+        String defaultMessage = root.getMessage();
         if (root instanceof SQLException) {
             String sqlState = ((SQLException) root).getSQLState();
             if (sqlState != null && sqlState.startsWith(INTEGRITY_CONSTRAINT_VIOLATION_GROUP_CODE)) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ParameterizedErrorVM(
-                    INTEGRITY_CONSTRAINT_VIOLATION_ERROR_CODE_PREFIX.concat(sqlState),
-                    localizationMessageService
-                        .getMessage(INTEGRITY_CONSTRAINT_VIOLATION_MESSAGE_CODE.concat(sqlState)),
-                    lepExceptionParametersResolver.extractParameters(root)));
+                String errorCode = INTEGRITY_CONSTRAINT_VIOLATION_ERROR_CODE_PREFIX.concat(sqlState);
+                Map<String, String> paramsMap = lepExceptionParametersResolver.extractParameters(root);
+                String message = localizationMessageService.getMessage(errorCode, paramsMap, false, defaultMessage);
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(buildParameterizedErrorVM(errorCode, message, paramsMap));
             }
         }
         ResponseEntity<ErrorVM> responseEntity = exceptionTranslator.processException(dataIntegrityViolationException);
         ErrorVM errorVM = responseEntity.getBody();
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ParameterizedErrorVM(
-            errorVM == null ? "error.missed.exception.translator" : errorVM.getError(),
-            errorVM == null ? "Unable to translate exception" : errorVM.getError_description(),
-            lepExceptionParametersResolver.extractParameters(dataIntegrityViolationException)));
+        Map<String, String> paramsMap = lepExceptionParametersResolver.extractParameters(root);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(buildParameterizedErrorVM(errorVM, paramsMap));
     }
 
+
+    private ParameterizedErrorVM buildParameterizedErrorVM(ErrorVM errorVM, Map<String, String> params) {
+        String error = errorVM == null ? "error.missed.exception.translator" : errorVM.getError();
+        String errorDescription = errorVM == null ? "Unable to translate exception" : errorVM.getError_description();
+        return buildParameterizedErrorVM(error, errorDescription, params);
+    }
+
+    private ParameterizedErrorVM buildParameterizedErrorVM(final String error, final String errorDescription, Map<String, String> params) {
+        return new ParameterizedErrorVM(error, errorDescription, params);
+    }
 
 }

@@ -177,8 +177,8 @@ public class ExceptionTranslatorIntTest extends AbstractSpringBootTest {
 
         mockMvc.perform(get("/test/integrity-constraint-violation-error"))
             .andExpect(status().isBadRequest())
-            .andExpect(jsonPath("$.error").value("error.db.23005"))
-            .andExpect(jsonPath("$.error_description").value("error.db.dataIntegrityViolation.23005"))
+            .andExpect(jsonPath("$.error").value("error.db.dataIntegrityViolation.23005"))
+            .andExpect(jsonPath("$.error_description").value("Unique constrain error"))
             .andExpect(jsonPath("$.params.field_json_path").value("$.email"))
             .andExpect(jsonPath("$.params.field_value").value("sdfasdf@gmail.com"))
             .andExpect(jsonPath("$.params.entity_type_key").value("PARTY.INDIVIDUAL"));
