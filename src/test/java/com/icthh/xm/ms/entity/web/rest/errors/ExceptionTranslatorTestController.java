@@ -2,6 +2,7 @@ package com.icthh.xm.ms.entity.web.rest.errors;
 
 import com.icthh.xm.commons.exceptions.BusinessException;
 import org.springframework.dao.ConcurrencyFailureException;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -10,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 import javax.validation.Valid;
@@ -73,5 +75,11 @@ public class ExceptionTranslatorTestController {
     @SuppressWarnings("serial")
     public static class TestResponseStatusException extends RuntimeException {
     }
+
+    @GetMapping("/test/integrity-constraint-violation-error")
+    public void uniqueConstrainError() {
+        throw new DataIntegrityViolationException("DataIntegrityViolationException", new SQLException("Unique constrain error", "23005"));
+    }
+
 
 }
