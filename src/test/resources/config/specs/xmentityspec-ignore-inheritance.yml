@@ -1,0 +1,47 @@
+---
+types:
+    - key: ACCOUNT
+      name: { en: "Account" }
+      isApp: true
+      isAbstract: true
+      tags:
+          - key: TEST
+            name: { en: "Test Account" }
+          - key: FAVORIT
+            name: { en: "Favorite" }
+      states:
+          - key: TEST-STATE-KEY-1
+            name: { en: "State 1", ru: "Состояние 1" }
+            icon: null
+            color: null
+          - key: TEST-STATE-KEY-2
+            name: { en: "State 2", ru: "Состояние 2" }
+            icon: null
+            color: null
+      functions:
+          -   key: A
+          -   key: B
+    - key: ACCOUNT.ADMIN
+      name: { en: "Admin" }
+      isApp: false
+      isAbstract: false
+      ignoreInheritanceFor:
+          - tags
+          - functions
+      functions:
+          -   key: C
+          -   key: D
+      tags:
+          -   key: TEST2
+              name: { en: "Test Account" }
+          -   key: TEST3
+              name: { en: "Favorite" }
+      states:
+          -   key: TEST-STATE-KEY-3
+              name: { en: "State 1", ru: "Состояние 1" }
+              icon: null
+              color: null
+          -   key: TEST-STATE-KEY-4
+              name: { en: "State 2", ru: "Состояние 2" }
+              icon: null
+              color: null

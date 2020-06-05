@@ -97,4 +97,7 @@ public class TypeSpec {
     @Builder.Default
     @JsonIgnore
     private Set<UniqueFieldSpec> uniqueFields = new HashSet<>();
+    @Builder.Default
+    @JsonProperty("ignoreInheritanceFor")
+    private Set<String> ignoreInheritanceFor = new HashSet<>();
 }
