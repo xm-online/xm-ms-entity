@@ -1,25 +1,12 @@
 package com.icthh.xm.ms.entity.service;
 
-import static com.google.common.collect.ImmutableMap.of;
-import static com.google.common.collect.Maps.newHashMap;
-import static com.icthh.xm.ms.entity.security.access.DynamicPermissionCheckService.CONFIG_SECTION;
-import static com.icthh.xm.ms.entity.util.CustomCollectionUtils.nullSafe;
-import static java.nio.charset.StandardCharsets.UTF_8;
-import static java.util.Arrays.asList;
-import static org.apache.commons.codec.digest.DigestUtils.sha1Hex;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.ArgumentMatchers.isNull;
-import static org.mockito.ArgumentMatchers.refEq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import com.github.fge.jackson.JsonLoader;
+import com.github.fge.jsonschema.core.report.ProcessingReport;
+import com.github.fge.jsonschema.main.JsonSchema;
+import com.github.fge.jsonschema.main.JsonSchemaFactory;
 import com.icthh.xm.commons.config.client.config.XmConfigProperties;
 import com.icthh.xm.commons.config.client.repository.CommonConfigRepository;
 import com.icthh.xm.commons.config.client.repository.TenantConfigRepository;
@@ -50,13 +37,6 @@ import com.icthh.xm.ms.entity.service.privileges.custom.ApplicationCustomPrivile
 import com.icthh.xm.ms.entity.service.privileges.custom.EntityCustomPrivilegeService;
 import com.icthh.xm.ms.entity.service.privileges.custom.FunctionCustomPrivilegesExtractor;
 import com.icthh.xm.ms.entity.service.privileges.custom.FunctionWithXmEntityCustomPrivilegesExtractor;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.stream.Collectors;
 import lombok.SneakyThrows;
 import org.apache.commons.io.IOUtils;
 import org.junit.Before;
@@ -66,6 +46,36 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
 import org.springframework.core.io.ClassPathResource;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import static com.google.common.collect.ImmutableMap.of;
+import static com.google.common.collect.Maps.newHashMap;
+import static com.icthh.xm.ms.entity.security.access.DynamicPermissionCheckService.CONFIG_SECTION;
+import static com.icthh.xm.ms.entity.util.CustomCollectionUtils.nullSafe;
+import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.Arrays.asList;
+import static org.apache.commons.codec.digest.DigestUtils.sha1Hex;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
+import static org.mockito.ArgumentMatchers.refEq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
 
@@ -90,6 +100,7 @@ public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
     private static final String KEY6 = "TYPE3";
     private static final String PRIVILEGES_PATH = "/config/tenants/TEST/custom-privileges.yml";
     private static final String PERMISSION_PATH = "/config/tenants/TEST/permissions.yml";
+    private static final Path SPEC_PATH = Paths.get("./src/test/resources/config/specs/xmentityspec-xm.yml");
 
     private XmEntitySpecService xmEntitySpecService;
 
@@ -491,6 +502,22 @@ public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
         String expectedPermissions = readFile("config/privileges/expected-permissions.yml");
 
         testUpdateRealPermissionFile(permissions, privileges, expectedPermissions);
+    }
+
+    @Test
+    @SneakyThrows
+    public void testXmEntitySpecSchemaGeneration() {
+        String jsonSchema = xmEntitySpecService.generateJsonSchema();
+        ObjectMapper objectMapper = new ObjectMapper(new YAMLFactory());
+        JsonNode xmentityspec = objectMapper.readTree(new File(SPEC_PATH.toString()));
+
+        JsonNode schemaNode = JsonLoader.fromString(jsonSchema);
+        JsonSchemaFactory factory = JsonSchemaFactory.byDefault();
+        JsonSchema schema = factory.getJsonSchema(schemaNode);
+        ProcessingReport report = schema.validate(xmentityspec);
+
+        boolean isSuccess = report.isSuccess();
+        assertTrue(report.toString(), isSuccess);
     }
 
     public void testUpdateRealPermissionFile(String permissions, String privileges, String expectedPermissions) {
