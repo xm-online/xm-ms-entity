@@ -7,6 +7,7 @@ import static org.hamcrest.Matchers.hasItem;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -46,6 +47,8 @@ public class XmEntitySpecResourceIntTest extends AbstractSpringBootTest {
     private static final String KEY3 = "ACCOUNT.USER";
 
     private static final String KEY4 = "PRODUCT-OFFERING";
+
+    private static final String XM_ENTITY_SPEC = "urn:jsonschema:com:icthh:xm:ms:entity:domain:spec:XmEntitySpec";
 
     @Autowired
     private XmEntityServiceImpl xmEntityService;
@@ -163,6 +166,15 @@ public class XmEntitySpecResourceIntTest extends AbstractSpringBootTest {
             .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
             .andDo(mvcResult -> System.out.println(mvcResult.getResponse().getContentAsString()))
             .andExpect(jsonPath("$.id").isNotEmpty());
+    }
+
+    @Test
+    public void getXmEntityTypeSpecSchema() throws Exception {
+        restXmEntitySpecMockMvc.perform(get("/api/xm-entity-specs/schema"))
+            .andDo(print())
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+            .andExpect(jsonPath("$.id").value(XM_ENTITY_SPEC));
     }
 
 }

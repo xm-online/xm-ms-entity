@@ -14,6 +14,7 @@ import com.icthh.xm.ms.entity.web.rest.util.RespContentUtil;
 import io.swagger.annotations.ApiParam;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PostAuthorize;
 import org.springframework.security.access.prepost.PostFilter;
@@ -88,6 +89,13 @@ public class XmEntitySpecResource {
                        .collect(Collectors.toList());
     }
 
+    @GetMapping(value = "/xm-entity-specs/schema", produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+    @Timed
+    @PostFilter("hasPermission({'log': false}, 'XMENTITY_SPEC.SCHEMA.GET')")
+    @PrivilegeDescription("Privilege to get the xmEntity specification json schema")
+    public String getSpecSchema() {
+        return xmEntitySpecService.generateJsonSchema();
+    }
 
     /**
      * GET  /xm-entity-specs/:key : get the "key" typeSpec.
