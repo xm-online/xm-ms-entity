@@ -13,6 +13,7 @@ import com.icthh.xm.commons.logging.aop.IgnoreLogginAspect;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
 import com.icthh.xm.ms.entity.config.ApplicationProperties;
+import com.icthh.xm.ms.entity.domain.ext.TypeSpecParameter;
 import com.icthh.xm.ms.entity.domain.spec.AttachmentSpec;
 import com.icthh.xm.ms.entity.domain.spec.CalendarSpec;
 import com.icthh.xm.ms.entity.domain.spec.FunctionSpec;
@@ -27,7 +28,6 @@ import com.icthh.xm.ms.entity.domain.spec.UniqueFieldSpec;
 import com.icthh.xm.ms.entity.domain.spec.XmEntitySpec;
 import com.icthh.xm.ms.entity.security.access.DynamicPermissionCheckService;
 import com.icthh.xm.ms.entity.service.privileges.custom.EntityCustomPrivilegeService;
-import com.icthh.xm.ms.entity.util.CustomCollectionUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -49,7 +49,17 @@ import java.util.stream.Collectors;
 
 import static com.github.fge.jackson.NodeType.OBJECT;
 import static com.github.fge.jackson.NodeType.getNodeType;
+import static com.icthh.xm.ms.entity.domain.ext.TypeSpecParameter.ACCESS;
+import static com.icthh.xm.ms.entity.domain.ext.TypeSpecParameter.ATTACHMENTS;
+import static com.icthh.xm.ms.entity.domain.ext.TypeSpecParameter.CALENDARS;
+import static com.icthh.xm.ms.entity.domain.ext.TypeSpecParameter.FUNCTIONS;
+import static com.icthh.xm.ms.entity.domain.ext.TypeSpecParameter.LINKS;
+import static com.icthh.xm.ms.entity.domain.ext.TypeSpecParameter.LOCATIONS;
+import static com.icthh.xm.ms.entity.domain.ext.TypeSpecParameter.RATINGS;
+import static com.icthh.xm.ms.entity.domain.ext.TypeSpecParameter.STATES;
+import static com.icthh.xm.ms.entity.domain.ext.TypeSpecParameter.TAGS;
 import static com.icthh.xm.ms.entity.util.CustomCollectionUtils.nullSafe;
+import static com.icthh.xm.ms.entity.util.CustomCollectionUtils.union;
 import static java.util.Collections.emptyList;
 import static org.springframework.util.CollectionUtils.isEmpty;
 
@@ -458,16 +468,31 @@ public class XmEntitySpecService implements RefreshableConfiguration {
         type.setIcon(type.getIcon() != null ? type.getIcon() : parentType.getIcon());
         type.setDataSpec(type.getDataSpec() != null ? type.getDataSpec() : parentType.getDataSpec());
         type.setDataForm(type.getDataForm() != null ? type.getDataForm() : parentType.getDataForm());
-        type.setAccess(CustomCollectionUtils.union(type.getAccess(), parentType.getAccess()));
-        type.setAttachments(CustomCollectionUtils.union(type.getAttachments(), parentType.getAttachments()));
-        type.setCalendars(CustomCollectionUtils.union(type.getCalendars(), parentType.getCalendars()));
-        type.setFunctions(CustomCollectionUtils.union(type.getFunctions(), parentType.getFunctions()));
-        type.setLinks(CustomCollectionUtils.union(type.getLinks(), parentType.getLinks()));
-        type.setLocations(CustomCollectionUtils.union(type.getLocations(), parentType.getLocations()));
-        type.setRatings(CustomCollectionUtils.union(type.getRatings(), parentType.getRatings()));
-        type.setStates(CustomCollectionUtils.union(type.getStates(), parentType.getStates()));
-        type.setTags(CustomCollectionUtils.union(type.getTags(), parentType.getTags()));
+        type.setAccess(ignorableUnion(ACCESS, type, parentType));
+        type.setAttachments(ignorableUnion(ATTACHMENTS, type, parentType));
+        type.setCalendars(ignorableUnion(CALENDARS, type, parentType));
+        type.setFunctions(ignorableUnion(FUNCTIONS, type, parentType));
+        type.setLinks(ignorableUnion(LINKS, type, parentType));
+        type.setLocations(ignorableUnion(LOCATIONS, type, parentType));
+        type.setRatings(ignorableUnion(RATINGS, type, parentType));
+        type.setStates(ignorableUnion(STATES, type, parentType));
+        type.setTags(ignorableUnion(TAGS, type, parentType));
         return type;
+    }
+
+    /**
+     * Combine type specifications considering ignore list.
+     *
+     * @param typeSpecParam  represents enum for type specification
+     * @param type       entity Type specification for extention
+     * @param parentType parent entity Type specification for cloning
+     * @return union list or list from child type in case inheritance prohibited
+     */
+    private static <T> List<T> ignorableUnion(TypeSpecParameter typeSpecParam, TypeSpec type, TypeSpec parentType) {
+        List<T> parameters = (List<T>) typeSpecParam.getParameterResolver().apply(type);
+        List<T> parentParameters = (List<T>) typeSpecParam.getParameterResolver().apply(parentType);
+        return type.getIgnoreInheritanceFor().contains(typeSpecParam.getType()) ?
+            parameters : union(parameters, parentParameters);
     }
 
     private TypeSpec filterFunctions(TypeSpec spec) {
