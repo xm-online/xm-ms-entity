@@ -195,6 +195,27 @@ public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
 
     }
 
+    @Test
+    public void testRefreshWithIgnoreList() {
+
+        TenantContext tenantContext = mock(TenantContext.class);
+        when(tenantContext.getTenantKey()).thenReturn(Optional.of(TenantKey.valueOf("IGNORE-INHERITANCE")));
+        tenantContextHolder = mock(TenantContextHolder.class);
+        when(tenantContextHolder.getContext()).thenReturn(tenantContext);
+        ApplicationProperties ap = new ApplicationProperties();
+        ap.setSpecificationPathPattern(URL);
+        xmEntitySpecService = createXmEntitySpecService(ap, tenantContextHolder);
+
+        Map<String, TypeSpec> typeSpecs = xmEntitySpecService.getTypeSpecs();
+
+        TypeSpec typeSpec = typeSpecs.get("ACCOUNT.ADMIN");
+        assertEquals(typeSpec.getFunctions().size(), 2);
+        assertTrue(typeSpec.getFunctions().stream().allMatch(f-> Set.of("C", "D").contains(f.getKey())));
+        assertEquals(typeSpec.getTags().size(), 2);
+        assertTrue(typeSpec.getTags().stream().allMatch(t-> Set.of("TEST2", "TEST3").contains(t.getKey())));
+        assertEquals(typeSpec.getStates().size(), 4);
+    }
+
     @SneakyThrows
     public void prepareConfig(Map<String, Object> map) {
         tenantConfig.onRefresh("/config/tenants/XM/tenant-config.yml", new ObjectMapper().writeValueAsString(map));
