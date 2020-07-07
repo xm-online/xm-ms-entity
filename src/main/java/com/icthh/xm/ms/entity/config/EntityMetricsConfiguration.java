@@ -1,6 +1,7 @@
 package com.icthh.xm.ms.entity.config;
 
 import com.codahale.metrics.MetricRegistry;
+import com.icthh.xm.commons.scheduler.metric.SchedulerMetricsSet;
 import com.ryantenney.metrics.spring.config.annotation.EnableMetrics;
 import com.ryantenney.metrics.spring.config.annotation.MetricsConfigurerAdapter;
 import com.zaxxer.hikari.HikariDataSource;
