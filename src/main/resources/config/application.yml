@@ -204,6 +204,13 @@ application:
     lep:
         tenant-script-storage: XM_MS_CONFIG
         lep-resource-path-pattern: /config/tenants/{tenantName}/entity/lep/resources/**/*
+    file-storage:
+        active-type: MINIO
+        minio:
+            bucket: int
+            url: http://172.20.75.144:9199/minio0/
+            access-key: Server-Access-Key
+            secret-key: Server-Secret-Key
     amazon:
         avatar:
             # XmEntity.avatarUrl should match this pattern to persist only last part into DB, otherwise set to null

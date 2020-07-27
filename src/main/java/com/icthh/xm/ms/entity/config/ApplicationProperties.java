@@ -1,13 +1,13 @@
 package com.icthh.xm.ms.entity.config;
 
 import com.icthh.xm.commons.lep.TenantScriptStorage;
-import java.util.List;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
 import java.util.Collections;
+import java.util.List;
 
 /**
  * Properties specific to JHipster.
@@ -20,6 +20,7 @@ import java.util.Collections;
 @Setter
 public class ApplicationProperties {
 
+    private final FileStorage fileStorage = new FileStorage();
     private final Amazon amazon = new Amazon();
     private final Retry retry = new Retry();
     private final Lep lep = new Lep();
@@ -97,6 +98,27 @@ public class ApplicationProperties {
 
     @Getter
     @Setter
+    public static class FileStorage {
+        private SupportedFileStorageType activeType;
+        private Minio minio;
+
+        @Getter
+        @Setter
+        public static class Minio {
+            private String bucket;
+            private String url;
+            private String accessKey;
+            private String secretKey;
+            private String template;
+        }
+
+        public enum SupportedFileStorageType {
+            MINIO, AWS
+        }
+    }
+
+    @Getter
+    @Setter
     private static class Retry {
         private int maxAttempts;
         private long delay;
@@ -113,8 +135,8 @@ public class ApplicationProperties {
     @Getter
     @Setter
     public static class KafkaMetric {
-       private boolean enabled;
-       private int connectionTimeoutTopic;
-       List<String> metricTopics;
+        private boolean enabled;
+        private int connectionTimeoutTopic;
+        List<String> metricTopics;
     }
 }

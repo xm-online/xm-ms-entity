@@ -125,6 +125,14 @@ xm-config:
 application:
     scheduler-enabled: false
     kafka-enabled: false
+    file-storage:
+        active-type: MINIO
+        minio:
+            bucket: int
+            template: http://172.20.75.144:9199/minio0/
+            url: http://172.20.75.144:9199/minio0/
+            access-key: Server-Access-Key
+            secret-key: Server-Secret-Key
     amazon:
         avatar:
             pre-persist-url-full-pattern: ^http(s)?:\/\/[a-zA-Z0-9-.]+[.]icthh[.][a-z]+(:\d+)?/[a-zA-Z0-9-.]+$
