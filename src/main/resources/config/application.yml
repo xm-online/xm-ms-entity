@@ -208,7 +208,7 @@ application:
         active-type: MINIO
         minio:
             bucket: int
-            url: http://172.20.75.144:9199/minio0/
+            url: http://
             access-key: Server-Access-Key
             secret-key: Server-Secret-Key
     amazon:
