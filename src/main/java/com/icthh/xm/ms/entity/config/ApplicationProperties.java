@@ -32,6 +32,7 @@ public class ApplicationProperties {
     private boolean timelinesEnabled;
     private boolean kafkaEnabled;
     private boolean schedulerEnabled;
+    private boolean useElasticsearchMultipleIndices;
     private List<String> tenantCreateServiceList;
     private Integer tenantClientConnectionTimeout;
     private Integer tenantClientReadTimeout;

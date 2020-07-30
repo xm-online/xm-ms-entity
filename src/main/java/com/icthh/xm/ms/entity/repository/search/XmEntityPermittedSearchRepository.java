@@ -9,9 +9,9 @@ import static org.springframework.data.elasticsearch.core.query.Query.DEFAULT_PA
 
 import com.icthh.xm.commons.permission.service.PermissionCheckService;
 import com.icthh.xm.ms.entity.domain.XmEntity;
+import com.icthh.xm.ms.entity.repository.search.elasticsearch.index.ElasticIndexNameResolver;
 import com.icthh.xm.ms.entity.repository.search.translator.SpelToElasticTranslator;
 import lombok.extern.slf4j.Slf4j;
-import lombok.val;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
@@ -24,11 +24,15 @@ import org.springframework.stereotype.Repository;
 public class XmEntityPermittedSearchRepository extends PermittedSearchRepository {
 
     private static final String TYPE_KEY = "typeKey";
+    private final ElasticIndexNameResolver elasticIndexNameResolver;
+
 
     public XmEntityPermittedSearchRepository(PermissionCheckService permissionCheckService,
                                              SpelToElasticTranslator spelToElasticTranslator,
-                                             ElasticsearchTemplate elasticsearchTemplate) {
+                                             ElasticsearchTemplate elasticsearchTemplate,
+                                             ElasticIndexNameResolver elasticIndexNameResolver) {
         super(permissionCheckService, spelToElasticTranslator, elasticsearchTemplate);
+        this.elasticIndexNameResolver = elasticIndexNameResolver;
     }
 
     /**
@@ -45,14 +49,14 @@ public class XmEntityPermittedSearchRepository extends PermittedSearchRepository
                                                   String privilegeKey) {
         String permittedQuery = buildPermittedQuery(query, privilegeKey);
 
-        val prefix = typeKey + ".";
+        var prefix = typeKey + ".";
 
-        val typeKeyQuery = boolQuery()
+        var typeKeyQuery = boolQuery()
             .should(matchQuery(TYPE_KEY, typeKey))
             .should(prefixQuery(TYPE_KEY, prefix))
             .minimumShouldMatch(1);
 
-        val esQuery = isEmpty(permittedQuery)
+        var esQuery = isEmpty(permittedQuery)
             ? boolQuery().must(typeKeyQuery)
             : typeKeyQuery.must(simpleQueryStringQuery(permittedQuery));
 
@@ -60,6 +64,7 @@ public class XmEntityPermittedSearchRepository extends PermittedSearchRepository
 
         NativeSearchQuery queryBuilder = new NativeSearchQueryBuilder()
             .withQuery(esQuery)
+            .withIndices(elasticIndexNameResolver.resolve(typeKey))
             .withPageable(pageable == null ? DEFAULT_PAGE : pageable)
             .build();
 

@@ -38,6 +38,7 @@ import com.icthh.xm.ms.entity.domain.listener.XmEntityElasticSearchListener;
 import com.icthh.xm.ms.entity.domain.spec.TypeSpec;
 import com.icthh.xm.ms.entity.repository.XmEntityRepositoryInternal;
 import com.icthh.xm.ms.entity.repository.search.XmEntitySearchRepository;
+import com.icthh.xm.ms.entity.repository.search.elasticsearch.XmEntityElasticRepository;
 import com.icthh.xm.ms.entity.web.rest.ElasticsearchIndexResource;
 import com.icthh.xm.ms.entity.web.rest.XmEntityResource;
 import lombok.SneakyThrows;
@@ -137,6 +138,9 @@ public class ElasticsearchIndexResourceIntTest extends AbstractSpringBootTest {
     private Executor executor;
 
     @Mock
+    private XmEntityElasticRepository xmEntityElasticRepository;
+
+    @Mock
     private XmEntitySpecService xmEntitySpecServiceMock;
 
     @Rule
@@ -170,7 +174,8 @@ public class ElasticsearchIndexResourceIntTest extends AbstractSpringBootTest {
                                                                   tenantContextHolder,
                                                                   mappingConfiguration,
                                                                   indexConfiguration,
-                                                                  executor);
+                                                                  executor,
+                                                                  xmEntityElasticRepository);
 
         elasticsearchIndexService.setSelfReference(elasticsearchIndexService);
 
