@@ -208,7 +208,8 @@ application:
         active-type: MINIO
         minio:
             bucket: int
-            url: http://
+            host-name: 127.0.0.1
+            port: 9199
             access-key: Server-Access-Key
             secret-key: Server-Secret-Key
     amazon:

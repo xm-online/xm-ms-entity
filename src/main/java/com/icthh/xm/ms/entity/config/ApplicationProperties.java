@@ -106,7 +106,8 @@ public class ApplicationProperties {
         @Setter
         public static class Minio {
             private String bucket;
-            private String url;
+            private String hostname;
+            private Integer port;
             private String accessKey;
             private String secretKey;
             private String template;

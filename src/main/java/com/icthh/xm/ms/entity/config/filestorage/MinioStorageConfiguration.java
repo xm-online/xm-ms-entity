@@ -17,7 +17,7 @@ public class MinioStorageConfiguration {
     public MinioClient minioClient() {
         ApplicationProperties.FileStorage.Minio minio = applicationProperties.getFileStorage().getMinio();
         return MinioClient.builder()
-            .endpoint(minio.getUrl())
+            .endpoint(minio.getHostname(), minio.getPort(), false)
             .credentials(minio.getAccessKey(), minio.getSecretKey())
             .build();
     }
