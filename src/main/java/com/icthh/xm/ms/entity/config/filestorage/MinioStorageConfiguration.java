@@ -5,12 +5,13 @@ import io.minio.MinioClient;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Lazy;
 
 @Configuration
-@RequiredArgsConstructor
+@RequiredArgsConstructor(onConstructor=@__(@Lazy))
 public class MinioStorageConfiguration {
 
-    private ApplicationProperties applicationProperties;
+    private final ApplicationProperties applicationProperties;
 
     @Bean
     public MinioClient minioClient() {
