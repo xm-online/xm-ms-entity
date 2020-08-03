@@ -1,0 +1,6 @@
+---
+types:
+    - key: ACCOUNT.CUSTOMER
+      name: { en: "Customer" }
+      isApp: false
+      isAbstract: false
