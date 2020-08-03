@@ -129,8 +129,8 @@ application:
         active-type: MINIO
         minio:
             bucket: int
-            template: http://172.20.75.144:9199/minio0/
-            url: http://172.20.75.144:9199/minio0/
+            host-name: 123.0.0.1
+            port: 9199
             access-key: Server-Access-Key
             secret-key: Server-Secret-Key
     amazon:
