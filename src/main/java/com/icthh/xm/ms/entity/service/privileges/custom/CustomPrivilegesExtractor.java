@@ -1,12 +1,12 @@
 package com.icthh.xm.ms.entity.service.privileges.custom;
 
-import static com.google.common.collect.ImmutableMap.of;
-import static com.icthh.xm.ms.entity.service.privileges.custom.CustomPrivilegesExtractor.DefaultPrivilegesValue.NONE;
-import static java.util.stream.Collectors.toList;
-
 import com.icthh.xm.ms.entity.domain.spec.TypeSpec;
+
 import java.util.List;
 import java.util.Map;
+
+import static com.google.common.collect.ImmutableMap.of;
+import static java.util.stream.Collectors.toList;
 
 public interface CustomPrivilegesExtractor {
 
@@ -26,16 +26,8 @@ public interface CustomPrivilegesExtractor {
 
     List<String> toPrivilegesList(Map<String, TypeSpec> specs);
 
-    default DefaultPrivilegesValue getDefaultValue() {
-        return NONE;
-    }
-
     default boolean isEnabled(String tenantKey) {
         return true;
-    }
-
-    enum DefaultPrivilegesValue {
-        NONE, ENABLED, DISABLED;
     }
 
 }
