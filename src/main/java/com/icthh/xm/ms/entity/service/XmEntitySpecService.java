@@ -172,6 +172,7 @@ public class XmEntitySpecService implements RefreshableConfiguration {
             byFiles.remove(updatedKey);
             return;
         }
+
         XmEntitySpec spec = mapper.readValue(config, XmEntitySpec.class);
         Map<String, TypeSpec> value = toTypeSpecsMap(spec);
         byFiles.put(updatedKey, value);
