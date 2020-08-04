@@ -1,19 +1,18 @@
 package com.icthh.xm.ms.entity.service.privileges.custom;
 
-import static com.google.common.base.Predicates.not;
-import static com.icthh.xm.ms.entity.service.privileges.custom.CustomPrivilegesExtractor.DefaultPrivilegesValue.NONE;
-import static java.util.stream.Collectors.toList;
-
 import com.icthh.xm.ms.entity.config.XmEntityTenantConfigService;
 import com.icthh.xm.ms.entity.config.XmEntityTenantConfigService.XmEntityTenantConfig;
 import com.icthh.xm.ms.entity.domain.spec.FunctionSpec;
 import com.icthh.xm.ms.entity.domain.spec.TypeSpec;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+
+import static java.util.stream.Collectors.toList;
 
 @Slf4j
 @Component
@@ -33,11 +32,6 @@ public class FunctionCustomPrivilegesExtractor implements CustomPrivilegesExtrac
     @Override
     public String getPrivilegePrefix() {
         return PRIVILEGE_PREFIX;
-    }
-
-    @Override
-    public DefaultPrivilegesValue getDefaultValue() {
-        return NONE;
     }
 
     @Override

@@ -79,6 +79,7 @@ import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.ArgumentMatchers.refEq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
@@ -475,10 +476,9 @@ public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
     @Test
     @SneakyThrows
     public void testCreateCustomPrivileges() {
-        String permissions = readFile("config/privileges/new-permission.yml");
         String privileges = readFile("config/privileges/new-privileges.yml");
 
-        testCreateCustomPrivileges(permissions, privileges);
+        testCreateCustomPrivileges(privileges);
     }
 
     @Test
@@ -486,25 +486,22 @@ public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
     public void testCreateCustomerPrivilegesWithFunctions() {
         enableDynamicPermissionCheck();
 
-        String permissions = readFile("config/privileges/new-permission.yml");
         String privileges = readFile("config/privileges/new-privileges-with-functions.yml");
 
-        testCreateCustomPrivileges(permissions, privileges);
+        testCreateCustomPrivileges(privileges);
     }
 
-    private void testCreateCustomPrivileges(String permissions, String privileges) {
+    private void testCreateCustomPrivileges(String privileges) {
         String privilegesPath = PRIVILEGES_PATH;
-        String permissionPath = PERMISSION_PATH;
-        when(commonConfigRepository.getConfig(isNull(), eq(asList(privilegesPath, permissionPath)))).thenReturn(null);
+        when(commonConfigRepository.getConfig(isNull(), eq(asList(privilegesPath)))).thenReturn(null);
         when(roleService.getRoles("TEST")).thenReturn(of("ROLE_ADMIN", new Role(), "ROLE_AGENT", new Role()));
 
         xmEntitySpecService.getTypeSpecs();
 
-        verify(commonConfigRepository).getConfig(isNull(), eq(asList(privilegesPath, permissionPath)));
+        verify(commonConfigRepository).getConfig(isNull(), eq(asList(privilegesPath)));
         verify(commonConfigRepository)
             .updateConfigFullPath(refEq(new Configuration(privilegesPath, privileges)), isNull());
-        verify(commonConfigRepository)
-            .updateConfigFullPath(refEq(new Configuration(permissionPath, permissions)), isNull());
+        verifyNoMoreInteractions(commonConfigRepository);
     }
 
     @Test
