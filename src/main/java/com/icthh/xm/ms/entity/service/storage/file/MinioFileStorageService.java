@@ -1,25 +1,30 @@
 package com.icthh.xm.ms.entity.service.storage.file;
 
-import com.icthh.xm.ms.entity.config.ApplicationProperties;
 import io.minio.BucketExistsArgs;
 import io.minio.MakeBucketArgs;
 import io.minio.MinioClient;
 import io.minio.PutObjectArgs;
-import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.annotation.Lazy;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.InputStream;
 
 @Slf4j
 @Service
-@RequiredArgsConstructor(onConstructor=@__(@Lazy))
 public class MinioFileStorageService implements FileStorageService {
 
-    private final ApplicationProperties properties;
+    private final String bucket;
     private final MinioClient minioClient;
+
+    public MinioFileStorageService(
+        @Value("${application.file-storage.minio.bucket}") String bucket,
+        MinioClient minioClient
+    ) {
+        this.bucket = bucket;
+        this.minioClient = minioClient;
+    }
 
     @Override
     @SneakyThrows
@@ -35,19 +40,19 @@ public class MinioFileStorageService implements FileStorageService {
 
     private BucketExistsArgs bucketExists() {
         return BucketExistsArgs.builder()
-            .bucket(properties.getFileStorage().getMinio().getBucket())
+            .bucket(bucket)
             .build();
     }
 
     private MakeBucketArgs configBucket() {
         return MakeBucketArgs.builder()
-            .bucket(properties.getFileStorage().getMinio().getBucket())
+            .bucket(bucket)
             .build();
     }
 
     private PutObjectArgs toObjectSize(String fileName, InputStream inputStream) {
         return PutObjectArgs.builder()
-            .bucket(properties.getFileStorage().getMinio().getBucket())
+            .bucket(bucket)
             .object(fileName)
             .stream(inputStream, -1, 10485760)
             .build();
