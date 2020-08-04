@@ -104,7 +104,6 @@ public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
 
     private static final String KEY6 = "TYPE3";
     private static final String PRIVILEGES_PATH = "/config/tenants/TEST/custom-privileges.yml";
-    private static final String PERMISSION_PATH = "/config/tenants/TEST/permissions.yml";
     private static final Path SPEC_PATH = Paths.get("./src/test/resources/config/specs/xmentityspec-xm.yml");
 
     private XmEntitySpecService xmEntitySpecService;
