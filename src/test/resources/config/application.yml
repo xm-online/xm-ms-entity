@@ -136,6 +136,7 @@ application:
     max-avatar-size: 2
     tenant-client-connection-timeout: 10000
     tenant-client-read-timeout: 10000
+    specification-folder-path-pattern: /config/tenants/{tenantName}/entity/xmentityspec/*.yml
     specification-path-pattern: /config/tenants/{tenantName}/entity/specs/xmentityspecs.yml
     specification-templates-path-pattern: /config/tenants/{tenantName}/entity/templates/${application.specification-templates-name}
     specification-webapp-name: settings-public.yml
