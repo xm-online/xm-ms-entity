@@ -324,8 +324,8 @@ dependencies {
     implementation("com.github.java-json-tools:json-schema-validator:2.2.8") {
         exclude group: 'javax.mail', module: 'mailapi'
     }
-    implementation "com.amazonaws:aws-java-sdk-s3:1.11.158"
-    implementation "com.amazonaws:aws-java-sdk-core:1.11.158"
+    implementation "com.amazonaws:aws-java-sdk-s3:1.11.835"
+    implementation "com.amazonaws:aws-java-sdk-core:1.11.835"
     // "org.json:json" already present in org.apache.geronimo.bundles:json:20090211_1 dependency for jackson-datatype-json-org
     //compile "org.json:json:20160212" // for LinkedIn LEP
     implementation "org.jsoup:jsoup:1.10.2" // for LinkedIn LEP
