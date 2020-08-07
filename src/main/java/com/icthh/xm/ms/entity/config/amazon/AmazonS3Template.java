@@ -3,26 +3,22 @@ package com.icthh.xm.ms.entity.config.amazon;
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.HttpMethod;
 import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.model.CannedAccessControlList;
-import com.amazonaws.services.s3.model.CreateBucketRequest;
-import com.amazonaws.services.s3.model.GeneratePresignedUrlRequest;
-import com.amazonaws.services.s3.model.ObjectMetadata;
-import com.amazonaws.services.s3.model.PutObjectRequest;
-import com.amazonaws.services.s3.model.S3Object;
+import com.amazonaws.services.s3.model.*;
 import com.amazonaws.services.s3.transfer.TransferManager;
 import com.amazonaws.services.s3.transfer.TransferManagerBuilder;
 import com.amazonaws.services.s3.transfer.Upload;
 import com.amazonaws.services.s3.transfer.model.UploadResult;
 import com.icthh.xm.ms.entity.config.ApplicationProperties;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URL;
-import java.net.URLConnection;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
+import java.net.URLConnection;
 
 @Slf4j
 @Component
@@ -44,6 +40,8 @@ public class AmazonS3Template {
      */
     public void save(String key, InputStream inputStream) throws IOException {
         String bucket = applicationProperties.getAmazon().getS3().getBucket();
+
+        log.info("Save to bucket {}", bucket);
 
         ObjectMetadata metadata = new ObjectMetadata();
         metadata.setContentType(URLConnection.guessContentTypeFromStream(inputStream));
@@ -74,6 +72,8 @@ public class AmazonS3Template {
      */
     @SneakyThrows
     public String save(String bucket, String key, InputStream inputStream, Integer contentLength, String fileName) {
+        log.info("Save to bucket {}", bucket);
+
         ObjectMetadata metadata = new ObjectMetadata();
         metadata.setContentType(URLConnection.guessContentTypeFromStream(inputStream));
         metadata.addUserMetadata(FILE_NAME_ATTRIBUTE, fileName);
