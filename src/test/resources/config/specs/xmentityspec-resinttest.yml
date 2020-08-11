@@ -453,3 +453,22 @@ types:
           - key: package/FUNCTION.PACKAGE-TEST
           - key: package/FUNCTION-WITH-ENTITY.PACKAGE-TEST
             withEntityId: true
+
+    - key: TEST_EXPORT_SOURCE
+      name: {en: "TEST EXPORT SOURCE"}
+      isApp: false
+      isAbstract: false
+      links:
+            - key: EXPORT_LINK
+              builderType: NEW
+              typeKey: TEST_EXPORT_TARGET
+      attachments:
+            - key: C
+      calendars:
+            - key: A
+              events:
+                  - key: B
+    - key: TEST_EXPORT_TARGET
+      name: {en: "TEST EXPORT TARGET"}
+      isApp: false
+      isAbstract: false
