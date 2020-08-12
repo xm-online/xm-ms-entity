@@ -16,4 +16,5 @@ public class ImportDto {
     private Set<Content> contents = new HashSet<>();
     private Set<CalendarExportDto> calendars = new HashSet<>();
     private Set<EventExportDto> events = new HashSet<>();
+    private Set<CommentExportDto> comments = new HashSet<>();
 }

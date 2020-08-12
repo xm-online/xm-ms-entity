@@ -1,0 +1,14 @@
+[
+  {
+    "linkTypeKeys": [
+      "TEST_EXPORT_LINK_1", "TEST_EXPORT_LINK_2", "TEST_EXPORT_LINK_3"
+    ],
+    "typeKey": "TEST_EXPORT_1"
+  },
+  {
+    "linkTypeKeys": [
+      "TEST_EXPORT_LINK_4"
+    ],
+    "typeKey": "TEST_EXPORT_2"
+  }
+]

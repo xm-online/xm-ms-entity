@@ -21,5 +21,5 @@ public interface LinkRepository extends JpaRepository<Link, Long>, JpaSpecificat
 
     List<Link> findByTargetIdAndTypeKey(Long targetId, String typeKey);
 
-    List<Link> findBySourceTypeKeyAndTargetTypeKeyIn(String sourceTypeKey, List<String> targetTypeKeys);
+    List<Link> findBySourceTypeKeyAndTypeKeyIn(String sourceTypeKey, List<String> linksTypeKeys);
 }

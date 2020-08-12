@@ -454,21 +454,40 @@ types:
           - key: package/FUNCTION-WITH-ENTITY.PACKAGE-TEST
             withEntityId: true
 
-    - key: TEST_EXPORT_SOURCE
-      name: {en: "TEST EXPORT SOURCE"}
+    - key: TEST_EXPORT_1
+      name: {en: "TEST_EXPORT_1"}
       isApp: false
       isAbstract: false
       links:
-            - key: EXPORT_LINK
+            - key: TEST_EXPORT_LINK_1
               builderType: NEW
-              typeKey: TEST_EXPORT_TARGET
+              typeKey: TEST_EXPORT_2
+            - key: TEST_EXPORT_LINK_2
+              builderType: NEW
+              typeKey: TEST_EXPORT_2
+            - key: TEST_EXPORT_LINK_3
+              builderType: NEW
+              typeKey: TEST_EXPORT_3
       attachments:
-            - key: C
+            - key: TEST_EXPORT_ATTACHMENT_1
+            - key: TEST_EXPORT_ATTACHMENT_2
       calendars:
-            - key: A
+            - key: TEST_EXPORT_CALENDAR_1
               events:
-                  - key: B
-    - key: TEST_EXPORT_TARGET
+                  - key: TEST_EXPORT_EVENT_1
+                  - key: TEST_EXPORT_EVENT_2
+            - key: TEST_EXPORT_CALENDAR_2
+              events:
+                  - key: TEST_EXPORT_EVENT_3
+    - key: TEST_EXPORT_2
+      name: {en: "TEST EXPORT TARGET"}
+      isApp: false
+      isAbstract: false
+      links:
+         - key: TEST_EXPORT_LINK_4
+           builderType: NEW
+           typeKey: TEST_EXPORT_3
+    - key: TEST_EXPORT_3
       name: {en: "TEST EXPORT TARGET"}
       isApp: false
       isAbstract: false

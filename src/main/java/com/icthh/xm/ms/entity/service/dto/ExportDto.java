@@ -10,6 +10,8 @@ public class ExportDto {
     private List<String> linkTypeKeys = new ArrayList<>();
     private List<String> attachmentTypeKeys = new ArrayList<>();
     private List<CalendarDto> calendars = new ArrayList<>();
+    private boolean comments;
+
 
     @Data
     public static class CalendarDto {
