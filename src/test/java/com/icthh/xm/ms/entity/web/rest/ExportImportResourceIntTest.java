@@ -476,8 +476,7 @@ public class ExportImportResourceIntTest extends AbstractSpringBootTest {
     public void testImportData() {
         restExportImportMockMvc.perform(post("/api/import/xm-entities")
                 .contentType(TestUtil.APPLICATION_JSON_UTF8)
-                .content(getExportImportDto("importexport/import.json")))
-                .andDo(MockMvcResultHandlers.print());
+                .content(getExportImportDto("importexport/import.json")));
 
         assertThat(entityRepositoryInternal.count()).isEqualTo(2);
         assertThat(attachmentRepository.count()).isEqualTo(1);
@@ -497,8 +496,7 @@ public class ExportImportResourceIntTest extends AbstractSpringBootTest {
     public void testImportDataWithWrongLink() {
         restExportImportMockMvc.perform(post("/api/import/xm-entities")
                 .contentType(TestUtil.APPLICATION_JSON_UTF8)
-                .content(getExportImportDto("importexport/importWithWrongLink.json")))
-                .andDo(MockMvcResultHandlers.print());
+                .content(getExportImportDto("importexport/importWithWrongLink.json")));
 
         assertThat(entityRepositoryInternal.count()).isEqualTo(2);
         assertThat(linkRepository.count()).isEqualTo(0);
@@ -687,7 +685,6 @@ public class ExportImportResourceIntTest extends AbstractSpringBootTest {
         MvcResult result = restExportImportMockMvc.perform(post("/api/export/xm-entities")
                 .contentType(TestUtil.APPLICATION_JSON_UTF8)
                 .content(getExportImportDto(contentPath)))
-                .andDo(MockMvcResultHandlers.print())
                 .andExpect(content().contentType(MediaType.APPLICATION_OCTET_STREAM))
                 .andReturn();
         byte[] response = result.getResponse().getContentAsByteArray();
