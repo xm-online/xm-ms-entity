@@ -474,6 +474,18 @@ public class ExportImportResourceIntTest extends AbstractSpringBootTest {
     @Test
     @Transactional
     public void testImportData() {
+
+        entityRepositoryInternal.deleteAll();
+        attachmentRepository.deleteAll();
+        linkRepository.deleteAll();
+        tagRepository.deleteAll();
+        locationRepository.deleteAll();
+        ratingRepository.deleteAll();
+        voteRepository.deleteAll();
+        calendarRepository.deleteAll();
+        eventRepository.deleteAll();
+        contentRepository.deleteAll();
+
         restExportImportMockMvc.perform(post("/api/import/xm-entities")
                 .contentType(TestUtil.APPLICATION_JSON_UTF8)
                 .content(getExportImportDto("importexport/import.json")));
@@ -494,6 +506,9 @@ public class ExportImportResourceIntTest extends AbstractSpringBootTest {
     @Test
     @Transactional
     public void testImportDataWithWrongLink() {
+        entityRepositoryInternal.deleteAll();
+        linkRepository.deleteAll();
+
         restExportImportMockMvc.perform(post("/api/import/xm-entities")
                 .contentType(TestUtil.APPLICATION_JSON_UTF8)
                 .content(getExportImportDto("importexport/importWithWrongLink.json")));
