@@ -15,12 +15,20 @@ import com.icthh.xm.ms.entity.domain.Comment;
 import com.icthh.xm.ms.entity.domain.Content;
 import com.icthh.xm.ms.entity.domain.Event;
 import com.icthh.xm.ms.entity.domain.Link;
+import com.icthh.xm.ms.entity.domain.Location;
+import com.icthh.xm.ms.entity.domain.Rating;
+import com.icthh.xm.ms.entity.domain.Tag;
+import com.icthh.xm.ms.entity.domain.Vote;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.repository.AttachmentRepository;
 import com.icthh.xm.ms.entity.repository.CalendarRepository;
 import com.icthh.xm.ms.entity.repository.CommentRepository;
 import com.icthh.xm.ms.entity.repository.EventRepository;
 import com.icthh.xm.ms.entity.repository.LinkRepository;
+import com.icthh.xm.ms.entity.repository.LocationRepository;
+import com.icthh.xm.ms.entity.repository.RatingRepository;
+import com.icthh.xm.ms.entity.repository.TagRepository;
+import com.icthh.xm.ms.entity.repository.VoteRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
 import com.icthh.xm.ms.entity.service.dto.AttachmentExportDto;
 import com.icthh.xm.ms.entity.service.dto.CalendarExportDto;
@@ -29,6 +37,10 @@ import com.icthh.xm.ms.entity.service.dto.EventExportDto;
 import com.icthh.xm.ms.entity.service.dto.ExportDto;
 import com.icthh.xm.ms.entity.service.dto.ImportDto;
 import com.icthh.xm.ms.entity.service.dto.LinkExportDto;
+import com.icthh.xm.ms.entity.service.dto.LocationExportDto;
+import com.icthh.xm.ms.entity.service.dto.RatingExportDto;
+import com.icthh.xm.ms.entity.service.dto.TagsExportDto;
+import com.icthh.xm.ms.entity.service.dto.VoteExportDto;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -57,6 +69,10 @@ public class ExportImportService {
     private final LinkRepository linkRepository;
     private final EventRepository eventRepository;
     private final CommentRepository commentRepository;
+    private final TagRepository tagRepository;
+    private final LocationRepository locationRepository;
+    private final RatingRepository ratingRepository;
+    private final VoteRepository voteRepository;
 
     @SneakyThrows
     @LogicExtensionPoint("exportEntities")
@@ -69,6 +85,9 @@ public class ExportImportService {
             processLinks(importDto, exportDto, typeKey);
             processAttachments(importDto, exportDto, typeKey);
             processCalendars(importDto, exportDto, typeKey);
+            processLocations(importDto, exportDto, typeKey);
+            processRating(importDto, exportDto, typeKey);
+            processTags(importDto, exportDto, typeKey);
         });
         processComments(exportEntities, importDto);
 
@@ -77,11 +96,46 @@ public class ExportImportService {
 
     @LogicExtensionPoint("importEntities")
     public void importEntities(ImportDto importDto) {
-        saveEntities(importDto);
-        saveLinks(importDto);
-        saveCalendars(importDto);
-        saveAttachments(importDto);
-        saveComments(importDto);
+        Map<Long, XmEntity> savedEntities = saveEntities(importDto);
+        saveLinks(importDto.getLinks(), savedEntities);
+        saveCalendars(importDto.getCalendars(), importDto.getEvents(), savedEntities);
+        saveAttachments(importDto.getAttachments(), importDto.getContents(), savedEntities);
+        saveComments(importDto.getComments(), savedEntities);
+        saveLocations(importDto.getLocations(), savedEntities);
+        saveTags(importDto.getTags(), savedEntities);
+        Map<Long, Rating> savedRatings = saveRatings(importDto.getRatings(), savedEntities);
+        saveVotes(importDto.getVotes(), savedRatings, savedEntities);
+    }
+
+    private Map<Long, Rating> saveRatings(Set<RatingExportDto> ratingExportDtos, Map<Long, XmEntity> savedEntities) {
+        Map<Long, Rating> savedRatings = new HashMap<>();
+        ratingExportDtos.forEach(ratingExportDto -> {
+            Optional<XmEntity> entityOptional = ofNullable(savedEntities.get(ratingExportDto.getEntityId()));
+            if (entityOptional.isEmpty()) {
+                log.info("Rating with id: {} skipped", ratingExportDto.getId());
+                return;
+            }
+            Long oldId = ratingExportDto.getId();
+            Rating savedRating = ratingRepository.save(ratingExportDto.toRating(entityOptional.get()));
+            savedRatings.put(oldId, savedRating);
+        });
+        return savedRatings;
+    }
+
+    private void saveVotes(Set<VoteExportDto> voteExportDtos, Map<Long, Rating> savedRatings,
+            Map<Long, XmEntity> savedEntities) {
+        List<Vote> votes = new ArrayList<>();
+        voteExportDtos.forEach(voteExportDto -> {
+            Optional<XmEntity> entityOptional = ofNullable(savedEntities.get(voteExportDto.getEntityId()));
+            Optional<Rating> ratingOptional = ofNullable(savedRatings.get(voteExportDto.getRatingId()));
+            if (entityOptional.isEmpty() || ratingOptional.isEmpty()) {
+                log.info("Vote with id: {} skipped", voteExportDto.getId());
+                return;
+            }
+            Vote vote = voteExportDto.toVote(ratingOptional.get(), entityOptional.get());
+            votes.add(vote);
+        });
+        voteRepository.saveAll(votes);
     }
 
     private void processXmEntities(Set<ExportDto> exportEntities, ImportDto importDto) {
@@ -100,6 +154,13 @@ public class ExportImportService {
         importDto.getEntities().addAll(links.stream().map(Link::getTarget).collect(toSet()));
     }
 
+    private void processLocations(ImportDto importDto, ExportDto exportDto, String typeKey) {
+        List<String> locationTypeKeys = exportDto.getLocationTypeKeys();
+        List<Location> locations = locationRepository.findAllByXmEntityTypeKeyAndTypeKeyIn(typeKey, locationTypeKeys);
+        log.info("For typeKey: {} found locations count: {}", typeKey, locations.size());
+        importDto.getLocations().addAll(locations.stream().map(LocationExportDto::new).collect(toSet()));
+    }
+
     private void processAttachments(ImportDto importDto, ExportDto exportDto, String typeKey) {
         List<String> attTypeKeys = exportDto.getAttachmentTypeKeys();
         List<Attachment> attachments = attachmentRepository.findByXmEntityTypeKeyAndTypeKeyIn(typeKey, attTypeKeys);
@@ -109,10 +170,22 @@ public class ExportImportService {
         importDto.getContents().addAll(attachments.stream().map(Attachment::getContent).collect(toSet()));
     }
 
+    private void processRating(ImportDto importDto, ExportDto exportDto, String typeKey) {
+        List<String> ratingTypeKeys = exportDto.getRatingTypeKeys();
+        List<Rating> ratings = ratingRepository.findByXmEntityTypeKeyAndTypeKeyIn(typeKey, ratingTypeKeys);
+        log.info("For typeKey: {} found ratings count: {}", typeKey, ratings.size());
+        importDto.getRatings()
+                .addAll(ratings.stream().map(RatingExportDto::new).collect(toSet()));
+        importDto.getVotes().addAll(ratings.stream()
+                .flatMap(rating -> rating.getVotes().stream())
+                .map(VoteExportDto::new)
+                .collect(toSet()));
+    }
+
     private void processCalendars(ImportDto importDto, ExportDto exportDto, String typeKey) {
         exportDto.getCalendars().forEach(calendarDto -> {
             String calendarTypeKey = calendarDto.getTypeKey();
-            List<String> eventTypeKeys = calendarDto.getEvents();
+            List<String> eventTypeKeys = calendarDto.getEventTypeKeys();
 
             Set<Calendar> calendars = calendarRepository
                     .findByXmEntityTypeKeyAndTypeKeyAndEventsTypeKeyIn(typeKey, calendarTypeKey, eventTypeKeys);
@@ -141,51 +214,30 @@ public class ExportImportService {
         importDto.getComments().addAll(comments.stream().map(CommentExportDto::new).collect(toSet()));
     }
 
-    private void saveEntities(ImportDto importDto) {
+    private void processTags(ImportDto importDto, ExportDto exportDto, String typeKey) {
+        List<String> tagTypeKeys = exportDto.getTagTypeKeys();
+        List<Tag> tags = tagRepository.findByXmEntityTypeKeyAndTypeKeyIn(typeKey, tagTypeKeys);
+        log.info("For typeKey: {} found tags count: {}", typeKey, tags.size());
+        importDto.getTags().addAll(tags.stream().map(TagsExportDto::new).collect(toSet()));
+
+    }
+
+    private Map<Long, XmEntity> saveEntities(ImportDto importDto) {
+        Map<Long, XmEntity> savedEntities = new HashMap<>();
         importDto.getEntities().forEach(xmEntity -> {
             Long oldId = xmEntity.getId();
             xmEntity.setId(null);
-            xmEntity.setId(entityRepository.save(xmEntity).getId());
-            importDto.getLinks().forEach(link -> {
-                if (Objects.equals(link.getSourceId(), oldId)) {
-                    link.setSourceId(xmEntity.getId());
-                }
-                if (Objects.equals(link.getTargetId(), oldId)) {
-                    link.setTargetId(xmEntity.getId());
-                }
-            });
-            importDto.getAttachments().forEach(attachmentExportDto -> {
-                if (Objects.equals(attachmentExportDto.getEntityId(), oldId)) {
-                    attachmentExportDto.setEntityId(xmEntity.getId());
-                }
-            });
-            importDto.getCalendars().forEach(calendarExportDto -> {
-                if (Objects.equals(calendarExportDto.getEntityId(), oldId)) {
-                    calendarExportDto.setEntityId(xmEntity.getId());
-                }
-            });
-            importDto.getEvents().forEach(eventExportDto -> {
-                if (Objects.equals(eventExportDto.getAssignedId(), oldId)) {
-                    eventExportDto.setAssignedId(xmEntity.getId());
-                }
-            });
-            importDto.getComments().forEach(commentExportDto -> {
-                if (Objects.equals(commentExportDto.getEntityId(), oldId)) {
-                    commentExportDto.setCommentId(xmEntity.getId());
-                }
-            });
-
+            XmEntity saved = entityRepository.save(xmEntity);
+            savedEntities.put(oldId, saved);
         });
+        return savedEntities;
     }
 
-    private void saveLinks(ImportDto importDto) {
+    private void saveLinks(Set<LinkExportDto> linkExportDtos, Map<Long, XmEntity> savedEntities) {
         List<Link> links = new ArrayList<>();
-        importDto.getLinks().forEach(linkExportDto -> {
-            Optional<XmEntity> targetOptional = importDto.getEntities().stream()
-                    .filter(xmEntity -> Objects.equals(xmEntity.getId(), linkExportDto.getTargetId())).findFirst();
-            Optional<XmEntity> sourceOptional = importDto.getEntities().stream()
-                    .filter(xmEntity -> Objects.equals(xmEntity.getId(), linkExportDto.getSourceId())).findFirst();
-
+        linkExportDtos.forEach(linkExportDto -> {
+            Optional<XmEntity> targetOptional = ofNullable(savedEntities.get(linkExportDto.getTargetId()));
+            Optional<XmEntity> sourceOptional = ofNullable(savedEntities.get(linkExportDto.getSourceId()));
             if (targetOptional.isEmpty() || sourceOptional.isEmpty()) {
                 log.info("Link with id: {} skipped", linkExportDto.getId());
                 return;
@@ -196,12 +248,10 @@ public class ExportImportService {
         linkRepository.saveAll(links);
     }
 
-    private void saveCalendars(ImportDto importDto) {
-        importDto.getCalendars().forEach(calendarExportDto -> {
-            Optional<XmEntity> entityOptional = importDto.getEntities().stream()
-                    .filter(xmEntity -> Objects.equals(xmEntity.getId(), calendarExportDto.getEntityId()))
-                    .findFirst();
-
+    private void saveCalendars(Set<CalendarExportDto> calendarExportDtos, Set<EventExportDto> eventExportDtos,
+            Map<Long, XmEntity> savedEntities) {
+        calendarExportDtos.forEach(calendarExportDto -> {
+            Optional<XmEntity> entityOptional = ofNullable(savedEntities.get(calendarExportDto.getEntityId()));
             if (entityOptional.isEmpty()) {
                 log.info("Calendar with id: {} skipped", calendarExportDto.getId());
                 return;
@@ -211,13 +261,11 @@ public class ExportImportService {
             Calendar saved = calendarRepository.save(calendar);
 
             List<Event> events = new ArrayList<>();
-            importDto.getEvents().forEach(eventExportDto -> {
+            eventExportDtos.forEach(eventExportDto -> {
                 if (!Objects.equals(eventExportDto.getCalendarId(), calendarExportDto.getId())) {
                     return;
                 }
-                XmEntity assigned = importDto.getEntities().stream()
-                        .filter(xmEntity -> Objects.equals(xmEntity.getId(), eventExportDto.getAssignedId()))
-                        .findFirst().orElse(null);
+                XmEntity assigned = ofNullable(savedEntities.get(eventExportDto.getAssignedId())).orElse(null);
                 Event event = eventExportDto.toEvent(saved, assigned);
                 events.add(event);
             });
@@ -225,15 +273,14 @@ public class ExportImportService {
         });
     }
 
-    private void saveAttachments(ImportDto importDto) {
+    private void saveAttachments(Set<AttachmentExportDto> attachmentExportDtos, Set<Content> contents,
+            Map<Long, XmEntity> savedEntities) {
         List<Attachment> attachments = new ArrayList<>();
-        importDto.getAttachments().forEach(attachmentExportDto -> {
-            Optional<Content> contentOptional = importDto.getContents().stream()
+        attachmentExportDtos.forEach(attachmentExportDto -> {
+            Optional<Content> contentOptional = contents.stream()
                     .filter(cont -> Objects.equals(cont.getId(), attachmentExportDto.getContentId()))
                     .findFirst();
-            Optional<XmEntity> entityOptional = importDto.getEntities().stream()
-                    .filter(xmEntity -> Objects.equals(xmEntity.getId(), attachmentExportDto.getEntityId()))
-                    .findFirst();
+            Optional<XmEntity> entityOptional = ofNullable(savedEntities.get(attachmentExportDto.getEntityId()));
 
             if (contentOptional.isEmpty() || entityOptional.isEmpty()) {
                 log.info("Attachment with id: {} skipped", attachmentExportDto.getId());
@@ -247,40 +294,38 @@ public class ExportImportService {
         attachmentRepository.saveAll(attachments);
     }
 
-
-    private void saveComments(ImportDto importDto) {
+    private void saveComments(Set<CommentExportDto> commentExportDtos, Map<Long, XmEntity> savedEntities) {
         Map<Long, Comment> savedComments = new HashMap<>();
-        List<CommentExportDto> comments = importDto.getComments().stream()
+        List<CommentExportDto> comments = commentExportDtos.stream()
                 .filter(commentExportDto -> Objects.isNull(commentExportDto.getCommentId())).collect(toList());
 
         comments.forEach(commentExportDto -> {
             Long oldCommentId = commentExportDto.getId();
-            Optional<XmEntity> entityOptional = importDto.getEntities().stream()
-                    .filter(xmEntity -> Objects.equals(xmEntity.getId(), commentExportDto.getEntityId())).findFirst();
+            Optional<XmEntity> entityOptional = ofNullable(savedEntities.get(commentExportDto.getEntityId()));
             if (entityOptional.isEmpty()) {
                 log.info("Comment with id: {} skipped", commentExportDto.getId());
                 return;
             }
             Comment comment = commentRepository.save(commentExportDto.toComment(entityOptional.get(), null));
 
-            importDto.getComments().remove(commentExportDto);
+            commentExportDtos.remove(commentExportDto);
             savedComments.put(oldCommentId, comment);
         });
 
-        saveCommentsRecursive(importDto, savedComments);
+        saveCommentsRecursive(commentExportDtos, savedComments, savedEntities);
     }
 
-    private void saveCommentsRecursive(ImportDto importDto, Map<Long, Comment> savedComments) {
+    private void saveCommentsRecursive(Set<CommentExportDto> commentExportDtos, Map<Long, Comment> savedComments,
+            Map<Long, XmEntity> savedEntities) {
 
-        if (CollectionUtils.isEmpty(importDto.getComments())) {
+        if (CollectionUtils.isEmpty(commentExportDtos)) {
             return;
         }
-        List<CommentExportDto> comments = importDto.getComments().stream()
+        List<CommentExportDto> comments = commentExportDtos.stream()
                 .filter(commentExportDto -> savedComments.containsKey(commentExportDto.getCommentId()))
                 .collect(toList());
         comments.forEach(commentExportDto -> {
-            Optional<XmEntity> entityOptional = importDto.getEntities().stream()
-                    .filter(xmEntity -> Objects.equals(xmEntity.getId(), commentExportDto.getEntityId())).findFirst();
+            Optional<XmEntity> entityOptional = ofNullable(savedEntities.get(commentExportDto.getEntityId()));
             Optional<Comment> savedCommentOptional = ofNullable(savedComments.get(commentExportDto.getCommentId()));
 
             if (entityOptional.isEmpty() || savedCommentOptional.isEmpty()) {
@@ -290,9 +335,38 @@ public class ExportImportService {
             Long oldCommentId = commentExportDto.getId();
             Comment comment = commentRepository
                     .save(commentExportDto.toComment(entityOptional.get(), savedCommentOptional.get()));
-            importDto.getComments().remove(commentExportDto);
+            commentExportDtos.remove(commentExportDto);
             savedComments.put(oldCommentId, comment);
         });
-        saveCommentsRecursive(importDto, savedComments);
+        saveCommentsRecursive(commentExportDtos, savedComments, savedEntities);
+    }
+
+    private void saveTags(Set<TagsExportDto> tagsExportDtos, Map<Long, XmEntity> savedEntities) {
+        List<Tag> tags = new ArrayList<>();
+        tagsExportDtos.forEach(tagsExportDto -> {
+            Optional<XmEntity> entityOptional = ofNullable(savedEntities.get(tagsExportDto.getEntityId()));
+            if (entityOptional.isEmpty()) {
+                log.info("Tag with id: {} skipped", tagsExportDto.getId());
+                return;
+            }
+            Tag tag = tagsExportDto.toTag(entityOptional.get());
+            tags.add(tag);
+        });
+        tagRepository.saveAll(tags);
+    }
+
+    private void saveLocations(Set<LocationExportDto> locationExportDtos, Map<Long, XmEntity> savedEntities) {
+        List<Location> locations = new ArrayList<>();
+        locationExportDtos.forEach(locationExportDto -> {
+            Optional<XmEntity> entityOptional = ofNullable(savedEntities.get(locationExportDto.getEntityId()));
+
+            if (entityOptional.isEmpty()) {
+                log.info("Location with id: {} skipped", locationExportDto.getId());
+                return;
+            }
+            Location location = locationExportDto.toLocation(entityOptional.get());
+            locations.add(location);
+        });
+        locationRepository.saveAll(locations);
     }
 }

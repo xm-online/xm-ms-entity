@@ -1,8 +1,6 @@
 package com.icthh.xm.ms.entity.service.dto;
 
-import com.icthh.xm.ms.entity.domain.Calendar;
 import com.icthh.xm.ms.entity.domain.Comment;
-import com.icthh.xm.ms.entity.domain.Event;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import java.time.Instant;
 import java.util.Optional;

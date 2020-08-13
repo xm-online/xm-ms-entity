@@ -3,9 +3,9 @@ package com.icthh.xm.ms.entity.web.rest;
 import com.codahale.metrics.annotation.Timed;
 import com.icthh.xm.commons.exceptions.BusinessException;
 import com.icthh.xm.commons.permission.annotation.PrivilegeDescription;
+import com.icthh.xm.ms.entity.service.ExportImportService;
 import com.icthh.xm.ms.entity.service.dto.ExportDto;
 import com.icthh.xm.ms.entity.service.dto.ImportDto;
-import com.icthh.xm.ms.entity.service.ExportImportService;
 import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -54,7 +54,7 @@ public class ExportImportResource {
         return ResponseEntity.ok().build();
     }
 
-   private String collectErrorMessage(Throwable e) {
+    private String collectErrorMessage(Throwable e) {
         StringBuilder stringBuilder = new StringBuilder();
         if (StringUtils.isNotBlank(e.getMessage())) {
             stringBuilder.append(e.getMessage()).append(". ");

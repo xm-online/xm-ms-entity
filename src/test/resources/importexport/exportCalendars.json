@@ -1,0 +1,20 @@
+[
+  {
+    "calendars": [
+      {
+        "eventTypeKeys": [
+          "TEST_EXPORT_EVENT_1",
+          "TEST_EXPORT_EVENT_2"
+        ],
+        "typeKey": "TEST_EXPORT_CALENDAR_1"
+      },
+      {
+        "eventTypeKeys": [
+          "TEST_EXPORT_EVENT_3"
+        ],
+        "typeKey": "TEST_EXPORT_CALENDAR_2"
+      }
+    ],
+    "typeKey": "TEST_EXPORT_1"
+  }
+]

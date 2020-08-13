@@ -1,0 +1,127 @@
+{
+  "entities": [
+    {
+      "id": 9851,
+      "key": "503d8148-ef57-b7fc-960f-a049395bf15c",
+      "typeKey": "TEST_EXPORT_1",
+      "name": "Test-entity",
+      "startDate": "2020-08-13T19:41:48.077624Z",
+      "updateDate": "2020-08-13T19:41:48.077637Z",
+      "createdBy": "xm",
+      "version": 0
+    },
+    {
+      "id": 9852,
+      "key": "70515f11-d6da-5b73-431f-3e1634fcda52",
+      "typeKey": "TEST_EXPORT_3",
+      "name": "targetEntity",
+      "startDate": "2020-08-13T19:47:31.030765Z",
+      "updateDate": "2020-08-13T19:47:31.030776Z",
+      "createdBy": "xm",
+      "version": 0
+    }
+  ],
+  "links": [
+    {
+      "id": 10201,
+      "typeKey": "TEST_EXPORT_LINK_3",
+      "name": "targetEntity",
+      "startDate": "2020-08-13T19:47:31.004Z",
+      "targetId": 9852,
+      "sourceId": 9851
+    }
+  ],
+  "attachments": [
+    {
+      "id": 10101,
+      "typeKey": "TEST_EXPORT_ATTACHMENT_1",
+      "name": "nano.save",
+      "contentUrl": "nano.save",
+      "startDate": "2020-08-13T19:43:13.169118Z",
+      "valueContentSize": 349,
+      "contentChecksum": "3781f4bfe84bc07235eb082dc740c9ca8448a402886c812be9d048edac693c28",
+      "contentId": 10151,
+      "entityId": 9851
+    }
+  ],
+  "contents": [
+    {
+      "id": 10151,
+      "value": "PHhicmxpOnNjZW5hcmlvPgogICAgICAgICA8eGJybGRpOmV4cGxpY2l0bWVtYmVyIGRpbWVuc2lvbj0iaWZycy1mdWxsOkNvbXBvbmVudHNPZkVxdWl0eUF4aXMiPmlmcnMtZnVsbDpOb25jb250cm9sbGluZ0ludGVyZXN0c01lbWJlcjwveGJybGRpOmV4cGxpY2l0bWVtYmVyPgogICAgICAgICA8eGJybGRpOmV4cGxpY2l0bWVtYmVyIGRpbWVuc2lvbj0iaWZycy1mdWxsOlJldHJvc3BlY3RpdmVBcHBsaWNhdGlvbkFuZFJldHJvc3BlY3RpdmVSZXN0YXRlbWVudEF4aXMiPmlmcnMtZnVsbDpQcmV2aW91c2x5U3RhdGVkTWVtYmVyPC94YnJsZGk6ZXhwbGljaXRtZW1iZXI+CiAgICAgIDwveGJybGk6c2NlbmFyaW8+Cg=="
+    }
+  ],
+  "calendars": [
+    {
+      "id": 9951,
+      "typeKey": "TEST_EXPORT_CALENDAR_1",
+      "name": "TEST_EXPORT_1",
+      "startDate": "2020-08-13T19:42:42.047509Z",
+      "entityId": 9851
+    }
+  ],
+  "events": [
+    {
+      "id": 10001,
+      "typeKey": "TEST_EXPORT_EVENT_1",
+      "title": "event",
+      "startDate": "2020-07-28T21:00:00Z",
+      "endDate": "2020-07-29T21:00:00Z",
+      "calendarId": 9951
+    }
+  ],
+  "comments": [
+    {
+      "id": 10051,
+      "userKey": "xm",
+      "message": "Comment",
+      "entryDate": "2020-08-13T16:42:00Z",
+      "entityId": 9851
+    }
+  ],
+  "tags": [
+    {
+      "id": 564,
+      "typeKey": "TEST_EXPORT_TAG_1",
+      "name": "firsrTag",
+      "startDate": "2020-08-13T22:46:23Z",
+      "entityId": 9851
+    }
+  ],
+  "locations": [
+    {
+      "id": 9901,
+      "typeKey": "TEST_EXPORT_LOCATION_1",
+      "countryKey": "AF",
+      "longitude": 0.29313527047634125,
+      "latitude": 0.0023719109588094802,
+      "name": "Home",
+      "addressLine1": "vul. Nezaleznosti 1",
+      "addressLine2": "kv.",
+      "city": "Chernihiv",
+      "region": "Чернігівська область",
+      "zip": "14003",
+      "entityId": 9851
+    }
+  ],
+  "ratings": [
+    {
+      "id": 123,
+      "typeKey": "TEST_EXPORT_RATING_1",
+      "value": 10.0,
+      "startDate": "2020-08-13T22:45:44Z",
+      "endDate": "2020-08-13T22:49:47Z",
+      "entityId": 9851
+    }
+  ],
+  "votes": [
+    {
+      "id": 231,
+      "userKey": "xm",
+      "value": 1.0,
+      "message": "vote-message",
+      "entryDate": "2020-08-13T22:45:45Z",
+      "ratingId": 123,
+      "entityId": 9851
+    }
+  ]
+}
