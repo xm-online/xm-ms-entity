@@ -9,6 +9,7 @@ import static org.springframework.data.domain.PageRequest.of;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.icthh.xm.commons.lep.LogicExtensionPoint;
 import com.icthh.xm.commons.lep.spring.LepService;
+import com.icthh.xm.commons.logging.LoggingAspectConfig;
 import com.icthh.xm.ms.entity.domain.Attachment;
 import com.icthh.xm.ms.entity.domain.Calendar;
 import com.icthh.xm.ms.entity.domain.Comment;
@@ -94,6 +95,7 @@ public class ExportImportService {
         return objectMapper.writeValueAsString(importDto).getBytes();
     }
 
+    @LoggingAspectConfig(inputExcludeParams = "importDto")
     @LogicExtensionPoint("importEntities")
     public void importEntities(ImportDto importDto) {
         Map<Long, XmEntity> savedEntities = saveEntities(importDto);
