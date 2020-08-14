@@ -2,7 +2,9 @@ package com.icthh.xm.ms.entity.service.dto;
 
 import com.icthh.xm.ms.entity.domain.Content;
 import com.icthh.xm.ms.entity.domain.XmEntity;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -12,14 +14,14 @@ import lombok.NoArgsConstructor;
 public class ImportDto {
 
     private Set<XmEntity> entities = new HashSet<>();
-    private Set<LinkExportDto> links = new HashSet<>();
-    private Set<AttachmentExportDto> attachments = new HashSet<>();
-    private Set<Content> contents = new HashSet<>();
-    private Set<CalendarExportDto> calendars = new HashSet<>();
-    private Set<EventExportDto> events = new HashSet<>();
-    private Set<CommentExportDto> comments = new HashSet<>();
-    private Set<TagsExportDto> tags = new HashSet<>();
-    private Set<LocationExportDto> locations = new HashSet<>();
-    private Set<RatingExportDto> ratings = new HashSet<>();
-    private Set<VoteExportDto> votes = new HashSet<>();
+    private List<LinkExportDto> links = new ArrayList<>();
+    private List<AttachmentExportDto> attachments = new ArrayList<>();
+    private List<Content> contents = new ArrayList<>();
+    private List<CalendarExportDto> calendars = new ArrayList<>();
+    private List<EventExportDto> events = new ArrayList<>();
+    private List<CommentExportDto> comments = new ArrayList<>();
+    private List<TagsExportDto> tags = new ArrayList<>();
+    private List<LocationExportDto> locations = new ArrayList<>();
+    private List<RatingExportDto> ratings = new ArrayList<>();
+    private List<VoteExportDto> votes = new ArrayList<>();
 }
