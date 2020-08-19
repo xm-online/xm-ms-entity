@@ -9,6 +9,7 @@ import static org.springframework.data.domain.PageRequest.of;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.icthh.xm.commons.lep.LogicExtensionPoint;
 import com.icthh.xm.commons.lep.spring.LepService;
+import com.icthh.xm.commons.logging.LoggingAspectConfig;
 import com.icthh.xm.ms.entity.domain.Attachment;
 import com.icthh.xm.ms.entity.domain.Calendar;
 import com.icthh.xm.ms.entity.domain.Comment;
@@ -94,6 +95,7 @@ public class ExportImportService {
         return objectMapper.writeValueAsString(importDto).getBytes();
     }
 
+    @LoggingAspectConfig(inputExcludeParams = "importDto")
     @LogicExtensionPoint("importEntities")
     public void importEntities(ImportDto importDto) {
         Map<Long, XmEntity> savedEntities = saveEntities(importDto);
@@ -107,32 +109,32 @@ public class ExportImportService {
         saveVotes(importDto.getVotes(), savedRatings, savedEntities);
     }
 
-    private Map<Long, Rating> saveRatings(Set<RatingExportDto> ratingExportDtos, Map<Long, XmEntity> savedEntities) {
+    private Map<Long, Rating> saveRatings(List<RatingExportDto> ratingExportDtos, Map<Long, XmEntity> savedEntities) {
         Map<Long, Rating> savedRatings = new HashMap<>();
         ratingExportDtos.forEach(ratingExportDto -> {
-            Optional<XmEntity> entityOptional = ofNullable(savedEntities.get(ratingExportDto.getEntityId()));
-            if (entityOptional.isEmpty()) {
+            XmEntity entity = savedEntities.get(ratingExportDto.getEntityId());
+            if (entity == null) {
                 log.info("Rating with id: {} skipped", ratingExportDto.getId());
                 return;
             }
             Long oldId = ratingExportDto.getId();
-            Rating savedRating = ratingRepository.save(ratingExportDto.toRating(entityOptional.get()));
+            Rating savedRating = ratingRepository.save(ratingExportDto.toRating(entity));
             savedRatings.put(oldId, savedRating);
         });
         return savedRatings;
     }
 
-    private void saveVotes(Set<VoteExportDto> voteExportDtos, Map<Long, Rating> savedRatings,
+    private void saveVotes(List<VoteExportDto> voteExportDtos, Map<Long, Rating> savedRatings,
             Map<Long, XmEntity> savedEntities) {
         List<Vote> votes = new ArrayList<>();
         voteExportDtos.forEach(voteExportDto -> {
-            Optional<XmEntity> entityOptional = ofNullable(savedEntities.get(voteExportDto.getEntityId()));
-            Optional<Rating> ratingOptional = ofNullable(savedRatings.get(voteExportDto.getRatingId()));
-            if (entityOptional.isEmpty() || ratingOptional.isEmpty()) {
+            XmEntity entity = savedEntities.get(voteExportDto.getEntityId());
+            Rating rating = savedRatings.get(voteExportDto.getRatingId());
+            if (entity == null || rating == null) {
                 log.info("Vote with id: {} skipped", voteExportDto.getId());
                 return;
             }
-            Vote vote = voteExportDto.toVote(ratingOptional.get(), entityOptional.get());
+            Vote vote = voteExportDto.toVote(rating, entity);
             votes.add(vote);
         });
         voteRepository.saveAll(votes);
@@ -233,31 +235,31 @@ public class ExportImportService {
         return savedEntities;
     }
 
-    private void saveLinks(Set<LinkExportDto> linkExportDtos, Map<Long, XmEntity> savedEntities) {
+    private void saveLinks(List<LinkExportDto> linkExportDtos, Map<Long, XmEntity> savedEntities) {
         List<Link> links = new ArrayList<>();
         linkExportDtos.forEach(linkExportDto -> {
-            Optional<XmEntity> targetOptional = ofNullable(savedEntities.get(linkExportDto.getTargetId()));
-            Optional<XmEntity> sourceOptional = ofNullable(savedEntities.get(linkExportDto.getSourceId()));
-            if (targetOptional.isEmpty() || sourceOptional.isEmpty()) {
+            XmEntity target = savedEntities.get(linkExportDto.getTargetId());
+            XmEntity source = savedEntities.get(linkExportDto.getSourceId());
+            if (target == null || source == null) {
                 log.info("Link with id: {} skipped", linkExportDto.getId());
                 return;
             }
-            Link link = linkExportDto.toLink(sourceOptional.get(), targetOptional.get());
+            Link link = linkExportDto.toLink(source, target);
             links.add(link);
         });
         linkRepository.saveAll(links);
     }
 
-    private void saveCalendars(Set<CalendarExportDto> calendarExportDtos, Set<EventExportDto> eventExportDtos,
+    private void saveCalendars(List<CalendarExportDto> calendarExportDtos, List<EventExportDto> eventExportDtos,
             Map<Long, XmEntity> savedEntities) {
         calendarExportDtos.forEach(calendarExportDto -> {
-            Optional<XmEntity> entityOptional = ofNullable(savedEntities.get(calendarExportDto.getEntityId()));
-            if (entityOptional.isEmpty()) {
+            XmEntity entity = savedEntities.get(calendarExportDto.getEntityId());
+            if (entity == null) {
                 log.info("Calendar with id: {} skipped", calendarExportDto.getId());
                 return;
             }
 
-            Calendar calendar = calendarExportDto.toCalendar(entityOptional.get());
+            Calendar calendar = calendarExportDto.toCalendar(entity);
             Calendar saved = calendarRepository.save(calendar);
 
             List<Event> events = new ArrayList<>();
@@ -273,40 +275,40 @@ public class ExportImportService {
         });
     }
 
-    private void saveAttachments(Set<AttachmentExportDto> attachmentExportDtos, Set<Content> contents,
+    private void saveAttachments(List<AttachmentExportDto> attachmentExportDtos, List<Content> contents,
             Map<Long, XmEntity> savedEntities) {
         List<Attachment> attachments = new ArrayList<>();
         attachmentExportDtos.forEach(attachmentExportDto -> {
             Optional<Content> contentOptional = contents.stream()
                     .filter(cont -> Objects.equals(cont.getId(), attachmentExportDto.getContentId()))
                     .findFirst();
-            Optional<XmEntity> entityOptional = ofNullable(savedEntities.get(attachmentExportDto.getEntityId()));
+            XmEntity entity = savedEntities.get(attachmentExportDto.getEntityId());
 
-            if (contentOptional.isEmpty() || entityOptional.isEmpty()) {
+            if (contentOptional.isEmpty() || entity == null) {
                 log.info("Attachment with id: {} skipped", attachmentExportDto.getId());
                 return;
             }
             Content content = contentOptional.get();
             content.setId(null);
-            Attachment attachment = attachmentExportDto.toAttachment(content, entityOptional.get());
+            Attachment attachment = attachmentExportDto.toAttachment(content, entity);
             attachments.add(attachment);
         });
         attachmentRepository.saveAll(attachments);
     }
 
-    private void saveComments(Set<CommentExportDto> commentExportDtos, Map<Long, XmEntity> savedEntities) {
+    private void saveComments(List<CommentExportDto> commentExportDtos, Map<Long, XmEntity> savedEntities) {
         Map<Long, Comment> savedComments = new HashMap<>();
         List<CommentExportDto> comments = commentExportDtos.stream()
                 .filter(commentExportDto -> Objects.isNull(commentExportDto.getCommentId())).collect(toList());
 
         comments.forEach(commentExportDto -> {
             Long oldCommentId = commentExportDto.getId();
-            Optional<XmEntity> entityOptional = ofNullable(savedEntities.get(commentExportDto.getEntityId()));
-            if (entityOptional.isEmpty()) {
+            XmEntity entity = savedEntities.get(commentExportDto.getEntityId());
+            if (entity == null) {
                 log.info("Comment with id: {} skipped", commentExportDto.getId());
                 return;
             }
-            Comment comment = commentRepository.save(commentExportDto.toComment(entityOptional.get(), null));
+            Comment comment = commentRepository.save(commentExportDto.toComment(entity, null));
 
             commentExportDtos.remove(commentExportDto);
             savedComments.put(oldCommentId, comment);
@@ -315,7 +317,7 @@ public class ExportImportService {
         saveCommentsRecursive(commentExportDtos, savedComments, savedEntities);
     }
 
-    private void saveCommentsRecursive(Set<CommentExportDto> commentExportDtos, Map<Long, Comment> savedComments,
+    private void saveCommentsRecursive(List<CommentExportDto> commentExportDtos, Map<Long, Comment> savedComments,
             Map<Long, XmEntity> savedEntities) {
 
         if (CollectionUtils.isEmpty(commentExportDtos)) {
@@ -325,46 +327,46 @@ public class ExportImportService {
                 .filter(commentExportDto -> savedComments.containsKey(commentExportDto.getCommentId()))
                 .collect(toList());
         comments.forEach(commentExportDto -> {
-            Optional<XmEntity> entityOptional = ofNullable(savedEntities.get(commentExportDto.getEntityId()));
-            Optional<Comment> savedCommentOptional = ofNullable(savedComments.get(commentExportDto.getCommentId()));
+            XmEntity entity = savedEntities.get(commentExportDto.getEntityId());
+            Comment savedComment = savedComments.get(commentExportDto.getCommentId());
 
-            if (entityOptional.isEmpty() || savedCommentOptional.isEmpty()) {
+            if (entity == null || savedComment == null) {
                 log.info("Comment with id: {} skipped", commentExportDto.getId());
                 return;
             }
             Long oldCommentId = commentExportDto.getId();
             Comment comment = commentRepository
-                    .save(commentExportDto.toComment(entityOptional.get(), savedCommentOptional.get()));
+                    .save(commentExportDto.toComment(entity, savedComment));
             commentExportDtos.remove(commentExportDto);
             savedComments.put(oldCommentId, comment);
         });
         saveCommentsRecursive(commentExportDtos, savedComments, savedEntities);
     }
 
-    private void saveTags(Set<TagsExportDto> tagsExportDtos, Map<Long, XmEntity> savedEntities) {
+    private void saveTags(List<TagsExportDto> tagsExportDtos, Map<Long, XmEntity> savedEntities) {
         List<Tag> tags = new ArrayList<>();
         tagsExportDtos.forEach(tagsExportDto -> {
-            Optional<XmEntity> entityOptional = ofNullable(savedEntities.get(tagsExportDto.getEntityId()));
-            if (entityOptional.isEmpty()) {
+            XmEntity entity = savedEntities.get(tagsExportDto.getEntityId());
+            if (entity == null) {
                 log.info("Tag with id: {} skipped", tagsExportDto.getId());
                 return;
             }
-            Tag tag = tagsExportDto.toTag(entityOptional.get());
+            Tag tag = tagsExportDto.toTag(entity);
             tags.add(tag);
         });
         tagRepository.saveAll(tags);
     }
 
-    private void saveLocations(Set<LocationExportDto> locationExportDtos, Map<Long, XmEntity> savedEntities) {
+    private void saveLocations(List<LocationExportDto> locationExportDtos, Map<Long, XmEntity> savedEntities) {
         List<Location> locations = new ArrayList<>();
         locationExportDtos.forEach(locationExportDto -> {
-            Optional<XmEntity> entityOptional = ofNullable(savedEntities.get(locationExportDto.getEntityId()));
+            XmEntity entity = savedEntities.get(locationExportDto.getEntityId());
 
-            if (entityOptional.isEmpty()) {
+            if (entity == null) {
                 log.info("Location with id: {} skipped", locationExportDto.getId());
                 return;
             }
-            Location location = locationExportDto.toLocation(entityOptional.get());
+            Location location = locationExportDto.toLocation(entity);
             locations.add(location);
         });
         locationRepository.saveAll(locations);
