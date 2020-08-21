@@ -2,9 +2,7 @@ package com.icthh.xm.ms.entity.repository;
 
 import com.icthh.xm.commons.permission.access.repository.ResourceRepository;
 import com.icthh.xm.ms.entity.domain.Link;
-
 import java.util.List;
-
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;
@@ -22,4 +20,6 @@ public interface LinkRepository extends JpaRepository<Link, Long>, JpaSpecificat
     List<Link> findBySourceIdAndTargetTypeKey(Long sourceId, String typeKey);
 
     List<Link> findByTargetIdAndTypeKey(Long targetId, String typeKey);
+
+    List<Link> findBySourceTypeKeyAndTypeKeyIn(String sourceTypeKey, List<String> linksTypeKeys);
 }

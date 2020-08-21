@@ -2,6 +2,7 @@ package com.icthh.xm.ms.entity.repository;
 
 import com.icthh.xm.commons.permission.access.repository.ResourceRepository;
 import com.icthh.xm.ms.entity.domain.Comment;
+import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -14,4 +15,6 @@ public interface CommentRepository extends JpaRepository<Comment, Long>, Resourc
 
     @Override
     Comment findResourceById(Object id);
+
+    List<Comment> findAllByXmEntityTypeKeyIn(List<String> typeKeys);
 }

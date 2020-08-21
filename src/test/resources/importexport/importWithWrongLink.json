@@ -1,0 +1,34 @@
+{
+  "entities": [
+    {
+      "id": 9851,
+      "key": "503d8148-ef57-b7fc-960f-a049395bf15c",
+      "typeKey": "TEST_EXPORT_1",
+      "name": "Test-entity",
+      "startDate": "2020-08-13T19:41:48.077624Z",
+      "updateDate": "2020-08-13T19:41:48.077637Z",
+      "createdBy": "xm",
+      "version": 0
+    },
+    {
+      "id": 9852,
+      "key": "70515f11-d6da-5b73-431f-3e1634fcda52",
+      "typeKey": "TEST_EXPORT_3",
+      "name": "targetEntity",
+      "startDate": "2020-08-13T19:47:31.030765Z",
+      "updateDate": "2020-08-13T19:47:31.030776Z",
+      "createdBy": "xm",
+      "version": 0
+    }
+  ],
+  "links": [
+    {
+      "id": 10201,
+      "typeKey": "TEST_EXPORT_LINK_3",
+      "name": "targetEntity",
+      "startDate": "2020-08-13T19:47:31.004Z",
+      "targetId": 9852,
+      "sourceId": 0
+    }
+  ]
+}

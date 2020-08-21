@@ -40,6 +40,7 @@ public class ApplicationProperties {
     private Integer kafkaMetadataMaxAge;
     private String emailPathPattern;
 
+    private String specificationFolderPathPattern;
     private String specificationPathPattern;
     private String specificationName;
 
