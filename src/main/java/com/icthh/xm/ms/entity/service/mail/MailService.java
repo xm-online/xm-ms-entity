@@ -324,7 +324,7 @@ public class MailService {
                     .stream()
                     .allMatch(entry -> nonNull(entry.getKey()) && nonNull(entry.getValue()));
 
-            log.debug("Send email[multipart '{}' and html '{}' and attachmentFilenames '{}' to '{}' with subject '{}' and content={}",
+            log.debug("Send email[multipart '{}' and html '{}' and attachmentFilenames '{}' to '{}'] with subject '{}' and content={}",
                 hasAttachments, true, ofNullable(attachments).map(Map::keySet).orElse(null), to, subject, content);
 
             message = new MimeMessageHelper(mimeMessage, hasAttachments, StandardCharsets.UTF_8.name());
