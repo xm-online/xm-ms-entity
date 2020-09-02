@@ -126,8 +126,8 @@ public class CustomMetricsIntTest extends AbstractSpringBootTest {
         assertEquals(2, periodicMetric.getValue());
         long time = waitValue(periodicMetric, 3);
         assertEquals(3, periodicMetric.getValue());
-        assertTrue(time + " less than 2000", time/1000_000 > 2000);
-        assertTrue(time + " more than 2100", time/1000_000 < 2100);
+        assertTrue(time + " less than 2000", (time/1000_000L) > 2000);
+        assertTrue(time + " more than 2100", (time/1000_000L) < 2100);
 
         assertEquals(1, everyTimeMetric.getValue());
         assertEquals(2, everyTimeMetric.getValue());
@@ -136,7 +136,7 @@ public class CustomMetricsIntTest extends AbstractSpringBootTest {
 
     private long waitValue(Gauge periodicMetric, Integer value) {
         long startTime = System.nanoTime();
-        await().atMost(4, SECONDS).until(() -> value.equals(periodicMetric.getValue()));
+        await().atMost(5, SECONDS).until(() -> value.equals(periodicMetric.getValue()));
         return System.nanoTime() - startTime;
     }
 

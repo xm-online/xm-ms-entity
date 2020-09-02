@@ -399,6 +399,8 @@ types:
     - key: TEST_SEARCH
       isApp: false
       isAbstract: false
+      isNameRequired: false
+      isKeyRequired: false
       dataSpec: |
           {
             "type": "object",
@@ -408,6 +410,11 @@ types:
               }
             }
           }
+      links:
+          - key: TEST_SEARCH_LINK
+            builderType: SEARCH
+            typeKey: TEST_SEARCH
+            isUnique: true
     - key: TEST_LIFECYCLE_TYPE_KEY.SUB.CHILD
       isApp: false
       isAbstract: false

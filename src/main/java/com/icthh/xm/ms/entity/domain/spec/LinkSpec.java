@@ -9,7 +9,7 @@ import lombok.Data;
 import java.util.Map;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonPropertyOrder({ "key", "builderType", "name", "backName", "icon", "typeKey", "max" })
+@JsonPropertyOrder({ "key", "builderType", "name", "backName", "icon", "typeKey", "max", "isUnique" })
 @Data
 public class LinkSpec {
 
@@ -36,5 +36,12 @@ public class LinkSpec {
 
     @JsonProperty("backName")
     private Map<String, String> backName;
+
+    /**
+     * Flag that disallow create two same links.
+     * WARNING: only affects search links, checking for unique is not implemented now
+     * */
+    @JsonProperty("isUnique")
+    private Boolean isUnique;
 
 }

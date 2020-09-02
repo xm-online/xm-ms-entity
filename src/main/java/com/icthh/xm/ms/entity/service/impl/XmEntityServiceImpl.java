@@ -9,6 +9,7 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toMap;
+import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.collections.MapUtils.isEmpty;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNoneBlank;
@@ -50,6 +51,8 @@ import com.icthh.xm.ms.entity.lep.keyresolver.TemplateTypeKeyResolver;
 import com.icthh.xm.ms.entity.lep.keyresolver.TypeKeyResolver;
 import com.icthh.xm.ms.entity.lep.keyresolver.TypeKeyWithExtends;
 import com.icthh.xm.ms.entity.lep.keyresolver.XmEntityTypeKeyResolver;
+import com.icthh.xm.ms.entity.projection.LinkProjection;
+import com.icthh.xm.ms.entity.projection.XmEntityId;
 import com.icthh.xm.ms.entity.projection.XmEntityIdKeyTypeKey;
 import com.icthh.xm.ms.entity.projection.XmEntityStateProjection;
 import com.icthh.xm.ms.entity.repository.SpringXmEntityRepository;
@@ -73,6 +76,7 @@ import com.jayway.jsonpath.JsonPath;
 import java.net.URI;
 import java.time.Instant;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -281,7 +285,7 @@ public class XmEntityServiceImpl implements XmEntityService {
         log.debug("Request to get all XmEntities");
         if (StringUtils.isNoneBlank(typeKey)) {
             Set<String> typeKeys = xmEntitySpecService.findNonAbstractTypesByPrefix(typeKey).stream()
-                .map(TypeSpec::getKey).collect(Collectors.toSet());
+                .map(TypeSpec::getKey).collect(toSet());
             log.debug("Find by typeKeys {}", typeKeys);
             return xmEntityPermittedRepository.findAllByTypeKeyIn(pageable, typeKeys, privilegeKey);
         } else {
@@ -505,6 +509,42 @@ public class XmEntityServiceImpl implements XmEntityService {
                                                         privilegeKey);
     }
 
+    @LogicExtensionPoint("SearchXmEntitiesToLink")
+    @Override
+    @Transactional(readOnly = true)
+    @FindWithPermission("XMENTITY.SEARCH")
+    @PrivilegeDescription("Privilege to search for the xmEntity corresponding to the query")
+    public Page<XmEntity> searchXmEntitiesToLink(IdOrKey idOrKey,
+                                                 String entityTypeKey,
+                                                 String linkTypeKey,
+                                                 String query,
+                                                 Pageable pageable,
+                                                 String privilegeKey) {
+        LinkSpec linkSpec = xmEntitySpecService.getLinkSpec(entityTypeKey, linkTypeKey)
+            .orElseThrow(() -> new IllegalArgumentException("Invalid entity typeKey ot link typeKey"));
+
+        if (!linkSpec.getIsUnique()) {
+            return self.search(query, pageable, privilegeKey);
+        }
+
+        Long id;
+        if (idOrKey.isId()) {
+            id = idOrKey.getId();
+        } else {
+            id = getXmEntityIdKeyTypeKey(idOrKey).getId();
+        }
+
+        List<LinkProjection> links = linkService.findLinkProjectionsBySourceIdAndTypeKey(id, linkTypeKey);
+        Set<Long> ids = links.stream()
+            .map(LinkProjection::getTarget)
+            .map(XmEntityId::getId)
+            .collect(toSet());
+        ids = new HashSet<>(ids);
+        ids.add(id);
+
+        return xmEntityPermittedSearchRepository.searchWithIdNotIn(query, ids, pageable, privilegeKey);
+    }
+
     @Override
     @Transactional(readOnly = true)
     @FindWithPermission("XMENTITY.SEARCH")
@@ -725,7 +765,7 @@ public class XmEntityServiceImpl implements XmEntityService {
     @Override
     public byte[] exportEntities(String fileFormat, String typeKey) {
         Set<String> typeKeys = xmEntitySpecService.findNonAbstractTypesByPrefix(typeKey).stream()
-            .map(TypeSpec::getKey).collect(Collectors.toSet());
+            .map(TypeSpec::getKey).collect(toSet());
         List<XmEntity> xmEntities = xmEntityRepository.findAllByTypeKeyIn(
             PageRequest.of(0, Integer.MAX_VALUE), typeKeys).getContent();
 
