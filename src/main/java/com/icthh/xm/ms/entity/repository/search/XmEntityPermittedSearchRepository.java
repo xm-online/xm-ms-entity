@@ -24,6 +24,7 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Repository
@@ -78,10 +79,10 @@ public class XmEntityPermittedSearchRepository extends PermittedSearchRepository
 
         BoolQueryBuilder idNotIn = boolQuery().mustNot(termsQuery("id", ids));
         var esQuery = isEmpty(permittedQuery)
-            ? boolQuery().must(idNotIn)
+            ? idNotIn
             : idNotIn.must(simpleQueryStringQuery(permittedQuery));
 
-        log.debug("Executing DSL '{}'", esQuery);
+        log.info("Executing DSL '{}'", esQuery);
 
         NativeSearchQuery queryBuilder = new NativeSearchQueryBuilder()
             .withQuery(esQuery)

@@ -462,6 +462,7 @@ public class XmEntityServiceIntTest extends AbstractSpringBootTest {
 
         String config = loadFile("config/elastic_config.json");
         indexConfiguration.onRefresh("/config/tenants/RESINTTEST/entity/index_config.json", config);
+        xmEntityService.delete(entity.getId());
         elasticsearchIndexService.reindexAll();
     }
 
@@ -612,6 +613,7 @@ public class XmEntityServiceIntTest extends AbstractSpringBootTest {
     @Test
     @WithMockUser(authorities = "SUPER-ADMIN")
     public void testFindLink() {
+
         List<XmEntity> entities = transactionExecutor.doInSeparateTransaction(() -> {
             XmEntity entity1 = xmEntityService.save(new XmEntity().typeKey("TEST_SEARCH").key("key1").name("name"));
             XmEntity entity2 = xmEntityService.save(new XmEntity().typeKey("TEST_SEARCH").key("key2").name("name"));
@@ -640,6 +642,7 @@ public class XmEntityServiceIntTest extends AbstractSpringBootTest {
 
         assertThat(result).contains(entities.get(3), entities.get(4));
         assertThat(result).doesNotContain(entities.get(0), entities.get(1), entities.get(2));
+        entities.forEach(it -> xmEntityService.delete(it.getId()));
     }
 
     private void saveXmEntities() {
