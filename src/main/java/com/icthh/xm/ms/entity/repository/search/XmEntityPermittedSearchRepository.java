@@ -52,12 +52,7 @@ public class XmEntityPermittedSearchRepository extends PermittedSearchRepository
                                                   String privilegeKey) {
         String permittedQuery = buildPermittedQuery(query, privilegeKey);
 
-        val prefix = typeKey + ".";
-
-        val typeKeyQuery = boolQuery()
-            .should(matchQuery(TYPE_KEY, typeKey))
-            .should(prefixQuery(TYPE_KEY, prefix))
-            .minimumShouldMatch(1);
+        BoolQueryBuilder typeKeyQuery = typeKeyQuery(typeKey);
 
         val esQuery = isEmpty(permittedQuery)
             ? boolQuery().must(typeKeyQuery)
@@ -73,14 +68,25 @@ public class XmEntityPermittedSearchRepository extends PermittedSearchRepository
         return getElasticsearchTemplate().queryForPage(queryBuilder, XmEntity.class);
     }
 
+    private BoolQueryBuilder typeKeyQuery(String typeKey) {
+        val prefix = typeKey + ".";
+        return boolQuery()
+            .should(matchQuery(TYPE_KEY, typeKey))
+            .should(prefixQuery(TYPE_KEY, prefix))
+            .minimumShouldMatch(1);
+    }
+
     public Page<XmEntity> searchWithIdNotIn(String query, Set<Long> ids,
+                                            String targetEntityTypeKey,
                                             Pageable pageable, String privilegeKey) {
         String permittedQuery = buildPermittedQuery(query, privilegeKey);
 
+        BoolQueryBuilder typeKeyQuery = typeKeyQuery(targetEntityTypeKey);
+
         BoolQueryBuilder idNotIn = boolQuery().mustNot(termsQuery("id", ids));
         var esQuery = isEmpty(permittedQuery)
-            ? idNotIn
-            : idNotIn.must(simpleQueryStringQuery(permittedQuery));
+            ? idNotIn.must(typeKeyQuery)
+            : idNotIn.must(simpleQueryStringQuery(permittedQuery)).must(typeKeyQuery);
 
         log.info("Executing DSL '{}'", esQuery);
 

@@ -542,7 +542,7 @@ public class XmEntityServiceImpl implements XmEntityService {
         ids = new HashSet<>(ids);
         ids.add(id);
 
-        return xmEntityPermittedSearchRepository.searchWithIdNotIn(query, ids, pageable, privilegeKey);
+        return xmEntityPermittedSearchRepository.searchWithIdNotIn(query, ids, linkSpec.getTypeKey(), pageable, privilegeKey);
     }
 
     @Override
