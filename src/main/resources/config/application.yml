@@ -117,6 +117,7 @@ spring:
                     auth: false
                     starttls.required: false
     liquibase:
+        enabled: false
         default-schema: XM
         change-log: classpath:config/liquibase/master.xml
 server:
