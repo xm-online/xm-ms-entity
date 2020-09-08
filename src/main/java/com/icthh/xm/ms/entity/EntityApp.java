@@ -33,7 +33,7 @@ import java.util.Arrays;
 import java.util.Collection;
 
 @ComponentScan(
-    value = "com.icthh.xm",
+    value = {"com.icthh.xm", "com.github.lwaddicor.springstartupanalysis"},
     excludeFilters = @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE,
         classes = {OAuth2InterceptedFeignConfiguration.class, CommonMessageSourceConfiguration.class})
 )

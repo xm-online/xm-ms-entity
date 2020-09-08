@@ -50,6 +50,7 @@ public class MicroserviceSecurityConfiguration extends ResourceServerConfigurerA
             .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
         .and()
             .authorizeRequests()
+            .antMatchers("/spring-startup/**").permitAll()
             .antMatchers("/api/profile-info").permitAll()
             .antMatchers("/api/xm-entities/registration").permitAll()
             .antMatchers("/api/xm-entities/registration/activate/*").permitAll()

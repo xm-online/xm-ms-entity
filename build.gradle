@@ -244,6 +244,7 @@ dependencies {
     // import JHipster dependencies BOM
     implementation platform("io.github.jhipster:jhipster-dependencies:${jhipster_dependencies_version}")
 
+    implementation "com.github.lwaddicor:spring-startup-analysis:1.1.0"
     // Use ", version: jhipster_dependencies_version, changing: true" if you want
     // to use a SNAPSHOT release instead of a stable release
     implementation "io.github.jhipster:jhipster-framework"
