@@ -112,10 +112,12 @@ public class FunctionContext implements Serializable {
     private transient boolean onlyData;
 
     @Setter
+    @Transient
     private String binaryDataField;
 
     @Setter
     @Getter
+    @Transient
     private String binaryDataType;
 
     public Long getId() {
