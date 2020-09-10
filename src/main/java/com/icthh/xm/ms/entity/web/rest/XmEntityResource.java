@@ -575,8 +575,6 @@ public class XmEntityResource {
         Map<String, Object> fContext = functionInput != null ? functionInput : Maps.newHashMap();
         FunctionContext result = functionService.execute(functionKey, IdOrKey.of(idOrKey), fContext);
 
-        log.info("TEST_FunctionContext: " + new Gson().toJson(result));
-
         ResponseEntity.BodyBuilder response = ResponseEntity.ok();
 
         if (result.isBinaryData()) {
