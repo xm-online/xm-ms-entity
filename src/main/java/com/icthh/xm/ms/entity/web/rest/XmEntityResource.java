@@ -575,10 +575,10 @@ public class XmEntityResource {
         ResponseEntity.BodyBuilder response = ResponseEntity.ok();
 
         if (result.isBinaryData()) {
-            response.header(result.getBinaryDataType());
+            response.header("content-type", result.getBinaryDataType());
         }
 
-        return ResponseEntity.ok().body(result.functionResult());
+        return response.body(result.functionResult());
     }
 
 }
