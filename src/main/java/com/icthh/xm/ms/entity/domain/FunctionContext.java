@@ -7,6 +7,7 @@ import com.icthh.xm.ms.entity.domain.converter.MapToStringConverter;
 import com.icthh.xm.ms.entity.domain.idresolver.XmEntityObjectIdResolver;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
+import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
@@ -109,6 +110,13 @@ public class FunctionContext implements Serializable {
     @Transient
     @Setter
     private transient boolean onlyData;
+
+    @Setter
+    private String binaryDataField;
+
+    @Setter
+    @Getter
+    private String binaryDataType;
 
     public Long getId() {
         return id;
@@ -246,10 +254,22 @@ public class FunctionContext implements Serializable {
     }
 
     public Object functionResult() {
+        if (isBinaryData()) {
+            return getBinaryData();
+        }
+
         if (onlyData) {
             return data.get("data");
         }
         return this;
+    }
+
+    public boolean isBinaryData() {
+        return binaryDataField != null;
+    }
+
+    public boolean getBinaryData() {
+        return data.get(binaryDataField) != null;
     }
 
     @Override
