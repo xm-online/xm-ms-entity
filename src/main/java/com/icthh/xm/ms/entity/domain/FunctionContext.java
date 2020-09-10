@@ -270,8 +270,8 @@ public class FunctionContext implements Serializable {
         return binaryDataField != null;
     }
 
-    public boolean getBinaryData() {
-        return data.get(binaryDataField) != null;
+    public Object getBinaryData() {
+        return data.get(binaryDataField);
     }
 
     @Override
