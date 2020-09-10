@@ -10,6 +10,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.when;
 
 import com.icthh.xm.commons.lep.XmLepScriptConfigServerResourceLoader;
@@ -33,6 +34,7 @@ import com.icthh.xm.ms.entity.domain.Rating;
 import com.icthh.xm.ms.entity.domain.Tag;
 import com.icthh.xm.ms.entity.domain.Vote;
 import com.icthh.xm.ms.entity.domain.XmEntity;
+import com.icthh.xm.ms.entity.domain.ext.IdOrKey;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
 import com.icthh.xm.ms.entity.service.ElasticsearchIndexService;
 import com.icthh.xm.ms.entity.service.SeparateTransactionExecutor;
@@ -49,6 +51,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.text.StrSubstitutor;
 import org.elasticsearch.action.search.SearchPhaseExecutionException;
+import org.hibernate.Hibernate;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -61,6 +64,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.ElasticsearchException;
 import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 public class XmEntityServiceIntTest extends AbstractSpringBootTest {
@@ -458,6 +462,7 @@ public class XmEntityServiceIntTest extends AbstractSpringBootTest {
 
         String config = loadFile("config/elastic_config.json");
         indexConfiguration.onRefresh("/config/tenants/RESINTTEST/entity/index_config.json", config);
+        xmEntityService.delete(entity.getId());
         elasticsearchIndexService.reindexAll();
     }
 
@@ -603,6 +608,41 @@ public class XmEntityServiceIntTest extends AbstractSpringBootTest {
         assertThat(scrollResult.getTotalPages()).isEqualTo(1);
 
         indexConfiguration.onRefresh("/config/tenants/RESINTTEST/entity/index_config.json", null);
+    }
+
+    @Test
+    @WithMockUser(authorities = "SUPER-ADMIN")
+    public void testFindLink() {
+
+        List<XmEntity> entities = transactionExecutor.doInSeparateTransaction(() -> {
+            XmEntity entity1 = xmEntityService.save(new XmEntity().typeKey("TEST_SEARCH").key("key1").name("name"));
+            XmEntity entity2 = xmEntityService.save(new XmEntity().typeKey("TEST_SEARCH").key("key2").name("name"));
+            XmEntity entity3 = xmEntityService.save(new XmEntity().typeKey("TEST_SEARCH").key("key3").name("name"));
+            XmEntity entity4 = xmEntityService.save(new XmEntity().typeKey("TEST_SEARCH").key("key4").name("name"));
+            XmEntity entity5 = xmEntityService.save(new XmEntity().typeKey("TEST_SEARCH").key("key5").name("name"));
+
+            Link link1 = new Link().typeKey("TEST_SEARCH_LINK");
+            entity1.addTargets(link1);
+            link1.setTarget(entity2);
+
+            Link link2 = new Link().typeKey("TEST_SEARCH_LINK");
+            entity1.addTargets(link2);
+            link2.setTarget(entity3);
+
+            xmEntityService.save(entity1);
+            xmEntityService.save(entity2);
+            xmEntityService.save(entity3);
+
+            return asList(entity1, entity2, entity3, entity4, entity5);
+        });
+
+        List<XmEntity> result = xmEntityService.searchXmEntitiesToLink(IdOrKey.of(entities.get(0).getId()),
+            "TEST_SEARCH", "TEST_SEARCH_LINK", "name: name",
+            PageRequest.of(0, 10), null).getContent();
+
+        assertThat(result).contains(entities.get(3), entities.get(4));
+        assertThat(result).doesNotContain(entities.get(0), entities.get(1), entities.get(2));
+        entities.forEach(it -> xmEntityService.delete(it.getId()));
     }
 
     private void saveXmEntities() {

@@ -222,6 +222,11 @@ public class XmEntitySpecService implements RefreshableConfiguration {
         return Optional.ofNullable(getTypeSpecs().get(key)).map(this::filterFunctions);
     }
 
+    @LoggingAspectConfig(resultDetails = false)
+    public Optional<LinkSpec> getLinkSpec(String entityTypeKey, String linkTypeKey) {
+        return getTypeSpecByKey(entityTypeKey).flatMap(ts -> ts.findLinkSpec(linkTypeKey));
+    }
+
     /**
      * Search entity Type specification by key.
      *
