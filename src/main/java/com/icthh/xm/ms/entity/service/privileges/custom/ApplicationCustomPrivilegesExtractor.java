@@ -1,16 +1,14 @@
 package com.icthh.xm.ms.entity.service.privileges.custom;
 
-import static com.icthh.xm.ms.entity.service.privileges.custom.CustomPrivilegesExtractor.DefaultPrivilegesValue.DISABLED;
-import static com.icthh.xm.ms.entity.service.privileges.custom.CustomPrivilegesExtractor.DefaultPrivilegesValue.ENABLED;
-import static java.lang.Boolean.FALSE;
-import static java.lang.Boolean.TRUE;
-import static java.util.stream.Collectors.toList;
-
 import com.icthh.xm.ms.entity.domain.spec.TypeSpec;
-import java.util.List;
-import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+
+import java.util.List;
+import java.util.Map;
+
+import static java.lang.Boolean.TRUE;
+import static java.util.stream.Collectors.toList;
 
 @Slf4j
 @Component
@@ -27,11 +25,6 @@ public class ApplicationCustomPrivilegesExtractor implements CustomPrivilegesExt
     @Override
     public String getPrivilegePrefix() {
         return APPLICATION_PRIVILEGE_PREFIX;
-    }
-
-    @Override
-    public DefaultPrivilegesValue getDefaultValue() {
-        return ENABLED;
     }
 
     @Override

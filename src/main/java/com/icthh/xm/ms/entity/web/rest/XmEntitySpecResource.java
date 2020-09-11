@@ -93,8 +93,8 @@ public class XmEntitySpecResource {
     @Timed
     @PostFilter("hasPermission({'log': false}, 'XMENTITY_SPEC.SCHEMA.GET')")
     @PrivilegeDescription("Privilege to get the xmEntity specification json schema")
-    public String getSpecSchema() {
-        return xmEntitySpecService.generateJsonSchema();
+    public ResponseEntity<String> getSpecSchema() {
+        return RespContentUtil.wrapOrNotFound(xmEntitySpecService.generateJsonSchema());
     }
 
     /**

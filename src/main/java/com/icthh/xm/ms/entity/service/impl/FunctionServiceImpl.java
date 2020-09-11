@@ -1,5 +1,7 @@
 package com.icthh.xm.ms.entity.service.impl;
 
+import static java.util.Collections.emptyList;
+
 import com.icthh.xm.commons.exceptions.EntityNotFoundException;
 import com.icthh.xm.ms.entity.domain.FunctionContext;
 import com.icthh.xm.ms.entity.domain.XmEntity;
@@ -16,6 +18,7 @@ import com.icthh.xm.ms.entity.service.XmEntitySpecService;
 import com.icthh.xm.ms.entity.util.CustomCollectionUtils;
 
 import java.time.Instant;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -170,7 +173,7 @@ public class FunctionServiceImpl implements FunctionService {
         functionResult.setStartDate(Instant.now());
         functionResult.setUpdateDate(functionResult.getStartDate());
         if (functionSpec.getSaveFunctionContext()) {
-            XmEntity xmEntity = (idOrKey != null) ? xmEntityService.findOne(idOrKey) : null;
+            XmEntity xmEntity = (idOrKey != null) ? xmEntityService.findOne(idOrKey, emptyList()) : null;
             functionResult.setXmEntity(xmEntity);
         }
         functionResult.setOnlyData(functionSpec.getOnlyData());

@@ -191,6 +191,7 @@ application:
     webapp-name: webapp
     specification-webapp-name: settings-public.yml
     specification-name: xmentityspec.yml
+    specification-folder-path-pattern: /config/tenants/{tenantName}/entity/xmentityspec/*.yml
     specification-path-pattern: /config/tenants/{tenantName}/entity/${application.specification-name}
     specification-templates-name: search-templates.yml
     specification-templates-path-pattern: /config/tenants/{tenantName}/entity/${application.specification-templates-name}

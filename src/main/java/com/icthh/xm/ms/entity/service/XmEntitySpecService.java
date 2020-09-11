@@ -6,7 +6,6 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.module.jsonSchema.JsonSchema;
 import com.fasterxml.jackson.module.jsonSchema.JsonSchemaGenerator;
-import com.fasterxml.jackson.module.jsonSchema.factories.JsonSchemaFactory;
 import com.fasterxml.jackson.module.jsonSchema.types.ArraySchema;
 import com.fasterxml.jackson.module.jsonSchema.types.ObjectSchema;
 import com.fasterxml.jackson.module.jsonSchema.types.StringSchema;
@@ -86,7 +85,8 @@ public class XmEntitySpecService implements RefreshableConfiguration {
     private final AntPathMatcher matcher = new AntPathMatcher();
 
     private ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
-    private ConcurrentHashMap<String, Map<String, TypeSpec>> types = new ConcurrentHashMap<>();
+    private ConcurrentHashMap<String, Map<String, TypeSpec>> typesByTenant = new ConcurrentHashMap<>();
+    private ConcurrentHashMap<String, Map<String, Map<String, TypeSpec>>> typesByTenantByFile = new ConcurrentHashMap<>();
 
     private final TenantConfigRepository tenantConfigRepository;
     private final ApplicationProperties applicationProperties;
@@ -131,27 +131,58 @@ public class XmEntitySpecService implements RefreshableConfiguration {
     @SneakyThrows
     @IgnoreLogginAspect
     public void onRefresh(String updatedKey, String config) {
-        String specificationPathPattern = applicationProperties.getSpecificationPathPattern();
+
         try {
-            String tenant = matcher.extractUriTemplateVariables(specificationPathPattern, updatedKey).get(TENANT_NAME);
-            if (StringUtils.isBlank(config)) {
-                types.remove(tenant);
-                return;
-            }
-            XmEntitySpec spec = mapper.readValue(config, XmEntitySpec.class);
-            Map<String, TypeSpec> value = toTypeSpecsMap(spec);
-            types.put(tenant, value);
-            entityCustomPrivilegeService.updateCustomPermission(value, tenant);
-            log.info("Specification was for tenant {} updated", tenant);
+            String pathPattern = getPathPattern(updatedKey);
+            String tenant = matcher.extractUriTemplateVariables(pathPattern, updatedKey).get(TENANT_NAME);
+            updateByFileState(updatedKey, config, tenant);
+            Map<String, TypeSpec> tenantEntitySpec = updateByTenantState(tenant);
+            entityCustomPrivilegeService.updateCustomPermission(tenantEntitySpec, tenant);
+            log.info("Specification was for tenant {} updated from file {}", tenant, updatedKey);
         } catch (Exception e) {
             log.error("Error read xm specification from path " + updatedKey, e);
         }
     }
 
+    private String getPathPattern(String updatedKey) {
+        String specificationPattern = applicationProperties.getSpecificationPathPattern();
+        String specificationFolderPattern = applicationProperties.getSpecificationFolderPathPattern();
+        if (matcher.match(specificationPattern, updatedKey)) {
+            return specificationPattern;
+        } else if (matcher.match(specificationFolderPattern, updatedKey)) {
+            return specificationFolderPattern;
+        }
+        throw new IllegalStateException("Config path does not match defined patterns");
+    }
+
+    private Map<String, TypeSpec> updateByTenantState(String tenant) {
+        var tenantEntitySpec = new LinkedHashMap<String, TypeSpec>();
+        typesByTenantByFile.get(tenant).values().forEach(tenantEntitySpec::putAll);
+        if (tenantEntitySpec.isEmpty()) {
+            typesByTenant.remove(tenant);
+        }
+        typesByTenant.put(tenant, tenantEntitySpec);
+        return tenantEntitySpec;
+    }
+
+    @SneakyThrows
+    private void updateByFileState(String updatedKey, String config, String tenant) {
+        var byFiles = typesByTenantByFile.computeIfAbsent(tenant, key -> new LinkedHashMap<>());
+        if (StringUtils.isBlank(config)) {
+            byFiles.remove(updatedKey);
+            return;
+        }
+
+        XmEntitySpec spec = mapper.readValue(config, XmEntitySpec.class);
+        Map<String, TypeSpec> value = toTypeSpecsMap(spec);
+        byFiles.put(updatedKey, value);
+    }
+
     @Override
     public boolean isListeningConfiguration(String updatedKey) {
-        String specificationPathPattern = applicationProperties.getSpecificationPathPattern();
-        return matcher.match(specificationPathPattern, updatedKey);
+        String specificationPattern = applicationProperties.getSpecificationPathPattern();
+        String specificationFolderPattern = applicationProperties.getSpecificationFolderPathPattern();
+        return matcher.match(specificationPattern, updatedKey) || matcher.match(specificationFolderPattern, updatedKey);
     }
 
     @Override
@@ -179,16 +210,21 @@ public class XmEntitySpecService implements RefreshableConfiguration {
      */
     protected Map<String, TypeSpec> getTypeSpecs() {
         String tenantKeyValue = getTenantKeyValue();
-        if (!types.containsKey(tenantKeyValue)) {
+        if (!typesByTenant.containsKey(tenantKeyValue)) {
             log.error("Tenant configuration {} not found", tenantKeyValue);
             throw new IllegalArgumentException("Tenant configuration not found");
         }
-        return nullSafe(types.get(tenantKeyValue));
+        return nullSafe(typesByTenant.get(tenantKeyValue));
     }
 
     @LoggingAspectConfig(resultDetails = false)
     public Optional<TypeSpec> getTypeSpecByKey(String key) {
         return Optional.ofNullable(getTypeSpecs().get(key)).map(this::filterFunctions);
+    }
+
+    @LoggingAspectConfig(resultDetails = false)
+    public Optional<LinkSpec> getLinkSpec(String entityTypeKey, String linkTypeKey) {
+        return getTypeSpecByKey(entityTypeKey).flatMap(ts -> ts.findLinkSpec(linkTypeKey));
     }
 
     /**
