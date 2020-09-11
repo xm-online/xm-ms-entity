@@ -441,7 +441,7 @@ public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
 
     @Test
     @SneakyThrows
-    public void testUpdateCustomerPrivilegesWithEntity() {
+    public void testUpdateCustomerPrivilegesWithEntity  () {
         enableDynamicPermissionCheck();
 
         String customPrivileges = readFile("config/privileges/custom-privileges-with-function.yml");
