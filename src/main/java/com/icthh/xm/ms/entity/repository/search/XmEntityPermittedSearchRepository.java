@@ -1,6 +1,5 @@
 package com.icthh.xm.ms.entity.repository.search;
 
-import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.lang.StringUtils.isEmpty;
 import static org.elasticsearch.index.query.QueryBuilders.boolQuery;
 import static org.elasticsearch.index.query.QueryBuilders.matchQuery;
@@ -13,6 +12,7 @@ import com.icthh.xm.commons.permission.service.PermissionCheckService;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.repository.search.elasticsearch.index.ElasticIndexNameResolver;
 import com.icthh.xm.ms.entity.repository.search.translator.SpelToElasticTranslator;
+import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.elasticsearch.index.query.BoolQueryBuilder;
@@ -22,10 +22,6 @@ import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQuery;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.stereotype.Repository;
-
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Repository
@@ -98,6 +94,7 @@ public class XmEntityPermittedSearchRepository extends PermittedSearchRepository
 
         NativeSearchQuery queryBuilder = new NativeSearchQueryBuilder()
             .withQuery(esQuery)
+            .withIndices(elasticIndexNameResolver.resolve(targetEntityTypeKey))
             .withPageable(pageable == null ? DEFAULT_PAGE : pageable)
             .build();
 

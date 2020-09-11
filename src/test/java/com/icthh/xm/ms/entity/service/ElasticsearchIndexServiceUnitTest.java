@@ -13,6 +13,7 @@ import com.icthh.xm.ms.entity.config.MappingConfiguration;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.repository.XmEntityRepositoryInternal;
 import com.icthh.xm.ms.entity.repository.search.XmEntitySearchRepository;
+import com.icthh.xm.ms.entity.repository.search.elasticsearch.XmEntityElasticRepository;
 import lombok.SneakyThrows;
 import org.junit.Before;
 import org.junit.Test;
@@ -47,6 +48,8 @@ public class ElasticsearchIndexServiceUnitTest extends AbstractUnitTest {
     MappingConfiguration mappingConfiguration;
     @Mock
     IndexConfiguration indexConfiguration;
+    @Mock
+    XmEntityElasticRepository  xmEntityElasticRepository;
 
     @Before
     public void before() {
@@ -57,7 +60,7 @@ public class ElasticsearchIndexServiceUnitTest extends AbstractUnitTest {
     public void reindexAll() {
         prepareInternal();
 
-        service.reindexAll();
+        service.reindexXmEntity(null);
 
         verifyInternal();
     }
@@ -72,19 +75,12 @@ public class ElasticsearchIndexServiceUnitTest extends AbstractUnitTest {
 
     @SneakyThrows
     @SuppressWarnings("unchecked")
-    private  void verifyInternal() {
+    private void verifyInternal() {
 
         Class<XmEntity> entityClass = XmEntity.class;
-
-        verify(elasticsearchTemplate).deleteIndex(entityClass);
-        verify(elasticsearchTemplate).createIndex(entityClass);
-        verify(elasticsearchTemplate).putMapping(entityClass);
-
-        verify(xmEntityRepository, times(4)).count(any());
-
+        verify(xmEntityRepository, times(3)).count(any());
         ArgumentCaptor<List> list = ArgumentCaptor.forClass(List.class);
-        verify(xmEntitySearchRepository).saveAll(list.capture());
-
+        verify(xmEntityElasticRepository).saveAll(list.capture());
         assertThat(list.getValue()).containsExactly(createObject(entityClass));
     }
 

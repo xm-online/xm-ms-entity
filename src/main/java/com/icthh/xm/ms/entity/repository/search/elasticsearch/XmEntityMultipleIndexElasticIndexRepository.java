@@ -1,7 +1,7 @@
 package com.icthh.xm.ms.entity.repository.search.elasticsearch;
 
-import static java.util.Optional.of;
-import static org.apache.commons.lang3.StringUtils.lowerCase;
+import static org.apache.commons.lang.StringUtils.defaultIfEmpty;
+import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 import static org.apache.commons.lang3.time.StopWatch.createStarted;
 import static org.elasticsearch.index.query.QueryBuilders.termQuery;
 
@@ -35,6 +35,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Slf4j
 public class XmEntityMultipleIndexElasticIndexRepository implements XmEntityElasticRepository {
 
+    public static final String INDEX_TYPE_NAME = "xmentity";
     private final ElasticsearchTemplate elasticsearchTemplate;
     private final MappingConfiguration mappingConfiguration;
     private final IndexConfiguration indexConfiguration;
@@ -89,10 +90,6 @@ public class XmEntityMultipleIndexElasticIndexRepository implements XmEntityElas
             recreateIndex(typeKey);
             Long count = specificationFunction.apply(spec);
             reIndexCount.addAndGet(count);
-            if (!mappingConfiguration.isMappingExists()) {
-                elasticsearchTemplate.putMapping(XmEntity.class);
-            }
-
         });
         return reIndexCount.get();
     }
@@ -103,17 +100,25 @@ public class XmEntityMultipleIndexElasticIndexRepository implements XmEntityElas
         StopWatch stopWatch = createStarted();
         elasticsearchTemplate.deleteIndex(resolvedTypeKey);
         try {
-            of(indexConfiguration.isConfigExists())
-                .filter(Boolean::valueOf)
-                .ifPresentOrElse(
-                    isConfigExists -> elasticsearchTemplate.createIndex(resolvedTypeKey, indexConfiguration.getConfiguration()),
-                    () -> elasticsearchTemplate.createIndex(resolvedTypeKey));
+            String indexConfig = defaultIfEmpty(
+                indexConfiguration.getMapping(resolvedTypeKey),
+                indexConfiguration.getConfiguration()
+            );
+            if (isNotEmpty(indexConfig)) {
+                elasticsearchTemplate.createIndex(resolvedTypeKey, indexConfig);
+            } else {
+                elasticsearchTemplate.createIndex(resolvedTypeKey);
+            }
         } catch (ResourceAlreadyExistsException e) {
             log.info("Do nothing. Index was already concurrently recreated by some other service");
         }
-        if (mappingConfiguration.isMappingExists()) {
-            elasticsearchTemplate.putMapping(resolvedTypeKey, "xmentity", mappingConfiguration.getMapping());
+        String mapping = mappingConfiguration.getMapping(resolvedTypeKey);
+        if (isNotEmpty(mapping)) {
+            elasticsearchTemplate.putMapping(resolvedTypeKey, INDEX_TYPE_NAME, mapping);
+        } else if (mappingConfiguration.isMappingExists()) {
+            elasticsearchTemplate.putMapping(resolvedTypeKey, INDEX_TYPE_NAME, mappingConfiguration.getMapping());
         }
+
         log.info("elasticsearch index was recreated for {}, typeKey:  in {} ms",
             XmEntity.class.getSimpleName(), resolvedTypeKey, stopWatch.getTime());
     }

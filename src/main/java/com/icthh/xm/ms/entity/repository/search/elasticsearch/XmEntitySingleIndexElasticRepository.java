@@ -58,21 +58,20 @@ public class XmEntitySingleIndexElasticRepository implements XmEntityElasticRepo
         StopWatch stopWatch = StopWatch.createStarted();
         elasticsearchTemplate.deleteIndex(clazz);
         try {
-
-            of(indexConfiguration.isConfigExists())
-                .filter(Boolean::valueOf)
-                .ifPresentOrElse(
-                    isConfigExists -> elasticsearchTemplate.createIndex(clazz, indexConfiguration.getConfiguration()),
-                    () -> elasticsearchTemplate.createIndex(clazz));
+            if (indexConfiguration.isConfigExists()) {
+                elasticsearchTemplate.createIndex(clazz, indexConfiguration.getConfiguration());
+            } else {
+                elasticsearchTemplate.createIndex(clazz);
+            }
         } catch (ResourceAlreadyExistsException e) {
             log.info("Do nothing. Index was already concurrently recreated by some other service");
         }
 
-        of(mappingConfiguration.isMappingExists())
-            .filter(Boolean::valueOf)
-            .ifPresentOrElse(
-                isMappingExists -> elasticsearchTemplate.putMapping(clazz, mappingConfiguration.getMapping()),
-                () -> elasticsearchTemplate.putMapping(clazz));
+        if (mappingConfiguration.isMappingExists()) {
+            elasticsearchTemplate.putMapping(clazz, mappingConfiguration.getMapping());
+        } else {
+            elasticsearchTemplate.putMapping(clazz);
+        }
         log.info("elasticsearch index was recreated for {} in {} ms",
             XmEntity.class.getSimpleName(), stopWatch.getTime());
     }

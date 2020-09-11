@@ -192,7 +192,7 @@ public class ElasticsearchIndexService {
         return reindexXmEntity(spec);
     }
 
-    private long reindexXmEntity(@Nullable Specification<XmEntity> spec) {
+    long reindexXmEntity(@Nullable Specification<XmEntity> spec) {
 
         StopWatch stopWatch = StopWatch.createStarted();
 
@@ -210,7 +210,7 @@ public class ElasticsearchIndexService {
                                                      .filter(Objects::nonNull)
                                                      .collect(Collectors.toList());
 
-            for (int i = 0; i <= count / PAGE_SIZE ; i++) {
+            for (int i = 0; i <= (count = xmEntityRepositoryInternal.count(spec)) / PAGE_SIZE ; i++) {
                 Pageable page = PageRequest.of(i, PAGE_SIZE);
                 log.info("Indexing page {} of {}, pageSize {}", i, count / PAGE_SIZE, PAGE_SIZE);
                 Page<XmEntity> results = xmEntityRepositoryInternal.findAll(spec, page);
