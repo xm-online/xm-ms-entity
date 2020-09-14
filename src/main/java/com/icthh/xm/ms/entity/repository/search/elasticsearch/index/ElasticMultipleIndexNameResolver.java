@@ -22,6 +22,7 @@ public class ElasticMultipleIndexNameResolver implements ElasticIndexNameResolve
         if (typeKey == null) return null;
         int dotIndex = StringUtils.indexOf(typeKey, ".");
         int end = dotIndex == INDEX_NOT_FOUND ? typeKey.length() : dotIndex;
-        return indexName.getPrefix() + lowerCase(substring(typeKey, 0, end));
+        return indexName.getPrefix() +
+            lowerCase(substring(typeKey, 0, end)).replaceAll("-", "_");
     }
 }

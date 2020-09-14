@@ -132,13 +132,13 @@ public class ElasticsearchIndexResourceIntTest extends AbstractSpringBootTest {
     @Autowired
     private SeparateTransactionExecutor transactionExecutor;
 
+    @Autowired
+    private XmEntityElasticRepository xmEntityElasticRepository;
+
     private ElasticsearchIndexService elasticsearchIndexService;
 
     @Mock
     private Executor executor;
-
-    @Mock
-    private XmEntityElasticRepository xmEntityElasticRepository;
 
     @Mock
     private XmEntitySpecService xmEntitySpecServiceMock;

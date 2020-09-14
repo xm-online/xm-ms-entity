@@ -31,7 +31,7 @@ public class IndexConfiguration implements RefreshableConfiguration {
 
         this.tenantContextHolder = tenantContextHolder;
         this.mappingPath = "/config/tenants/{tenantName}/" + appName + "/index_config.json";
-        this.mappingPathPerIndex = "/config/tenants/{tenantName}/" + appName + "/mappings/index_config_{index}.json";
+        this.mappingPathPerIndex = "/config/tenants/{tenantName}/" + appName + "/indices/index_config_{index}.json";
     }
 
     public void onRefresh(final String updatedKey, final String config) {
