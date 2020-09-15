@@ -79,18 +79,26 @@ public class XmEntityMultipleIndexElasticIndexRepository implements XmEntityElas
     public long handleReindex(Function<Specification, Long> specificationFunction) {
         AtomicLong reIndexCount = new AtomicLong(0L);
         List<TypeSpec> allTypes = xmEntitySpecService.findAllTypes();
-        List<String> typeKeyList = allTypes.stream().map(spec -> spec.getKey()).collect(Collectors.toList());
-        IntStream.iterate(0, i -> i < typeKeyList.size(), i -> i + 1).forEach(i -> {
-            String typeKey = typeKeyList.get(i);
-            log.info("{} from {} resolvedTypeKey [{}] is being indexed", i, typeKeyList.size(), typeKey);
-            Specification spec = (Specification) (root, query, criteriaBuilder) -> {
-                query.orderBy(criteriaBuilder.desc(root.get("id")));
-                return criteriaBuilder.equal(root.get(XM_ENTITY_FIELD_TYPEKEY), typeKey);
-            };
-            recreateIndex(typeKey);
-            Long count = specificationFunction.apply(spec);
-            reIndexCount.addAndGet(count);
-        });
+        List<String> typeKeyList = allTypes
+            .stream()
+            .map(spec -> spec.getKey())
+            .sorted()
+            .collect(Collectors.toList());
+        IntStream.iterate(0, i -> i < typeKeyList.size(), i -> i + 1)
+            .peek(i -> log.info("{} from {} resolvedTypeKey [{}] is being indexed", i,
+                typeKeyList.size(), typeKeyList.get(i)))
+            .mapToObj(i-> typeKeyList.get(i))
+            .forEach(typeKey -> {
+                Specification spec = (Specification) (root, query, criteriaBuilder) -> {
+                    query.orderBy(criteriaBuilder.desc(root.get("id")));
+                    return criteriaBuilder.like(root.get(XM_ENTITY_FIELD_TYPEKEY), typeKey);
+                };
+                if (elasticIndexNameResolver.isOnlyRoot(typeKey)) {
+                    recreateIndex(typeKey);
+                }
+                Long count = specificationFunction.apply(spec);
+                reIndexCount.addAndGet(count);
+            });
         return reIndexCount.get();
     }
 
@@ -102,7 +110,7 @@ public class XmEntityMultipleIndexElasticIndexRepository implements XmEntityElas
         try {
             String indexConfig = defaultIfEmpty(
                 indexConfiguration.getMapping(resolvedTypeKey),
-                indexConfiguration.getConfiguration()
+                indexConfiguration.getMapping()
             );
             if (isNotEmpty(indexConfig)) {
                 elasticsearchTemplate.createIndex(resolvedTypeKey, indexConfig);

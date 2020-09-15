@@ -54,8 +54,8 @@ public class XmEntitySingleIndexElasticRepository implements XmEntityElasticRepo
         StopWatch stopWatch = StopWatch.createStarted();
         elasticsearchTemplate.deleteIndex(clazz);
         try {
-            if (indexConfiguration.isConfigExists()) {
-                elasticsearchTemplate.createIndex(clazz, indexConfiguration.getConfiguration());
+            if (indexConfiguration.isMappingExists()) {
+                elasticsearchTemplate.createIndex(clazz, indexConfiguration.getMapping());
             } else {
                 elasticsearchTemplate.createIndex(clazz);
             }

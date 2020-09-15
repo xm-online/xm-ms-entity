@@ -71,7 +71,7 @@ public class XmEntityPermittedSearchRepository extends PermittedSearchRepository
     }
 
     private BoolQueryBuilder typeKeyQuery(String typeKey) {
-        val prefix = typeKey + ".";
+        var prefix = typeKey + ".";
         return boolQuery()
             .should(matchQuery(TYPE_KEY, typeKey))
             .should(prefixQuery(TYPE_KEY, prefix))

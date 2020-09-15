@@ -6,6 +6,7 @@ import com.icthh.xm.ms.entity.config.elasticsearch.EmbeddedElasticsearchConfig;
 import com.icthh.xm.ms.entity.config.tenant.WebappTenantOverrideConfiguration;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.junit.experimental.categories.Category;
@@ -41,11 +42,16 @@ public abstract class AbstractSpringBootTest {
      * Clean data from elastic by delete all query without index deletion due to performance reasons.
      */
     protected void cleanElasticsearch() {
+        cleanElasticsearch(null);
+    }
+
+    protected void cleanElasticsearch(String index) {
 
         StopWatch stopWatch = StopWatch.createStarted();
 
         DeleteQuery deleteQuery = new DeleteQuery();
         deleteQuery.setQuery(QueryBuilders.matchAllQuery());
+        deleteQuery.setIndex(index);
         elasticsearchTemplate.delete(deleteQuery, XmEntity.class);
 
         log.info("Elasticsearch index for XmEntity cleaned in {} ms", stopWatch.getTime());
