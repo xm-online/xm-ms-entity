@@ -68,4 +68,6 @@
 
     <include file="classpath:config/liquibase/changelog/20190415105900_add_indexes.xml" relativeToChangelogFile="false"/>
 
+    <include file="classpath:config/liquibase/changelog/20200915154500_increase_comment_size.xml" relativeToChangelogFile="false"/>
+
 </databaseChangeLog>
