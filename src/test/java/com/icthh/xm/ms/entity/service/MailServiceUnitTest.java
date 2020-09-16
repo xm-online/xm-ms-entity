@@ -2,6 +2,7 @@ package com.icthh.xm.ms.entity.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import com.google.common.collect.Lists;
 import com.icthh.xm.commons.config.client.config.XmConfigProperties;
 import com.icthh.xm.commons.i18n.spring.service.LocalizationMessageService;
 import com.icthh.xm.commons.mail.provider.MailProviderService;
@@ -41,6 +42,7 @@ import static java.util.Locale.ENGLISH;
 import static java.util.Locale.FRANCE;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
@@ -407,16 +409,16 @@ public class MailServiceUnitTest extends AbstractUnitTest {
 
     private void assertMultiparts(List<Multipart> multiparts) throws Exception {
         assertEquals(1, multiparts.size());
-        List<String> fileNames = List.of(FILE_NAME, FILE_NAME2);
+        List<String> fileNames = Lists.newArrayList(FILE_NAME, FILE_NAME2);
 
         Multipart multipart = multiparts.get(0);
         assertEquals(3, multipart.getCount());
         for (int i = 1; i < multipart.getCount(); i++) {
-            String fileName = fileNames.get(i - 1);
             BodyPart bodyPart = multipart.getBodyPart(i);
 
             assertEquals(ATTACHMENT, bodyPart.getDisposition());
-            assertEquals(fileName, bodyPart.getFileName());
+            String fileName = bodyPart.getFileName();
+            assertTrue(fileNames.remove(fileName));
 
             DataSource dataSource = bodyPart.getDataHandler().getDataSource();
             assertEquals(fileName, dataSource.getName());
