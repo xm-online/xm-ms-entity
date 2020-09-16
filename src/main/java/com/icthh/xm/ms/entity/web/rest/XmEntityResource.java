@@ -6,6 +6,7 @@ import static org.apache.commons.collections.CollectionUtils.isEmpty;
 
 import com.codahale.metrics.annotation.Timed;
 import com.google.common.collect.Maps;
+import com.google.gson.Gson;
 import com.icthh.xm.commons.exceptions.BusinessException;
 import com.icthh.xm.commons.exceptions.ErrorConstants;
 import com.icthh.xm.commons.permission.annotation.PrivilegeDescription;
@@ -27,6 +28,7 @@ import com.icthh.xm.ms.entity.web.rest.util.HeaderUtil;
 import com.icthh.xm.ms.entity.web.rest.util.PaginationUtil;
 import com.icthh.xm.ms.entity.web.rest.util.RespContentUtil;
 import io.swagger.annotations.ApiParam;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Page;
@@ -66,6 +68,7 @@ import javax.validation.Valid;
  */
 @RestController
 @RequestMapping("/api")
+@Slf4j
 public class XmEntityResource {
 
     private static final String ENTITY_NAME = "xmEntity";
@@ -571,7 +574,14 @@ public class XmEntityResource {
                                                   Map<String, Object> functionInput) {
         Map<String, Object> fContext = functionInput != null ? functionInput : Maps.newHashMap();
         FunctionContext result = functionService.execute(functionKey, IdOrKey.of(idOrKey), fContext);
-        return ResponseEntity.ok().body(result.functionResult());
+
+        ResponseEntity.BodyBuilder response = ResponseEntity.ok();
+
+        if (result.isBinaryData()) {
+            response.header("content-type", result.getBinaryDataType());
+        }
+
+        return response.body(result.functionResult());
     }
 
 }

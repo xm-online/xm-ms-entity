@@ -101,7 +101,7 @@ public class FunctionServiceImpl implements FunctionService {
         // validate that current XmEntity has function
         FunctionSpec functionSpec = findFunctionSpec(functionKey, projection);
 
-        //orElseThorw is replaced by war message
+        //orElseThrow is replaced by war message
         assertCallAllowedByState(functionSpec, projection);
 
         // execute function
@@ -177,6 +177,8 @@ public class FunctionServiceImpl implements FunctionService {
             functionResult.setXmEntity(xmEntity);
         }
         functionResult.setOnlyData(functionSpec.getOnlyData());
+        functionResult.setBinaryDataField(functionSpec.getBinaryDataField());
+        functionResult.setBinaryDataType(functionSpec.getBinaryDataType());
         return functionResult;
     }
 

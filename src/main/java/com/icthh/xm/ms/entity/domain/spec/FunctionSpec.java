@@ -83,6 +83,12 @@ public class FunctionSpec {
     @JsonProperty("onlyData")
     private Boolean onlyData;
 
+    @JsonProperty("binaryDataField")
+    private String binaryDataField;
+
+    @JsonProperty("binaryDataType")
+    private String binaryDataType;
+
     public Boolean getSaveFunctionContext() {
         return saveFunctionContext == null ? false : saveFunctionContext;
     }
