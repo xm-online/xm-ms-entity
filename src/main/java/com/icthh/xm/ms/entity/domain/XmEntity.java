@@ -739,11 +739,6 @@ public class XmEntity implements Serializable, Persistable<Long> {
         return this;
     }
 
-    public XmEntity event(Event event) {
-        this.event = event;
-        return this;
-    }
-
     public void setEvents(Set<Event> events) {
         this.events = events;
     }
