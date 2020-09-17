@@ -450,6 +450,7 @@ public class XmEntityServiceImpl implements XmEntityService {
         }
 
         xmEntityRepository.deleteById(xmEntity.getId());
+        ofNullable(xmEntity.getEvent()).ifPresent(event -> event.setEventDataRef(null));
     }
 
 
