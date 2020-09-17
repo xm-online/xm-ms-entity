@@ -6,7 +6,9 @@ import static java.time.Instant.now;
 import static java.util.UUID.randomUUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -15,6 +17,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.google.common.collect.ImmutableMap;
 import com.icthh.xm.commons.i18n.error.web.ExceptionTranslator;
 import com.icthh.xm.commons.security.XmAuthenticationContext;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
@@ -25,12 +28,19 @@ import com.icthh.xm.ms.entity.domain.Event;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.repository.EventRepository;
 import com.icthh.xm.ms.entity.service.EventService;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import javax.persistence.EntityManager;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
@@ -39,11 +49,6 @@ import org.springframework.test.context.transaction.BeforeTransaction;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
-import java.util.List;
-import javax.persistence.EntityManager;
 
 /**
  * Test class for the EventResource REST controller.
@@ -70,6 +75,14 @@ public class EventResourceIntTest extends AbstractSpringBootTest {
 
     private static final Instant DEFAULT_END_DATE = Instant.ofEpochMilli(0L);
     private static final Instant UPDATED_END_DATE = now().truncatedTo(ChronoUnit.MILLIS);
+
+    public static final String DEFAULT_XM_ENTITY_NAME = "name";
+    private static final String DEFAULT_EVENT_DATA_REF_TYPE_KEY = "EVENT_DATA_REF_TYPE_KEY";
+
+    private static final Map<String, Object> DEFAULT_EVENT_DATA_REF_DATA = ImmutableMap.<String, Object>builder()
+        .put("AAAAAAAAAA", "AAAAAAAAAA").build();
+    private static final Map<String, Object> UPDATED_EVENT_DATA_REF_DATA = ImmutableMap.<String, Object>builder()
+        .put("AAAAAAAAAA", "BBBBBBBBBB").build();
 
     @Autowired
     private EventResource eventResource;
@@ -137,23 +150,33 @@ public class EventResourceIntTest extends AbstractSpringBootTest {
      * if they test an entity which requires the current entity.
      */
     public static Event createEntity(EntityManager em) {
-        XmEntity entity = new XmEntity().typeKey("TARGET_ENTITY").startDate(now()).updateDate(now()).name("name").key(randomUUID());
-        em.persist(entity);
-        Event event = new Event()
+        XmEntity assigned = new XmEntity()
+            .typeKey("TARGET_ENTITY")
+            .startDate(now())
+            .updateDate(now())
+            .name(DEFAULT_XM_ENTITY_NAME)
+            .key(randomUUID());
+        XmEntity eventDataRef = new XmEntity()
+            .typeKey(DEFAULT_EVENT_DATA_REF_TYPE_KEY)
+            .startDate(now())
+            .updateDate(now())
+            .key(randomUUID())
+            .name(DEFAULT_XM_ENTITY_NAME)
+            .data(DEFAULT_EVENT_DATA_REF_DATA);
+        em.persist(assigned);
+        return new Event()
             .typeKey(DEFAULT_TYPE_KEY)
             .repeatRuleKey(DEFAULT_REPEAT_RULE_KEY)
             .title(DEFAULT_TITLE)
             .description(DEFAULT_DESCRIPTION)
             .startDate(DEFAULT_START_DATE)
             .endDate(DEFAULT_END_DATE)
-            .assigned(entity);
-
-        return event;
+            .assigned(assigned)
+            .eventDataRef(eventDataRef);
     }
 
     @Before
     public void initTest() {
-      //  eventSearchRepository.deleteAll();
         event = createEntity(em);
     }
 
@@ -166,7 +189,9 @@ public class EventResourceIntTest extends AbstractSpringBootTest {
         restEventMockMvc.perform(post("/api/events")
             .contentType(TestUtil.APPLICATION_JSON_UTF8)
             .content(TestUtil.convertObjectToJsonBytes(event)))
-            .andExpect(status().isCreated());
+            .andExpect(status().isCreated())
+            .andExpect(jsonPath("$.eventDataRef.typeKey").value(DEFAULT_EVENT_DATA_REF_TYPE_KEY))
+            .andExpect(jsonPath("$.eventDataRef.data").value(is(DEFAULT_EVENT_DATA_REF_DATA)));
 
         // Validate the Event in the database
         List<Event> eventList = eventRepository.findAll();
@@ -178,6 +203,8 @@ public class EventResourceIntTest extends AbstractSpringBootTest {
         assertThat(testEvent.getDescription()).isEqualTo(DEFAULT_DESCRIPTION);
         assertThat(testEvent.getStartDate()).isEqualTo(DEFAULT_START_DATE);
         assertThat(testEvent.getEndDate()).isEqualTo(DEFAULT_END_DATE);
+        assertThat(testEvent.getEventDataRef().getTypeKey()).isEqualTo(DEFAULT_EVENT_DATA_REF_TYPE_KEY);
+        assertThat(testEvent.getEventDataRef().getData()).isEqualTo(DEFAULT_EVENT_DATA_REF_DATA);
     }
 
     @Test
@@ -200,6 +227,21 @@ public class EventResourceIntTest extends AbstractSpringBootTest {
         // Validate the Alice in the database
         List<Event> eventList = eventRepository.findAll();
         assertThat(eventList).hasSize(databaseSizeBeforeCreate);
+    }
+
+    @Test(expected = DataIntegrityViolationException.class)
+    @Transactional
+    public void createEventWithAlreadyAssignedEventDataRef() throws Exception {
+        eventRepository.saveAndFlush(event);
+        em.clear();
+
+        Event eventWithAlreadyAssignedEventDataRef = event;
+        eventWithAlreadyAssignedEventDataRef.setId(null);
+
+        restEventMockMvc.perform(post("/api/events")
+            .contentType(TestUtil.APPLICATION_JSON_UTF8)
+            .content(TestUtil.convertObjectToJsonBytes(eventWithAlreadyAssignedEventDataRef)));
+        eventRepository.flush();// New event with already assigned event data ref must fail by unique constraint
     }
 
     @Test
@@ -238,10 +280,10 @@ public class EventResourceIntTest extends AbstractSpringBootTest {
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
             .andExpect(jsonPath("$.[*].id").value(hasItem(event.getId().intValue())))
-            .andExpect(jsonPath("$.[*].typeKey").value(hasItem(DEFAULT_TYPE_KEY.toString())))
-            .andExpect(jsonPath("$.[*].repeatRuleKey").value(hasItem(DEFAULT_REPEAT_RULE_KEY.toString())))
-            .andExpect(jsonPath("$.[*].title").value(hasItem(DEFAULT_TITLE.toString())))
-            .andExpect(jsonPath("$.[*].description").value(hasItem(DEFAULT_DESCRIPTION.toString())))
+            .andExpect(jsonPath("$.[*].typeKey").value(hasItem(DEFAULT_TYPE_KEY)))
+            .andExpect(jsonPath("$.[*].repeatRuleKey").value(hasItem(DEFAULT_REPEAT_RULE_KEY)))
+            .andExpect(jsonPath("$.[*].title").value(hasItem(DEFAULT_TITLE)))
+            .andExpect(jsonPath("$.[*].description").value(hasItem(DEFAULT_DESCRIPTION)))
             .andExpect(jsonPath("$.[*].startDate").value(hasItem(DEFAULT_START_DATE.toString())))
             .andExpect(jsonPath("$.[*].endDate").value(hasItem(DEFAULT_END_DATE.toString())));
     }
@@ -257,10 +299,10 @@ public class EventResourceIntTest extends AbstractSpringBootTest {
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
             .andExpect(jsonPath("$.id").value(event.getId().intValue()))
-            .andExpect(jsonPath("$.typeKey").value(DEFAULT_TYPE_KEY.toString()))
-            .andExpect(jsonPath("$.repeatRuleKey").value(DEFAULT_REPEAT_RULE_KEY.toString()))
-            .andExpect(jsonPath("$.title").value(DEFAULT_TITLE.toString()))
-            .andExpect(jsonPath("$.description").value(DEFAULT_DESCRIPTION.toString()))
+            .andExpect(jsonPath("$.typeKey").value(DEFAULT_TYPE_KEY))
+            .andExpect(jsonPath("$.repeatRuleKey").value(DEFAULT_REPEAT_RULE_KEY))
+            .andExpect(jsonPath("$.title").value(DEFAULT_TITLE))
+            .andExpect(jsonPath("$.description").value(DEFAULT_DESCRIPTION))
             .andExpect(jsonPath("$.startDate").value(DEFAULT_START_DATE.toString()))
             .andExpect(jsonPath("$.endDate").value(DEFAULT_END_DATE.toString()));
     }
@@ -280,24 +322,25 @@ public class EventResourceIntTest extends AbstractSpringBootTest {
     @Transactional
     public void updateEvent() throws Exception {
         // Initialize the database
-        eventService.save(event);
+        em.persist(event);
 
         int databaseSizeBeforeUpdate = eventRepository.findAll().size();
 
         // Update the event
-        Event updatedEvent = eventRepository.findById(event.getId())
-            .orElseThrow(NullPointerException::new);
-        updatedEvent
+        em.detach(event);
+        em.detach(event.getEventDataRef());
+        event
             .typeKey(UPDATED_TYPE_KEY)
             .repeatRuleKey(UPDATED_REPEAT_RULE_KEY)
             .title(UPDATED_TITLE)
             .description(UPDATED_DESCRIPTION)
             .startDate(UPDATED_START_DATE)
-            .endDate(UPDATED_END_DATE);
+            .endDate(UPDATED_END_DATE)
+            .getEventDataRef().setData(UPDATED_EVENT_DATA_REF_DATA);
 
         restEventMockMvc.perform(put("/api/events")
             .contentType(TestUtil.APPLICATION_JSON_UTF8)
-            .content(TestUtil.convertObjectToJsonBytes(updatedEvent)))
+            .content(TestUtil.convertObjectToJsonBytes(event)))
             .andExpect(status().isOk());
 
         // Validate the Event in the database
@@ -310,6 +353,9 @@ public class EventResourceIntTest extends AbstractSpringBootTest {
         assertThat(testEvent.getDescription()).isEqualTo(UPDATED_DESCRIPTION);
         assertThat(testEvent.getStartDate()).isEqualTo(UPDATED_START_DATE);
         assertThat(testEvent.getEndDate()).isEqualTo(UPDATED_END_DATE);
+        //assert that event data ref not updated
+        assertThat(testEvent.getEventDataRef()).isNotNull()
+            .extracting(XmEntity::getData).isEqualTo(DEFAULT_EVENT_DATA_REF_DATA);
     }
 
     @Test
@@ -334,7 +380,8 @@ public class EventResourceIntTest extends AbstractSpringBootTest {
     @Transactional
     public void deleteEvent() throws Exception {
         // Initialize the database
-        eventService.save(event);
+        em.persist(event);
+        XmEntity eventDataRef = Objects.requireNonNull(event.getEventDataRef(), "Event data ref can't be NULL");
 
         int databaseSizeBeforeDelete = eventRepository.findAll().size();
 
@@ -346,6 +393,7 @@ public class EventResourceIntTest extends AbstractSpringBootTest {
         // Validate the database is empty
         List<Event> eventList = eventRepository.findAll();
         assertThat(eventList).hasSize(databaseSizeBeforeDelete - 1);
+        assertNull(em.find(XmEntity.class, eventDataRef.getId()));
     }
 
     @Test

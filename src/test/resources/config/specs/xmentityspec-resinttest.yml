@@ -217,6 +217,20 @@ types:
     - key: TARGET_ENTITY
       isApp: false
       isAbstract: false
+    - key: EVENT_DATA_REF_TYPE_KEY
+      isApp: false
+      isAbstract: false
+      dataSpec: |
+          {
+              "type": "object",
+              "title": "Data",
+              "properties": {
+                  "AAAAAAAAAA": {
+                      "title": "AAAAAAAAAA title",
+                      "type": "string"
+                  }
+              }
+          }
     - key: TEST_SAVE_AND_PROCEED
       isApp: false
       isAbstract: false
