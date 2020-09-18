@@ -9,11 +9,14 @@ import com.icthh.xm.commons.permission.annotation.PrivilegeDescription;
 import com.icthh.xm.commons.permission.repository.PermittedRepository;
 import com.icthh.xm.ms.entity.domain.Event;
 import com.icthh.xm.ms.entity.domain.XmEntity;
+import com.icthh.xm.ms.entity.lep.keyresolver.EventTypeKeyResolver;
 import com.icthh.xm.ms.entity.repository.EventRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
 import com.icthh.xm.ms.entity.repository.search.PermittedSearchRepository;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import lombok.Setter;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,21 +30,32 @@ import org.springframework.transaction.annotation.Transactional;
 public class EventService {
 
     private final EventRepository eventRepository;
-
     private final PermittedRepository permittedRepository;
-
     private final PermittedSearchRepository permittedSearchRepository;
-
     private final XmEntityRepository xmEntityRepository;
+    @Setter(onMethod_ = {@Autowired})
+    private EventService self;
 
     /**
-     * Save a event.
+     * Save an event.
+     *
+     * <p>NOTE: Method triggers LEP method which resolved by {@link Event#getTypeKey()} value.
+     * @param event the entity to save
+     * @return the persisted entity
+     */
+    @LogicExtensionPoint(value = "Save", resolver = EventTypeKeyResolver.class)
+    public Event save(Event event) {
+        return self.saveEvent(event);
+    }
+
+    /**
+     * Save an event.
      *
      * @param event the entity to save
      * @return the persisted entity
      */
-    @LogicExtensionPoint("Save")
-    public Event save(Event event) {
+    @LogicExtensionPoint(value = "Save")
+    public Event saveEvent(Event event) {
         ofNullable(event.getAssigned())
             .map(XmEntity::getId)
             .ifPresent(assignedId -> event.setAssigned(xmEntityRepository.getOne(assignedId)));
