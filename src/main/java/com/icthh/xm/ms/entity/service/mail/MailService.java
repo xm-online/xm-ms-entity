@@ -3,12 +3,10 @@ package com.icthh.xm.ms.entity.service.mail;
 import static com.icthh.xm.ms.entity.config.Constants.TRANSLATION_KEY;
 import static java.util.Locale.ENGLISH;
 import static java.util.Objects.nonNull;
-import static java.util.Optional.ofNullable;
 import static org.springframework.context.i18n.LocaleContextHolder.getLocale;
 import static org.springframework.context.i18n.LocaleContextHolder.getLocaleContext;
 import static org.springframework.context.i18n.LocaleContextHolder.setLocale;
 import static org.springframework.context.i18n.LocaleContextHolder.setLocaleContext;
-import static org.springframework.util.CollectionUtils.isEmpty;
 
 import com.icthh.xm.commons.i18n.spring.service.LocalizationMessageService;
 import com.icthh.xm.commons.logging.aop.IgnoreLogginAspect;
@@ -44,7 +42,6 @@ import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.ui.freemarker.FreeMarkerTemplateUtils;
-import org.springframework.util.CollectionUtils;
 
 /**
  * Service for sending emails.
@@ -156,6 +153,7 @@ public class MailService {
             objectModel,
             rid,
             from,
+            null,
             null);
     }
 
@@ -192,41 +190,8 @@ public class MailService {
             objectModel,
             rid,
             from,
-            Map.of(attachmentFilename, dataSource));
-    }
-
-    /**
-     * Async send of email with attachment
-     * @param tenantKey the tenant key
-     * @param locale the locale
-     * @param templateName the email template name
-     * @param subject the raw subject
-     * @param email the to email
-     * @param objectModel the email parameters
-     * @param rid the request id
-     * @param from the from email
-     * @param attachments map of attachment file name which appear in the mail and data source of file content
-     * and the content type
-     */
-    @Async
-    public void sendEmailFromTemplateWithAttachments(TenantKey tenantKey,
-                                                    Locale locale,
-                                                    String templateName,
-                                                    String subject,
-                                                    String email,
-                                                    Map<String, Object> objectModel,
-                                                    String rid,
-                                                    String from,
-                                                    Map<String, InputStreamSource> attachments) {
-        initAndSendEmail(tenantKey,
-            locale,
-            templateName,
-            subject,
-            email,
-            objectModel,
-            rid,
-            from,
-            attachments);
+            attachmentFilename,
+            dataSource);
     }
 
     private void initAndSendEmail(TenantKey tenantKey,
@@ -237,7 +202,8 @@ public class MailService {
                                   Map<String, Object> objectModel,
                                   String rid,
                                   String from,
-                                  Map<String, InputStreamSource> attachments) {
+                                  String attachmentFilename,
+                                  InputStreamSource dataSource) {
         execForCustomRid(rid, () -> {
             if (email == null) {
                 log.warn("Can't send email on null address for tenant: {}, email template: {}",
@@ -260,7 +226,8 @@ public class MailService {
                     mailParams.getSubject(),
                     content,
                     mailParams.getFrom(),
-                    attachments,
+                    attachmentFilename,
+                    dataSource,
                     mailProviderService.getJavaMailSender(tenantKey.getValue())
                 );
             } catch (TemplateException e) {
@@ -311,21 +278,18 @@ public class MailService {
                    String subject,
                    String content,
                    String from,
-                   Map<String, InputStreamSource> attachments,
+                   String attachmentFilename,
+                   InputStreamSource dataSource,
                    JavaMailSender javaMailSender) {
 
         // Prepare message using a Spring helper
         MimeMessage mimeMessage = javaMailSender.createMimeMessage();
         MimeMessageHelper message;
         try {
-            boolean hasAttachments = !isEmpty(attachments) &&
-                attachments
-                    .entrySet()
-                    .stream()
-                    .allMatch(entry -> nonNull(entry.getKey()) && nonNull(entry.getValue()));
+            boolean hasAttachments = nonNull(attachmentFilename) || nonNull(dataSource);
 
-            log.debug("Send email[multipart '{}' and html '{}' and attachmentFilenames '{}' to '{}'] with subject '{}' and content={}",
-                hasAttachments, true, ofNullable(attachments).map(Map::keySet).orElse(null), to, subject, content);
+            log.debug("Send email[multipart '{}' and html '{}' and attachmentFilename '{}'] to '{}' with subject '{}' and content={}",
+                hasAttachments, true, attachmentFilename, to, subject, content);
 
             message = new MimeMessageHelper(mimeMessage, hasAttachments, StandardCharsets.UTF_8.name());
             message.setTo(to);
@@ -333,15 +297,13 @@ public class MailService {
             message.setSubject(subject);
             message.setText(content, true);
             if (hasAttachments) {
-                for (Map.Entry<String, InputStreamSource> entry : attachments.entrySet()) {
-                    message.addAttachment(entry.getKey(), entry.getValue());
-                }
+                message.addAttachment(attachmentFilename, dataSource);
             }
             javaMailSender.send(mimeMessage);
             log.debug("Sent email to User '{}'", to);
         } catch (Exception e) {
             if (log.isDebugEnabled()) {
-                log.debug("Email could not be sent to user '{}'", to, e);
+                log.warn("Email could not be sent to user '{}'", to, e);
             } else {
                 log.warn("Email could not be sent to user '{}': {}", to, e.getMessage());
             }
@@ -369,6 +331,7 @@ public class MailService {
             email,
             MdcUtils.generateRid(),
             from,
+            null,
             null);
     }
 
@@ -398,7 +361,8 @@ public class MailService {
             email,
             MdcUtils.generateRid(),
             from,
-            Map.of(attachmentFilename, dataSource));
+            attachmentFilename,
+            dataSource);
     }
 
     private void initAndSendEmail(TenantKey tenantKey,
@@ -407,7 +371,8 @@ public class MailService {
                                   String email,
                                   String rid,
                                   String from,
-                                  Map<String, InputStreamSource> attachments) {
+                                  String attachmentFilename,
+                                  InputStreamSource dataSource) {
         execForCustomRid(rid, () -> {
             if (email == null) {
                 log.warn("Can't send email on null address for tenant: {}, Email [ subject : {}, to : {} ]",
@@ -422,7 +387,8 @@ public class MailService {
                     subject,
                     content,
                     from,
-                    attachments,
+                    attachmentFilename,
+                    dataSource,
                     mailProviderService.getJavaMailSender(tenantKey.getValue())
                 );
             } finally {

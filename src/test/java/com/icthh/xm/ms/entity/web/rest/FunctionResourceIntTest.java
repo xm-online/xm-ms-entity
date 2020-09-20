@@ -114,6 +114,10 @@ public class FunctionResourceIntTest extends AbstractSpringBootTest {
         String packageTestBody = "return lepContext.inArgs";
         leps.onRefresh(functionPrefix + "package/Function$$FUNCTION$PACKAGE_TEST$$tenant.groovy", loadData ? packageTestBody : null);
         leps.onRefresh(functionPrefix + "package/FunctionWithXmEntity$$FUNCTION_WITH_ENTITY$PACKAGE_TEST$$tenant.groovy", loadData ? packageTestBody : null);
+
+        String functionWithBinaryResult = "return [\"bytes\": \"test\".getBytes()]";
+        leps.onRefresh(functionPrefix + "package/FunctionWithXmEntity$$FUNCTION_WITH_BINARY_RESULT$$tenant.groovy", loadData ? functionWithBinaryResult : null);
+
     }
 
     @SneakyThrows
@@ -179,6 +183,18 @@ public class FunctionResourceIntTest extends AbstractSpringBootTest {
             .andExpect(jsonPath("$.data.functionKey").value(functionWithEntityKey))
             .andExpect(status().is2xxSuccessful());
     }
+//
+//    @Test
+//    @Transactional
+//    public void functionWithBinaryDataResult() throws Exception {
+//        Long id = xmEntityService.save(new XmEntity().typeKey("TEST_FUNCTION_WITH_BINARY_RESULT")).getId();
+//
+//        mockMvc.perform(
+//            get("/api/xm-entities/{idOrKey}/functions/{functionName}}",
+//                id, "FUNCTION_WITH_BINARY_RESULT").contentType(
+//                TestUtil.APPLICATION_JSON_UTF8)).andExpect(
+//            status().is2xxSuccessful());
+//    }
 
     @Test
     @Transactional

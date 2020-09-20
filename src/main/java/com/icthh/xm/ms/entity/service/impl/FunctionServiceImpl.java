@@ -101,7 +101,7 @@ public class FunctionServiceImpl implements FunctionService {
         // validate that current XmEntity has function
         FunctionSpec functionSpec = findFunctionSpec(functionKey, projection);
 
-        //orElseThrow is replaced by war message
+        //orElseThorw is replaced by war message
         assertCallAllowedByState(functionSpec, projection);
 
         // execute function
