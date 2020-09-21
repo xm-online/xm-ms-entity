@@ -83,6 +83,9 @@ types:
                   dataTypeKey: EVENT_DATA_REF_TYPE_KEY
                 - key: TEST_EVENT_TYPEKEY_2
                   dataTypeKey: EVENT_DATA_REF_TYPE_KEY
+                - key: EVENT_WITHOUT_DATA_REF
+                - key: EVENT_WITH_NOT_EXISTED_DATA_REF
+                  dataTypeKey: NOT_EXISTED_DATA_REF
       links:
           - key: LINK.TARGET
             builderType: NEW

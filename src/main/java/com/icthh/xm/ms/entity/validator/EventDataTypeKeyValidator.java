@@ -2,12 +2,11 @@ package com.icthh.xm.ms.entity.validator;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
-import com.icthh.xm.commons.exceptions.BusinessException;
-import com.icthh.xm.commons.exceptions.EntityNotFoundException;
 import com.icthh.xm.ms.entity.domain.Event;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.domain.spec.EventSpec;
 import com.icthh.xm.ms.entity.service.XmEntitySpecService;
+import java.util.Optional;
 import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
 import lombok.RequiredArgsConstructor;
@@ -16,6 +15,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @RequiredArgsConstructor
 public class EventDataTypeKeyValidator implements ConstraintValidator<EventDataTypeKey, Event> {
+
+    private static final String TYPE_KEY_FIELD_NAME = "typeKey";
 
     private final XmEntitySpecService xmEntitySpecService;
 
@@ -27,19 +28,40 @@ public class EventDataTypeKeyValidator implements ConstraintValidator<EventDataT
         }
 
         String eventTypeKey = event.getTypeKey();
-        EventSpec eventSpec = xmEntitySpecService.findEvent(eventTypeKey)
-            .orElseThrow(() -> new EntityNotFoundException("Event specification not found by key: " + eventTypeKey));
+        Optional<EventSpec> eventSpec = xmEntitySpecService.findEvent(eventTypeKey);
+        if (eventSpec.isEmpty()) {
+            processConstraintViolation(constraintValidatorContext,
+                "Event specification not found by key: " + eventTypeKey, TYPE_KEY_FIELD_NAME);
+            return false;
+        }
 
-        String eventSpecDataTypeKey = eventSpec.getDataTypeKey();
+        String eventSpecDataTypeKey = eventSpec.get().getDataTypeKey();
         if (isBlank(eventSpecDataTypeKey)) {
-            throw new BusinessException("xm.ms.entity.event.dataTypekey.blank",
-                "Data type key not configured for Event with type key: " + eventSpec.getKey());
+            processConstraintViolation(constraintValidatorContext,
+                "Data type key not configured for Event with type key: " + eventTypeKey, TYPE_KEY_FIELD_NAME);
+            return false;
         }
 
         if (xmEntitySpecService.getTypeSpecByKey(eventSpecDataTypeKey).isEmpty()) {
-            throw new EntityNotFoundException("Type specification not found by key: " + eventSpecDataTypeKey);
+            processConstraintViolation(constraintValidatorContext,
+                "Type specification not found by key: " + eventSpecDataTypeKey, TYPE_KEY_FIELD_NAME);
+            return false;
         }
 
-        return eventSpecDataTypeKey.equals(eventDataRef.getTypeKey());
+        if (!eventSpecDataTypeKey.equals(eventDataRef.getTypeKey())) {
+            processConstraintViolation(constraintValidatorContext,
+                "Specified event data ref type key not matched with configured", "eventDataRef");
+            return false;
+        }
+        return true;
+    }
+
+    private void processConstraintViolation(ConstraintValidatorContext constraintValidatorContext,
+                                            String message,
+                                            String propertyNode) {
+        constraintValidatorContext.disableDefaultConstraintViolation();
+        constraintValidatorContext.buildConstraintViolationWithTemplate(message)
+            .addPropertyNode(propertyNode)
+            .addConstraintViolation();
     }
 }

@@ -234,6 +234,86 @@ public class EventResourceIntTest extends AbstractSpringBootTest {
         assertThat(eventList).hasSize(databaseSizeBeforeCreate);
     }
 
+    @Test
+    @Transactional
+    public void createEventWithNotExistingTypeKey() throws Exception {
+        event.setTypeKey("NOT_EXISTED_TYPE_KEY");
+
+        restEventMockMvc.perform(post("/api/events")
+            .contentType(TestUtil.APPLICATION_JSON_UTF8)
+            .content(TestUtil.convertObjectToJsonBytes(event)))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.error").value("error.validation"))
+            .andExpect(jsonPath("$.error_description").value(notNullValue()))
+            .andExpect(jsonPath("$.fieldErrors[*].objectName").value("event"))
+            .andExpect(jsonPath("$.fieldErrors[*].field")
+                .value(Event.class.getDeclaredField("typeKey").getName()))
+            .andExpect(jsonPath("$.fieldErrors[*].message").value("EventDataTypeKey"))
+            .andExpect(jsonPath("$.fieldErrors[*].description")
+                .value("Event specification not found by key: " + event.getTypeKey()));
+    }
+
+    @Test
+    @Transactional
+    public void createEventWithoutDataRef() throws Exception {
+        String typeKey = "EVENT_WITHOUT_DATA_REF";
+        event.setTypeKey(typeKey);
+
+        restEventMockMvc.perform(post("/api/events")
+            .contentType(TestUtil.APPLICATION_JSON_UTF8)
+            .content(TestUtil.convertObjectToJsonBytes(event)))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.error").value("error.validation"))
+            .andExpect(jsonPath("$.error_description").value(notNullValue()))
+            .andExpect(jsonPath("$.fieldErrors[*].objectName").value("event"))
+            .andExpect(jsonPath("$.fieldErrors[*].field")
+                .value(Event.class.getDeclaredField("typeKey").getName()))
+            .andExpect(jsonPath("$.fieldErrors[*].message").value("EventDataTypeKey"))
+            .andExpect(jsonPath("$.fieldErrors[*].description").value("Data type key not configured for Event with type key: " + typeKey));
+    }
+
+    @Test
+    @Transactional
+    public void createEventWithNotExistedDataRef() throws Exception {
+        String typeKey = "EVENT_WITH_NOT_EXISTED_DATA_REF";
+        String eventDataRefTypeKey = "NOT_EXISTED_DATA_REF";
+        event.setTypeKey(typeKey);
+        event.getEventDataRef().setTypeKey(eventDataRefTypeKey);
+
+        restEventMockMvc.perform(post("/api/events")
+            .contentType(TestUtil.APPLICATION_JSON_UTF8)
+            .content(TestUtil.convertObjectToJsonBytes(event)))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.error").value("error.validation"))
+            .andExpect(jsonPath("$.error_description").value(notNullValue()))
+            .andExpect(jsonPath("$.fieldErrors[*].objectName").value("event"))
+            .andExpect(jsonPath("$.fieldErrors[*].field")
+                .value(Event.class.getDeclaredField("typeKey").getName()))
+            .andExpect(jsonPath("$.fieldErrors[*].message").value("EventDataTypeKey"))
+            .andExpect(jsonPath("$.fieldErrors[*].description")
+                .value("Type specification not found by key: " + eventDataRefTypeKey));
+    }
+
+
+    @Test
+    @Transactional
+    public void createEventWithNotMatchingDataRef() throws Exception {
+        event.getEventDataRef().setTypeKey("NOT_MATCHING_EVENT_DATA_REF_TYPE_KEY");
+
+        restEventMockMvc.perform(post("/api/events")
+            .contentType(TestUtil.APPLICATION_JSON_UTF8)
+            .content(TestUtil.convertObjectToJsonBytes(event)))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.error").value("error.validation"))
+            .andExpect(jsonPath("$.error_description").value(notNullValue()))
+            .andExpect(jsonPath("$.fieldErrors[*].objectName").value("event"))
+            .andExpect(jsonPath("$.fieldErrors[*].field")
+                .value(Event.class.getDeclaredField("eventDataRef").getName()))
+            .andExpect(jsonPath("$.fieldErrors[*].message").value("EventDataTypeKey"))
+            .andExpect(jsonPath("$.fieldErrors[*].description")
+                .value("Specified event data ref type key not matched with configured"));
+    }
+
     @Test(expected = DataIntegrityViolationException.class)
     @Transactional
     public void createEventWithAlreadyAssignedEventDataRef() throws Exception {
