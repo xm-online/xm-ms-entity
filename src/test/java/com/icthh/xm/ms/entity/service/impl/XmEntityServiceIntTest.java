@@ -234,16 +234,15 @@ public class XmEntityServiceIntTest extends AbstractSpringBootTest {
 
     @Test
     public void testDeleteWithAlreadyAssignedEvent() {
-        XmEntity newXmEntity = xmEntityService.save(createXmEntity());
+        XmEntity eventDataRef = xmEntityService.save(createXmEntity());
         Event event = transactionExecutor.doInSeparateTransaction(() -> {
-            XmEntity xmEntity = entityManager.find(XmEntity.class, newXmEntity.getId());
-            Event newEvent = new Event().typeKey("A").title("1").eventDataRef(xmEntity);
-            xmEntity.setEvent(newEvent);
+            XmEntity existedEventDataRef = entityManager.find(XmEntity.class, eventDataRef.getId());
+            Event newEvent = new Event().typeKey("B").title("1").eventDataRef(existedEventDataRef);
             entityManager.persist(newEvent);
             return newEvent;
         });
 
-        xmEntityService.delete(newXmEntity.getId());
+        xmEntityService.delete(eventDataRef.getId());
 
         Event eventAfterRelatedEntityDeletion = transactionExecutor.doInSeparateTransaction(
             () -> entityManager.find(Event.class, event.getId()));

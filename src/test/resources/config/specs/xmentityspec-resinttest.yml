@@ -79,7 +79,10 @@ types:
       calendars:
           - key: TYPEKEY
             events:
-                - key: TYPEKEY
+                - key: TEST_EVENT_TYPEKEY_1
+                  dataTypeKey: EVENT_DATA_REF_TYPE_KEY
+                - key: TEST_EVENT_TYPEKEY_2
+                  dataTypeKey: EVENT_DATA_REF_TYPE_KEY
       links:
           - key: LINK.TARGET
             builderType: NEW
@@ -162,6 +165,7 @@ types:
           - key: A
             events:
                 - key: B
+                  dataTypeKey: TEST_DELETE
       locations:
           - key: A
       ratings:

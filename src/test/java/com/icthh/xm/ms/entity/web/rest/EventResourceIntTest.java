@@ -49,6 +49,7 @@ import org.springframework.test.context.transaction.BeforeTransaction;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.validation.Validator;
 
 /**
  * Test class for the EventResource REST controller.
@@ -58,8 +59,8 @@ import org.springframework.transaction.annotation.Transactional;
 @WithMockUser(authorities = {"SUPER-ADMIN"})
 public class EventResourceIntTest extends AbstractSpringBootTest {
 
-    private static final String DEFAULT_TYPE_KEY = "AAAAAAAAAA";
-    private static final String UPDATED_TYPE_KEY = "BBBBBBBBBB";
+    private static final String DEFAULT_TYPE_KEY = "TEST_EVENT_TYPEKEY_1";
+    private static final String UPDATED_TYPE_KEY = "TEST_EVENT_TYPEKEY_2";
 
     private static final String DEFAULT_REPEAT_RULE_KEY = "AAAAAAAAAA";
     private static final String UPDATED_REPEAT_RULE_KEY = "BBBBBBBBBB";
@@ -103,6 +104,9 @@ public class EventResourceIntTest extends AbstractSpringBootTest {
     private ExceptionTranslator exceptionTranslator;
 
     @Autowired
+    private Validator validator;
+
+    @Autowired
     private EntityManager em;
 
     private MockMvc restEventMockMvc;
@@ -130,6 +134,7 @@ public class EventResourceIntTest extends AbstractSpringBootTest {
         this.restEventMockMvc = MockMvcBuilders.standaloneSetup(eventResourceMock)
             .setCustomArgumentResolvers(pageableArgumentResolver)
             .setControllerAdvice(exceptionTranslator)
+            .setValidator(validator)
             .setMessageConverters(jacksonMessageConverter).build();
 
         lepManager.beginThreadContext(ctx -> {
