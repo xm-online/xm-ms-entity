@@ -1,6 +1,7 @@
 package com.icthh.xm.ms.entity.service;
 
 import com.icthh.xm.commons.permission.annotation.FindWithPermission;
+import com.icthh.xm.commons.permission.annotation.PrivilegeDescription;
 import com.icthh.xm.commons.permission.repository.PermittedRepository;
 import com.icthh.xm.ms.entity.domain.Content;
 import com.icthh.xm.ms.entity.repository.search.PermittedSearchRepository;
@@ -20,6 +21,7 @@ public class ContentService {
     private final PermittedSearchRepository permittedSearchRepository;
 
     @FindWithPermission("CONTENT.GET_LIST")
+    @PrivilegeDescription("Privilege to get all the contents")
     public List<Content> findAll(String privilegeKey) {
         return permittedRepository.findAll(Content.class, privilegeKey);
     }

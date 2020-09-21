@@ -1,15 +1,14 @@
 {
     "properties": {
         "key": {
-            "type": "string",
+            "type": "text",
             "fielddata": true
         },
         "data": {
             "type": "object",
             "properties": {
                 "targetField": {
-                    "type": "string",
-                    "index": "not_analyzed"
+                    "type": "keyword"
                 }
             }
         }

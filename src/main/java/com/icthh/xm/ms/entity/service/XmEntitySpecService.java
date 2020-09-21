@@ -2,7 +2,13 @@ package com.icthh.xm.ms.entity.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import com.fasterxml.jackson.module.jsonSchema.JsonSchema;
+import com.fasterxml.jackson.module.jsonSchema.JsonSchemaGenerator;
+import com.fasterxml.jackson.module.jsonSchema.types.ArraySchema;
+import com.fasterxml.jackson.module.jsonSchema.types.ObjectSchema;
+import com.fasterxml.jackson.module.jsonSchema.types.StringSchema;
 import com.github.fge.jackson.JsonLoader;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -13,6 +19,7 @@ import com.icthh.xm.commons.logging.aop.IgnoreLogginAspect;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
 import com.icthh.xm.ms.entity.config.ApplicationProperties;
+import com.icthh.xm.ms.entity.domain.ext.TypeSpecParameter;
 import com.icthh.xm.ms.entity.domain.spec.AttachmentSpec;
 import com.icthh.xm.ms.entity.domain.spec.CalendarSpec;
 import com.icthh.xm.ms.entity.domain.spec.FunctionSpec;
@@ -27,7 +34,6 @@ import com.icthh.xm.ms.entity.domain.spec.UniqueFieldSpec;
 import com.icthh.xm.ms.entity.domain.spec.XmEntitySpec;
 import com.icthh.xm.ms.entity.security.access.DynamicPermissionCheckService;
 import com.icthh.xm.ms.entity.service.privileges.custom.EntityCustomPrivilegeService;
-import com.icthh.xm.ms.entity.util.CustomCollectionUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -35,6 +41,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.util.AntPathMatcher;
 
+import java.io.StringWriter;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
@@ -49,7 +56,17 @@ import java.util.stream.Collectors;
 
 import static com.github.fge.jackson.NodeType.OBJECT;
 import static com.github.fge.jackson.NodeType.getNodeType;
+import static com.icthh.xm.ms.entity.domain.ext.TypeSpecParameter.ACCESS;
+import static com.icthh.xm.ms.entity.domain.ext.TypeSpecParameter.ATTACHMENTS;
+import static com.icthh.xm.ms.entity.domain.ext.TypeSpecParameter.CALENDARS;
+import static com.icthh.xm.ms.entity.domain.ext.TypeSpecParameter.FUNCTIONS;
+import static com.icthh.xm.ms.entity.domain.ext.TypeSpecParameter.LINKS;
+import static com.icthh.xm.ms.entity.domain.ext.TypeSpecParameter.LOCATIONS;
+import static com.icthh.xm.ms.entity.domain.ext.TypeSpecParameter.RATINGS;
+import static com.icthh.xm.ms.entity.domain.ext.TypeSpecParameter.STATES;
+import static com.icthh.xm.ms.entity.domain.ext.TypeSpecParameter.TAGS;
 import static com.icthh.xm.ms.entity.util.CustomCollectionUtils.nullSafe;
+import static com.icthh.xm.ms.entity.util.CustomCollectionUtils.union;
 import static java.util.Collections.emptyList;
 import static org.springframework.util.CollectionUtils.isEmpty;
 
@@ -68,7 +85,8 @@ public class XmEntitySpecService implements RefreshableConfiguration {
     private final AntPathMatcher matcher = new AntPathMatcher();
 
     private ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
-    private ConcurrentHashMap<String, Map<String, TypeSpec>> types = new ConcurrentHashMap<>();
+    private ConcurrentHashMap<String, Map<String, TypeSpec>> typesByTenant = new ConcurrentHashMap<>();
+    private ConcurrentHashMap<String, Map<String, Map<String, TypeSpec>>> typesByTenantByFile = new ConcurrentHashMap<>();
 
     private final TenantConfigRepository tenantConfigRepository;
     private final ApplicationProperties applicationProperties;
@@ -113,27 +131,58 @@ public class XmEntitySpecService implements RefreshableConfiguration {
     @SneakyThrows
     @IgnoreLogginAspect
     public void onRefresh(String updatedKey, String config) {
-        String specificationPathPattern = applicationProperties.getSpecificationPathPattern();
+
         try {
-            String tenant = matcher.extractUriTemplateVariables(specificationPathPattern, updatedKey).get(TENANT_NAME);
-            if (StringUtils.isBlank(config)) {
-                types.remove(tenant);
-                return;
-            }
-            XmEntitySpec spec = mapper.readValue(config, XmEntitySpec.class);
-            Map<String, TypeSpec> value = toTypeSpecsMap(spec);
-            types.put(tenant, value);
-            entityCustomPrivilegeService.updateCustomPermission(value, tenant);
-            log.info("Specification was for tenant {} updated", tenant);
+            String pathPattern = getPathPattern(updatedKey);
+            String tenant = matcher.extractUriTemplateVariables(pathPattern, updatedKey).get(TENANT_NAME);
+            updateByFileState(updatedKey, config, tenant);
+            Map<String, TypeSpec> tenantEntitySpec = updateByTenantState(tenant);
+            entityCustomPrivilegeService.updateCustomPermission(tenantEntitySpec, tenant);
+            log.info("Specification was for tenant {} updated from file {}", tenant, updatedKey);
         } catch (Exception e) {
             log.error("Error read xm specification from path " + updatedKey, e);
         }
     }
 
+    private String getPathPattern(String updatedKey) {
+        String specificationPattern = applicationProperties.getSpecificationPathPattern();
+        String specificationFolderPattern = applicationProperties.getSpecificationFolderPathPattern();
+        if (matcher.match(specificationPattern, updatedKey)) {
+            return specificationPattern;
+        } else if (matcher.match(specificationFolderPattern, updatedKey)) {
+            return specificationFolderPattern;
+        }
+        throw new IllegalStateException("Config path does not match defined patterns");
+    }
+
+    private Map<String, TypeSpec> updateByTenantState(String tenant) {
+        var tenantEntitySpec = new LinkedHashMap<String, TypeSpec>();
+        typesByTenantByFile.get(tenant).values().forEach(tenantEntitySpec::putAll);
+        if (tenantEntitySpec.isEmpty()) {
+            typesByTenant.remove(tenant);
+        }
+        typesByTenant.put(tenant, tenantEntitySpec);
+        return tenantEntitySpec;
+    }
+
+    @SneakyThrows
+    private void updateByFileState(String updatedKey, String config, String tenant) {
+        var byFiles = typesByTenantByFile.computeIfAbsent(tenant, key -> new LinkedHashMap<>());
+        if (StringUtils.isBlank(config)) {
+            byFiles.remove(updatedKey);
+            return;
+        }
+
+        XmEntitySpec spec = mapper.readValue(config, XmEntitySpec.class);
+        Map<String, TypeSpec> value = toTypeSpecsMap(spec);
+        byFiles.put(updatedKey, value);
+    }
+
     @Override
     public boolean isListeningConfiguration(String updatedKey) {
-        String specificationPathPattern = applicationProperties.getSpecificationPathPattern();
-        return matcher.match(specificationPathPattern, updatedKey);
+        String specificationPattern = applicationProperties.getSpecificationPathPattern();
+        String specificationFolderPattern = applicationProperties.getSpecificationFolderPathPattern();
+        return matcher.match(specificationPattern, updatedKey) || matcher.match(specificationFolderPattern, updatedKey);
     }
 
     @Override
@@ -161,16 +210,21 @@ public class XmEntitySpecService implements RefreshableConfiguration {
      */
     protected Map<String, TypeSpec> getTypeSpecs() {
         String tenantKeyValue = getTenantKeyValue();
-        if (!types.containsKey(tenantKeyValue)) {
+        if (!typesByTenant.containsKey(tenantKeyValue)) {
             log.error("Tenant configuration {} not found", tenantKeyValue);
             throw new IllegalArgumentException("Tenant configuration not found");
         }
-        return nullSafe(types.get(tenantKeyValue));
+        return nullSafe(typesByTenant.get(tenantKeyValue));
     }
 
     @LoggingAspectConfig(resultDetails = false)
     public Optional<TypeSpec> getTypeSpecByKey(String key) {
         return Optional.ofNullable(getTypeSpecs().get(key)).map(this::filterFunctions);
+    }
+
+    @LoggingAspectConfig(resultDetails = false)
+    public Optional<LinkSpec> getLinkSpec(String entityTypeKey, String linkTypeKey) {
+        return getTypeSpecByKey(entityTypeKey).flatMap(ts -> ts.findLinkSpec(linkTypeKey));
     }
 
     /**
@@ -458,16 +512,31 @@ public class XmEntitySpecService implements RefreshableConfiguration {
         type.setIcon(type.getIcon() != null ? type.getIcon() : parentType.getIcon());
         type.setDataSpec(type.getDataSpec() != null ? type.getDataSpec() : parentType.getDataSpec());
         type.setDataForm(type.getDataForm() != null ? type.getDataForm() : parentType.getDataForm());
-        type.setAccess(CustomCollectionUtils.union(type.getAccess(), parentType.getAccess()));
-        type.setAttachments(CustomCollectionUtils.union(type.getAttachments(), parentType.getAttachments()));
-        type.setCalendars(CustomCollectionUtils.union(type.getCalendars(), parentType.getCalendars()));
-        type.setFunctions(CustomCollectionUtils.union(type.getFunctions(), parentType.getFunctions()));
-        type.setLinks(CustomCollectionUtils.union(type.getLinks(), parentType.getLinks()));
-        type.setLocations(CustomCollectionUtils.union(type.getLocations(), parentType.getLocations()));
-        type.setRatings(CustomCollectionUtils.union(type.getRatings(), parentType.getRatings()));
-        type.setStates(CustomCollectionUtils.union(type.getStates(), parentType.getStates()));
-        type.setTags(CustomCollectionUtils.union(type.getTags(), parentType.getTags()));
+        type.setAccess(ignorableUnion(ACCESS, type, parentType));
+        type.setAttachments(ignorableUnion(ATTACHMENTS, type, parentType));
+        type.setCalendars(ignorableUnion(CALENDARS, type, parentType));
+        type.setFunctions(ignorableUnion(FUNCTIONS, type, parentType));
+        type.setLinks(ignorableUnion(LINKS, type, parentType));
+        type.setLocations(ignorableUnion(LOCATIONS, type, parentType));
+        type.setRatings(ignorableUnion(RATINGS, type, parentType));
+        type.setStates(ignorableUnion(STATES, type, parentType));
+        type.setTags(ignorableUnion(TAGS, type, parentType));
         return type;
+    }
+
+    /**
+     * Combine type specifications considering ignore list.
+     *
+     * @param typeSpecParam  represents enum for type specification
+     * @param type       entity Type specification for extention
+     * @param parentType parent entity Type specification for cloning
+     * @return union list or list from child type in case inheritance prohibited
+     */
+    private static <T> List<T> ignorableUnion(TypeSpecParameter typeSpecParam, TypeSpec type, TypeSpec parentType) {
+        List<T> parameters = (List<T>) typeSpecParam.getParameterResolver().apply(type);
+        List<T> parentParameters = (List<T>) typeSpecParam.getParameterResolver().apply(parentType);
+        return type.getIgnoreInheritanceFor().contains(typeSpecParam.getType()) ?
+            parameters : union(parameters, parentParameters);
     }
 
     private TypeSpec filterFunctions(TypeSpec spec) {
@@ -476,6 +545,51 @@ public class XmEntitySpecService implements RefreshableConfiguration {
             clone::getFunctions,
             clone::setFunctions,
             FunctionSpec::getDynamicPrivilegeKey);
+    }
+
+    @SneakyThrows
+    public String generateJsonSchema() {
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.configure(SerializationFeature.WRITE_ENUMS_USING_TO_STRING, true);
+
+        JsonSchemaGenerator schemaGen = new JsonSchemaGenerator(mapper);
+        JsonSchema jsonSchema = schemaGen.generateSchema(XmEntitySpec.class);
+        rejectAdditionalProperties(jsonSchema);
+        StringWriter json = new StringWriter();
+        mapper.configure(SerializationFeature.INDENT_OUTPUT, true);
+        mapper.writeValue(json, jsonSchema);
+        return json.toString();
+    }
+
+    private static void rejectAdditionalProperties(JsonSchema jsonSchema) {
+        if (jsonSchema.isObjectSchema()) {
+            ObjectSchema objectSchema = jsonSchema.asObjectSchema();
+            ObjectSchema.AdditionalProperties additionalProperties = objectSchema.getAdditionalProperties();
+            if (additionalProperties instanceof ObjectSchema.SchemaAdditionalProperties) {
+                rejectAdditionalProperties(((ObjectSchema.SchemaAdditionalProperties) additionalProperties).getJsonSchema());
+            } else {
+                for (JsonSchema property : objectSchema.getProperties().values()) {
+                    rejectAdditionalProperties(property);
+                }
+                objectSchema.rejectAdditionalProperties();
+            }
+
+            // fix for correct schema validation (i found only string usage, and correct validation required string in this place),
+            // but we need keep backward capability
+            if ("urn:jsonschema:com:icthh:xm:ms:entity:domain:spec:StateSpec".equals(objectSchema.getId())) {
+                objectSchema.getProperties().put("icon", new StringSchema());
+                objectSchema.getProperties().put("color", new StringSchema());
+            }
+        } else if (jsonSchema.isArraySchema()) {
+            ArraySchema.Items items = jsonSchema.asArraySchema().getItems();
+            if (items.isSingleItems()) {
+                rejectAdditionalProperties(items.asSingleItems().getSchema());
+            } else if (items.isArrayItems()) {
+                for (JsonSchema schema : items.asArrayItems().getJsonSchemas()) {
+                    rejectAdditionalProperties(schema);
+                }
+            }
+        }
     }
 
 }

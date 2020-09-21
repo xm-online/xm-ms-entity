@@ -1,0 +1,57 @@
+{
+    "type" : "object",
+    "id" : "urn:jsonschema:com:icthh:xm:ms:entity:config:XmEntityTenantConfigService:XmEntityTenantConfig",
+    "properties" : {
+        "entityVersionControl" : {
+            "type" : "object",
+            "id" : "urn:jsonschema:com:icthh:xm:ms:entity:config:XmEntityTenantConfigService:XmEntityTenantConfig:EntityVersionControl",
+            "properties" : {
+                "enabled" : {
+                    "type" : "boolean"
+                }
+            }
+        },
+        "mailSettings" : {
+            "type" : "array",
+            "items" : {
+                "type" : "object",
+                "id" : "urn:jsonschema:com:icthh:xm:ms:entity:config:XmEntityTenantConfigService:XmEntityTenantConfig:MailSetting",
+                "properties" : {
+                    "templateName" : {
+                        "type" : "string"
+                    },
+                    "subject" : {
+                        "type" : "object",
+                        "additionalProperties" : {
+                            "type" : "string"
+                        }
+                    },
+                    "from" : {
+                        "type" : "object",
+                        "additionalProperties" : {
+                            "type" : "string"
+                        }
+                    }
+                }
+            }
+        },
+        "lep" : {
+            "type" : "object",
+            "id" : "urn:jsonschema:com:icthh:xm:ms:entity:config:XmEntityTenantConfigService:XmEntityTenantConfig:LepSetting",
+            "properties" : {
+                "enableInheritanceTypeKey" : {
+                    "type" : "boolean"
+                }
+            }
+        },
+        "entity-functions" : {
+            "type" : "object",
+            "id" : "urn:jsonschema:com:icthh:xm:ms:entity:config:XmEntityTenantConfigService:XmEntityTenantConfig:EntityFunctions",
+            "properties" : {
+                "dynamicPermissionCheckEnabled" : {
+                    "type" : "boolean"
+                }
+            }
+        }
+    }
+}

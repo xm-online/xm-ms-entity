@@ -1,0 +1,10 @@
+{
+    "index": {
+        "mapping": {
+            "total_fields": {
+                "limit": 10000
+            }
+        },
+        "max_result_window" : 1000
+    }
+}

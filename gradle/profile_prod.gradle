@@ -1,21 +1,22 @@
-apply plugin: 'org.springframework.boot'
-apply plugin: 'com.gorylenko.gradle-git-properties'
+dependencies {
+    testImplementation "com.h2database:h2"
+}
 
 ext {
     logbackLoglevel = "INFO"
 }
 
-dependencies {
-
+def profiles = "prod"
+if (project.hasProperty("no-liquibase")) {
+    profiles += ",no-liquibase"
 }
 
-def profiles = 'prod'
-if (project.hasProperty('no-liquibase')) {
-    profiles += ',no-liquibase'
+if (project.hasProperty("swagger")) {
+    profiles += ",swagger"
 }
 
-if (project.hasProperty('swagger')) {
-    profiles += ',swagger'
+springBoot {
+    buildInfo()
 }
 
 bootRun {
@@ -24,6 +25,8 @@ bootRun {
 
 
 processResources {
+    inputs.property('version', version)
+    inputs.property('springProfiles', profiles)
     filesMatching('**/application.yml') {
         filter {
             it.replace('#spring.profiles.active#', profiles)
@@ -32,9 +35,14 @@ processResources {
             it.replace('#project.version#', version)
         }
     }
-    filesMatching('**/bootstrap.yml') {
+    filesMatching("**/application.yml") {
         filter {
-            it.replace('#spring.profiles.active#', profiles)
+            it.replace("#project.version#", version)
+        }
+    }
+    filesMatching("**/bootstrap.yml") {
+        filter {
+            it.replace("#spring.profiles.active#", profiles)
         }
     }
     filesMatching('**/logback-spring.xml') {
@@ -51,6 +59,6 @@ generateGitProperties {
 }
 
 gitProperties {
-    keys = ['git.branch', 'git.commit.id.abbrev', 'git.commit.id.describe']
+    keys = ["git.branch", "git.commit.id.abbrev", "git.commit.id.describe"]
 }
 

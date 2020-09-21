@@ -3,8 +3,10 @@ package com.icthh.xm.ms.entity.service;
 import com.icthh.xm.commons.lep.LogicExtensionPoint;
 import com.icthh.xm.commons.lep.spring.LepService;
 import com.icthh.xm.commons.permission.annotation.FindWithPermission;
+import com.icthh.xm.commons.permission.annotation.PrivilegeDescription;
 import com.icthh.xm.ms.entity.domain.Link;
 import com.icthh.xm.ms.entity.domain.XmEntity;
+import com.icthh.xm.ms.entity.projection.LinkProjection;
 import com.icthh.xm.ms.entity.repository.LinkPermittedRepository;
 import com.icthh.xm.ms.entity.repository.LinkRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
@@ -77,6 +79,7 @@ public class LinkService {
     @Transactional(readOnly = true)
     @FindWithPermission("LINK.GET_LIST")
     @LogicExtensionPoint("FindAll")
+    @PrivilegeDescription("Privilege to get all the links")
     public Page<Link> findAll(Pageable pageable, String privilegeKey) {
         return permittedRepository.findAll(pageable, Link.class, privilegeKey);
     }
@@ -107,6 +110,25 @@ public class LinkService {
     }
 
     /**
+     * Get all link by source ID and link typeKey
+     *
+     * @param id      source entity ID
+     * @param typeKey target type key
+     * @return list of links
+     */
+    @Transactional(readOnly = true)
+    public List<Link> findBySourceIdAndTypeKey(Long id, String typeKey) {
+        log.debug("Request to get link by sourceId={} and typeKey={}", id, typeKey);
+        return linkRepository.findBySourceIdAndTypeKey(id, typeKey);
+    }
+
+    @Transactional(readOnly = true)
+    public List<LinkProjection> findLinkProjectionsBySourceIdAndTypeKey(Long id, String typeKey) {
+        log.debug("Request to get link by sourceId={} and typeKey={}", id, typeKey);
+        return linkRepository.findLinkProjectionsBySourceIdAndTypeKey(id, typeKey);
+    }
+
+    /**
      * Get all link by target ID and link typeKey
      * @param id target entity ID
      * @param typeKey link type key
@@ -120,6 +142,7 @@ public class LinkService {
 
     @FindWithPermission("LINK.SOURCE.GET_LIST")
     @Transactional(readOnly = true)
+    @PrivilegeDescription("Privilege to get all the source links by target entity id and typeKeys")
     public Page<Link> findSourceByTargetIdAndTypeKey(Pageable pageable, Long id, Set<String> typeKey, String
         privilegeKey) {
         return permittedRepository.findAllByTargetIdAndTypeKeyIn(pageable, id, typeKey, privilegeKey);
@@ -142,8 +165,10 @@ public class LinkService {
      *  @param pageable the pagination information
      *  @return the list of entities
      */
+    @Deprecated
     @Transactional(readOnly = true)
     @FindWithPermission("LINK.SEARCH")
+    @PrivilegeDescription("Privilege to search for the link corresponding to the query")
     public Page<Link> search(String query, Pageable pageable, String privilegeKey) {
         return permittedSearchRepository.search(query, pageable, Link.class, privilegeKey);
     }

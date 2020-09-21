@@ -2,11 +2,15 @@ package com.icthh.xm.ms.entity.service;
 
 import com.icthh.xm.commons.exceptions.BusinessException;
 import com.icthh.xm.commons.exceptions.EntityNotFoundException;
+import com.icthh.xm.commons.lep.LogicExtensionPoint;
+import com.icthh.xm.commons.lep.spring.LepService;
 import com.icthh.xm.commons.permission.annotation.FindWithPermission;
+import com.icthh.xm.commons.permission.annotation.PrivilegeDescription;
 import com.icthh.xm.commons.permission.repository.PermittedRepository;
 import com.icthh.xm.ms.entity.domain.Location;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.domain.spec.LocationSpec;
+import com.icthh.xm.ms.entity.lep.keyresolver.LocationTypeKeyResolver;
 import com.icthh.xm.ms.entity.repository.LocationRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
 import com.icthh.xm.ms.entity.repository.search.PermittedSearchRepository;
@@ -21,6 +25,7 @@ import java.util.Optional;
 
 @Slf4j
 @Service
+@LepService(group = "service.location")
 @Transactional
 @RequiredArgsConstructor
 public class LocationService {
@@ -37,8 +42,17 @@ public class LocationService {
     private final XmEntityRepository xmEntityRepository;
 
     private final XmEntitySpecService xmEntitySpecService;
+    @Transactional(readOnly = true)
+    @LogicExtensionPoint("FindById")
+    public Optional<Location> findById(Long id) {
+        return locationRepository.findById(id);
+    }
+
 
     @FindWithPermission("LOCATION.GET_LIST")
+    @LogicExtensionPoint("FindAll")
+    @Transactional(readOnly = true)
+    @PrivilegeDescription("Privilege to get all the locations")
     public List<Location> findAll(String privilegeKey) {
         return permittedRepository.findAll(Location.class, privilegeKey);
     }
@@ -49,8 +63,10 @@ public class LocationService {
      * @param query the query of the search
      * @return the list of entities
      */
+    @Deprecated
     @Transactional(readOnly = true)
     @FindWithPermission("LOCATION.SEARCH")
+    @PrivilegeDescription("Privilege to search for the location corresponding to the query")
     public List<Location> search(String query, String privilegeKey) {
         return permittedSearchRepository.search(query, Location.class, privilegeKey);
     }
@@ -62,6 +78,7 @@ public class LocationService {
      * @param location the location to save
      * @return the persisted XmEntity
      */
+    @LogicExtensionPoint(value = "Save", resolver = LocationTypeKeyResolver.class)
     public Location save(Location location) {
         log.debug("Request to save location : {}", location);
 
@@ -106,6 +123,17 @@ public class LocationService {
         if (locationRepository.countByXmEntityIdAndTypeKey(entity.getId(), spec.getKey()) >= spec.getMax()) {
             throw new BusinessException(MAX_RESTRICTION, "Spec for " + spec.getKey() + " allows to add " + spec.getMax() + " elements");
         }
+    }
+
+    /**
+     * Delete location by ID
+     *
+     * @param locationId
+     */
+    @LogicExtensionPoint("Delete")
+    public void delete(long locationId) {
+        log.debug("Request to delete location : {}", locationId);
+        locationRepository.deleteById(locationId);
     }
 
 }

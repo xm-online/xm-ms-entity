@@ -1,19 +1,37 @@
 package com.icthh.xm.ms.entity.web.rest.errors;
 
+import com.icthh.xm.commons.exceptions.ErrorConstants;
+import com.icthh.xm.commons.i18n.error.web.ExceptionTranslator;
+import com.icthh.xm.commons.lep.XmLepScriptConfigServerResourceLoader;
+import com.icthh.xm.commons.security.XmAuthenticationContext;
+import com.icthh.xm.commons.security.XmAuthenticationContextHolder;
+import com.icthh.xm.commons.tenant.TenantContextHolder;
+import com.icthh.xm.commons.tenant.TenantContextUtils;
+import com.icthh.xm.lep.api.LepManager;
+import com.icthh.xm.ms.entity.AbstractSpringBootTest;
+import com.icthh.xm.ms.entity.web.rest.error.EntityExceptionTranslator;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
+import org.springframework.test.context.transaction.BeforeTransaction;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Optional;
+
+import static com.icthh.xm.commons.i18n.I18nConstants.LANGUAGE;
+import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_AUTH_CONTEXT;
+import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_TENANT_CONTEXT;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
-import com.icthh.xm.commons.exceptions.ErrorConstants;
-import com.icthh.xm.commons.i18n.error.web.ExceptionTranslator;
-import com.icthh.xm.ms.entity.AbstractSpringBootTest;
-import org.junit.Before;
-import org.junit.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 /**
  * Test class for the ExceptionTranslator controller advice.
@@ -28,13 +46,57 @@ public class ExceptionTranslatorIntTest extends AbstractSpringBootTest {
     @Autowired
     private ExceptionTranslator exceptionTranslator;
 
+    @Mock
+    private XmAuthenticationContext context;
+
+    @Autowired
+    private EntityExceptionTranslator entityExceptionTranslator;
+
+    @Autowired
+    private XmLepScriptConfigServerResourceLoader lepLoader;
+
+    @Autowired
+    private TenantContextHolder tenantContextHolder;
+
     private MockMvc mockMvc;
+
+    @Autowired
+    private LepManager lepManager;
+
+    @Mock
+    private XmAuthenticationContextHolder authContextHolder;
+
+    @BeforeTransaction
+    public void beforeTransaction() {
+        TenantContextUtils.setTenant(tenantContextHolder, "RESINTTEST");
+    }
+
 
     @Before
     public void setup() {
+        MockitoAnnotations.initMocks(this);
+
         mockMvc = MockMvcBuilders.standaloneSetup(controller)
-            .setControllerAdvice(exceptionTranslator)
+            .setControllerAdvice(exceptionTranslator, entityExceptionTranslator)
             .build();
+
+        when(context.hasAuthentication()).thenReturn(true);
+        when(context.getLogin()).thenReturn(Optional.of("testLogin"));
+        when(context.getUserKey()).thenReturn(Optional.of("AAAAAAA"));
+        when(context.getDetailsValue(LANGUAGE)).thenReturn(Optional.of("en"));
+
+        when(authContextHolder.getContext()).thenReturn(context);
+
+        lepManager.beginThreadContext(ctx -> {
+            ctx.setValue(THREAD_CONTEXT_KEY_TENANT_CONTEXT, tenantContextHolder.getContext());
+            ctx.setValue(THREAD_CONTEXT_KEY_AUTH_CONTEXT, authContextHolder.getContext());
+        });
+    }
+
+    @After
+    public void destroy() {
+        lepManager.endThreadContext();
+        tenantContextHolder.getPrivilegedContext().destroyCurrentContext();
     }
 
     @Test
@@ -105,5 +167,23 @@ public class ExceptionTranslatorIntTest extends AbstractSpringBootTest {
             .andExpect(status().isInternalServerError())
             .andExpect(jsonPath("$.error").value(ErrorConstants.ERR_INTERNAL_SERVER_ERROR))
             .andExpect(jsonPath("$.error_description").value("Internal server error, please try later"));
+    }
+
+    @Test
+    @Transactional
+    public void testDataViolationError() throws Exception {
+        lepLoader.onRefresh("/config/tenants/RESINTTEST/entity/lep/service/exceptiontranslator/ExtractParameters$$around.groovy",
+            "return ['field_json_path':'$.email', 'field_value':'sdfasdf@gmail.com', 'entity_type_key':'PARTY.INDIVIDUAL']");
+
+        mockMvc.perform(get("/test/integrity-constraint-violation-error"))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.error").value("error.db.dataIntegrityViolation.23005"))
+            .andExpect(jsonPath("$.error_description").value("Unique constrain error"))
+            .andExpect(jsonPath("$.params.field_json_path").value("$.email"))
+            .andExpect(jsonPath("$.params.field_value").value("sdfasdf@gmail.com"))
+            .andExpect(jsonPath("$.params.entity_type_key").value("PARTY.INDIVIDUAL"));
+
+        lepLoader.onRefresh("/config/tenants/RESINTTEST/entity/lep/service/exceptiontranslator/ExtractParameters$$around.groovy",
+            "lepContext.lep.proceed(lepContext.lep.getMethodArgValues())");
     }
 }

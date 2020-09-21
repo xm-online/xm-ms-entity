@@ -3,6 +3,8 @@ package com.icthh.xm.ms.entity.web.rest;
 import static org.springframework.http.MediaType.TEXT_PLAIN_VALUE;
 
 import com.codahale.metrics.annotation.Timed;
+import com.icthh.xm.commons.logging.LoggingAspectConfig;
+import com.icthh.xm.commons.permission.annotation.PrivilegeDescription;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.domain.spec.TypeSpec;
 import com.icthh.xm.ms.entity.service.XmEntityGeneratorService;
@@ -12,6 +14,7 @@ import com.icthh.xm.ms.entity.web.rest.util.RespContentUtil;
 import io.swagger.annotations.ApiParam;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PostAuthorize;
 import org.springframework.security.access.prepost.PostFilter;
@@ -77,6 +80,7 @@ public class XmEntitySpecResource {
     @GetMapping("/xm-entity-specs")
     @Timed
     @PostFilter("hasPermission({'returnObject': filterObject, 'log': false}, 'XMENTITY_SPEC.GET')")
+    @PrivilegeDescription("Privilege to get the xmEntity specification by filter")
     public List<TypeSpec> getTypeSpecs(@ApiParam XmEntitySpecResource.Filter filter) {
         log.debug("REST request to get a list of TypeSpec");
 
@@ -85,6 +89,13 @@ public class XmEntitySpecResource {
                        .collect(Collectors.toList());
     }
 
+    @GetMapping(value = "/xm-entity-specs/schema", produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+    @Timed
+    @PostFilter("hasPermission({'log': false}, 'XMENTITY_SPEC.SCHEMA.GET')")
+    @PrivilegeDescription("Privilege to get the xmEntity specification json schema")
+    public ResponseEntity<String> getSpecSchema() {
+        return RespContentUtil.wrapOrNotFound(xmEntitySpecService.generateJsonSchema());
+    }
 
     /**
      * GET  /xm-entity-specs/:key : get the "key" typeSpec.
@@ -95,6 +106,7 @@ public class XmEntitySpecResource {
     @GetMapping("/xm-entity-specs/{key}")
     @Timed
     @PostAuthorize("hasPermission({'returnObject': returnObject.body}, 'XMENTITY_SPEC.GET_LIST.ITEM')")
+    @PrivilegeDescription("Privilege to get the xmEntity specification by key")
     public ResponseEntity<TypeSpec> getTypeSpec(@PathVariable String key) {
         log.debug("REST request to get TypeSpec : {}", key);
         return RespContentUtil.wrapOrNotFound(xmEntitySpecService.getTypeSpecByKey(key));
@@ -109,6 +121,7 @@ public class XmEntitySpecResource {
     @PostMapping("/xm-entity-specs/generate-xm-entity")
     @Timed
     @PreAuthorize("hasPermission({'rootTypeKey': #rootTypeKey}, 'XMENTITY_SPEC.GENERATE')")
+    @PrivilegeDescription("Privilege to generate a new random xmEntity with passed type. Used for demo")
     public ResponseEntity<XmEntity> generateXmEntity(@ApiParam String rootTypeKey) throws URISyntaxException {
         log.debug("REST request to generate XmEntity");
         XmEntity result = xmEntityGeneratorService.generateXmEntity(rootTypeKey != null ? rootTypeKey : "");
@@ -123,9 +136,11 @@ public class XmEntitySpecResource {
      * @return the ResponseEntity with status 201 (Created) and with body the new xmEntity
      * @throws URISyntaxException if the Location URI syntax is incorrect
      */
+    @LoggingAspectConfig(inputExcludeParams = "xmEntitySpec")
     @PostMapping(value = "/xm-entity-specs", consumes = {TEXT_PLAIN_VALUE})
     @Timed
     @PreAuthorize("hasPermission({'xmEntitySpec': #xmEntitySpec}, 'XMENTITY_SPEC.UPDATE')")
+    @PrivilegeDescription("Privilege to update an existing xmEntity specification")
     public ResponseEntity<XmEntity> updateXmEntitySpec(@RequestBody String xmEntitySpec) {
         xmEntitySpecService.updateXmEntitySpec(xmEntitySpec);
         return ResponseEntity.ok().build();

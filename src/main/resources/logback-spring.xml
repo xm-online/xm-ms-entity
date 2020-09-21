@@ -68,6 +68,8 @@
     <logger name="sun.rmi.transport" level="WARN"/>
     <logger name="com.jayway.jsonpath.internal.path" level="INFO"/>
     <logger name="org.reflections" level="INFO"/>
+    <logger name="org.springframework.boot.actuate.endpoint.EndpointId" level="ERROR"/>
+    <logger name="com.netflix.config.sources.URLConfigurationSource" level="ERROR"/>
 
     <contextListener class="ch.qos.logback.classic.jul.LevelChangePropagator">
         <resetJUL>true</resetJUL>

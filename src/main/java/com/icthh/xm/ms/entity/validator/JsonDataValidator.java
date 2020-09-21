@@ -1,6 +1,7 @@
 package com.icthh.xm.ms.entity.validator;
 
 import static com.github.fge.jsonschema.core.report.LogLevel.ERROR;
+import static com.icthh.xm.ms.entity.config.Constants.REGEX_EOL;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.StreamSupport.stream;
 import static org.apache.commons.collections.MapUtils.isEmpty;
@@ -80,7 +81,7 @@ public class JsonDataValidator implements ConstraintValidator<JsonData, XmEntity
 
         boolean isSuccess = report.isSuccess();
         if (!isSuccess) {
-            log.error("Validation data report: {}", report.toString().replaceAll("\n", " | "));
+            log.error("Validation data report: {}", report.toString().replaceAll(REGEX_EOL, " | "));
             context.disableDefaultConstraintViolation();
 
             List<?> message = stream(report.spliterator(), false)

@@ -4,6 +4,7 @@ import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_AUTH_CO
 import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_TENANT_CONTEXT;
 import static com.icthh.xm.ms.entity.web.rest.XmEntityResourceIntTest.createEntity;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -32,6 +33,7 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
+import org.springframework.http.MediaType;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.test.context.support.WithMockUser;
@@ -176,6 +178,49 @@ public class FunctionResourceIntTest extends AbstractSpringBootTest {
             .andDo(print())
             .andExpect(jsonPath("$.data.functionKey").value(functionWithEntityKey))
             .andExpect(status().is2xxSuccessful());
+    }
+
+    @Test
+    @Transactional
+    @SneakyThrows
+    public void testFunctionWithPackageAndInput() {
+        String functionApi = "/api/functions/";
+        String functionKey = "package/FUNCTION.PACKAGE-TEST";
+        String content = "{\"parameter\": \"value\"}";
+        mockMvc.perform(post(functionApi + functionKey).content(content).contentType(APPLICATION_JSON_VALUE))
+               .andDo(print())
+               .andExpect(jsonPath("$.data.functionKey").value(functionKey))
+               .andExpect(jsonPath("$.data.functionInput.parameter").value("value"))
+               .andExpect(status().is2xxSuccessful());
+
+        mockMvc.perform(put(functionApi + functionKey).content(content).contentType(APPLICATION_JSON_VALUE))
+               .andDo(print())
+               .andExpect(jsonPath("$.data.functionKey").value(functionKey))
+               .andExpect(jsonPath("$.data.functionInput.parameter").value("value"))
+               .andExpect(status().is2xxSuccessful());
+
+        mockMvc.perform(get(functionApi + functionKey + "?parameter=value"))
+               .andDo(print())
+               .andExpect(jsonPath("$.data.functionKey").value(functionKey))
+               .andExpect(jsonPath("$.data.functionInput.parameter").value("value"))
+               .andExpect(status().is2xxSuccessful());
+
+        Long id = xmEntityService.save(new XmEntity().typeKey("TEST_FUNCTION_WITH_PACKAGE")).getId();
+
+        String functionWithEntityApi = "/api/xm-entities/" + id +"/functions/";
+        String functionWithEntityKey = "package/FUNCTION-WITH-ENTITY.PACKAGE-TEST";
+        mockMvc.perform(post(functionWithEntityApi + functionWithEntityKey).content(content)
+                                                                           .contentType(APPLICATION_JSON_VALUE))
+               .andDo(print())
+               .andExpect(jsonPath("$.data.functionKey").value(functionWithEntityKey))
+               .andExpect(jsonPath("$.data.functionInput.parameter").value("value"))
+               .andExpect(status().is2xxSuccessful());
+        mockMvc.perform(get(functionWithEntityApi + functionWithEntityKey + "?parameter=value")
+                            .content(content).contentType(APPLICATION_JSON_VALUE))
+               .andDo(print())
+               .andExpect(jsonPath("$.data.functionKey").value(functionWithEntityKey))
+               .andExpect(jsonPath("$.data.functionInput.parameter").value("value"))
+               .andExpect(status().is2xxSuccessful());
     }
 
 }

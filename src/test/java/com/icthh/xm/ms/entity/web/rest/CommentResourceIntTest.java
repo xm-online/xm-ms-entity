@@ -3,6 +3,7 @@ package com.icthh.xm.ms.entity.web.rest;
 import static com.icthh.xm.commons.i18n.I18nConstants.LANGUAGE;
 import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_AUTH_CONTEXT;
 import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_TENANT_CONTEXT;
+import static liquibase.util.StringUtils.repeat;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.notNullValue;
@@ -31,6 +32,7 @@ import com.icthh.xm.ms.entity.repository.CommentRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
 import com.icthh.xm.ms.entity.repository.search.PermittedSearchRepository;
 import com.icthh.xm.ms.entity.service.CommentService;
+import liquibase.util.StringUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -408,6 +410,17 @@ public class CommentResourceIntTest extends AbstractSpringBootTest {
 
     @Test
     @Transactional
+    public void testSaveLongComment() {
+        Comment comment = createEntity(em);
+        String message = repeat("long", 1000);
+        comment.setMessage(message);
+        Comment saved = commentService.save(comment);
+        em.flush();
+        assertThat(saved.getMessage().length()).isEqualTo(4000);
+    }
+
+    @Test
+    @Transactional
     public void equalsVerifier() throws Exception {
         TestUtil.equalsVerifier(Comment.class);
         Comment comment1 = new Comment();
@@ -420,5 +433,6 @@ public class CommentResourceIntTest extends AbstractSpringBootTest {
         comment1.setId(null);
         assertThat(comment1).isNotEqualTo(comment2);
     }
+
 
 }

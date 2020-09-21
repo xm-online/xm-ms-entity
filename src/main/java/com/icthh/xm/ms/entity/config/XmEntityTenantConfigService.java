@@ -65,6 +65,7 @@ public class XmEntityTenantConfigService extends TenantConfigService {
 
     /**
      * Configuration class for enable/disable tenant level feature in xm-entity.
+     * Keep resources/specs/tenant-config-json.schema.json actual.
      */
     @Data
     public static class XmEntityTenantConfig {

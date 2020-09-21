@@ -1,5 +1,6 @@
 package com.icthh.xm.ms.entity.web.rest;
 
+import com.icthh.xm.commons.permission.annotation.PrivilegeDescription;
 import com.icthh.xm.ms.entity.config.DefaultProfileUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.env.Environment;
@@ -20,6 +21,7 @@ public class ProfileInfoResource {
 
     @GetMapping("/profile-info")
     @PostAuthorize("hasPermission({'returnObject': returnObject}, 'ENTITY.PROFILE_INFO.GET_LIST.ITEM')")
+    @PrivilegeDescription("Privilege to get entity Spring active profiles")
     public ProfileInfoVM getActiveProfiles() {
         String[] activeProfiles = DefaultProfileUtil.getActiveProfiles(env);
         return new ProfileInfoVM(activeProfiles);

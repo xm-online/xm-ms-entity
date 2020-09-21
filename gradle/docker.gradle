@@ -1,21 +1,18 @@
-import org.gradle.internal.os.OperatingSystem
-
-task buildDocker(type: Exec) {
-    doFirst {
-        copy {
-            from "src/main/docker/"
-            into "build/docker/"
-            include "*"
-        }
-        copy {
-            from "build/libs"
-            into "build/docker/"
-            include "*.war*"
-        }
+jib {
+    from {
+        image = "adoptopenjdk:11-jre-hotspot"
     }
-    if (OperatingSystem.current().isWindows()) {
-        commandLine 'cmd', '/c', 'docker', 'image', 'build', '-f', 'build/docker/Dockerfile', '-t', 'entity', 'build/docker/'
-    } else {
-        commandLine 'docker', 'image', 'build', '-f', 'build/docker/Dockerfile', '-t', 'entity', 'build/docker/'
+    to {
+        image = "entity:latest"
+    }
+    container {
+        entrypoint = ["bash", "-c", "chmod +x /entrypoint.sh && sync && /entrypoint.sh"]
+        ports = ["8081"]
+        environment = [
+            SPRING_OUTPUT_ANSI_ENABLED: "ALWAYS",
+            JHIPSTER_SLEEP: "0"
+        ]
+        creationTime = "USE_CURRENT_TIMESTAMP"
     }
 }
+

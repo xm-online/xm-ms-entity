@@ -3,6 +3,7 @@ package com.icthh.xm.ms.entity.web.rest;
 import com.codahale.metrics.annotation.Timed;
 import com.icthh.xm.commons.exceptions.BusinessException;
 import com.icthh.xm.commons.exceptions.ErrorConstants;
+import com.icthh.xm.commons.permission.annotation.PrivilegeDescription;
 import com.icthh.xm.ms.entity.domain.Rating;
 import com.icthh.xm.ms.entity.service.RatingService;
 import com.icthh.xm.ms.entity.web.rest.util.HeaderUtil;
@@ -55,6 +56,7 @@ public class RatingResource {
     @PostMapping("/ratings")
     @Timed
     @PreAuthorize("hasPermission({'rating': #rating}, 'RATING.CREATE')")
+    @PrivilegeDescription("Privilege to create a new rating")
     public ResponseEntity<Rating> createRating(@Valid @RequestBody Rating rating) throws URISyntaxException {
         if (rating.getId() != null) {
             throw new BusinessException(ErrorConstants.ERR_BUSINESS_IDEXISTS,
@@ -78,6 +80,7 @@ public class RatingResource {
     @PutMapping("/ratings")
     @Timed
     @PreAuthorize("hasPermission({'id': #rating.id, 'newRating': #rating}, 'rating', 'RATING.UPDATE')")
+    @PrivilegeDescription("Privilege to updates an existing rating")
     public ResponseEntity<Rating> updateRating(@Valid @RequestBody Rating rating) throws URISyntaxException {
         if (rating.getId() == null) {
             //in order to call method with permissions check
@@ -109,6 +112,7 @@ public class RatingResource {
     @GetMapping("/ratings/{id}")
     @Timed
     @PostAuthorize("hasPermission({'returnObject': returnObject.body}, 'RATING.GET_LIST.ITEM')")
+    @PrivilegeDescription("Privilege to get the rating by id")
     public ResponseEntity<Rating> getRating(@PathVariable Long id) {
         Rating rating = ratingService.findOne(id);
         return RespContentUtil.wrapOrNotFound(Optional.ofNullable(rating));
@@ -123,6 +127,7 @@ public class RatingResource {
     @DeleteMapping("/ratings/{id}")
     @Timed
     @PreAuthorize("hasPermission({'id': #id}, 'rating', 'RATING.DELETE')")
+    @PrivilegeDescription("Privilege to delete the rating by id")
     public ResponseEntity<Void> deleteRating(@PathVariable Long id) {
         ratingService.delete(id);
         return ResponseEntity.ok().headers(HeaderUtil.createEntityDeletionAlert(ENTITY_NAME, id.toString())).build();

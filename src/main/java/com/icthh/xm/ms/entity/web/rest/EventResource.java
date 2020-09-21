@@ -3,6 +3,7 @@ package com.icthh.xm.ms.entity.web.rest;
 import com.codahale.metrics.annotation.Timed;
 import com.icthh.xm.commons.exceptions.BusinessException;
 import com.icthh.xm.commons.exceptions.ErrorConstants;
+import com.icthh.xm.commons.permission.annotation.PrivilegeDescription;
 import com.icthh.xm.ms.entity.domain.Event;
 import com.icthh.xm.ms.entity.service.EventService;
 import com.icthh.xm.ms.entity.web.rest.util.HeaderUtil;
@@ -55,6 +56,7 @@ public class EventResource {
     @PostMapping("/events")
     @Timed
     @PreAuthorize("hasPermission({'event': #event}, 'EVENT.CREATE')")
+    @PrivilegeDescription("Privilege to create a new event")
     public ResponseEntity<Event> createEvent(@Valid @RequestBody Event event) throws URISyntaxException {
         if (event.getId() != null) {
             throw new BusinessException(ErrorConstants.ERR_BUSINESS_IDEXISTS,
@@ -78,6 +80,7 @@ public class EventResource {
     @PutMapping("/events")
     @Timed
     @PreAuthorize("hasPermission({'id': #event.id, 'newEvent': #event}, 'event', 'EVENT.UPDATE')")
+    @PrivilegeDescription("Privilege to updates an existing event")
     public ResponseEntity<Event> updateEvent(@Valid @RequestBody Event event) throws URISyntaxException {
         if (event.getId() == null) {
             //in order to call method with permissions check
@@ -109,6 +112,7 @@ public class EventResource {
     @GetMapping("/events/{id}")
     @Timed
     @PostAuthorize("hasPermission({'returnObject': returnObject.body}, 'EVENT.GET_LIST.ITEM')")
+    @PrivilegeDescription("Privilege to get the event by id")
     public ResponseEntity<Event> getEvent(@PathVariable Long id) {
         Event event = eventService.findOne(id);
         return RespContentUtil.wrapOrNotFound(Optional.ofNullable(event));
@@ -123,6 +127,7 @@ public class EventResource {
     @DeleteMapping("/events/{id}")
     @Timed
     @PreAuthorize("hasPermission({'id': #id}, 'event', 'EVENT.DELETE')")
+    @PrivilegeDescription("Privilege to delete the event by id")
     public ResponseEntity<Void> deleteEvent(@PathVariable Long id) {
         eventService.delete(id);
         return ResponseEntity.ok().headers(HeaderUtil.createEntityDeletionAlert(ENTITY_NAME, id.toString())).build();

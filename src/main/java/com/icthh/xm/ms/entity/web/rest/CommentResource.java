@@ -3,6 +3,7 @@ package com.icthh.xm.ms.entity.web.rest;
 import com.codahale.metrics.annotation.Timed;
 import com.icthh.xm.commons.exceptions.BusinessException;
 import com.icthh.xm.commons.exceptions.ErrorConstants;
+import com.icthh.xm.commons.permission.annotation.PrivilegeDescription;
 import com.icthh.xm.ms.entity.domain.Comment;
 import com.icthh.xm.ms.entity.service.CommentService;
 import com.icthh.xm.ms.entity.web.rest.util.HeaderUtil;
@@ -61,6 +62,7 @@ public class CommentResource {
     @PostMapping("/comments")
     @Timed
     @PreAuthorize("hasPermission({'comment': #comment}, 'COMMENT.CREATE')")
+    @PrivilegeDescription("Privilege to create a new comment")
     public ResponseEntity<Comment> createComment(@Valid @RequestBody Comment comment) throws URISyntaxException {
         if (comment.getId() != null) {
             throw new BusinessException(ErrorConstants.ERR_BUSINESS_IDEXISTS,
@@ -84,6 +86,7 @@ public class CommentResource {
     @PutMapping("/comments")
     @Timed
     @PreAuthorize("hasPermission({'id': #comment.id, 'newComment': #comment}, 'comment', 'COMMENT.UPDATE')")
+    @PrivilegeDescription("Privilege to updates an existing comment")
     public ResponseEntity<Comment> updateComment(@Valid @RequestBody Comment comment) throws URISyntaxException {
         if (comment.getId() == null) {
             //in order to call method with permissions check
@@ -118,6 +121,7 @@ public class CommentResource {
     @GetMapping("/comments/{id}")
     @Timed
     @PostAuthorize("hasPermission({'returnObject': returnObject.body}, 'COMMENT.GET_LIST.ITEM')")
+    @PrivilegeDescription("Privilege to get the comment by id")
     public ResponseEntity<Comment> getComment(@PathVariable Long id) {
         Comment comment = commentService.findOne(id);
         return RespContentUtil.wrapOrNotFound(Optional.ofNullable(comment));
@@ -132,6 +136,7 @@ public class CommentResource {
     @DeleteMapping("/comments/{id}")
     @Timed
     @PreAuthorize("hasPermission({'id': #id}, 'comment', 'COMMENT.DELETE')")
+    @PrivilegeDescription("Privilege to delete the comment by id")
     public ResponseEntity<Void> deleteComment(@PathVariable Long id) {
         commentService.delete(id);
         return ResponseEntity.ok().headers(HeaderUtil.createEntityDeletionAlert(ENTITY_NAME, id.toString())).build();

@@ -3,6 +3,7 @@ package com.icthh.xm.ms.entity.web.rest;
 import com.codahale.metrics.annotation.Timed;
 import com.icthh.xm.commons.exceptions.BusinessException;
 import com.icthh.xm.commons.exceptions.ErrorConstants;
+import com.icthh.xm.commons.permission.annotation.PrivilegeDescription;
 import com.icthh.xm.ms.entity.domain.Vote;
 import com.icthh.xm.ms.entity.service.VoteService;
 import com.icthh.xm.ms.entity.web.rest.util.HeaderUtil;
@@ -61,6 +62,7 @@ public class VoteResource {
     @PostMapping("/votes")
     @Timed
     @PreAuthorize("hasPermission({'vote': #vote}, 'VOTE.CREATE')")
+    @PrivilegeDescription("Privilege to create a new vote")
     public ResponseEntity<Vote> createVote(@Valid @RequestBody Vote vote) throws URISyntaxException {
         if (vote.getId() != null) {
             throw new BusinessException(ErrorConstants.ERR_BUSINESS_IDEXISTS,
@@ -84,6 +86,7 @@ public class VoteResource {
     @PutMapping("/votes")
     @Timed
     @PreAuthorize("hasPermission({'id': #vote.id, 'newVote': #vote}, 'vote', 'VOTE.UPDATE')")
+    @PrivilegeDescription("Privilege to updates an existing vote")
     public ResponseEntity<Vote> updateVote(@Valid @RequestBody Vote vote) throws URISyntaxException {
         if (vote.getId() == null) {
             //in order to call method with permissions check
@@ -118,6 +121,7 @@ public class VoteResource {
     @GetMapping("/votes/{id}")
     @Timed
     @PostAuthorize("hasPermission({'returnObject': returnObject.body}, 'VOTE.GET_LIST.ITEM')")
+    @PrivilegeDescription("Privilege to get vote by id")
     public ResponseEntity<Vote> getVote(@PathVariable Long id) {
         Vote vote = voteService.findOne(id);
         return RespContentUtil.wrapOrNotFound(Optional.ofNullable(vote));
@@ -132,6 +136,7 @@ public class VoteResource {
     @DeleteMapping("/votes/{id}")
     @Timed
     @PreAuthorize("hasPermission({'id': #id}, 'vote', 'VOTE.DELETE')")
+    @PrivilegeDescription("Privilege to delete the vote by id")
     public ResponseEntity<Void> deleteVote(@PathVariable Long id) {
         voteService.delete(id);
         return ResponseEntity.ok().headers(HeaderUtil.createEntityDeletionAlert(ENTITY_NAME, id.toString())).build();

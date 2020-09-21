@@ -2,7 +2,6 @@ package com.icthh.xm.ms.entity.domain.serializer;
 
 import com.github.bohnman.squiggly.web.RequestSquigglyContextProvider;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
 
 import java.util.Collections;
 import java.util.Map;
@@ -10,7 +9,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 @Slf4j
-@Component
 public class XmSquigglyContextProvider extends RequestSquigglyContextProvider {
 
     private static final String TO_REPLACE_FILTER = "<REPLACE_ME>";
@@ -30,7 +28,7 @@ public class XmSquigglyContextProvider extends RequestSquigglyContextProvider {
     @Override
     protected String customizeFilter(final String filter, final HttpServletRequest request, final Class beanClass) {
 
-        log.debug("customize json filter for URL: {}, class: {}, current filter: {}",
+        log.trace("customize json filter for URL: {}, class: {}, current filter: {}",
                   request != null ? request.getRequestURI() : null, beanClass, filter);
 
         String updatedFilter = super.customizeFilter(filter, request, beanClass);
@@ -43,7 +41,7 @@ public class XmSquigglyContextProvider extends RequestSquigglyContextProvider {
     protected String customizeFilter(final String filter, final Class beanClass) {
         if (TO_REPLACE_FILTER.equals(filter)) {
             String updatedFilter = defaultFilterByBean.getOrDefault(beanClass, DEFAULT_FILTER);
-            log.debug("customize json filter for class: {}, updatedFilter: {}", beanClass, updatedFilter);
+            log.trace("customize json filter for class: {}, updatedFilter: {}", beanClass, updatedFilter);
             return updatedFilter;
         }
         return super.customizeFilter(filter, beanClass);

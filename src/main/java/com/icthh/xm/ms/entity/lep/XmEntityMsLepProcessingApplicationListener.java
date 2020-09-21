@@ -4,6 +4,7 @@ import static com.icthh.xm.ms.entity.lep.LepXmEntityMsConstants.BINDING_KEY_COMM
 import static com.icthh.xm.ms.entity.lep.LepXmEntityMsConstants.BINDING_KEY_REPOSITORIES;
 import static com.icthh.xm.ms.entity.lep.LepXmEntityMsConstants.BINDING_KEY_SERVICES;
 import static com.icthh.xm.ms.entity.lep.LepXmEntityMsConstants.BINDING_KEY_TEMPLATES;
+import static com.icthh.xm.ms.entity.lep.LepXmEntityMsConstants.BINDING_METRICS_CONTEXT;
 import static com.icthh.xm.ms.entity.lep.LepXmEntityMsConstants.BINDING_SUB_KEY_COMMENT_SERVICE;
 import static com.icthh.xm.ms.entity.lep.LepXmEntityMsConstants.BINDING_SUB_KEY_PERMISSION_SERVICE;
 import static com.icthh.xm.ms.entity.lep.LepXmEntityMsConstants.BINDING_SUB_KEY_PROFILE_EVENT_PRODUCER_SERVICE;
@@ -25,6 +26,7 @@ import static com.icthh.xm.ms.entity.lep.LepXmEntityMsConstants.BINDING_SUB_KEY_
 import static com.icthh.xm.ms.entity.lep.LepXmEntityMsConstants.BINDING_SUB_KEY_SERVICE_XM_ENTITY;
 import static com.icthh.xm.ms.entity.lep.LepXmEntityMsConstants.BINDING_SUB_KEY_SERVICE_XM_TENANT_LC;
 import static com.icthh.xm.ms.entity.lep.LepXmEntityMsConstants.BINDING_SUB_KEY_TEMPLATE_ELASTIC;
+import static com.icthh.xm.ms.entity.lep.LepXmEntityMsConstants.BINDING_SUB_KEY_TEMPLATE_KAFKA;
 import static com.icthh.xm.ms.entity.lep.LepXmEntityMsConstants.BINDING_SUB_KEY_TEMPLATE_REST;
 import static com.icthh.xm.ms.entity.lep.LepXmEntityMsConstants.BINDING_SUB_KEY_TEMPLATE_S3;
 
@@ -33,6 +35,7 @@ import com.icthh.xm.commons.lep.commons.CommonsExecutor;
 import com.icthh.xm.commons.lep.commons.CommonsService;
 import com.icthh.xm.commons.lep.spring.SpringLepProcessingApplicationListener;
 import com.icthh.xm.commons.permission.service.PermissionCheckService;
+import com.icthh.xm.commons.topic.service.KafkaTemplateService;
 import com.icthh.xm.lep.api.ScopedContext;
 import com.icthh.xm.ms.entity.config.RestTemplateConfiguration.PathTimeoutHttpComponentsClientHttpRequestFactory;
 import com.icthh.xm.ms.entity.config.amazon.AmazonS3Template;
@@ -52,8 +55,11 @@ import com.icthh.xm.ms.entity.service.TagService;
 import com.icthh.xm.ms.entity.service.XmEntityService;
 import com.icthh.xm.ms.entity.service.XmTenantLifecycleService;
 import com.icthh.xm.ms.entity.service.mail.MailService;
+import com.icthh.xm.ms.entity.service.metrics.CustomMetricsContext;
+
 import java.util.HashMap;
 import java.util.Map;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
 import org.springframework.web.client.RestTemplate;
@@ -88,6 +94,8 @@ public class XmEntityMsLepProcessingApplicationListener extends SpringLepProcess
     private final PermittedSearchRepository permittedSearchRepository;
     private final ElasticsearchIndexService elasticsearchIndexService;
     private final SeparateTransactionExecutor transactionExecutor;
+    private final CustomMetricsContext customMetricsContext;
+    private final KafkaTemplateService kafkaTemplateService;
 
     @Override
     protected void bindExecutionContext(ScopedContext executionContext) {
@@ -115,6 +123,8 @@ public class XmEntityMsLepProcessingApplicationListener extends SpringLepProcess
 
         executionContext.setValue(BINDING_KEY_SERVICES, services);
 
+        executionContext.setValue(BINDING_METRICS_CONTEXT, customMetricsContext);
+
         // repositories
         Map<String, Object> repositories = new HashMap<>();
         repositories.put(BINDING_SUB_KEY_REPOSITORY_XM_ENTITY, xmEntityRepository);
@@ -128,9 +138,9 @@ public class XmEntityMsLepProcessingApplicationListener extends SpringLepProcess
         templates.put(BINDING_SUB_KEY_REQUEST_FACTORY, requestFactory);
         templates.put(BINDING_SUB_KEY_TEMPLATE_S3, s3Template);
         templates.put(BINDING_SUB_KEY_TEMPLATE_ELASTIC, elasticsearchTemplate);
+        templates.put(BINDING_SUB_KEY_TEMPLATE_KAFKA, kafkaTemplateService);
 
         executionContext.setValue(BINDING_KEY_TEMPLATES, templates);
     }
-
 }
 

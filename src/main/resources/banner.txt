@@ -8,4 +8,4 @@
   d88P Y88b  888   "   888        Y88..88P 888  888 888 888 888  888 Y8b.
  d88P   Y88b 888       888         "Y88P"  888  888 888 888 888  888  "Y8888
 
-:: XM^online  :: Running Spring Boot ${spring-boot.version} :: https://xm.icthh.com ::
+:: XM^online  :: Running version ${application.version} :: Running Spring Boot ${spring-boot.version} :: https://xm.icthh.com ::

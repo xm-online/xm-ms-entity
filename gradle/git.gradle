@@ -1,8 +1,0 @@
-apply plugin: 'org.ajoberstar.grgit'
-
-def objectId = grgit.repository.jgit.getRepository().exactRef("HEAD").getObjectId()
-
-ext.gitInfo = [
-    "currentBranch": grgit.repository.jgit.nameRev().add(objectId).call().get(objectId),
-    "hashCommit": grgit.head().abbreviatedId
-]

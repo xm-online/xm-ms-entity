@@ -40,6 +40,7 @@ public class ApplicationProperties {
     private Integer kafkaMetadataMaxAge;
     private String emailPathPattern;
 
+    private String specificationFolderPathPattern;
     private String specificationPathPattern;
     private String specificationName;
 
@@ -55,6 +56,10 @@ public class ApplicationProperties {
     private List<String> requestCacheIgnoredPathPatternList = Collections.emptyList();
     private Integer maxUploadFileSize;
     private Integer maxUploadSize;
+
+    private Integer periodicMetricPoolSize;
+
+    private KafkaMetric kafkaMetric;
 
     @Getter
     @Setter
@@ -104,5 +109,13 @@ public class ApplicationProperties {
     public static class Lep {
         private TenantScriptStorage tenantScriptStorage;
         private String lepResourcePathPattern;
+    }
+
+    @Getter
+    @Setter
+    public static class KafkaMetric {
+       private boolean enabled;
+       private int connectionTimeoutTopic;
+       List<String> metricTopics;
     }
 }

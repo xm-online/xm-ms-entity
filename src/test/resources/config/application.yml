@@ -17,6 +17,8 @@
 spring:
     application:
         name: entity
+    main:
+      allow-bean-definition-overriding: true
     jackson:
         serialization.write_dates_as_timestamps: false
     cache:
@@ -27,6 +29,8 @@ spring:
         name:
         username:
         password:
+        hikari:
+          auto-commit: false
     jpa:
         database-platform: io.github.jhipster.domain.util.FixedH2Dialect
         database: H2
@@ -38,17 +42,19 @@ spring:
                 physical-strategy: org.springframework.boot.orm.jpa.hibernate.SpringPhysicalNamingStrategy
                 implicit-strategy: org.springframework.boot.orm.jpa.hibernate.SpringImplicitNamingStrategy
         properties:
+            hibernate.model.generator_name_as_sequence_name: false # see org.hibernate.cfg.AvailableSettings.PREFER_GENERATOR_NAME_AS_DEFAULT_SEQUENCE_NAME
             hibernate.id.new_generator_mappings: true
+            hibernate.connection.provider_disables_autocommit: true
             hibernate.cache.use_second_level_cache: false
             hibernate.cache.use_query_cache: false
             hibernate.generate_statistics: true
             hibernate.hbm2ddl.auto: validate
+            hibernate.jdbc.time_zone: UTC
     data:
         elasticsearch:
             properties:
                 path:
-                    home: build/elasticsearch
-                    data: build/elasticsearch/data
+                  home: build/elasticsearch
     mail:
         host: localhost
     messages:
@@ -60,6 +66,7 @@ spring:
         mode: XHTML
     liquibase:
         contexts: test
+        change-log: classpath:config/liquibase/master.xml
 
 server:
     port: 10344
@@ -70,8 +77,15 @@ server:
 #
 # Full reference is available at: https://www.jhipster.tech/common-application-properties/
 # ===================================================================
+management:
+    metrics:
+        export:
+            prometheus:
+                enabled: true
 
 jhipster:
+    clientApp:
+      name: 'entityApp'
     async:
         core-pool-size: 1
         max-pool-size: 50
@@ -95,11 +109,6 @@ jhipster:
             token-service-id: uaa
             client-id: internal
             client-secret: internal
-    metrics: # DropWizard Metrics configuration, used by MetricsConfiguration
-        jmx.enabled: true
-        logs: # Reports Dropwizard metrics in the logs
-            enabled: true
-            report-frequency: 60 # in seconds
 
 # ===================================================================
 # Application specific properties
@@ -127,11 +136,16 @@ application:
     max-avatar-size: 2
     tenant-client-connection-timeout: 10000
     tenant-client-read-timeout: 10000
+    specification-folder-path-pattern: /config/tenants/{tenantName}/entity/xmentityspec/*.yml
     specification-path-pattern: /config/tenants/{tenantName}/entity/specs/xmentityspecs.yml
     specification-templates-path-pattern: /config/tenants/{tenantName}/entity/templates/${application.specification-templates-name}
+    specification-webapp-name: settings-public.yml
+    specification-name: xmentityspec.yml
+    webapp-name: webapp
     kafka-system-topic: system_topic
     kafka-system-queue: system_queue
     lep:
         tenant-script-storage: XM_MS_CONFIG
     maxUploadFileSize: 1073741824
     maxUploadSize: 1073741824
+    periodicMetricPoolSize: 1

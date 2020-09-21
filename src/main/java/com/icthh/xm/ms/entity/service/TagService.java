@@ -1,6 +1,7 @@
 package com.icthh.xm.ms.entity.service;
 
 import com.icthh.xm.commons.permission.annotation.FindWithPermission;
+import com.icthh.xm.commons.permission.annotation.PrivilegeDescription;
 import com.icthh.xm.commons.permission.repository.PermittedRepository;
 import com.icthh.xm.ms.entity.domain.Tag;
 import com.icthh.xm.ms.entity.repository.TagRepository;
@@ -58,6 +59,7 @@ public class TagService {
 
     @Transactional(readOnly = true)
     @FindWithPermission("TAG.GET_LIST")
+    @PrivilegeDescription("Privilege to get all the tags")
     public List<Tag> findAll(String privilegeKey) {
         return permittedRepository.findAll(Tag.class, privilegeKey);
     }
@@ -68,8 +70,10 @@ public class TagService {
      *  @param query the query of the search
      *  @return the list of entities
      */
+    @Deprecated
     @Transactional(readOnly = true)
     @FindWithPermission("TAG.SEARCH")
+    @PrivilegeDescription("Privilege to search for the tags corresponding to the query")
     public List<Tag> search(String query, String privilegeKey) {
         return permittedSearchRepository.search(query, Tag.class, privilegeKey);
     }

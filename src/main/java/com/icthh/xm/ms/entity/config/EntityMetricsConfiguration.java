@@ -1,33 +1,27 @@
 package com.icthh.xm.ms.entity.config;
 
 import com.codahale.metrics.MetricRegistry;
+import com.icthh.xm.commons.scheduler.metric.SchedulerMetricsSet;
 import com.ryantenney.metrics.spring.config.annotation.EnableMetrics;
 import com.ryantenney.metrics.spring.config.annotation.MetricsConfigurerAdapter;
 import com.zaxxer.hikari.HikariDataSource;
-import io.github.jhipster.config.JHipsterProperties;
-import io.prometheus.client.CollectorRegistry;
-import io.prometheus.client.dropwizard.DropwizardExports;
-import io.prometheus.client.exporter.MetricsServlet;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.web.servlet.ServletContextInitializer;
 import org.springframework.context.annotation.Configuration;
 
 import javax.annotation.PostConstruct;
-import javax.servlet.ServletContext;
 
 @Slf4j
 @Configuration
 @EnableMetrics(proxyTargetClass = true)
 @RequiredArgsConstructor
-public class EntityMetricsConfiguration extends MetricsConfigurerAdapter implements ServletContextInitializer {
+public class EntityMetricsConfiguration extends MetricsConfigurerAdapter {
 
     private static final String SCHEDULER = "scheduler";
 
     private final MetricRegistry metricRegistry;
     private final SchedulerMetricsSet schedulerMetricsSet;
-    private final JHipsterProperties jHipsterProperties;
 
     private HikariDataSource hikariDataSource;
 
@@ -46,20 +40,5 @@ public class EntityMetricsConfiguration extends MetricsConfigurerAdapter impleme
         }
 
         metricRegistry.register(SCHEDULER, schedulerMetricsSet);
-    }
-
-    @Override
-    public void onStartup(ServletContext servletContext) {
-
-        if (jHipsterProperties.getMetrics().getPrometheus().isEnabled()) {
-            String endpoint = jHipsterProperties.getMetrics().getPrometheus().getEndpoint();
-
-            log.debug("Initializing prometheus metrics exporting via {}", endpoint);
-
-            CollectorRegistry.defaultRegistry.register(new DropwizardExports(metricRegistry));
-            servletContext
-                .addServlet("prometheusMetrics", new MetricsServlet(CollectorRegistry.defaultRegistry))
-                .addMapping(endpoint);
-        }
     }
 }

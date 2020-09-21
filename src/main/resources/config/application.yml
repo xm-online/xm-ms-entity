@@ -28,7 +28,7 @@ management:
         web:
             base-path: /management
             exposure:
-                include: ["configprops", "env", "health", "info", "threaddump", "logfile" ]
+                include: ["configprops", "env", "health", "info", "threaddump", "logfile", "jhimetrics", "prometheus" ]
     endpoint:
         health:
             show-details: when_authorized
@@ -38,12 +38,25 @@ management:
     health:
         mail:
             enabled: false # When using the MailService, configure an SMTP server and set this to true
+        elasticsearch:
+            enabled: false
     metrics:
-        enabled: false # http://micrometer.io/ is disabled by default, as we use http://metrics.dropwizard.io/ instead
+        enable:
+            http: true
+            jvm: true
+            logback: true
+            process: true
+            system: true
+        export:
+            prometheus:
+                enabled: true
+                step: 60
 
 spring:
     application:
         name: entity
+    main:
+      allow-bean-definition-overriding: true
     cloud:
         inetutils:
             preferredNetworks:
@@ -105,6 +118,7 @@ spring:
                     starttls.required: false
     liquibase:
         default-schema: XM
+        change-log: classpath:config/liquibase/master.xml
 server:
     servlet:
         session:
@@ -123,6 +137,8 @@ info:
 # ===================================================================
 
 jhipster:
+    clientApp:
+        name: 'entityApp'
     async:
         core-pool-size: 2
         max-pool-size: 50
@@ -174,6 +190,7 @@ application:
     webapp-name: webapp
     specification-webapp-name: settings-public.yml
     specification-name: xmentityspec.yml
+    specification-folder-path-pattern: /config/tenants/{tenantName}/entity/xmentityspec/*.yml
     specification-path-pattern: /config/tenants/{tenantName}/entity/${application.specification-name}
     specification-templates-name: search-templates.yml
     specification-templates-path-pattern: /config/tenants/{tenantName}/entity/${application.specification-templates-name}
@@ -209,6 +226,11 @@ application:
     requestCacheIgnoredPathPatternList: /api/functions/*/upload
     maxUploadFileSize: 1073741824
     maxUploadSize: 1073741824
+    periodicMetricPoolSize: 1
+    kafkaMetric:
+        enabled: true
+        connectionTimeoutTopic: 1000
+        metricTopics: system_topic
 
 # ===================================================================
 # Timeline specific properties
@@ -257,3 +279,8 @@ timelines:
           path-to-mask: $.value
           mask: <bytes[]>
           mask-response: true
+
+gracefulShutdown:
+    enabled: false
+    shutdownDelay:
+

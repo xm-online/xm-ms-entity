@@ -1,25 +1,14 @@
 package com.icthh.xm.ms.entity.service;
 
-import static com.google.common.collect.ImmutableMap.of;
-import static com.google.common.collect.Maps.newHashMap;
-import static com.icthh.xm.ms.entity.security.access.DynamicPermissionCheckService.CONFIG_SECTION;
-import static com.icthh.xm.ms.entity.util.CustomCollectionUtils.nullSafe;
-import static java.nio.charset.StandardCharsets.UTF_8;
-import static java.util.Arrays.asList;
-import static org.apache.commons.codec.digest.DigestUtils.sha1Hex;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.ArgumentMatchers.isNull;
-import static org.mockito.ArgumentMatchers.refEq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import com.fasterxml.jackson.module.jsonSchema.JsonSchemaGenerator;
+import com.github.fge.jackson.JsonLoader;
+import com.github.fge.jsonschema.core.report.ProcessingReport;
+import com.github.fge.jsonschema.main.JsonSchema;
+import com.github.fge.jsonschema.main.JsonSchemaFactory;
 import com.icthh.xm.commons.config.client.config.XmConfigProperties;
 import com.icthh.xm.commons.config.client.repository.CommonConfigRepository;
 import com.icthh.xm.commons.config.client.repository.TenantConfigRepository;
@@ -45,18 +34,12 @@ import com.icthh.xm.ms.entity.domain.spec.StateSpec;
 import com.icthh.xm.ms.entity.domain.spec.TagSpec;
 import com.icthh.xm.ms.entity.domain.spec.TypeSpec;
 import com.icthh.xm.ms.entity.domain.spec.UniqueFieldSpec;
+import com.icthh.xm.ms.entity.domain.spec.XmEntitySpec;
 import com.icthh.xm.ms.entity.security.access.DynamicPermissionCheckService;
 import com.icthh.xm.ms.entity.service.privileges.custom.ApplicationCustomPrivilegesExtractor;
 import com.icthh.xm.ms.entity.service.privileges.custom.EntityCustomPrivilegeService;
 import com.icthh.xm.ms.entity.service.privileges.custom.FunctionCustomPrivilegesExtractor;
 import com.icthh.xm.ms.entity.service.privileges.custom.FunctionWithXmEntityCustomPrivilegesExtractor;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.stream.Collectors;
 import lombok.SneakyThrows;
 import org.apache.commons.io.IOUtils;
 import org.junit.Before;
@@ -66,6 +49,38 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
 import org.springframework.core.io.ClassPathResource;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.StringWriter;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import static com.google.common.collect.ImmutableMap.of;
+import static com.google.common.collect.Maps.newHashMap;
+import static com.icthh.xm.ms.entity.security.access.DynamicPermissionCheckService.CONFIG_SECTION;
+import static com.icthh.xm.ms.entity.util.CustomCollectionUtils.nullSafe;
+import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.Arrays.asList;
+import static org.apache.commons.codec.digest.DigestUtils.sha1Hex;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
+import static org.mockito.ArgumentMatchers.refEq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 
 public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
 
@@ -89,7 +104,7 @@ public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
 
     private static final String KEY6 = "TYPE3";
     private static final String PRIVILEGES_PATH = "/config/tenants/TEST/custom-privileges.yml";
-    private static final String PERMISSION_PATH = "/config/tenants/TEST/permissions.yml";
+    private static final Path SPEC_PATH = Paths.get("./src/test/resources/config/specs/xmentityspec-xm.yml");
 
     private XmEntitySpecService xmEntitySpecService;
 
@@ -178,6 +193,27 @@ public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
 
         assertThat(functions.size()).isEqualTo(4);
 
+    }
+
+    @Test
+    public void testRefreshWithIgnoreList() {
+
+        TenantContext tenantContext = mock(TenantContext.class);
+        when(tenantContext.getTenantKey()).thenReturn(Optional.of(TenantKey.valueOf("IGNORE-INHERITANCE")));
+        tenantContextHolder = mock(TenantContextHolder.class);
+        when(tenantContextHolder.getContext()).thenReturn(tenantContext);
+        ApplicationProperties ap = new ApplicationProperties();
+        ap.setSpecificationPathPattern(URL);
+        xmEntitySpecService = createXmEntitySpecService(ap, tenantContextHolder);
+
+        Map<String, TypeSpec> typeSpecs = xmEntitySpecService.getTypeSpecs();
+
+        TypeSpec typeSpec = typeSpecs.get("ACCOUNT.ADMIN");
+        assertEquals(typeSpec.getFunctions().size(), 2);
+        assertTrue(typeSpec.getFunctions().stream().allMatch(f-> Set.of("C", "D").contains(f.getKey())));
+        assertEquals(typeSpec.getTags().size(), 2);
+        assertTrue(typeSpec.getTags().stream().allMatch(t-> Set.of("TEST2", "TEST3").contains(t.getKey())));
+        assertEquals(typeSpec.getStates().size(), 4);
     }
 
     @SneakyThrows
@@ -399,10 +435,8 @@ public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
     public void testUpdateCustomerPrivileges() {
         String customPrivileges = readFile("config/privileges/custom-privileges.yml");
         String expectedCustomPrivileges = readFile("config/privileges/expected-custom-privileges.yml");
-        String permissions = readFile("config/privileges/mock-privileges.yml");
-        String expectedPermissions = readFile("config/privileges/mock-expected-privileges.yml");
 
-        testUpdateCustomerPrivileges(customPrivileges, expectedCustomPrivileges, permissions, expectedPermissions);
+        testUpdateCustomerPrivileges(customPrivileges, expectedCustomPrivileges);
     }
 
     @Test
@@ -412,37 +446,31 @@ public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
 
         String customPrivileges = readFile("config/privileges/custom-privileges-with-function.yml");
         String expectedCustomPrivileges = readFile("config/privileges/expected-custom-privileges-with-function.yml");
-        String permissions = readFile("config/privileges/mock-privileges.yml");
-        String expectedPermissions = readFile("config/privileges/mock-expected-privileges.yml");
 
-        testUpdateCustomerPrivileges(customPrivileges, expectedCustomPrivileges, permissions, expectedPermissions);
+        testUpdateCustomerPrivileges(customPrivileges, expectedCustomPrivileges);
     }
 
-    private void testUpdateCustomerPrivileges(String customPrivileges, String expectedCustomPrivileges,
-                                             String permissions, String expectedPermissions) {
+    private void testUpdateCustomerPrivileges(String customPrivileges, String expectedCustomPrivileges) {
         String privilegesPath = PRIVILEGES_PATH;
-        String permissionPath = PERMISSION_PATH;
         Map<String, Configuration> configs = of(
-            privilegesPath, new Configuration(privilegesPath, customPrivileges),
-            permissionPath, new Configuration(permissionPath, permissions)
+            privilegesPath, new Configuration(privilegesPath, customPrivileges)
                                                );
-        when(commonConfigRepository.getConfig(isNull(), eq(asList(privilegesPath, permissionPath)))).thenReturn(configs);
+        when(commonConfigRepository.getConfig(isNull(), eq(asList(privilegesPath)))).thenReturn(configs);
         when(roleService.getRoles("TEST")).thenReturn(of("TEST_ROLE", new Role()));
 
         xmEntitySpecService.getTypeSpecs();
 
-        verify(commonConfigRepository).getConfig(isNull(), eq(asList(privilegesPath, permissionPath)));
+        verify(commonConfigRepository).getConfig(isNull(), eq(asList(privilegesPath)));
         verify(commonConfigRepository).updateConfigFullPath(refEq(new Configuration(privilegesPath, expectedCustomPrivileges)), eq(sha1Hex(customPrivileges)));
-        verify(commonConfigRepository).updateConfigFullPath(refEq(new Configuration(permissionPath, expectedPermissions)), eq(sha1Hex(permissions)));
+        verifyNoMoreInteractions(commonConfigRepository);
     }
 
     @Test
     @SneakyThrows
     public void testCreateCustomPrivileges() {
-        String permissions = readFile("config/privileges/new-permission.yml");
         String privileges = readFile("config/privileges/new-privileges.yml");
 
-        testCreateCustomPrivileges(permissions, privileges);
+        testCreateCustomPrivileges(privileges);
     }
 
     @Test
@@ -450,35 +478,30 @@ public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
     public void testCreateCustomerPrivilegesWithFunctions() {
         enableDynamicPermissionCheck();
 
-        String permissions = readFile("config/privileges/new-permission.yml");
         String privileges = readFile("config/privileges/new-privileges-with-functions.yml");
 
-        testCreateCustomPrivileges(permissions, privileges);
+        testCreateCustomPrivileges(privileges);
     }
 
-    private void testCreateCustomPrivileges(String permissions, String privileges) {
+    private void testCreateCustomPrivileges(String privileges) {
         String privilegesPath = PRIVILEGES_PATH;
-        String permissionPath = PERMISSION_PATH;
-        when(commonConfigRepository.getConfig(isNull(), eq(asList(privilegesPath, permissionPath)))).thenReturn(null);
+        when(commonConfigRepository.getConfig(isNull(), eq(asList(privilegesPath)))).thenReturn(null);
         when(roleService.getRoles("TEST")).thenReturn(of("ROLE_ADMIN", new Role(), "ROLE_AGENT", new Role()));
 
         xmEntitySpecService.getTypeSpecs();
 
-        verify(commonConfigRepository).getConfig(isNull(), eq(asList(privilegesPath, permissionPath)));
+        verify(commonConfigRepository).getConfig(isNull(), eq(asList(privilegesPath)));
         verify(commonConfigRepository)
             .updateConfigFullPath(refEq(new Configuration(privilegesPath, privileges)), isNull());
-        verify(commonConfigRepository)
-            .updateConfigFullPath(refEq(new Configuration(permissionPath, permissions)), isNull());
+        verifyNoMoreInteractions(commonConfigRepository);
     }
 
     @Test
     @SneakyThrows
     public void testUpdateRealPermissionFile() {
-        String permissions = readFile("config/privileges/permissions.yml");
         String privileges = readFile("config/privileges/new-privileges.yml");
-        String expectedPermissions = readFile("config/privileges/expected-permissions.yml");
 
-        testUpdateRealPermissionFile(permissions, privileges, expectedPermissions);
+        testUpdateRealPermissionFile(privileges);
     }
 
     @Test
@@ -486,20 +509,31 @@ public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
     public void testUpdateRealPermissionFileWithXmEntity() {
         enableDynamicPermissionCheck();
 
-        String permissions = readFile("config/privileges/permissions.yml");
         String privileges = readFile("config/privileges/new-privileges-with-functions.yml");
-        String expectedPermissions = readFile("config/privileges/expected-permissions.yml");
 
-        testUpdateRealPermissionFile(permissions, privileges, expectedPermissions);
+        testUpdateRealPermissionFile(privileges);
     }
 
-    public void testUpdateRealPermissionFile(String permissions, String privileges, String expectedPermissions) {
+    @Test
+    @SneakyThrows
+    public void testXmEntitySpecSchemaGeneration() {
+        String jsonSchema = xmEntitySpecService.generateJsonSchema();
+        ObjectMapper objectMapper = new ObjectMapper(new YAMLFactory());
+        JsonNode xmentityspec = objectMapper.readTree(new File(SPEC_PATH.toString()));
+
+        JsonNode schemaNode = JsonLoader.fromString(jsonSchema);
+        JsonSchemaFactory factory = JsonSchemaFactory.byDefault();
+        JsonSchema schema = factory.getJsonSchema(schemaNode);
+        ProcessingReport report = schema.validate(xmentityspec);
+
+        boolean isSuccess = report.isSuccess();
+        assertTrue(report.toString(), isSuccess);
+    }
+
+    public void testUpdateRealPermissionFile(String privileges) {
         String privilegesPath = PRIVILEGES_PATH;
-        String permissionPath = PERMISSION_PATH;
-        Map<String, Configuration> configs = of(
-            permissionPath, new Configuration(permissionPath, permissions)
-                                               );
-        when(commonConfigRepository.getConfig(isNull(), eq(asList(privilegesPath, permissionPath)))).thenReturn(configs);
+        Map<String, Configuration> configs = of();
+        when(commonConfigRepository.getConfig(isNull(), eq(asList(privilegesPath)))).thenReturn(configs);
         when(roleService.getRoles("TEST")).thenReturn(of(
             "ROLE_ADMIN", new Role(),
             "ROLE_AGENT", new Role()
@@ -507,9 +541,9 @@ public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
 
         xmEntitySpecService.getTypeSpecs();
 
-        verify(commonConfigRepository).getConfig(isNull(), eq(asList(privilegesPath, permissionPath)));
+        verify(commonConfigRepository).getConfig(isNull(), eq(asList(privilegesPath)));
         verify(commonConfigRepository).updateConfigFullPath(refEq(new Configuration(privilegesPath, privileges)), isNull());
-        verify(commonConfigRepository).updateConfigFullPath(refEq(new Configuration(permissionPath, expectedPermissions)), eq(sha1Hex(permissions)));
+        verifyNoMoreInteractions(commonConfigRepository);
     }
 
     private String readFile(String path1) throws IOException {

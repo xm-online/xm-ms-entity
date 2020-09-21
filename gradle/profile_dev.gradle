@@ -1,21 +1,34 @@
-apply plugin: 'org.springframework.boot'
+configurations {
+    developmentOnly
+    runtimeClasspath {
+        extendsFrom developmentOnly
+    }
+}
 
 ext {
     logbackLoglevel = "DEBUG"
 }
 
 dependencies {
-    compile "org.springframework.boot:spring-boot-devtools"
+    developmentOnly "org.springframework.boot:spring-boot-devtools"
+    implementation "com.h2database:h2"
 }
 
-def profiles = 'dev'
-if (project.hasProperty('no-liquibase')) {
-    profiles += ',no-liquibase'
+def profiles = "dev"
+if (project.hasProperty("no-liquibase")) {
+    profiles += ",no-liquibase"
+}
+if (project.hasProperty("tls")) {
+    profiles += ",tls"
 }
 
-
-
-
+springBoot {
+    buildInfo {
+		properties {
+			time = null
+		}
+	}
+}
 
 bootRun {
     args = []
@@ -23,22 +36,21 @@ bootRun {
 
 
 processResources {
+    inputs.property('version', version)
+    inputs.property('springProfiles', profiles)
+    filesMatching("**/application.yml") {
+        filter {
+            it.replace("#project.version#", version)
+        }
+    }
+    filesMatching("**/bootstrap.yml") {
+        filter {
+            it.replace("#spring.profiles.active#", profiles)
+        }
+    }
     filesMatching('**/logback-spring.xml') {
         filter {
             it.replace('#logback.loglevel#', logbackLoglevel)
-        }
-    }
-    filesMatching('**/application.yml') {
-        filter {
-            it.replace('#project.version#', version)
-        }
-    }
-    filesMatching('**/bootstrap.yml') {
-        filter {
-            it.replace('#spring.profiles.active#', profiles)
-        }
-        filter {
-            it.replace('#project.version#', version)
         }
     }
 }

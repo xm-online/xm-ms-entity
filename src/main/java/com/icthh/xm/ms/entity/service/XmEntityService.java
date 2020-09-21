@@ -64,6 +64,11 @@ public interface XmEntityService extends ResourceRepository {
                           Pageable pageable,
                           String privilegeKey);
 
+    Page<XmEntity> search(Long scrollTimeInMillis, String query, Pageable pageable, String privilegeKey);
+
+    Page<XmEntity> searchXmEntitiesToLink(IdOrKey idOrKey, String entityTypeKey, String linkTypeKey, String query,
+                                          Pageable pageable, String privilegeKey);
+
     @Deprecated
     XmEntity profile();
 
@@ -128,4 +133,5 @@ public interface XmEntityService extends ResourceRepository {
     XmEntity findById(Object id);
 
     byte[] exportEntities(String fileFormat, String typeKey);
+
 }

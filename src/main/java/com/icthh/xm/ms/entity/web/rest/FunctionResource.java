@@ -5,12 +5,14 @@ import static org.springframework.web.servlet.HandlerMapping.BEST_MATCHING_PATTE
 import static org.springframework.web.servlet.HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE;
 
 import com.codahale.metrics.annotation.Timed;
+import com.icthh.xm.commons.permission.annotation.PrivilegeDescription;
 import com.icthh.xm.ms.entity.domain.FunctionContext;
 import com.icthh.xm.ms.entity.service.FunctionService;
 import com.icthh.xm.ms.entity.web.rest.util.HeaderUtil;
 import java.net.URI;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import javax.servlet.http.HttpServletRequest;
 import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -56,6 +58,7 @@ public class FunctionResource {
     @Timed
     @GetMapping("/functions/{functionKey:.+}")
     @PreAuthorize("hasPermission({'functionKey': #functionKey}, 'FUNCTION.GET.CALL')")
+    @PrivilegeDescription("Privilege to call get function")
     public ResponseEntity<Object> callGetFunction(@PathVariable("functionKey") String functionKey,
                                                            @RequestParam(required = false) Map<String, Object> functionInput) {
         FunctionContext result = functionService.execute(functionKey, functionInput);
@@ -65,6 +68,7 @@ public class FunctionResource {
     @Timed
     @PutMapping("/functions/{functionKey:.+}")
     @PreAuthorize("hasPermission({'functionKey': #functionKey}, 'FUNCTION.PUT.CALL')")
+    @PrivilegeDescription("Privilege to call put function")
     public ResponseEntity<Object> callPutFunction(@PathVariable("functionKey") String functionKey,
                                                            @RequestBody(required = false) Map<String, Object> functionInput) {
         FunctionContext result = functionService.execute(functionKey, functionInput);
@@ -82,10 +86,11 @@ public class FunctionResource {
     @Timed
     @PostMapping("/functions/{functionKey:.+}")
     @PreAuthorize("hasPermission({'functionKey': #functionKey}, 'FUNCTION.CALL')")
+    @PrivilegeDescription("Privilege to execute a function by key (key in entity specification)")
     public ResponseEntity<Object> callFunction(@PathVariable("functionKey") String functionKey,
-                                                        @RequestBody(required = false) Map<String, Object> functionInput) {
+                                               @RequestBody(required = false) Map<String, Object> functionInput) {
         FunctionContext result = functionService.execute(functionKey, functionInput);
-        return ResponseEntity.created(URI.create("/api/function-contexts/" + result.getId()))
+        return ResponseEntity.created(URI.create("/api/function-contexts/" + Objects.toString(result.getId(), "")))
             .headers(HeaderUtil.createEntityCreationAlert(ENTITY_NAME_FUNCTION_CONTEXT, String.valueOf(result.getId())))
             .body(result.functionResult());
     }
@@ -100,6 +105,7 @@ public class FunctionResource {
     @Timed
     @PostMapping("/functions/mvc/{functionKey:.+}")
     @PreAuthorize("hasPermission({'functionKey': #functionKey}, 'FUNCTION.MVC.CALL')")
+    @PrivilegeDescription("Privilege to execute a mvc function by key (key in entity specification)")
     public ModelAndView callMvcFunction(@PathVariable("functionKey") String functionKey,
                                         @RequestBody(required = false) Map<String, Object> functionInput) {
         FunctionContext result = functionService.execute(functionKey, functionInput);
@@ -120,14 +126,14 @@ public class FunctionResource {
     @Timed
     @PostMapping("/functions/**")
     public ResponseEntity<Object> callFunction(HttpServletRequest request,
-                                               @RequestParam(required = false) Map<String, Object> functionInput) {
+                                               @RequestBody(required = false) Map<String, Object> functionInput) {
         return self.callFunction(getFunctionKey(request), functionInput);
     }
 
     @Timed
     @PutMapping("/functions/**")
     public ResponseEntity<Object> callPutFunction(HttpServletRequest request,
-                                                  @RequestParam(required = false) Map<String, Object> functionInput) {
+                                                  @RequestBody(required = false) Map<String, Object> functionInput) {
         return self.callPutFunction(getFunctionKey(request), functionInput);
     }
 
@@ -142,6 +148,7 @@ public class FunctionResource {
     @PostMapping(value = "/functions/{functionKey:.+}/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasPermission({'functionKey': #functionKey}, 'FUNCTION.UPLOAD.CALL')")
     @SneakyThrows
+    @PrivilegeDescription("Privilege to call upload function")
     public ResponseEntity<Object> callUploadFunction(@PathVariable("functionKey") String functionKey,
                                                      @RequestParam(value = "file", required = false) List<MultipartFile> files,
                                                      HttpServletRequest httpServletRequest) {
