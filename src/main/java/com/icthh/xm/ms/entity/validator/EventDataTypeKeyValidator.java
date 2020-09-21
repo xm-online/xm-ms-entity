@@ -2,6 +2,7 @@ package com.icthh.xm.ms.entity.validator;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
+import com.icthh.xm.commons.exceptions.BusinessException;
 import com.icthh.xm.commons.exceptions.EntityNotFoundException;
 import com.icthh.xm.ms.entity.domain.Event;
 import com.icthh.xm.ms.entity.domain.XmEntity;
@@ -31,8 +32,8 @@ public class EventDataTypeKeyValidator implements ConstraintValidator<EventDataT
 
         String eventSpecDataTypeKey = eventSpec.getDataTypeKey();
         if (isBlank(eventSpecDataTypeKey)) {
-            throw new IllegalStateException("Data type key not configured for Event with type key: "
-                + eventSpec.getKey());
+            throw new BusinessException("xm.ms.entity.event.dataTypekey.blank",
+                "Data type key not configured for Event with type key: " + eventSpec.getKey());
         }
 
         if (xmEntitySpecService.getTypeSpecByKey(eventSpecDataTypeKey).isEmpty()) {
