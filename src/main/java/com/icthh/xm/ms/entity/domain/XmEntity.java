@@ -5,7 +5,6 @@ import static javax.persistence.CascadeType.ALL;
 import static javax.persistence.CascadeType.MERGE;
 import static javax.persistence.CascadeType.PERSIST;
 import static javax.persistence.CascadeType.REMOVE;
-import static javax.persistence.FetchType.LAZY;
 import static org.apache.commons.lang3.StringUtils.removeAll;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -41,7 +40,6 @@ import javax.persistence.Id;
 import javax.persistence.NamedAttributeNode;
 import javax.persistence.NamedEntityGraph;
 import javax.persistence.OneToMany;
-import javax.persistence.OneToOne;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.persistence.Transient;
@@ -265,12 +263,6 @@ public class XmEntity implements Serializable, Persistable<Long> {
     @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
     @Getter @Setter
     private Set<UniqueField> uniqueFields = new HashSet<>();
-
-    @OneToOne(mappedBy = "eventDataRef", fetch = LAZY)
-    @JsonIgnore
-    @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
-    @Getter @Setter
-    private Event event;
 
     public Long getId() {
         return id;
@@ -731,11 +723,6 @@ public class XmEntity implements Serializable, Persistable<Long> {
     public XmEntity removeEvent(Event event) {
         this.events.remove(event);
         event.setAssigned(null);
-        return this;
-    }
-
-    public XmEntity event(Event event) {
-        this.event = event;
         return this;
     }
 
