@@ -55,6 +55,7 @@ import com.icthh.xm.ms.entity.projection.LinkProjection;
 import com.icthh.xm.ms.entity.projection.XmEntityId;
 import com.icthh.xm.ms.entity.projection.XmEntityIdKeyTypeKey;
 import com.icthh.xm.ms.entity.projection.XmEntityStateProjection;
+import com.icthh.xm.ms.entity.repository.EventRepository;
 import com.icthh.xm.ms.entity.repository.SpringXmEntityRepository;
 import com.icthh.xm.ms.entity.repository.UniqueFieldRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityPermittedRepository;
@@ -130,6 +131,7 @@ public class XmEntityServiceImpl implements XmEntityService {
     private final SpringXmEntityRepository springXmEntityRepository;
     private final TypeKeyWithExtends typeKeyWithExtends;
     private final SimpleTemplateProcessor simpleTemplateProcessors;
+    private final EventRepository eventRepository;
 
     private XmEntityServiceImpl self;
 
@@ -448,7 +450,7 @@ public class XmEntityServiceImpl implements XmEntityService {
                     linkSpec.get(target.getTypeKey()), target.getTypeKey());
             }
         }
-
+        eventRepository.findByEventDataRef(xmEntity).ifPresent(event -> event.setEventDataRef(null));
         xmEntityRepository.deleteById(xmEntity.getId());
     }
 

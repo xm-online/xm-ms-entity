@@ -1,19 +1,35 @@
 package com.icthh.xm.ms.entity.domain;
 
+import static javax.persistence.CascadeType.MERGE;
+import static javax.persistence.CascadeType.PERSIST;
+import static javax.persistence.CascadeType.REMOVE;
+
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.JsonIdentityReference;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import com.icthh.xm.ms.entity.domain.idresolver.CalendarObjectIdResolver;
 import com.icthh.xm.ms.entity.domain.idresolver.XmEntityObjectIdResolver;
+import com.icthh.xm.ms.entity.validator.EventDataTypeKey;
 import io.swagger.annotations.ApiModelProperty;
-import org.hibernate.annotations.Cache;
-import org.hibernate.annotations.CacheConcurrencyStrategy;
-
-import javax.persistence.*;
-import javax.validation.constraints.*;
 import java.io.Serializable;
 import java.time.Instant;
 import java.util.Objects;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.OneToOne;
+import javax.persistence.PrePersist;
+import javax.persistence.SequenceGenerator;
+import javax.persistence.Table;
+import javax.validation.constraints.NotNull;
+import lombok.Getter;
+import lombok.Setter;
+import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
 
 /**
  * A Event.
@@ -21,6 +37,9 @@ import java.util.Objects;
 @Entity
 @Table(name = "event")
 @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
+@Getter
+@Setter
+@EventDataTypeKey
 public class Event implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -39,14 +58,14 @@ public class Event implements Serializable {
     private String typeKey;
 
     /**
-     * Configuration for event repetition
+     * Configuration for event repetition.
      */
     @ApiModelProperty(value = "Configuration for event repetition")
     @Column(name = "repeat_rule_key")
     private String repeatRuleKey;
 
     /**
-     * Event title
+     * Event title.
      */
     @NotNull
     @ApiModelProperty(value = "Event title", required = true)
@@ -54,21 +73,21 @@ public class Event implements Serializable {
     private String title;
 
     /**
-     * Event description
+     * Event description.
      */
     @ApiModelProperty(value = "Event description")
     @Column(name = "description")
     private String description;
 
     /**
-     * Start date
+     * Start date.
      */
     @ApiModelProperty(value = "Start date")
     @Column(name = "start_date")
     private Instant startDate;
 
     /**
-     * End date
+     * End date.
      */
     @ApiModelProperty(value = "End date")
     @Column(name = "end_date")
@@ -86,29 +105,17 @@ public class Event implements Serializable {
     @JsonIdentityReference(alwaysAsId = true)
     private XmEntity assigned;
 
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public String getTypeKey() {
-        return typeKey;
-    }
+    /**
+     * Reference to {@link XmEntity} which stores extra data regarding to this {@link Event}.
+     */
+    @ApiModelProperty(value = "Reference to event's extra data")
+    @OneToOne(cascade = {PERSIST, MERGE, REMOVE})
+    @JoinColumn(name = "event_data_ref_id", unique = true)
+    private XmEntity eventDataRef;
 
     public Event typeKey(String typeKey) {
         this.typeKey = typeKey;
         return this;
-    }
-
-    public void setTypeKey(String typeKey) {
-        this.typeKey = typeKey;
-    }
-
-    public String getRepeatRuleKey() {
-        return repeatRuleKey;
     }
 
     public Event repeatRuleKey(String repeatRuleKey) {
@@ -116,25 +123,9 @@ public class Event implements Serializable {
         return this;
     }
 
-    public void setRepeatRuleKey(String repeatRuleKey) {
-        this.repeatRuleKey = repeatRuleKey;
-    }
-
-    public String getTitle() {
-        return title;
-    }
-
     public Event title(String title) {
         this.title = title;
         return this;
-    }
-
-    public void setTitle(String title) {
-        this.title = title;
-    }
-
-    public String getDescription() {
-        return description;
     }
 
     public Event description(String description) {
@@ -142,25 +133,9 @@ public class Event implements Serializable {
         return this;
     }
 
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
-    public Instant getStartDate() {
-        return startDate;
-    }
-
     public Event startDate(Instant startDate) {
         this.startDate = startDate;
         return this;
-    }
-
-    public void setStartDate(Instant startDate) {
-        this.startDate = startDate;
-    }
-
-    public Instant getEndDate() {
-        return endDate;
     }
 
     public Event endDate(Instant endDate) {
@@ -168,25 +143,9 @@ public class Event implements Serializable {
         return this;
     }
 
-    public void setEndDate(Instant endDate) {
-        this.endDate = endDate;
-    }
-
-    public Calendar getCalendar() {
-        return calendar;
-    }
-
     public Event calendar(Calendar calendar) {
         this.calendar = calendar;
         return this;
-    }
-
-    public void setCalendar(Calendar calendar) {
-        this.calendar = calendar;
-    }
-
-    public XmEntity getAssigned() {
-        return assigned;
     }
 
     public Event assigned(XmEntity xmEntity) {
@@ -194,8 +153,9 @@ public class Event implements Serializable {
         return this;
     }
 
-    public void setAssigned(XmEntity xmEntity) {
-        this.assigned = xmEntity;
+    public Event eventDataRef(XmEntity xmEntity) {
+        this.eventDataRef = xmEntity;
+        return this;
     }
 
     @PrePersist
@@ -227,14 +187,14 @@ public class Event implements Serializable {
 
     @Override
     public String toString() {
-        return "Event{" +
-            "id=" + getId() +
-            ", typeKey='" + getTypeKey() + "'" +
-            ", repeatRuleKey='" + getRepeatRuleKey() + "'" +
-            ", title='" + getTitle() + "'" +
-            ", description='" + getDescription() + "'" +
-            ", startDate='" + getStartDate() + "'" +
-            ", endDate='" + getEndDate() + "'" +
-            "}";
+        return "Event{"
+            + "id=" + getId()
+            + ", typeKey='" + getTypeKey() + "'"
+            + ", repeatRuleKey='" + getRepeatRuleKey() + "'"
+            + ", title='" + getTitle() + "'"
+            + ", description='" + getDescription() + "'"
+            + ", startDate='" + getStartDate() + "'"
+            + ", endDate='" + getEndDate() + "'"
+            + "}";
     }
 }
