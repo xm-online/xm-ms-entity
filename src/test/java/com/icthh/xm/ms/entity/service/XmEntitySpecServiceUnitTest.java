@@ -166,16 +166,16 @@ public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
 
     @Test
     public void testFindTypeByKey() {
-        TypeSpec type = xmEntitySpecService.findTypeByKey(KEY1);
+        TypeSpec type = xmEntitySpecService.getTypeSpecByKey(KEY1).orElse(null);
         assertNotNull(type);
         assertEquals(KEY1, type.getKey());
 
-        type = xmEntitySpecService.findTypeByKey(KEY3);
+        type = xmEntitySpecService.getTypeSpecByKey(KEY3).orElse(null);
         assertNotNull(type);
         assertEquals(KEY3, type.getKey());
 
-        type = xmEntitySpecService.findTypeByKey(KEY4);
-        assertNull(type);
+        Optional<TypeSpec> typeSpecByKey = xmEntitySpecService.getTypeSpecByKey(KEY4);
+        assertThat(typeSpecByKey).isEmpty();
     }
 
     @Test

@@ -30,7 +30,7 @@ public class XmEntityFieldNotNullValidator implements ConstraintValidator<NotNul
     @Override
     @SneakyThrows
     public boolean isValid(XmEntity xmEntity, ConstraintValidatorContext ctx) {
-        TypeSpec typeSpec = xmEntitySpecService.findTypeByKey(xmEntity.getTypeKey());
+        TypeSpec typeSpec = xmEntitySpecService.getTypeSpecByKey(xmEntity.getTypeKey()).orElse(null);
 
         if (typeSpec == null) {
             return true;

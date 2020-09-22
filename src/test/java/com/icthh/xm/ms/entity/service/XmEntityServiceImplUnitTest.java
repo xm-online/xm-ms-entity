@@ -100,7 +100,7 @@ public class XmEntityServiceImplUnitTest extends AbstractUnitTest {
             new UniqueFieldSpec("$.uniqueObjectWithUniqueField.uniqueField"),
             new UniqueFieldSpec("$.notExistsObjectWith.uniqueField")
         )));
-        when(xmEntitySpecService.findTypeByKey(TEST_TYPE_KEY)).thenReturn(typeSpec);
+        when(xmEntitySpecService.getTypeSpecByKey(TEST_TYPE_KEY)).thenReturn(Optional.of(typeSpec));
 
         XmEntity any = any();
         when(xmEntityRepository.save(any)).then(args -> args.getArguments()[0]);
@@ -215,7 +215,7 @@ public class XmEntityServiceImplUnitTest extends AbstractUnitTest {
 
     @Test
     @Transactional
-    public void nameTemplateTest() throws Exception {
+    public void nameTemplateTest() {
         XmEntity entity = new XmEntity();
         entity.setTypeKey("TEST_TYPE_KEY");
         entity.setId(15L);
@@ -225,7 +225,7 @@ public class XmEntityServiceImplUnitTest extends AbstractUnitTest {
 
         String namePattern = "Name generate from ${id} and ${key:unknown} and ${stateKey} and ${data.a.b.c.d.f} and ${data.a.b.c} and ${data.a.b.c.k} and ${data.a.b.c.e[1]} and ${data.a.b.c.e[2]}";
         TypeSpec typeSpec = TypeSpec.builder().namePattern(namePattern).build();
-        when(xmEntitySpecService.findTypeByKey("TEST_TYPE_KEY")).thenReturn(typeSpec);
+        when(xmEntitySpecService.getTypeSpecByKey("TEST_TYPE_KEY")).thenReturn(Optional.of(typeSpec));
 
         xmEntityService.save(entity);
         log.info(entity.getName());
