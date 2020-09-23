@@ -5,6 +5,7 @@ import static com.icthh.xm.ms.entity.domain.spec.LinkSpec.SEARCH_BUILDER_TYPE;
 import static com.icthh.xm.ms.entity.util.CustomCollectionUtils.nullSafe;
 import static com.jayway.jsonpath.Configuration.defaultConfiguration;
 import static com.jayway.jsonpath.Option.SUPPRESS_EXCEPTIONS;
+import static java.lang.Boolean.TRUE;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static java.util.Optional.ofNullable;
@@ -525,7 +526,7 @@ public class XmEntityServiceImpl implements XmEntityService {
         LinkSpec linkSpec = xmEntitySpecService.getLinkSpec(entityTypeKey, linkTypeKey)
             .orElseThrow(() -> new IllegalArgumentException("Invalid entity typeKey ot link typeKey"));
 
-        if (!linkSpec.getIsUnique()) {
+        if (!TRUE.equals(linkSpec.getIsUnique())) {
             return self.search(query, pageable, privilegeKey);
         }
 
