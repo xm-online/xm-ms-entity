@@ -15,21 +15,21 @@ import com.icthh.xm.ms.entity.domain.converter.MapToStringConverter;
 import com.icthh.xm.ms.entity.domain.listener.AvatarUrlListener;
 import com.icthh.xm.ms.entity.domain.listener.XmEntityElasticSearchListener;
 import com.icthh.xm.ms.entity.validator.JsonData;
+import com.icthh.xm.ms.entity.validator.NotNull;
 import com.icthh.xm.ms.entity.validator.StateKey;
 import com.icthh.xm.ms.entity.validator.TypeKey;
-import com.icthh.xm.ms.entity.validator.NotNull;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
-import lombok.Getter;
-import lombok.Setter;
-import org.apache.commons.collections4.CollectionUtils;
-import org.hibernate.annotations.Cache;
-import org.hibernate.annotations.CacheConcurrencyStrategy;
-import org.springframework.data.domain.Persistable;
-import org.springframework.data.elasticsearch.annotations.Document;
-import org.springframework.data.elasticsearch.annotations.Field;
-import org.springframework.data.elasticsearch.annotations.FieldType;
-
+import java.io.Serializable;
+import java.time.Instant;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.UUID;
+import java.util.function.BiConsumer;
 import javax.persistence.Column;
 import javax.persistence.Convert;
 import javax.persistence.Entity;
@@ -45,16 +45,15 @@ import javax.persistence.Table;
 import javax.persistence.Transient;
 import javax.persistence.Version;
 import javax.validation.Valid;
-import java.io.Serializable;
-import java.time.Instant;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
-import java.util.UUID;
-import java.util.function.BiConsumer;
+import lombok.Getter;
+import lombok.Setter;
+import org.apache.commons.collections4.CollectionUtils;
+import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.springframework.data.domain.Persistable;
+import org.springframework.data.elasticsearch.annotations.Document;
+import org.springframework.data.elasticsearch.annotations.Field;
+import org.springframework.data.elasticsearch.annotations.FieldType;
 
 /**
  * Represents any XM entity like Account, Product Offering, Product, Order, Handling,
@@ -63,7 +62,8 @@ import java.util.function.BiConsumer;
 @TypeKey
 @StateKey
 @JsonData
-@ApiModel(description = "Represents any XM entity like Account, Product Offering, Product, Order, Handling, Resource, Task, Agreement, Contact, Organization, Price, Channel, Segment and other.")
+@ApiModel(description = "Represents any XM entity like Account, Product Offering, Product, Order, Handling, "
+    + "Resource, Task, Agreement, Contact, Organization, Price, Channel, Segment and other.")
 @Entity
 @Table(name = "xm_entity")
 @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
@@ -758,22 +758,22 @@ public class XmEntity implements Serializable, Persistable<Long> {
 
     @Override
     public String toString() {
-        return "XmEntity{" +
-            "id=" + getId() +
-            ", key='" + getKey() + "'" +
-            ", typeKey='" + getTypeKey() + "'" +
-            ", stateKey='" + getStateKey() + "'" +
-            ", name='" + getName() + "'" +
-            ", startDate='" + getStartDate() + "'" +
-            ", updateDate='" + getUpdateDate() + "'" +
-            ", endDate='" + getEndDate() + "'" +
-            ", avatarUrl='" + getAvatarUrl() + "'" +
-            ", description='" + removeAll(getDescription(), REGEX_EOL) + "'" +
-            ", data='" + getData() + "'" +
-            ", removed='" + isRemoved() + "'" +
-            ", createdBy='" + getCreatedBy() + "'" +
-            ", version='" + getVersion() + "'" +
-            "}";
+        return "XmEntity{"
+            + "id=" + getId()
+            + ", key='" + getKey() + "'"
+            + ", typeKey='" + getTypeKey() + "'"
+            + ", stateKey='" + getStateKey() + "'"
+            + ", name='" + getName() + "'"
+            + ", startDate='" + getStartDate() + "'"
+            + ", updateDate='" + getUpdateDate() + "'"
+            + ", endDate='" + getEndDate() + "'"
+            + ", avatarUrl='" + getAvatarUrl() + "'"
+            + ", description='" + removeAll(getDescription(), REGEX_EOL) + "'"
+            + ", data='" + getData() + "'"
+            + ", removed='" + isRemoved() + "'"
+            + ", createdBy='" + getCreatedBy() + "'"
+            + ", version='" + getVersion() + "'"
+            + "}";
     }
 
 }

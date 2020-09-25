@@ -10,7 +10,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.when;
 
 import com.icthh.xm.commons.lep.XmLepScriptConfigServerResourceLoader;
@@ -46,12 +45,12 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import javax.persistence.EntityManager;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.text.StrSubstitutor;
 import org.elasticsearch.action.search.SearchPhaseExecutionException;
-import org.hibernate.Hibernate;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -64,8 +63,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.ElasticsearchException;
 import org.springframework.security.test.context.support.WithMockUser;
-import org.springframework.test.context.TestPropertySource;
-import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 public class XmEntityServiceIntTest extends AbstractSpringBootTest {
@@ -99,6 +96,9 @@ public class XmEntityServiceIntTest extends AbstractSpringBootTest {
 
     @Autowired
     private XmEntityTenantConfigService xmEntityTenantConfigService;
+
+    @Autowired
+    private EntityManager entityManager;
 
     @Mock
     private XmAuthenticationContextHolder authContextHolder;
@@ -230,6 +230,23 @@ public class XmEntityServiceIntTest extends AbstractSpringBootTest {
         XmEntity entity = xmEntityService.save(createXmEntity());
 
         xmEntityService.delete(entity.getId());
+    }
+
+    @Test
+    public void testDeleteWithAlreadyAssignedEvent() {
+        XmEntity eventDataRef = xmEntityService.save(createXmEntity());
+        Event event = transactionExecutor.doInSeparateTransaction(() -> {
+            XmEntity existedEventDataRef = entityManager.find(XmEntity.class, eventDataRef.getId());
+            Event newEvent = new Event().typeKey("B").title("1").eventDataRef(existedEventDataRef);
+            entityManager.persist(newEvent);
+            return newEvent;
+        });
+
+        xmEntityService.delete(eventDataRef.getId());
+
+        Event eventAfterRelatedEntityDeletion = transactionExecutor.doInSeparateTransaction(
+            () -> entityManager.find(Event.class, event.getId()));
+        assertThat(eventAfterRelatedEntityDeletion.getEventDataRef()).isNull();
     }
 
     @Test

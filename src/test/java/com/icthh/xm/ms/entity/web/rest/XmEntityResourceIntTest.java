@@ -28,7 +28,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableMap;
-import com.icthh.xm.commons.config.client.service.TenantConfigService;
 import com.icthh.xm.commons.i18n.error.web.ExceptionTranslator;
 import com.icthh.xm.commons.security.XmAuthenticationContext;
 import com.icthh.xm.commons.security.XmAuthenticationContextHolder;
@@ -43,6 +42,7 @@ import com.icthh.xm.ms.entity.config.XmEntityTenantConfigService;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.domain.spec.StateSpec;
 import com.icthh.xm.ms.entity.lep.keyresolver.TypeKeyWithExtends;
+import com.icthh.xm.ms.entity.repository.EventRepository;
 import com.icthh.xm.ms.entity.repository.SpringXmEntityRepository;
 import com.icthh.xm.ms.entity.repository.UniqueFieldRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityPermittedRepository;
@@ -146,6 +146,9 @@ public class XmEntityResourceIntTest extends AbstractSpringBootTest {
 
     @Autowired
     private XmEntityRepositoryInternal xmEntityRepository;
+
+    @Autowired
+    private EventRepository eventRepository;
 
     @Autowired
     private SpringXmEntityRepository springXmEntityRepository;
@@ -280,7 +283,8 @@ public class XmEntityResourceIntTest extends AbstractSpringBootTest {
                                                       mock(UniqueFieldRepository.class),
                                                       springXmEntityRepository,
                                                       new TypeKeyWithExtends(tenantConfigService),
-                                                      new SimpleTemplateProcessor(objectMapper));
+                                                      new SimpleTemplateProcessor(objectMapper),
+                                                      eventRepository);
         xmEntityServiceImpl.setSelf(xmEntityServiceImpl);
 
         this.xmEntityServiceImpl = xmEntityServiceImpl;

@@ -1,11 +1,9 @@
 package com.icthh.xm.ms.entity.domain.spec;
 
-import java.util.Map;
-
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-
+import java.util.Map;
 import lombok.Data;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -19,5 +17,6 @@ public class EventSpec {
     private Map<String, String> name;
     @JsonProperty("color")
     private String color;
-
+    @JsonProperty("dataTypeKey")
+    private String dataTypeKey;
 }
