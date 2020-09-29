@@ -215,7 +215,8 @@ public class XmEntityServiceImpl implements XmEntityService {
             .getTypeSpecByKey(xmEntity.getTypeKey())
             .map(TypeSpec::getNamePattern)
             .filter(StringUtils::isNotEmpty)
-            .ifPresent(parentName -> xmEntity.setName(simpleTemplateProcessors.processTemplate(parentName, xmEntity)));
+            .map(parentName -> simpleTemplateProcessors.processTemplate(parentName, xmEntity))
+            .ifPresent(xmEntity::setName);
     }
 
     private void preventRenameTenant(XmEntity xmEntity, XmEntity oldEntity) {
