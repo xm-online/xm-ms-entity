@@ -43,6 +43,7 @@ import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.domain.converter.EntityToCsvConverterUtils;
 import com.icthh.xm.ms.entity.domain.converter.EntityToExcelConverterUtils;
 import com.icthh.xm.ms.entity.domain.ext.IdOrKey;
+import com.icthh.xm.ms.entity.domain.spec.AttachmentSpec;
 import com.icthh.xm.ms.entity.domain.spec.LinkSpec;
 import com.icthh.xm.ms.entity.domain.spec.StateSpec;
 import com.icthh.xm.ms.entity.domain.spec.TypeSpec;
@@ -212,10 +213,12 @@ public class XmEntityServiceImpl implements XmEntityService {
     }
 
     private void processName(XmEntity xmEntity) {
-        TypeSpec typeByKey = xmEntitySpecService.findTypeByKey(xmEntity.getTypeKey());
-        if (StringUtils.isNotEmpty(typeByKey.getNamePattern())) {
-            xmEntity.setName(simpleTemplateProcessors.processTemplate(typeByKey.getNamePattern(), xmEntity));
-        }
+        xmEntitySpecService
+            .getTypeSpecByKey(xmEntity.getTypeKey())
+            .map(TypeSpec::getNamePattern)
+            .filter(StringUtils::isNotEmpty)
+            .map(parentName -> simpleTemplateProcessors.processTemplate(parentName, xmEntity))
+            .ifPresent(xmEntity::setName);
     }
 
     private void preventRenameTenant(XmEntity xmEntity, XmEntity oldEntity) {
@@ -236,15 +239,19 @@ public class XmEntityServiceImpl implements XmEntityService {
         }
 
         String json = objectMapper.writeValueAsString(xmEntity.getData());
-        TypeSpec typeByKey = xmEntitySpecService.findTypeByKey(xmEntity.getTypeKey());
 
-        if (CollectionUtils.isEmpty(typeByKey.getUniqueFields())) {
+        Set<UniqueFieldSpec> uniqueFieldSpecs = xmEntitySpecService
+            .getTypeSpecByKey(xmEntity.getTypeKey())
+            .map(TypeSpec::getUniqueFields)
+            .orElseGet(Set::of);
+
+        if (uniqueFieldSpecs.isEmpty()) {
             return;
         }
 
         DocumentContext document = JsonPath.using(defaultConfiguration().addOptions(SUPPRESS_EXCEPTIONS)).parse(json);
 
-        for (UniqueFieldSpec uniqueFieldSpec : typeByKey.getUniqueFields()) {
+        for (UniqueFieldSpec uniqueFieldSpec : uniqueFieldSpecs) {
             String jsonPath = uniqueFieldSpec.getJsonPath();
             String value = convertToString(document.read(jsonPath));
 
@@ -431,8 +438,7 @@ public class XmEntityServiceImpl implements XmEntityService {
 
     private void deleteXmEntity(XmEntity xmEntity) {
 
-        TypeSpec spec = xmEntitySpecService.findTypeByKey(xmEntity.getTypeKey());
-        Map<String, String> linkSpec = ofNullable(spec)
+        Map<String, String> linkSpec = xmEntitySpecService.getTypeSpecByKey(xmEntity.getTypeKey())
             .map(TypeSpec::getLinks)
             .orElse(emptyList())
             .stream()
@@ -634,13 +640,13 @@ public class XmEntityServiceImpl implements XmEntityService {
         log.debug("Multipart file stored with name {}", storedFileName);
 
         String targetTypeKey = entity.getTypeKey();
-        TypeSpec typeSpec = xmEntitySpecService.findTypeByKey(targetTypeKey);
-        if (typeSpec == null || ObjectUtils.isEmpty(typeSpec.getAttachments())) {
-            throw new IllegalStateException("Attachment type key not found for entity " + targetTypeKey);
-        }
+
+        List<AttachmentSpec> attachmentSpecs = xmEntitySpecService.getTypeSpecByKey(targetTypeKey)
+            .map(TypeSpec::getAttachments)
+            .orElseThrow(() -> new IllegalStateException("Attachment type key not found for entity " + targetTypeKey));
 
         //get first attachment spec type for now
-        String attachmentTypeKey = typeSpec.getAttachments().stream().findFirst()
+        String attachmentTypeKey = attachmentSpecs.stream().findFirst()
             .orElseThrow(() -> new IllegalArgumentException("Attachment typeKey not found for key " + targetTypeKey))
             .getKey();
         log.debug("Attachment type key {}", attachmentTypeKey);
@@ -836,7 +842,7 @@ public class XmEntityServiceImpl implements XmEntityService {
 
     @Nullable
     private String findFirstStateForTypeKey(String typeKey) {
-        return ofNullable(xmEntitySpecService.findTypeByKey(typeKey))
+        return xmEntitySpecService.getTypeSpecByKey(typeKey)
             .map(TypeSpec::getStates)
             .filter(org.apache.commons.collections.CollectionUtils::isNotEmpty)
             .map(it -> it.get(0))
