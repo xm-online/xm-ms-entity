@@ -29,6 +29,7 @@ import org.springframework.transaction.annotation.Transactional;
 @LepService(group = "service.event")
 public class EventService {
 
+    private final XmEntityService xmEntityService;
     private final EventRepository eventRepository;
     private final PermittedRepository permittedRepository;
     private final PermittedSearchRepository permittedSearchRepository;
@@ -59,9 +60,10 @@ public class EventService {
         ofNullable(event.getAssigned())
             .map(XmEntity::getId)
             .ifPresent(assignedId -> event.setAssigned(xmEntityRepository.getOne(assignedId)));
-        ofNullable(event.getEventDataRef())
-            .map(XmEntity::getId)
-            .ifPresent(eventDataRefId -> event.setEventDataRef(xmEntityRepository.getOne(eventDataRefId)));
+        XmEntity eventDataRef = ofNullable(event.getEventDataRef())
+            .map(xmEntityService::save)
+            .orElse(null);
+        event.setEventDataRef(eventDataRef);
         return eventRepository.save(event);
     }
 
