@@ -1,7 +1,5 @@
 package com.icthh.xm.ms.entity.domain;
 
-import static javax.persistence.CascadeType.MERGE;
-import static javax.persistence.CascadeType.PERSIST;
 import static javax.persistence.CascadeType.REMOVE;
 
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
@@ -109,7 +107,7 @@ public class Event implements Serializable {
      * Reference to {@link XmEntity} which stores extra data regarding to this {@link Event}.
      */
     @ApiModelProperty(value = "Reference to event's extra data")
-    @OneToOne(cascade = {PERSIST, MERGE, REMOVE})
+    @OneToOne(cascade = REMOVE)
     @JoinColumn(name = "event_data_ref_id", unique = true)
     private XmEntity eventDataRef;
 

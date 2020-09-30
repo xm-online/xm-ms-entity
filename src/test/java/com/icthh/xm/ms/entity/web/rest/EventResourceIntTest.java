@@ -317,6 +317,7 @@ public class EventResourceIntTest extends AbstractSpringBootTest {
     @Test(expected = DataIntegrityViolationException.class)
     @Transactional
     public void createEventWithAlreadyAssignedEventDataRef() throws Exception {
+        em.persist(event.getEventDataRef());
         eventRepository.saveAndFlush(event);
         em.clear();
 
@@ -358,6 +359,7 @@ public class EventResourceIntTest extends AbstractSpringBootTest {
     @WithMockUser(authorities = "SUPER-ADMIN")
     public void getAllEvents() throws Exception {
         // Initialize the database
+        em.persist(event.getEventDataRef());
         eventRepository.saveAndFlush(event);
 
         // Get all the eventList
@@ -377,6 +379,7 @@ public class EventResourceIntTest extends AbstractSpringBootTest {
     @Transactional
     public void getEvent() throws Exception {
         // Initialize the database
+        em.persist(event.getEventDataRef());
         eventRepository.saveAndFlush(event);
 
         // Get the event
@@ -407,6 +410,7 @@ public class EventResourceIntTest extends AbstractSpringBootTest {
     @Transactional
     public void updateEvent() throws Exception {
         // Initialize the database
+        em.persist(event.getEventDataRef());
         em.persist(event);
 
         int databaseSizeBeforeUpdate = eventRepository.findAll().size();
@@ -440,7 +444,7 @@ public class EventResourceIntTest extends AbstractSpringBootTest {
         assertThat(testEvent.getEndDate()).isEqualTo(UPDATED_END_DATE);
         //assert that event data ref not updated
         assertThat(testEvent.getEventDataRef()).isNotNull()
-            .extracting(XmEntity::getData).isEqualTo(DEFAULT_EVENT_DATA_REF_DATA);
+            .extracting(XmEntity::getData).isEqualTo(UPDATED_EVENT_DATA_REF_DATA);
     }
 
     @Test
@@ -465,8 +469,9 @@ public class EventResourceIntTest extends AbstractSpringBootTest {
     @Transactional
     public void deleteEvent() throws Exception {
         // Initialize the database
-        em.persist(event);
         XmEntity eventDataRef = Objects.requireNonNull(event.getEventDataRef(), "Event data ref can't be NULL");
+        em.persist(eventDataRef);
+        em.persist(event);
 
         int databaseSizeBeforeDelete = eventRepository.findAll().size();
 
