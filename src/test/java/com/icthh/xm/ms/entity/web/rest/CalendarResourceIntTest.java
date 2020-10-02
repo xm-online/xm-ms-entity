@@ -48,6 +48,7 @@ import org.springframework.http.converter.json.MappingJackson2HttpMessageConvert
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.transaction.BeforeTransaction;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.Validator;
@@ -446,20 +447,26 @@ public class CalendarResourceIntTest extends AbstractSpringBootTest {
     public void getEventsByIdFiltering() throws Exception {
         // Initialize the database
         calendarRepository.saveAndFlush(calendar);
-        Event event = EventResourceIntTest.createEntity(em);
-        event.setCalendar(calendar);
-        em.persist(event);
+        Event event1 = EventResourceIntTest.createEntity(em);
+        event1.setCalendar(calendar);
+        em.persist(event1);
 
-        Long id = event.getId();
+        Event event2 = EventResourceIntTest.createEntity(em);
+        event2.setCalendar(calendar);
+        em.persist(event1);
 
-        defaultEventShouldBeFound(event, "id.equals=" + id);
-        defaultEventShouldNotBeFound(event, "id.notEquals=" + id);
+        Long id = event1.getId();
 
-        defaultEventShouldBeFound(event, "id.greaterThanOrEqual=" + id);
-        defaultEventShouldNotBeFound(event, "id.greaterThan=" + id);
+        //assert that single event returned
+        defaultEventShouldBeFound(event1, "id.equals=" + id)
+            .andExpect(jsonPath("$.length()").value(1));
+        defaultEventShouldNotBeFound(event1, "id.notEquals=" + id);
 
-        defaultEventShouldBeFound(event, "id.lessThanOrEqual=" + id);
-        defaultEventShouldNotBeFound(event, "id.lessThan=" + id);
+        defaultEventShouldBeFound(event1, "id.greaterThanOrEqual=" + id);
+        defaultEventShouldNotBeFound(event1, "id.greaterThan=" + id);
+
+        defaultEventShouldBeFound(event1, "id.lessThanOrEqual=" + id);
+        defaultEventShouldNotBeFound(event1, "id.lessThan=" + id);
     }
 
 
@@ -723,27 +730,28 @@ public class CalendarResourceIntTest extends AbstractSpringBootTest {
     /**
      * Executes the search, and checks that the default entity is returned.
      */
-    private void defaultEventShouldBeFound(Event event, String filter) throws Exception {
-        Long calendarId = event.getCalendar().getId();
-        restCalendarMockMvc.perform(get("/api/calendars/{id}/events?sort=id,desc&" + filter, calendarId))
-            .andExpect(status().isOk())
-            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
+    private ResultActions defaultEventShouldBeFound(Event event, String filter) throws Exception {
+        return performGetEventRequest(event, filter)
             .andExpect(jsonPath("$.[*].id").value(hasItem(event.getId().intValue())))
             .andExpect(jsonPath("$.[*].typeKey").value(hasItem(event.getTypeKey())))
             .andExpect(jsonPath("$.[*].startDate").value(hasItem(event.getStartDate().toString())))
             .andExpect(jsonPath("$.[*].endDate").value(hasItem(event.getEndDate().toString())))
-            .andExpect(jsonPath("$.[*].calendar").value(hasItem(calendarId.intValue())));
+            .andExpect(jsonPath("$.[*].calendar").value(hasItem(event.getCalendar().getId().intValue())));
     }
 
     /**
      * Executes the search, and checks that the default entity is not returned.
      */
     private void defaultEventShouldNotBeFound(Event event, String filter) throws Exception {
-        restCalendarMockMvc.perform(get("/api/calendars/{id}/events?sort=id,desc&"
-                + filter, event.getCalendar().getId()))
-            .andExpect(status().isOk())
-            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
+        performGetEventRequest(event, filter)
             .andExpect(jsonPath("$").isArray())
             .andExpect(jsonPath("$").isEmpty());
+    }
+
+    private ResultActions performGetEventRequest(Event event, String filter) throws Exception {
+        Long calendarId = event.getCalendar().getId();
+        return restCalendarMockMvc.perform(get("/api/calendars/{id}/events?sort=id,desc&" + filter, calendarId))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8));
     }
 }
