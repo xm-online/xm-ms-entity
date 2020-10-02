@@ -5,14 +5,15 @@ import com.icthh.xm.ms.entity.domain.Event;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;
 
 /**
  * Spring Data JPA repository for the Event entity.
  */
-@SuppressWarnings("unused")
 @Repository
-public interface EventRepository extends JpaRepository<Event, Long>, ResourceRepository {
+public interface EventRepository extends JpaRepository<Event, Long>, ResourceRepository,
+    JpaSpecificationExecutor<Event> {
 
     @Override
     Event findResourceById(Object id);
