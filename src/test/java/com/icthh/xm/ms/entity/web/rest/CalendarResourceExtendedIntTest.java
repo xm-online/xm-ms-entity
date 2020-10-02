@@ -22,6 +22,10 @@ import com.icthh.xm.ms.entity.repository.XmEntityRepository;
 import com.icthh.xm.ms.entity.repository.search.PermittedSearchRepository;
 import com.icthh.xm.ms.entity.service.CalendarService;
 import com.icthh.xm.ms.entity.service.impl.StartUpdateDateGenerationStrategy;
+import com.icthh.xm.ms.entity.service.query.EventQueryService;
+import java.time.Instant;
+import java.util.List;
+import javax.persistence.EntityManager;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -38,10 +42,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.Validator;
-
-import java.time.Instant;
-import java.util.List;
-import javax.persistence.EntityManager;
 
 /**
  * Extended Test class for the CalendarResource REST controller.
@@ -86,6 +86,9 @@ public class CalendarResourceExtendedIntTest extends AbstractSpringBootTest {
     @Autowired
     private XmEntityRepository xmEntityRepository;
 
+    @Autowired
+    private EventQueryService eventQueryService;
+
     @Spy
     private StartUpdateDateGenerationStrategy startUpdateDateGenerationStrategy;
 
@@ -117,7 +120,8 @@ public class CalendarResourceExtendedIntTest extends AbstractSpringBootTest {
             permittedRepository,
             permittedSearchRepository,
             startUpdateDateGenerationStrategy,
-            xmEntityRepository);
+            xmEntityRepository,
+            eventQueryService);
 
         CalendarResource calendarResourceMock = new CalendarResource(calendarService, calendarResource);
         this.restCalendarMockMvc = MockMvcBuilders.standaloneSetup(calendarResourceMock)
@@ -186,7 +190,7 @@ public class CalendarResourceExtendedIntTest extends AbstractSpringBootTest {
 
     @Test
     @Transactional
-    public void checkStartDateIsRequiredInDb() throws Exception {
+    public void checkStartDateIsRequiredInDb() {
 
         Calendar cal = calendarService.save(calendar);
 
