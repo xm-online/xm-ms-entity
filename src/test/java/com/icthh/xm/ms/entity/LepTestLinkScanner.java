@@ -1,5 +1,6 @@
 package com.icthh.xm.ms.entity;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -13,19 +14,46 @@ import java.util.stream.Stream;
  */
 public class LepTestLinkScanner {
 
+    private static String SEPARATOR = File.separator;
+
     private static String PROJECT_ROOT = Paths.get("").toAbsolutePath().toString();
     private static String XM_REPOSITORY_HOME;
 
     private static final String XM_MS_NAME = "entity";
 
-    private static final String XM_REPOSITORY_TENANTS = "config/tenants";
-    private static final String XM_REPOSITORY_MS_TEST = XM_MS_NAME + "/test";
-    private static final String XM_REPOSITORY_MS_LEP = XM_MS_NAME + "/lep";
+    private static final String XM_REPOSITORY_TENANTS = "config".concat(SEPARATOR).concat("tenants");
+    private static final String XM_REPOSITORY_MS_TEST = XM_MS_NAME.concat(SEPARATOR).concat("test");
+    private static final String XM_REPOSITORY_MS_LEP = XM_MS_NAME.concat(SEPARATOR).concat("lep");
 
-    private static final String LEP_TEST_HOME = "src/test/lep";
-    private static final String LEP_SCRIPT_HOME = "src/main/lep";
+    private static final String LEP_TEST_HOME = "src".concat(SEPARATOR).concat("test").concat(SEPARATOR).concat("lep");
+    private static final String LEP_SCRIPT_HOME = "src".concat(SEPARATOR).concat("main").concat(SEPARATOR).concat("lep");
 
-    private static final String LEP_TEST_EXISTS_REGEX = ".*tenants/.*/" + XM_MS_NAME + "/test";
+    private enum RegexpPatterns {
+        WIN(".*tenants\\\\.*\\\\%s\\\\test", ".*\\\\tenants\\\\", "\\\\.*"),
+        LINUX(".*tenants/.*/%s/test",".*/tenants/", "/.*");
+
+        RegexpPatterns(String testRegexp, String pattern1, String pattern2) {
+            this.testRegexp = testRegexp;
+            this.pattern1 = pattern1;
+            this.pattern2 = pattern2;
+        }
+
+        private String testRegexp;
+        private String pattern1;
+        private String pattern2;
+
+        private String testExistPattern(String service) {
+            return String.format(this.testRegexp, service);
+        }
+
+        private static RegexpPatterns currentOs() {
+            if (System.getProperty("os.name").toUpperCase().contains("WIN")) {
+                return WIN;
+            }
+            return LINUX;
+        }
+
+    }
 
     /**
      * Entry point.
@@ -47,7 +75,7 @@ public class LepTestLinkScanner {
 
         long count = Files
             .walk(Paths.get(XM_REPOSITORY_HOME))
-            .filter(path -> path.toString().matches(LEP_TEST_EXISTS_REGEX))
+            .filter(path -> path.toString().matches(RegexpPatterns.currentOs().testExistPattern(XM_MS_NAME)))
             .peek(path -> System.out.println("Found tests for tenant: " + SymLink.extractTenant(path)))
             .flatMap(SymLink::of)
             .filter(symLink -> !Files.exists(symLink.from))
@@ -84,8 +112,8 @@ public class LepTestLinkScanner {
 
         private static String extractTenant(Path path) {
             return path.toString()
-                       .replaceAll(".*/tenants/", "")
-                       .replaceAll("/.*", "");
+                       .replaceAll(RegexpPatterns.currentOs().pattern1, "")
+                       .replaceAll(RegexpPatterns.currentOs().pattern2, "");
         }
 
         void createSymLink() {
