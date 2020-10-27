@@ -84,7 +84,7 @@ public class Event implements Serializable {
     @Column(name = "start_date")
     private Instant startDate;
 
-    @ApiModelProperty(value = "Event description")
+    @ApiModelProperty(value = "Timezone id")
     @Column(name = "time_zone_id")
     private String timeZoneId;
 
