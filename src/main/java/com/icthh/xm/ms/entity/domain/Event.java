@@ -160,6 +160,11 @@ public class Event implements Serializable {
         return this;
     }
 
+    public Event timeZoneId(String timeZoneId) {
+        this.timeZoneId = timeZoneId;
+        return this;
+    }
+
     @PrePersist
     private void prePersist() {
         if (id == null && startDate == null) {

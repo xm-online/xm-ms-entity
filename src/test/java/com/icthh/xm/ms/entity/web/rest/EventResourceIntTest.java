@@ -79,6 +79,9 @@ public class EventResourceIntTest extends AbstractSpringBootTest {
 
     public static final String DEFAULT_XM_ENTITY_NAME = "name";
     private static final String DEFAULT_EVENT_DATA_REF_TYPE_KEY = "EVENT_DATA_REF_TYPE_KEY";
+    private static final String DEFAULT_TIMEZONE_ID = "Europe/Kiev";
+    private static final String UPDATED_TIMEZONE_ID = "Europe/Kiev1";
+
 
     private static final Map<String, Object> DEFAULT_EVENT_DATA_REF_DATA = ImmutableMap.<String, Object>builder()
         .put("AAAAAAAAAA", "AAAAAAAAAA").build();
@@ -178,7 +181,8 @@ public class EventResourceIntTest extends AbstractSpringBootTest {
             .startDate(DEFAULT_START_DATE)
             .endDate(DEFAULT_END_DATE)
             .assigned(assigned)
-            .eventDataRef(eventDataRef);
+            .eventDataRef(eventDataRef)
+            .timeZoneId(DEFAULT_TIMEZONE_ID);
     }
 
     @Before
@@ -211,6 +215,8 @@ public class EventResourceIntTest extends AbstractSpringBootTest {
         assertThat(testEvent.getEndDate()).isEqualTo(DEFAULT_END_DATE);
         assertThat(testEvent.getEventDataRef().getTypeKey()).isEqualTo(DEFAULT_EVENT_DATA_REF_TYPE_KEY);
         assertThat(testEvent.getEventDataRef().getData()).isEqualTo(DEFAULT_EVENT_DATA_REF_DATA);
+        assertThat(testEvent.getTimeZoneId()).isEqualTo(DEFAULT_TIMEZONE_ID);
+
     }
 
     @Test
@@ -371,7 +377,8 @@ public class EventResourceIntTest extends AbstractSpringBootTest {
             .andExpect(jsonPath("$.[*].title").value(hasItem(DEFAULT_TITLE)))
             .andExpect(jsonPath("$.[*].description").value(hasItem(DEFAULT_DESCRIPTION)))
             .andExpect(jsonPath("$.[*].startDate").value(hasItem(DEFAULT_START_DATE.toString())))
-            .andExpect(jsonPath("$.[*].endDate").value(hasItem(DEFAULT_END_DATE.toString())));
+            .andExpect(jsonPath("$.[*].endDate").value(hasItem(DEFAULT_END_DATE.toString())))
+            .andExpect(jsonPath("$.[*].timeZoneId").value(hasItem(DEFAULT_END_DATE.toString())));
     }
 
     @Test
@@ -390,7 +397,8 @@ public class EventResourceIntTest extends AbstractSpringBootTest {
             .andExpect(jsonPath("$.title").value(DEFAULT_TITLE))
             .andExpect(jsonPath("$.description").value(DEFAULT_DESCRIPTION))
             .andExpect(jsonPath("$.startDate").value(DEFAULT_START_DATE.toString()))
-            .andExpect(jsonPath("$.endDate").value(DEFAULT_END_DATE.toString()));
+            .andExpect(jsonPath("$.endDate").value(DEFAULT_END_DATE.toString()))
+            .andExpect(jsonPath("$.timeZoneId").value(DEFAULT_TIMEZONE_ID));
     }
 
     @Test
@@ -422,6 +430,7 @@ public class EventResourceIntTest extends AbstractSpringBootTest {
             .description(UPDATED_DESCRIPTION)
             .startDate(UPDATED_START_DATE)
             .endDate(UPDATED_END_DATE)
+            .timeZoneId(UPDATED_TIMEZONE_ID)
             .getEventDataRef().setData(UPDATED_EVENT_DATA_REF_DATA);
 
         restEventMockMvc.perform(put("/api/events")
@@ -442,6 +451,7 @@ public class EventResourceIntTest extends AbstractSpringBootTest {
         //assert that event data ref not updated
         assertThat(testEvent.getEventDataRef()).isNotNull()
             .extracting(XmEntity::getData).isEqualTo(UPDATED_EVENT_DATA_REF_DATA);
+        assertThat(testEvent.getTimeZoneId()).isEqualTo(UPDATED_TIMEZONE_ID);
     }
 
     @Test
