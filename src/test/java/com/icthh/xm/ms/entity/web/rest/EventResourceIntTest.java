@@ -216,7 +216,6 @@ public class EventResourceIntTest extends AbstractSpringBootTest {
         assertThat(testEvent.getEventDataRef().getTypeKey()).isEqualTo(DEFAULT_EVENT_DATA_REF_TYPE_KEY);
         assertThat(testEvent.getEventDataRef().getData()).isEqualTo(DEFAULT_EVENT_DATA_REF_DATA);
         assertThat(testEvent.getTimeZoneId()).isEqualTo(DEFAULT_TIMEZONE_ID);
-
     }
 
     @Test
@@ -378,7 +377,7 @@ public class EventResourceIntTest extends AbstractSpringBootTest {
             .andExpect(jsonPath("$.[*].description").value(hasItem(DEFAULT_DESCRIPTION)))
             .andExpect(jsonPath("$.[*].startDate").value(hasItem(DEFAULT_START_DATE.toString())))
             .andExpect(jsonPath("$.[*].endDate").value(hasItem(DEFAULT_END_DATE.toString())))
-            .andExpect(jsonPath("$.[*].timeZoneId").value(hasItem(DEFAULT_END_DATE.toString())));
+            .andExpect(jsonPath("$.[*].timeZoneId").value(hasItem(DEFAULT_TIMEZONE_ID)));
     }
 
     @Test
