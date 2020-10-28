@@ -70,6 +70,9 @@ public class CalendarResourceIntTest extends AbstractSpringBootTest {
     private static final String DEFAULT_DESCRIPTION = "AAAAAAAAAA";
     private static final String UPDATED_DESCRIPTION = "BBBBBBBBBB";
 
+    private static final String DEFAULT_TIMEZONE_ID = "Europe/Kiev";
+    private static final String UPDATED_TIMEZONE_ID = "Europe/Kiev1";
+
     private static final Instant DEFAULT_START_DATE = Instant.ofEpochMilli(0L);
     private static final Instant UPDATED_START_DATE = Instant.now().truncatedTo(ChronoUnit.MILLIS);
 
@@ -184,7 +187,8 @@ public class CalendarResourceIntTest extends AbstractSpringBootTest {
             .description(DEFAULT_DESCRIPTION)
             .startDate(DEFAULT_START_DATE)
             .endDate(DEFAULT_END_DATE)
-            .xmEntity(xmEntity);
+            .xmEntity(xmEntity)
+            .timeZoneId(DEFAULT_TIMEZONE_ID);
     }
 
     @Before
@@ -212,6 +216,7 @@ public class CalendarResourceIntTest extends AbstractSpringBootTest {
         assertThat(testCalendar.getDescription()).isEqualTo(DEFAULT_DESCRIPTION);
         assertThat(testCalendar.getStartDate()).isEqualTo(DEFAULT_START_DATE);
         assertThat(testCalendar.getEndDate()).isEqualTo(DEFAULT_END_DATE);
+        assertThat(testCalendar.getTimeZoneId()).isEqualTo(DEFAULT_TIMEZONE_ID);
     }
 
     @Test
@@ -325,7 +330,8 @@ public class CalendarResourceIntTest extends AbstractSpringBootTest {
             .andExpect(jsonPath("$.[*].name").value(hasItem(DEFAULT_NAME)))
             .andExpect(jsonPath("$.[*].description").value(hasItem(DEFAULT_DESCRIPTION)))
             .andExpect(jsonPath("$.[*].startDate").value(hasItem(DEFAULT_START_DATE.toString())))
-            .andExpect(jsonPath("$.[*].endDate").value(hasItem(DEFAULT_END_DATE.toString())));
+            .andExpect(jsonPath("$.[*].endDate").value(hasItem(DEFAULT_END_DATE.toString())))
+            .andExpect(jsonPath("$.[*].timeZoneId").value(hasItem(DEFAULT_TIMEZONE_ID)));
     }
 
     @Test
@@ -343,7 +349,8 @@ public class CalendarResourceIntTest extends AbstractSpringBootTest {
             .andExpect(jsonPath("$.name").value(DEFAULT_NAME))
             .andExpect(jsonPath("$.description").value(DEFAULT_DESCRIPTION))
             .andExpect(jsonPath("$.startDate").value(DEFAULT_START_DATE.toString()))
-            .andExpect(jsonPath("$.endDate").value(DEFAULT_END_DATE.toString()));
+            .andExpect(jsonPath("$.endDate").value(DEFAULT_END_DATE.toString()))
+            .andExpect(jsonPath("$.timeZoneId").value(hasItem(DEFAULT_TIMEZONE_ID)));
     }
 
     @Test
@@ -373,7 +380,8 @@ public class CalendarResourceIntTest extends AbstractSpringBootTest {
             .name(UPDATED_NAME)
             .description(UPDATED_DESCRIPTION)
             .startDate(UPDATED_START_DATE)
-            .endDate(UPDATED_END_DATE);
+            .endDate(UPDATED_END_DATE)
+            .setTimeZoneId(UPDATED_TIMEZONE_ID);
 
         restCalendarMockMvc.perform(put("/api/calendars")
                                         .contentType(TestUtil.APPLICATION_JSON_UTF8)
@@ -389,6 +397,7 @@ public class CalendarResourceIntTest extends AbstractSpringBootTest {
         assertThat(testCalendar.getDescription()).isEqualTo(UPDATED_DESCRIPTION);
         assertThat(testCalendar.getStartDate()).isEqualTo(UPDATED_START_DATE);
         assertThat(testCalendar.getEndDate()).isEqualTo(UPDATED_END_DATE);
+        assertThat(testCalendar.getTimeZoneId()).isEqualTo(UPDATED_TIMEZONE_ID);
     }
 
     @Test
