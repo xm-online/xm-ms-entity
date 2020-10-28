@@ -5,3 +5,6 @@ theme: teal
 langs:
     - en
     - ru
+sidebar:
+    hideAdminConsole: true
+    hideApplication: false
