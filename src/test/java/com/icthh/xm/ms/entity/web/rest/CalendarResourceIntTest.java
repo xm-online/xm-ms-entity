@@ -350,7 +350,7 @@ public class CalendarResourceIntTest extends AbstractSpringBootTest {
             .andExpect(jsonPath("$.description").value(DEFAULT_DESCRIPTION))
             .andExpect(jsonPath("$.startDate").value(DEFAULT_START_DATE.toString()))
             .andExpect(jsonPath("$.endDate").value(DEFAULT_END_DATE.toString()))
-            .andExpect(jsonPath("$.timeZoneId").value(hasItem(DEFAULT_TIMEZONE_ID)));
+            .andExpect(jsonPath("$.timeZoneId").value(DEFAULT_TIMEZONE_ID));
     }
 
     @Test
