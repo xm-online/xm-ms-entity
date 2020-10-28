@@ -22,9 +22,9 @@ public class CalendarSpec {
     private List<EventSpec> events = null;
 
     /**
-     * Event timeZone display strategy on interface. It could be:
+     * Calendar timeZone display strategy on interface. It could be:
      * STANDARD - default,
-     * SUBJECT - timeZoneId for display is saved to Event.timeZoneId
+     * SUBJECT - timeZoneId for display is saved to Calendar.timeZoneId
      * and default timeZoneId is taken from XmEntity data by path timeZoneDataRef
      */
     @JsonProperty("timeZoneStrategy")
