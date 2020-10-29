@@ -84,10 +84,6 @@ public class Event implements Serializable {
     @Column(name = "start_date")
     private Instant startDate;
 
-    @ApiModelProperty(value = "Timezone id")
-    @Column(name = "time_zone_id")
-    private String timeZoneId;
-
     /**
      * End date.
      */
@@ -157,11 +153,6 @@ public class Event implements Serializable {
 
     public Event eventDataRef(XmEntity xmEntity) {
         this.eventDataRef = xmEntity;
-        return this;
-    }
-
-    public Event timeZoneId(String timeZoneId) {
-        this.timeZoneId = timeZoneId;
         return this;
     }
 

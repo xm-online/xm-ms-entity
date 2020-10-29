@@ -19,15 +19,4 @@ public class EventSpec {
     private String color;
     @JsonProperty("dataTypeKey")
     private String dataTypeKey;
-
-    /**
-     * Event timeZone display strategy on interface. It could be:
-     * STANDARD - default,
-     * SUBJECT - timeZoneId for display is saved to Event.timeZoneId
-     * and default timeZoneId is taken from XmEntity data by path timeZoneDataRef
-     */
-    @JsonProperty("timeZoneStrategy")
-    private String timeZoneStrategy;
-    @JsonProperty("timeZoneDataRef")
-    private String timeZoneDataRef;
 }

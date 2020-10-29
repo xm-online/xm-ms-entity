@@ -11,6 +11,8 @@ import com.icthh.xm.ms.entity.domain.idresolver.XmEntityObjectIdResolver;
 import com.icthh.xm.ms.entity.validator.TypeKey;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
+import lombok.Getter;
+import lombok.Setter;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 
@@ -87,6 +89,12 @@ public class Calendar implements Serializable {
     @JsonIdentityReference(alwaysAsId = true)
     @JoinColumn(name = "xm_entity_id", nullable = false)
     private XmEntity xmEntity;
+
+    @Getter
+    @Setter
+    @ApiModelProperty(value = "Timezone id")
+    @Column(name = "time_zone_id")
+    private String timeZoneId;
 
     public Long getId() {
         return id;
@@ -192,6 +200,11 @@ public class Calendar implements Serializable {
 
     public Calendar xmEntity(XmEntity xmEntity) {
         this.xmEntity = xmEntity;
+        return this;
+    }
+
+    public Calendar timeZoneId(String timeZoneId) {
+        this.timeZoneId = timeZoneId;
         return this;
     }
 
