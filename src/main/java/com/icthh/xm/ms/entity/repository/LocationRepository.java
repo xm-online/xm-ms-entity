@@ -9,12 +9,14 @@ import org.springframework.stereotype.Repository;
 /**
  * Spring Data JPA repository for the Location entity.
  */
-@SuppressWarnings("unused")
 @Repository
 public interface LocationRepository extends JpaRepository<Location, Long>, ResourceRepository {
 
     @Override
     Location findResourceById(Object id);
 
+    int countByXmEntityIdAndTypeKey(long xmEntityId, String typeKey);
+
     List<Location> findAllByXmEntityTypeKeyAndTypeKeyIn(String entityTypeKey, List<String> typeKeys);
+
 }

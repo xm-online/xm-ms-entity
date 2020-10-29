@@ -152,9 +152,23 @@ public class LocationResourceIntTest extends AbstractSpringBootTest {
      * This is a static method, as tests for other entities might also need it,
      * if they test an entity which requires the current entity.
      */
+    public static Location createEntity(EntityManager em, String typeKey) {
+        Location location = createLocation(typeKey);
+        // Add required entity
+        XmEntity xmEntity = XmEntityResourceIntTest.createEntity();
+        em.persist(xmEntity);
+        em.flush();
+        location.setXmEntity(xmEntity);
+        return location;
+    }
+
     public static Location createEntity(EntityManager em) {
-        Location location = new Location()
-            .typeKey(DEFAULT_TYPE_KEY)
+        return createEntity(em, DEFAULT_TYPE_KEY);
+    }
+
+    private static Location createLocation(String type) {
+        return new Location()
+            .typeKey(type)
             .countryKey(DEFAULT_COUNTRY_KEY)
             .longitude(DEFAULT_LONGITUDE)
             .latitude(DEFAULT_LATITUDE)
@@ -164,12 +178,6 @@ public class LocationResourceIntTest extends AbstractSpringBootTest {
             .city(DEFAULT_CITY)
             .region(DEFAULT_REGION)
             .zip(DEFAULT_ZIP);
-        // Add required entity
-        XmEntity xmEntity = XmEntityResourceIntTest.createEntity();
-        em.persist(xmEntity);
-        em.flush();
-        location.setXmEntity(xmEntity);
-        return location;
     }
 
     @Before
@@ -202,6 +210,38 @@ public class LocationResourceIntTest extends AbstractSpringBootTest {
         assertThat(testLocation.getCity()).isEqualTo(DEFAULT_CITY);
         assertThat(testLocation.getRegion()).isEqualTo(DEFAULT_REGION);
         assertThat(testLocation.getZip()).isEqualTo(DEFAULT_ZIP);
+    }
+
+    @Test
+    @Transactional
+    public void shouldFailOnSecondLocationCreation() throws Exception {
+        int databaseSizeBeforeCreate = locationRepository.findAll().size();
+
+        Location l1 = createEntity(em, "CCCCCCCCCC");
+
+        // Create the Location
+        restLocationMockMvc.perform(post("/api/locations")
+            .contentType(TestUtil.APPLICATION_JSON_UTF8)
+            .content(TestUtil.convertObjectToJsonBytes(l1)))
+            .andExpect(status().isCreated());
+
+        // Validate the Location in the database
+        List<Location> locationList = locationRepository.findAll();
+        assertThat(locationList).hasSize(databaseSizeBeforeCreate + 1);
+
+        Location l2 = createLocation("CCCCCCCCCC");
+        XmEntity e = XmEntityResourceIntTest.createEntity();
+        e.setId(l1.getXmEntity().getId());
+        l2.setXmEntity(e);
+
+        // Create the Location
+        restLocationMockMvc.perform(post("/api/locations")
+            .contentType(TestUtil.APPLICATION_JSON_UTF8)
+            .content(TestUtil.convertObjectToJsonBytes(l1)))
+            .andExpect(status().is4xxClientError())
+            .andExpect(jsonPath("$.error").value(LocationService.MAX_RESTRICTION));
+
+        assertThat(locationRepository.findAll()).hasSize(databaseSizeBeforeCreate + 1);
     }
 
     @Test
