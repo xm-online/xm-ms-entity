@@ -178,4 +178,9 @@ public class LinkService {
         return linkRepository.findAll(spec);
     }
 
+    @Transactional(readOnly = true)
+    public Page<Link> findAll(Specification<Link> spec, Pageable pageable) {
+        return linkRepository.findAll(spec, pageable);
+    }
+
 }
