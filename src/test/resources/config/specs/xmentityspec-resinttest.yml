@@ -79,7 +79,13 @@ types:
       calendars:
           - key: TYPEKEY
             events:
-                - key: TYPEKEY
+                - key: TEST_EVENT_TYPEKEY_1
+                  dataTypeKey: EVENT_DATA_REF_TYPE_KEY
+                - key: TEST_EVENT_TYPEKEY_2
+                  dataTypeKey: EVENT_DATA_REF_TYPE_KEY
+                - key: EVENT_WITHOUT_DATA_REF
+                - key: EVENT_WITH_NOT_EXISTED_DATA_REF
+                  dataTypeKey: NOT_EXISTED_DATA_REF
       links:
           - key: LINK.TARGET
             builderType: NEW
@@ -162,6 +168,7 @@ types:
           - key: A
             events:
                 - key: B
+                  dataTypeKey: TEST_DELETE
       locations:
           - key: A
       ratings:
@@ -217,6 +224,20 @@ types:
     - key: TARGET_ENTITY
       isApp: false
       isAbstract: false
+    - key: EVENT_DATA_REF_TYPE_KEY
+      isApp: false
+      isAbstract: false
+      dataSpec: |
+          {
+              "type": "object",
+              "title": "Data",
+              "properties": {
+                  "AAAAAAAAAA": {
+                      "title": "AAAAAAAAAA title",
+                      "type": "string"
+                  }
+              }
+          }
     - key: TEST_SAVE_AND_PROCEED
       isApp: false
       isAbstract: false

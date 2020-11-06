@@ -13,7 +13,6 @@ import static org.mockito.Mockito.when;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableMap;
-import com.icthh.xm.commons.config.client.service.TenantConfigService;
 import com.icthh.xm.commons.exceptions.BusinessException;
 import com.icthh.xm.commons.exceptions.EntityNotFoundException;
 import com.icthh.xm.commons.security.XmAuthenticationContext;
@@ -32,6 +31,7 @@ import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.domain.ext.IdOrKey;
 import com.icthh.xm.ms.entity.domain.template.TemplateParamsHolder;
 import com.icthh.xm.ms.entity.lep.keyresolver.TypeKeyWithExtends;
+import com.icthh.xm.ms.entity.repository.EventRepository;
 import com.icthh.xm.ms.entity.repository.LinkRepository;
 import com.icthh.xm.ms.entity.repository.SpringXmEntityRepository;
 import com.icthh.xm.ms.entity.repository.UniqueFieldRepository;
@@ -47,6 +47,11 @@ import com.icthh.xm.ms.entity.service.StorageService;
 import com.icthh.xm.ms.entity.service.XmEntitySpecService;
 import com.icthh.xm.ms.entity.service.XmEntityTemplatesSpecService;
 import com.icthh.xm.ms.entity.util.XmHttpEntityUtils;
+import java.math.BigInteger;
+import java.net.URI;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.After;
@@ -67,12 +72,6 @@ import org.springframework.test.context.transaction.BeforeTransaction;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.math.BigInteger;
-import java.net.URI;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.List;
-
 @Slf4j
 public class EntityServiceImplIntTest extends AbstractSpringBootTest {
 
@@ -83,6 +82,9 @@ public class EntityServiceImplIntTest extends AbstractSpringBootTest {
 
     @Autowired
     private XmEntityRepositoryInternal xmEntityRepository;
+
+    @Autowired
+    private EventRepository eventRepository;
 
     @Autowired
     private SpringXmEntityRepository springXmEntityRepository;
@@ -183,7 +185,8 @@ public class EntityServiceImplIntTest extends AbstractSpringBootTest {
             mock(UniqueFieldRepository.class),
             springXmEntityRepository,
             new TypeKeyWithExtends(tenantConfigService),
-            new SimpleTemplateProcessor(objectMapper)
+            new SimpleTemplateProcessor(objectMapper),
+            eventRepository
         );
         xmEntityService.setSelf(xmEntityService);
 

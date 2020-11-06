@@ -65,6 +65,7 @@ import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.domain.ext.IdOrKey;
 import com.icthh.xm.ms.entity.domain.serializer.XmSquigglyInterceptor;
 import com.icthh.xm.ms.entity.lep.keyresolver.TypeKeyWithExtends;
+import com.icthh.xm.ms.entity.repository.EventRepository;
 import com.icthh.xm.ms.entity.repository.SpringXmEntityRepository;
 import com.icthh.xm.ms.entity.repository.UniqueFieldRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityPermittedRepository;
@@ -89,7 +90,6 @@ import com.icthh.xm.ms.entity.service.XmEntityTemplatesSpecService;
 import com.icthh.xm.ms.entity.service.impl.StartUpdateDateGenerationStrategy;
 import com.icthh.xm.ms.entity.service.impl.XmEntityServiceImpl;
 import com.jayway.jsonpath.JsonPath;
-
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.time.Instant;
@@ -98,7 +98,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import javax.persistence.EntityManager;
-
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -212,6 +211,9 @@ public class XmEntityResourceExtendedIntTest extends AbstractSpringBootTest {
 
     @Autowired
     private XmEntityRepositoryInternal xmEntityRepository;
+
+    @Autowired
+    private EventRepository eventRepository;
 
     @Autowired
     private SpringXmEntityRepository springXmEntityRepository;
@@ -357,7 +359,8 @@ public class XmEntityResourceExtendedIntTest extends AbstractSpringBootTest {
                                                                       mock(UniqueFieldRepository.class),
                                                                       springXmEntityRepository,
                                                                       new TypeKeyWithExtends(tenantConfigService),
-                                                                      new SimpleTemplateProcessor(objectMapper));
+                                                                      new SimpleTemplateProcessor(objectMapper),
+                                                                      eventRepository);
 
         xmEntityService.setSelf(xmEntityService);
         this.xmEntityService = xmEntityService;
