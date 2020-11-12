@@ -8,13 +8,13 @@ import com.icthh.xm.lep.api.LepManager;
 import com.icthh.xm.ms.entity.AbstractSpringBootTest;
 import com.icthh.xm.ms.entity.domain.Location;
 import com.icthh.xm.ms.entity.web.rest.LocationResourceIntTest;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.transaction.BeforeTransaction;
 import org.springframework.transaction.annotation.Transactional;
-import org.testng.Assert;
 
 import javax.persistence.EntityManager;
 import java.util.LinkedList;
