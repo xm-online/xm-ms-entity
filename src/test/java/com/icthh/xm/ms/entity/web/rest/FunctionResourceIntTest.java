@@ -223,4 +223,20 @@ public class FunctionResourceIntTest extends AbstractSpringBootTest {
                .andExpect(status().is2xxSuccessful());
     }
 
+    @Test
+    @Transactional
+    @SneakyThrows
+    public void testGStringSerialization() {
+        String functionPrefix = "/config/tenants/RESINTTEST/entity/lep/function/";
+        String functionApi = "/api/functions/";
+        String functionKey = "package/FUNCTION.PACKAGE-TEST";
+        String funcKey = functionPrefix + "package/Function$$FUNCTION$PACKAGE_TEST$$tenant.groovy";
+        leps.onRefresh(funcKey, "def i = 1; return [result: \"gstr${i}ing\"]");
+        mockMvc.perform(post(functionApi + functionKey).content("{}").contentType(APPLICATION_JSON_VALUE))
+               .andDo(print())
+               .andExpect(jsonPath("$.data.result").isString())
+               .andExpect(status().is2xxSuccessful());
+        leps.onRefresh(funcKey, null);
+    }
+
 }
