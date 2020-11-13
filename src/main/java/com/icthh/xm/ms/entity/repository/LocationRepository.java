@@ -17,4 +17,8 @@ public interface LocationRepository extends JpaRepository<Location, Long>, Resou
     Location findResourceById(Object id);
 
     List<Location> findAllByXmEntityTypeKeyAndTypeKeyIn(String entityTypeKey, List<String> typeKeys);
+
+    List<Location> findAllByXmEntityIdIn(List<Long> xmEntityIds);
+
+    List<Location> findAllByIdIn(List<Long> locationIds);
 }
