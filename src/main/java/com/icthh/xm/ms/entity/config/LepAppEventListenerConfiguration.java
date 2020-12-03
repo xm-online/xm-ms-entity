@@ -29,6 +29,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.web.client.RestTemplate;
 
 /**
@@ -64,15 +65,19 @@ public class LepAppEventListenerConfiguration {
         ElasticsearchIndexService elasticsearchIndexService,
         SeparateTransactionExecutor transactionExecutor,
         CustomMetricsContext customMetricsContext,
-        KafkaTemplateService kafkaTemplateService) {
+        KafkaTemplateService kafkaTemplateService,
+        JdbcTemplate jdbcTemplate
+    ) {
 
-        return new XmEntityMsLepProcessingApplicationListener(xmEntityService,
-                        xmTenantLifecycleService, xmEntityRepository, profileService, linkService,
-                        mailService, tenantConfigService, attachmentService, loadBalancedRestTemplateWithTimeout,
-                        requestFactory, locationService, tagService, profileEventProducer, commentService,
-                        commonsService, permissionCheckService, eventService, calendarService, tenantLepResource,
-                        amazonS3Template, elasticsearchTemplate, permittedSearchRepository, elasticsearchIndexService,
-                        transactionExecutor, customMetricsContext, kafkaTemplateService);
+        return new XmEntityMsLepProcessingApplicationListener(
+            xmEntityService,
+            xmTenantLifecycleService, xmEntityRepository, profileService, linkService,
+            mailService, tenantConfigService, attachmentService, loadBalancedRestTemplateWithTimeout,
+            requestFactory, locationService, tagService, profileEventProducer, commentService,
+            commonsService, permissionCheckService, eventService, calendarService, tenantLepResource,
+            amazonS3Template, elasticsearchTemplate, permittedSearchRepository, elasticsearchIndexService,
+            transactionExecutor, customMetricsContext, kafkaTemplateService, jdbcTemplate
+        );
     }
 
 }
