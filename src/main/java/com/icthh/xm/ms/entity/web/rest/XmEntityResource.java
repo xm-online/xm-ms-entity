@@ -575,7 +575,7 @@ public class XmEntityResource {
         ResponseEntity.BodyBuilder response = ResponseEntity.ok();
 
         if (result.isBinaryData()) {
-            response.header(org.springframework.http.HttpHeaders.CONTENT_TYPE, result.getBinaryDataType());
+            response.header(HttpHeaders.CONTENT_TYPE, result.getBinaryDataType());
         }
 
         return response.body(result.functionResult());
