@@ -108,7 +108,7 @@ public class FunctionServiceImpl implements FunctionService {
     public FunctionContext executeAnonymous(String functionKey, Map<String, Object> functionInput) {
         FunctionSpec functionSpec = findFunctionSpec(functionKey, null);
 
-        if (functionSpec.getAnonymous() != null && functionSpec.getAnonymous()) {
+        if (functionSpec.getAnonymous() == null || !functionSpec.getAnonymous()) {
             throw new BusinessException("Not allowed");
         }
 
