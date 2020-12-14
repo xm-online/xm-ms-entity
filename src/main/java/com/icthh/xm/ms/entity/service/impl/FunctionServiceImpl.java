@@ -35,6 +35,7 @@ public class FunctionServiceImpl implements FunctionService {
     public static String NONE = "NONE";
 
     public static String FUNCTION_CALL_PRIV = "FUNCTION.CALL";
+    public static String FUNCTION_ANONYMOUS_CALL_PRIV = "FUNCTION.ANONYMOUS.CALL";
     public static String XM_ENITITY_FUNCTION_CALL_PRIV = "XMENTITY.FUNCTION.EXECUTE";
 
     private final XmEntitySpecService xmEntitySpecService;
@@ -116,7 +117,7 @@ public class FunctionServiceImpl implements FunctionService {
         Map<String, Object> vInput = CustomCollectionUtils.emptyIfNull(functionInput);
 
         dynamicPermissionCheckService.checkContextPermission(DynamicPermissionCheckService.FeatureContext.FUNCTION,
-            FUNCTION_CALL_PRIV, functionKey);
+            FUNCTION_ANONYMOUS_CALL_PRIV, functionKey);
 
         // execute function
         Map<String, Object> data = functionExecutorService.execute(functionKey, vInput);
