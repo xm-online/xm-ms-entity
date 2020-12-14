@@ -107,6 +107,6 @@ public class FunctionSpec {
     }
 
     public Boolean getAnonymous() {
-        return anonymous;
+        return anonymous == null ? false : anonymous;
     }
 }

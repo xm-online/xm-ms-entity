@@ -131,24 +131,6 @@ public class FunctionResource {
         return null;
     }
 
-    /**
-     * POST  /functions/raw/{functionKey} : Execute a function on raw request by key (key in entity specification).
-     *
-     * @param functionKey   the function key to execute
-     * @param functionInput function input data context
-     * @return ModelAndView object
-     */
-    @Timed
-    @PostMapping("/functions/mvc/{functionKey:.+}")
-    @PreAuthorize("hasPermission({'functionKey': #functionKey}, 'FUNCTION.RAW.CALL')")
-    @PrivilegeDescription("Privilege to execute a mvc function by key (key in entity specification)")
-    public ModelAndView callRawHttpRequestFunction(@PathVariable("functionKey") String functionKey,
-                                                   @RequestBody(required = false) Map<String, Object> functionInput) {
-        RequestContextHolder.
-            FunctionContext result = functionService.execute(functionKey, functionInput);
-        return null;
-    }
-
     @Timed
     @GetMapping("/functions/**")
     public ResponseEntity<Object> callGetFunction(HttpServletRequest request,

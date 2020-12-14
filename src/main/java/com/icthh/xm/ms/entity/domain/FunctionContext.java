@@ -7,6 +7,7 @@ import com.icthh.xm.ms.entity.domain.converter.MapToStringConverter;
 import com.icthh.xm.ms.entity.domain.idresolver.XmEntityObjectIdResolver;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
+import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.Cache;
@@ -121,7 +122,10 @@ public class FunctionContext implements Serializable {
     @Transient
     private String binaryDataType;
 
-    boolean anonymous;
+    @Transient
+    @Getter
+    @Setter
+    private transient boolean anonymous;
 
     public Long getId() {
         return id;
@@ -275,14 +279,6 @@ public class FunctionContext implements Serializable {
 
     public Optional<Object> getBinaryData() {
         return Optional.ofNullable(data.get(binaryDataField));
-    }
-
-    public boolean isAnonymous() {
-        return anonymous;
-    }
-
-    public void setAnonymous(boolean anonymous) {
-        this.anonymous = anonymous;
     }
 
     @Override
