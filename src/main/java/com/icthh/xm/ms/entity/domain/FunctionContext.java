@@ -121,6 +121,8 @@ public class FunctionContext implements Serializable {
     @Transient
     private String binaryDataType;
 
+    boolean anonymous;
+
     public Long getId() {
         return id;
     }
@@ -273,6 +275,14 @@ public class FunctionContext implements Serializable {
 
     public Optional<Object> getBinaryData() {
         return Optional.ofNullable(data.get(binaryDataField));
+    }
+
+    public boolean isAnonymous() {
+        return anonymous;
+    }
+
+    public void setAnonymous(boolean anonymous) {
+        this.anonymous = anonymous;
     }
 
     @Override

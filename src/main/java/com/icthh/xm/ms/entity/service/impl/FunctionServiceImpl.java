@@ -1,7 +1,6 @@
 package com.icthh.xm.ms.entity.service.impl;
 
-import static java.util.Collections.emptyList;
-
+import com.icthh.xm.commons.exceptions.BusinessException;
 import com.icthh.xm.commons.exceptions.EntityNotFoundException;
 import com.icthh.xm.ms.entity.domain.FunctionContext;
 import com.icthh.xm.ms.entity.domain.XmEntity;
@@ -10,23 +9,19 @@ import com.icthh.xm.ms.entity.domain.spec.FunctionSpec;
 import com.icthh.xm.ms.entity.projection.XmEntityIdKeyTypeKey;
 import com.icthh.xm.ms.entity.projection.XmEntityStateProjection;
 import com.icthh.xm.ms.entity.security.access.DynamicPermissionCheckService;
-import com.icthh.xm.ms.entity.service.FunctionContextService;
-import com.icthh.xm.ms.entity.service.FunctionExecutorService;
-import com.icthh.xm.ms.entity.service.FunctionService;
-import com.icthh.xm.ms.entity.service.XmEntityService;
-import com.icthh.xm.ms.entity.service.XmEntitySpecService;
+import com.icthh.xm.ms.entity.service.*;
 import com.icthh.xm.ms.entity.util.CustomCollectionUtils;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import static java.util.Collections.emptyList;
 
 /**
  * The {@link FunctionServiceImpl} class.
@@ -107,6 +102,25 @@ public class FunctionServiceImpl implements FunctionService {
         // execute function
         Map<String, Object> data = functionExecutorService.execute(functionKey, idOrKey, projection.getTypeKey(), vInput);
         return processFunctionResult(functionKey, idOrKey, data, functionSpec);
+    }
+
+    @Override
+    public FunctionContext executeAnonymous(String functionKey, Map<String, Object> functionInput) {
+        FunctionSpec functionSpec = findFunctionSpec(functionKey, null);
+
+        if (functionSpec.getAnonymous() != null && functionSpec.getAnonymous()) {
+            throw new BusinessException("Not allowed");
+        }
+
+        Objects.requireNonNull(functionKey, "functionKey can't be null");
+        Map<String, Object> vInput = CustomCollectionUtils.emptyIfNull(functionInput);
+
+        dynamicPermissionCheckService.checkContextPermission(DynamicPermissionCheckService.FeatureContext.FUNCTION,
+            FUNCTION_CALL_PRIV, functionKey);
+
+        // execute function
+        Map<String, Object> data = functionExecutorService.execute(functionKey, vInput);
+        return processFunctionResult(functionKey, data, functionSpec);
     }
 
     /**

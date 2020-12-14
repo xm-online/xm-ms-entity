@@ -89,6 +89,9 @@ public class FunctionSpec {
     @JsonProperty("binaryDataType")
     private String binaryDataType;
 
+    @JsonProperty("anonymous")
+    private Boolean anonymous;
+
     public Boolean getSaveFunctionContext() {
         return saveFunctionContext == null ? false : saveFunctionContext;
     }
@@ -103,4 +106,7 @@ public class FunctionSpec {
             FUNCTION_CALL_PRIV.concat(".").concat(getKey());
     }
 
+    public Boolean getAnonymous() {
+        return anonymous;
+    }
 }
