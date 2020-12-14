@@ -104,7 +104,7 @@ public class FunctionResource {
     @PrivilegeDescription("Privilege to execute a function by key (key in entity specification)")
     public ResponseEntity<Object> callAnonymousFunction(@PathVariable("functionKey") String functionKey,
                                                @RequestBody(required = false) Map<String, Object> functionInput) {
-        FunctionContext result = functionService.execute(functionKey, functionInput);
+        FunctionContext result = functionService.executeAnonymous(functionKey, functionInput);
         return ResponseEntity.created(URI.create("/api/function-contexts/" + Objects.toString(result.getId(), "")))
             .headers(HeaderUtil.createEntityCreationAlert(ENTITY_NAME_FUNCTION_CONTEXT, String.valueOf(result.getId())))
             .body(result.functionResult());
