@@ -471,6 +471,14 @@ types:
       isAbstract: false
       functions:
           - key: UPLOAD
+    - key: TEST_ENTITY_WITH_BINARY_RESULT_FUNCTION
+      name: { en: "TEST_ENTITY_WITH_BINARY_RESULT_FUNCTION" }
+      isApp: false
+      isAbstract: false
+      functions:
+          - key: FUNCTION_WITH_BINARY_RESULT
+            binaryDataField: 'bytes'
+            binaryDataType: 'application/pdf'
     - key: TEST_FUNCTION_WITH_PACKAGE
       name: { en: "TEST_FUNCTION_WITH_PACKAGE" }
       isApp: false
@@ -481,7 +489,6 @@ types:
           - key: package/FUNCTION.PACKAGE-TEST
           - key: package/FUNCTION-WITH-ENTITY.PACKAGE-TEST
             withEntityId: true
-
     - key: TEST_EXPORT_1
       name: {en: "TEST_EXPORT_1"}
       isApp: false

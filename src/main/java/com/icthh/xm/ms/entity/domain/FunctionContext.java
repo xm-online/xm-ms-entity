@@ -7,6 +7,7 @@ import com.icthh.xm.ms.entity.domain.converter.MapToStringConverter;
 import com.icthh.xm.ms.entity.domain.idresolver.XmEntityObjectIdResolver;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
+import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
@@ -16,6 +17,7 @@ import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import javax.persistence.Column;
 import javax.persistence.Convert;
 import javax.persistence.Entity;
@@ -109,6 +111,15 @@ public class FunctionContext implements Serializable {
     @Transient
     @Setter
     private transient boolean onlyData;
+
+    @Setter
+    @Transient
+    private String binaryDataField;
+
+    @Setter
+    @Getter
+    @Transient
+    private String binaryDataType;
 
     public Long getId() {
         return id;
@@ -246,10 +257,22 @@ public class FunctionContext implements Serializable {
     }
 
     public Object functionResult() {
+        if (getBinaryData().isPresent()) {
+            return getBinaryData().get();
+        }
+
         if (onlyData) {
             return data.get("data");
         }
         return this;
+    }
+
+    public boolean isBinaryData() {
+        return binaryDataField != null;
+    }
+
+    public Optional<Object> getBinaryData() {
+        return Optional.ofNullable(data.get(binaryDataField));
     }
 
     @Override
