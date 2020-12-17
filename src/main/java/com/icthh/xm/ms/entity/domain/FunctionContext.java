@@ -277,7 +277,7 @@ public class FunctionContext implements Serializable {
     }
 
     public Optional<Object> getBinaryData() {
-        return Optional.ofNullable(data.get(binaryDataField));
+        return data != null ? Optional.ofNullable(data.get(binaryDataField)) : Optional.empty();
     }
 
     @Override
