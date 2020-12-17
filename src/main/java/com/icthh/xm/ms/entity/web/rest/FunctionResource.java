@@ -96,6 +96,26 @@ public class FunctionResource {
     }
 
     /**
+     * POST  /functions/{functionKey} : Execute a function by key (key in entity specification).
+     *
+     * @param functionKey   the function key to execute
+     * @param functionInput function input data context
+     * @return the ResponseEntity with status 201 (Created) and with body the new FunctionContext,
+     * or with status 400 (Bad Request) if the FunctionContext has already an ID
+     */
+    @Timed
+    @PostMapping("/functions/anonymous/{functionKey:.+}")
+    @PreAuthorize("hasPermission({'functionKey': #functionKey}, 'FUNCTION.ANONYMOUS.CALL')")
+    @PrivilegeDescription("Privilege to execute a function by key (key in entity specification)")
+    public ResponseEntity<Object> callAnonymousFunction(@PathVariable("functionKey") String functionKey,
+                                               @RequestBody(required = false) Map<String, Object> functionInput) {
+        FunctionContext result = functionService.executeAnonymous(functionKey, functionInput);
+        return ResponseEntity.created(URI.create("/api/function-contexts/" + Objects.toString(result.getId(), "")))
+            .headers(HeaderUtil.createEntityCreationAlert(ENTITY_NAME_FUNCTION_CONTEXT, String.valueOf(result.getId())))
+            .body(result.functionResult());
+    }
+
+    /**
      * POST  /functions/mvc/{functionKey} : Execute a mvc function by key (key in entity specification).
      *
      * @param functionKey   the function key to execute

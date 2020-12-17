@@ -17,6 +17,7 @@ import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import javax.persistence.Column;
 import javax.persistence.Convert;
 import javax.persistence.Entity;
@@ -119,6 +120,11 @@ public class FunctionContext implements Serializable {
     @Getter
     @Transient
     private String binaryDataType;
+
+    @Transient
+    @Getter
+    @Setter
+    private transient boolean anonymous;
 
     public Long getId() {
         return id;
@@ -256,8 +262,8 @@ public class FunctionContext implements Serializable {
     }
 
     public Object functionResult() {
-        if (isBinaryData()) {
-            return getBinaryData();
+        if (getBinaryData().isPresent()) {
+            return getBinaryData().get();
         }
 
         if (onlyData) {
@@ -270,8 +276,8 @@ public class FunctionContext implements Serializable {
         return binaryDataField != null;
     }
 
-    public Object getBinaryData() {
-        return data.get(binaryDataField);
+    public Optional<Object> getBinaryData() {
+        return Optional.ofNullable(data.get(binaryDataField));
     }
 
     @Override
