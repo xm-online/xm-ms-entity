@@ -1,6 +1,7 @@
 package com.icthh.xm.ms.entity.service.impl;
 
 import com.google.common.collect.Maps;
+import com.google.common.primitives.Bytes;
 import com.icthh.xm.ms.entity.AbstractUnitTest;
 import com.icthh.xm.ms.entity.domain.FunctionContext;
 import com.icthh.xm.ms.entity.domain.ext.IdOrKey;
@@ -12,15 +13,13 @@ import com.icthh.xm.ms.entity.service.FunctionExecutorService;
 import com.icthh.xm.ms.entity.service.XmEntityService;
 import com.icthh.xm.ms.entity.service.XmEntitySpecService;
 import org.assertj.core.util.Lists;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.*;
 import org.junit.rules.ExpectedException;
 import org.mockito.AdditionalAnswers;
 import org.mockito.Mockito;
 import org.mockito.stubbing.Answer;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
@@ -310,6 +309,33 @@ public class FunctionServiceImplUnitTest extends AbstractUnitTest {
         functionService.assertCallAllowedByState(spec, p);
     }
 
+    @Test
+    public void functionWithBinaryDataResult() {
+        //GIVEN
+        Map<String, Object> context = Maps.newHashMap();
+        when(xmEntityService.findStateProjectionById(key)).thenReturn(getProjection(key));
+
+        FunctionSpec spec = getFunctionSpec(Boolean.FALSE);
+        spec.setBinaryDataField("contentBytes");
+        spec.setBinaryDataType("application/pdf");
+
+        when(xmEntitySpecService.findFunction(xmEntityTypeKey, "FUNCTION_WITH_BINARY_RESULT"))
+            .thenReturn(Optional.of(spec));
+
+        Map<String, Object> functionResult = new HashMap<>();
+        functionResult.put("contentBytes", "kind_of_pdf_content".getBytes());
+
+        when(functionExecutorService.execute("FUNCTION_WITH_BINARY_RESULT", key, xmEntityTypeKey, context))
+            .thenReturn(functionResult);
+
+        //WHEN
+        FunctionContext result = functionService.execute("FUNCTION_WITH_BINARY_RESULT", key, context);
+
+        //THEN
+        Assert.assertTrue(result.isBinaryData());
+        Assert.assertArrayEquals("kind_of_pdf_content".getBytes(), (byte[]) result.functionResult());
+    }
+
     private FunctionSpec getFunctionSpec(Boolean saveContext) {
         FunctionSpec spec = new FunctionSpec();
         spec.setKey(functionName);
@@ -323,6 +349,7 @@ public class FunctionServiceImplUnitTest extends AbstractUnitTest {
             public String getStateKey() {
                 return "STATE";
             }
+
             @Override
             public Long getId() {
                 return key.getId();
