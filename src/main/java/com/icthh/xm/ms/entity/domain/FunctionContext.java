@@ -271,6 +271,9 @@ public class FunctionContext implements Serializable {
     }
 
     public Object getBinaryData() {
+        if (data == null) {
+            return null;
+        }
         return data.get(binaryDataField);
     }
 

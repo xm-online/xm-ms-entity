@@ -120,6 +120,8 @@ public class FunctionResourceIntTest extends AbstractSpringBootTest {
 
         String functionWithBinaryResult = "return [\"bytes\": \"test\".getBytes()]";
         leps.onRefresh(functionPrefix + "FunctionWithXmEntity$$FUNCTION_WITH_BINARY_RESULT$$tenant.groovy", loadData ? functionWithBinaryResult : null);
+        String functionWithNullResult = "return null";
+        leps.onRefresh(functionPrefix + "Function$$FUNCTION_WITH_NULL_RESULT$$tenant.groovy", loadData ? functionWithNullResult : null);
     }
 
     @SneakyThrows
@@ -202,6 +204,14 @@ public class FunctionResourceIntTest extends AbstractSpringBootTest {
             .andExpect(status().is2xxSuccessful())
             .andExpect(header().string("content-type", "application/pdf"))
             .andExpect(content().bytes("test".getBytes()));
+    }
+
+    @Test
+    @Transactional
+    public void functionWithNullResult() throws Exception {
+        ResultActions resultActions = mockMvc.perform(
+                get("/api/functions/{functionName}", "FUNCTION_WITH_NULL_RESULT"));
+        resultActions.andExpect(status().is2xxSuccessful());
     }
 
     @Test
