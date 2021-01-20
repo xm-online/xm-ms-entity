@@ -182,20 +182,14 @@ public class ElasticsearchIndexService {
 
     @Timed
     @Transactional(readOnly = true)
-    public long reindexByTypeKey(@Nonnull String typeKey, Integer startFrom){
-
+    public long reindexByTypeKey(@Nonnull String typeKey, Integer startFrom) {
         Objects.requireNonNull(typeKey, "typeKey should not be null");
-
-
         Specification spec = (Specification) (root, query, criteriaBuilder) -> {
             query.orderBy(criteriaBuilder.desc(root.get("id")));
             return criteriaBuilder.equal(root.get(XM_ENTITY_FIELD_TYPEKEY), typeKey);
         };
         return reindexXmEntity(spec, startFrom);
     }
-
-
-
 
     /**
      * Refreshes entities in elasticsearch index filtered by collection of IDs.
