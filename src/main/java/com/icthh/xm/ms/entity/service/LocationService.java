@@ -85,4 +85,14 @@ public class LocationService {
         log.debug("Request to delete location : {}", locationId);
         locationRepository.deleteById(locationId);
     }
+
+    public List<Location> findByIds(List<Long> ids) {
+        return locationRepository.findAllByIdIn(ids);
+    }
+
+
+    public List<Location> findByEntityIds(List<Long> ids) {
+        return locationRepository.findAllByXmEntityIdIn(ids);
+    }
+
 }

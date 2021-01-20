@@ -34,18 +34,14 @@ public class StateKeyValidator implements ConstraintValidator<StateKey, XmEntity
             return true;
         }
 
-        TypeSpec typeSpec = xmEntitySpecService.findTypeByKey(value.getTypeKey());
+        List<StateSpec> stateSpecs = xmEntitySpecService.getTypeSpecByKey(value.getTypeKey())
+            .map(TypeSpec::getStates)
+            .orElse(List.of());
 
-        if (typeSpec == null) {
+        if (stateSpecs.isEmpty()) {
             return true;
         }
 
-        if (isEmpty(typeSpec.getStates()) && value.getStateKey() == null) {
-            return true;
-        }
-
-        List<StateSpec> stateSpecs = typeSpec.getStates();
-        stateSpecs = (stateSpecs != null) ? stateSpecs : Collections.emptyList();
         Set<String> stateKeys = stateSpecs.stream().map(StateSpec::getKey).collect(toSet());
         log.debug("Type specification states {}, checked state {}", stateKeys, value.getStateKey());
         return stateKeys.contains(value.getStateKey());

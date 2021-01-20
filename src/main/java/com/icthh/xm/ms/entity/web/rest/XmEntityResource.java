@@ -355,6 +355,24 @@ public class XmEntityResource {
         return xmEntityService.getLinkTargets(IdOrKey.of(idOrKey), typeKey);
     }
 
+    @Timed
+    @GetMapping("/xm-entities/{entityTypeKey}/{idOrKey}/links/{linkTypeKey}/search")
+    @PreAuthorize("hasPermission({'query': #query}, 'XMENTITY.SEARCH.TO_LINK.QUERY')")
+    @PrivilegeDescription("Privilege to search candidates for link with specified XmEntity")
+    public ResponseEntity<List<XmEntity>> searchXmEntitiesToLink(
+        @PathVariable String idOrKey,
+        @PathVariable String entityTypeKey,
+        @PathVariable String linkTypeKey,
+        @RequestParam String query,
+        @ApiParam Pageable pageable) {
+        Page<XmEntity> page = xmEntityService
+            .searchXmEntitiesToLink(IdOrKey.of(idOrKey), entityTypeKey, linkTypeKey, query, pageable, null);
+        HttpHeaders headers = PaginationUtil
+            .generateSearchPaginationHttpHeaders(query, page,
+                String.format("/api/xm-entities/%s/%s/links/%s/search", entityTypeKey, idOrKey, linkTypeKey));
+        return new ResponseEntity<>(page.getContent(), headers, HttpStatus.OK);
+    }
+
     @PostMapping("/xm-entities/{idOrKey}/links/targets")
     @Timed
     @PreAuthorize("hasPermission({'idOrKey':#idOrKey, 'link':#link, 'file':#file}, 'XMENTITY.LINK.TARGET.CREATE')")
@@ -553,7 +571,14 @@ public class XmEntityResource {
                                                   Map<String, Object> functionInput) {
         Map<String, Object> fContext = functionInput != null ? functionInput : Maps.newHashMap();
         FunctionContext result = functionService.execute(functionKey, IdOrKey.of(idOrKey), fContext);
-        return ResponseEntity.ok().body(result.functionResult());
+
+        ResponseEntity.BodyBuilder response = ResponseEntity.ok();
+
+        if (result.isBinaryData()) {
+            response.header(HttpHeaders.CONTENT_TYPE, result.getBinaryDataType());
+        }
+
+        return response.body(result.functionResult());
     }
 
 }

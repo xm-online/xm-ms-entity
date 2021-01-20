@@ -1,5 +1,23 @@
 package com.icthh.xm.ms.entity.service;
 
+import static com.github.fge.jackson.NodeType.OBJECT;
+import static com.github.fge.jackson.NodeType.getNodeType;
+import static com.google.common.collect.Iterables.getFirst;
+import static com.icthh.xm.ms.entity.domain.ext.TypeSpecParameter.ACCESS;
+import static com.icthh.xm.ms.entity.domain.ext.TypeSpecParameter.ATTACHMENTS;
+import static com.icthh.xm.ms.entity.domain.ext.TypeSpecParameter.CALENDARS;
+import static com.icthh.xm.ms.entity.domain.ext.TypeSpecParameter.FUNCTIONS;
+import static com.icthh.xm.ms.entity.domain.ext.TypeSpecParameter.LINKS;
+import static com.icthh.xm.ms.entity.domain.ext.TypeSpecParameter.LOCATIONS;
+import static com.icthh.xm.ms.entity.domain.ext.TypeSpecParameter.RATINGS;
+import static com.icthh.xm.ms.entity.domain.ext.TypeSpecParameter.STATES;
+import static com.icthh.xm.ms.entity.domain.ext.TypeSpecParameter.TAGS;
+import static com.icthh.xm.ms.entity.util.CustomCollectionUtils.nullSafe;
+import static com.icthh.xm.ms.entity.util.CustomCollectionUtils.union;
+import static java.util.Collections.emptyList;
+import static java.util.Optional.ofNullable;
+import static org.springframework.util.CollectionUtils.isEmpty;
+
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -22,6 +40,7 @@ import com.icthh.xm.ms.entity.config.ApplicationProperties;
 import com.icthh.xm.ms.entity.domain.ext.TypeSpecParameter;
 import com.icthh.xm.ms.entity.domain.spec.AttachmentSpec;
 import com.icthh.xm.ms.entity.domain.spec.CalendarSpec;
+import com.icthh.xm.ms.entity.domain.spec.EventSpec;
 import com.icthh.xm.ms.entity.domain.spec.FunctionSpec;
 import com.icthh.xm.ms.entity.domain.spec.LinkSpec;
 import com.icthh.xm.ms.entity.domain.spec.LocationSpec;
@@ -34,41 +53,27 @@ import com.icthh.xm.ms.entity.domain.spec.UniqueFieldSpec;
 import com.icthh.xm.ms.entity.domain.spec.XmEntitySpec;
 import com.icthh.xm.ms.entity.security.access.DynamicPermissionCheckService;
 import com.icthh.xm.ms.entity.service.privileges.custom.EntityCustomPrivilegeService;
-import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
-import org.springframework.stereotype.Service;
-import org.springframework.util.AntPathMatcher;
-
 import java.io.StringWriter;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
-
-import static com.github.fge.jackson.NodeType.OBJECT;
-import static com.github.fge.jackson.NodeType.getNodeType;
-import static com.icthh.xm.ms.entity.domain.ext.TypeSpecParameter.ACCESS;
-import static com.icthh.xm.ms.entity.domain.ext.TypeSpecParameter.ATTACHMENTS;
-import static com.icthh.xm.ms.entity.domain.ext.TypeSpecParameter.CALENDARS;
-import static com.icthh.xm.ms.entity.domain.ext.TypeSpecParameter.FUNCTIONS;
-import static com.icthh.xm.ms.entity.domain.ext.TypeSpecParameter.LINKS;
-import static com.icthh.xm.ms.entity.domain.ext.TypeSpecParameter.LOCATIONS;
-import static com.icthh.xm.ms.entity.domain.ext.TypeSpecParameter.RATINGS;
-import static com.icthh.xm.ms.entity.domain.ext.TypeSpecParameter.STATES;
-import static com.icthh.xm.ms.entity.domain.ext.TypeSpecParameter.TAGS;
-import static com.icthh.xm.ms.entity.util.CustomCollectionUtils.nullSafe;
-import static com.icthh.xm.ms.entity.util.CustomCollectionUtils.union;
-import static java.util.Collections.emptyList;
-import static org.springframework.util.CollectionUtils.isEmpty;
+import java.util.stream.Stream;
+import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.stereotype.Service;
+import org.springframework.util.AntPathMatcher;
 
 /**
  * XM Entity Specification service, that provides extra possibilities to
@@ -84,9 +89,9 @@ public class XmEntitySpecService implements RefreshableConfiguration {
     private static final String TENANT_NAME = "tenantName";
     private final AntPathMatcher matcher = new AntPathMatcher();
 
-    private ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
-    private ConcurrentHashMap<String, Map<String, TypeSpec>> typesByTenant = new ConcurrentHashMap<>();
-    private ConcurrentHashMap<String, Map<String, Map<String, TypeSpec>>> typesByTenantByFile = new ConcurrentHashMap<>();
+    private final ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+    private final ConcurrentHashMap<String, Map<String, TypeSpec>> typesByTenant = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, Map<String, Map<String, TypeSpec>>> typesByTenantByFile = new ConcurrentHashMap<>();
 
     private final TenantConfigRepository tenantConfigRepository;
     private final ApplicationProperties applicationProperties;
@@ -219,7 +224,12 @@ public class XmEntitySpecService implements RefreshableConfiguration {
 
     @LoggingAspectConfig(resultDetails = false)
     public Optional<TypeSpec> getTypeSpecByKey(String key) {
-        return Optional.ofNullable(getTypeSpecs().get(key)).map(this::filterFunctions);
+        return ofNullable(getTypeSpecs().get(key)).map(this::filterFunctions);
+    }
+
+    @LoggingAspectConfig(resultDetails = false)
+    public Optional<LinkSpec> getLinkSpec(String entityTypeKey, String linkTypeKey) {
+        return getTypeSpecByKey(entityTypeKey).flatMap(ts -> ts.findLinkSpec(linkTypeKey));
     }
 
     /**
@@ -339,6 +349,31 @@ public class XmEntitySpecService implements RefreshableConfiguration {
             .orElse(emptyList());
 
         return functionSpecs.stream().filter(keysEquals).findFirst();
+    }
+
+    /**
+     * Find {@link EventSpec} for specified event type key.
+     * @implNote method throws exception in case when more than one {@link EventSpec} found
+     * @param eventTypeKey the event type key to find
+     * @return the event specification
+     */
+    @IgnoreLogginAspect
+    public Optional<EventSpec> findEvent(String eventTypeKey) {
+        List<EventSpec> eventSpecs = Stream.ofNullable(getTypeSpecs())
+            .map(Map::values)
+            .flatMap(Collection::stream)
+            .map(TypeSpec::getCalendars)
+            .filter(Objects::nonNull)
+            .flatMap(Collection::stream)
+            .map(CalendarSpec::getEvents)
+            .filter(Objects::nonNull)
+            .flatMap(Collection::stream)
+            .filter(eventSpec -> eventTypeKey.equals(eventSpec.getKey()))
+            .collect(Collectors.toList());
+        if (eventSpecs.size() > 1) {
+            throw new IllegalStateException("Found more than one Event specifications by key:" + eventTypeKey);
+        }
+        return ofNullable(getFirst(eventSpecs, null));
     }
 
     /**

@@ -33,6 +33,7 @@ import com.icthh.xm.ms.entity.domain.Rating;
 import com.icthh.xm.ms.entity.domain.Tag;
 import com.icthh.xm.ms.entity.domain.Vote;
 import com.icthh.xm.ms.entity.domain.XmEntity;
+import com.icthh.xm.ms.entity.domain.ext.IdOrKey;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
 import com.icthh.xm.ms.entity.service.ElasticsearchIndexService;
 import com.icthh.xm.ms.entity.service.SeparateTransactionExecutor;
@@ -44,6 +45,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import javax.persistence.EntityManager;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
@@ -94,6 +96,9 @@ public class XmEntityServiceIntTest extends AbstractSpringBootTest {
 
     @Autowired
     private XmEntityTenantConfigService xmEntityTenantConfigService;
+
+    @Autowired
+    private EntityManager entityManager;
 
     @Mock
     private XmAuthenticationContextHolder authContextHolder;
@@ -225,6 +230,23 @@ public class XmEntityServiceIntTest extends AbstractSpringBootTest {
         XmEntity entity = xmEntityService.save(createXmEntity());
 
         xmEntityService.delete(entity.getId());
+    }
+
+    @Test
+    public void testDeleteWithAlreadyAssignedEvent() {
+        XmEntity eventDataRef = xmEntityService.save(createXmEntity());
+        Event event = transactionExecutor.doInSeparateTransaction(() -> {
+            XmEntity existedEventDataRef = entityManager.find(XmEntity.class, eventDataRef.getId());
+            Event newEvent = new Event().typeKey("B").title("1").eventDataRef(existedEventDataRef);
+            entityManager.persist(newEvent);
+            return newEvent;
+        });
+
+        xmEntityService.delete(eventDataRef.getId());
+
+        Event eventAfterRelatedEntityDeletion = transactionExecutor.doInSeparateTransaction(
+            () -> entityManager.find(Event.class, event.getId()));
+        assertThat(eventAfterRelatedEntityDeletion.getEventDataRef()).isNull();
     }
 
     @Test
@@ -458,6 +480,7 @@ public class XmEntityServiceIntTest extends AbstractSpringBootTest {
 
         String config = loadFile("config/elastic_config.json");
         indexConfiguration.onRefresh("/config/tenants/RESINTTEST/entity/index_config.json", config);
+        xmEntityService.delete(entity.getId());
         elasticsearchIndexService.reindexAll();
     }
 
@@ -603,6 +626,41 @@ public class XmEntityServiceIntTest extends AbstractSpringBootTest {
         assertThat(scrollResult.getTotalPages()).isEqualTo(1);
 
         indexConfiguration.onRefresh("/config/tenants/RESINTTEST/entity/index_config.json", null);
+    }
+
+    @Test
+    @WithMockUser(authorities = "SUPER-ADMIN")
+    public void testFindLink() {
+
+        List<XmEntity> entities = transactionExecutor.doInSeparateTransaction(() -> {
+            XmEntity entity1 = xmEntityService.save(new XmEntity().typeKey("TEST_SEARCH").key("key1").name("name"));
+            XmEntity entity2 = xmEntityService.save(new XmEntity().typeKey("TEST_SEARCH").key("key2").name("name"));
+            XmEntity entity3 = xmEntityService.save(new XmEntity().typeKey("TEST_SEARCH").key("key3").name("name"));
+            XmEntity entity4 = xmEntityService.save(new XmEntity().typeKey("TEST_SEARCH").key("key4").name("name"));
+            XmEntity entity5 = xmEntityService.save(new XmEntity().typeKey("TEST_SEARCH").key("key5").name("name"));
+
+            Link link1 = new Link().typeKey("TEST_SEARCH_LINK");
+            entity1.addTargets(link1);
+            link1.setTarget(entity2);
+
+            Link link2 = new Link().typeKey("TEST_SEARCH_LINK");
+            entity1.addTargets(link2);
+            link2.setTarget(entity3);
+
+            xmEntityService.save(entity1);
+            xmEntityService.save(entity2);
+            xmEntityService.save(entity3);
+
+            return asList(entity1, entity2, entity3, entity4, entity5);
+        });
+
+        List<XmEntity> result = xmEntityService.searchXmEntitiesToLink(IdOrKey.of(entities.get(0).getId()),
+            "TEST_SEARCH", "TEST_SEARCH_LINK", "name: name",
+            PageRequest.of(0, 10), null).getContent();
+
+        assertThat(result).contains(entities.get(3), entities.get(4));
+        assertThat(result).doesNotContain(entities.get(0), entities.get(1), entities.get(2));
+        entities.forEach(it -> xmEntityService.delete(it.getId()));
     }
 
     private void saveXmEntities() {

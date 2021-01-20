@@ -6,6 +6,7 @@ import com.icthh.xm.commons.permission.annotation.FindWithPermission;
 import com.icthh.xm.commons.permission.annotation.PrivilegeDescription;
 import com.icthh.xm.ms.entity.domain.Link;
 import com.icthh.xm.ms.entity.domain.XmEntity;
+import com.icthh.xm.ms.entity.projection.LinkProjection;
 import com.icthh.xm.ms.entity.repository.LinkPermittedRepository;
 import com.icthh.xm.ms.entity.repository.LinkRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
@@ -109,6 +110,25 @@ public class LinkService {
     }
 
     /**
+     * Get all link by source ID and link typeKey
+     *
+     * @param id      source entity ID
+     * @param typeKey target type key
+     * @return list of links
+     */
+    @Transactional(readOnly = true)
+    public List<Link> findBySourceIdAndTypeKey(Long id, String typeKey) {
+        log.debug("Request to get link by sourceId={} and typeKey={}", id, typeKey);
+        return linkRepository.findBySourceIdAndTypeKey(id, typeKey);
+    }
+
+    @Transactional(readOnly = true)
+    public List<LinkProjection> findLinkProjectionsBySourceIdAndTypeKey(Long id, String typeKey) {
+        log.debug("Request to get link by sourceId={} and typeKey={}", id, typeKey);
+        return linkRepository.findLinkProjectionsBySourceIdAndTypeKey(id, typeKey);
+    }
+
+    /**
      * Get all link by target ID and link typeKey
      * @param id target entity ID
      * @param typeKey link type key
@@ -156,6 +176,11 @@ public class LinkService {
     @Transactional(readOnly = true)
     public List<Link> findAll(Specification<Link> spec) {
         return linkRepository.findAll(spec);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<Link> findAll(Specification<Link> spec, Pageable pageable) {
+        return linkRepository.findAll(spec, pageable);
     }
 
 }

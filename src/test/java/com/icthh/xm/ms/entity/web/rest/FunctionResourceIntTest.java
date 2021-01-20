@@ -10,8 +10,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 import com.icthh.xm.commons.i18n.error.web.ExceptionTranslator;
 import com.icthh.xm.commons.lep.XmLepScriptConfigServerResourceLoader;
@@ -24,6 +23,8 @@ import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.service.impl.XmEntityServiceImpl;
 import java.io.InputStream;
 import java.util.List;
+import java.util.UUID;
+
 import lombok.SneakyThrows;
 import org.apache.commons.io.IOUtils;
 import org.junit.After;
@@ -34,11 +35,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
 import org.springframework.http.MediaType;
+import org.springframework.http.converter.ByteArrayHttpMessageConverter;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.transaction.BeforeTransaction;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -97,7 +100,7 @@ public class FunctionResourceIntTest extends AbstractSpringBootTest {
         this.mockMvc = MockMvcBuilders.standaloneSetup(functionResource, xmEntityResource)
                                                   .setCustomArgumentResolvers(pageableArgumentResolver)
                                                   .setControllerAdvice(exceptionTranslator)
-                                                  .setMessageConverters(jacksonMessageConverter).build();
+                                                  .setMessageConverters(jacksonMessageConverter, new ByteArrayHttpMessageConverter()).build();
 
         initLeps(true);
     }
@@ -114,6 +117,11 @@ public class FunctionResourceIntTest extends AbstractSpringBootTest {
         String packageTestBody = "return lepContext.inArgs";
         leps.onRefresh(functionPrefix + "package/Function$$FUNCTION$PACKAGE_TEST$$tenant.groovy", loadData ? packageTestBody : null);
         leps.onRefresh(functionPrefix + "package/FunctionWithXmEntity$$FUNCTION_WITH_ENTITY$PACKAGE_TEST$$tenant.groovy", loadData ? packageTestBody : null);
+
+        String functionWithBinaryResult = "return [\"bytes\": \"test\".getBytes()]";
+        leps.onRefresh(functionPrefix + "FunctionWithXmEntity$$FUNCTION_WITH_BINARY_RESULT$$tenant.groovy", loadData ? functionWithBinaryResult : null);
+        String functionWithNullResult = "return null";
+        leps.onRefresh(functionPrefix + "Function$$FUNCTION_WITH_NULL_RESULT$$tenant.groovy", loadData ? functionWithNullResult : null);
     }
 
     @SneakyThrows
@@ -182,6 +190,32 @@ public class FunctionResourceIntTest extends AbstractSpringBootTest {
 
     @Test
     @Transactional
+    public void functionWithBinaryDataResult() throws Exception {
+        //GIVEN
+        Long id = xmEntityService.save(new XmEntity().typeKey("TEST_ENTITY_WITH_BINARY_RESULT_FUNCTION").key(UUID.randomUUID()).name("test")).getId();
+
+        //WHEN
+        ResultActions resultActions = mockMvc.perform(
+            get("/api/xm-entities/{idOrKey}/functions/{functionName}",
+                id, "FUNCTION_WITH_BINARY_RESULT"));
+
+        //THEN
+        resultActions
+            .andExpect(status().is2xxSuccessful())
+            .andExpect(header().string("content-type", "application/pdf"))
+            .andExpect(content().bytes("test".getBytes()));
+    }
+
+    @Test
+    @Transactional
+    public void functionWithNullResult() throws Exception {
+        ResultActions resultActions = mockMvc.perform(
+                get("/api/functions/{functionName}", "FUNCTION_WITH_NULL_RESULT"));
+        resultActions.andExpect(status().is2xxSuccessful());
+    }
+
+    @Test
+    @Transactional
     @SneakyThrows
     public void testFunctionWithPackageAndInput() {
         String functionApi = "/api/functions/";
@@ -221,6 +255,22 @@ public class FunctionResourceIntTest extends AbstractSpringBootTest {
                .andExpect(jsonPath("$.data.functionKey").value(functionWithEntityKey))
                .andExpect(jsonPath("$.data.functionInput.parameter").value("value"))
                .andExpect(status().is2xxSuccessful());
+    }
+
+    @Test
+    @Transactional
+    @SneakyThrows
+    public void testGStringSerialization() {
+        String functionPrefix = "/config/tenants/RESINTTEST/entity/lep/function/";
+        String functionApi = "/api/functions/";
+        String functionKey = "package/FUNCTION.PACKAGE-TEST";
+        String funcKey = functionPrefix + "package/Function$$FUNCTION$PACKAGE_TEST$$tenant.groovy";
+        leps.onRefresh(funcKey, "def i = 1; return [result: \"gstr${i}ing\"]");
+        mockMvc.perform(post(functionApi + functionKey).content("{}").contentType(APPLICATION_JSON_VALUE))
+               .andDo(print())
+               .andExpect(jsonPath("$.data.result").isString())
+               .andExpect(status().is2xxSuccessful());
+        leps.onRefresh(funcKey, null);
     }
 
 }

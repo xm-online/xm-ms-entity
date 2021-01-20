@@ -12,6 +12,7 @@ import lombok.NoArgsConstructor;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -100,4 +101,12 @@ public class TypeSpec {
     @Builder.Default
     @JsonProperty("ignoreInheritanceFor")
     private Set<String> ignoreInheritanceFor = new HashSet<>();
+
+    public Optional<LinkSpec> findLinkSpec(String typeKey) {
+        if (links == null) {
+            return Optional.empty();
+        }
+        return links.stream().filter(linkSpec -> typeKey.equals(linkSpec.getKey())).findAny();
+    }
+
 }

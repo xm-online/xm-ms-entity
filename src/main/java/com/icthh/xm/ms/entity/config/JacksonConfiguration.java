@@ -1,5 +1,10 @@
 package com.icthh.xm.ms.entity.config;
 
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializerProvider;
+import com.fasterxml.jackson.databind.module.SimpleModule;
+import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 import com.fasterxml.jackson.datatype.hibernate5.Hibernate5Module;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
@@ -10,7 +15,13 @@ import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.domain.serializer.XmSquigglyContextProvider;
 import com.icthh.xm.ms.entity.domain.serializer.XmSquigglyFilterCustomizer;
 import com.icthh.xm.ms.entity.domain.serializer.XmSquigglyInterceptor;
+import groovy.lang.GString;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
 import org.springframework.boot.autoconfigure.jackson.Jackson2ObjectMapperBuilderCustomizer;
 import org.springframework.context.annotation.Bean;
@@ -18,10 +29,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.http.converter.json.SpringHandlerInstantiator;
-
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import org.springframework.stereotype.Component;
 
 @Slf4j
 @Configuration
@@ -119,6 +127,25 @@ public class JacksonConfiguration {
         log.info("Init Squiggly filter for message converter: {} and objectMapper: {}",
                  converter, converter.getObjectMapper());
         Squiggly.init(converter.getObjectMapper(), xmSquigglyContextProvider());
+    }
+
+    @Component
+    public static class GStringJsonSerializer extends StdSerializer<GString> {
+
+        @Autowired
+        public GStringJsonSerializer(ObjectMapper objectMapper) {
+            super(GString.class);
+
+            SimpleModule module = new SimpleModule();
+            module.addSerializer(GString.class, this);
+            objectMapper.registerModule(module);
+        }
+
+        @Override
+        public void serialize(GString value, JsonGenerator gen, SerializerProvider serializers) throws IOException {
+            gen.writeString(value.toString());
+        }
+
     }
 
 }

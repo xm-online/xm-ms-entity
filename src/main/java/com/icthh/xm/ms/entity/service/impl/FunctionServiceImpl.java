@@ -177,6 +177,8 @@ public class FunctionServiceImpl implements FunctionService {
             functionResult.setXmEntity(xmEntity);
         }
         functionResult.setOnlyData(functionSpec.getOnlyData());
+        functionResult.setBinaryDataField(functionSpec.getBinaryDataField());
+        functionResult.setBinaryDataType(functionSpec.getBinaryDataType());
         return functionResult;
     }
 

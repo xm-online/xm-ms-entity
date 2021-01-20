@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+
+    <changeSet id="20200916140000" author="abonert">
+        <addColumn tableName="event">
+            <column name="event_data_ref_id" type="bigint">
+                <constraints foreignKeyName="fk_event_xm_entity_event_data_ref_id"
+                             referencedColumnNames="id"
+                             referencedTableName="xm_entity"
+                             unique="true"
+                             uniqueConstraintName="uq_event_event_data_ref_id"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
+</databaseChangeLog>
