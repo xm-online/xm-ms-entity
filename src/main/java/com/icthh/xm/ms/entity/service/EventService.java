@@ -14,9 +14,14 @@ import com.icthh.xm.ms.entity.repository.EventRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
 import com.icthh.xm.ms.entity.repository.search.PermittedSearchRepository;
 import java.util.List;
+
+import com.icthh.xm.ms.entity.service.query.EventQueryService;
+import com.icthh.xm.ms.entity.service.query.filter.EventFilter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,6 +35,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class EventService {
 
     private final XmEntityService xmEntityService;
+    private final EventQueryService eventQueryService;
     private final EventRepository eventRepository;
     private final PermittedRepository permittedRepository;
     private final PermittedSearchRepository permittedSearchRepository;
@@ -115,5 +121,11 @@ public class EventService {
     @PrivilegeDescription("Privilege to search for the event corresponding to the query")
     public List<Event> search(String query, String privilegeKey) {
         return permittedSearchRepository.search(query, Event.class, privilegeKey);
+    }
+
+    @Transactional(readOnly = true)
+    @LogicExtensionPoint("GetEvents")
+    public List<Event> getEvents(EventFilter filter) {
+        return eventQueryService.findAll(filter);
     }
 }
