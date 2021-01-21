@@ -20,8 +20,6 @@ import com.icthh.xm.ms.entity.service.query.filter.EventFilter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -93,6 +91,7 @@ public class EventService {
      * @return the list of entities
      */
     @Transactional(readOnly = true)
+    @SuppressWarnings("unused")
     public List<Event> findAllByFilter(EventFilter filter) {
         return eventQueryService.findAll(filter);
     }
