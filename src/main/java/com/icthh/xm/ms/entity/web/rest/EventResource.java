@@ -6,7 +6,6 @@ import com.icthh.xm.commons.exceptions.ErrorConstants;
 import com.icthh.xm.commons.permission.annotation.PrivilegeDescription;
 import com.icthh.xm.ms.entity.domain.Event;
 import com.icthh.xm.ms.entity.service.EventService;
-import com.icthh.xm.ms.entity.service.query.filter.EventFilter;
 import com.icthh.xm.ms.entity.web.rest.util.HeaderUtil;
 import com.icthh.xm.ms.entity.web.rest.util.RespContentUtil;
 import org.springframework.context.annotation.Lazy;
@@ -100,12 +99,8 @@ public class EventResource {
      */
     @GetMapping("/events")
     @Timed
-    public List<Event> getAllEvents(EventFilter filter) {
-        if (filter == null) {
-            return eventService.findAll(null);
-        } else {
-            return eventService.getEvents(filter);
-        }
+    public List<Event> getAllEvents() {
+        return eventService.findAll(null);
     }
 
     /**

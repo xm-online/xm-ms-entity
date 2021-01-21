@@ -87,6 +87,17 @@ public class EventService {
     }
 
     /**
+     * Get all the events by filter.
+     * Method is used in LEP's
+     *
+     * @return the list of entities
+     */
+    @Transactional(readOnly = true)
+    public List<Event> findAllByFilter(EventFilter filter) {
+        return eventQueryService.findAll(filter);
+    }
+
+    /**
      *  Get one event by id.
      *
      *  @param id the id of the entity
@@ -121,11 +132,5 @@ public class EventService {
     @PrivilegeDescription("Privilege to search for the event corresponding to the query")
     public List<Event> search(String query, String privilegeKey) {
         return permittedSearchRepository.search(query, Event.class, privilegeKey);
-    }
-
-    @Transactional(readOnly = true)
-    @LogicExtensionPoint("GetEvents")
-    public List<Event> getEvents(EventFilter filter) {
-        return eventQueryService.findAll(filter);
     }
 }
