@@ -58,6 +58,8 @@ public class EventQueryService extends QueryService<Event> {
     }
 
     private Specification<Event> createSpecification(EventFilter filter) {
+        //criteriaBuilder.conjunction() is used to avoid returning null from methods.
+        //It generates always true Predicate
         Specification<Event> specification = (root, query, cb) -> cb.conjunction();
         specification = getEventSpecification(filter, specification);
 
