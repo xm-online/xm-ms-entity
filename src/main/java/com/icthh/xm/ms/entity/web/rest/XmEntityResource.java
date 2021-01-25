@@ -571,7 +571,14 @@ public class XmEntityResource {
                                                   Map<String, Object> functionInput) {
         Map<String, Object> fContext = functionInput != null ? functionInput : Maps.newHashMap();
         FunctionContext result = functionService.execute(functionKey, IdOrKey.of(idOrKey), fContext);
-        return ResponseEntity.ok().body(result.functionResult());
+
+        ResponseEntity.BodyBuilder response = ResponseEntity.ok();
+
+        if (result.isBinaryData()) {
+            response.header(HttpHeaders.CONTENT_TYPE, result.getBinaryDataType());
+        }
+
+        return response.body(result.functionResult());
     }
 
 }
