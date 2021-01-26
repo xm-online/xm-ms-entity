@@ -9,6 +9,7 @@ import com.icthh.xm.ms.entity.domain.Event;
 import com.icthh.xm.ms.entity.service.query.filter.EventFilter;
 import io.github.jhipster.service.filter.InstantFilter;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.Assert;
@@ -66,12 +67,17 @@ public class EventQueryServiceIntTest extends AbstractSpringBootTest {
         List<Event> actual = eventService.findAllByFilter(eventFilter);
 
         Assert.assertNotNull(actual);
-        Assert.assertEquals(expected.size(), actual.size());
+        Assert.assertEquals(expected.size() - 1, actual.size());
     }
 
     @BeforeTransaction
     public void beforeTransaction() {
-        TenantContextUtils.setTenant(tenantContextHolder, "RESINTTEST");
+        TenantContextUtils.setTenant(tenantContextHolder, "TEST");
+    }
+
+    @After
+    public void tearDown() {
+        tenantContextHolder.getPrivilegedContext().destroyCurrentContext();
     }
 
     public List<Event> initEvents() {
@@ -82,6 +88,12 @@ public class EventQueryServiceIntTest extends AbstractSpringBootTest {
             em.flush();
             events.add(event);
         }
+        Event event = new Event()
+            .typeKey("Event2")
+            .title("Tomorrow event")
+            .startDate(LocalDate.now().plusDays(1).atTime(LocalTime.parse("07:00")).toInstant(ZoneOffset.UTC))
+            .endDate(LocalDate.now().plusDays(1).atTime(LocalTime.parse("20:00")).toInstant(ZoneOffset.UTC));
+        events.add(event);
         return events;
     }
 
