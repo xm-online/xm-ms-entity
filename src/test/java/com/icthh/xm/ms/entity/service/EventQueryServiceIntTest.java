@@ -66,7 +66,7 @@ public class EventQueryServiceIntTest extends AbstractSpringBootTest {
         List<Event> actual = eventService.findAllByFilter(eventFilter);
 
         Assert.assertNotNull(actual);
-        Assert.assertEquals(expected, actual);
+        Assert.assertEquals(expected.size(), actual.size());
     }
 
     @BeforeTransaction
