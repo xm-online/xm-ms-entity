@@ -61,8 +61,8 @@ public class EventQueryServiceIntTest extends AbstractSpringBootTest {
         EventFilter eventFilter = new EventFilter();
         InstantFilter instantFilter = new InstantFilter();
 
-        instantFilter.setGreaterThanOrEqual(LocalDate.now().atStartOfDay().toInstant(ZoneOffset.UTC));
-        instantFilter.setLessThanOrEqual(LocalDate.now().atTime(LocalTime.MAX).toInstant(ZoneOffset.UTC));
+        instantFilter.setGreaterThanOrEqual(LocalDate.parse("2019-01-26").atStartOfDay().toInstant(ZoneOffset.UTC));
+        instantFilter.setLessThanOrEqual(LocalDate.parse("2019-01-26").atTime(LocalTime.MAX).toInstant(ZoneOffset.UTC));
         eventFilter.setStartDate(instantFilter);
         List<Event> actual = eventService.findAllByFilter(eventFilter);
 
@@ -91,8 +91,8 @@ public class EventQueryServiceIntTest extends AbstractSpringBootTest {
         Event event = new Event()
             .typeKey("Event2")
             .title("Tomorrow event")
-            .startDate(LocalDate.now().plusDays(1).atTime(LocalTime.parse("07:00")).toInstant(ZoneOffset.UTC))
-            .endDate(LocalDate.now().plusDays(1).atTime(LocalTime.parse("20:00")).toInstant(ZoneOffset.UTC));
+            .startDate(LocalDate.parse("2019-01-27").atTime(LocalTime.parse("07:00")).toInstant(ZoneOffset.UTC))
+            .endDate(LocalDate.parse("2019-01-27").atTime(LocalTime.parse("20:00")).toInstant(ZoneOffset.UTC));
         events.add(event);
         return events;
     }
@@ -107,7 +107,7 @@ public class EventQueryServiceIntTest extends AbstractSpringBootTest {
         return new Event()
             .typeKey("Event")
             .title("Today event")
-            .startDate(LocalDate.now().atTime(LocalTime.parse("07:00")).toInstant(ZoneOffset.UTC))
-            .endDate(LocalDate.now().atTime(LocalTime.parse("20:00")).toInstant(ZoneOffset.UTC));
+            .startDate(LocalDate.parse("2019-01-26").atTime(LocalTime.parse("07:00")).toInstant(ZoneOffset.UTC))
+            .endDate(LocalDate.parse("2019-01-26").atTime(LocalTime.parse("20:00")).toInstant(ZoneOffset.UTC));
     }
 }
