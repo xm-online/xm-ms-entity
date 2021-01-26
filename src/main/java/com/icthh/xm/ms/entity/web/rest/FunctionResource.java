@@ -70,7 +70,7 @@ public class FunctionResource {
             response.header(HttpHeaders.CONTENT_TYPE, result.getBinaryDataType());
         }
 
-        return ResponseEntity.ok().body(result.functionResult());
+        return response.body(result.functionResult());
     }
 
     @Timed
