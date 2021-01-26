@@ -92,6 +92,7 @@ public class EventService {
      */
     @Transactional(readOnly = true)
     @SuppressWarnings("unused")
+    @LogicExtensionPoint("FindAllByFilter")
     public List<Event> findAllByFilter(EventFilter filter) {
         return eventQueryService.findAll(filter);
     }
