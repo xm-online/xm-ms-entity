@@ -39,7 +39,7 @@ public class EventQueryServiceIntTest extends AbstractSpringBootTest {
     private TenantContextHolder tenantContextHolder;
     @Autowired
     private LepManager lepManager;
-    @Mock
+    @Autowired
     private XmAuthenticationContextHolder authContextHolder;
 
     private List<Event> expected;
