@@ -120,6 +120,8 @@ public class FunctionResourceIntTest extends AbstractSpringBootTest {
 
         String functionWithBinaryResult = "return [\"bytes\": \"test\".getBytes()]";
         leps.onRefresh(functionPrefix + "FunctionWithXmEntity$$FUNCTION_WITH_BINARY_RESULT$$tenant.groovy", loadData ? functionWithBinaryResult : null);
+        String functionWithNullResult = "return null";
+        leps.onRefresh(functionPrefix + "Function$$FUNCTION_WITH_NULL_RESULT$$tenant.groovy", loadData ? functionWithNullResult : null);
     }
 
     @SneakyThrows
@@ -206,6 +208,14 @@ public class FunctionResourceIntTest extends AbstractSpringBootTest {
 
     @Test
     @Transactional
+    public void functionWithNullResult() throws Exception {
+        ResultActions resultActions = mockMvc.perform(
+                get("/api/functions/{functionName}", "FUNCTION_WITH_NULL_RESULT"));
+        resultActions.andExpect(status().is2xxSuccessful());
+    }
+
+    @Test
+    @Transactional
     @SneakyThrows
     public void testFunctionWithPackageAndInput() {
         String functionApi = "/api/functions/";
@@ -245,6 +255,22 @@ public class FunctionResourceIntTest extends AbstractSpringBootTest {
                .andExpect(jsonPath("$.data.functionKey").value(functionWithEntityKey))
                .andExpect(jsonPath("$.data.functionInput.parameter").value("value"))
                .andExpect(status().is2xxSuccessful());
+    }
+
+    @Test
+    @Transactional
+    @SneakyThrows
+    public void testGStringSerialization() {
+        String functionPrefix = "/config/tenants/RESINTTEST/entity/lep/function/";
+        String functionApi = "/api/functions/";
+        String functionKey = "package/FUNCTION.PACKAGE-TEST";
+        String funcKey = functionPrefix + "package/Function$$FUNCTION$PACKAGE_TEST$$tenant.groovy";
+        leps.onRefresh(funcKey, "def i = 1; return [result: \"gstr${i}ing\"]");
+        mockMvc.perform(post(functionApi + functionKey).content("{}").contentType(APPLICATION_JSON_VALUE))
+               .andDo(print())
+               .andExpect(jsonPath("$.data.result").isString())
+               .andExpect(status().is2xxSuccessful());
+        leps.onRefresh(funcKey, null);
     }
 
 }

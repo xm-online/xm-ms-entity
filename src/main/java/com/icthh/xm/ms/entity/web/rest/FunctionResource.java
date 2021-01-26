@@ -18,6 +18,7 @@ import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -62,6 +63,13 @@ public class FunctionResource {
     public ResponseEntity<Object> callGetFunction(@PathVariable("functionKey") String functionKey,
                                                            @RequestParam(required = false) Map<String, Object> functionInput) {
         FunctionContext result = functionService.execute(functionKey, functionInput);
+
+        ResponseEntity.BodyBuilder response = ResponseEntity.ok();
+
+        if (result.isBinaryData()) {
+            response.header(HttpHeaders.CONTENT_TYPE, result.getBinaryDataType());
+        }
+
         return ResponseEntity.ok().body(result.functionResult());
     }
 

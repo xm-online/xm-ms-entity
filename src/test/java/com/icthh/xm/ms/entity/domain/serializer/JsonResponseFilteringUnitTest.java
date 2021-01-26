@@ -39,6 +39,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
@@ -148,7 +149,8 @@ public class JsonResponseFilteringUnitTest extends AbstractWebMvcTest {
 
         Page<Link> result = new PageImpl<>(new ArrayList<>(source.getTargets()));
 
-        when(linkService.findAll(any(), any())).thenReturn(result);
+        Pageable pageable = any();
+        when(linkService.findAll(pageable, any())).thenReturn(result);
 
         // Get the link
         ResultActions actions = performGet("/api/links")
@@ -170,7 +172,8 @@ public class JsonResponseFilteringUnitTest extends AbstractWebMvcTest {
 
         Page<Link> result = new PageImpl<>(new ArrayList<>(source.getTargets()));
 
-        when(linkService.findAll(any(), any())).thenReturn(result);
+        Pageable pageable = any();
+        when(linkService.findAll(pageable, any())).thenReturn(result);
 
         // Get the link
         ResultActions actions = performGet("/api/links?filter={filter}", "id,target.id")

@@ -262,8 +262,8 @@ public class FunctionContext implements Serializable {
     }
 
     public Object functionResult() {
-        if (getBinaryData().isPresent()) {
-            return getBinaryData().get();
+        if (isBinaryData()) {
+            return getBinaryData();
         }
 
         if (onlyData) {
@@ -276,8 +276,11 @@ public class FunctionContext implements Serializable {
         return binaryDataField != null;
     }
 
-    public Optional<Object> getBinaryData() {
-        return data != null ? Optional.ofNullable(data.get(binaryDataField)) : Optional.empty();
+    public Object getBinaryData() {
+        if (data == null) {
+            return null;
+        }
+        return data.get(binaryDataField);
     }
 
     @Override
