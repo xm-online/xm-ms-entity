@@ -7,9 +7,7 @@ import com.icthh.xm.commons.logging.LoggingAspectConfig;
 import com.icthh.xm.commons.permission.annotation.PrivilegeDescription;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.domain.spec.TypeSpec;
-import com.icthh.xm.ms.entity.service.XmEntityGeneratorService;
 import com.icthh.xm.ms.entity.service.XmEntitySpecService;
-import com.icthh.xm.ms.entity.web.rest.util.HeaderUtil;
 import com.icthh.xm.ms.entity.web.rest.util.RespContentUtil;
 import io.swagger.annotations.ApiParam;
 import lombok.AllArgsConstructor;
@@ -26,7 +24,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Optional;
@@ -46,7 +43,6 @@ public class XmEntitySpecResource {
     private static final String ENTITY_NAME = "xmEntity";
 
     private final XmEntitySpecService xmEntitySpecService;
-    private final XmEntityGeneratorService xmEntityGeneratorService;
 
     public enum Filter {
 
@@ -110,24 +106,6 @@ public class XmEntitySpecResource {
     public ResponseEntity<TypeSpec> getTypeSpec(@PathVariable String key) {
         log.debug("REST request to get TypeSpec : {}", key);
         return RespContentUtil.wrapOrNotFound(xmEntitySpecService.getTypeSpecByKey(key));
-    }
-
-    /**
-     * POST  /xm-entity-specs/generate-xm-entity : Generate a new xmEntity.
-     *
-     * @return the ResponseEntity with status 201 (Created) and with body the new xmEntity
-     * @throws URISyntaxException if the Location URI syntax is incorrect
-     */
-    @PostMapping("/xm-entity-specs/generate-xm-entity")
-    @Timed
-    @PreAuthorize("hasPermission({'rootTypeKey': #rootTypeKey}, 'XMENTITY_SPEC.GENERATE')")
-    @PrivilegeDescription("Privilege to generate a new random xmEntity with passed type. Used for demo")
-    public ResponseEntity<XmEntity> generateXmEntity(@ApiParam String rootTypeKey) throws URISyntaxException {
-        log.debug("REST request to generate XmEntity");
-        XmEntity result = xmEntityGeneratorService.generateXmEntity(rootTypeKey != null ? rootTypeKey : "");
-        return ResponseEntity.created(new URI("/api/xm-entities/" + result.getId()))
-            .headers(HeaderUtil.createEntityCreationAlert(ENTITY_NAME, result.getId().toString()))
-            .body(result);
     }
 
     /**

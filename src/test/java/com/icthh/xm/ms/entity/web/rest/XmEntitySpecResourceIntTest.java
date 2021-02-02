@@ -5,9 +5,6 @@ import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_TENANT_
 import static com.icthh.xm.commons.tenant.TenantContextUtils.setTenant;
 import static com.icthh.xm.ms.entity.config.TenantConfigMockConfiguration.getXmEntitySpec;
 import static com.icthh.xm.ms.entity.util.IsCollectionNotContaining.hasNotItem;
-import static org.assertj.core.api.Assertions.not;
-import static org.hamcrest.Matchers.allOf;
-import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.hasSize;
 import static org.junit.Assert.assertTrue;
@@ -26,11 +23,9 @@ import com.icthh.xm.commons.security.XmAuthenticationContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.lep.api.LepManager;
 import com.icthh.xm.ms.entity.AbstractSpringBootTest;
-import com.icthh.xm.ms.entity.service.XmEntityGeneratorService;
 import com.icthh.xm.ms.entity.service.XmEntitySpecService;
 import com.icthh.xm.ms.entity.service.impl.XmEntityServiceImpl;
 import lombok.SneakyThrows;
-import org.hamcrest.core.IsEqual;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -84,8 +79,6 @@ public class XmEntitySpecResourceIntTest extends AbstractSpringBootTest {
     @Autowired
     private ExceptionTranslator exceptionTranslator;
 
-    private XmEntityGeneratorService xmEntityGeneratorService;
-
     private MockMvc restXmEntitySpecMockMvc;
 
     @Before
@@ -101,11 +94,7 @@ public class XmEntitySpecResourceIntTest extends AbstractSpringBootTest {
             ctx.setValue(THREAD_CONTEXT_KEY_AUTH_CONTEXT, authContextHolder.getContext());
         });
 
-        xmEntityGeneratorService = new XmEntityGeneratorService(xmEntityService,
-            xmEntitySpecService, authContextHolder, objectMapper);
-
-        XmEntitySpecResource xmEntitySpecResource = new XmEntitySpecResource(xmEntitySpecService,
-            xmEntityGeneratorService);
+        XmEntitySpecResource xmEntitySpecResource = new XmEntitySpecResource(xmEntitySpecService);
         this.restXmEntitySpecMockMvc = MockMvcBuilders.standaloneSetup(xmEntitySpecResource)
             .setControllerAdvice(exceptionTranslator).build();
     }
