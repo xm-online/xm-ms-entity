@@ -34,6 +34,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.MockitoJUnitRunner;
+import org.springframework.security.access.AccessDeniedException;
 
 import java.util.List;
 import java.util.Map;
@@ -101,7 +102,7 @@ public class DynamicPermissionCheckServiceUnitTest extends AbstractUnitTest {
         Assertions.assertThat(result).isTrue();
 
         given(permissionCheckService.hasPermission(null, "Z")).willReturn(false);
-        assertThatExceptionOfType(IllegalStateException.class)
+        assertThatExceptionOfType(AccessDeniedException.class)
             .isThrownBy(() -> dynamicPermissionCheckService.checkContextPermission(FeatureContext.FUNCTION, "Z", "Y"));
     }
 
@@ -119,7 +120,7 @@ public class DynamicPermissionCheckServiceUnitTest extends AbstractUnitTest {
 
         //privilege == X.Y, assume hasPermission = false
         given(permissionCheckService.hasPermission(null, "Z.Y")).willReturn(false);
-        assertThatExceptionOfType(IllegalStateException.class)
+        assertThatExceptionOfType(AccessDeniedException.class)
             .isThrownBy(() -> dynamicPermissionCheckService.checkContextPermission(FeatureContext.FUNCTION, "Z", "Y"));
 
     }
