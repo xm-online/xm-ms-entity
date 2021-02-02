@@ -23,6 +23,7 @@ import com.icthh.xm.commons.i18n.spring.service.LocalizationMessageService;
 import com.icthh.xm.commons.lep.XmLepScriptConfigServerResourceLoader;
 import com.icthh.xm.commons.lep.spring.AspectForLepInBeanDetection;
 import com.icthh.xm.commons.lep.spring.LepServiceHandler;
+import com.icthh.xm.commons.logging.config.LoggingConfigService;
 import com.icthh.xm.commons.security.XmAuthenticationContextHolder;
 import com.icthh.xm.commons.security.spring.config.XmAuthenticationContextConfiguration;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
@@ -105,6 +106,8 @@ public class JsonResponseFilteringLepUnitTest extends AbstractWebMvcTest {
     private FunctionService functionService;
     @MockBean
     private LocalizationMessageService localizationMessageService;
+    @MockBean
+    private LoggingConfigService loggingConfigService;
 
     @Autowired
     private XmEntityResource xmEntityResource;
