@@ -74,7 +74,7 @@ public class XmEntityGeneratorService {
 
     private TypeSpec getRandomTypeSpec(String rootTypeKey) {
         List<TypeSpec> availableTypeSpecs = xmEntitySpecService.findNonAbstractTypesByPrefix(rootTypeKey);
-         return availableTypeSpecs.get(generateRandomInt(availableTypeSpecs.size()));
+        return availableTypeSpecs.get(generateRandomInt(availableTypeSpecs.size()));
     }
 
     public XmEntity generateXmEntity(String rootTypeKey) {
