@@ -1,5 +1,6 @@
 package com.icthh.xm.ms.entity.service;
 
+import static com.icthh.xm.ms.entity.service.impl.XmEntityServiceIntTest.loadFile;
 import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.collections.CollectionUtils.isEmpty;
 import static org.apache.commons.lang.StringUtils.isBlank;
@@ -73,6 +74,8 @@ public class XmEntityGeneratorServiceIntTest extends AbstractSpringBootTest {
         when(entityServiceMock.save(any())).thenAnswer(arg -> arg.getArguments()[0]);
         xmEntityGeneratorService = new XmEntityGeneratorService(entityServiceMock,
             xmEntitySpecService, authContextHolder, objectMapper);
+        xmEntitySpecService.onRefresh("/config/tenants/TEST/entity/xmentityspec.yml",
+                loadFile("config/specs/xmentityspec-test.yml"));
     }
 
     @After
