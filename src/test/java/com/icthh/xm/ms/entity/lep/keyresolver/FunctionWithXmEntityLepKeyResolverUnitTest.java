@@ -13,6 +13,7 @@ import com.icthh.xm.lep.api.MethodSignature;
 import com.icthh.xm.lep.api.commons.SeparatorSegmentedLepKey;
 import com.icthh.xm.ms.entity.AbstractUnitTest;
 import java.util.Arrays;
+import lombok.SneakyThrows;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
@@ -32,6 +33,7 @@ public class FunctionWithXmEntityLepKeyResolverUnitTest extends AbstractUnitTest
     private LepManagerService managerService;
     private LepMethod lepMethod;
 
+    @SneakyThrows
     @Before
     public void before() {
         initialExtensionKey = new SeparatorSegmentedLepKey(XmLepConstants.EXTENSION_KEY_SEPARATOR,
@@ -47,6 +49,7 @@ public class FunctionWithXmEntityLepKeyResolverUnitTest extends AbstractUnitTest
             "xmEntityTypeKey",
             "functionKey"
         });
+        when(methodSignature.getMethod()).thenReturn(this.getClass().getMethod("validFunctionKeyEntityTypeKey"));
         when(lepMethod.getMethodSignature()).thenReturn(methodSignature);
     }
 
