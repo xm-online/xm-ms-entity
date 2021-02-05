@@ -74,8 +74,8 @@ public class XmEntityGeneratorServiceIntTest extends AbstractSpringBootTest {
         when(entityServiceMock.save(any())).thenAnswer(arg -> arg.getArguments()[0]);
         xmEntityGeneratorService = new XmEntityGeneratorService(entityServiceMock,
             xmEntitySpecService, authContextHolder, objectMapper);
-        xmEntitySpecService.onRefresh("/config/tenants/TEST/entity/xmentityspec.yml",
-                loadFile("config/specs/xmentityspec-test.yml"));
+        xmEntitySpecService.onRefresh("/config/tenants/TEST/entity/specs/xmentityspecs.yml",
+                loadFile("/config/specs/xmentityspec-test.yml"));
     }
 
     @After

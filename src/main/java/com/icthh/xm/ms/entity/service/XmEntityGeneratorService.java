@@ -72,7 +72,9 @@ public class XmEntityGeneratorService {
         this.mapper = mapper;
     }
 
+    @SneakyThrows
     private TypeSpec getRandomTypeSpec(String rootTypeKey) {
+        log.info("log spec {}", mapper.writeValueAsString(xmEntitySpecService.getTypeSpecs()));
         List<TypeSpec> availableTypeSpecs = xmEntitySpecService.findNonAbstractTypesByPrefix(rootTypeKey);
          return availableTypeSpecs.get(generateRandomInt(availableTypeSpecs.size()));
     }
