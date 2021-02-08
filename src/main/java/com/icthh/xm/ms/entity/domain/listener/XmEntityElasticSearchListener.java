@@ -5,9 +5,14 @@ import static com.icthh.xm.ms.entity.util.DatabaseUtil.runAfterTransaction;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.domain.spec.TypeSpec;
 import com.icthh.xm.ms.entity.repository.search.XmEntitySearchRepository;
+import com.icthh.xm.ms.entity.repository.search.elasticsearch.XmEntityElasticRepository;
 import com.icthh.xm.ms.entity.service.XmEntitySpecService;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
+import org.springframework.data.elasticsearch.core.query.IndexQuery;
+import org.springframework.data.elasticsearch.core.query.IndexQueryBuilder;
 import org.springframework.stereotype.Component;
 
 import java.util.function.Function;
@@ -23,6 +28,12 @@ public class XmEntityElasticSearchListener {
     private static XmEntitySearchRepository xmEntitySearchRepository;
 
     private static XmEntitySpecService xmEntitySpecService;
+    private static XmEntityElasticRepository xmEntityElasticRepository;
+
+    @Autowired
+    public void setXmEntityElasticRepository(XmEntityElasticRepository xmEntityElasticRepository) {
+        XmEntityElasticSearchListener.xmEntityElasticRepository = xmEntityElasticRepository;
+    }
 
     @Autowired
     public void setXmEntitySearchRepository(XmEntitySearchRepository xmEntitySearchRepository) {
@@ -44,7 +55,7 @@ public class XmEntityElasticSearchListener {
     void onPostPersistOrUpdate(XmEntity entity) {
         if (isFeatureEnabled(entity, TypeSpec::getIndexAfterSaveEnabled)) {
             log.debug("Save xm entity to elastic {}", entity);
-            runAfterTransaction(entity, xmEntitySearchRepository::save);
+            runAfterTransaction(entity, xmEntityElasticRepository::save);
         }
     }
 
@@ -52,7 +63,7 @@ public class XmEntityElasticSearchListener {
     void onPostRemove(XmEntity entity) {
         if(isFeatureEnabled(entity, TypeSpec::getIndexAfterDeleteEnabled)){
             log.debug("Delete xm entity from elastic {}", entity);
-            runAfterTransaction(entity, xmEntitySearchRepository::delete);
+            runAfterTransaction(entity, xmEntityElasticRepository::delete);
         }
     }
 

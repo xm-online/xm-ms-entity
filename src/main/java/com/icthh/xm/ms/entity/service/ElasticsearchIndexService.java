@@ -1,7 +1,5 @@
 package com.icthh.xm.ms.entity.service;
 
-import static org.apache.commons.lang3.ObjectUtils.defaultIfNull;
-
 import com.codahale.metrics.annotation.Timed;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.icthh.xm.commons.logging.util.MdcUtils;
@@ -13,12 +11,12 @@ import com.icthh.xm.ms.entity.config.MappingConfiguration;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.repository.XmEntityRepositoryInternal;
 import com.icthh.xm.ms.entity.repository.search.XmEntitySearchRepository;
+import com.icthh.xm.ms.entity.repository.search.elasticsearch.XmEntityElasticRepository;
 import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.time.StopWatch;
-import org.elasticsearch.ResourceAlreadyExistsException;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Page;
@@ -29,6 +27,11 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import javax.annotation.Resource;
+import javax.persistence.OneToMany;
+import javax.persistence.criteria.CriteriaBuilder;
 import java.beans.IntrospectionException;
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.Field;
@@ -43,14 +46,12 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-import javax.annotation.Resource;
-import javax.persistence.OneToMany;
-import javax.persistence.criteria.CriteriaBuilder;
+
+import static org.apache.commons.lang3.ObjectUtils.defaultIfNull;
 
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class ElasticsearchIndexService {
 
     private static final Lock reindexLock = new ReentrantLock();
@@ -64,28 +65,14 @@ public class ElasticsearchIndexService {
     private final TenantContextHolder tenantContextHolder;
     private final MappingConfiguration mappingConfiguration;
     private final IndexConfiguration indexConfiguration;
+    @Qualifier("taskExecutor")
     private final Executor executor;
+    private final XmEntityElasticRepository xmEntityElasticRepository;
 
     @Setter(AccessLevel.PACKAGE)
     @Resource
     @Lazy
     private ElasticsearchIndexService selfReference;
-
-    public ElasticsearchIndexService(XmEntityRepositoryInternal xmEntityRepositoryInternal,
-                                     XmEntitySearchRepository xmEntitySearchRepository,
-                                     ElasticsearchTemplate elasticsearchTemplate,
-                                     TenantContextHolder tenantContextHolder,
-                                     MappingConfiguration mappingConfiguration,
-                                     IndexConfiguration indexConfiguration,
-                                     @Qualifier("taskExecutor") Executor executor) {
-        this.xmEntityRepositoryInternal = xmEntityRepositoryInternal;
-        this.xmEntitySearchRepository = xmEntitySearchRepository;
-        this.elasticsearchTemplate = elasticsearchTemplate;
-        this.tenantContextHolder = tenantContextHolder;
-        this.mappingConfiguration = mappingConfiguration;
-        this.indexConfiguration = indexConfiguration;
-        this.executor = executor;
-    }
 
     /**
      * Recreates index and then reindexes ALL entities from database asynchronously.
@@ -145,19 +132,19 @@ public class ElasticsearchIndexService {
     @Timed
     @Transactional(readOnly = true)
     public long reindexAll() {
-        long reindexed = 0L;
+
         if (reindexLock.tryLock()) {
             try {
-                recreateIndex();
-                reindexed = reindexXmEntity();
+                long count = xmEntityElasticRepository.handleReindex(this::reindexXmEntity);
                 log.info("Elasticsearch: Successfully performed full reindexing");
+                return count;
             } finally {
                 reindexLock.unlock();
             }
         } else {
             log.info("Elasticsearch: concurrent reindexing attempt");
         }
-        return reindexed;
+        return 0L;
     }
 
     /**
@@ -214,12 +201,7 @@ public class ElasticsearchIndexService {
         return reindexXmEntity(spec);
     }
 
-    private Long reindexXmEntity() {
-
-        return reindexXmEntity(null);
-    }
-
-    private long reindexXmEntity(@Nullable Specification<XmEntity> spec) {
+    long reindexXmEntity(@Nullable Specification<XmEntity> spec) {
         return reindexXmEntity(spec, null);
     }
 
@@ -232,7 +214,8 @@ public class ElasticsearchIndexService {
 
         long reindexed = 0L;
 
-        if (xmEntityRepositoryInternal.count(spec) > 0) {
+        long count = xmEntityRepositoryInternal.count(spec);
+        if (count > 0) {
             List<Method> relationshipGetters = Arrays.stream(clazz.getDeclaredFields())
                                                      .filter(field -> field.getType().equals(Set.class))
                                                      .filter(field -> field.getAnnotation(OneToMany.class) != null)
@@ -241,12 +224,12 @@ public class ElasticsearchIndexService {
                                                      .filter(Objects::nonNull)
                                                      .collect(Collectors.toList());
 
-            for (int i = startFrom; i <= xmEntityRepositoryInternal.count(spec) / PAGE_SIZE ; i++) {
+            for (int i = startFrom; i <= (count = xmEntityRepositoryInternal.count(spec)) / PAGE_SIZE ; i++) {
                 Pageable page = PageRequest.of(i, PAGE_SIZE);
-                log.info("Indexing page {} of {}, pageSize {}", i, xmEntityRepositoryInternal.count(spec) / PAGE_SIZE, PAGE_SIZE);
+                log.info("Indexing page {} of {}, pageSize {}", i, count / PAGE_SIZE, PAGE_SIZE);
                 Page<XmEntity> results = xmEntityRepositoryInternal.findAll(spec, page);
                 results.map(entity -> loadEntityRelationships(relationshipGetters, entity));
-                xmEntitySearchRepository.saveAll(results.getContent());
+                xmEntityElasticRepository.saveAll(results.getContent());
                 reindexed += results.getContent().size();
             }
         }
@@ -254,32 +237,6 @@ public class ElasticsearchIndexService {
                  reindexed, clazz.getSimpleName(), stopWatch.getTime());
         return reindexed;
 
-    }
-
-    private void recreateIndex() {
-
-        final Class<XmEntity> clazz = XmEntity.class;
-
-        StopWatch stopWatch = StopWatch.createStarted();
-
-        elasticsearchTemplate.deleteIndex(clazz);
-        try {
-            if (indexConfiguration.isConfigExists()) {
-                elasticsearchTemplate.createIndex(clazz, indexConfiguration.getConfiguration());
-            } else {
-                elasticsearchTemplate.createIndex(clazz);
-            }
-        } catch (ResourceAlreadyExistsException e) {
-            log.info("Do nothing. Index was already concurrently recreated by some other service");
-        }
-
-        if (mappingConfiguration.isMappingExists()) {
-            elasticsearchTemplate.putMapping(clazz, mappingConfiguration.getMapping());
-        } else {
-            elasticsearchTemplate.putMapping(clazz);
-        }
-        log.info("elasticsearch index was recreated for {} in {} ms",
-                 XmEntity.class.getSimpleName(), stopWatch.getTime());
     }
 
     private Method extractFieldGetter(final Class<XmEntity> clazz, final Field field) {
