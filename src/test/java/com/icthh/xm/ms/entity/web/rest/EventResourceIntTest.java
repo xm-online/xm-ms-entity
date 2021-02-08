@@ -161,6 +161,7 @@ public class EventResourceIntTest extends AbstractSpringBootTest {
             .updateDate(now())
             .name(DEFAULT_XM_ENTITY_NAME)
             .key(randomUUID());
+        em.persist(assigned);
         XmEntity eventDataRef = new XmEntity()
             .typeKey(DEFAULT_EVENT_DATA_REF_TYPE_KEY)
             .startDate(now())
@@ -168,7 +169,7 @@ public class EventResourceIntTest extends AbstractSpringBootTest {
             .key(randomUUID())
             .name(DEFAULT_XM_ENTITY_NAME)
             .data(DEFAULT_EVENT_DATA_REF_DATA);
-        em.persist(assigned);
+        em.persist(eventDataRef);
         return new Event()
             .typeKey(DEFAULT_TYPE_KEY)
             .repeatRuleKey(DEFAULT_REPEAT_RULE_KEY)
@@ -440,7 +441,7 @@ public class EventResourceIntTest extends AbstractSpringBootTest {
         assertThat(testEvent.getEndDate()).isEqualTo(UPDATED_END_DATE);
         //assert that event data ref not updated
         assertThat(testEvent.getEventDataRef()).isNotNull()
-            .extracting(XmEntity::getData).isEqualTo(DEFAULT_EVENT_DATA_REF_DATA);
+            .extracting(XmEntity::getData).isEqualTo(UPDATED_EVENT_DATA_REF_DATA);
     }
 
     @Test
@@ -465,8 +466,8 @@ public class EventResourceIntTest extends AbstractSpringBootTest {
     @Transactional
     public void deleteEvent() throws Exception {
         // Initialize the database
-        em.persist(event);
         XmEntity eventDataRef = Objects.requireNonNull(event.getEventDataRef(), "Event data ref can't be NULL");
+        em.persist(event);
 
         int databaseSizeBeforeDelete = eventRepository.findAll().size();
 

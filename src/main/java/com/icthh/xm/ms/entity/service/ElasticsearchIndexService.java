@@ -12,25 +12,6 @@ import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.repository.XmEntityRepositoryInternal;
 import com.icthh.xm.ms.entity.repository.search.XmEntitySearchRepository;
 import com.icthh.xm.ms.entity.repository.search.elasticsearch.XmEntityElasticRepository;
-import java.beans.IntrospectionException;
-import java.beans.PropertyDescriptor;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Executor;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
-import java.util.function.Supplier;
-import java.util.stream.Collectors;
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-import javax.annotation.Resource;
-import javax.persistence.OneToMany;
-import javax.persistence.criteria.CriteriaBuilder;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
@@ -45,6 +26,28 @@ import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import javax.annotation.Resource;
+import javax.persistence.OneToMany;
+import javax.persistence.criteria.CriteriaBuilder;
+import java.beans.IntrospectionException;
+import java.beans.PropertyDescriptor;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.Supplier;
+import java.util.stream.Collectors;
+
+import static org.apache.commons.lang3.ObjectUtils.defaultIfNull;
 
 @Slf4j
 @Service
@@ -164,6 +167,17 @@ public class ElasticsearchIndexService {
 
     }
 
+    @Timed
+    @Transactional(readOnly = true)
+    public long reindexByTypeKey(@Nonnull String typeKey, Integer startFrom) {
+        Objects.requireNonNull(typeKey, "typeKey should not be null");
+        Specification spec = (Specification) (root, query, criteriaBuilder) -> {
+            query.orderBy(criteriaBuilder.desc(root.get("id")));
+            return criteriaBuilder.equal(root.get(XM_ENTITY_FIELD_TYPEKEY), typeKey);
+        };
+        return reindexXmEntity(spec, startFrom);
+    }
+
     /**
      * Refreshes entities in elasticsearch index filtered by collection of IDs.
      *
@@ -188,8 +202,13 @@ public class ElasticsearchIndexService {
     }
 
     long reindexXmEntity(@Nullable Specification<XmEntity> spec) {
+        return reindexXmEntity(spec, null);
+    }
+
+    private long reindexXmEntity(@Nullable Specification<XmEntity> spec,  Integer startFrom) {
 
         StopWatch stopWatch = StopWatch.createStarted();
+        startFrom = defaultIfNull(startFrom, 0);
 
         final Class<XmEntity> clazz = XmEntity.class;
 
@@ -205,7 +224,7 @@ public class ElasticsearchIndexService {
                                                      .filter(Objects::nonNull)
                                                      .collect(Collectors.toList());
 
-            for (int i = 0; i <= (count = xmEntityRepositoryInternal.count(spec)) / PAGE_SIZE ; i++) {
+            for (int i = startFrom; i <= (count = xmEntityRepositoryInternal.count(spec)) / PAGE_SIZE ; i++) {
                 Pageable page = PageRequest.of(i, PAGE_SIZE);
                 log.info("Indexing page {} of {}, pageSize {}", i, count / PAGE_SIZE, PAGE_SIZE);
                 Page<XmEntity> results = xmEntityRepositoryInternal.findAll(spec, page);

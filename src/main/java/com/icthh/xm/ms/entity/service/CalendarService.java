@@ -6,15 +6,19 @@ import com.icthh.xm.commons.permission.annotation.FindWithPermission;
 import com.icthh.xm.commons.permission.annotation.PrivilegeDescription;
 import com.icthh.xm.commons.permission.repository.PermittedRepository;
 import com.icthh.xm.ms.entity.domain.Calendar;
+import com.icthh.xm.ms.entity.domain.Event;
 import com.icthh.xm.ms.entity.repository.CalendarRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
 import com.icthh.xm.ms.entity.repository.search.PermittedSearchRepository;
 import com.icthh.xm.ms.entity.service.impl.StartUpdateDateGenerationStrategy;
+import com.icthh.xm.ms.entity.service.query.EventQueryService;
+import com.icthh.xm.ms.entity.service.query.filter.EventFilter;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
 
 /**
  * Service Implementation for managing Calendar.
@@ -26,14 +30,11 @@ import java.util.List;
 public class CalendarService {
 
     private final CalendarRepository calendarRepository;
-
     private final PermittedRepository permittedRepository;
-
     private final PermittedSearchRepository permittedSearchRepository;
-
     private final StartUpdateDateGenerationStrategy startUpdateDateGenerationStrategy;
-
     private final XmEntityRepository xmEntityRepository;
+    private final EventQueryService eventQueryService;
 
     /**
      * Save a calendar.
@@ -101,5 +102,11 @@ public class CalendarService {
     @PrivilegeDescription("Privilege to search for the calendar corresponding to the query")
     public List<Calendar> search(String query, String privilegeKey) {
         return permittedSearchRepository.search(query, Calendar.class, privilegeKey);
+    }
+
+    @Transactional(readOnly = true)
+    @LogicExtensionPoint("FindEvents")
+    public Page<Event> findEvents(Long calendarId, EventFilter filter, Pageable pageable) {
+        return eventQueryService.findAllByCalendarId(calendarId, filter, pageable);
     }
 }

@@ -91,7 +91,10 @@ public class XmEntityGeneratorServiceIntTest extends AbstractSpringBootTest {
 
         assertFalse("No tags generated", isEmpty(tags));
 
-        TypeSpec specType = xmEntitySpecService.findTypeByKey("TYPE1.SUBTYPE1");
+        String tk = "TYPE1.SUBTYPE1";
+        TypeSpec specType = xmEntitySpecService
+            .getTypeSpecByKey(tk)
+            .orElseThrow(() -> new IllegalArgumentException("No " + tk + " found"));
         List<TagSpec> tagsSpecs = specType.getTags();
 
         Set<String> specTagsKeys = tagsSpecs.stream().map(TagSpec::getKey).collect(toSet());
@@ -115,7 +118,9 @@ public class XmEntityGeneratorServiceIntTest extends AbstractSpringBootTest {
 
         assertFalse("No locations generated", isEmpty(locations));
 
-        TypeSpec specType = xmEntitySpecService.findTypeByKey("TYPE1.SUBTYPE1");
+        String tk = "TYPE1.SUBTYPE1";
+        TypeSpec specType = xmEntitySpecService.getTypeSpecByKey(tk)
+            .orElseThrow(() -> new IllegalArgumentException("No " + tk + " found"));
         List<LocationSpec> locationSpecs = specType.getLocations();
 
         Set<String> locationSpecKeys = locationSpecs.stream().map(LocationSpec::getKey).collect(toSet());

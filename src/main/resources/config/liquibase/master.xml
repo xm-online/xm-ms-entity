@@ -71,4 +71,8 @@
     <include file="classpath:config/liquibase/changelog/20200915154500_increase_comment_size.xml" relativeToChangelogFile="false"/>
 
     <include file="classpath:config/liquibase/changelog/20200916140000_added_reference_column_from_Event_to_XmEntity.xml" relativeToChangelogFile="false"/>
+
+    <include file="classpath:config/liquibase/changelog/20201027110000_added_timezone_id_column_to_Event.xml" relativeToChangelogFile="false"/>
+
+    <include file="classpath:config/liquibase/changelog/20201028150000_move_timezone_id_column_from_Event_to_Calendar.xml" relativeToChangelogFile="false"/>
 </databaseChangeLog>

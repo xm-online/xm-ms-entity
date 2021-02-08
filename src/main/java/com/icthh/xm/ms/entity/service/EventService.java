@@ -14,6 +14,9 @@ import com.icthh.xm.ms.entity.repository.EventRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
 import com.icthh.xm.ms.entity.repository.search.PermittedSearchRepository;
 import java.util.List;
+
+import com.icthh.xm.ms.entity.service.query.EventQueryService;
+import com.icthh.xm.ms.entity.service.query.filter.EventFilter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,6 +32,8 @@ import org.springframework.transaction.annotation.Transactional;
 @LepService(group = "service.event")
 public class EventService {
 
+    private final XmEntityService xmEntityService;
+    private final EventQueryService eventQueryService;
     private final EventRepository eventRepository;
     private final PermittedRepository permittedRepository;
     private final PermittedSearchRepository permittedSearchRepository;
@@ -59,9 +64,10 @@ public class EventService {
         ofNullable(event.getAssigned())
             .map(XmEntity::getId)
             .ifPresent(assignedId -> event.setAssigned(xmEntityRepository.getOne(assignedId)));
-        ofNullable(event.getEventDataRef())
-            .map(XmEntity::getId)
-            .ifPresent(eventDataRefId -> event.setEventDataRef(xmEntityRepository.getOne(eventDataRefId)));
+        XmEntity eventDataRef = ofNullable(event.getEventDataRef())
+            .map(xmEntityService::save)
+            .orElse(null);
+        event.setEventDataRef(eventDataRef);
         return eventRepository.save(event);
     }
 
@@ -76,6 +82,19 @@ public class EventService {
     @PrivilegeDescription("Privilege to get all the events")
     public List<Event> findAll(String privilegeKey) {
         return permittedRepository.findAll(Event.class, privilegeKey);
+    }
+
+    /**
+     * Get all the events by filter.
+     * Method is used in LEP's
+     *
+     * @return the list of entities
+     */
+    @Transactional(readOnly = true)
+    @SuppressWarnings("unused")
+    @LogicExtensionPoint("FindAllByFilter")
+    public List<Event> findAllByFilter(EventFilter filter) {
+        return eventQueryService.findAll(filter);
     }
 
     /**
