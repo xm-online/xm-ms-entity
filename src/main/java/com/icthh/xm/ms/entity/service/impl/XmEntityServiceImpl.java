@@ -74,6 +74,7 @@ import com.icthh.xm.ms.entity.service.XmEntityService;
 import com.icthh.xm.ms.entity.service.XmEntitySpecService;
 import com.icthh.xm.ms.entity.service.XmEntityTemplatesSpecService;
 import com.icthh.xm.ms.entity.service.dto.LinkSourceDto;
+import com.icthh.xm.ms.entity.service.dto.SearchDto;
 import com.jayway.jsonpath.DocumentContext;
 import com.jayway.jsonpath.JsonPath;
 import java.net.URI;
@@ -490,6 +491,15 @@ public class XmEntityServiceImpl implements XmEntityService {
     @PrivilegeDescription("Privilege to search for the xmEntity corresponding to the query")
     public Page<XmEntity> search(String query, Pageable pageable, String privilegeKey) {
         return xmEntityPermittedSearchRepository.search(query, pageable, XmEntity.class, privilegeKey);
+    }
+
+    @LogicExtensionPoint("SearchV2")
+    @Override
+    @Transactional(readOnly = true)
+    @FindWithPermission("XMENTITY.SEARCH")
+    @PrivilegeDescription("Privilege to search for the xmEntity corresponding to the query")
+    public Page<XmEntity> searchV2(SearchDto searchDto) {
+        return xmEntityPermittedSearchRepository.searchForPage(searchDto);
     }
 
     @LogicExtensionPoint(value = "SearchByTemplate", resolver = TemplateTypeKeyResolver.class)

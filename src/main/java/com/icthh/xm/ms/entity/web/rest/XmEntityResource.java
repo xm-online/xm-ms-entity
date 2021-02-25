@@ -22,6 +22,7 @@ import com.icthh.xm.ms.entity.service.ProfileService;
 import com.icthh.xm.ms.entity.service.TenantService;
 import com.icthh.xm.ms.entity.service.XmEntityService;
 import com.icthh.xm.ms.entity.service.dto.LinkSourceDto;
+import com.icthh.xm.ms.entity.service.dto.SearchDto;
 import com.icthh.xm.ms.entity.util.XmHttpEntityUtils;
 import com.icthh.xm.ms.entity.web.rest.util.HeaderUtil;
 import com.icthh.xm.ms.entity.web.rest.util.PaginationUtil;
@@ -31,6 +32,7 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.elasticsearch.core.query.FetchSourceFilter;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -231,6 +233,27 @@ public class XmEntityResource {
             @RequestParam String query,
             @ApiParam Pageable pageable) {
         Page<XmEntity> page = xmEntityService.search(query, pageable, null);
+        HttpHeaders headers = PaginationUtil
+            .generateSearchPaginationHttpHeaders(query, page,
+                "/api/_search/xm-entities");
+        return new ResponseEntity<>(page.getContent(), headers, HttpStatus.OK);
+    }
+
+    @GetMapping("/_search/v2/xm-entities")
+    @Timed
+    @PreAuthorize("hasPermission({'query': #query}, 'XMENTITY.SEARCH.QUERY')")
+    @PrivilegeDescription("Privilege to search for the xmEntity corresponding to the query")
+    public ResponseEntity<List<XmEntity>> searchXmEntitiesV2(
+        @RequestParam String query,
+        @ApiParam Pageable pageable,
+        @ApiParam FetchSourceFilter fetchSourceFilter) {
+        SearchDto searchDto = SearchDto.builder()
+            .query(query)
+            .pageable(pageable)
+            .entityClass(XmEntity.class)
+            .fetchSourceFilter(fetchSourceFilter)
+            .build();
+        Page<XmEntity> page = xmEntityService.searchV2(searchDto);
         HttpHeaders headers = PaginationUtil
             .generateSearchPaginationHttpHeaders(query, page,
                 "/api/_search/xm-entities");
