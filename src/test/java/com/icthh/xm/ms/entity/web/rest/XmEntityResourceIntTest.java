@@ -10,6 +10,7 @@ import static org.hamcrest.Matchers.everyItem;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.hasItems;
 import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.hasValue;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.nullValue;
@@ -778,6 +779,63 @@ public class XmEntityResourceIntTest extends AbstractSpringBootTest {
             .andExpect(jsonPath("$.[*].data").value(hasItem(DEFAULT_DATA)))
             .andExpect(jsonPath("$.[*].removed").value(hasItem(DEFAULT_REMOVED.booleanValue())));
     }
+
+    @Test
+    @Transactional
+    public void searchXmEntityWithExcludeFields() throws Exception {
+        xmEntity = transactionService.inNestedTransaction(() -> {
+            // Initialize the database
+            return xmEntityServiceImpl.save(xmEntity);
+        }, this::setup);
+        xmEntitySearchRepository.refresh();
+
+        // Search the xmEntity
+        restXmEntityMockMvc.perform(get("/api/_search/v2/xm-entities?query=id:" + xmEntity.getId()
+            +"&excludes=id&excludes=key&excludes=typeKey"))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+            .andExpect(jsonPath("$.[*].id").value(hasItem(nullValue())))
+            .andExpect(jsonPath("$.[*].key").value(hasItem(nullValue())))
+            .andExpect(jsonPath("$.[*].typeKey").value(hasItem(nullValue())))
+            .andExpect(jsonPath("$.[*].stateKey").value(hasItem(DEFAULT_STATE_KEY)))
+            .andExpect(jsonPath("$.[*].name").value(hasItem(DEFAULT_NAME)))
+            .andExpect(jsonPath("$.[*].startDate").value(hasItem(MOCKED_START_DATE.toString())))
+            .andExpect(jsonPath("$.[*].updateDate").value(hasItem(MOCKED_UPDATE_DATE.toString())))
+            .andExpect(jsonPath("$.[*].endDate").value(hasItem(DEFAULT_END_DATE.toString())))
+            .andExpect(jsonPath("$.[*].avatarUrl").value(hasItem(containsString("aaaaa.jpg"))))
+            .andExpect(jsonPath("$.[*].description").value(hasItem(DEFAULT_DESCRIPTION.toString())))
+            .andExpect(jsonPath("$.[*].data").value(hasItem(DEFAULT_DATA)))
+            .andExpect(jsonPath("$.[*].removed").value(hasItem(DEFAULT_REMOVED.booleanValue())));
+    }
+
+    @Test
+    @Transactional
+    public void searchXmEntityWithIncludeFields() throws Exception {
+        xmEntity = transactionService.inNestedTransaction(() -> {
+            // Initialize the database
+            return xmEntityServiceImpl.save(xmEntity);
+        }, this::setup);
+        xmEntitySearchRepository.refresh();
+
+        // Search the xmEntity
+        restXmEntityMockMvc.perform(get("/api/_search/v2/xm-entities?query=id:" + xmEntity.getId()
+            +"&includes=id&includes=key&includes=typeKey"))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+            .andExpect(jsonPath("$.[*].id").value(hasItem(xmEntity.getId().intValue())))
+            .andExpect(jsonPath("$.[*].key").value(hasItem(DEFAULT_KEY)))
+            .andExpect(jsonPath("$.[*].typeKey").value(hasItem(DEFAULT_TYPE_KEY)))
+            .andExpect(jsonPath("$.[*].stateKey").value(hasItem(nullValue())))
+            .andExpect(jsonPath("$.[*].name").value(hasItem(nullValue())))
+            .andExpect(jsonPath("$.[*].startDate").value(hasItem(nullValue())))
+            .andExpect(jsonPath("$.[*].updateDate").value(hasItem(nullValue())))
+            .andExpect(jsonPath("$.[*].endDate").value(hasItem(nullValue())))
+            .andExpect(jsonPath("$.[*].avatarUrl").value(hasItem(nullValue())))
+            .andExpect(jsonPath("$.[*].description").value(hasItem(nullValue())))
+            .andExpect(jsonPath("$.[*].removed").value(hasItem(nullValue())));
+    }
+
+
 
     @Test
     @Transactional
