@@ -11,7 +11,6 @@ public class SearchDto {
 
     private String query;
     private Pageable pageable;
-    private String privilegeKey;
     private FetchSourceFilter fetchSourceFilter;
     private Class entityClass;
 }

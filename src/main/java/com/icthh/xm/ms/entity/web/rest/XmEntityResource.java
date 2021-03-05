@@ -253,7 +253,7 @@ public class XmEntityResource {
             .entityClass(XmEntity.class)
             .fetchSourceFilter(fetchSourceFilter)
             .build();
-        Page<XmEntity> page = xmEntityService.searchV2(searchDto);
+        Page<XmEntity> page = xmEntityService.searchV2(searchDto, null);
         HttpHeaders headers = PaginationUtil
             .generateSearchPaginationHttpHeaders(query, page,
                 "/api/_search/xm-entities");

@@ -52,18 +52,16 @@ public class PermittedSearchRepository {
      * @param query the elastic query
      * @param pageable the page info
      * @param entityClass the search entity class
-     * @param privilegeKey the privilege key
      * @return permitted entities
-     * @deprecated use {@link #searchForPage(SearchDto)} instead
+     * @deprecated use {@link #searchForPage(SearchDto, String)} instead
      */
     @Deprecated
     public <T> Page<T> search(String query, Pageable pageable, Class<T> entityClass, String privilegeKey) {
         return searchForPage(SearchDto.builder()
             .entityClass(entityClass)
             .pageable(pageable)
-            .privilegeKey(privilegeKey)
             .query(query)
-            .build());
+            .build(), privilegeKey);
     }
 
     /**
@@ -142,8 +140,8 @@ public class PermittedSearchRepository {
         return elasticsearchTemplate;
     }
 
-    public <T> Page<T> searchForPage(SearchDto searchDto) {
-        SearchQuery query = buildQuery(searchDto.getQuery(), searchDto.getPageable(), searchDto.getPrivilegeKey(), searchDto.getFetchSourceFilter());
+    public <T> Page<T> searchForPage(SearchDto searchDto, String privilegeKey) {
+        SearchQuery query = buildQuery(searchDto.getQuery(), searchDto.getPageable(), privilegeKey, searchDto.getFetchSourceFilter());
         return getElasticsearchTemplate().queryForPage(query, searchDto.getEntityClass());
     }
 }
