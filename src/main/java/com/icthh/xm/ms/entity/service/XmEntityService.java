@@ -10,6 +10,7 @@ import com.icthh.xm.ms.entity.projection.XmEntityIdKeyTypeKey;
 import com.icthh.xm.ms.entity.projection.XmEntityStateProjection;
 import com.icthh.xm.ms.entity.service.dto.LinkSourceDto;
 
+import com.icthh.xm.ms.entity.service.dto.SearchDto;
 import java.net.URI;
 import java.util.List;
 import java.util.Map;
@@ -22,6 +23,7 @@ import org.apache.commons.lang3.NotImplementedException;
 import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.elasticsearch.core.query.FetchSourceFilter;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpEntity;
 import org.springframework.transaction.annotation.Transactional;
@@ -58,6 +60,8 @@ public interface XmEntityService extends ResourceRepository {
     void delete(Long id);
 
     Page<XmEntity> search(String query, Pageable pageable, String privilegeKey);
+
+    Page<XmEntity> searchV2(SearchDto searchDto);
 
     Page<XmEntity> search(String template,
                           TemplateParamsHolder templateParamsHolder,
