@@ -61,7 +61,7 @@ public interface XmEntityService extends ResourceRepository {
 
     Page<XmEntity> search(String query, Pageable pageable, String privilegeKey);
 
-    Page<XmEntity> searchV2(SearchDto searchDto);
+    Page<XmEntity> searchV2(SearchDto searchDto, String privilegeKey);
 
     Page<XmEntity> search(String template,
                           TemplateParamsHolder templateParamsHolder,

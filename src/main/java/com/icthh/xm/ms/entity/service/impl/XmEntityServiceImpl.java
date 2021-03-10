@@ -498,8 +498,8 @@ public class XmEntityServiceImpl implements XmEntityService {
     @Transactional(readOnly = true)
     @FindWithPermission("XMENTITY.SEARCH")
     @PrivilegeDescription("Privilege to search for the xmEntity corresponding to the query")
-    public Page<XmEntity> searchV2(SearchDto searchDto) {
-        return xmEntityPermittedSearchRepository.searchForPage(searchDto);
+    public Page<XmEntity> searchV2(SearchDto searchDto, String privilegeKey) {
+        return xmEntityPermittedSearchRepository.searchForPage(searchDto, privilegeKey);
     }
 
     @LogicExtensionPoint(value = "SearchByTemplate", resolver = TemplateTypeKeyResolver.class)
