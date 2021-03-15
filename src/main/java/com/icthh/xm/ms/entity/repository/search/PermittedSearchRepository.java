@@ -5,7 +5,9 @@ import static org.elasticsearch.index.query.QueryBuilders.queryStringQuery;
 import static org.springframework.data.elasticsearch.core.query.Query.DEFAULT_PAGE;
 
 import com.icthh.xm.commons.permission.service.PermissionCheckService;
+import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.repository.search.translator.SpelToElasticTranslator;
+import com.icthh.xm.ms.entity.service.dto.SearchDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -14,6 +16,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
 import org.springframework.data.elasticsearch.core.ScrolledPage;
+import org.springframework.data.elasticsearch.core.query.FetchSourceFilter;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.data.elasticsearch.core.query.SearchQuery;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -41,7 +44,7 @@ public class PermittedSearchRepository {
      * @return permitted entities
      */
     public <T> List<T> search(String query, Class<T> entityClass, String privilegeKey) {
-        return getElasticsearchTemplate().queryForList(buildQuery(query, null, privilegeKey), entityClass);
+        return getElasticsearchTemplate().queryForList(buildQuery(query, null, privilegeKey, null), entityClass);
     }
 
     /**
@@ -49,11 +52,16 @@ public class PermittedSearchRepository {
      * @param query the elastic query
      * @param pageable the page info
      * @param entityClass the search entity class
-     * @param privilegeKey the privilege key
      * @return permitted entities
+     * @deprecated use {@link #searchForPage(SearchDto, String)} instead
      */
+    @Deprecated
     public <T> Page<T> search(String query, Pageable pageable, Class<T> entityClass, String privilegeKey) {
-        return getElasticsearchTemplate().queryForPage(buildQuery(query, pageable, privilegeKey), entityClass);
+        return searchForPage(SearchDto.builder()
+            .entityClass(entityClass)
+            .pageable(pageable)
+            .query(query)
+            .build(), privilegeKey);
     }
 
     /**
@@ -75,7 +83,7 @@ public class PermittedSearchRepository {
         List<T> resultList = new ArrayList<>();
         try {
             ScrolledPage<T> scrollResult = (ScrolledPage<T>) getElasticsearchTemplate()
-                .startScroll(scrollTimeInMillis, buildQuery(query, pageable, privilegeKey), entityClass);
+                .startScroll(scrollTimeInMillis, buildQuery(query, pageable, privilegeKey, null), entityClass);
 
             scrollId = scrollResult.getScrollId();
 
@@ -94,13 +102,14 @@ public class PermittedSearchRepository {
         return new PageImpl<>(resultList, pageable, resultList.size());
     }
 
-    private SearchQuery buildQuery(String query, Pageable pageable, String privilegeKey) {
+    private SearchQuery buildQuery(String query, Pageable pageable, String privilegeKey, FetchSourceFilter fetchSourceFilter) {
         String permittedQuery = buildPermittedQuery(query, privilegeKey);
 
         log.debug("Executing DSL '{}'", permittedQuery);
 
         return new NativeSearchQueryBuilder()
             .withQuery(queryStringQuery(permittedQuery))
+            .withSourceFilter(fetchSourceFilter)
             .withPageable(pageable == null ? DEFAULT_PAGE : pageable)
             .build();
     }
@@ -129,5 +138,10 @@ public class PermittedSearchRepository {
     // do not renamed! called from lep for not simple string query
     public ElasticsearchTemplate getElasticsearchTemplate() {
         return elasticsearchTemplate;
+    }
+
+    public <T> Page<T> searchForPage(SearchDto searchDto, String privilegeKey) {
+        SearchQuery query = buildQuery(searchDto.getQuery(), searchDto.getPageable(), privilegeKey, searchDto.getFetchSourceFilter());
+        return getElasticsearchTemplate().queryForPage(query, searchDto.getEntityClass());
     }
 }
