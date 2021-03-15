@@ -253,7 +253,6 @@ public class XmEntity implements Serializable, Persistable<Long> {
     @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
     private Set<FunctionContext> functionContexts = new HashSet<>();
 
-
     @OneToMany(mappedBy = "assigned", cascade = {PERSIST, MERGE, REMOVE})
     @JsonIgnore
     @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
