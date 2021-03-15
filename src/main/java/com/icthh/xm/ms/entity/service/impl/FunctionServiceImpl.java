@@ -13,6 +13,7 @@ import com.icthh.xm.ms.entity.security.access.DynamicPermissionCheckService;
 import com.icthh.xm.ms.entity.service.FunctionContextService;
 import com.icthh.xm.ms.entity.service.FunctionExecutorService;
 import com.icthh.xm.ms.entity.service.FunctionService;
+import com.icthh.xm.ms.entity.service.JsonValidationService;
 import com.icthh.xm.ms.entity.service.XmEntityService;
 import com.icthh.xm.ms.entity.service.XmEntitySpecService;
 import com.icthh.xm.ms.entity.util.CustomCollectionUtils;
@@ -24,6 +25,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -34,6 +36,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Slf4j
 @Transactional
 @Service("functionService")
+@RequiredArgsConstructor
 public class FunctionServiceImpl implements FunctionService {
 
     //Function is not visible, but could be executed
@@ -47,17 +50,7 @@ public class FunctionServiceImpl implements FunctionService {
     private final FunctionExecutorService functionExecutorService;
     private final FunctionContextService functionContextService;
     private final DynamicPermissionCheckService dynamicPermissionCheckService;
-
-    public FunctionServiceImpl(XmEntitySpecService xmEntitySpecService,
-                               XmEntityService xmEntityService,
-                               FunctionExecutorService functionExecutorService,
-                               FunctionContextService functionContextService, DynamicPermissionCheckService dynamicPermissionCheckService) {
-        this.xmEntitySpecService = xmEntitySpecService;
-        this.xmEntityService = xmEntityService;
-        this.functionExecutorService = functionExecutorService;
-        this.functionContextService = functionContextService;
-        this.dynamicPermissionCheckService = dynamicPermissionCheckService;
-    }
+    private final JsonValidationService jsonValidationService;
 
     /**
      * {@inheritDoc}
@@ -72,6 +65,8 @@ public class FunctionServiceImpl implements FunctionService {
             FUNCTION_CALL_PRIV, functionKey);
 
         FunctionSpec functionSpec = findFunctionSpec(functionKey, null);
+
+        validateFunctionInput(functionSpec, functionInput);
 
         // execute function
         Map<String, Object> data = functionExecutorService.execute(functionKey, vInput);
@@ -104,9 +99,17 @@ public class FunctionServiceImpl implements FunctionService {
         //orElseThorw is replaced by war message
         assertCallAllowedByState(functionSpec, projection);
 
+        validateFunctionInput(functionSpec, functionInput);
+
         // execute function
         Map<String, Object> data = functionExecutorService.execute(functionKey, idOrKey, projection.getTypeKey(), vInput);
         return processFunctionResult(functionKey, idOrKey, data, functionSpec);
+    }
+
+    private void validateFunctionInput(FunctionSpec functionSpec, Map<String, Object> functionInput) {
+        if (Boolean.TRUE.equals(functionSpec.getValidateFunctionInput())) {
+            jsonValidationService.assertJson(functionInput, functionSpec.getInputSpec());
+        }
     }
 
     /**

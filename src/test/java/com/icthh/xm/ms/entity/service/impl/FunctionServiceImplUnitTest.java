@@ -10,6 +10,7 @@ import com.icthh.xm.ms.entity.projection.XmEntityStateProjection;
 import com.icthh.xm.ms.entity.security.access.DynamicPermissionCheckService;
 import com.icthh.xm.ms.entity.service.FunctionContextService;
 import com.icthh.xm.ms.entity.service.FunctionExecutorService;
+import com.icthh.xm.ms.entity.service.JsonValidationService;
 import com.icthh.xm.ms.entity.service.XmEntityService;
 import com.icthh.xm.ms.entity.service.XmEntitySpecService;
 import org.assertj.core.util.Lists;
@@ -41,6 +42,7 @@ public class FunctionServiceImplUnitTest extends AbstractUnitTest {
     private FunctionExecutorService functionExecutorService;
     private FunctionContextService functionContextService;
     private DynamicPermissionCheckService dynamicPermissionCheckService;
+    private JsonValidationService jsonValidationService;
 
     private String functionName = "F_NAME";
 
@@ -56,8 +58,9 @@ public class FunctionServiceImplUnitTest extends AbstractUnitTest {
         functionExecutorService = Mockito.mock(FunctionExecutorService.class);
         functionContextService = Mockito.mock(FunctionContextService.class);
         dynamicPermissionCheckService = Mockito.mock(DynamicPermissionCheckService.class);
+        jsonValidationService = Mockito.mock(JsonValidationService.class);
         functionService = new FunctionServiceImpl(xmEntitySpecService, xmEntityService,
-            functionExecutorService, functionContextService, dynamicPermissionCheckService);
+            functionExecutorService, functionContextService, dynamicPermissionCheckService, jsonValidationService);
     }
 
     @Test
