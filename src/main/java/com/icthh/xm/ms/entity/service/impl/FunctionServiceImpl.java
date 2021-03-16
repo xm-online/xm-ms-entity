@@ -20,7 +20,6 @@ import com.icthh.xm.ms.entity.service.XmEntitySpecService;
 import com.icthh.xm.ms.entity.util.CustomCollectionUtils;
 
 import java.time.Instant;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -109,7 +108,7 @@ public class FunctionServiceImpl implements FunctionService {
     }
 
     private void validateFunctionInput(FunctionSpec functionSpec, Map<String, Object> functionInput) {
-        if (xmEntityTenantConfigService.getXmEntityTenantConfig().getEntityFunctions().getInputSpecValidation()) {
+        if (xmEntityTenantConfigService.getXmEntityTenantConfig().getEntityFunctions().getValidateFunctionInput()) {
             // exclude one when enabled for all
             if (!Boolean.FALSE.equals(functionSpec.getValidateFunctionInput())) {
                 jsonValidationService.assertJson(functionInput, functionSpec.getInputSpec());

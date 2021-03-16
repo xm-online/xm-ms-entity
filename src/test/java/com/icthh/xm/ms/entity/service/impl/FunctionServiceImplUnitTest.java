@@ -388,13 +388,13 @@ public class FunctionServiceImplUnitTest extends AbstractUnitTest {
 
     @Test
     public void validationWhenGloballyEnabled() {
-        xmEntityTenantConfig.getEntityFunctions().setInputSpecValidation(true);
+        xmEntityTenantConfig.getEntityFunctions().setValidateFunctionInput(true);
         validatedSuccess(null);
     }
 
     @Test
     public void excludeValidationWhenGloballyEnabled() {
-        xmEntityTenantConfig.getEntityFunctions().setInputSpecValidation(true);
+        xmEntityTenantConfig.getEntityFunctions().setValidateFunctionInput(true);
         noValidation(false);
     }
 

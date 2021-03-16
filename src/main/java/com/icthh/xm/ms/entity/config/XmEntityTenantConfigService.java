@@ -75,7 +75,7 @@ public class XmEntityTenantConfigService extends TenantConfigService {
         @Data
         public static class EntityFunctions {
             private Boolean dynamicPermissionCheckEnabled = false;
-            private Boolean inputSpecValidation = false;
+            private Boolean validateFunctionInput = false;
         }
 
         private EntityVersionControl entityVersionControl = new EntityVersionControl();
