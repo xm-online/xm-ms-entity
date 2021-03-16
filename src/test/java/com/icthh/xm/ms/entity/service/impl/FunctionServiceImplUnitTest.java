@@ -1,8 +1,10 @@
 package com.icthh.xm.ms.entity.service.impl;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Maps;
-import com.google.common.primitives.Bytes;
 import com.icthh.xm.ms.entity.AbstractUnitTest;
+import com.icthh.xm.ms.entity.config.XmEntityTenantConfigService;
+import com.icthh.xm.ms.entity.config.XmEntityTenantConfigService.XmEntityTenantConfig;
 import com.icthh.xm.ms.entity.domain.FunctionContext;
 import com.icthh.xm.ms.entity.domain.ext.IdOrKey;
 import com.icthh.xm.ms.entity.domain.spec.FunctionSpec;
@@ -10,9 +12,11 @@ import com.icthh.xm.ms.entity.projection.XmEntityStateProjection;
 import com.icthh.xm.ms.entity.security.access.DynamicPermissionCheckService;
 import com.icthh.xm.ms.entity.service.FunctionContextService;
 import com.icthh.xm.ms.entity.service.FunctionExecutorService;
+import com.icthh.xm.ms.entity.service.JsonValidationService;
 import com.icthh.xm.ms.entity.service.XmEntityService;
 import com.icthh.xm.ms.entity.service.XmEntitySpecService;
 import org.assertj.core.util.Lists;
+import org.jetbrains.annotations.NotNull;
 import org.junit.*;
 import org.junit.rules.ExpectedException;
 import org.mockito.AdditionalAnswers;
@@ -23,6 +27,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
+import static com.icthh.xm.ms.entity.domain.ext.IdOrKey.SELF;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -30,6 +35,7 @@ import static org.mockito.Mockito.*;
 public class FunctionServiceImplUnitTest extends AbstractUnitTest {
 
     public static final String UNKNOWN_KEY = "UNKNOWN_KEY";
+    public static final String VALIDATION_FUNCTION = "VALIDATION_FUNCTION";
 
     private FunctionServiceImpl functionService;
 
@@ -41,10 +47,13 @@ public class FunctionServiceImplUnitTest extends AbstractUnitTest {
     private FunctionExecutorService functionExecutorService;
     private FunctionContextService functionContextService;
     private DynamicPermissionCheckService dynamicPermissionCheckService;
+    private JsonValidationService jsonValidationService;
+    private XmEntityTenantConfigService xmEntityTenantConfigService;
+    private XmEntityTenantConfig xmEntityTenantConfig;
 
     private String functionName = "F_NAME";
 
-    private IdOrKey key = IdOrKey.SELF;
+    private IdOrKey key = SELF;
 
     final String xmEntityTypeKey = "DUMMY";
 
@@ -56,8 +65,13 @@ public class FunctionServiceImplUnitTest extends AbstractUnitTest {
         functionExecutorService = Mockito.mock(FunctionExecutorService.class);
         functionContextService = Mockito.mock(FunctionContextService.class);
         dynamicPermissionCheckService = Mockito.mock(DynamicPermissionCheckService.class);
+        xmEntityTenantConfigService = Mockito.mock(XmEntityTenantConfigService.class);
+        jsonValidationService = spy(new JsonValidationService(new ObjectMapper()));
         functionService = new FunctionServiceImpl(xmEntitySpecService, xmEntityService,
-            functionExecutorService, functionContextService, dynamicPermissionCheckService);
+            functionExecutorService, functionContextService, dynamicPermissionCheckService,
+                jsonValidationService, xmEntityTenantConfigService);
+        xmEntityTenantConfig = new XmEntityTenantConfig();
+        when(xmEntityTenantConfigService.getXmEntityTenantConfig()).thenReturn(xmEntityTenantConfig);
     }
 
     @Test
@@ -281,7 +295,7 @@ public class FunctionServiceImplUnitTest extends AbstractUnitTest {
     @Test
     public void passStateValidationIfNoStateMapping() {
         FunctionSpec spec = new FunctionSpec();
-        XmEntityStateProjection p = getProjection(IdOrKey.SELF).get();
+        XmEntityStateProjection p = getProjection(SELF).get();
         functionService.assertCallAllowedByState(spec, p);
     }
 
@@ -289,7 +303,7 @@ public class FunctionServiceImplUnitTest extends AbstractUnitTest {
     public void passStateValidationIfNONEStateIsSet() {
         FunctionSpec spec = new FunctionSpec();
         spec.setAllowedStateKeys(Lists.newArrayList(FunctionServiceImpl.NONE));
-        XmEntityStateProjection p = getProjection(IdOrKey.SELF).get();
+        XmEntityStateProjection p = getProjection(SELF).get();
         functionService.assertCallAllowedByState(spec, p);
     }
 
@@ -297,7 +311,7 @@ public class FunctionServiceImplUnitTest extends AbstractUnitTest {
     public void passStateValidationIfStatesMatches() {
         FunctionSpec spec = new FunctionSpec();
         spec.setAllowedStateKeys(Lists.newArrayList("STATE"));
-        XmEntityStateProjection p = getProjection(IdOrKey.SELF).get();
+        XmEntityStateProjection p = getProjection(SELF).get();
         functionService.assertCallAllowedByState(spec, p);
     }
 
@@ -305,7 +319,7 @@ public class FunctionServiceImplUnitTest extends AbstractUnitTest {
     public void failStateValidationIfStatesNotMatches() {
         FunctionSpec spec = new FunctionSpec();
         spec.setAllowedStateKeys(Lists.newArrayList("XX-STATE-XX"));
-        XmEntityStateProjection p = getProjection(IdOrKey.SELF).get();
+        XmEntityStateProjection p = getProjection(SELF).get();
         functionService.assertCallAllowedByState(spec, p);
     }
 
@@ -367,4 +381,96 @@ public class FunctionServiceImplUnitTest extends AbstractUnitTest {
         });
     }
 
+    @Test
+    public void noValidationOnInvalidFunctionInputWhenValidationDisabled() {
+        noValidation(false);
+    }
+
+    @Test
+    public void validationWhenGloballyEnabled() {
+        xmEntityTenantConfig.getEntityFunctions().setValidateFunctionInput(true);
+        validatedSuccess(null);
+    }
+
+    @Test
+    public void excludeValidationWhenGloballyEnabled() {
+        xmEntityTenantConfig.getEntityFunctions().setValidateFunctionInput(true);
+        noValidation(false);
+    }
+
+    @Test
+    public void validationSuccessOnValidFunctionInputWhenValidationEnabled() {
+        validatedSuccess(true);
+    }
+
+    public void noValidation(Boolean validateFunctionInput) {
+        FunctionSpec spec = generateFunctionSpec(validateFunctionInput);
+        when(xmEntitySpecService.findFunction(VALIDATION_FUNCTION)).thenReturn(Optional.of(spec));
+        functionService.execute(VALIDATION_FUNCTION, Map.of("numberArgument", "stringValue"));
+        verifyNoMoreInteractions(jsonValidationService);
+
+        spec.setWithEntityId(true);
+        when(xmEntitySpecService.findFunction(xmEntityTypeKey, VALIDATION_FUNCTION)).thenReturn(Optional.of(spec));
+        when(xmEntityService.findStateProjectionById(SELF)).thenReturn(getProjection(SELF));
+        functionService.execute(VALIDATION_FUNCTION, SELF, Map.of("numberArgument", "stringValue"));
+        verifyNoMoreInteractions(jsonValidationService);
+    }
+
+    private void validatedSuccess(Boolean validateFunctionInput) {
+        FunctionSpec spec = generateFunctionSpec(validateFunctionInput);
+        when(xmEntitySpecService.findFunction(VALIDATION_FUNCTION)).thenReturn(Optional.of(spec));
+        Map<String, Object> functionInput = Map.of("numberArgument", 2);
+        functionService.execute(VALIDATION_FUNCTION, functionInput);
+
+        spec.setWithEntityId(true);
+        when(xmEntitySpecService.findFunction(xmEntityTypeKey, VALIDATION_FUNCTION)).thenReturn(Optional.of(spec));
+        when(xmEntityService.findStateProjectionById(SELF)).thenReturn(getProjection(SELF));
+        functionService.execute(VALIDATION_FUNCTION, SELF, functionInput);
+
+        verify(jsonValidationService, times(2)).assertJson(eq(functionInput), eq(spec.getInputSpec()));
+    }
+
+    @Test
+    public void validationFailOnInvalidFunctionInputWhenValidationEnabled() {
+        exception.expect(JsonValidationService.InvalidJsonException.class);
+        String exceptionMessage = "{\"pointer\":\"/numberArgument\"} |     domain: \"validation\" |     keyword: \"type\" |     found: \"string\" |     expected: [\"integer\",\"number\"] | ";
+        exception.expectMessage(exceptionMessage);
+
+        FunctionSpec spec = generateFunctionSpec(true);
+        when(xmEntitySpecService.findFunction(VALIDATION_FUNCTION)).thenReturn(Optional.of(spec));
+        Map<String, Object> functionInput = Map.of("numberArgument", "stringValue");
+        functionService.execute(VALIDATION_FUNCTION, functionInput);
+        verify(jsonValidationService).assertJson(eq(functionInput), eq(spec.getInputSpec()));
+    }
+
+    @Test
+    public void validationFailOnInvalidFunctionWithEntityIdInputWhenValidationEnabled() {
+        exception.expect(JsonValidationService.InvalidJsonException.class);
+        String exceptionMessage = "{\"pointer\":\"/numberArgument\"} |     domain: \"validation\" |     keyword: \"type\" |     found: \"string\" |     expected: [\"integer\",\"number\"] | ";
+        exception.expectMessage(exceptionMessage);
+
+        FunctionSpec spec = generateFunctionSpec(true);
+        Map<String, Object> functionInput = Map.of("numberArgument", "stringValue");
+        spec.setWithEntityId(true);
+        when(xmEntitySpecService.findFunction(xmEntityTypeKey, VALIDATION_FUNCTION)).thenReturn(Optional.of(spec));
+        when(xmEntityService.findStateProjectionById(SELF)).thenReturn(getProjection(SELF));
+        functionService.execute(VALIDATION_FUNCTION, SELF, functionInput);
+        verify(jsonValidationService).assertJson(eq(functionInput), eq(spec.getInputSpec()));
+    }
+
+    @NotNull
+    private FunctionSpec generateFunctionSpec(Boolean validateFunctionInput) {
+        FunctionSpec spec = new FunctionSpec();
+        spec.setKey(VALIDATION_FUNCTION);
+        spec.setValidateFunctionInput(validateFunctionInput);
+        // language=JSON
+        String inputSpec = "{\n" +
+                "              \"type\": \"object\",\n" +
+                "              \"properties\": {\n" +
+                "                  \"numberArgument\": {\"type\": \"number\" }\n" +
+                "              }\n" +
+                "            }";
+        spec.setInputSpec(inputSpec);
+        return spec;
+    }
 }

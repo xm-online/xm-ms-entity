@@ -16,7 +16,7 @@ import static com.icthh.xm.ms.entity.service.impl.FunctionServiceImpl.XM_ENITITY
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({"key", "name", "actionName", "allowedStateKeys", "withEntityId", "isShowFormWithoutData", "inputSpec", "inputForm",
-    "contextDataSpec", "contextDataForm", "showResponse", "onlyData"})
+    "contextDataSpec", "contextDataForm", "showResponse", "onlyData", "validateFunctionInput"})
 @Data
 public class FunctionSpec {
 
@@ -88,6 +88,9 @@ public class FunctionSpec {
 
     @JsonProperty("binaryDataType")
     private String binaryDataType;
+
+    @JsonProperty("validateFunctionInput")
+    private Boolean validateFunctionInput;
 
     public Boolean getSaveFunctionContext() {
         return saveFunctionContext == null ? false : saveFunctionContext;
