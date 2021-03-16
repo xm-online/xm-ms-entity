@@ -3,6 +3,7 @@ package com.icthh.xm.ms.entity.service.impl;
 import static java.util.Collections.emptyList;
 
 import com.icthh.xm.commons.exceptions.EntityNotFoundException;
+import com.icthh.xm.ms.entity.config.XmEntityTenantConfigService;
 import com.icthh.xm.ms.entity.domain.FunctionContext;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.domain.ext.IdOrKey;
@@ -51,6 +52,7 @@ public class FunctionServiceImpl implements FunctionService {
     private final FunctionContextService functionContextService;
     private final DynamicPermissionCheckService dynamicPermissionCheckService;
     private final JsonValidationService jsonValidationService;
+    private final XmEntityTenantConfigService xmEntityTenantConfigService;
 
     /**
      * {@inheritDoc}
@@ -107,8 +109,16 @@ public class FunctionServiceImpl implements FunctionService {
     }
 
     private void validateFunctionInput(FunctionSpec functionSpec, Map<String, Object> functionInput) {
-        if (Boolean.TRUE.equals(functionSpec.getValidateFunctionInput())) {
-            jsonValidationService.assertJson(functionInput, functionSpec.getInputSpec());
+        if (xmEntityTenantConfigService.getXmEntityTenantConfig().getEntityFunctions().getInputSpecValidation()) {
+            // exclude one when enabled for all
+            if (!Boolean.FALSE.equals(functionSpec.getValidateFunctionInput())) {
+                jsonValidationService.assertJson(functionInput, functionSpec.getInputSpec());
+            }
+        } else {
+            // include one when disabled for all
+            if (Boolean.TRUE.equals(functionSpec.getValidateFunctionInput())) {
+                jsonValidationService.assertJson(functionInput, functionSpec.getInputSpec());
+            }
         }
     }
 

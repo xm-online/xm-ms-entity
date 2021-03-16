@@ -3,6 +3,8 @@ package com.icthh.xm.ms.entity.service.impl;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Maps;
 import com.icthh.xm.ms.entity.AbstractUnitTest;
+import com.icthh.xm.ms.entity.config.XmEntityTenantConfigService;
+import com.icthh.xm.ms.entity.config.XmEntityTenantConfigService.XmEntityTenantConfig;
 import com.icthh.xm.ms.entity.domain.FunctionContext;
 import com.icthh.xm.ms.entity.domain.ext.IdOrKey;
 import com.icthh.xm.ms.entity.domain.spec.FunctionSpec;
@@ -46,6 +48,8 @@ public class FunctionServiceImplUnitTest extends AbstractUnitTest {
     private FunctionContextService functionContextService;
     private DynamicPermissionCheckService dynamicPermissionCheckService;
     private JsonValidationService jsonValidationService;
+    private XmEntityTenantConfigService xmEntityTenantConfigService;
+    private XmEntityTenantConfig xmEntityTenantConfig;
 
     private String functionName = "F_NAME";
 
@@ -61,9 +65,13 @@ public class FunctionServiceImplUnitTest extends AbstractUnitTest {
         functionExecutorService = Mockito.mock(FunctionExecutorService.class);
         functionContextService = Mockito.mock(FunctionContextService.class);
         dynamicPermissionCheckService = Mockito.mock(DynamicPermissionCheckService.class);
+        xmEntityTenantConfigService = Mockito.mock(XmEntityTenantConfigService.class);
         jsonValidationService = spy(new JsonValidationService(new ObjectMapper()));
         functionService = new FunctionServiceImpl(xmEntitySpecService, xmEntityService,
-            functionExecutorService, functionContextService, dynamicPermissionCheckService, jsonValidationService);
+            functionExecutorService, functionContextService, dynamicPermissionCheckService,
+                jsonValidationService, xmEntityTenantConfigService);
+        xmEntityTenantConfig = new XmEntityTenantConfig();
+        when(xmEntityTenantConfigService.getXmEntityTenantConfig()).thenReturn(xmEntityTenantConfig);
     }
 
     @Test
@@ -375,7 +383,28 @@ public class FunctionServiceImplUnitTest extends AbstractUnitTest {
 
     @Test
     public void noValidationOnInvalidFunctionInputWhenValidationDisabled() {
-        FunctionSpec spec = generateFunctionSpec(false);
+        noValidation(false);
+    }
+
+    @Test
+    public void validationWhenGloballyEnabled() {
+        xmEntityTenantConfig.getEntityFunctions().setInputSpecValidation(true);
+        validatedSuccess(null);
+    }
+
+    @Test
+    public void excludeValidationWhenGloballyEnabled() {
+        xmEntityTenantConfig.getEntityFunctions().setInputSpecValidation(true);
+        noValidation(false);
+    }
+
+    @Test
+    public void validationSuccessOnValidFunctionInputWhenValidationEnabled() {
+        validatedSuccess(true);
+    }
+
+    public void noValidation(Boolean validateFunctionInput) {
+        FunctionSpec spec = generateFunctionSpec(validateFunctionInput);
         when(xmEntitySpecService.findFunction(VALIDATION_FUNCTION)).thenReturn(Optional.of(spec));
         functionService.execute(VALIDATION_FUNCTION, Map.of("numberArgument", "stringValue"));
         verifyNoMoreInteractions(jsonValidationService);
@@ -387,9 +416,8 @@ public class FunctionServiceImplUnitTest extends AbstractUnitTest {
         verifyNoMoreInteractions(jsonValidationService);
     }
 
-    @Test
-    public void validationSuccessOnValidFunctionInputWhenValidationEnabled() {
-        FunctionSpec spec = generateFunctionSpec(true);
+    private void validatedSuccess(Boolean validateFunctionInput) {
+        FunctionSpec spec = generateFunctionSpec(validateFunctionInput);
         when(xmEntitySpecService.findFunction(VALIDATION_FUNCTION)).thenReturn(Optional.of(spec));
         Map<String, Object> functionInput = Map.of("numberArgument", 2);
         functionService.execute(VALIDATION_FUNCTION, functionInput);
@@ -431,7 +459,7 @@ public class FunctionServiceImplUnitTest extends AbstractUnitTest {
     }
 
     @NotNull
-    private FunctionSpec generateFunctionSpec(boolean validateFunctionInput) {
+    private FunctionSpec generateFunctionSpec(Boolean validateFunctionInput) {
         FunctionSpec spec = new FunctionSpec();
         spec.setKey(VALIDATION_FUNCTION);
         spec.setValidateFunctionInput(validateFunctionInput);
