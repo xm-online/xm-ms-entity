@@ -1,7 +1,7 @@
 package com.icthh.xm.ms.entity.service.impl;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Maps;
-import com.google.common.primitives.Bytes;
 import com.icthh.xm.ms.entity.AbstractUnitTest;
 import com.icthh.xm.ms.entity.domain.FunctionContext;
 import com.icthh.xm.ms.entity.domain.ext.IdOrKey;
@@ -14,6 +14,7 @@ import com.icthh.xm.ms.entity.service.JsonValidationService;
 import com.icthh.xm.ms.entity.service.XmEntityService;
 import com.icthh.xm.ms.entity.service.XmEntitySpecService;
 import org.assertj.core.util.Lists;
+import org.jetbrains.annotations.NotNull;
 import org.junit.*;
 import org.junit.rules.ExpectedException;
 import org.mockito.AdditionalAnswers;
@@ -24,6 +25,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
+import static com.icthh.xm.ms.entity.domain.ext.IdOrKey.SELF;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -31,6 +33,7 @@ import static org.mockito.Mockito.*;
 public class FunctionServiceImplUnitTest extends AbstractUnitTest {
 
     public static final String UNKNOWN_KEY = "UNKNOWN_KEY";
+    public static final String VALIDATION_FUNCTION = "VALIDATION_FUNCTION";
 
     private FunctionServiceImpl functionService;
 
@@ -46,7 +49,7 @@ public class FunctionServiceImplUnitTest extends AbstractUnitTest {
 
     private String functionName = "F_NAME";
 
-    private IdOrKey key = IdOrKey.SELF;
+    private IdOrKey key = SELF;
 
     final String xmEntityTypeKey = "DUMMY";
 
@@ -58,7 +61,7 @@ public class FunctionServiceImplUnitTest extends AbstractUnitTest {
         functionExecutorService = Mockito.mock(FunctionExecutorService.class);
         functionContextService = Mockito.mock(FunctionContextService.class);
         dynamicPermissionCheckService = Mockito.mock(DynamicPermissionCheckService.class);
-        jsonValidationService = Mockito.mock(JsonValidationService.class);
+        jsonValidationService = spy(new JsonValidationService(new ObjectMapper()));
         functionService = new FunctionServiceImpl(xmEntitySpecService, xmEntityService,
             functionExecutorService, functionContextService, dynamicPermissionCheckService, jsonValidationService);
     }
@@ -284,7 +287,7 @@ public class FunctionServiceImplUnitTest extends AbstractUnitTest {
     @Test
     public void passStateValidationIfNoStateMapping() {
         FunctionSpec spec = new FunctionSpec();
-        XmEntityStateProjection p = getProjection(IdOrKey.SELF).get();
+        XmEntityStateProjection p = getProjection(SELF).get();
         functionService.assertCallAllowedByState(spec, p);
     }
 
@@ -292,7 +295,7 @@ public class FunctionServiceImplUnitTest extends AbstractUnitTest {
     public void passStateValidationIfNONEStateIsSet() {
         FunctionSpec spec = new FunctionSpec();
         spec.setAllowedStateKeys(Lists.newArrayList(FunctionServiceImpl.NONE));
-        XmEntityStateProjection p = getProjection(IdOrKey.SELF).get();
+        XmEntityStateProjection p = getProjection(SELF).get();
         functionService.assertCallAllowedByState(spec, p);
     }
 
@@ -300,7 +303,7 @@ public class FunctionServiceImplUnitTest extends AbstractUnitTest {
     public void passStateValidationIfStatesMatches() {
         FunctionSpec spec = new FunctionSpec();
         spec.setAllowedStateKeys(Lists.newArrayList("STATE"));
-        XmEntityStateProjection p = getProjection(IdOrKey.SELF).get();
+        XmEntityStateProjection p = getProjection(SELF).get();
         functionService.assertCallAllowedByState(spec, p);
     }
 
@@ -308,7 +311,7 @@ public class FunctionServiceImplUnitTest extends AbstractUnitTest {
     public void failStateValidationIfStatesNotMatches() {
         FunctionSpec spec = new FunctionSpec();
         spec.setAllowedStateKeys(Lists.newArrayList("XX-STATE-XX"));
-        XmEntityStateProjection p = getProjection(IdOrKey.SELF).get();
+        XmEntityStateProjection p = getProjection(SELF).get();
         functionService.assertCallAllowedByState(spec, p);
     }
 
@@ -370,4 +373,76 @@ public class FunctionServiceImplUnitTest extends AbstractUnitTest {
         });
     }
 
+    @Test
+    public void noValidationOnInvalidFunctionInputWhenValidationDisabled() {
+        FunctionSpec spec = generateFunctionSpec(false);
+        when(xmEntitySpecService.findFunction(VALIDATION_FUNCTION)).thenReturn(Optional.of(spec));
+        functionService.execute(VALIDATION_FUNCTION, Map.of("numberArgument", "stringValue"));
+        verifyNoMoreInteractions(jsonValidationService);
+
+        spec.setWithEntityId(true);
+        when(xmEntitySpecService.findFunction(xmEntityTypeKey, VALIDATION_FUNCTION)).thenReturn(Optional.of(spec));
+        when(xmEntityService.findStateProjectionById(SELF)).thenReturn(getProjection(SELF));
+        functionService.execute(VALIDATION_FUNCTION, SELF, Map.of("numberArgument", "stringValue"));
+        verifyNoMoreInteractions(jsonValidationService);
+    }
+
+    @Test
+    public void validationSuccessOnValidFunctionInputWhenValidationEnabled() {
+        FunctionSpec spec = generateFunctionSpec(true);
+        when(xmEntitySpecService.findFunction(VALIDATION_FUNCTION)).thenReturn(Optional.of(spec));
+        Map<String, Object> functionInput = Map.of("numberArgument", 2);
+        functionService.execute(VALIDATION_FUNCTION, functionInput);
+
+        spec.setWithEntityId(true);
+        when(xmEntitySpecService.findFunction(xmEntityTypeKey, VALIDATION_FUNCTION)).thenReturn(Optional.of(spec));
+        when(xmEntityService.findStateProjectionById(SELF)).thenReturn(getProjection(SELF));
+        functionService.execute(VALIDATION_FUNCTION, SELF, functionInput);
+
+        verify(jsonValidationService, times(2)).assertJson(eq(functionInput), eq(spec.getInputSpec()));
+    }
+
+    @Test
+    public void validationFailOnInvalidFunctionInputWhenValidationEnabled() {
+        exception.expect(JsonValidationService.InvalidJsonException.class);
+        String exceptionMessage = "{\"pointer\":\"/numberArgument\"} |     domain: \"validation\" |     keyword: \"type\" |     found: \"string\" |     expected: [\"integer\",\"number\"] | ";
+        exception.expectMessage(exceptionMessage);
+
+        FunctionSpec spec = generateFunctionSpec(true);
+        when(xmEntitySpecService.findFunction(VALIDATION_FUNCTION)).thenReturn(Optional.of(spec));
+        Map<String, Object> functionInput = Map.of("numberArgument", "stringValue");
+        functionService.execute(VALIDATION_FUNCTION, functionInput);
+        verify(jsonValidationService).assertJson(eq(functionInput), eq(spec.getInputSpec()));
+    }
+
+    @Test
+    public void validationFailOnInvalidFunctionWithEntityIdInputWhenValidationEnabled() {
+        exception.expect(JsonValidationService.InvalidJsonException.class);
+        String exceptionMessage = "{\"pointer\":\"/numberArgument\"} |     domain: \"validation\" |     keyword: \"type\" |     found: \"string\" |     expected: [\"integer\",\"number\"] | ";
+        exception.expectMessage(exceptionMessage);
+
+        FunctionSpec spec = generateFunctionSpec(true);
+        Map<String, Object> functionInput = Map.of("numberArgument", "stringValue");
+        spec.setWithEntityId(true);
+        when(xmEntitySpecService.findFunction(xmEntityTypeKey, VALIDATION_FUNCTION)).thenReturn(Optional.of(spec));
+        when(xmEntityService.findStateProjectionById(SELF)).thenReturn(getProjection(SELF));
+        functionService.execute(VALIDATION_FUNCTION, SELF, functionInput);
+        verify(jsonValidationService).assertJson(eq(functionInput), eq(spec.getInputSpec()));
+    }
+
+    @NotNull
+    private FunctionSpec generateFunctionSpec(boolean validateFunctionInput) {
+        FunctionSpec spec = new FunctionSpec();
+        spec.setKey(VALIDATION_FUNCTION);
+        spec.setValidateFunctionInput(validateFunctionInput);
+        // language=JSON
+        String inputSpec = "{\n" +
+                "              \"type\": \"object\",\n" +
+                "              \"properties\": {\n" +
+                "                  \"numberArgument\": {\"type\": \"number\" }\n" +
+                "              }\n" +
+                "            }";
+        spec.setInputSpec(inputSpec);
+        return spec;
+    }
 }
