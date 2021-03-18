@@ -16,9 +16,12 @@ import org.junit.Test;
 import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.transaction.BeforeTransaction;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,6 +31,14 @@ import java.util.List;
 
 import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_AUTH_CONTEXT;
 import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_TENANT_CONTEXT;
+import static com.icthh.xm.ms.entity.security.access.DynamicPermissionCheckService.FeatureContext.LINK_DELETE;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 
 public class LinkServiceIntTest extends AbstractSpringBootTest {
 
@@ -39,9 +50,9 @@ public class LinkServiceIntTest extends AbstractSpringBootTest {
     private TenantContextHolder tenantContextHolder;
     @Autowired
     private LepManager lepManager;
-    @MockBean
+    @SpyBean
     private DynamicPermissionCheckService dynamicPermissionCheckService;
-    @Mock
+    @Autowired
     private XmAuthenticationContextHolder authContextHolder;
 
     private List<Link> expected;
@@ -53,8 +64,6 @@ public class LinkServiceIntTest extends AbstractSpringBootTest {
             ctx.setValue(THREAD_CONTEXT_KEY_TENANT_CONTEXT, tenantContextHolder.getContext());
             ctx.setValue(THREAD_CONTEXT_KEY_AUTH_CONTEXT, authContextHolder.getContext());
         });
-
-        dynamicPermissionCheckService.isDynamicLinkDeletePermissionEnabled()
 
         expected = initLinks();
     }
@@ -68,6 +77,34 @@ public class LinkServiceIntTest extends AbstractSpringBootTest {
         Assert.assertNotNull(actual);
         Assert.assertEquals(expected, actual.getContent());
     }
+
+    @Test
+    @Transactional
+    public void testSimpleDelete() {
+        when(dynamicPermissionCheckService.isDynamicLinkDeletePermissionEnabled()).thenReturn(false);
+        linkService.delete(expected.get(0).getId());
+        verify(dynamicPermissionCheckService).isDynamicLinkDeletePermissionEnabled();
+        verify(dynamicPermissionCheckService, never()).checkContextPermission(any(), any(), any());
+    }
+
+    @Test
+    @Transactional
+    @WithMockUser(authorities = "SUPER-ADMIN")
+    public void testDeleteWithPermissionAssertion() {
+        when(dynamicPermissionCheckService.isDynamicLinkDeletePermissionEnabled()).thenReturn(true);
+        linkService.delete(expected.get(0).getId());
+        verify(dynamicPermissionCheckService, times(2)).isDynamicLinkDeletePermissionEnabled();
+        verify(dynamicPermissionCheckService).checkContextPermission(LINK_DELETE, "LINK.DELETE", expected.get(0).getTypeKey());
+    }
+
+    @Test(expected = AccessDeniedException.class)
+    @Transactional
+    @WithMockUser(authorities = "ROLE_ANONYMOUS")
+    public void testDeleteWherePermissionDenied() {
+        when(dynamicPermissionCheckService.isDynamicLinkDeletePermissionEnabled()).thenReturn(true);
+        linkService.delete(expected.get(0).getId());
+    }
+
 
     @BeforeTransaction
     public void beforeTransaction() {
