@@ -6,6 +6,7 @@ import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.Assert.assertFalse;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -24,6 +25,7 @@ import com.icthh.xm.ms.entity.repository.LinkPermittedRepository;
 import com.icthh.xm.ms.entity.repository.LinkRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
 import com.icthh.xm.ms.entity.repository.search.PermittedSearchRepository;
+import com.icthh.xm.ms.entity.security.access.DynamicPermissionCheckService;
 import com.icthh.xm.ms.entity.service.LinkService;
 import com.icthh.xm.ms.entity.service.impl.StartUpdateDateGenerationStrategy;
 import lombok.SneakyThrows;
@@ -97,6 +99,9 @@ public class LinkResourceExtendedIntTest extends AbstractSpringBootTest {
     @Autowired
     private ObjectMapper objectMapper;
 
+    @Autowired
+    private DynamicPermissionCheckService dynamicPermissionCheckService;
+
     @Spy
     private StartUpdateDateGenerationStrategy startUpdateDateGenerationStrategy;
 
@@ -122,7 +127,8 @@ public class LinkResourceExtendedIntTest extends AbstractSpringBootTest {
             permittedRepository,
             permittedSearchRepository,
             startUpdateDateGenerationStrategy,
-            xmEntityRepository);
+            xmEntityRepository,
+            dynamicPermissionCheckService);
 
         LinkResource linkResourceMock = new LinkResource(linkService, linkResource);
         this.restLinkMockMvc = MockMvcBuilders.standaloneSetup(linkResourceMock)

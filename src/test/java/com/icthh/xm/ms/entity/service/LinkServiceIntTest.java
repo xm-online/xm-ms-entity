@@ -8,12 +8,14 @@ import com.icthh.xm.lep.api.LepManager;
 import com.icthh.xm.ms.entity.AbstractSpringBootTest;
 import com.icthh.xm.ms.entity.domain.Link;
 import com.icthh.xm.ms.entity.domain.Link_;
+import com.icthh.xm.ms.entity.security.access.DynamicPermissionCheckService;
 import com.icthh.xm.ms.entity.web.rest.LinkResourceIntTest;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.jpa.domain.Specification;
@@ -37,6 +39,8 @@ public class LinkServiceIntTest extends AbstractSpringBootTest {
     private TenantContextHolder tenantContextHolder;
     @Autowired
     private LepManager lepManager;
+    @MockBean
+    private DynamicPermissionCheckService dynamicPermissionCheckService;
     @Mock
     private XmAuthenticationContextHolder authContextHolder;
 
@@ -49,6 +53,8 @@ public class LinkServiceIntTest extends AbstractSpringBootTest {
             ctx.setValue(THREAD_CONTEXT_KEY_TENANT_CONTEXT, tenantContextHolder.getContext());
             ctx.setValue(THREAD_CONTEXT_KEY_AUTH_CONTEXT, authContextHolder.getContext());
         });
+
+        dynamicPermissionCheckService.isDynamicLinkDeletePermissionEnabled()
 
         expected = initLinks();
     }
