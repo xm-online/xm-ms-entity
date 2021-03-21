@@ -1,19 +1,26 @@
 package com.icthh.xm.ms.entity.service;
 
+import com.icthh.xm.commons.exceptions.EntityNotFoundException;
 import com.icthh.xm.commons.lep.LogicExtensionPoint;
 import com.icthh.xm.commons.lep.spring.LepService;
 import com.icthh.xm.commons.permission.annotation.FindWithPermission;
 import com.icthh.xm.commons.permission.annotation.PrivilegeDescription;
+import com.icthh.xm.ms.entity.config.XmEntityTenantConfigService;
+import com.icthh.xm.ms.entity.config.XmEntityTenantConfigService.XmEntityTenantConfig;
 import com.icthh.xm.ms.entity.domain.Link;
 import com.icthh.xm.ms.entity.domain.XmEntity;
+import com.icthh.xm.ms.entity.lep.keyresolver.LinkTypeKeyResolver;
 import com.icthh.xm.ms.entity.projection.LinkProjection;
 import com.icthh.xm.ms.entity.repository.LinkPermittedRepository;
 import com.icthh.xm.ms.entity.repository.LinkRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
 import com.icthh.xm.ms.entity.repository.search.PermittedSearchRepository;
+import com.icthh.xm.ms.entity.security.access.DynamicPermissionCheckService;
 import com.icthh.xm.ms.entity.service.impl.StartUpdateDateGenerationStrategy;
 import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -22,6 +29,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Set;
+
+import static com.icthh.xm.ms.entity.security.access.DynamicPermissionCheckService.FeatureContext.LINK_DELETE;
 
 /**
  * Service Implementation for managing Link.
@@ -42,6 +51,11 @@ public class LinkService {
     private final StartUpdateDateGenerationStrategy startUpdateDateGenerationStrategy;
 
     private final XmEntityRepository xmEntityRepository;
+
+    private final DynamicPermissionCheckService permissionCheckService;
+
+    @Setter(onMethod = @__(@Autowired))
+    private LinkService self;
 
     /**
      * Save a link.
@@ -155,7 +169,19 @@ public class LinkService {
      */
     @LogicExtensionPoint("Delete")
     public void delete(Long id) {
-        linkRepository.deleteById(id);
+        if (permissionCheckService.isDynamicLinkDeletePermissionEnabled()) {
+            Link link = linkRepository.findById(id)
+                    .orElseThrow(() -> new EntityNotFoundException("Link by id " + id + " not found"));
+            self.deleteByTypeKey(id, link);
+        } else {
+            linkRepository.deleteById(id);
+        }
+    }
+
+    @LogicExtensionPoint(value = "Delete", resolver = LinkTypeKeyResolver.class)
+    public void deleteByTypeKey(Long id, Link link) {
+        permissionCheckService.checkContextPermission(LINK_DELETE, "LINK.DELETE", link.getTypeKey());
+        linkRepository.delete(link);
     }
 
     /**

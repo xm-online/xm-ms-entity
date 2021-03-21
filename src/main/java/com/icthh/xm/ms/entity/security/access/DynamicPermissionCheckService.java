@@ -57,7 +57,8 @@ public class DynamicPermissionCheckService {
     public enum FeatureContext {
 
         FUNCTION(DynamicPermissionCheckService::isDynamicFunctionPermissionEnabled),
-        CHANGE_STATE(DynamicPermissionCheckService::isDynamicChangeStatePermissionEnabled);
+        CHANGE_STATE(DynamicPermissionCheckService::isDynamicChangeStatePermissionEnabled),
+        LINK_DELETE(DynamicPermissionCheckService::isDynamicLinkDeletePermissionEnabled);
 
         private final Function<DynamicPermissionCheckService, Boolean> featureContextResolver;
 
@@ -223,6 +224,10 @@ public class DynamicPermissionCheckService {
      */
     private boolean isDynamicFunctionPermissionEnabled() {
         return tenantConfigService.getXmEntityTenantConfig().getEntityFunctions().getDynamicPermissionCheckEnabled();
+    }
+
+    public boolean isDynamicLinkDeletePermissionEnabled() {
+        return tenantConfigService.getXmEntityTenantConfig().getDynamicTypeKeyPermission().getLinkDeletion();
     }
 
     /**

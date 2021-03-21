@@ -78,6 +78,12 @@ public class XmEntityTenantConfigService extends TenantConfigService {
             private Boolean validateFunctionInput = false;
         }
 
+        private DynamicTypeKeyPermission dynamicTypeKeyPermission = new DynamicTypeKeyPermission();
+        @Data
+        public static class DynamicTypeKeyPermission {
+            private Boolean linkDeletion = false;
+        }
+
         private EntityVersionControl entityVersionControl = new EntityVersionControl();
         @Data
         public static class EntityVersionControl {
