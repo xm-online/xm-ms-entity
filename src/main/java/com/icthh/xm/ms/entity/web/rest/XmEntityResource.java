@@ -24,6 +24,7 @@ import com.icthh.xm.ms.entity.service.XmEntityService;
 import com.icthh.xm.ms.entity.service.dto.LinkSourceDto;
 import com.icthh.xm.ms.entity.service.dto.SearchDto;
 import com.icthh.xm.ms.entity.util.XmHttpEntityUtils;
+import com.icthh.xm.ms.entity.web.rest.dto.ElasticFetchSourceFilterDto;
 import com.icthh.xm.ms.entity.web.rest.util.HeaderUtil;
 import com.icthh.xm.ms.entity.web.rest.util.PaginationUtil;
 import com.icthh.xm.ms.entity.web.rest.util.RespContentUtil;
@@ -246,12 +247,12 @@ public class XmEntityResource {
     public ResponseEntity<List<XmEntity>> searchXmEntitiesV2(
         @RequestParam String query,
         @ApiParam Pageable pageable,
-        @ApiParam FetchSourceFilter fetchSourceFilter) {
+        @ApiParam ElasticFetchSourceFilterDto fetchSourceFilterDto) {
         SearchDto searchDto = SearchDto.builder()
             .query(query)
             .pageable(pageable)
             .entityClass(XmEntity.class)
-            .fetchSourceFilter(fetchSourceFilter)
+            .fetchSourceFilter(new FetchSourceFilter(fetchSourceFilterDto.getIncludes(), fetchSourceFilterDto.getExcludes()))
             .build();
         Page<XmEntity> page = xmEntityService.searchV2(searchDto, null);
         HttpHeaders headers = PaginationUtil
