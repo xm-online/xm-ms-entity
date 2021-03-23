@@ -252,7 +252,7 @@ public class ElasticsearchIndexService {
                 results.map(entity -> loadEntityRelationships(relationshipGetters, entity));
                 xmEntitySearchRepository.saveAll(results.getContent());
                 reindexed += results.getContent().size();
-                results.forEach(xmEntity -> entityManager.detach(xmEntity));
+                results.forEach(entityManager::detach);
             }
         }
         log.info("Elasticsearch: Indexed [{}] rows for {} in {} ms",
