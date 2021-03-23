@@ -1,7 +1,5 @@
 package com.icthh.xm.ms.entity.service;
 
-import static org.apache.commons.lang3.ObjectUtils.defaultIfNull;
-
 import com.codahale.metrics.annotation.Timed;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.icthh.xm.commons.logging.util.MdcUtils;
@@ -10,6 +8,7 @@ import com.icthh.xm.commons.tenant.TenantContextUtils;
 import com.icthh.xm.commons.tenant.TenantKey;
 import com.icthh.xm.ms.entity.config.IndexConfiguration;
 import com.icthh.xm.ms.entity.config.MappingConfiguration;
+import com.icthh.xm.ms.entity.domain.Attachment;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.repository.XmEntityRepositoryInternal;
 import com.icthh.xm.ms.entity.repository.search.XmEntitySearchRepository;
@@ -28,6 +27,12 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import javax.annotation.Resource;
+import javax.persistence.EntityManager;
+import javax.persistence.OneToMany;
+import javax.persistence.criteria.CriteriaBuilder;
 import java.beans.IntrospectionException;
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.Field;
@@ -43,12 +48,8 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-import javax.annotation.Resource;
-import javax.persistence.EntityManager;
-import javax.persistence.OneToMany;
-import javax.persistence.criteria.CriteriaBuilder;
+
+import static org.apache.commons.lang3.ObjectUtils.defaultIfNull;
 
 @Slf4j
 @Service
@@ -93,6 +94,7 @@ public class ElasticsearchIndexService {
 
     /**
      * Recreates index and then reindexes ALL entities from database asynchronously.
+     *
      * @return @{@link CompletableFuture<Long>} with a number of reindexed entities.
      */
     @Timed
@@ -100,14 +102,15 @@ public class ElasticsearchIndexService {
         TenantKey tenantKey = TenantContextUtils.getRequiredTenantKey(tenantContextHolder);
         String rid = MdcUtils.getRid();
         return CompletableFuture.supplyAsync(() -> execForCustomContext(tenantKey,
-                                                                        rid,
-                                                                        selfReference::reindexAll), executor);
+            rid,
+            selfReference::reindexAll), executor);
     }
 
     /**
      * Refreshes entities in elasticsearch index filtered by typeKey asynchronously.
-     *
+     * <p>
      * Does not recreate index.
+     *
      * @param typeKey typeKey to filter source entities.
      * @return @{@link CompletableFuture<Long>} with a number of reindexed entities.
      */
@@ -119,14 +122,15 @@ public class ElasticsearchIndexService {
         TenantKey tenantKey = TenantContextUtils.getRequiredTenantKey(tenantContextHolder);
         String rid = MdcUtils.getRid();
         return CompletableFuture.supplyAsync(() -> execForCustomContext(tenantKey,
-                                                                        rid,
-                                                                        () -> selfReference.reindexByTypeKey(typeKey)), executor);
+            rid,
+            () -> selfReference.reindexByTypeKey(typeKey)), executor);
     }
 
     /**
      * Refreshes entities in elasticsearch index filtered by collection of IDs asynchronously.
-     *
+     * <p>
      * Does not recreate index.
+     *
      * @param ids - collection of IDs of entities to be reindexed.
      * @return @{@link CompletableFuture<Long>} with a number of reindexed entities.
      */
@@ -138,12 +142,13 @@ public class ElasticsearchIndexService {
         TenantKey tenantKey = TenantContextUtils.getRequiredTenantKey(tenantContextHolder);
         String rid = MdcUtils.getRid();
         return CompletableFuture.supplyAsync(() -> execForCustomContext(tenantKey,
-                                                                        rid,
-                                                                        () -> selfReference.reindexByIds(ids)), executor);
+            rid,
+            () -> selfReference.reindexByIds(ids)), executor);
     }
 
     /**
      * Recreates index and then reindexes ALL entities from database.
+     *
      * @return number of reindexed entities.
      */
     @Timed
@@ -166,14 +171,15 @@ public class ElasticsearchIndexService {
 
     /**
      * Refreshes entities in elasticsearch index filtered by typeKey.
-     *
+     * <p>
      * Does not recreate index.
+     *
      * @param typeKey typeKey to filter source entities.
      * @return number of reindexed entities.
      */
     @Timed
     @Transactional(readOnly = true)
-    public long reindexByTypeKey(@Nonnull String typeKey){
+    public long reindexByTypeKey(@Nonnull String typeKey) {
 
         Objects.requireNonNull(typeKey, "typeKey should not be null");
 
@@ -197,8 +203,9 @@ public class ElasticsearchIndexService {
 
     /**
      * Refreshes entities in elasticsearch index filtered by collection of IDs.
-     *
+     * <p>
      * Does not recreate index.
+     *
      * @param ids - collection of IDs of entities to be reindexed.
      * @return number of reindexed entities.
      */
@@ -227,7 +234,7 @@ public class ElasticsearchIndexService {
         return reindexXmEntity(spec, null);
     }
 
-    private long reindexXmEntity(@Nullable Specification<XmEntity> spec,  Integer startFrom) {
+    private long reindexXmEntity(@Nullable Specification<XmEntity> spec, Integer startFrom) {
 
         StopWatch stopWatch = StopWatch.createStarted();
         startFrom = defaultIfNull(startFrom, 0);
@@ -238,25 +245,35 @@ public class ElasticsearchIndexService {
 
         if (xmEntityRepositoryInternal.count(spec) > 0) {
             List<Method> relationshipGetters = Arrays.stream(clazz.getDeclaredFields())
-                                                     .filter(field -> field.getType().equals(Set.class))
-                                                     .filter(field -> field.getAnnotation(OneToMany.class) != null)
-                                                     .filter(field -> field.getAnnotation(JsonIgnore.class) == null)
-                                                     .map(field -> extractFieldGetter(clazz, field))
-                                                     .filter(Objects::nonNull)
-                                                     .collect(Collectors.toList());
+                .filter(field -> field.getType().equals(Set.class))
+                .filter(field -> field.getAnnotation(OneToMany.class) != null)
+                .filter(field -> field.getAnnotation(JsonIgnore.class) == null)
+                .map(field -> extractFieldGetter(clazz, field))
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
 
-            for (int i = startFrom; i <= xmEntityRepositoryInternal.count(spec) / PAGE_SIZE ; i++) {
+            for (int i = startFrom; i <= xmEntityRepositoryInternal.count(spec) / PAGE_SIZE; i++) {
                 Pageable page = PageRequest.of(i, PAGE_SIZE);
                 log.info("Indexing page {} of {}, pageSize {}", i, xmEntityRepositoryInternal.count(spec) / PAGE_SIZE, PAGE_SIZE);
                 Page<XmEntity> results = xmEntityRepositoryInternal.findAll(spec, page);
                 results.map(entity -> loadEntityRelationships(relationshipGetters, entity));
                 xmEntitySearchRepository.saveAll(results.getContent());
                 reindexed += results.getContent().size();
-                results.forEach(entityManager::detach);
+                results.forEach(xmEntity -> {
+                    entityManager.detach(xmEntity);
+                    xmEntity.getAttachments().forEach(entityManager::detach);
+                    xmEntity.getCalendars().forEach(entityManager::detach);
+                    xmEntity.getComments().forEach(entityManager::detach);
+                    xmEntity.getEvents().forEach(entityManager::detach);
+                    xmEntity.getFunctionContexts().forEach(entityManager::detach);
+                    xmEntity.getSources().forEach(entityManager::detach);
+                    xmEntity.getRatings().forEach(entityManager::detach);
+                    xmEntity.getVotes().forEach(entityManager::detach);
+                });
             }
         }
         log.info("Elasticsearch: Indexed [{}] rows for {} in {} ms",
-                 reindexed, clazz.getSimpleName(), stopWatch.getTime());
+            reindexed, clazz.getSimpleName(), stopWatch.getTime());
         return reindexed;
 
     }
@@ -284,7 +301,7 @@ public class ElasticsearchIndexService {
             elasticsearchTemplate.putMapping(clazz);
         }
         log.info("elasticsearch index was recreated for {} in {} ms",
-                 XmEntity.class.getSimpleName(), stopWatch.getTime());
+            XmEntity.class.getSimpleName(), stopWatch.getTime());
     }
 
     private Method extractFieldGetter(final Class<XmEntity> clazz, final Field field) {
@@ -292,7 +309,7 @@ public class ElasticsearchIndexService {
             return new PropertyDescriptor(field.getName(), clazz).getReadMethod();
         } catch (IntrospectionException e) {
             log.error("Error retrieving getter for class {}, field {}. Field will NOT be indexed",
-                      clazz.getSimpleName(), field.getName(), e);
+                clazz.getSimpleName(), field.getName(), e);
             return null;
         }
     }
