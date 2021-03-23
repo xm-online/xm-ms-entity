@@ -199,7 +199,6 @@ public class ElasticsearchIndexService {
      * @return number of reindexed entities.
      */
     @Timed
-    @Transactional(readOnly = true)
     public long reindexByIds(@Nonnull Iterable<Long> ids) {
 
         Objects.requireNonNull(ids, "ids should not be null");
@@ -242,11 +241,7 @@ public class ElasticsearchIndexService {
                                                      .collect(Collectors.toList());
 
             for (int i = startFrom; i <= xmEntityRepositoryInternal.count(spec) / PAGE_SIZE ; i++) {
-                Pageable page = PageRequest.of(i, PAGE_SIZE);
-                log.info("Indexing page {} of {}, pageSize {}", i, xmEntityRepositoryInternal.count(spec) / PAGE_SIZE, PAGE_SIZE);
-                Page<XmEntity> results = xmEntityRepositoryInternal.findAll(spec, page);
-                results.map(entity -> loadEntityRelationships(relationshipGetters, entity));
-                xmEntitySearchRepository.saveAll(results.getContent());
+                Page<XmEntity> results = indexBatch(spec, relationshipGetters, i);
                 reindexed += results.getContent().size();
             }
         }
@@ -254,6 +249,16 @@ public class ElasticsearchIndexService {
                  reindexed, clazz.getSimpleName(), stopWatch.getTime());
         return reindexed;
 
+    }
+
+    @Transactional(readOnly = true)
+    private Page<XmEntity> indexBatch(@Nullable Specification<XmEntity> spec, List<Method> relationshipGetters, int i) {
+        Pageable page = PageRequest.of(i, PAGE_SIZE);
+        log.info("Indexing page {} of {}, pageSize {}", i, xmEntityRepositoryInternal.count(spec) / PAGE_SIZE, PAGE_SIZE);
+        Page<XmEntity> results = xmEntityRepositoryInternal.findAll(spec, page);
+        results.map(entity -> loadEntityRelationships(relationshipGetters, entity));
+        xmEntitySearchRepository.saveAll(results.getContent());
+        return results;
     }
 
     private void recreateIndex() {
