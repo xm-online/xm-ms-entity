@@ -261,13 +261,6 @@ public class ElasticsearchIndexService {
                     results.forEach(xmEntity -> {
                         entityManager.detach(xmEntity);
                         xmEntity.getAttachments().forEach(entityManager::detach);
-                        xmEntity.getCalendars().forEach(entityManager::detach);
-                        xmEntity.getComments().forEach(entityManager::detach);
-                        xmEntity.getEvents().forEach(entityManager::detach);
-                        xmEntity.getFunctionContexts().forEach(entityManager::detach);
-                        xmEntity.getSources().forEach(entityManager::detach);
-                        xmEntity.getRatings().forEach(entityManager::detach);
-                        xmEntity.getVotes().forEach(entityManager::detach);
                     });
                 } catch (Exception e) {
                     log.error("error", e);
