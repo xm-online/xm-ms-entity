@@ -8,7 +8,6 @@ import com.icthh.xm.commons.tenant.TenantContextUtils;
 import com.icthh.xm.commons.tenant.TenantKey;
 import com.icthh.xm.ms.entity.config.IndexConfiguration;
 import com.icthh.xm.ms.entity.config.MappingConfiguration;
-import com.icthh.xm.ms.entity.domain.Attachment;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.repository.XmEntityRepositoryInternal;
 import com.icthh.xm.ms.entity.repository.search.XmEntitySearchRepository;
@@ -45,7 +44,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
-import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -259,17 +257,22 @@ public class ElasticsearchIndexService {
                 results.map(entity -> loadEntityRelationships(relationshipGetters, entity));
                 xmEntitySearchRepository.saveAll(results.getContent());
                 reindexed += results.getContent().size();
-                results.forEach(xmEntity -> {
-                    entityManager.detach(xmEntity);
-                    xmEntity.getAttachments().forEach(entityManager::detach);
-                    xmEntity.getCalendars().forEach(entityManager::detach);
-                    xmEntity.getComments().forEach(entityManager::detach);
-                    xmEntity.getEvents().forEach(entityManager::detach);
-                    xmEntity.getFunctionContexts().forEach(entityManager::detach);
-                    xmEntity.getSources().forEach(entityManager::detach);
-                    xmEntity.getRatings().forEach(entityManager::detach);
-                    xmEntity.getVotes().forEach(entityManager::detach);
-                });
+                try {
+                    results.forEach(xmEntity -> {
+                        entityManager.detach(xmEntity);
+                        xmEntity.getAttachments().forEach(entityManager::detach);
+                        xmEntity.getCalendars().forEach(entityManager::detach);
+                        xmEntity.getComments().forEach(entityManager::detach);
+                        xmEntity.getEvents().forEach(entityManager::detach);
+                        xmEntity.getFunctionContexts().forEach(entityManager::detach);
+                        xmEntity.getSources().forEach(entityManager::detach);
+                        xmEntity.getRatings().forEach(entityManager::detach);
+                        xmEntity.getVotes().forEach(entityManager::detach);
+                    });
+                } catch (Exception e) {
+                    log.error("error", e);
+                }
+
             }
         }
         log.info("Elasticsearch: Indexed [{}] rows for {} in {} ms",
