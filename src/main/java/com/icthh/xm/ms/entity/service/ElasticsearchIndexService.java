@@ -40,6 +40,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
@@ -251,6 +252,7 @@ public class ElasticsearchIndexService {
                 results.map(entity -> loadEntityRelationships(relationshipGetters, entity));
                 xmEntitySearchRepository.saveAll(results.getContent());
                 reindexed += results.getContent().size();
+                results.forEach(xmEntity -> entityManager.detach(xmEntity));
             }
         }
         log.info("Elasticsearch: Indexed [{}] rows for {} in {} ms",
