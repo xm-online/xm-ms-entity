@@ -1,26 +1,5 @@
 package com.icthh.xm.ms.entity.service;
 
-import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_AUTH_CONTEXT;
-import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_TENANT_CONTEXT;
-import static com.icthh.xm.ms.entity.web.rest.TestUtil.sameInstant;
-import static com.icthh.xm.ms.entity.web.rest.XmEntityResourceExtendedIntTest.createEntity;
-import static com.icthh.xm.ms.entity.web.rest.XmEntityResourceExtendedIntTest.createEntityComplexIncoming;
-import static org.hamcrest.Matchers.containsInAnyOrder;
-import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.hasSize;
-import static org.hamcrest.Matchers.notNullValue;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
 import com.icthh.xm.commons.i18n.error.web.ExceptionTranslator;
 import com.icthh.xm.commons.security.XmAuthenticationContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
@@ -59,9 +38,26 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.persistence.EntityManager;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.Executor;
+
+import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_AUTH_CONTEXT;
+import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_TENANT_CONTEXT;
+import static com.icthh.xm.ms.entity.web.rest.TestUtil.sameInstant;
+import static com.icthh.xm.ms.entity.web.rest.XmEntityResourceExtendedIntTest.createEntity;
+import static com.icthh.xm.ms.entity.web.rest.XmEntityResourceExtendedIntTest.createEntityComplexIncoming;
+import static org.hamcrest.Matchers.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 /**
  * Test class for the ElasticsearchIndexResource REST controller and ElasticsearchIndexService service.
@@ -131,6 +127,9 @@ public class ElasticsearchIndexResourceIntTest extends AbstractSpringBootTest {
     @Autowired
     private SeparateTransactionExecutor transactionExecutor;
 
+    @Autowired
+    private EntityManager entityManager;
+
     private ElasticsearchIndexService elasticsearchIndexService;
 
     @Mock
@@ -165,12 +164,12 @@ public class ElasticsearchIndexResourceIntTest extends AbstractSpringBootTest {
         elasticsearchTemplate.refresh(XmEntity.class);
 
         elasticsearchIndexService = new ElasticsearchIndexService(xmEntityRepositoryInternal,
-                                                                  xmEntitySearchRepository,
-                                                                  elasticsearchTemplate,
-                                                                  tenantContextHolder,
-                                                                  mappingConfiguration,
-                                                                  indexConfiguration,
-                                                                  executor, entityManager);
+            xmEntitySearchRepository,
+            elasticsearchTemplate,
+            tenantContextHolder,
+            mappingConfiguration,
+            indexConfiguration,
+            executor, entityManager);
 
         elasticsearchIndexService.setSelfReference(elasticsearchIndexService);
 
@@ -178,9 +177,9 @@ public class ElasticsearchIndexResourceIntTest extends AbstractSpringBootTest {
             new ElasticsearchIndexResource(elasticsearchIndexService);
 
         this.mockMvc = MockMvcBuilders.standaloneSetup(elasticsearchIndexResource, xmEntityResource)
-                                      .setCustomArgumentResolvers(pageableArgumentResolver)
-                                      .setControllerAdvice(exceptionTranslator)
-                                      .setMessageConverters(jacksonMessageConverter).build();
+            .setCustomArgumentResolvers(pageableArgumentResolver)
+            .setControllerAdvice(exceptionTranslator)
+            .setMessageConverters(jacksonMessageConverter).build();
 
         // make executor run task immediately
         doAnswer(a -> {
@@ -227,41 +226,41 @@ public class ElasticsearchIndexResourceIntTest extends AbstractSpringBootTest {
         assert tag.getXmEntity().getId() != null;
 
         mockMvc.perform(get("/api/_search/xm-entities?query=id:{id}", saved.getId()))
-               .andExpect(status().isOk())
-               .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
-               .andExpect(jsonPath("$.[0].id").value(saved.getId()))
-               .andExpect(jsonPath("$.[0].key").value(saved.getKey()))
-               .andExpect(jsonPath("$.[0].typeKey").value(saved.getTypeKey()))
-               .andExpect(jsonPath("$.[0].stateKey").value(saved.getStateKey()))
-               .andExpect(jsonPath("$.[0].name").value(saved.getName()))
-               .andExpect(jsonPath("$.[0].startDate").value(sameInstant(saved.getStartDate())))
-               .andExpect(jsonPath("$.[0].updateDate").value(sameInstant(saved.getUpdateDate())))
-               .andExpect(jsonPath("$.[0].endDate").value(sameInstant(saved.getEndDate())))
-               .andExpect(jsonPath("$.[0].avatarUrl").value(containsString("aaaaa.jpg")))
-               .andExpect(jsonPath("$.[0].description").value(saved.getDescription()))
-               .andExpect(jsonPath("$.[0].data.AAAAAAAAAA").value("BBBBBBBBBB"))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+            .andExpect(jsonPath("$.[0].id").value(saved.getId()))
+            .andExpect(jsonPath("$.[0].key").value(saved.getKey()))
+            .andExpect(jsonPath("$.[0].typeKey").value(saved.getTypeKey()))
+            .andExpect(jsonPath("$.[0].stateKey").value(saved.getStateKey()))
+            .andExpect(jsonPath("$.[0].name").value(saved.getName()))
+            .andExpect(jsonPath("$.[0].startDate").value(sameInstant(saved.getStartDate())))
+            .andExpect(jsonPath("$.[0].updateDate").value(sameInstant(saved.getUpdateDate())))
+            .andExpect(jsonPath("$.[0].endDate").value(sameInstant(saved.getEndDate())))
+            .andExpect(jsonPath("$.[0].avatarUrl").value(containsString("aaaaa.jpg")))
+            .andExpect(jsonPath("$.[0].description").value(saved.getDescription()))
+            .andExpect(jsonPath("$.[0].data.AAAAAAAAAA").value("BBBBBBBBBB"))
 
-               .andExpect(jsonPath("$.[0].tags[0].id").value(notNullValue()))
-               .andExpect(jsonPath("$.[0].tags[0].name").value(tag.getName()))
-               .andExpect(jsonPath("$.[0].tags[0].typeKey").value(tag.getTypeKey()))
-               .andExpect(jsonPath("$.[0].tags[0].xmEntity").value(tag.getXmEntity().getId()))
+            .andExpect(jsonPath("$.[0].tags[0].id").value(notNullValue()))
+            .andExpect(jsonPath("$.[0].tags[0].name").value(tag.getName()))
+            .andExpect(jsonPath("$.[0].tags[0].typeKey").value(tag.getTypeKey()))
+            .andExpect(jsonPath("$.[0].tags[0].xmEntity").value(tag.getXmEntity().getId()))
 
-               .andExpect(jsonPath("$.[0].attachments[0].id").value(notNullValue()))
-               .andExpect(jsonPath("$.[0].attachments[0].typeKey").value(attachment.getTypeKey()))
-               .andExpect(jsonPath("$.[0].attachments[0].name").value(attachment.getName()))
-               .andExpect(jsonPath("$.[0].attachments[0].contentUrl").value(attachment.getContentUrl()))
-               .andExpect(jsonPath("$.[0].attachments[0].description").value(attachment.getDescription()))
-               .andExpect(jsonPath("$.[0].attachments[0].startDate").value(sameInstant(attachment.getStartDate())))
-               .andExpect(jsonPath("$.[0].attachments[0].endDate").value(sameInstant(attachment.getEndDate())))
-               .andExpect(jsonPath("$.[0].attachments[0].valueContentType").value(attachment.getValueContentType()))
-               .andExpect(jsonPath("$.[0].attachments[0].valueContentSize").value(attachment.getValueContentSize()))
-               .andExpect(jsonPath("$.[0].attachments[0].xmEntity").value(attachment.getXmEntity().getId()))
+            .andExpect(jsonPath("$.[0].attachments[0].id").value(notNullValue()))
+            .andExpect(jsonPath("$.[0].attachments[0].typeKey").value(attachment.getTypeKey()))
+            .andExpect(jsonPath("$.[0].attachments[0].name").value(attachment.getName()))
+            .andExpect(jsonPath("$.[0].attachments[0].contentUrl").value(attachment.getContentUrl()))
+            .andExpect(jsonPath("$.[0].attachments[0].description").value(attachment.getDescription()))
+            .andExpect(jsonPath("$.[0].attachments[0].startDate").value(sameInstant(attachment.getStartDate())))
+            .andExpect(jsonPath("$.[0].attachments[0].endDate").value(sameInstant(attachment.getEndDate())))
+            .andExpect(jsonPath("$.[0].attachments[0].valueContentType").value(attachment.getValueContentType()))
+            .andExpect(jsonPath("$.[0].attachments[0].valueContentSize").value(attachment.getValueContentSize()))
+            .andExpect(jsonPath("$.[0].attachments[0].xmEntity").value(attachment.getXmEntity().getId()))
 
-               .andExpect(jsonPath("$.[0].locations[0].id").value(notNullValue()))
-               .andExpect(jsonPath("$.[0].locations[0].typeKey").value(location.getTypeKey()))
-               .andExpect(jsonPath("$.[0].locations[0].name").value(location.getName()))
-               .andExpect(jsonPath("$.[0].locations[0].countryKey").value(location.getCountryKey()))
-               .andExpect(jsonPath("$.[0].locations[0].xmEntity").value(location.getXmEntity().getId()));
+            .andExpect(jsonPath("$.[0].locations[0].id").value(notNullValue()))
+            .andExpect(jsonPath("$.[0].locations[0].typeKey").value(location.getTypeKey()))
+            .andExpect(jsonPath("$.[0].locations[0].name").value(location.getName()))
+            .andExpect(jsonPath("$.[0].locations[0].countryKey").value(location.getCountryKey()))
+            .andExpect(jsonPath("$.[0].locations[0].xmEntity").value(location.getXmEntity().getId()));
     }
 
     @SneakyThrows
@@ -276,10 +275,10 @@ public class ElasticsearchIndexResourceIntTest extends AbstractSpringBootTest {
         });
 
         mockMvc.perform(get("/api/_search/xm-entities?query=id:{id}", id))
-               .andExpect(status().isOk())
-               .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
-               .andExpect(jsonPath("$").isArray())
-               .andExpect(jsonPath("$").isEmpty())
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+            .andExpect(jsonPath("$").isArray())
+            .andExpect(jsonPath("$").isEmpty())
         ;
     }
 
@@ -295,11 +294,11 @@ public class ElasticsearchIndexResourceIntTest extends AbstractSpringBootTest {
         });
 
         mockMvc.perform(get("/api/_search/xm-entities?query=id:{id}", id))
-               .andExpect(status().isOk())
-               .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
-               .andExpect(jsonPath("$").isArray())
-               .andExpect(jsonPath("$").isNotEmpty())
-               .andExpect(jsonPath("$.[0].id").value(id))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+            .andExpect(jsonPath("$").isArray())
+            .andExpect(jsonPath("$").isNotEmpty())
+            .andExpect(jsonPath("$.[0].id").value(id))
         ;
     }
 
@@ -315,11 +314,11 @@ public class ElasticsearchIndexResourceIntTest extends AbstractSpringBootTest {
         });
 
         mockMvc.perform(get("/api/_search/xm-entities?query=id:{id}", id))
-               .andExpect(status().isOk())
-               .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
-               .andExpect(jsonPath("$").isArray())
-               .andExpect(jsonPath("$").isNotEmpty())
-               .andExpect(jsonPath("$.[0].id").value(id))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+            .andExpect(jsonPath("$").isArray())
+            .andExpect(jsonPath("$").isNotEmpty())
+            .andExpect(jsonPath("$.[0].id").value(id))
         ;
 
         transactionExecutor.doInSeparateTransaction(() -> {
@@ -329,11 +328,11 @@ public class ElasticsearchIndexResourceIntTest extends AbstractSpringBootTest {
         });
 
         mockMvc.perform(get("/api/_search/xm-entities?query=id:{id}", id))
-               .andExpect(status().isOk())
-               .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
-               .andExpect(jsonPath("$").isArray())
-               .andExpect(jsonPath("$").isNotEmpty())
-               .andExpect(jsonPath("$.[0].id").value(id))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+            .andExpect(jsonPath("$").isArray())
+            .andExpect(jsonPath("$").isNotEmpty())
+            .andExpect(jsonPath("$.[0].id").value(id))
         ;
     }
 
@@ -349,11 +348,11 @@ public class ElasticsearchIndexResourceIntTest extends AbstractSpringBootTest {
         });
 
         mockMvc.perform(get("/api/_search/xm-entities?query=id:{id}", id))
-               .andExpect(status().isOk())
-               .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
-               .andExpect(jsonPath("$").isArray())
-               .andExpect(jsonPath("$").isNotEmpty())
-               .andExpect(jsonPath("$.[0].id").value(id))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+            .andExpect(jsonPath("$").isArray())
+            .andExpect(jsonPath("$").isNotEmpty())
+            .andExpect(jsonPath("$.[0].id").value(id))
         ;
 
         transactionExecutor.doInSeparateTransaction(() -> {
@@ -363,10 +362,10 @@ public class ElasticsearchIndexResourceIntTest extends AbstractSpringBootTest {
         });
 
         mockMvc.perform(get("/api/_search/xm-entities?query=id:{id}", id))
-               .andExpect(status().isOk())
-               .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
-               .andExpect(jsonPath("$").isArray())
-               .andExpect(jsonPath("$").isEmpty())
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+            .andExpect(jsonPath("$").isArray())
+            .andExpect(jsonPath("$").isEmpty())
         ;
     }
 
@@ -390,12 +389,12 @@ public class ElasticsearchIndexResourceIntTest extends AbstractSpringBootTest {
         assertEquals(3L, reindexed);
 
         mockMvc.perform(get("/api/_search/xm-entities?query=*:*"))
-               .andExpect(status().isOk())
-               .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
-               .andExpect(jsonPath("$").isArray())
-               .andExpect(jsonPath("$").value(hasSize(3)))
-               .andExpect(jsonPath("$.[*].id")
-                              .value(containsInAnyOrder(id1.intValue(), id2.intValue(), id3.intValue())))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+            .andExpect(jsonPath("$").isArray())
+            .andExpect(jsonPath("$").value(hasSize(3)))
+            .andExpect(jsonPath("$.[*].id")
+                .value(containsInAnyOrder(id1.intValue(), id2.intValue(), id3.intValue())))
         ;
 
         xmEntityRepositoryInternal.deleteAll();
@@ -409,11 +408,11 @@ public class ElasticsearchIndexResourceIntTest extends AbstractSpringBootTest {
         assertEquals(2L, reindexed);
 
         mockMvc.perform(get("/api/_search/xm-entities?query=*:*"))
-               .andExpect(status().isOk())
-               .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
-               .andExpect(jsonPath("$").isArray())
-               .andExpect(jsonPath("$").value(hasSize(2)))
-               .andExpect(jsonPath("$.[*].id").value(containsInAnyOrder(id4.intValue(), id5.intValue())))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+            .andExpect(jsonPath("$").isArray())
+            .andExpect(jsonPath("$").value(hasSize(2)))
+            .andExpect(jsonPath("$.[*].id").value(containsInAnyOrder(id4.intValue(), id5.intValue())))
         ;
     }
 
@@ -433,12 +432,12 @@ public class ElasticsearchIndexResourceIntTest extends AbstractSpringBootTest {
         assertEquals(2L, reindexed);
 
         mockMvc.perform(get("/api/_search/xm-entities?query=*:*"))
-               .andExpect(status().isOk())
-               .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
-               .andExpect(jsonPath("$").isArray())
-               .andExpect(jsonPath("$").value(hasSize(2)))
-               .andExpect(jsonPath("$.[0].typeKey").value(DEFAULT_TYPE_KEY))
-               .andExpect(jsonPath("$.[1].typeKey").value(DEFAULT_TYPE_KEY))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+            .andExpect(jsonPath("$").isArray())
+            .andExpect(jsonPath("$").value(hasSize(2)))
+            .andExpect(jsonPath("$.[0].typeKey").value(DEFAULT_TYPE_KEY))
+            .andExpect(jsonPath("$.[1].typeKey").value(DEFAULT_TYPE_KEY))
         ;
     }
 
@@ -458,12 +457,12 @@ public class ElasticsearchIndexResourceIntTest extends AbstractSpringBootTest {
         assertEquals(2L, reindexed);
 
         mockMvc.perform(get("/api/_search/xm-entities?query=*:*"))
-               .andExpect(status().isOk())
-               .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
-               .andExpect(jsonPath("$").isArray())
-               .andExpect(jsonPath("$").value(hasSize(2)))
-               .andExpect(jsonPath("$.[0].typeKey").value(DEFAULT_TYPE_KEY))
-               .andExpect(jsonPath("$.[1].typeKey").value(DEFAULT_TYPE_KEY))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+            .andExpect(jsonPath("$").isArray())
+            .andExpect(jsonPath("$").value(hasSize(2)))
+            .andExpect(jsonPath("$.[0].typeKey").value(DEFAULT_TYPE_KEY))
+            .andExpect(jsonPath("$.[1].typeKey").value(DEFAULT_TYPE_KEY))
         ;
     }
 
@@ -514,12 +513,12 @@ public class ElasticsearchIndexResourceIntTest extends AbstractSpringBootTest {
         assertEquals(2L, reindexed);
 
         mockMvc.perform(get("/api/_search/xm-entities?query=*:*"))
-               .andExpect(status().isOk())
-               .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
-               .andExpect(jsonPath("$").isArray())
-               .andExpect(jsonPath("$").value(hasSize(2)))
-               .andExpect(jsonPath("$.[*].id")
-                              .value(containsInAnyOrder(id1.intValue(),id3.intValue())))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+            .andExpect(jsonPath("$").isArray())
+            .andExpect(jsonPath("$").value(hasSize(2)))
+            .andExpect(jsonPath("$.[*].id")
+                .value(containsInAnyOrder(id1.intValue(), id3.intValue())))
         ;
     }
 
@@ -542,12 +541,12 @@ public class ElasticsearchIndexResourceIntTest extends AbstractSpringBootTest {
         assertEquals(2L, reindexed);
 
         mockMvc.perform(get("/api/_search/xm-entities?query=*:*"))
-               .andExpect(status().isOk())
-               .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
-               .andExpect(jsonPath("$").isArray())
-               .andExpect(jsonPath("$").value(hasSize(2)))
-               .andExpect(jsonPath("$.[*].id")
-                              .value(containsInAnyOrder(id1.intValue(),id3.intValue())))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+            .andExpect(jsonPath("$").isArray())
+            .andExpect(jsonPath("$").value(hasSize(2)))
+            .andExpect(jsonPath("$.[*].id")
+                .value(containsInAnyOrder(id1.intValue(), id3.intValue())))
         ;
     }
 
@@ -600,24 +599,24 @@ public class ElasticsearchIndexResourceIntTest extends AbstractSpringBootTest {
         assertEquals(2L, reindexed);
 
         mockMvc.perform(get("/api/_search/xm-entities?query=*:*"))
-               .andExpect(status().isOk())
-               .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
-               .andExpect(jsonPath("$").isArray())
-               .andExpect(jsonPath("$").value(hasSize(2)))
-               .andExpect(jsonPath("$.[*].id")
-                              .value(containsInAnyOrder(id1.intValue(), id2.intValue())))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+            .andExpect(jsonPath("$").isArray())
+            .andExpect(jsonPath("$").value(hasSize(2)))
+            .andExpect(jsonPath("$.[*].id")
+                .value(containsInAnyOrder(id1.intValue(), id2.intValue())))
         ;
 
         reindexed = elasticsearchIndexService.reindexByIds(Lists.newArrayList(id3));
         assertEquals(1L, reindexed);
 
         mockMvc.perform(get("/api/_search/xm-entities?query=*:*"))
-               .andExpect(status().isOk())
-               .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
-               .andExpect(jsonPath("$").isArray())
-               .andExpect(jsonPath("$").value(hasSize(3)))
-               .andExpect(jsonPath("$.[*].id")
-                              .value(containsInAnyOrder(id1.intValue(), id2.intValue(), id3.intValue())))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+            .andExpect(jsonPath("$").isArray())
+            .andExpect(jsonPath("$").value(hasSize(3)))
+            .andExpect(jsonPath("$.[*].id")
+                .value(containsInAnyOrder(id1.intValue(), id2.intValue(), id3.intValue())))
         ;
     }
 
@@ -641,15 +640,15 @@ public class ElasticsearchIndexResourceIntTest extends AbstractSpringBootTest {
         assertEquals(2L, reindexed);
 
         mockMvc.perform(get("/api/_search/xm-entities?query=*:*"))
-               .andExpect(status().isOk())
-               .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
-               .andExpect(jsonPath("$").isArray())
-               .andExpect(jsonPath("$").value(hasSize(2)))
-               .andExpect(jsonPath("$.[*].id")
-                              .value(containsInAnyOrder(xmEntity1.getId().intValue(),
-                                                        xmEntity2.getId().intValue())))
-               .andExpect(jsonPath("$.[*].name")
-                              .value(containsInAnyOrder(DEFAULT_NAME, DEFAULT_NAME)))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+            .andExpect(jsonPath("$").isArray())
+            .andExpect(jsonPath("$").value(hasSize(2)))
+            .andExpect(jsonPath("$.[*].id")
+                .value(containsInAnyOrder(xmEntity1.getId().intValue(),
+                    xmEntity2.getId().intValue())))
+            .andExpect(jsonPath("$.[*].name")
+                .value(containsInAnyOrder(DEFAULT_NAME, DEFAULT_NAME)))
 
         ;
 
@@ -659,30 +658,30 @@ public class ElasticsearchIndexResourceIntTest extends AbstractSpringBootTest {
         assertEquals(2L, reindexed);
 
         mockMvc.perform(get("/api/_search/xm-entities?query=*:*"))
-               .andExpect(status().isOk())
-               .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
-               .andExpect(jsonPath("$").isArray())
-               .andExpect(jsonPath("$").value(hasSize(2)))
-               .andExpect(jsonPath("$.[*].id")
-                              .value(containsInAnyOrder(xmEntity1.getId().intValue(),
-                                                        xmEntity2.getId().intValue())))
-               .andExpect(jsonPath("$.[*].name")
-                              .value(containsInAnyOrder("new name 1", DEFAULT_NAME)))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+            .andExpect(jsonPath("$").isArray())
+            .andExpect(jsonPath("$").value(hasSize(2)))
+            .andExpect(jsonPath("$.[*].id")
+                .value(containsInAnyOrder(xmEntity1.getId().intValue(),
+                    xmEntity2.getId().intValue())))
+            .andExpect(jsonPath("$.[*].name")
+                .value(containsInAnyOrder("new name 1", DEFAULT_NAME)))
         ;
     }
 
     private void assertIndexIsEmpty() throws Exception {
         mockMvc.perform(get("/api/_search/xm-entities?query=*:*"))
-               .andExpect(status().isOk())
-               .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
-               .andExpect(jsonPath("$").isArray())
-               .andExpect(jsonPath("$").isEmpty())
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+            .andExpect(jsonPath("$").isArray())
+            .andExpect(jsonPath("$").isEmpty())
         ;
     }
 
     private void reindexWithRestApi() throws Exception {
         mockMvc.perform(post("/api/elasticsearch/index"))
-               .andExpect(status().isAccepted());
+            .andExpect(status().isAccepted());
     }
 
     private void autoIndexDisable() {
