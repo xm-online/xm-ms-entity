@@ -59,6 +59,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.persistence.EntityManager;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.Executor;
@@ -131,6 +132,9 @@ public class ElasticsearchIndexResourceIntTest extends AbstractSpringBootTest {
     @Autowired
     private SeparateTransactionExecutor transactionExecutor;
 
+    @Autowired
+    private EntityManager entityManager;
+
     private ElasticsearchIndexService elasticsearchIndexService;
 
     @Mock
@@ -170,7 +174,8 @@ public class ElasticsearchIndexResourceIntTest extends AbstractSpringBootTest {
                                                                   tenantContextHolder,
                                                                   mappingConfiguration,
                                                                   indexConfiguration,
-                                                                  executor);
+                                                                  executor,
+                                                                  entityManager);
 
         elasticsearchIndexService.setSelfReference(elasticsearchIndexService);
 

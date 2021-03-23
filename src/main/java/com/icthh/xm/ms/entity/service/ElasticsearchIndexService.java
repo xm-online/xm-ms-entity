@@ -16,7 +16,6 @@ import com.icthh.xm.ms.entity.repository.search.XmEntitySearchRepository;
 import lombok.AccessLevel;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.elasticsearch.ResourceAlreadyExistsException;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -46,6 +45,7 @@ import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.Resource;
+import javax.persistence.EntityManager;
 import javax.persistence.OneToMany;
 import javax.persistence.criteria.CriteriaBuilder;
 
@@ -65,6 +65,7 @@ public class ElasticsearchIndexService {
     private final MappingConfiguration mappingConfiguration;
     private final IndexConfiguration indexConfiguration;
     private final Executor executor;
+    private final EntityManager entityManager;
 
     @Setter(AccessLevel.PACKAGE)
     @Resource
@@ -77,7 +78,8 @@ public class ElasticsearchIndexService {
                                      TenantContextHolder tenantContextHolder,
                                      MappingConfiguration mappingConfiguration,
                                      IndexConfiguration indexConfiguration,
-                                     @Qualifier("taskExecutor") Executor executor) {
+                                     @Qualifier("taskExecutor") Executor executor,
+                                     EntityManager entityManager) {
         this.xmEntityRepositoryInternal = xmEntityRepositoryInternal;
         this.xmEntitySearchRepository = xmEntitySearchRepository;
         this.elasticsearchTemplate = elasticsearchTemplate;
@@ -85,6 +87,7 @@ public class ElasticsearchIndexService {
         this.mappingConfiguration = mappingConfiguration;
         this.indexConfiguration = indexConfiguration;
         this.executor = executor;
+        this.entityManager = entityManager;
     }
 
     /**
