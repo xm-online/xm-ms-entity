@@ -19,6 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.elasticsearch.ResourceAlreadyExistsException;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Page;
@@ -46,6 +47,7 @@ import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.Resource;
+import javax.persistence.EntityManager;
 import javax.persistence.OneToMany;
 import javax.persistence.criteria.CriteriaBuilder;
 
@@ -86,6 +88,9 @@ public class ElasticsearchIndexService {
         this.indexConfiguration = indexConfiguration;
         this.executor = executor;
     }
+
+    @Autowired
+    private EntityManager entityManager;
 
     /**
      * Recreates index and then reindexes ALL entities from database asynchronously.
