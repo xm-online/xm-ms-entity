@@ -170,7 +170,7 @@ public class ElasticsearchIndexResourceIntTest extends AbstractSpringBootTest {
                                                                   tenantContextHolder,
                                                                   mappingConfiguration,
                                                                   indexConfiguration,
-                                                                  executor);
+                                                                  executor, entityManager);
 
         elasticsearchIndexService.setSelfReference(elasticsearchIndexService);
 

@@ -78,7 +78,8 @@ public class ElasticsearchIndexService {
                                      TenantContextHolder tenantContextHolder,
                                      MappingConfiguration mappingConfiguration,
                                      IndexConfiguration indexConfiguration,
-                                     @Qualifier("taskExecutor") Executor executor) {
+                                     @Qualifier("taskExecutor") Executor executor,
+                                     EntityManager entityManager) {
         this.xmEntityRepositoryInternal = xmEntityRepositoryInternal;
         this.xmEntitySearchRepository = xmEntitySearchRepository;
         this.elasticsearchTemplate = elasticsearchTemplate;
@@ -86,6 +87,7 @@ public class ElasticsearchIndexService {
         this.mappingConfiguration = mappingConfiguration;
         this.indexConfiguration = indexConfiguration;
         this.executor = executor;
+        this.entityManager = entityManager;
     }
 
     /**
