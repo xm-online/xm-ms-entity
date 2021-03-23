@@ -18,7 +18,7 @@ import java.util.Set;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({"key", "name", "namePattern", "nameValidationPattern", "descriptionPattern", "pluralName", "isApp", "isAbstract",
     "isAvatarEnabled", "isKeyRequired", "isNameRequired", "fastSearch", "icon", "dataSpec", "dataForm", "functions", "access", "attachments", "calendars",
-    "links", "locations", "ratings", "states", "tags"})
+    "links", "locations", "ratings", "states", "tags", "dataSpecInheritance", "dataFormInheritance"})
 @Data
 @Builder(toBuilder = true)
 @AllArgsConstructor
@@ -101,6 +101,12 @@ public class TypeSpec {
     @Builder.Default
     @JsonProperty("ignoreInheritanceFor")
     private Set<String> ignoreInheritanceFor = new HashSet<>();
+    @Builder.Default
+    @JsonProperty("dataSpecInheritance")
+    private Boolean dataSpecInheritance = null;
+    @Builder.Default
+    @JsonProperty("dataFormInheritance")
+    private Boolean dataFormInheritance = null;
 
     public Optional<LinkSpec> findLinkSpec(String typeKey) {
         if (links == null) {
