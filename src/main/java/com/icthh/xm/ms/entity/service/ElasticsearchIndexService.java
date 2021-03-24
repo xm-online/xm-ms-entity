@@ -31,6 +31,7 @@ import javax.annotation.Nullable;
 import javax.annotation.Resource;
 import javax.persistence.EntityManager;
 import javax.persistence.OneToMany;
+import javax.persistence.PersistenceContext;
 import javax.persistence.criteria.CriteriaBuilder;
 import java.beans.IntrospectionException;
 import java.beans.PropertyDescriptor;
@@ -65,6 +66,8 @@ public class ElasticsearchIndexService {
     private final MappingConfiguration mappingConfiguration;
     private final IndexConfiguration indexConfiguration;
     private final Executor executor;
+
+    @PersistenceContext
     private final EntityManager entityManager;
 
     @Setter(AccessLevel.PACKAGE)
@@ -150,7 +153,6 @@ public class ElasticsearchIndexService {
      * @return number of reindexed entities.
      */
     @Timed
-    @Transactional(readOnly = true)
     public long reindexAll() {
         long reindexed = 0L;
         if (reindexLock.tryLock()) {
@@ -250,28 +252,23 @@ public class ElasticsearchIndexService {
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());
 
-            for (int i = startFrom; i <= xmEntityRepositoryInternal.count(spec) / PAGE_SIZE; i++) {
-                Pageable page = PageRequest.of(i, PAGE_SIZE);
-                log.info("Indexing page {} of {}, pageSize {}", i, xmEntityRepositoryInternal.count(spec) / PAGE_SIZE, PAGE_SIZE);
-                Page<XmEntity> results = xmEntityRepositoryInternal.findAll(spec, page);
-                //results.map(entity -> loadEntityRelationships(relationshipGetters, entity));
-                xmEntitySearchRepository.saveAll(results.getContent());
-                reindexed += results.getContent().size();
-                try {
-                    results.forEach(xmEntity -> {
-                        entityManager.detach(xmEntity);
-                       // xmEntity.getAttachments().forEach(entityManager::detach);
-                    });
-                } catch (Exception e) {
-                    log.error("error", e);
-                }
-
+            for (int pageNumber = startFrom; pageNumber <= xmEntityRepositoryInternal.count(spec) / PAGE_SIZE; pageNumber++) {
+                indexPage(spec, relationshipGetters, pageNumber);
             }
         }
         log.info("Elasticsearch: Indexed [{}] rows for {} in {} ms",
             reindexed, clazz.getSimpleName(), stopWatch.getTime());
         return reindexed;
 
+    }
+
+    @Transactional(readOnly = true)
+    private void indexPage(@Nullable Specification<XmEntity> spec, List<Method> relationshipGetters, int i) {
+        Pageable page = PageRequest.of(i, PAGE_SIZE);
+        log.info("Indexing page {} of {}, pageSize {}", i, xmEntityRepositoryInternal.count(spec) / PAGE_SIZE, PAGE_SIZE);
+        Page<XmEntity> results = xmEntityRepositoryInternal.findAll(spec, page);
+        results.map(entity -> loadEntityRelationships(relationshipGetters, entity));
+        xmEntitySearchRepository.saveAll(results.getContent());
     }
 
     private void recreateIndex() {
