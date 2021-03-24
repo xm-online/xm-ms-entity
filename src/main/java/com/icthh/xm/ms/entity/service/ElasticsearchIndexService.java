@@ -254,7 +254,7 @@ public class ElasticsearchIndexService {
                 Pageable page = PageRequest.of(i, PAGE_SIZE);
                 log.info("Indexing page {} of {}, pageSize {}", i, xmEntityRepositoryInternal.count(spec) / PAGE_SIZE, PAGE_SIZE);
                 Page<XmEntity> results = xmEntityRepositoryInternal.findAll(spec, page);
-                results.map(entity -> loadEntityRelationships(relationshipGetters, entity));
+                //results.map(entity -> loadEntityRelationships(relationshipGetters, entity));
                 xmEntitySearchRepository.saveAll(results.getContent());
                 reindexed += results.getContent().size();
                 try {
