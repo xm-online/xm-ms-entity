@@ -260,7 +260,7 @@ public class ElasticsearchIndexService {
                 try {
                     results.forEach(xmEntity -> {
                         entityManager.detach(xmEntity);
-                        xmEntity.getAttachments().forEach(entityManager::detach);
+                       // xmEntity.getAttachments().forEach(entityManager::detach);
                     });
                 } catch (Exception e) {
                     log.error("error", e);
