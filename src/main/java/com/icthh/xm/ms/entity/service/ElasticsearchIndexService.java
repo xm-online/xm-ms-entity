@@ -153,6 +153,7 @@ public class ElasticsearchIndexService {
      * @return number of reindexed entities.
      */
     @Timed
+    @Transactional(readOnly = true)
     public long reindexAll() {
         long reindexed = 0L;
         if (reindexLock.tryLock()) {
@@ -262,7 +263,6 @@ public class ElasticsearchIndexService {
 
     }
 
-    @Transactional(readOnly = true)
     private void indexPage(@Nullable Specification<XmEntity> spec, List<Method> relationshipGetters, int i) {
         Pageable page = PageRequest.of(i, PAGE_SIZE);
         log.info("Indexing page {} of {}, pageSize {}", i, xmEntityRepositoryInternal.count(spec) / PAGE_SIZE, PAGE_SIZE);
