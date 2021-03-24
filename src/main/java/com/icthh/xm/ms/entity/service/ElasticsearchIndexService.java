@@ -68,7 +68,7 @@ public class ElasticsearchIndexService {
     private final Executor executor;
 
     @PersistenceContext
-    private final EntityManager entityManager;
+    private EntityManager entityManager;
 
     @Setter(AccessLevel.PACKAGE)
     @Resource
@@ -81,8 +81,7 @@ public class ElasticsearchIndexService {
                                      TenantContextHolder tenantContextHolder,
                                      MappingConfiguration mappingConfiguration,
                                      IndexConfiguration indexConfiguration,
-                                     @Qualifier("taskExecutor") Executor executor,
-                                     EntityManager entityManager) {
+                                     @Qualifier("taskExecutor") Executor executor) {
         this.xmEntityRepositoryInternal = xmEntityRepositoryInternal;
         this.xmEntitySearchRepository = xmEntitySearchRepository;
         this.elasticsearchTemplate = elasticsearchTemplate;
@@ -90,7 +89,6 @@ public class ElasticsearchIndexService {
         this.mappingConfiguration = mappingConfiguration;
         this.indexConfiguration = indexConfiguration;
         this.executor = executor;
-        this.entityManager = entityManager;
     }
 
     /**
@@ -269,6 +267,7 @@ public class ElasticsearchIndexService {
         Page<XmEntity> results = xmEntityRepositoryInternal.findAll(spec, page);
         results.map(entity -> loadEntityRelationships(relationshipGetters, entity));
         xmEntitySearchRepository.saveAll(results.getContent());
+        entityManager.clear();
     }
 
     private void recreateIndex() {
