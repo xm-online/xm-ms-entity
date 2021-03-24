@@ -14,12 +14,15 @@ import static com.icthh.xm.ms.entity.domain.ext.TypeSpecParameter.STATES;
 import static com.icthh.xm.ms.entity.domain.ext.TypeSpecParameter.TAGS;
 import static com.icthh.xm.ms.entity.util.CustomCollectionUtils.nullSafe;
 import static com.icthh.xm.ms.entity.util.CustomCollectionUtils.union;
+import static java.lang.Boolean.FALSE;
+import static java.lang.Boolean.TRUE;
 import static java.util.Collections.emptyList;
 import static java.util.Optional.ofNullable;
 import static org.springframework.util.CollectionUtils.isEmpty;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.module.jsonSchema.JsonSchema;
@@ -37,6 +40,8 @@ import com.icthh.xm.commons.logging.aop.IgnoreLogginAspect;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
 import com.icthh.xm.ms.entity.config.ApplicationProperties;
+import com.icthh.xm.ms.entity.config.XmEntityTenantConfigService;
+import com.icthh.xm.ms.entity.config.XmEntityTenantConfigService.XmEntityTenantConfig;
 import com.icthh.xm.ms.entity.domain.ext.TypeSpecParameter;
 import com.icthh.xm.ms.entity.domain.spec.AttachmentSpec;
 import com.icthh.xm.ms.entity.domain.spec.CalendarSpec;
@@ -87,6 +92,7 @@ public class XmEntitySpecService implements RefreshableConfiguration {
     private static final String TYPE_SEPARATOR_REGEXP = "\\.";
     private static final String TYPE_SEPARATOR = ".";
     private static final String TENANT_NAME = "tenantName";
+    private static final String XM_ENTITY_DEFINITION = "xmEntityDefinition";
     private final AntPathMatcher matcher = new AntPathMatcher();
 
     private final ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
@@ -98,6 +104,7 @@ public class XmEntitySpecService implements RefreshableConfiguration {
     private final TenantContextHolder tenantContextHolder;
     private final EntityCustomPrivilegeService entityCustomPrivilegeService;
     private final DynamicPermissionCheckService dynamicPermissionCheckService;
+    private final XmEntityTenantConfigService tenantConfigService;
 
     /**
      * Search of all entity Type specifications.
@@ -179,7 +186,7 @@ public class XmEntitySpecService implements RefreshableConfiguration {
         }
 
         XmEntitySpec spec = mapper.readValue(config, XmEntitySpec.class);
-        Map<String, TypeSpec> value = toTypeSpecsMap(spec);
+        Map<String, TypeSpec> value = toTypeSpecsMap(spec, tenant);
         byFiles.put(updatedKey, value);
     }
 
@@ -491,7 +498,7 @@ public class XmEntitySpecService implements RefreshableConfiguration {
         return TenantContextUtils.getRequiredTenantKeyValue(tenantContextHolder);
     }
 
-    private Map<String, TypeSpec> toTypeSpecsMap(XmEntitySpec xmEntitySpec) {
+    private Map<String, TypeSpec> toTypeSpecsMap(XmEntitySpec xmEntitySpec, String tenant) {
         List<TypeSpec> typeSpecs = xmEntitySpec.getTypes();
         if (isEmpty(typeSpecs)) {
             return Collections.emptyMap();
@@ -504,7 +511,7 @@ public class XmEntitySpecService implements RefreshableConfiguration {
                     }, LinkedHashMap::new));
 
             // add inheritance
-            inheritance(result);
+            inheritance(result, tenant);
             processUniqueFields(result);
 
             return result;
@@ -515,7 +522,7 @@ public class XmEntitySpecService implements RefreshableConfiguration {
      * XM Entity Type specifications support inheritance based on key hierarchy
      * with data extension.
      */
-    private void inheritance(Map<String, TypeSpec> types) {
+    private void inheritance(Map<String, TypeSpec> types, String tenant) {
         List<String> keys = types.keySet().stream()
             .sorted(Comparator.comparingInt(k -> k.split(TYPE_SEPARATOR_REGEXP).length))
             .collect(Collectors.toList());
@@ -525,7 +532,7 @@ public class XmEntitySpecService implements RefreshableConfiguration {
                 TypeSpec type = types.get(key);
                 TypeSpec parentType = types.get(StringUtils.substringBeforeLast(key, TYPE_SEPARATOR));
                 if (parentType != null) {
-                    types.put(key, extend(type, parentType));
+                    types.put(key, extend(type, parentType, tenant));
                 }
             }
         }
@@ -538,10 +545,10 @@ public class XmEntitySpecService implements RefreshableConfiguration {
      * @param parentType parent entity Type specification for cloning
      * @return entity Type specification that extended from parent Type
      */
-    private static TypeSpec extend(TypeSpec type, TypeSpec parentType) {
+    private TypeSpec extend(TypeSpec type, TypeSpec parentType, String tenant) {
         type.setIcon(type.getIcon() != null ? type.getIcon() : parentType.getIcon());
-        type.setDataSpec(type.getDataSpec() != null ? type.getDataSpec() : parentType.getDataSpec());
-        type.setDataForm(type.getDataForm() != null ? type.getDataForm() : parentType.getDataForm());
+        extendDataSpec(type, parentType, tenant);
+        extendDataForm(type, parentType, tenant);
         type.setAccess(ignorableUnion(ACCESS, type, parentType));
         type.setAttachments(ignorableUnion(ATTACHMENTS, type, parentType));
         type.setCalendars(ignorableUnion(CALENDARS, type, parentType));
@@ -552,6 +559,54 @@ public class XmEntitySpecService implements RefreshableConfiguration {
         type.setStates(ignorableUnion(STATES, type, parentType));
         type.setTags(ignorableUnion(TAGS, type, parentType));
         return type;
+    }
+
+    @SneakyThrows
+    private void extendDataSpec(TypeSpec type, TypeSpec parentType, String tenant) {
+        XmEntityTenantConfig entityTenantConfig = this.tenantConfigService.getXmEntityTenantConfig(tenant);
+        Boolean isInheritanceEnabled = entityTenantConfig.getEntitySpec().getEnableDataSpecInheritance();
+        if (isFeatureEnabled(isInheritanceEnabled, type.getDataSpecInheritance()) && hasDataSpec(type, parentType)) {
+            ObjectMapper objectMapper = new ObjectMapper();
+            var target = objectMapper.readValue(type.getDataSpec(), Map.class);
+            var parent = objectMapper.readValue(parentType.getDataSpec(), Map.class);
+            if (parent.containsKey("additionalProperties")) {
+                parent.put("additionalProperties", true);
+            }
+            target.put(XM_ENTITY_DEFINITION, Map.of(parentType.getKey(), parent));
+            target.put("$ref", "#/" + XM_ENTITY_DEFINITION + "/" + parentType.getKey());
+            String mergedJson = objectMapper.writeValueAsString(target);
+            type.setDataSpec(mergedJson);
+        } else {
+            type.setDataSpec(type.getDataSpec() != null ? type.getDataSpec() : parentType.getDataSpec());
+        }
+    }
+
+    private boolean hasDataSpec(TypeSpec type, TypeSpec parentType) {
+        return type.getDataSpec() != null && parentType.getDataSpec() != null;
+    }
+
+    private boolean isFeatureEnabled(Boolean tenantFlag, Boolean entityFlag) {
+        return TRUE.equals(entityFlag) || (TRUE.equals(tenantFlag) && !FALSE.equals(entityFlag));
+    }
+
+    private boolean hasDataForm(TypeSpec type, TypeSpec parentType) {
+        return type.getDataForm() != null && parentType.getDataForm() != null;
+    }
+
+    @SneakyThrows
+    private void extendDataForm(TypeSpec type, TypeSpec parentType, String tenant) {
+        XmEntityTenantConfig entityTenantConfig = this.tenantConfigService.getXmEntityTenantConfig(tenant);
+        Boolean isInheritanceEnabled = entityTenantConfig.getEntitySpec().getEnableDataFromInheritance();
+        if (isFeatureEnabled(isInheritanceEnabled, type.getDataFormInheritance()) && hasDataForm(type, parentType)) {
+            ObjectMapper objectMapper = new ObjectMapper();
+            var defaults = objectMapper.readValue(parentType.getDataForm(), Map.class);
+            ObjectReader updater = objectMapper.readerForUpdating(defaults);
+            Map<String, Object> merged = updater.readValue(type.getDataForm());
+            String mergedJson = objectMapper.writeValueAsString(merged);
+            type.setDataForm(mergedJson);
+        } else {
+            type.setDataForm(type.getDataForm() != null ? type.getDataForm() : parentType.getDataForm());
+        }
     }
 
     /**

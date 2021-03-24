@@ -103,6 +103,13 @@ public class XmEntityTenantConfigService extends TenantConfigService {
         public static class LepSetting {
             private Boolean enableInheritanceTypeKey = false;
         }
+
+        private EntitySpec entitySpec = new EntitySpec();
+        @Data
+        public static class EntitySpec {
+            private Boolean enableDataSpecInheritance = false;
+            private Boolean enableDataFromInheritance = false;
+        }
     }
 
 }

@@ -538,3 +538,83 @@ types:
       name: {en: "TEST EXPORT TARGET"}
       isApp: false
       isAbstract: false
+    - key: BASE_ENTITY
+      isApp: false
+      isAbstract: true
+      # language=JSON
+      dataSpec: |
+        {
+          "type" : "object",
+          "additionalProperties": false,
+          "properties" : {
+            "field1" : {"type" : "string" },
+            "object1": {
+              "type" : "object",
+              "properties" : {
+                "field2" : {"type" : "string" }
+              }
+            }
+          }
+        }
+      # language=JSON
+      dataForm: |
+        {
+          "form": [
+            {"key": "field1"},
+            {"key": "object1.field2"}
+          ]
+        }
+    - key: BASE_ENTITY.EXTENDS
+      isApp: false
+      isAbstract: false
+      # language=JSON
+      dataSpec: |
+        {
+          "type" : "object",
+          "additionalProperties": false,
+          "properties" : {
+            "field3" : {"type" : "string" },
+            "object1": {
+              "type" : "object",
+              "properties" : {
+                "field4" : {"type" : "string" }
+              }
+            }
+          }
+        }
+      # language=JSON
+      dataForm: |
+        {
+          "form": [
+            {"key": "field3"},
+            {"key": "object1.field4"}
+          ]
+        }
+    - key: BASE_ENTITY.EXTENDS_ENABLED
+      isApp: false
+      isAbstract: false
+      dataSpecInheritance: true
+      dataFormInheritance: true
+      # language=JSON
+      dataSpec: |
+        {
+          "type" : "object",
+          "additionalProperties": false,
+          "properties" : {
+            "field3" : {"type" : "string" },
+            "object1": {
+              "type" : "object",
+              "properties" : {
+                "field4" : {"type" : "string" }
+              }
+            }
+          }
+        }
+      # language=JSON
+      dataForm: |
+        {
+          "form": [
+            {"key": "field3"},
+            {"key": "object1.field4"}
+          ]
+        }
