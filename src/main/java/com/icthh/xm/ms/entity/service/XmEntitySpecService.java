@@ -174,6 +174,8 @@ public class XmEntitySpecService implements RefreshableConfiguration {
             typesByTenant.remove(tenant);
         }
         typesByTenant.put(tenant, tenantEntitySpec);
+        inheritance(tenantEntitySpec, tenant);
+        processUniqueFields(tenantEntitySpec);
         return tenantEntitySpec;
     }
 
@@ -509,11 +511,6 @@ public class XmEntitySpecService implements RefreshableConfiguration {
                     (u, v) -> {
                         throw new IllegalStateException(String.format("Duplicate key %s", u));
                     }, LinkedHashMap::new));
-
-            // add inheritance
-            inheritance(result, tenant);
-            processUniqueFields(result);
-
             return result;
         }
     }

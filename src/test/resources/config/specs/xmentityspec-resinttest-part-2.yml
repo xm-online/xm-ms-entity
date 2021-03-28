@@ -1,0 +1,30 @@
+---
+types:
+    - key: BASE_ENTITY.SEPARATE_FILE_EXTENDS_ENABLED
+      isApp: false
+      isAbstract: false
+      dataSpecInheritance: true
+      dataFormInheritance: true
+      # language=JSON
+      dataSpec: |
+        {
+          "type" : "object",
+          "additionalProperties": false,
+          "properties" : {
+            "field5" : {"type" : "string" },
+            "object1": {
+              "type" : "object",
+              "properties" : {
+                "field6" : {"type" : "string" }
+              }
+            }
+          }
+        }
+      # language=JSON
+      dataForm: |
+        {
+          "form": [
+            {"key": "field5"},
+            {"key": "object1.field6"}
+          ]
+        }
