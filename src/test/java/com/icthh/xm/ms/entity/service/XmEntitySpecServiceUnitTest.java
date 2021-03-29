@@ -66,6 +66,7 @@ import java.util.stream.Collectors;
 import static com.google.common.collect.ImmutableMap.of;
 import static com.google.common.collect.Maps.newHashMap;
 import static com.icthh.xm.ms.entity.config.Constants.REGEX_EOL;
+import static com.icthh.xm.ms.entity.config.TenantConfigMockConfiguration.getXmEntitySpec;
 import static com.icthh.xm.ms.entity.security.access.DynamicPermissionCheckService.CONFIG_SECTION;
 import static com.icthh.xm.ms.entity.util.CustomCollectionUtils.nullSafe;
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -92,7 +93,9 @@ public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
 
     private static final String TENANT = "TEST";
 
-    private static final String URL = "/config/tenants/{tenantName}/entity/specs/xmentityspecs.yml";
+    private static final String SPEC_FOLDER_URL = "/config/tenants/{tenantName}/entity/specs/xmentityspecs";
+
+    private static final String URL = SPEC_FOLDER_URL + ".yml";
 
     private static final String ROOT_KEY = "";
 
@@ -144,6 +147,7 @@ public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
 
         ApplicationProperties ap = new ApplicationProperties();
         ap.setSpecificationPathPattern(URL);
+        ap.setSpecificationFolderPathPattern(SPEC_FOLDER_URL + "/*");
         xmEntitySpecService = createXmEntitySpecService(ap, tenantContextHolder);
     }
 
@@ -561,6 +565,33 @@ public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
         verify(commonConfigRepository).getConfig(isNull(), eq(asList(privilegesPath)));
         verify(commonConfigRepository).updateConfigFullPath(refEq(new Configuration(privilegesPath, privileges)), isNull());
         verifyNoMoreInteractions(commonConfigRepository);
+    }
+
+    @Test
+    public void testExtendsWithSeparateFiles() {
+        String config = getXmEntitySpec("resinttest-part-2");
+        String key = SPEC_FOLDER_URL.replace("{tenantName}", "RESINTTEST") + "/file.yml";
+        xmEntitySpecService.onRefresh(key, config);
+
+        testExtendsDataSpec();
+
+        var bothEntityData = Map.of(
+                "field1", "field1value",
+                "field5", "field4value",
+                "object1", Map.of(
+                        "field2", "field2value",
+                        "field6", "field6value"
+                )
+        );
+
+        setExtendsFormAndSpec(false);
+        var typeSpecs = xmEntitySpecService.getTypeSpecs();
+        TypeSpec extendedEntity = typeSpecs.get("BASE_ENTITY.SEPARATE_FILE_EXTENDS_ENABLED");
+        assertTrue(validateByJsonSchema(extendedEntity.getDataSpec(), bothEntityData));
+
+        setExtendsFormAndSpec(true);
+        TypeSpec extendedEntityWithGlobalExtends = typeSpecs.get("BASE_ENTITY.SEPARATE_FILE_EXTENDS_ENABLED");
+        assertTrue(validateByJsonSchema(extendedEntityWithGlobalExtends.getDataSpec(), bothEntityData));
     }
 
     @Test
