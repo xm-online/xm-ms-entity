@@ -14,6 +14,7 @@ import static com.icthh.xm.ms.entity.domain.ext.TypeSpecParameter.STATES;
 import static com.icthh.xm.ms.entity.domain.ext.TypeSpecParameter.TAGS;
 import static com.icthh.xm.ms.entity.util.CustomCollectionUtils.nullSafe;
 import static com.icthh.xm.ms.entity.util.CustomCollectionUtils.union;
+import static com.icthh.xm.ms.entity.util.CustomCollectionUtils.uniqUnion;
 import static java.lang.Boolean.FALSE;
 import static java.lang.Boolean.TRUE;
 import static java.util.Collections.emptyList;
@@ -621,7 +622,7 @@ public class XmEntitySpecService implements RefreshableConfiguration {
         List<T> parameters = (List<T>) typeSpecParam.getParameterResolver().apply(type);
         List<T> parentParameters = (List<T>) typeSpecParam.getParameterResolver().apply(parentType);
         return type.getIgnoreInheritanceFor().contains(typeSpecParam.getType()) ?
-            parameters : union(parameters, parentParameters);
+            parameters : uniqUnion(parameters, parentParameters);
     }
 
     private TypeSpec filterFunctions(TypeSpec spec) {

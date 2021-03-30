@@ -4,6 +4,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import lombok.experimental.UtilityClass;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -62,6 +63,33 @@ public final class CustomCollectionUtils {
             result.addAll(list2);
         }
         return result;
+    }
+
+    /**
+     * Union for nullable lists with exclude duplicates by identity.
+     *
+     * @param list1 first list
+     * @param list2 second list
+     * @return concatenated list
+     */
+    public static <E> List<E> uniqUnion(final List<E> list1, final List<E> list2) {
+        List<E> union = union(list1, list2);
+        List<E> uniqUnion = new ArrayList<>();
+        for (int currentIndex = 0; currentIndex < union.size(); currentIndex++) {
+            if (!containsByIdentity(union, currentIndex)) {
+                uniqUnion.add(union.get(currentIndex));
+            }
+        }
+        return uniqUnion;
+    }
+
+    private static <E> boolean containsByIdentity(List<E> union, int current) {
+        for (int i = current + 1; i < union.size(); i++) {
+            if (union.get(current) == union.get(i)) {
+                return true;
+            }
+        }
+        return false;
     }
 
 }
