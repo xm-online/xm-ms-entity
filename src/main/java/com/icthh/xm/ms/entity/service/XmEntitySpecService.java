@@ -97,7 +97,7 @@ public class XmEntitySpecService implements RefreshableConfiguration {
 
     private final ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
     private final ConcurrentHashMap<String, Map<String, TypeSpec>> typesByTenant = new ConcurrentHashMap<>();
-    private final ConcurrentHashMap<String, Map<String, Map<String, TypeSpec>>> typesByTenantByFile = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, Map<String, String>> typesByTenantByFile = new ConcurrentHashMap<>();
 
     private final TenantConfigRepository tenantConfigRepository;
     private final ApplicationProperties applicationProperties;
@@ -169,7 +169,7 @@ public class XmEntitySpecService implements RefreshableConfiguration {
 
     private Map<String, TypeSpec> updateByTenantState(String tenant) {
         var tenantEntitySpec = new LinkedHashMap<String, TypeSpec>();
-        typesByTenantByFile.get(tenant).values().forEach(tenantEntitySpec::putAll);
+        typesByTenantByFile.get(tenant).values().stream().map(this::toTypeSpecsMap).forEach(tenantEntitySpec::putAll);
         if (tenantEntitySpec.isEmpty()) {
             typesByTenant.remove(tenant);
         }
@@ -187,9 +187,7 @@ public class XmEntitySpecService implements RefreshableConfiguration {
             return;
         }
 
-        XmEntitySpec spec = mapper.readValue(config, XmEntitySpec.class);
-        Map<String, TypeSpec> value = toTypeSpecsMap(spec, tenant);
-        byFiles.put(updatedKey, value);
+        byFiles.put(updatedKey, config);
     }
 
     @Override
@@ -500,7 +498,9 @@ public class XmEntitySpecService implements RefreshableConfiguration {
         return TenantContextUtils.getRequiredTenantKeyValue(tenantContextHolder);
     }
 
-    private Map<String, TypeSpec> toTypeSpecsMap(XmEntitySpec xmEntitySpec, String tenant) {
+    @SneakyThrows
+    private Map<String, TypeSpec> toTypeSpecsMap(String config) {
+        XmEntitySpec xmEntitySpec = mapper.readValue(config, XmEntitySpec.class);
         List<TypeSpec> typeSpecs = xmEntitySpec.getTypes();
         if (isEmpty(typeSpecs)) {
             return Collections.emptyMap();

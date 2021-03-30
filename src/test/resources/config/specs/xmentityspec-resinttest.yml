@@ -564,6 +564,8 @@ types:
             {"key": "object1.field2"}
           ]
         }
+      functions:
+        - key: TEST_FUNCTION_DUPLICATE
     - key: BASE_ENTITY.EXTENDS
       isApp: false
       isAbstract: false
