@@ -569,6 +569,23 @@ public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
 
     @Test
     public void testExtendsWithSeparateFiles() {
+        mockTenant("RESINTTEST");
+        String config = getXmEntitySpec("resinttest-part-2");
+        String key = SPEC_FOLDER_URL.replace("{tenantName}", "RESINTTEST") + "/file.yml";
+        xmEntitySpecService.onRefresh(key, config);
+        // refresh multiple times (important)
+        xmEntitySpecService.getTypeSpecs();
+        xmEntitySpecService.getTypeSpecs();
+        var typeSpecs = xmEntitySpecService.getTypeSpecs();
+
+        TypeSpec extendedEntity = typeSpecs.get("BASE_ENTITY.EXTENDS_ENABLED");
+        assertEquals(extendedEntity.getFunctions().size(), 1);
+        TypeSpec extendedEntityFromSeparateFile = typeSpecs.get("BASE_ENTITY.SEPARATE_FILE_EXTENDS_ENABLED");
+        assertEquals(extendedEntityFromSeparateFile.getFunctions().size(), 1);
+    }
+
+    @Test
+    public void testExtendsDataSpecWithSeparateFiles() {
         String config = getXmEntitySpec("resinttest-part-2");
         String key = SPEC_FOLDER_URL.replace("{tenantName}", "RESINTTEST") + "/file.yml";
         xmEntitySpecService.onRefresh(key, config);
