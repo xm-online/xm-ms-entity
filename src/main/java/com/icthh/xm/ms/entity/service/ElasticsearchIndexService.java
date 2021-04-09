@@ -1,5 +1,7 @@
 package com.icthh.xm.ms.entity.service;
 
+import static org.apache.commons.lang3.ObjectUtils.defaultIfNull;
+
 import com.codahale.metrics.annotation.Timed;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.icthh.xm.commons.logging.util.MdcUtils;
@@ -26,12 +28,6 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-import javax.annotation.Resource;
-import javax.persistence.EntityManager;
-import javax.persistence.OneToMany;
-import javax.persistence.criteria.CriteriaBuilder;
 import java.beans.IntrospectionException;
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.Field;
@@ -46,8 +42,13 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
-
-import static org.apache.commons.lang3.ObjectUtils.defaultIfNull;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import javax.annotation.Resource;
+import javax.persistence.EntityManager;
+import javax.persistence.OneToMany;
+import javax.persistence.PersistenceContext;
+import javax.persistence.criteria.CriteriaBuilder;
 
 @Slf4j
 @Service
@@ -65,7 +66,9 @@ public class ElasticsearchIndexService {
     private final MappingConfiguration mappingConfiguration;
     private final IndexConfiguration indexConfiguration;
     private final Executor executor;
-    private final EntityManager entityManager;
+
+    @PersistenceContext
+    private EntityManager entityManager;
 
     @Setter(AccessLevel.PACKAGE)
     @Resource
@@ -78,8 +81,7 @@ public class ElasticsearchIndexService {
                                      TenantContextHolder tenantContextHolder,
                                      MappingConfiguration mappingConfiguration,
                                      IndexConfiguration indexConfiguration,
-                                     @Qualifier("taskExecutor") Executor executor,
-                                     EntityManager entityManager) {
+                                     @Qualifier("taskExecutor") Executor executor) {
         this.xmEntityRepositoryInternal = xmEntityRepositoryInternal;
         this.xmEntitySearchRepository = xmEntitySearchRepository;
         this.elasticsearchTemplate = elasticsearchTemplate;
@@ -87,7 +89,6 @@ public class ElasticsearchIndexService {
         this.mappingConfiguration = mappingConfiguration;
         this.indexConfiguration = indexConfiguration;
         this.executor = executor;
-        this.entityManager = entityManager;
     }
 
     /**
@@ -257,8 +258,7 @@ public class ElasticsearchIndexService {
                 results.map(entity -> loadEntityRelationships(relationshipGetters, entity));
                 xmEntitySearchRepository.saveAll(results.getContent());
                 reindexed += results.getContent().size();
-
-                results.forEach(entityManager::detach);
+                entityManager.clear();
             }
         }
         log.info("Elasticsearch: Indexed [{}] rows for {} in {} ms",
