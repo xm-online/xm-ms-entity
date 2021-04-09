@@ -92,6 +92,9 @@ public class FunctionSpec {
     @JsonProperty("validateFunctionInput")
     private Boolean validateFunctionInput;
 
+    @JsonProperty("anonymous")
+    private Boolean anonymous;
+
     public Boolean getSaveFunctionContext() {
         return saveFunctionContext == null ? false : saveFunctionContext;
     }
@@ -106,4 +109,7 @@ public class FunctionSpec {
             FUNCTION_CALL_PRIV.concat(".").concat(getKey());
     }
 
+    public Boolean getAnonymous() {
+        return anonymous == null ? false : anonymous;
+    }
 }
