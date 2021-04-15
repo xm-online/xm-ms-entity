@@ -26,6 +26,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
 import org.springframework.util.ReflectionUtils;
 
+import javax.persistence.EntityManager;
 import java.lang.reflect.Field;
 import java.util.Collections;
 import java.util.List;
@@ -41,6 +42,8 @@ public class ElasticsearchIndexServiceUnitTest extends AbstractUnitTest {
     private XmEntitySearchRepository xmEntitySearchRepository;
     @Mock
     private ElasticsearchTemplate elasticsearchTemplate;
+    @Mock
+    private EntityManager entityManager;
     @Mock
     TenantContextHolder tenantContextHolder;
     @Mock

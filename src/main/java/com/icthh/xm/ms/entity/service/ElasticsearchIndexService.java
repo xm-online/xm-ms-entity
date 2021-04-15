@@ -16,7 +16,6 @@ import com.icthh.xm.ms.entity.repository.search.XmEntitySearchRepository;
 import lombok.AccessLevel;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.elasticsearch.ResourceAlreadyExistsException;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -46,7 +45,9 @@ import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.Resource;
+import javax.persistence.EntityManager;
 import javax.persistence.OneToMany;
+import javax.persistence.PersistenceContext;
 import javax.persistence.criteria.CriteriaBuilder;
 
 @Slf4j
@@ -66,6 +67,9 @@ public class ElasticsearchIndexService {
     private final IndexConfiguration indexConfiguration;
     private final Executor executor;
 
+    @PersistenceContext
+    private final EntityManager entityManager;
+
     @Setter(AccessLevel.PACKAGE)
     @Resource
     @Lazy
@@ -77,7 +81,8 @@ public class ElasticsearchIndexService {
                                      TenantContextHolder tenantContextHolder,
                                      MappingConfiguration mappingConfiguration,
                                      IndexConfiguration indexConfiguration,
-                                     @Qualifier("taskExecutor") Executor executor) {
+                                     @Qualifier("taskExecutor") Executor executor,
+                                     EntityManager entityManager) {
         this.xmEntityRepositoryInternal = xmEntityRepositoryInternal;
         this.xmEntitySearchRepository = xmEntitySearchRepository;
         this.elasticsearchTemplate = elasticsearchTemplate;
@@ -85,6 +90,7 @@ public class ElasticsearchIndexService {
         this.mappingConfiguration = mappingConfiguration;
         this.indexConfiguration = indexConfiguration;
         this.executor = executor;
+        this.entityManager = entityManager;
     }
 
     /**
@@ -248,6 +254,7 @@ public class ElasticsearchIndexService {
                 results.map(entity -> loadEntityRelationships(relationshipGetters, entity));
                 xmEntitySearchRepository.saveAll(results.getContent());
                 reindexed += results.getContent().size();
+                entityManager.clear();
             }
         }
         log.info("Elasticsearch: Indexed [{}] rows for {} in {} ms",
