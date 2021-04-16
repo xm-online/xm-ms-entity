@@ -96,7 +96,7 @@ public class FunctionResource {
     }
 
     /**
-     * POST  /functions/{functionKey} : Execute a function by key (key in entity specification).
+     * POST  /functions/anonymous/{functionKey} : Execute a function by key (key in entity specification).
      *
      * @param functionKey   the function key to execute
      * @param functionInput function input data context
