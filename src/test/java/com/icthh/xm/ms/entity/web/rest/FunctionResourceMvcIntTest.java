@@ -6,8 +6,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -61,6 +60,20 @@ public class FunctionResourceMvcIntTest extends AbstractWebMvcTest {
             .andExpect(jsonPath("$.data.test").value("result"))
             .andExpect(status().isOk());
         verify(functionService).execute(eq("SOME-FUNCTION_KEY.TROLOLO"), eq(of("var1", "val1", "var2", "val2")));
+    }
+
+    @Test
+    @SneakyThrows
+    public void testCallAnonymousFunction() {
+        when(functionService.executeAnonymous("SOME-ANONYMOUS-FUNCTION_KEY.TROLOLO", of("var1", "val1", "var2", "val2")))
+            .thenReturn(new FunctionContext().data(of("test", "result")));
+        mockMvc.perform(post("/api/functions/anonymous/SOME-ANONYMOUS-FUNCTION_KEY.TROLOLO")
+            .contentType(TestUtil.APPLICATION_JSON_UTF8)
+            .content("{\"var1\":\"val1\", \"var2\": \"val2\"}"))
+            .andDo(print())
+            .andExpect(jsonPath("$.data.test").value("result"))
+            .andExpect(status().isCreated());
+        verify(functionService).executeAnonymous(eq("SOME-ANONYMOUS-FUNCTION_KEY.TROLOLO"), eq(of("var1", "val1", "var2", "val2")));
     }
 
     @Test
