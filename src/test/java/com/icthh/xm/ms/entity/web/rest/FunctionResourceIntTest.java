@@ -215,7 +215,7 @@ public class FunctionResourceIntTest extends AbstractSpringBootTest {
     @Transactional
     public void anonymousFunction() throws Exception {
         //GIVEN
-        xmEntityService.save(new XmEntity().typeKey("TEST_ENTITY_WITH_ANONYMOUS_FUNCTION").key(UUID.randomUUID()).name("test")).getId();
+        xmEntityService.save(new XmEntity().typeKey("TEST_ENTITY_WITH_ANONYMOUS_FUNCTION").key(UUID.randomUUID()).name("test"));
         String testContent = "{\"testKey\": \"testValue\"}";
 
         //WHEN
