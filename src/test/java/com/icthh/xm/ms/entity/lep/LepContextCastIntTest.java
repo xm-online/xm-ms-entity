@@ -74,7 +74,7 @@ public class LepContextCastIntTest extends AbstractSpringBootTest {
         String function = "import com.icthh.xm.ms.entity.lep.LepContext;\nLepContext context = lepContext\nreturn ['context':context]";
         leps.onRefresh(funcKey, function);
         Map<String, Object> result = functionExecutorService.execute(functionKey, Map.of());
-        assertTrue(result.get("context") instanceof  LepContext);
+        assertTrue(result.get("context") instanceof LepContext);
         leps.onRefresh(funcKey, null);
     }
 
