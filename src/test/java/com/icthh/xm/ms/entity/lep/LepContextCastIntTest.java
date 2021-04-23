@@ -24,7 +24,6 @@ import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_TENANT_
 import static org.junit.Assert.assertTrue;
 
 
-@WithMockUser(authorities = {"SUPER-ADMIN"})
 @Transactional
 public class LepContextCastIntTest extends AbstractSpringBootTest {
 
