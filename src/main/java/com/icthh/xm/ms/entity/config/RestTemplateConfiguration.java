@@ -46,6 +46,11 @@ public class RestTemplateConfiguration {
     }
 
     @Bean
+    public RestTemplate plainRestTemplate() {
+        return new RestTemplate();
+    }
+
+    @Bean
     public PathTimeoutHttpComponentsClientHttpRequestFactory pathTimeoutHttpComponentsClientHttpRequestFactory() {
         return new PathTimeoutHttpComponentsClientHttpRequestFactory();
     }
