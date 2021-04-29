@@ -130,10 +130,10 @@ public class ElasticsearchIndexResourceIntTest extends AbstractSpringBootTest {
     private XmEntitySpecService xmEntitySpecService;
 
     @Autowired
-    private SeparateTransactionExecutor transactionExecutor;
+    private EntityManager entityManager;
 
     @Autowired
-    private EntityManager entityManager;
+    private SeparateTransactionExecutor transactionExecutor;
 
     private ElasticsearchIndexService elasticsearchIndexService;
 
@@ -174,8 +174,7 @@ public class ElasticsearchIndexResourceIntTest extends AbstractSpringBootTest {
                                                                   tenantContextHolder,
                                                                   mappingConfiguration,
                                                                   indexConfiguration,
-                                                                  executor,
-                                                                  entityManager);
+                                                                  executor, entityManager);
 
         elasticsearchIndexService.setSelfReference(elasticsearchIndexService);
 

@@ -5,6 +5,9 @@ import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_TENANT_
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.notNullValue;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -26,6 +29,7 @@ import com.icthh.xm.ms.entity.repository.LinkPermittedRepository;
 import com.icthh.xm.ms.entity.repository.LinkRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
 import com.icthh.xm.ms.entity.repository.search.PermittedSearchRepository;
+import com.icthh.xm.ms.entity.security.access.DynamicPermissionCheckService;
 import com.icthh.xm.ms.entity.service.LinkService;
 import com.icthh.xm.ms.entity.service.impl.StartUpdateDateGenerationStrategy;
 import org.junit.After;
@@ -108,6 +112,9 @@ public class LinkResourceIntTest extends AbstractSpringBootTest {
     @Autowired
     private LepManager lepManager;
 
+    @Autowired
+    private DynamicPermissionCheckService dynamicPermissionCheckService;
+
     @Spy
     private StartUpdateDateGenerationStrategy startUpdateDateGenerationStrategy;
 
@@ -137,7 +144,8 @@ public class LinkResourceIntTest extends AbstractSpringBootTest {
                                       permittedRepository,
                                       permittedSearchRepository,
                                       startUpdateDateGenerationStrategy,
-                                      xmEntityRepository);
+                                      xmEntityRepository,
+                                      dynamicPermissionCheckService);
 
         LinkResource linkResourceMock = new LinkResource(linkService, linkResource);
         this.restLinkMockMvc = MockMvcBuilders.standaloneSetup(linkResourceMock)

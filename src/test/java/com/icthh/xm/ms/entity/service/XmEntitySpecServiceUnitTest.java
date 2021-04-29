@@ -41,6 +41,7 @@ import com.icthh.xm.ms.entity.service.privileges.custom.EntityCustomPrivilegeSer
 import com.icthh.xm.ms.entity.service.privileges.custom.FunctionCustomPrivilegesExtractor;
 import com.icthh.xm.ms.entity.service.privileges.custom.FunctionWithXmEntityCustomPrivilegesExtractor;
 import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -64,6 +65,8 @@ import java.util.stream.Collectors;
 
 import static com.google.common.collect.ImmutableMap.of;
 import static com.google.common.collect.Maps.newHashMap;
+import static com.icthh.xm.ms.entity.config.Constants.REGEX_EOL;
+import static com.icthh.xm.ms.entity.config.TenantConfigMockConfiguration.getXmEntitySpec;
 import static com.icthh.xm.ms.entity.security.access.DynamicPermissionCheckService.CONFIG_SECTION;
 import static com.icthh.xm.ms.entity.util.CustomCollectionUtils.nullSafe;
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -71,6 +74,7 @@ import static java.util.Arrays.asList;
 import static org.apache.commons.codec.digest.DigestUtils.sha1Hex;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -82,13 +86,16 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
+@Slf4j
 public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
 
     private static final String DYNAMIC_FUNCTION_PERMISSION_FEATURE = "dynamicPermissionCheckEnabled";
 
     private static final String TENANT = "TEST";
 
-    private static final String URL = "/config/tenants/{tenantName}/entity/specs/xmentityspecs.yml";
+    private static final String SPEC_FOLDER_URL = "/config/tenants/{tenantName}/entity/specs/xmentityspecs";
+
+    private static final String URL = SPEC_FOLDER_URL + ".yml";
 
     private static final String ROOT_KEY = "";
 
@@ -134,14 +141,13 @@ public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
     @SneakyThrows
     public void init() {
         MockitoAnnotations.initMocks(this);
-        TenantContext tenantContext = mock(TenantContext.class);
-        when(tenantContext.getTenantKey()).thenReturn(Optional.of(TenantKey.valueOf(TENANT)));
 
         tenantContextHolder = mock(TenantContextHolder.class);
-        when(tenantContextHolder.getContext()).thenReturn(tenantContext);
+        mockTenant(TENANT);
 
         ApplicationProperties ap = new ApplicationProperties();
         ap.setSpecificationPathPattern(URL);
+        ap.setSpecificationFolderPathPattern(SPEC_FOLDER_URL + "/*");
         xmEntitySpecService = createXmEntitySpecService(ap, tenantContextHolder);
     }
 
@@ -161,7 +167,8 @@ public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
                                                     new FunctionWithXmEntityCustomPrivilegesExtractor(tenantConfig)
                                                 )
                                             ),
-                                            dynamicPermissionCheckService);
+                                            dynamicPermissionCheckService,
+                                            tenantConfig);
     }
 
     @Test
@@ -212,10 +219,7 @@ public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
     @Test
     public void testRefreshWithIgnoreList() {
 
-        TenantContext tenantContext = mock(TenantContext.class);
-        when(tenantContext.getTenantKey()).thenReturn(Optional.of(TenantKey.valueOf("IGNORE-INHERITANCE")));
-        tenantContextHolder = mock(TenantContextHolder.class);
-        when(tenantContextHolder.getContext()).thenReturn(tenantContext);
+        mockTenant("IGNORE-INHERITANCE");
         ApplicationProperties ap = new ApplicationProperties();
         ap.setSpecificationPathPattern(URL);
         xmEntitySpecService = createXmEntitySpecService(ap, tenantContextHolder);
@@ -413,10 +417,7 @@ public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
 
     @Test
     public void testUniqueField() {
-        TenantContext tenantContext = mock(TenantContext.class);
-        when(tenantContext.getTenantKey()).thenReturn(Optional.of(TenantKey.valueOf("RESINTTEST")));
-        tenantContextHolder = mock(TenantContextHolder.class);
-        when(tenantContextHolder.getContext()).thenReturn(tenantContext);
+        mockTenant("RESINTTEST");
         ApplicationProperties ap = new ApplicationProperties();
         ap.setSpecificationPathPattern(URL);
         xmEntitySpecService = createXmEntitySpecService(ap, tenantContextHolder);
@@ -435,6 +436,12 @@ public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
                 assertEquals(typeSpec.getUniqueFields().size(), 0);
             }
         }
+    }
+
+    public void mockTenant(String resinttest) {
+        TenantContext tenantContext = mock(TenantContext.class);
+        when(tenantContext.getTenantKey()).thenReturn(Optional.of(TenantKey.valueOf(resinttest)));
+        when(tenantContextHolder.getContext()).thenReturn(tenantContext);
     }
 
 
@@ -558,6 +565,173 @@ public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
         verify(commonConfigRepository).getConfig(isNull(), eq(asList(privilegesPath)));
         verify(commonConfigRepository).updateConfigFullPath(refEq(new Configuration(privilegesPath, privileges)), isNull());
         verifyNoMoreInteractions(commonConfigRepository);
+    }
+
+    @Test
+    public void testExtendsWithSeparateFiles() {
+        mockTenant("RESINTTEST");
+        String config = getXmEntitySpec("resinttest-part-2");
+        String key = SPEC_FOLDER_URL.replace("{tenantName}", "RESINTTEST") + "/file.yml";
+        xmEntitySpecService.onRefresh(key, config);
+        // refresh multiple times (important)
+        xmEntitySpecService.getTypeSpecs();
+        xmEntitySpecService.getTypeSpecs();
+        var typeSpecs = xmEntitySpecService.getTypeSpecs();
+
+        TypeSpec extendedEntity = typeSpecs.get("BASE_ENTITY.EXTENDS_ENABLED");
+        assertEquals(extendedEntity.getFunctions().size(), 1);
+        TypeSpec extendedEntityFromSeparateFile = typeSpecs.get("BASE_ENTITY.SEPARATE_FILE_EXTENDS_ENABLED");
+        assertEquals(extendedEntityFromSeparateFile.getFunctions().size(), 1);
+    }
+
+    @Test
+    public void testExtendsDataSpecWithSeparateFiles() {
+        String config = getXmEntitySpec("resinttest-part-2");
+        String key = SPEC_FOLDER_URL.replace("{tenantName}", "RESINTTEST") + "/file.yml";
+        xmEntitySpecService.onRefresh(key, config);
+
+        testExtendsDataSpec();
+
+        var bothEntityData = Map.of(
+                "field1", "field1value",
+                "field5", "field4value",
+                "object1", Map.of(
+                        "field2", "field2value",
+                        "field6", "field6value"
+                )
+        );
+
+        setExtendsFormAndSpec(false);
+        var typeSpecs = xmEntitySpecService.getTypeSpecs();
+        TypeSpec extendedEntity = typeSpecs.get("BASE_ENTITY.SEPARATE_FILE_EXTENDS_ENABLED");
+        assertTrue(validateByJsonSchema(extendedEntity.getDataSpec(), bothEntityData));
+
+        setExtendsFormAndSpec(true);
+        TypeSpec extendedEntityWithGlobalExtends = typeSpecs.get("BASE_ENTITY.SEPARATE_FILE_EXTENDS_ENABLED");
+        assertTrue(validateByJsonSchema(extendedEntityWithGlobalExtends.getDataSpec(), bothEntityData));
+    }
+
+    @Test
+    public void testExtendsDataSpec() {
+
+        mockTenant("RESINTTEST");
+
+        var baseEntityData = Map.of(
+                "field1", "field1value",
+                "object1", Map.of(
+                        "field2", "field2value"
+                )
+        );
+        var extendsEntityData = Map.of(
+                "field3", "field3value",
+                "object1", Map.of(
+                        "field4", "field4value"
+                )
+        );
+        var bothEntityData = Map.of(
+                "field1", "field1value",
+                "field3", "field3value",
+                "object1", Map.of(
+                        "field2", "field2value",
+                        "field4", "field4value"
+                )
+        );
+
+        var typeSpecs = xmEntitySpecService.getTypeSpecs();
+        TypeSpec baseEntity = typeSpecs.get("BASE_ENTITY");
+        TypeSpec extendedEntity = typeSpecs.get("BASE_ENTITY.EXTENDS");
+        assertTrue(validateByJsonSchema(baseEntity.getDataSpec(), baseEntityData));
+        assertTrue(validateByJsonSchema(extendedEntity.getDataSpec(), extendsEntityData));
+        assertFalse(validateByJsonSchema(baseEntity.getDataSpec(), extendsEntityData));
+        assertFalse(validateByJsonSchema(extendedEntity.getDataSpec(), baseEntityData));
+        assertFalse(validateByJsonSchema(extendedEntity.getDataSpec(), bothEntityData));
+
+        TypeSpec extendedEntityWithEnabledExtends = typeSpecs.get("BASE_ENTITY.EXTENDS_ENABLED");
+        assertTrue(validateByJsonSchema(extendedEntityWithEnabledExtends.getDataSpec(), extendsEntityData));
+        assertTrue(validateByJsonSchema(extendedEntityWithEnabledExtends.getDataSpec(), bothEntityData));
+
+        setExtendsFormAndSpec(true);
+
+        var typeSpecsWithExtends = xmEntitySpecService.getTypeSpecs();
+        TypeSpec baseEntityWithExtends = typeSpecsWithExtends.get("BASE_ENTITY");
+        TypeSpec extendedEntityWithExtends = typeSpecsWithExtends.get("BASE_ENTITY.EXTENDS");
+        assertTrue(validateByJsonSchema(baseEntityWithExtends.getDataSpec(), baseEntityData));
+        assertTrue(validateByJsonSchema(extendedEntityWithExtends.getDataSpec(), extendsEntityData));
+        assertFalse(validateByJsonSchema(baseEntity.getDataSpec(), extendsEntityData));
+        assertTrue(validateByJsonSchema(extendedEntityWithExtends.getDataSpec(), baseEntityData));
+        assertTrue(validateByJsonSchema(extendedEntityWithExtends.getDataSpec(), bothEntityData));
+    }
+
+    @Test
+    public void testExtendsDataForm() {
+
+        mockTenant("RESINTTEST");
+
+        var baseDataFrom = Map.of(
+                "form", List.of(
+                Map.of("key", "field1"),
+                Map.of("key", "object1.field2")
+            )
+        );
+
+        var extendsDataFrom = Map.of(
+                "form", List.of(
+                        Map.of("key", "field3"),
+                        Map.of("key", "object1.field4")
+                )
+        );
+
+        var bothDataFrom = Map.of(
+                "form", List.of(
+                        Map.of("key", "field1"),
+                        Map.of("key", "object1.field2"),
+                        Map.of("key", "field3"),
+                        Map.of("key", "object1.field4")
+                )
+        );
+
+        var typeSpecs = xmEntitySpecService.getTypeSpecs();
+        TypeSpec baseEntity = typeSpecs.get("BASE_ENTITY");
+        TypeSpec extendedEntity = typeSpecs.get("BASE_ENTITY.EXTENDS");
+        TypeSpec extendedEntityWithEnabledExtends = typeSpecs.get("BASE_ENTITY.EXTENDS_ENABLED");
+        assertEqualsJson(baseDataFrom, baseEntity.getDataForm());
+        assertEqualsJson(extendsDataFrom, extendedEntity.getDataForm());
+        assertEqualsJson(bothDataFrom, extendedEntityWithEnabledExtends.getDataForm());
+
+        setExtendsFormAndSpec(true);
+
+        var typeSpecsWithExtends = xmEntitySpecService.getTypeSpecs();
+        TypeSpec baseEntityWithExtends = typeSpecsWithExtends.get("BASE_ENTITY");
+        TypeSpec extendedEntityWithExtends = typeSpecsWithExtends.get("BASE_ENTITY.EXTENDS");
+        assertEqualsJson(baseDataFrom, baseEntityWithExtends.getDataForm());
+        assertEqualsJson(bothDataFrom, extendedEntityWithExtends.getDataForm());
+    }
+
+    @SneakyThrows
+    private void assertEqualsJson(Map<String, ?> expected, String actual) {
+        ObjectMapper objectMapper = new ObjectMapper();
+        JsonNode expectedTree = objectMapper.readTree(objectMapper.writeValueAsString(expected));
+        JsonNode actualTree = objectMapper.readTree(actual);
+        assertEquals(expectedTree, actualTree);
+    }
+
+    @SneakyThrows
+    private boolean validateByJsonSchema(String schema, Map<String, Object> value) {
+        ObjectMapper objectMapper = new ObjectMapper();
+        JsonNode valueJsonNode = objectMapper.readTree(objectMapper.writeValueAsString(value));
+        JsonNode schemaNode = JsonLoader.fromString(schema);
+        JsonSchemaFactory factory = JsonSchemaFactory.byDefault();
+        JsonSchema jsonSchema = factory.getJsonSchema(schemaNode);
+        ProcessingReport report = jsonSchema.validate(valueJsonNode);
+        log.info("Validation: {}", report.toString());
+        return report.isSuccess();
+    }
+
+    private void setExtendsFormAndSpec(Boolean value) {
+        XmEntityTenantConfig config = new XmEntityTenantConfig();
+        config.getEntitySpec().setEnableDataFromInheritance(value);
+        config.getEntitySpec().setEnableDataSpecInheritance(value);
+        when(tenantConfig.getXmEntityTenantConfig("RESINTTEST")).thenReturn(config);
     }
 
     private String readFile(String path1) throws IOException {

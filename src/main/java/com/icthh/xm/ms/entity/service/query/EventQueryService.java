@@ -39,9 +39,34 @@ public class EventQueryService extends QueryService<Event> {
         return eventRepository.findAll(specification, pageable);
     }
 
+    /**
+     * Return a {@link List} of {@link Event} which matches the criteria from the database.
+     * @param filter The object which holds all the filters, which the entities should match.
+     * @return the matching entities.
+     */
+    public List<Event> findAll(EventFilter filter) {
+        Specification<Event> specification = createSpecification(filter);
+        return eventRepository.findAll(specification);
+    }
+
     private Specification<Event> createSpecification(Long calendarId, EventFilter filter) {
         Specification<Event> specification =
             (root, query, cb) -> cb.equal(root.get(Event_.calendar).get(Calendar_.id), calendarId);
+        specification = getEventSpecification(filter, specification);
+
+        return specification;
+    }
+
+    private Specification<Event> createSpecification(EventFilter filter) {
+        //criteriaBuilder.conjunction() is used to avoid returning null from methods.
+        //It generates always true Predicate
+        Specification<Event> specification = (root, query, cb) -> cb.conjunction();
+        specification = getEventSpecification(filter, specification);
+
+        return specification;
+    }
+
+    private Specification<Event> getEventSpecification(EventFilter filter, Specification<Event> specification) {
         if (filter != null) {
             if (filter.getId() != null) {
                 specification = specification.and(buildRangeSpecification(filter.getId(), Event_.id));
@@ -56,7 +81,6 @@ public class EventQueryService extends QueryService<Event> {
                 specification = specification.and(buildRangeSpecification(filter.getEndDate(), Event_.endDate));
             }
         }
-
         return specification;
     }
 }

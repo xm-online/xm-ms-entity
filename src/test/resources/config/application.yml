@@ -123,6 +123,7 @@ xm-config:
     enabled: false
 
 application:
+    timeline-ignored-http-methods:
     scheduler-enabled: false
     kafka-enabled: false
     amazon:

@@ -1,6 +1,7 @@
 package com.icthh.xm.ms.entity.security.access;
 
 import static com.icthh.xm.ms.entity.util.CustomCollectionUtils.nullSafe;
+import static java.lang.String.format;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
@@ -10,10 +11,14 @@ import com.icthh.xm.commons.permission.constants.RoleConstant;
 import com.icthh.xm.commons.permission.domain.Permission;
 import com.icthh.xm.commons.permission.service.PermissionCheckService;
 import com.icthh.xm.commons.permission.service.PermissionService;
+import com.icthh.xm.commons.security.XmAuthenticationContext;
+import com.icthh.xm.commons.security.XmAuthenticationContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
 import com.icthh.xm.ms.entity.config.XmEntityTenantConfigService;
 import com.icthh.xm.ms.entity.security.SecurityUtils;
+
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -23,9 +28,14 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
@@ -47,7 +57,8 @@ public class DynamicPermissionCheckService {
     public enum FeatureContext {
 
         FUNCTION(DynamicPermissionCheckService::isDynamicFunctionPermissionEnabled),
-        CHANGE_STATE(DynamicPermissionCheckService::isDynamicChangeStatePermissionEnabled);
+        CHANGE_STATE(DynamicPermissionCheckService::isDynamicChangeStatePermissionEnabled),
+        LINK_DELETE(DynamicPermissionCheckService::isDynamicLinkDeletePermissionEnabled);
 
         private final Function<DynamicPermissionCheckService, Boolean> featureContextResolver;
 
@@ -70,6 +81,7 @@ public class DynamicPermissionCheckService {
     private final PermissionCheckService permissionCheckService;
     private final PermissionService permissionService;
     private final TenantContextHolder tenantContextHolder;
+    private final XmAuthenticationContextHolder xmAuthenticationContextHolder;
 
     /**
      * Checks if user has permission with dynamic key feature
@@ -178,14 +190,32 @@ public class DynamicPermissionCheckService {
     private boolean assertPermission(final String permission) {
         Preconditions.checkArgument(StringUtils.isNotEmpty(permission));
 
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         boolean permitted = permissionCheckService
-            .hasPermission(SecurityContextHolder.getContext().getAuthentication(), permission);
+            .hasPermission(authentication, permission);
 
         if (!permitted) {
-            //TODO place correct error here
-            throw new IllegalStateException("Throw correct exception here");
+            String msg = format("access denied: privilege=%s, roleKey=%s, user=%s due to privilege is not permitted",
+                    permission, getRoleKey(authentication), getUserKey());
+            throw new AccessDeniedException(msg);
         }
         return true;
+    }
+
+    private String getUserKey() {
+        return Optional.ofNullable(xmAuthenticationContextHolder)
+                .map(XmAuthenticationContextHolder::getContext)
+                .flatMap(XmAuthenticationContext::getUserKey)
+                .orElse(null);
+    }
+
+    private static String getRoleKey(Authentication authentication) {
+        return Optional.ofNullable(authentication)
+                .map(Authentication::getAuthorities)
+                .map(Collection::stream)
+                .flatMap(Stream::findFirst)
+                .map(GrantedAuthority::getAuthority)
+                .orElse(null);
     }
 
     /**
@@ -194,6 +224,10 @@ public class DynamicPermissionCheckService {
      */
     private boolean isDynamicFunctionPermissionEnabled() {
         return tenantConfigService.getXmEntityTenantConfig().getEntityFunctions().getDynamicPermissionCheckEnabled();
+    }
+
+    public boolean isDynamicLinkDeletePermissionEnabled() {
+        return tenantConfigService.getXmEntityTenantConfig().getDynamicTypeKeyPermission().getLinkDeletion();
     }
 
     /**

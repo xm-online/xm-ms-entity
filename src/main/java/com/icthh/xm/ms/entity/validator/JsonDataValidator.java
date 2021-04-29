@@ -10,12 +10,17 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.github.fge.jackson.JsonLoader;
+import com.github.fge.jsonschema.core.exceptions.ProcessingException;
 import com.github.fge.jsonschema.core.report.ProcessingMessage;
+import com.github.fge.jsonschema.core.report.ProcessingReport;
 import com.github.fge.jsonschema.main.JsonSchema;
 import com.github.fge.jsonschema.main.JsonSchemaFactory;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.domain.spec.TypeSpec;
+import com.icthh.xm.ms.entity.service.JsonValidationService;
 import com.icthh.xm.ms.entity.service.XmEntitySpecService;
+
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import javax.validation.ConstraintValidator;
@@ -31,6 +36,7 @@ public class JsonDataValidator implements ConstraintValidator<JsonData, XmEntity
 
     private final XmEntitySpecService xmEntitySpecService;
     private final ObjectMapper objectMapper;
+    private final JsonValidationService jsonValidationService;
 
     @Override
     public void initialize(JsonData constraintAnnotation) {
@@ -69,16 +75,7 @@ public class JsonDataValidator implements ConstraintValidator<JsonData, XmEntity
     @SneakyThrows
     private boolean validate(Map<String, Object> data, String jsonSchema, ConstraintValidatorContext context) {
 
-        String stringData = objectMapper.writeValueAsString(data);
-        log.debug("Validation data. map: {}, jsonData: {}", data, stringData);
-
-        JsonNode schemaNode = JsonLoader.fromString(jsonSchema);
-
-        JsonNode dataNode = JsonLoader.fromString(stringData);
-        JsonSchemaFactory factory = JsonSchemaFactory.byDefault();
-        JsonSchema schema = factory.getJsonSchema(schemaNode);
-        val report = schema.validate(dataNode);
-
+        final ProcessingReport report = jsonValidationService.validateJson(data, jsonSchema);
         boolean isSuccess = report.isSuccess();
         if (!isSuccess) {
             log.error("Validation data report: {}", report.toString().replaceAll(REGEX_EOL, " | "));
