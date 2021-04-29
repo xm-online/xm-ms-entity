@@ -51,6 +51,7 @@ public class LepAppEventListenerConfiguration {
         TenantConfigService tenantConfigService,
         AttachmentService attachmentService,
         @Qualifier("loadBalancedRestTemplateWithTimeout") RestTemplate loadBalancedRestTemplateWithTimeout,
+        @Qualifier("plainRestTemplate") RestTemplate plainRestTemplate,
         PathTimeoutHttpComponentsClientHttpRequestFactory requestFactory,
         LocationService locationService,
         TagService tagService,
@@ -68,7 +69,7 @@ public class LepAppEventListenerConfiguration {
 
         return new XmEntityMsLepProcessingApplicationListener(xmEntityService,
                         xmTenantLifecycleService, xmEntityRepository, profileService, linkService,
-                        mailService, tenantConfigService, attachmentService, loadBalancedRestTemplateWithTimeout,
+                        mailService, tenantConfigService, attachmentService, loadBalancedRestTemplateWithTimeout, plainRestTemplate,
                         requestFactory, locationService, tagService, profileEventProducer, commentService,
                         commonsService, permissionCheckService, eventService, calendarService, tenantLepResource,
                         amazonS3Template, elasticsearchTemplate, permittedSearchRepository, elasticsearchIndexService,
