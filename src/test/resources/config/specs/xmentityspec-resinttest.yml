@@ -406,6 +406,16 @@ types:
             - key: en2en1
               builderType: SEARCH
               typeKey: ENTITY1
+    - key: ENTITY1jpql
+      isApp: false
+      isAbstract: false
+      isNameRequired: false
+      isKeyRequired: false
+    - key: ENTITY2jpql
+      isApp: false
+      isAbstract: false
+      isNameRequired: true
+      isKeyRequired: true
     - key: TEST_SAVE_WITH_LINK_EXISTS_ENTITY
       isAbstract: false
       links:
