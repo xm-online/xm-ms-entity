@@ -426,7 +426,8 @@ public class XmEntityServiceIntTest extends AbstractSpringBootTest {
         xmEntityService.save(new XmEntity().typeKey("ENTITY2jpql").name("###5").key(randomUUID()));
 
         // language=JPAQL
-        String query = "SELECT typeKey, count(entity.id) FROM XmEntity entity WHERE entity.typeKey = 'ENTITY1jpql' OR entity.typeKey = 'ENTITY2jpql' GROUP BY entity.typeKey";
+        String query = "SELECT typeKey, count(entity.id) FROM XmEntity entity WHERE entity.typeKey = 'ENTITY1jpql' " +
+                "OR entity.typeKey = 'ENTITY2jpql' GROUP BY entity.typeKey";
         List<Object[]> result = (List<Object[]>) xmEntityRepository.findAll(query, Map.of());
         log.info("Entities {}", result);
 
