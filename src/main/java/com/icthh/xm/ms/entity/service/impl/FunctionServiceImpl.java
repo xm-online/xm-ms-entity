@@ -208,7 +208,6 @@ public class FunctionServiceImpl implements FunctionService {
         functionResult.setOnlyData(functionSpec.getOnlyData());
         functionResult.setBinaryDataField(functionSpec.getBinaryDataField());
         functionResult.setBinaryDataType(functionSpec.getBinaryDataType());
-        functionResult.setAnonymous(functionSpec.getAnonymous());
         return functionResult;
     }
 

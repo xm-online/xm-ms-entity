@@ -120,9 +120,6 @@ public class FunctionContext implements Serializable {
     @Transient
     private String binaryDataType;
 
-    @Transient
-    private transient boolean anonymous;
-
     public Long getId() {
         return id;
     }
@@ -234,15 +231,6 @@ public class FunctionContext implements Serializable {
 
     public void setXmEntity(XmEntity xmEntity) {
         this.xmEntity = xmEntity;
-    }
-
-    public FunctionContext setAnonymous(boolean anonymous) {
-        this.anonymous = anonymous;
-        return this;
-    }
-
-    public boolean getAnonymous() {
-        return anonymous;
     }
 
     @PrePersist
