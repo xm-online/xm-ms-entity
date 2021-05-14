@@ -417,22 +417,22 @@ public class XmEntityServiceIntTest extends AbstractSpringBootTest {
     public void testJpqlWithAnyResult() throws Exception {
 
         // Initialize the database
-        XmEntity entity1 = new XmEntity().typeKey("ENTITY1").name("###1").key(randomUUID());
+        XmEntity entity1 = new XmEntity().typeKey("ENTITY1jpql").name("###1").key(randomUUID());
         xmEntityService.save(entity1);
-        XmEntity entity2 = new XmEntity().typeKey("ENTITY1").name("###2").key(randomUUID());
+        XmEntity entity2 = new XmEntity().typeKey("ENTITY1jpql").name("###2").key(randomUUID());
         xmEntityService.save(entity2);
-        xmEntityService.save(new XmEntity().typeKey("ENTITY2").name("###3").key(randomUUID()));
-        xmEntityService.save(new XmEntity().typeKey("ENTITY2").name("###4").key(randomUUID()));
-        xmEntityService.save(new XmEntity().typeKey("ENTITY2").name("###5").key(randomUUID()));
+        xmEntityService.save(new XmEntity().typeKey("ENTITY2jpql").name("###3").key(randomUUID()));
+        xmEntityService.save(new XmEntity().typeKey("ENTITY2jpql").name("###4").key(randomUUID()));
+        xmEntityService.save(new XmEntity().typeKey("ENTITY2jpql").name("###5").key(randomUUID()));
 
         String query = "SELECT typeKey, count(entity.id) FROM XmEntity entity GROUP BY entity.typeKey";
         List<Object[]> result = (List<Object[]>) xmEntityRepository.findAll(query, Map.of());
         log.info("Entities {}", result);
 
         assertEquals(2, result.size());
-        assertEquals("ENTITY1", result.get(0)[0]);
+        assertEquals("ENTITY1jpql", result.get(0)[0]);
         assertEquals(2L, result.get(0)[1]);
-        assertEquals("ENTITY2", result.get(1)[0]);
+        assertEquals("ENTITY2jpql", result.get(1)[0]);
         assertEquals(3L, result.get(1)[1]);
     }
 
