@@ -37,8 +37,8 @@ public interface FunctionExecutorService {
     @LogicExtensionPoint(value = "Function", resolver = FunctionLepKeyResolver.class)
     Map<String, Object> execute(String functionKey, Map<String, Object> functionInput);
 
-        /**
-     * Execute function without binding to any XmEntity instance.
+    /**
+     * Execute anonymous function
      *
      * @param functionKey   the function key, unique in Tenant
      * @param functionInput function input context
