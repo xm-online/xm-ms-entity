@@ -38,7 +38,7 @@ public interface FunctionExecutorService {
     Map<String, Object> execute(String functionKey, Map<String, Object> functionInput);
 
     /**
-     * Execute anonymous function
+     * Execute anonymous function.
      *
      * @param functionKey   the function key, unique in Tenant
      * @param functionInput function input context

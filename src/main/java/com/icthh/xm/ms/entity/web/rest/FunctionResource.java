@@ -96,7 +96,7 @@ public class FunctionResource {
     }
 
     /**
-     * POST  /functions/anonymous/{functionKey} : Execute a function by key (key in entity specification).
+     * POST  /functions/anonymous/{functionKey} : Execute an anonymous function by key (key in entity specification).
      *
      * @param functionKey   the function key to execute
      * @param functionInput function input data context
@@ -105,7 +105,6 @@ public class FunctionResource {
      */
     @Timed
     @PostMapping("/functions/anonymous/{functionKey:.+}")
-    @PreAuthorize("hasPermission({'functionKey': #functionKey}, 'FUNCTION.ANONYMOUS.CALL')")
     @PrivilegeDescription("Privilege to execute a function by key (key in entity specification)")
     public ResponseEntity<Object> callAnonymousFunction(@PathVariable("functionKey") String functionKey,
                                                @RequestBody(required = false) Map<String, Object> functionInput) {
