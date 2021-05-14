@@ -124,9 +124,9 @@ public class FunctionResourceIntTest extends AbstractSpringBootTest {
         leps.onRefresh(functionPrefix + "Function$$FUNCTION_WITH_NULL_RESULT$$tenant.groovy", loadData ? functionWithNullResult : null);
 
         String anonymousFunctionResult = "return [someKey: \"someValue\"]";
-        leps.onRefresh(functionPrefix + "Function$$FUNCTION_WITH_ANONYMOUS_NOT_EXPLICITLY_SET$$tenant.groovy", loadData ? anonymousFunctionResult : null);
-        leps.onRefresh(functionPrefix + "Function$$FUNCTION_WITH_ANONYMOUS_SET_TO_FALSE$$tenant.groovy", loadData ? anonymousFunctionResult : null);
-        leps.onRefresh(functionPrefix + "Function$$FUNCTION_WITH_ANONYMOUS_SET_TO_TRUE$$tenant.groovy", loadData ? anonymousFunctionResult : null);
+        leps.onRefresh(functionPrefix + "AnonymousFunction$$FUNCTION_WITH_ANONYMOUS_NOT_EXPLICITLY_SET$$tenant.groovy", loadData ? anonymousFunctionResult : null);
+        leps.onRefresh(functionPrefix + "AnonymousFunction$$FUNCTION_WITH_ANONYMOUS_SET_TO_FALSE$$tenant.groovy", loadData ? anonymousFunctionResult : null);
+        leps.onRefresh(functionPrefix + "AnonymousFunction$$FUNCTION_WITH_ANONYMOUS_SET_TO_TRUE$$tenant.groovy", loadData ? anonymousFunctionResult : null);
     }
 
     @SneakyThrows

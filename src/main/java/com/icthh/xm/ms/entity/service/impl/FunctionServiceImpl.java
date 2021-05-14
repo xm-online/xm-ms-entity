@@ -134,7 +134,7 @@ public class FunctionServiceImpl implements FunctionService {
         Map<String, Object> vInput = CustomCollectionUtils.emptyIfNull(functionInput);
 
         // execute function
-        Map<String, Object> data = functionExecutorService.execute(functionKey, vInput);
+        Map<String, Object> data = functionExecutorService.executeAnonymousFunction(functionKey, vInput);
         return processFunctionResult(functionKey, data, functionSpec);
     }
 
