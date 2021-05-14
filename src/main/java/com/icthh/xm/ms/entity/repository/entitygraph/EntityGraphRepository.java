@@ -13,4 +13,6 @@ public interface EntityGraphRepository<T, ID extends Serializable> extends JpaRe
     T findOne(ID id, List<String> embed);
 
     List<T> findAll(String jpql, Map<String, Object> args, List<String> embed);
+
+    List<?> findAll(String jpql, Map<String, Object> args);
 }
