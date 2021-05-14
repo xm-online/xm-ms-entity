@@ -4,6 +4,7 @@ import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.projection.XmEntityIdKeyTypeKey;
 import com.icthh.xm.ms.entity.projection.XmEntityStateProjection;
 
+import java.sql.ResultSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -64,6 +65,8 @@ public interface XmEntityRepository {
     List<XmEntity> findAll(Specification<XmEntity> spec, Sort sort);
 
     List<XmEntity> findAll(String jpql, Map<String, Object> args, List<String> embed);
+
+    List<?> findAll(String jpql, Map<String, Object> args);
 
     Page<XmEntity> findAllByTypeKeyIn(Pageable pageable, Set<String> typeKeys);
 

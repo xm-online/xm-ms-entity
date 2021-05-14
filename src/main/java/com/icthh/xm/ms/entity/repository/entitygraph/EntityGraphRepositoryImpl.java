@@ -4,7 +4,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.springframework.data.jpa.repository.support.JpaEntityInformation;
 import org.springframework.data.jpa.repository.support.SimpleJpaRepository;
-import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityGraph;
 import javax.persistence.EntityManager;
@@ -66,6 +65,13 @@ public class EntityGraphRepositoryImpl<T, I extends Serializable>
         Query query = entityManager.createQuery(jpql);
         args.forEach(query::setParameter);
         query.setHint(HINT_LOADGRAPH, createEntityGraph(embed));
+        return query.getResultList();
+    }
+
+    @Override
+    public List<?> findAll(String jpql, Map<String, Object> args) {
+        Query query = entityManager.createQuery(jpql);
+        args.forEach(query::setParameter);
         return query.getResultList();
     }
 

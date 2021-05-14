@@ -39,6 +39,7 @@ import com.icthh.xm.ms.entity.service.ElasticsearchIndexService;
 import com.icthh.xm.ms.entity.service.SeparateTransactionExecutor;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -409,6 +410,32 @@ public class XmEntityServiceIntTest extends AbstractSpringBootTest {
 
         assertEquals(entities, asList(entity1, entity2));
 
+    }
+
+    @Test
+    @WithMockUser(authorities = "SUPER-ADMIN")
+    public void testJpqlWithAnyResult() throws Exception {
+
+        // Initialize the database
+        XmEntity entity1 = new XmEntity().typeKey("ENTITY1jpql").name("###1").key(randomUUID());
+        xmEntityService.save(entity1);
+        XmEntity entity2 = new XmEntity().typeKey("ENTITY1jpql").name("###2").key(randomUUID());
+        xmEntityService.save(entity2);
+        xmEntityService.save(new XmEntity().typeKey("ENTITY2jpql").name("###3").key(randomUUID()));
+        xmEntityService.save(new XmEntity().typeKey("ENTITY2jpql").name("###4").key(randomUUID()));
+        xmEntityService.save(new XmEntity().typeKey("ENTITY2jpql").name("###5").key(randomUUID()));
+
+        // language=JPAQL
+        String query = "SELECT typeKey, count(entity.id) FROM XmEntity entity WHERE entity.typeKey = 'ENTITY1jpql' " +
+                "OR entity.typeKey = 'ENTITY2jpql' GROUP BY entity.typeKey";
+        List<Object[]> result = (List<Object[]>) xmEntityRepository.findAll(query, Map.of());
+        log.info("Entities {}", result);
+
+        assertEquals(2, result.size());
+        assertEquals("ENTITY1jpql", result.get(0)[0]);
+        assertEquals(2L, result.get(0)[1]);
+        assertEquals("ENTITY2jpql", result.get(1)[0]);
+        assertEquals(3L, result.get(1)[1]);
     }
 
     @Test
