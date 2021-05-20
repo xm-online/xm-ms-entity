@@ -31,4 +31,13 @@ public interface FunctionService {
      */
     FunctionContext execute(String functionKey, Map<String, Object> functionInput);
 
+     /**
+     * Execute anonymous function.
+     *
+     * @param functionKey   the function key, unique in Tenant
+     * @param functionInput function input context
+     * @return function execution result
+     */
+    FunctionContext executeAnonymous(String functionKey, Map<String, Object> functionInput);
+
 }

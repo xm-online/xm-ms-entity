@@ -2,6 +2,7 @@ package com.icthh.xm.ms.entity.service.impl;
 
 import static java.util.Collections.emptyList;
 
+import com.icthh.xm.commons.exceptions.BusinessException;
 import com.icthh.xm.commons.exceptions.EntityNotFoundException;
 import com.icthh.xm.ms.entity.config.XmEntityTenantConfigService;
 import com.icthh.xm.ms.entity.domain.FunctionContext;
@@ -27,6 +28,7 @@ import java.util.UUID;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -119,6 +121,22 @@ public class FunctionServiceImpl implements FunctionService {
                 jsonValidationService.assertJson(functionInput, functionSpec.getInputSpec());
             }
         }
+    }
+
+    @Override
+    public FunctionContext executeAnonymous(String functionKey, Map<String, Object> functionInput) {
+        FunctionSpec functionSpec = findFunctionSpec(functionKey, null);
+
+        if (!functionSpec.getAnonymous()) {
+            throw new AccessDeniedException("access denied");
+        }
+
+        Objects.requireNonNull(functionKey, "functionKey can't be null");
+        Map<String, Object> vInput = CustomCollectionUtils.emptyIfNull(functionInput);
+
+        // execute function
+        Map<String, Object> data = functionExecutorService.executeAnonymousFunction(functionKey, vInput);
+        return processFunctionResult(functionKey, data, functionSpec);
     }
 
     /**
