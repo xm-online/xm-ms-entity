@@ -28,6 +28,7 @@ import java.util.UUID;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -127,7 +128,7 @@ public class FunctionServiceImpl implements FunctionService {
         FunctionSpec functionSpec = findFunctionSpec(functionKey, null);
 
         if (!functionSpec.getAnonymous()) {
-            throw new BusinessException("access denied");
+            throw new AccessDeniedException("access denied");
         }
 
         Objects.requireNonNull(functionKey, "functionKey can't be null");
