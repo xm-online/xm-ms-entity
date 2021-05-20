@@ -75,4 +75,6 @@
     <include file="classpath:config/liquibase/changelog/20201027110000_added_timezone_id_column_to_Event.xml" relativeToChangelogFile="false"/>
 
     <include file="classpath:config/liquibase/changelog/20201028150000_move_timezone_id_column_from_Event_to_Calendar.xml" relativeToChangelogFile="false"/>
+
+    <include file="classpath:config/liquibase/changelog/20210520110800_add_color_field_to_Event.xml" relativeToChangelogFile="false"/>
 </databaseChangeLog>
