@@ -68,6 +68,9 @@ public class EventResourceIntTest extends AbstractSpringBootTest {
     private static final String DEFAULT_TITLE = "AAAAAAAAAA";
     private static final String UPDATED_TITLE = "BBBBBBBBBB";
 
+    private static final String DEFAULT_COLOR = "#000000";
+    private static final String UPDATED_COLOR = "#FFFFFF";
+
     private static final String DEFAULT_DESCRIPTION = "AAAAAAAAAA";
     private static final String UPDATED_DESCRIPTION = "BBBBBBBBBB";
 
@@ -178,6 +181,7 @@ public class EventResourceIntTest extends AbstractSpringBootTest {
             .startDate(DEFAULT_START_DATE)
             .endDate(DEFAULT_END_DATE)
             .assigned(assigned)
+            .color(DEFAULT_COLOR)
             .eventDataRef(eventDataRef);
     }
 
@@ -206,6 +210,7 @@ public class EventResourceIntTest extends AbstractSpringBootTest {
         assertThat(testEvent.getTypeKey()).isEqualTo(DEFAULT_TYPE_KEY);
         assertThat(testEvent.getRepeatRuleKey()).isEqualTo(DEFAULT_REPEAT_RULE_KEY);
         assertThat(testEvent.getTitle()).isEqualTo(DEFAULT_TITLE);
+        assertThat(testEvent.getColor()).isEqualTo(DEFAULT_COLOR);
         assertThat(testEvent.getDescription()).isEqualTo(DEFAULT_DESCRIPTION);
         assertThat(testEvent.getStartDate()).isEqualTo(DEFAULT_START_DATE);
         assertThat(testEvent.getEndDate()).isEqualTo(DEFAULT_END_DATE);
@@ -422,6 +427,7 @@ public class EventResourceIntTest extends AbstractSpringBootTest {
             .description(UPDATED_DESCRIPTION)
             .startDate(UPDATED_START_DATE)
             .endDate(UPDATED_END_DATE)
+            .color(UPDATED_COLOR)
             .getEventDataRef().setData(UPDATED_EVENT_DATA_REF_DATA);
 
         restEventMockMvc.perform(put("/api/events")
@@ -436,6 +442,7 @@ public class EventResourceIntTest extends AbstractSpringBootTest {
         assertThat(testEvent.getTypeKey()).isEqualTo(UPDATED_TYPE_KEY);
         assertThat(testEvent.getRepeatRuleKey()).isEqualTo(UPDATED_REPEAT_RULE_KEY);
         assertThat(testEvent.getTitle()).isEqualTo(UPDATED_TITLE);
+        assertThat(testEvent.getColor()).isEqualTo(UPDATED_COLOR);
         assertThat(testEvent.getDescription()).isEqualTo(UPDATED_DESCRIPTION);
         assertThat(testEvent.getStartDate()).isEqualTo(UPDATED_START_DATE);
         assertThat(testEvent.getEndDate()).isEqualTo(UPDATED_END_DATE);

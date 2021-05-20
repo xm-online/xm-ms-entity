@@ -111,6 +111,12 @@ public class Event implements Serializable {
     @JoinColumn(name = "event_data_ref_id", unique = true)
     private XmEntity eventDataRef;
 
+    /**
+     * Event color. Override default color from {@link com.icthh.xm.ms.entity.domain.spec.EventSpec}
+     */
+    @ApiModelProperty(value = "Event color")
+    private String color;
+
     public Event typeKey(String typeKey) {
         this.typeKey = typeKey;
         return this;
@@ -156,6 +162,11 @@ public class Event implements Serializable {
         return this;
     }
 
+    public Event color(String color) {
+        this.color = color;
+        return this;
+    }
+
     @PrePersist
     private void prePersist() {
         if (id == null && startDate == null) {
@@ -193,6 +204,7 @@ public class Event implements Serializable {
             + ", description='" + getDescription() + "'"
             + ", startDate='" + getStartDate() + "'"
             + ", endDate='" + getEndDate() + "'"
+            + ", color='" + getColor() + "'"
             + "}";
     }
 }

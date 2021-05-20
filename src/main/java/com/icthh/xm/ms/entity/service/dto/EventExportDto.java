@@ -25,7 +25,7 @@ public class EventExportDto {
     private Instant endDate;
     private Long calendarId;
     private Long assignedId;
-
+    private String color;
 
     public EventExportDto(Event event) {
         if (event != null) {
@@ -38,6 +38,7 @@ public class EventExportDto {
             this.endDate = event.getEndDate();
             this.calendarId = Optional.ofNullable(event.getCalendar()).map(Calendar::getId).orElse(null);
             this.assignedId = Optional.ofNullable(event.getAssigned()).map(XmEntity::getId).orElse(null);
+            this.color = event.getColor();
         }
     }
 
@@ -51,6 +52,7 @@ public class EventExportDto {
         event.setEndDate(this.getEndDate());
         event.setCalendar(calendar);
         event.setAssigned(assigned);
+        event.setColor(this.getColor());
         return event;
     }
 
