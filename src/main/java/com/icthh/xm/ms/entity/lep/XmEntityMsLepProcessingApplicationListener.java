@@ -28,6 +28,7 @@ import static com.icthh.xm.ms.entity.lep.LepXmEntityMsConstants.BINDING_SUB_KEY_
 import static com.icthh.xm.ms.entity.lep.LepXmEntityMsConstants.BINDING_SUB_KEY_TEMPLATE_ELASTIC;
 import static com.icthh.xm.ms.entity.lep.LepXmEntityMsConstants.BINDING_SUB_KEY_TEMPLATE_KAFKA;
 import static com.icthh.xm.ms.entity.lep.LepXmEntityMsConstants.BINDING_SUB_KEY_TEMPLATE_REST;
+import static com.icthh.xm.ms.entity.lep.LepXmEntityMsConstants.BINDING_SUB_KEY_TEMPLATE_PLAIN_REST;
 import static com.icthh.xm.ms.entity.lep.LepXmEntityMsConstants.BINDING_SUB_KEY_TEMPLATE_S3;
 
 import com.icthh.xm.commons.config.client.service.TenantConfigService;
@@ -79,6 +80,7 @@ public class XmEntityMsLepProcessingApplicationListener extends SpringLepProcess
     private final TenantConfigService tenantConfigService;
     private final AttachmentService attachmentService;
     private final RestTemplate restTemplate;
+    private final RestTemplate plainRestTemplate;
     private final PathTimeoutHttpComponentsClientHttpRequestFactory requestFactory;
     private final LocationService locationService;
     private final TagService tagService;
@@ -135,6 +137,7 @@ public class XmEntityMsLepProcessingApplicationListener extends SpringLepProcess
         // templates
         Map<String, Object> templates = new HashMap<>();
         templates.put(BINDING_SUB_KEY_TEMPLATE_REST, restTemplate);
+        templates.put(BINDING_SUB_KEY_TEMPLATE_PLAIN_REST, plainRestTemplate);
         templates.put(BINDING_SUB_KEY_REQUEST_FACTORY, requestFactory);
         templates.put(BINDING_SUB_KEY_TEMPLATE_S3, s3Template);
         templates.put(BINDING_SUB_KEY_TEMPLATE_ELASTIC, elasticsearchTemplate);
