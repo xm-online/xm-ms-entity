@@ -73,6 +73,11 @@ sourceSets {
             srcDirs += ['src/test/lep']
         }
     }
+    main {
+        groovy {
+            srcDirs += ['src/main/lep']
+        }
+    }
 }
 
 eclipse {
@@ -406,7 +411,7 @@ task cleanResources(type: Delete) {
 }
 
 wrapper {
-    gradleVersion = "6.0.1"
+    gradleVersion = "6.9"
 }
 
 task stage(dependsOn: 'bootWar') {
