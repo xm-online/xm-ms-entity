@@ -15,6 +15,7 @@ import lombok.Getter;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.protocol.HttpClientContext;
 import org.apache.http.protocol.HttpContext;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.cloud.client.loadbalancer.RestTemplateCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -46,14 +47,14 @@ public class RestTemplateConfiguration {
     }
 
     @Bean
-    public RestTemplate plainRestTemplate(PathTimeoutHttpComponentsClientHttpRequestFactory requestFactory) {
+    public RestTemplate plainRestTemplate(PathTimeoutHttpComponentsClientHttpRequestFactory plainRestTemplatePathTimeoutHttpComponentsClientHttpRequestFactory) {
         RestTemplate restTemplate = new RestTemplate();
-        restTemplate.setRequestFactory(requestFactory);
+        restTemplate.setRequestFactory(plainRestTemplatePathTimeoutHttpComponentsClientHttpRequestFactory);
         return restTemplate;
     }
 
     @Bean
-    public PathTimeoutHttpComponentsClientHttpRequestFactory pathTimeoutHttpComponentsClientHttpRequestFactory() {
+    public PathTimeoutHttpComponentsClientHttpRequestFactory requestFactory() {
         return new PathTimeoutHttpComponentsClientHttpRequestFactory();
     }
 

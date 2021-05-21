@@ -70,6 +70,7 @@ public class LepContext {
         public RestTemplate rest;
         public RestTemplate plainRest;
         public RestTemplateConfiguration.PathTimeoutHttpComponentsClientHttpRequestFactory requestFactory;
+        public RestTemplateConfiguration.PathTimeoutHttpComponentsClientHttpRequestFactory plainRestTemplateRequestFactory;
         public AmazonS3Template s3;
         public ElasticsearchTemplate elastic;
         public KafkaTemplateService kafka;
