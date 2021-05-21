@@ -11,6 +11,7 @@ import static com.icthh.xm.ms.entity.lep.LepXmEntityMsConstants.BINDING_SUB_KEY_
 import static com.icthh.xm.ms.entity.lep.LepXmEntityMsConstants.BINDING_SUB_KEY_REPOSITORY_SEARCH;
 import static com.icthh.xm.ms.entity.lep.LepXmEntityMsConstants.BINDING_SUB_KEY_REPOSITORY_XM_ENTITY;
 import static com.icthh.xm.ms.entity.lep.LepXmEntityMsConstants.BINDING_SUB_KEY_REQUEST_FACTORY;
+import static com.icthh.xm.ms.entity.lep.LepXmEntityMsConstants.BINDING_SUB_KEY_PLAIN_REST_TEMPLATE_REQUEST_FACTORY;
 import static com.icthh.xm.ms.entity.lep.LepXmEntityMsConstants.BINDING_SUB_KEY_SERVICE_ATTACHMENT;
 import static com.icthh.xm.ms.entity.lep.LepXmEntityMsConstants.BINDING_SUB_KEY_SERVICE_CALENDAR_SERVICE;
 import static com.icthh.xm.ms.entity.lep.LepXmEntityMsConstants.BINDING_SUB_KEY_SERVICE_ELASTICSEARCH_INDEXS;
@@ -82,6 +83,7 @@ public class XmEntityMsLepProcessingApplicationListener extends SpringLepProcess
     private final RestTemplate restTemplate;
     private final RestTemplate plainRestTemplate;
     private final PathTimeoutHttpComponentsClientHttpRequestFactory requestFactory;
+    private final PathTimeoutHttpComponentsClientHttpRequestFactory plainRestTemplateRequestFactory;
     private final LocationService locationService;
     private final TagService tagService;
     private final ProfileEventProducer profileEventProducer;
@@ -139,6 +141,7 @@ public class XmEntityMsLepProcessingApplicationListener extends SpringLepProcess
         templates.put(BINDING_SUB_KEY_TEMPLATE_REST, restTemplate);
         templates.put(BINDING_SUB_KEY_TEMPLATE_PLAIN_REST, plainRestTemplate);
         templates.put(BINDING_SUB_KEY_REQUEST_FACTORY, requestFactory);
+        templates.put(BINDING_SUB_KEY_PLAIN_REST_TEMPLATE_REQUEST_FACTORY, plainRestTemplateRequestFactory);
         templates.put(BINDING_SUB_KEY_TEMPLATE_S3, s3Template);
         templates.put(BINDING_SUB_KEY_TEMPLATE_ELASTIC, elasticsearchTemplate);
         templates.put(BINDING_SUB_KEY_TEMPLATE_KAFKA, kafkaTemplateService);

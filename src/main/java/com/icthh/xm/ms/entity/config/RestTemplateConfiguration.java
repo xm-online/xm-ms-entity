@@ -57,6 +57,11 @@ public class RestTemplateConfiguration {
         return new PathTimeoutHttpComponentsClientHttpRequestFactory();
     }
 
+    @Bean
+    public PathTimeoutHttpComponentsClientHttpRequestFactory plainRestTemplatePathTimeoutHttpComponentsClientHttpRequestFactory() {
+        return new PathTimeoutHttpComponentsClientHttpRequestFactory();
+    }
+
     public static class PathTimeoutHttpComponentsClientHttpRequestFactory extends HttpComponentsClientHttpRequestFactory {
         @Getter
         private final Set<PathTimeoutConfig> pathPatternTimeoutConfigs = new HashSet<>();
