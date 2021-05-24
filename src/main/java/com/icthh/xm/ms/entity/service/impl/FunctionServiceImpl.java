@@ -32,6 +32,8 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.servlet.http.HttpServletResponse;
+
 /**
  * The {@link FunctionServiceImpl} class.
  */
@@ -137,6 +139,23 @@ public class FunctionServiceImpl implements FunctionService {
         // execute function
         Map<String, Object> data = functionExecutorService.executeAnonymousFunction(functionKey, vInput);
         return processFunctionResult(functionKey, data, functionSpec);
+    }
+
+    @Override
+    public void execute(String functionKey, Map<String, Object> functionInput, HttpServletResponse response) {
+        Objects.requireNonNull(functionKey, "functionKey can't be null");
+        Map<String, Object> vInput = CustomCollectionUtils.emptyIfNull(functionInput);
+        vInput.put("http.response", response);
+
+        dynamicPermissionCheckService.checkContextPermission(DynamicPermissionCheckService.FeatureContext.FUNCTION,
+            FUNCTION_CALL_PRIV, functionKey);
+
+        FunctionSpec functionSpec = findFunctionSpec(functionKey, null);
+
+        validateFunctionInput(functionSpec, functionInput);
+
+        // execute function
+        functionExecutorService.execute(functionKey, vInput);
     }
 
     /**

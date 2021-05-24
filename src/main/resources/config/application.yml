@@ -224,7 +224,7 @@ application:
             bucket:
             bucket-prefix:
     elasticSchemaSuffix: ""
-    requestCacheIgnoredPathPatternList: /api/functions/*/upload
+    requestCacheIgnoredPathPatternList: /api/functions/*/upload,/api/functions/*/download
     maxUploadFileSize: 1073741824
     maxUploadSize: 1073741824
     periodicMetricPoolSize: 1

@@ -14,10 +14,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
 import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -174,6 +178,28 @@ public class FunctionResource {
         Map<String, Object> functionInput = of("httpServletRequest", httpServletRequest, "files", files);
         FunctionContext result = functionService.execute(functionKey, functionInput);
         return ResponseEntity.ok().body(result.functionResult());
+    }
+
+    /**
+     * Function that is desired to provide downloading of large binary data by streaming it to the {@link HttpServletResponse#getOutputStream()}<br/>
+     * Streaming to the response output should be provided by internal Function implementation<br>
+     * Function has control over response object and can setup response preferences, such as Content-Type,
+     * Content-Disposition etc, in order to tune output result more flexible
+     * Response can be used in the LEP via <pre>lepContext.inArgs.functionInput['http.response']</pre>
+     *
+     * @param functionKey
+     * @param functionInput
+     * @param response
+     */
+    @Timed
+    @GetMapping(value = "/functions/{functionKey:.+}/download")
+    @PreAuthorize("hasPermission({'functionKey': #functionKey}, 'FUNCTION.CALL')")
+    @SneakyThrows
+    public void callDownloadFunction(@PathVariable("functionKey") String functionKey,
+                                                                    @RequestParam(required = false) Map<String, Object> functionInput,
+                                                                    HttpServletResponse response) {
+        functionService.execute(functionKey, functionInput, response);
+        response.flushBuffer();
     }
 
     public static String getFunctionKey(HttpServletRequest request) {

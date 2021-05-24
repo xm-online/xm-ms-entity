@@ -12,6 +12,7 @@ import lombok.Setter;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 
+import java.io.InputStream;
 import java.io.Serializable;
 import java.time.Instant;
 import java.util.HashMap;
