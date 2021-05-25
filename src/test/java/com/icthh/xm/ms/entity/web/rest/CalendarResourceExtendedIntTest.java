@@ -21,6 +21,7 @@ import com.icthh.xm.ms.entity.repository.CalendarRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
 import com.icthh.xm.ms.entity.repository.search.PermittedSearchRepository;
 import com.icthh.xm.ms.entity.service.CalendarService;
+import com.icthh.xm.ms.entity.service.XmEntitySpecService;
 import com.icthh.xm.ms.entity.service.impl.StartUpdateDateGenerationStrategy;
 import com.icthh.xm.ms.entity.service.query.EventQueryService;
 import java.time.Instant;
@@ -104,6 +105,9 @@ public class CalendarResourceExtendedIntTest extends AbstractSpringBootTest {
     @Mock
     private XmAuthenticationContext context;
 
+    @Autowired
+    private XmEntitySpecService xmEntitySpecService;
+
     @BeforeTransaction
     public void beforeTransaction() {
         TenantContextUtils.setTenant(tenantContextHolder, "RESINTTEST");
@@ -121,7 +125,8 @@ public class CalendarResourceExtendedIntTest extends AbstractSpringBootTest {
             permittedSearchRepository,
             startUpdateDateGenerationStrategy,
             xmEntityRepository,
-            eventQueryService);
+            eventQueryService,
+            xmEntitySpecService);
 
         CalendarResource calendarResourceMock = new CalendarResource(calendarService, calendarResource);
         this.restCalendarMockMvc = MockMvcBuilders.standaloneSetup(calendarResourceMock)

@@ -13,13 +13,16 @@ import com.icthh.xm.ms.entity.lep.keyresolver.EventTypeKeyResolver;
 import com.icthh.xm.ms.entity.repository.EventRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
 import com.icthh.xm.ms.entity.repository.search.PermittedSearchRepository;
-import java.util.List;
-
 import com.icthh.xm.ms.entity.service.query.EventQueryService;
 import com.icthh.xm.ms.entity.service.query.filter.EventFilter;
+import java.util.List;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -38,6 +41,8 @@ public class EventService {
     private final PermittedRepository permittedRepository;
     private final PermittedSearchRepository permittedSearchRepository;
     private final XmEntityRepository xmEntityRepository;
+    private final CalendarService calendarService;
+
     @Setter(onMethod_ = {@Autowired})
     private EventService self;
 
@@ -61,6 +66,12 @@ public class EventService {
      */
     @LogicExtensionPoint(value = "Save")
     public Event saveEvent(Event event) {
+        calendarService.assertReadOnlyCalendar(event.getCalendar());
+        if (event.getId() != null) {
+            Optional<Event> oldEvent = eventRepository.findById(event.getId());
+            oldEvent.map(Event::getCalendar).ifPresent(calendarService::assertReadOnlyCalendar);
+        }
+
         ofNullable(event.getAssigned())
             .map(XmEntity::getId)
             .ifPresent(assignedId -> event.setAssigned(xmEntityRepository.getOne(assignedId)));
@@ -97,6 +108,11 @@ public class EventService {
         return eventQueryService.findAll(filter);
     }
 
+    @Transactional(readOnly = true)
+    public Page<Event> findAll(Specification<Event> spec, Pageable pageable) {
+        return eventRepository.findAll(spec, pageable);
+    }
+
     /**
      *  Get one event by id.
      *
@@ -117,6 +133,11 @@ public class EventService {
     @LogicExtensionPoint("Delete")
     public void delete(Long id) {
         eventRepository.deleteById(id);
+    }
+
+    @LogicExtensionPoint("DeleteAll")
+    public void deleteAll(List<Event> events) {
+        eventRepository.deleteAll(events);
     }
 
     /**

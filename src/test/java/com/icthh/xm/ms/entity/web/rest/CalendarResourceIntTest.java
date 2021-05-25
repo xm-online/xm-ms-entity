@@ -5,6 +5,7 @@ import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_TENANT_
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.notNullValue;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -24,15 +25,18 @@ import com.icthh.xm.ms.entity.AbstractSpringBootTest;
 import com.icthh.xm.ms.entity.domain.Calendar;
 import com.icthh.xm.ms.entity.domain.Event;
 import com.icthh.xm.ms.entity.domain.XmEntity;
+import com.icthh.xm.ms.entity.domain.spec.CalendarSpec;
 import com.icthh.xm.ms.entity.repository.CalendarRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
 import com.icthh.xm.ms.entity.repository.search.PermittedSearchRepository;
 import com.icthh.xm.ms.entity.service.CalendarService;
+import com.icthh.xm.ms.entity.service.XmEntitySpecService;
 import com.icthh.xm.ms.entity.service.impl.StartUpdateDateGenerationStrategy;
 import com.icthh.xm.ms.entity.service.query.EventQueryService;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.Optional;
 import javax.persistence.EntityManager;
 import org.junit.After;
 import org.junit.Before;
@@ -130,6 +134,9 @@ public class CalendarResourceIntTest extends AbstractSpringBootTest {
     @Mock
     private XmAuthenticationContext context;
 
+    @Mock
+    private XmEntitySpecService xmEntitySpecService;
+
     @BeforeTransaction
     public void beforeTransaction() {
         TenantContextUtils.setTenant(tenantContextHolder, "RESINTTEST");
@@ -146,7 +153,8 @@ public class CalendarResourceIntTest extends AbstractSpringBootTest {
             permittedSearchRepository,
             startUpdateDateGenerationStrategy,
             xmEntityRepository,
-            eventQueryService);
+            eventQueryService,
+            xmEntitySpecService);
 
         CalendarResource calendarResourceMock = new CalendarResource(calendarService, calendarResource);
         this.restCalendarMockMvc = MockMvcBuilders.standaloneSetup(calendarResourceMock)
@@ -217,6 +225,41 @@ public class CalendarResourceIntTest extends AbstractSpringBootTest {
         assertThat(testCalendar.getStartDate()).isEqualTo(DEFAULT_START_DATE);
         assertThat(testCalendar.getEndDate()).isEqualTo(DEFAULT_END_DATE);
         assertThat(testCalendar.getTimeZoneId()).isEqualTo(DEFAULT_TIMEZONE_ID);
+    }
+
+    @Test
+    @Transactional
+    public void createReadOnlyCalendar() throws Exception {
+        CalendarSpec calendarSpec = new CalendarSpec();
+        calendarSpec.setReadOnly(true);
+        when(xmEntitySpecService.findCalendar(anyString(), anyString())).thenReturn(Optional.of(calendarSpec));
+        createCalendar();
+    }
+
+    @Test
+    @Transactional
+    public void updateReadOnlyCalendar() throws Exception {
+        CalendarSpec calendarSpec = new CalendarSpec();
+        calendarSpec.setReadOnly(true);
+        when(xmEntitySpecService.findCalendar(anyString(), anyString())).thenReturn(Optional.of(calendarSpec));
+        calendarService.save(calendar);
+
+        Calendar updatedCalendar = calendarRepository.findById(calendar.getId())
+            .orElseThrow(NullPointerException::new);
+        updatedCalendar
+            .typeKey(UPDATED_TYPE_KEY)
+            .name(UPDATED_NAME)
+            .description(UPDATED_DESCRIPTION)
+            .startDate(UPDATED_START_DATE)
+            .endDate(UPDATED_END_DATE)
+            .setTimeZoneId(UPDATED_TIMEZONE_ID);
+
+        restCalendarMockMvc.perform(put("/api/calendars")
+            .contentType(TestUtil.APPLICATION_JSON_UTF8)
+            .content(TestUtil.convertObjectToJsonBytes(updatedCalendar)))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.error").value("error.read.only.calendar"))
+            .andExpect(jsonPath("$.error_description").value(notNullValue()));
     }
 
     @Test
