@@ -110,25 +110,6 @@ public class FunctionServiceImpl implements FunctionService {
         return processFunctionResult(functionKey, idOrKey, data, functionSpec);
     }
 
-        @Override
-    public FunctionContext executeAnonymous(String functionKey, Map<String, Object> functionInput) {
-        FunctionSpec functionSpec = findFunctionSpec(functionKey, null);
-
-        if (functionSpec.getAnonymous() == null || !functionSpec.getAnonymous()) {
-            throw new BusinessException("Not allowed");
-        }
-
-        Objects.requireNonNull(functionKey, "functionKey can't be null");
-        Map<String, Object> vInput = CustomCollectionUtils.emptyIfNull(functionInput);
-
-        dynamicPermissionCheckService.checkContextPermission(DynamicPermissionCheckService.FeatureContext.FUNCTION,
-            FUNCTION_ANONYMOUS_CALL_PRIV, functionKey);
-
-        // execute function
-        Map<String, Object> data = functionExecutorService.execute(functionKey, vInput);
-        return processFunctionResult(functionKey, data, functionSpec);
-    }
-
     private void validateFunctionInput(FunctionSpec functionSpec, Map<String, Object> functionInput) {
         if (xmEntityTenantConfigService.getXmEntityTenantConfig().getEntityFunctions().getValidateFunctionInput()) {
             // exclude one when enabled for all
