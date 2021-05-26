@@ -16,7 +16,6 @@ import com.icthh.xm.ms.entity.repository.search.PermittedSearchRepository;
 import com.icthh.xm.ms.entity.service.query.EventQueryService;
 import com.icthh.xm.ms.entity.service.query.filter.EventFilter;
 import java.util.List;
-import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,7 +41,6 @@ public class EventService {
     private final PermittedSearchRepository permittedSearchRepository;
     private final XmEntityRepository xmEntityRepository;
     private final CalendarService calendarService;
-
     @Setter(onMethod_ = {@Autowired})
     private EventService self;
 
@@ -68,8 +66,9 @@ public class EventService {
     public Event saveEvent(Event event) {
         calendarService.assertReadOnlyCalendar(event.getCalendar());
         if (event.getId() != null) {
-            Optional<Event> oldEvent = eventRepository.findById(event.getId());
-            oldEvent.map(Event::getCalendar).ifPresent(calendarService::assertReadOnlyCalendar);
+            eventRepository.findById(event.getId())
+                .map(Event::getCalendar)
+                .ifPresent(calendarService::assertReadOnlyCalendar);
         }
 
         ofNullable(event.getAssigned())

@@ -9,7 +9,7 @@ import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -48,7 +48,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import javax.persistence.EntityManager;
-import lombok.extern.slf4j.Slf4j;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -280,16 +279,16 @@ public class EventResourceIntTest extends AbstractSpringBootTest {
     @Transactional
     public void updateEventReadOnlyCalendar() throws Exception {
         CalendarSpec calendarSpec = new CalendarSpec();
-        calendarSpec.setReadOnly(true);
-        when(xmEntitySpecService.findCalendar(anyString(), anyString())).thenReturn(Optional.of(calendarSpec));
+        calendarSpec.setReadonly(true);
+        when(xmEntitySpecService.findCalendar(eq(XmEntityResourceIntTest.DEFAULT_TYPE_KEY),
+                                              eq(CalendarResourceIntTest.DEFAULT_TYPE_KEY)))
+            .thenReturn(Optional.of(calendarSpec));
 
-        // Initialize the database
         Calendar calendar = CalendarResourceIntTest.createEntity(em);
         em.persist(calendar);
         event.setCalendar(calendar);
         em.persist(event);
 
-        // Update the event
         em.detach(event);
         em.detach(event.getEventDataRef());
         event
@@ -315,10 +314,11 @@ public class EventResourceIntTest extends AbstractSpringBootTest {
     @Transactional
     public void createEventReadOnlyCalendar() throws Exception {
         CalendarSpec calendarSpec = new CalendarSpec();
-        calendarSpec.setReadOnly(true);
-        when(xmEntitySpecService.findCalendar(anyString(), anyString())).thenReturn(Optional.of(calendarSpec));
+        calendarSpec.setReadonly(true);
+        when(xmEntitySpecService.findCalendar(eq(XmEntityResourceIntTest.DEFAULT_TYPE_KEY),
+                                              eq(CalendarResourceIntTest.DEFAULT_TYPE_KEY)))
+            .thenReturn(Optional.of(calendarSpec));
 
-        // Initialize the database
         Calendar calendar = CalendarResourceIntTest.createEntity(em);
         em.persist(calendar);
         event.setCalendar(calendar);

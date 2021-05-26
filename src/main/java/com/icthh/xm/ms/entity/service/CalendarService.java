@@ -1,7 +1,5 @@
 package com.icthh.xm.ms.entity.service;
 
-import static java.lang.Boolean.TRUE;
-
 import com.icthh.xm.commons.exceptions.BusinessException;
 import com.icthh.xm.commons.lep.LogicExtensionPoint;
 import com.icthh.xm.commons.lep.spring.LepService;
@@ -18,7 +16,6 @@ import com.icthh.xm.ms.entity.service.impl.StartUpdateDateGenerationStrategy;
 import com.icthh.xm.ms.entity.service.query.EventQueryService;
 import com.icthh.xm.ms.entity.service.query.filter.EventFilter;
 import java.util.List;
-import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -62,14 +59,17 @@ public class CalendarService {
     }
 
     public void assertReadOnlyCalendar(Calendar calendar) {
-        if (calendar != null && calendar.getId() != null) {
-            Optional<CalendarSpec> spec = specService
-                .findCalendar(calendar.getXmEntity().getTypeKey(), calendar.getTypeKey());
-
-            if (spec.isPresent() && TRUE.equals(spec.get().getReadOnly())) {
-                throw new BusinessException("error.read.only.calendar", "Cannot update read only calendar");
-            }
+        if (calendar == null || calendar.getId() == null) {
+            return;
         }
+
+        specService
+            .findCalendar(calendar.getXmEntity().getTypeKey(), calendar.getTypeKey())
+            .map(CalendarSpec::getReadonly)
+            .filter(isReadonly -> isReadonly)
+            .ifPresent(isReadonly -> {
+                throw new BusinessException("error.read.only.calendar", "Cannot update read only calendar");
+            });
     }
 
     /**

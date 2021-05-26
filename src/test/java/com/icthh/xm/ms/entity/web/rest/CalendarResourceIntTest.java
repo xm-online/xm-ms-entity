@@ -5,7 +5,7 @@ import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_TENANT_
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.notNullValue;
-import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -65,7 +65,7 @@ import org.springframework.validation.Validator;
 @WithMockUser(authorities = {"SUPER-ADMIN"})
 public class CalendarResourceIntTest extends AbstractSpringBootTest {
 
-    private static final String DEFAULT_TYPE_KEY = "AAAAAAAAAA";
+    public static final String DEFAULT_TYPE_KEY = "AAAAAAAAAA";
     private static final String UPDATED_TYPE_KEY = "BBBBBBBBBB";
 
     private static final String DEFAULT_NAME = "AAAAAAAAAA";
@@ -231,8 +231,9 @@ public class CalendarResourceIntTest extends AbstractSpringBootTest {
     @Transactional
     public void createReadOnlyCalendar() throws Exception {
         CalendarSpec calendarSpec = new CalendarSpec();
-        calendarSpec.setReadOnly(true);
-        when(xmEntitySpecService.findCalendar(anyString(), anyString())).thenReturn(Optional.of(calendarSpec));
+        calendarSpec.setReadonly(true);
+        when(xmEntitySpecService.findCalendar(eq(XmEntityResourceIntTest.DEFAULT_TYPE_KEY), eq(DEFAULT_TYPE_KEY)))
+            .thenReturn(Optional.of(calendarSpec));
         createCalendar();
     }
 
@@ -240,12 +241,14 @@ public class CalendarResourceIntTest extends AbstractSpringBootTest {
     @Transactional
     public void updateReadOnlyCalendar() throws Exception {
         CalendarSpec calendarSpec = new CalendarSpec();
-        calendarSpec.setReadOnly(true);
-        when(xmEntitySpecService.findCalendar(anyString(), anyString())).thenReturn(Optional.of(calendarSpec));
+        calendarSpec.setReadonly(true);
+        when(xmEntitySpecService.findCalendar(eq(XmEntityResourceIntTest.DEFAULT_TYPE_KEY), eq(DEFAULT_TYPE_KEY)))
+            .thenReturn(Optional.of(calendarSpec));
+        when(xmEntitySpecService.findCalendar(eq(XmEntityResourceIntTest.DEFAULT_TYPE_KEY), eq(UPDATED_TYPE_KEY)))
+            .thenReturn(Optional.of(calendarSpec));
         calendarService.save(calendar);
 
-        Calendar updatedCalendar = calendarRepository.findById(calendar.getId())
-            .orElseThrow(NullPointerException::new);
+        Calendar updatedCalendar = calendarRepository.findById(calendar.getId()).get();
         updatedCalendar
             .typeKey(UPDATED_TYPE_KEY)
             .name(UPDATED_NAME)
