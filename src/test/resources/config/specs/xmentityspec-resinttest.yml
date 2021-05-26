@@ -406,6 +406,16 @@ types:
             - key: en2en1
               builderType: SEARCH
               typeKey: ENTITY1
+    - key: ENTITY1jpql
+      isApp: false
+      isAbstract: false
+      isNameRequired: false
+      isKeyRequired: false
+    - key: ENTITY2jpql
+      isApp: false
+      isAbstract: false
+      isNameRequired: true
+      isKeyRequired: true
     - key: TEST_SAVE_WITH_LINK_EXISTS_ENTITY
       isAbstract: false
       links:
@@ -480,6 +490,16 @@ types:
           - key: FUNCTION_WITH_BINARY_RESULT
             binaryDataField: 'bytes'
             binaryDataType: 'application/pdf'
+    - key: TEST_ENTITY_WITH_ANONYMOUS_FUNCTION
+      name: { en: "TEST_ENTITY_WITH_ANONYMOUS_FUNCTION" }
+      isApp: false
+      isAbstract: false
+      functions:
+          - key: FUNCTION_WITH_ANONYMOUS_NOT_EXPLICITLY_SET
+          - key: FUNCTION_WITH_ANONYMOUS_SET_TO_FALSE
+            anonymous: false
+          - key: FUNCTION_WITH_ANONYMOUS_SET_TO_TRUE
+            anonymous: true
     - key: TEST_FUNCTION_WITH_PACKAGE
       name: { en: "TEST_FUNCTION_WITH_PACKAGE" }
       isApp: false

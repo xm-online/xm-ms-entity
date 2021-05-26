@@ -28,6 +28,7 @@ import java.util.UUID;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -140,6 +141,22 @@ public class FunctionServiceImpl implements FunctionService {
                 jsonValidationService.assertJson(functionInput, functionSpec.getInputSpec());
             }
         }
+    }
+
+    @Override
+    public FunctionContext executeAnonymous(String functionKey, Map<String, Object> functionInput) {
+        FunctionSpec functionSpec = findFunctionSpec(functionKey, null);
+
+        if (!functionSpec.getAnonymous()) {
+            throw new AccessDeniedException("access denied");
+        }
+
+        Objects.requireNonNull(functionKey, "functionKey can't be null");
+        Map<String, Object> vInput = CustomCollectionUtils.emptyIfNull(functionInput);
+
+        // execute function
+        Map<String, Object> data = functionExecutorService.executeAnonymousFunction(functionKey, vInput);
+        return processFunctionResult(functionKey, data, functionSpec);
     }
 
     /**

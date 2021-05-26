@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import lombok.Data;
 
+import javax.validation.constraints.NotNull;
 import java.util.List;
 import java.util.Map;
 
@@ -109,6 +110,7 @@ public class FunctionSpec {
             FUNCTION_CALL_PRIV.concat(".").concat(getKey());
     }
 
+    @NotNull
     public Boolean getAnonymous() {
         return anonymous == null ? false : anonymous;
     }

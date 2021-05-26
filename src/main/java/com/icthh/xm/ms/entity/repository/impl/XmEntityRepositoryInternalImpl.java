@@ -118,6 +118,11 @@ public class XmEntityRepositoryInternalImpl implements XmEntityRepositoryInterna
     }
 
     @Override
+    public List<?> findAll(String jpql, Map<String, Object> args) {
+        return springXmEntityRepository.findAll(jpql, args);
+    }
+
+    @Override
     public List<XmEntity> findAllById(Iterable<Long> longs) {
         return springXmEntityRepository.findAllById(longs);
     }

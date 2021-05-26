@@ -122,6 +122,11 @@ public class FunctionResourceIntTest extends AbstractSpringBootTest {
         leps.onRefresh(functionPrefix + "FunctionWithXmEntity$$FUNCTION_WITH_BINARY_RESULT$$tenant.groovy", loadData ? functionWithBinaryResult : null);
         String functionWithNullResult = "return null";
         leps.onRefresh(functionPrefix + "Function$$FUNCTION_WITH_NULL_RESULT$$tenant.groovy", loadData ? functionWithNullResult : null);
+
+        String anonymousFunctionResult = "return [someKey: \"someValue\"]";
+        leps.onRefresh(functionPrefix + "AnonymousFunction$$FUNCTION_WITH_ANONYMOUS_NOT_EXPLICITLY_SET$$tenant.groovy", loadData ? anonymousFunctionResult : null);
+        leps.onRefresh(functionPrefix + "AnonymousFunction$$FUNCTION_WITH_ANONYMOUS_SET_TO_FALSE$$tenant.groovy", loadData ? anonymousFunctionResult : null);
+        leps.onRefresh(functionPrefix + "AnonymousFunction$$FUNCTION_WITH_ANONYMOUS_SET_TO_TRUE$$tenant.groovy", loadData ? anonymousFunctionResult : null);
     }
 
     @SneakyThrows
@@ -204,6 +209,43 @@ public class FunctionResourceIntTest extends AbstractSpringBootTest {
             .andExpect(status().is2xxSuccessful())
             .andExpect(header().string("content-type", "application/pdf"))
             .andExpect(content().bytes("test".getBytes()));
+    }
+
+    @Test
+    @Transactional
+    public void anonymousFunction() throws Exception {
+        //GIVEN
+        xmEntityService.save(new XmEntity().typeKey("TEST_ENTITY_WITH_ANONYMOUS_FUNCTION").key(UUID.randomUUID()).name("test"));
+        String testContent = "{\"testKey\": \"testValue\"}";
+
+        //WHEN
+        ResultActions functionWithAnonymousFlagNotExplicitlySetCallResult = mockMvc.perform(
+            post("/api/functions/anonymous/{functionName}",
+                "FUNCTION_WITH_ANONYMOUS_NOT_EXPLICITLY_SET")
+                .content(testContent)
+                .contentType(APPLICATION_JSON_VALUE));
+        ResultActions functionWithAnonymousFlagSetToFalse = mockMvc.perform(
+            post("/api/functions/anonymous/{functionName}",
+                "FUNCTION_WITH_ANONYMOUS_SET_TO_FALSE")
+                .content(testContent)
+                .contentType(APPLICATION_JSON_VALUE));
+        ResultActions functionWithAnonymousFlagSetToTrue = mockMvc.perform(
+            post("/api/functions/anonymous/{functionName}",
+                "FUNCTION_WITH_ANONYMOUS_SET_TO_TRUE")
+                .content(testContent)
+                .contentType(APPLICATION_JSON_VALUE));
+
+        //THEN
+        functionWithAnonymousFlagNotExplicitlySetCallResult
+            .andExpect(status().is4xxClientError())
+            .andExpect(header().string("content-type", "application/json;charset=UTF-8"));
+        functionWithAnonymousFlagSetToFalse
+            .andExpect(status().is4xxClientError())
+            .andExpect(header().string("content-type", "application/json;charset=UTF-8"));
+        functionWithAnonymousFlagSetToTrue
+            .andExpect(status().is2xxSuccessful())
+            .andExpect(header().string("content-type", "application/json;charset=UTF-8"))
+            .andExpect(content().json("{\"data\":{\"someKey\":\"someValue\"}}"));
     }
 
     @Test
