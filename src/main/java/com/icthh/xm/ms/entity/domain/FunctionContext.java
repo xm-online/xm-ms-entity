@@ -18,6 +18,7 @@ import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import javax.persistence.Column;
 import javax.persistence.Convert;
 import javax.persistence.Entity;
@@ -120,6 +121,11 @@ public class FunctionContext implements Serializable {
     @Getter
     @Transient
     private String binaryDataType;
+
+    @Transient
+    @Getter
+    @Setter
+    private transient boolean anonymous;
 
     public Long getId() {
         return id;
