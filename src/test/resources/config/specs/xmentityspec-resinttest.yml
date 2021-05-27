@@ -510,6 +510,15 @@ types:
           - key: package/FUNCTION.PACKAGE-TEST
           - key: package/FUNCTION-WITH-ENTITY.PACKAGE-TEST
             withEntityId: true
+    -   key: TEST_DOWNLOAD_FUNCTION
+        name: { en: "TEST_DOWNLOAD_FUNCTION" }
+        isApp: false
+        isAbstract: false
+        isNameRequired: false
+        isKeyRequired: false
+        functions:
+            -   key: TEST-DOWNLOAD-FUNCTION
+                withEntityId: false
     - key: TEST_EXPORT_1
       name: {en: "TEST_EXPORT_1"}
       isApp: false

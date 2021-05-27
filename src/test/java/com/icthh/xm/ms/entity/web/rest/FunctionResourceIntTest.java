@@ -315,4 +315,27 @@ public class FunctionResourceIntTest extends AbstractSpringBootTest {
         leps.onRefresh(funcKey, null);
     }
 
+    @Test
+    @SneakyThrows
+    public void testDownloadFunction() {
+        String functionPrefix = "/config/tenants/RESINTTEST/entity/lep/function/";
+        String functionApi = "/api/functions/";
+        String functionKey = "TEST-DOWNLOAD-FUNCTION";
+        String funcKey = functionPrefix + "Function$$TEST_DOWNLOAD_FUNCTION$$tenant.groovy";
+        final String simpleFunctionScript =
+            "lepContext.inArgs.functionInput['http.response'].setHeader('Content-Disposition', 'attachment;fileName=file.txt')\n" +
+            "lepContext.inArgs.functionInput['http.response'].setContentType('application/octet-stream')\n" +
+            "lepContext.inArgs.functionInput['http.response'].setContentLengthLong(12L)\n" +
+            "lepContext.inArgs.functionInput['http.response'].getOutputStream().print('file-content')\n";
+        leps.onRefresh(funcKey, simpleFunctionScript);
+
+        mockMvc.perform(get(functionApi + functionKey + "/download"))
+            .andDo(print())
+            .andExpect(status().is2xxSuccessful())
+            .andExpect(header().string("Content-Disposition", "attachment;fileName=file.txt"))
+            .andExpect(content().contentType("application/octet-stream"))
+            .andExpect(content().string("file-content"));
+
+        leps.onRefresh(funcKey, null);
+    }
 }

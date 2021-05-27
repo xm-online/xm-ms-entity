@@ -23,6 +23,8 @@ import org.mockito.AdditionalAnswers;
 import org.mockito.Mockito;
 import org.mockito.stubbing.Answer;
 
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpServletResponseWrapper;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -456,6 +458,19 @@ public class FunctionServiceImplUnitTest extends AbstractUnitTest {
         when(xmEntityService.findStateProjectionById(SELF)).thenReturn(getProjection(SELF));
         functionService.execute(VALIDATION_FUNCTION, SELF, functionInput);
         verify(jsonValidationService).assertJson(eq(functionInput), eq(spec.getInputSpec()));
+    }
+
+    @Test
+    public void addHttpServletResponseToLepContext() {
+        FunctionSpec spec = generateFunctionSpec(false);
+        when(xmEntitySpecService.findFunction("FUNCTION")).thenReturn(Optional.of(spec));
+
+        HttpServletResponse servletResponse = mock(HttpServletResponse.class);
+        final Map<String, Object> functionInput = new HashMap<>();
+        functionService.execute("FUNCTION", functionInput, servletResponse);
+
+
+        assertThat(functionInput.get("http.response")).isEqualTo(servletResponse);
     }
 
     @NotNull
