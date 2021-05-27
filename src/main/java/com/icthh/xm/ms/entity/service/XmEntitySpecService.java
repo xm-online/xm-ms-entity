@@ -42,6 +42,7 @@ import com.icthh.xm.commons.tenant.TenantContextUtils;
 import com.icthh.xm.ms.entity.config.ApplicationProperties;
 import com.icthh.xm.ms.entity.config.XmEntityTenantConfigService;
 import com.icthh.xm.ms.entity.config.XmEntityTenantConfigService.XmEntityTenantConfig;
+import com.icthh.xm.ms.entity.domain.Calendar;
 import com.icthh.xm.ms.entity.domain.ext.TypeSpecParameter;
 import com.icthh.xm.ms.entity.domain.spec.AttachmentSpec;
 import com.icthh.xm.ms.entity.domain.spec.CalendarSpec;
@@ -381,6 +382,22 @@ public class XmEntitySpecService implements RefreshableConfiguration {
             throw new IllegalStateException("Found more than one Event specifications by key:" + eventTypeKey);
         }
         return ofNullable(getFirst(eventSpecs, null));
+    }
+
+    /**
+     * Find {@link CalendarSpec} for specified calendar type key.
+     * @implNote method throws exception in case when more than one {@link Calendar} found
+     * @param calendarTypeKey the calendar type key to find
+     * @return the calendar specification
+     */
+    @IgnoreLogginAspect
+    public Optional<CalendarSpec> findCalendar(String typeKey, String calendarTypeKey) {
+        return getTypeSpecByKey(typeKey)
+            .map(TypeSpec::getCalendars)
+            .stream()
+            .flatMap(Collection::stream)
+            .filter(calendarSpec -> calendarSpec.getKey().equals(calendarTypeKey))
+            .findFirst();
     }
 
     /**

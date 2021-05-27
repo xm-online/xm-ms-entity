@@ -9,6 +9,8 @@ import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -19,20 +21,32 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.google.common.collect.ImmutableMap;
 import com.icthh.xm.commons.i18n.error.web.ExceptionTranslator;
+import com.icthh.xm.commons.permission.repository.PermittedRepository;
 import com.icthh.xm.commons.security.XmAuthenticationContext;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
 import com.icthh.xm.lep.api.LepManager;
 import com.icthh.xm.ms.entity.AbstractSpringBootTest;
+import com.icthh.xm.ms.entity.domain.Calendar;
 import com.icthh.xm.ms.entity.domain.Event;
 import com.icthh.xm.ms.entity.domain.XmEntity;
+import com.icthh.xm.ms.entity.domain.spec.CalendarSpec;
+import com.icthh.xm.ms.entity.repository.CalendarRepository;
 import com.icthh.xm.ms.entity.repository.EventRepository;
+import com.icthh.xm.ms.entity.repository.XmEntityRepository;
+import com.icthh.xm.ms.entity.repository.search.PermittedSearchRepository;
+import com.icthh.xm.ms.entity.service.CalendarService;
 import com.icthh.xm.ms.entity.service.EventService;
+import com.icthh.xm.ms.entity.service.XmEntityService;
+import com.icthh.xm.ms.entity.service.XmEntitySpecService;
+import com.icthh.xm.ms.entity.service.impl.StartUpdateDateGenerationStrategy;
+import com.icthh.xm.ms.entity.service.query.EventQueryService;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import javax.persistence.EntityManager;
 import org.junit.After;
 import org.junit.Before;
@@ -94,7 +108,6 @@ public class EventResourceIntTest extends AbstractSpringBootTest {
     @Autowired
     private EventRepository eventRepository;
 
-    @Autowired
     private EventService eventService;
 
     @Autowired
@@ -122,8 +135,34 @@ public class EventResourceIntTest extends AbstractSpringBootTest {
     @Autowired
     private LepManager lepManager;
 
+    @Autowired
+    private XmEntityService xmEntityService;
+
+    @Autowired
+    private EventQueryService eventQueryService;
+
+    @Autowired
+    private PermittedRepository permittedRepository;
+
+    @Autowired
+    private PermittedSearchRepository permittedSearchRepository;
+
+    @Autowired
+    private XmEntityRepository xmEntityRepository;
+
     @Mock
     private XmAuthenticationContext context;
+
+    @Mock
+    private XmEntitySpecService xmEntitySpecService;
+
+    @Autowired
+    private CalendarRepository calendarRepository;
+
+    @Autowired
+    private StartUpdateDateGenerationStrategy startUpdateDateGenerationStrategy;
+
+    private CalendarService calendarService;
 
     @BeforeTransaction
     public void beforeTransaction() {
@@ -133,6 +172,24 @@ public class EventResourceIntTest extends AbstractSpringBootTest {
     @Before
     public void setup() {
         MockitoAnnotations.initMocks(this);
+
+        calendarService = new CalendarService(calendarRepository,
+            permittedRepository,
+            permittedSearchRepository,
+            startUpdateDateGenerationStrategy,
+            xmEntityRepository,
+            eventQueryService,
+            xmEntitySpecService);
+
+        eventService = new EventService(xmEntityService,
+            eventQueryService,
+            eventRepository,
+            permittedRepository,
+            permittedSearchRepository,
+            xmEntityRepository,
+            calendarService);
+        eventService.setSelf(eventService);
+
         EventResource eventResourceMock = new EventResource(eventService, eventResource);
         this.restEventMockMvc = MockMvcBuilders.standaloneSetup(eventResourceMock)
             .setCustomArgumentResolvers(pageableArgumentResolver)
@@ -216,6 +273,62 @@ public class EventResourceIntTest extends AbstractSpringBootTest {
         assertThat(testEvent.getEndDate()).isEqualTo(DEFAULT_END_DATE);
         assertThat(testEvent.getEventDataRef().getTypeKey()).isEqualTo(DEFAULT_EVENT_DATA_REF_TYPE_KEY);
         assertThat(testEvent.getEventDataRef().getData()).isEqualTo(DEFAULT_EVENT_DATA_REF_DATA);
+    }
+
+    @Test
+    @Transactional
+    public void updateEventReadOnlyCalendar() throws Exception {
+        CalendarSpec calendarSpec = new CalendarSpec();
+        calendarSpec.setReadonly(true);
+        when(xmEntitySpecService.findCalendar(eq(XmEntityResourceIntTest.DEFAULT_TYPE_KEY),
+                                              eq(CalendarResourceIntTest.DEFAULT_TYPE_KEY)))
+            .thenReturn(Optional.of(calendarSpec));
+
+        Calendar calendar = CalendarResourceIntTest.createEntity(em);
+        em.persist(calendar);
+        event.setCalendar(calendar);
+        em.persist(event);
+
+        em.detach(event);
+        em.detach(event.getEventDataRef());
+        event
+            .typeKey(UPDATED_TYPE_KEY)
+            .repeatRuleKey(UPDATED_REPEAT_RULE_KEY)
+            .title(UPDATED_TITLE)
+            .description(UPDATED_DESCRIPTION)
+            .startDate(UPDATED_START_DATE)
+            .endDate(UPDATED_END_DATE)
+            .color(UPDATED_COLOR)
+            .calendar(calendar)
+            .getEventDataRef().setData(UPDATED_EVENT_DATA_REF_DATA);
+
+        restEventMockMvc.perform(put("/api/events")
+            .contentType(TestUtil.APPLICATION_JSON_UTF8)
+            .content(TestUtil.convertObjectToJsonBytes(event)))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.error").value("error.read.only.calendar"))
+            .andExpect(jsonPath("$.error_description").value(notNullValue()));
+    }
+
+    @Test
+    @Transactional
+    public void createEventReadOnlyCalendar() throws Exception {
+        CalendarSpec calendarSpec = new CalendarSpec();
+        calendarSpec.setReadonly(true);
+        when(xmEntitySpecService.findCalendar(eq(XmEntityResourceIntTest.DEFAULT_TYPE_KEY),
+                                              eq(CalendarResourceIntTest.DEFAULT_TYPE_KEY)))
+            .thenReturn(Optional.of(calendarSpec));
+
+        Calendar calendar = CalendarResourceIntTest.createEntity(em);
+        em.persist(calendar);
+        event.setCalendar(calendar);
+
+        restEventMockMvc.perform(post("/api/events")
+            .contentType(TestUtil.APPLICATION_JSON_UTF8)
+            .content(TestUtil.convertObjectToJsonBytes(event)))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.error").value("error.read.only.calendar"))
+            .andExpect(jsonPath("$.error_description").value(notNullValue()));
     }
 
     @Test

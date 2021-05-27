@@ -105,7 +105,7 @@ public class XmEntityResourceIntTest extends AbstractSpringBootTest {
     private static final String DEFAULT_KEY = "AAAAAAAAAA";
     private static final String UPDATED_KEY = "BBBBBBBBBB";
 
-    private static final String DEFAULT_TYPE_KEY = "ACCOUNT.ADMIN";
+    public static final String DEFAULT_TYPE_KEY = "ACCOUNT.ADMIN";
     private static final String UPDATED_TYPE_KEY = "ACCOUNT.OWNER";
 
     private static final String DEFAULT_STATE_KEY = "STATE2";

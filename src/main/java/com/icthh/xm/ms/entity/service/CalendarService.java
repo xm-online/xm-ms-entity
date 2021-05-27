@@ -1,5 +1,6 @@
 package com.icthh.xm.ms.entity.service;
 
+import com.icthh.xm.commons.exceptions.BusinessException;
 import com.icthh.xm.commons.lep.LogicExtensionPoint;
 import com.icthh.xm.commons.lep.spring.LepService;
 import com.icthh.xm.commons.permission.annotation.FindWithPermission;
@@ -7,6 +8,7 @@ import com.icthh.xm.commons.permission.annotation.PrivilegeDescription;
 import com.icthh.xm.commons.permission.repository.PermittedRepository;
 import com.icthh.xm.ms.entity.domain.Calendar;
 import com.icthh.xm.ms.entity.domain.Event;
+import com.icthh.xm.ms.entity.domain.spec.CalendarSpec;
 import com.icthh.xm.ms.entity.repository.CalendarRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
 import com.icthh.xm.ms.entity.repository.search.PermittedSearchRepository;
@@ -35,6 +37,7 @@ public class CalendarService {
     private final StartUpdateDateGenerationStrategy startUpdateDateGenerationStrategy;
     private final XmEntityRepository xmEntityRepository;
     private final EventQueryService eventQueryService;
+    private final XmEntitySpecService specService;
 
     /**
      * Save a calendar.
@@ -51,7 +54,22 @@ public class CalendarService {
                                                               Calendar::setStartDate,
                                                               Calendar::getStartDate);
         calendar.setXmEntity(xmEntityRepository.getOne(calendar.getXmEntity().getId()));
+        assertReadOnlyCalendar(calendar);
         return calendarRepository.save(calendar);
+    }
+
+    public void assertReadOnlyCalendar(Calendar calendar) {
+        if (calendar == null || calendar.getId() == null) {
+            return;
+        }
+
+        specService
+            .findCalendar(calendar.getXmEntity().getTypeKey(), calendar.getTypeKey())
+            .map(CalendarSpec::getReadonly)
+            .filter(isReadonly -> isReadonly)
+            .ifPresent(isReadonly -> {
+                throw new BusinessException("error.read.only.calendar", "Cannot update read only calendar");
+            });
     }
 
     /**

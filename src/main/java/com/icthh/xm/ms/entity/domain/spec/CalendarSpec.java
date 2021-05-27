@@ -32,4 +32,6 @@ public class CalendarSpec {
     @JsonProperty("timeZoneDataRef")
     private String timeZoneDataRef;
 
+    @JsonProperty("readonly")
+    private Boolean readonly;
 }

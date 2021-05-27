@@ -14,11 +14,11 @@ import javax.validation.Payload;
 @Retention(RetentionPolicy.RUNTIME)
 @Constraint(validatedBy = TypeKeyValidator.class)
 public @interface TypeKey {
-    
+
     String typeKeyField() default "typeKey";
-    
+
     String entityField() default "xmEntity";
-    
+
     String message() default "{xm.ms.entity.typekey.constraint}";
 
     Class<?>[] groups() default {};
