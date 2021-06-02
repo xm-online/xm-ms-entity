@@ -44,9 +44,7 @@ public class XmEntityElasticSearchListener {
     void onPostPersistOrUpdate(XmEntity entity) {
         if (isFeatureEnabled(entity, TypeSpec::getIndexAfterSaveEnabled)) {
             log.debug("Save xm entity to elastic {}", entity);
-            runAfterTransaction(entity, xmEntitySearchRepository::save);
-        }
-    }
+            runAfterTransaction(entity, xmEntitySearchRepository::save); } }
 
     @PostRemove
     void onPostRemove(XmEntity entity) {
