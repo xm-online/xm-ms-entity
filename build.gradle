@@ -67,10 +67,14 @@ idea {
 }
 
 sourceSets {
-    // FIXME src/main/lep is not defined as source set because package problem is not resolved yet.
     test {
         groovy {
             srcDirs += ['src/test/lep']
+        }
+    }
+    main {
+        groovy {
+            srcDirs += ['src/main/lep']
         }
     }
 }
