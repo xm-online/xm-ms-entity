@@ -73,6 +73,11 @@ sourceSets {
             srcDirs += ['src/test/lep']
         }
     }
+    main {
+        groovy {
+            srcDirs += ['src/main/lep']
+        }
+    }
 }
 
 eclipse {
