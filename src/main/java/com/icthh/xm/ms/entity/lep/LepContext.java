@@ -25,6 +25,7 @@ import com.icthh.xm.ms.entity.service.XmEntityService;
 import com.icthh.xm.ms.entity.service.mail.MailService;
 import com.icthh.xm.ms.entity.service.metrics.CustomMetricsContext;
 import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.web.client.RestTemplate;
 
 public class LepContext {
@@ -68,6 +69,7 @@ public class LepContext {
 
     public static class LepTemplates {
         public RestTemplate rest;
+        public JdbcTemplate jdbc;
         public RestTemplate plainRest;
         public RestTemplateConfiguration.PathTimeoutHttpComponentsClientHttpRequestFactory requestFactory;
         public AmazonS3Template s3;

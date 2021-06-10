@@ -29,6 +29,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.web.client.RestTemplate;
 
 /**
@@ -52,6 +53,7 @@ public class LepAppEventListenerConfiguration {
         AttachmentService attachmentService,
         @Qualifier("loadBalancedRestTemplateWithTimeout") RestTemplate loadBalancedRestTemplateWithTimeout,
         @Qualifier("plainRestTemplate") RestTemplate plainRestTemplate,
+        JdbcTemplate jdbcTemplate,
         PathTimeoutHttpComponentsClientHttpRequestFactory requestFactory,
         LocationService locationService,
         TagService tagService,
@@ -73,7 +75,7 @@ public class LepAppEventListenerConfiguration {
                         requestFactory, locationService, tagService, profileEventProducer, commentService,
                         commonsService, permissionCheckService, eventService, calendarService, tenantLepResource,
                         amazonS3Template, elasticsearchTemplate, permittedSearchRepository, elasticsearchIndexService,
-                        transactionExecutor, customMetricsContext, kafkaTemplateService);
+                        transactionExecutor, customMetricsContext, kafkaTemplateService, jdbcTemplate);
     }
 
 }
