@@ -4,6 +4,8 @@ import static com.icthh.xm.ms.entity.util.DatabaseUtil.runAfterTransaction;
 
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.domain.spec.TypeSpec;
+import com.icthh.xm.ms.entity.lep.ElasticIndexManager;
+import com.icthh.xm.ms.entity.lep.ElasticIndexManagerService;
 import com.icthh.xm.ms.entity.repository.search.XmEntitySearchRepository;
 import com.icthh.xm.ms.entity.service.XmEntitySpecService;
 import lombok.extern.slf4j.Slf4j;
@@ -20,13 +22,13 @@ import javax.persistence.PostUpdate;
 @Component
 public class XmEntityElasticSearchListener {
 
-    private static XmEntitySearchRepository xmEntitySearchRepository;
+    private static ElasticIndexManagerService elasticIndexManagerService;
 
     private static XmEntitySpecService xmEntitySpecService;
 
     @Autowired
-    public void setXmEntitySearchRepository(XmEntitySearchRepository xmEntitySearchRepository) {
-        this.xmEntitySearchRepository = xmEntitySearchRepository;
+    public void setElasticIndexManagerService(ElasticIndexManagerService elasticIndexManagerService) {
+        this.elasticIndexManagerService = elasticIndexManagerService;
     }
 
     @Autowired
@@ -36,7 +38,7 @@ public class XmEntityElasticSearchListener {
 
     @PostConstruct
     public void init() {
-        log.info("Initializing Listener for XmEntity [{}, {}]", xmEntitySearchRepository, xmEntitySpecService);
+        log.info("Initializing Listener for XmEntity [{}, {}]", elasticIndexManagerService, xmEntitySpecService);
     }
 
     @PostPersist
@@ -44,7 +46,7 @@ public class XmEntityElasticSearchListener {
     void onPostPersistOrUpdate(XmEntity entity) {
         if (isFeatureEnabled(entity, TypeSpec::getIndexAfterSaveEnabled)) {
             log.debug("Save xm entity to elastic {}", entity);
-            runAfterTransaction(entity, xmEntitySearchRepository::save);
+            elasticIndexManagerService.addEntityToSave(entity);
         }
     }
 
@@ -52,7 +54,7 @@ public class XmEntityElasticSearchListener {
     void onPostRemove(XmEntity entity) {
         if(isFeatureEnabled(entity, TypeSpec::getIndexAfterDeleteEnabled)){
             log.debug("Delete xm entity from elastic {}", entity);
-            runAfterTransaction(entity, xmEntitySearchRepository::delete);
+            elasticIndexManagerService.addEntityToDelete(entity);
         }
     }
 
