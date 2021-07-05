@@ -4,6 +4,8 @@ import com.icthh.xm.commons.config.client.api.RefreshableConfiguration;
 import com.icthh.xm.commons.logging.LoggingAspectConfig;
 import com.icthh.xm.commons.tenant.TenantKey;
 import com.icthh.xm.ms.entity.config.ApplicationProperties;
+import freemarker.cache.StringTemplateLoader;
+import freemarker.cache.TemplateLoader;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -27,6 +29,7 @@ public class TenantEmailTemplateService implements RefreshableConfiguration {
     private ConcurrentHashMap<String, String> emailTemplates = new ConcurrentHashMap<>();
     private final AntPathMatcher matcher = new AntPathMatcher();
     private final ApplicationProperties applicationProperties;
+    private final StringTemplateLoader templateLoader;
 
     /**
      * Search email template by email template key.
@@ -55,10 +58,12 @@ public class TenantEmailTemplateService implements RefreshableConfiguration {
                                                                 templateName);
         if (StringUtils.isBlank(config)) {
             emailTemplates.remove(templateKey);
+            templateLoader.removeTemplate(templateKey);
             log.info("Email template '{}' with locale {} for tenant '{}' was removed", templateName,
                             langKey, tenantKeyValue);
         } else {
             emailTemplates.put(templateKey, config);
+            templateLoader.putTemplate(templateKey, config);
             log.info("Email template '{}' with locale {} for tenant '{}' was updated", templateName,
                             langKey, tenantKeyValue);
         }
