@@ -130,10 +130,10 @@ public class XmEntity implements Serializable, Persistable<Long> {
 
     /**
      * This is i18n name of Entity.
-     * TODO: change data type
      */
-    @ApiModelProperty(value = "This is i18n name of Entity. TODO: change data type", required = true)
+    @ApiModelProperty(value = "This is i18n name of Entity.", required = true)
     @Column(name = "name", nullable = false)
+    @Field(type = FieldType.Keyword)
     private String name;
 
     /**
