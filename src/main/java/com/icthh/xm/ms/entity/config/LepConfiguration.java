@@ -9,6 +9,8 @@ import com.icthh.xm.ms.entity.lep.keyresolver.FunctionLepKeyResolver;
 import com.icthh.xm.ms.entity.lep.keyresolver.SystemQueueConsumerLepKeyResolver;
 import com.icthh.xm.ms.entity.repository.search.XmEntitySearchRepository;
 import com.icthh.xm.ms.entity.service.XmEntityLifeCycleService;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.time.StopWatch;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.context.ApplicationContext;
@@ -18,9 +20,12 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.transaction.support.SimpleTransactionScope;
 
+import java.util.concurrent.TimeUnit;
+
 /**
  * The {@link LepConfiguration} class.
  */
+@Slf4j
 @Configuration
 @EnableLepServices(basePackageClasses = XmEntityLifeCycleService.class)
 public class LepConfiguration extends WebLepSpringConfiguration {
@@ -57,7 +62,11 @@ public class LepConfiguration extends WebLepSpringConfiguration {
             @Override
             public ElasticIndexManager getElasticIndexManager() {
                 // using application context to fetch correct bean by scope rules every times
-                return context.getBean(ElasticIndexManager.class);
+                log.info("START get ElasticIndexManager");
+                StopWatch stopWatch = StopWatch.createStarted();
+                var bean = context.getBean(ElasticIndexManager.class);
+                log.info("STOP get ElasticIndexManager {}", stopWatch.getTime(TimeUnit.MILLISECONDS));
+                return bean;
             }
         };
     }

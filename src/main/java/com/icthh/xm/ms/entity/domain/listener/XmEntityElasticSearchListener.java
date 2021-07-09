@@ -9,9 +9,11 @@ import com.icthh.xm.ms.entity.lep.ElasticIndexManagerService;
 import com.icthh.xm.ms.entity.repository.search.XmEntitySearchRepository;
 import com.icthh.xm.ms.entity.service.XmEntitySpecService;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.time.StopWatch;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import javax.annotation.PostConstruct;
 import javax.persistence.PostPersist;
@@ -45,8 +47,10 @@ public class XmEntityElasticSearchListener {
     @PostUpdate
     void onPostPersistOrUpdate(XmEntity entity) {
         if (isFeatureEnabled(entity, TypeSpec::getIndexAfterSaveEnabled)) {
-            log.debug("Save xm entity to elastic {}", entity);
+            log.debug("START: Add to save xm entity to elastic {}", entity);
+            StopWatch stopWatch = StopWatch.createStarted();
             elasticIndexManagerService.addEntityToSave(entity);
+            log.debug("STOP: Add to xm entity to elastic {}", stopWatch.getTime(TimeUnit.MILLISECONDS));
         }
     }
 
