@@ -51,7 +51,7 @@ public class XmEntityElasticSearchListener {
         if (isFeatureEnabled(entity, TypeSpec::getIndexAfterSaveEnabled)) {
             elasticIndexManagerService.addEntityToSave(entity);
         }
-        log.debug("STOP: Add to xm entity to elastic {}", stopWatch.getTime(TimeUnit.MILLISECONDS));
+        log.debug("STOP: Add to xm entity to elastic {}ns, {}ms", stopWatch.getTime(TimeUnit.NANOSECONDS), , stopWatch.getTime(TimeUnit.MILLISECONDS));
     }
 
     @PostRemove
