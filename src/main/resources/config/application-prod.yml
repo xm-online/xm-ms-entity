@@ -57,6 +57,7 @@ spring:
             #hibernate.cache.hazelcast.use_lite_member: true
             hibernate.show_sql: false
             hibernate.format_sql: false
+            hibernate.jdbc.batch_size: 100
     data:
         elasticsearch:
             cluster-name:
