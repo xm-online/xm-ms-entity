@@ -46,12 +46,12 @@ public class XmEntityElasticSearchListener {
     @PostPersist
     @PostUpdate
     void onPostPersistOrUpdate(XmEntity entity) {
+        StopWatch stopWatch = StopWatch.createStarted();
+        log.debug("START: Add to save xm entity to elastic {}", entity);
         if (isFeatureEnabled(entity, TypeSpec::getIndexAfterSaveEnabled)) {
-            log.debug("START: Add to save xm entity to elastic {}", entity);
-            StopWatch stopWatch = StopWatch.createStarted();
             elasticIndexManagerService.addEntityToSave(entity);
-            log.debug("STOP: Add to xm entity to elastic {}", stopWatch.getTime(TimeUnit.MILLISECONDS));
         }
+        log.debug("STOP: Add to xm entity to elastic {}", stopWatch.getTime(TimeUnit.MILLISECONDS));
     }
 
     @PostRemove
@@ -63,8 +63,6 @@ public class XmEntityElasticSearchListener {
     }
 
     private boolean isFeatureEnabled(XmEntity entity, Function<TypeSpec, Boolean> flag) {
-        return xmEntitySpecService.getTypeSpecByKey(entity.getTypeKey())
-                                  .map(flag)
-                                  .orElse(false);
+        return false; // xmEntitySpecService.getTypeSpecByKey(entity.getTypeKey()).map(flag).orElse(false);
     }
 }
