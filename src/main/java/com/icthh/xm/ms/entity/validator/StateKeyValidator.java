@@ -34,7 +34,7 @@ public class StateKeyValidator implements ConstraintValidator<StateKey, XmEntity
             return true;
         }
 
-        List<StateSpec> stateSpecs = xmEntitySpecService.getTypeSpecByKey(value.getTypeKey())
+        List<StateSpec> stateSpecs = xmEntitySpecService.getTypeSpecByKeyWithoutFunctionFilter(value.getTypeKey())
             .map(TypeSpec::getStates)
             .orElse(List.of());
 

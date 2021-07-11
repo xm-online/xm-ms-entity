@@ -47,8 +47,9 @@ public class JsonDataValidator implements ConstraintValidator<JsonData, XmEntity
     @Override
     public boolean isValid(XmEntity value, ConstraintValidatorContext context) {
         TypeSpec typeSpecification = xmEntitySpecService.getTypeSpecByKey(value.getTypeKey()).orElse(null);
+        JsonSchema jsonSchema = xmEntitySpecService.getDataJsonSchemaByKey(value.getTypeKey()).orElse(null);
 
-        if (!present(typeSpecification) || dataAndSpecificationEmpty(value, typeSpecification)) {
+        if (!present(typeSpecification) || dataAndSpecificationEmpty(value, jsonSchema)) {
             return true;
         }
 
@@ -57,7 +58,7 @@ public class JsonDataValidator implements ConstraintValidator<JsonData, XmEntity
             return false;
         }
 
-        return validate(value.getData(), typeSpecification.getDataSpec(), context);
+        return validate(value.getData(), jsonSchema, context);
     }
 
     private static boolean present(Object object) {
@@ -68,12 +69,12 @@ public class JsonDataValidator implements ConstraintValidator<JsonData, XmEntity
         return typeSpec.getDataSpec() == null && !isEmpty(value.getData());
     }
 
-    private static boolean dataAndSpecificationEmpty(XmEntity value, TypeSpec typeSpec) {
-        return isEmpty(value.getData()) && typeSpec.getDataSpec() == null;
+    private static boolean dataAndSpecificationEmpty(XmEntity value, JsonSchema jsonSchema) {
+        return isEmpty(value.getData()) && jsonSchema == null;
     }
 
     @SneakyThrows
-    private boolean validate(Map<String, Object> data, String jsonSchema, ConstraintValidatorContext context) {
+    private boolean validate(Map<String, Object> data, JsonSchema jsonSchema, ConstraintValidatorContext context) {
 
         final ProcessingReport report = jsonValidationService.validateJson(data, jsonSchema);
         boolean isSuccess = report.isSuccess();

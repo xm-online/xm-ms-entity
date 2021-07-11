@@ -274,7 +274,7 @@ public class ElasticsearchIndexResourceIntTest extends AbstractSpringBootTest {
     public void autoIndexAfterSaveDisabled() {
 
         Long id = transactionExecutor.doInSeparateTransaction(() -> {
-            when(xmEntitySpecServiceMock.getTypeSpecByKey(DEFAULT_TYPE_KEY))
+            when(xmEntitySpecServiceMock.getTypeSpecByKeyWithoutFunctionFilter(DEFAULT_TYPE_KEY))
                 .thenReturn(createTypeSpecWith(false));
             return createAndFlush();
         });
@@ -293,7 +293,7 @@ public class ElasticsearchIndexResourceIntTest extends AbstractSpringBootTest {
     public void autoIndexAfterSaveEnabled() {
 
         Long id = transactionExecutor.doInSeparateTransaction(() -> {
-            when(xmEntitySpecServiceMock.getTypeSpecByKey(DEFAULT_TYPE_KEY))
+            when(xmEntitySpecServiceMock.getTypeSpecByKeyWithoutFunctionFilter(DEFAULT_TYPE_KEY))
                 .thenReturn(createTypeSpecWith(true));
             return createAndFlush();
         });
@@ -313,7 +313,7 @@ public class ElasticsearchIndexResourceIntTest extends AbstractSpringBootTest {
     public void autoIndexAfterDeleteDisabled() {
 
         Long id = transactionExecutor.doInSeparateTransaction(() -> {
-            when(xmEntitySpecServiceMock.getTypeSpecByKey(DEFAULT_TYPE_KEY))
+            when(xmEntitySpecServiceMock.getTypeSpecByKeyWithoutFunctionFilter(DEFAULT_TYPE_KEY))
                 .thenReturn(createTypeSpecWith(true, false));
             return createAndFlush();
         });
@@ -347,7 +347,7 @@ public class ElasticsearchIndexResourceIntTest extends AbstractSpringBootTest {
     public void autoIndexAfterDeleteEnabled() {
 
         Long id = transactionExecutor.doInSeparateTransaction(() -> {
-            when(xmEntitySpecServiceMock.getTypeSpecByKey(DEFAULT_TYPE_KEY))
+            when(xmEntitySpecServiceMock.getTypeSpecByKeyWithoutFunctionFilter(DEFAULT_TYPE_KEY))
                 .thenReturn(createTypeSpecWith(true, true));
             return createAndFlush();
         });
@@ -690,7 +690,7 @@ public class ElasticsearchIndexResourceIntTest extends AbstractSpringBootTest {
     }
 
     private void autoIndexDisable() {
-        when(xmEntitySpecServiceMock.getTypeSpecByKey(anyString()))
+        when(xmEntitySpecServiceMock.getTypeSpecByKeyWithoutFunctionFilter(anyString()))
             .thenReturn(createTypeSpecWith(false, false));
     }
 

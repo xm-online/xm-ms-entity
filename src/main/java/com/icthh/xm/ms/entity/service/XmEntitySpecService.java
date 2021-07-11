@@ -31,6 +31,8 @@ import com.fasterxml.jackson.module.jsonSchema.types.ArraySchema;
 import com.fasterxml.jackson.module.jsonSchema.types.ObjectSchema;
 import com.fasterxml.jackson.module.jsonSchema.types.StringSchema;
 import com.github.fge.jackson.JsonLoader;
+import com.github.fge.jsonschema.core.exceptions.ProcessingException;
+import com.github.fge.jsonschema.main.JsonSchemaFactory;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.icthh.xm.commons.config.client.api.RefreshableConfiguration;
@@ -59,10 +61,13 @@ import com.icthh.xm.ms.entity.domain.spec.UniqueFieldSpec;
 import com.icthh.xm.ms.entity.domain.spec.XmEntitySpec;
 import com.icthh.xm.ms.entity.security.access.DynamicPermissionCheckService;
 import com.icthh.xm.ms.entity.service.privileges.custom.EntityCustomPrivilegeService;
+
+import java.io.IOException;
 import java.io.StringWriter;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -99,6 +104,7 @@ public class XmEntitySpecService implements RefreshableConfiguration {
     private final ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
     private final ConcurrentHashMap<String, Map<String, TypeSpec>> typesByTenant = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, Map<String, String>> typesByTenantByFile = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, Map<String, com.github.fge.jsonschema.main.JsonSchema>> dataSpecJsonSchemas = new ConcurrentHashMap<>();
 
     private final TenantConfigRepository tenantConfigRepository;
     private final ApplicationProperties applicationProperties;
@@ -177,7 +183,26 @@ public class XmEntitySpecService implements RefreshableConfiguration {
         typesByTenant.put(tenant, tenantEntitySpec);
         inheritance(tenantEntitySpec, tenant);
         processUniqueFields(tenantEntitySpec);
+
+        var dataSchemas = new HashMap<String, com.github.fge.jsonschema.main.JsonSchema>();
+        JsonSchemaFactory jsonSchemaFactory = JsonSchemaFactory.byDefault();
+        for (TypeSpec typeSpec : tenantEntitySpec.values()) {
+            addJsonSchema(dataSchemas, jsonSchemaFactory, typeSpec);
+        }
+        dataSpecJsonSchemas.put(tenant, dataSchemas);
         return tenantEntitySpec;
+    }
+
+    private void addJsonSchema(HashMap<String, com.github.fge.jsonschema.main.JsonSchema> dataSchemas,
+                               JsonSchemaFactory jsonSchemaFactory, TypeSpec typeSpec) {
+        if (StringUtils.isNotBlank(typeSpec.getDataSpec())) {
+            try {
+                var jsonSchema = jsonSchemaFactory.getJsonSchema(JsonLoader.fromString(typeSpec.getDataSpec()));
+                dataSchemas.put(typeSpec.getKey(), jsonSchema);
+            } catch (IOException | ProcessingException e) {
+                log.error("Error processing data spec", e);
+            }
+        }
     }
 
     @SneakyThrows
@@ -233,6 +258,16 @@ public class XmEntitySpecService implements RefreshableConfiguration {
     @LoggingAspectConfig(resultDetails = false)
     public Optional<TypeSpec> getTypeSpecByKey(String key) {
         return ofNullable(getTypeSpecs().get(key)).map(this::filterFunctions);
+    }
+
+    @LoggingAspectConfig(resultDetails = false)
+    public Optional<com.github.fge.jsonschema.main.JsonSchema> getDataJsonSchemaByKey(String key) {
+        return ofNullable(dataSpecJsonSchemas.get(getTenantKeyValue())).map(it -> it.get(key));
+    }
+
+    @LoggingAspectConfig(resultDetails = false)
+    public Optional<TypeSpec> getTypeSpecByKeyWithoutFunctionFilter(String key) {
+        return ofNullable(getTypeSpecs().get(key));
     }
 
     @LoggingAspectConfig(resultDetails = false)
