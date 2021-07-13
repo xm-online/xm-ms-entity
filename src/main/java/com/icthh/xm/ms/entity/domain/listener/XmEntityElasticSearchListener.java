@@ -59,7 +59,7 @@ public class XmEntityElasticSearchListener {
     }
 
     private boolean isFeatureEnabled(XmEntity entity, Function<TypeSpec, Boolean> flag) {
-        return xmEntitySpecService.getTypeSpecByKey(entity.getTypeKey())
+        return xmEntitySpecService.getTypeSpecByKeyWithoutFunctionFilter(entity.getTypeKey())
                                   .map(flag)
                                   .orElse(false);
     }

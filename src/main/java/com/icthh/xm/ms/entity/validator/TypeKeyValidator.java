@@ -32,10 +32,11 @@ public class TypeKeyValidator implements ConstraintValidator<TypeKey, Object> {
     @Override
     public boolean isValid(Object value, ConstraintValidatorContext context) {
         try {
-            String typeKey = (String) FieldUtils.readField(value, typeKeyField, true);
             if (value instanceof XmEntity) {
-                return xmEntitySpecService.getAllKeys().containsKey(typeKey);
+                String typeKey = ((XmEntity)value).getTypeKey();
+                return xmEntitySpecService.getTypeSpecByKeyWithoutFunctionFilter(typeKey).isPresent();
             } else {
+                String typeKey = (String) FieldUtils.readField(value, typeKeyField, true);
                 XmEntity entity = (XmEntity) FieldUtils.readField(value, entityField, true);
                 if (entity == null) {
                     return true;

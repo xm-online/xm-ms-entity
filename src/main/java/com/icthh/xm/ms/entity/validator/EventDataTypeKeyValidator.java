@@ -42,7 +42,7 @@ public class EventDataTypeKeyValidator implements ConstraintValidator<EventDataT
             return false;
         }
 
-        if (xmEntitySpecService.getTypeSpecByKey(eventSpecDataTypeKey).isEmpty()) {
+        if (xmEntitySpecService.getTypeSpecByKeyWithoutFunctionFilter(eventSpecDataTypeKey).isEmpty()) {
             processConstraintViolation(constraintValidatorContext,
                 "Type specification not found by key: " + eventSpecDataTypeKey, TYPE_KEY_FIELD_NAME);
             return false;
