@@ -31,9 +31,11 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import javax.annotation.Resource;
+import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Lazy;
@@ -106,6 +108,28 @@ public class MailService {
             objectModel,
             MdcUtils.generateRid(),
             from);
+    }
+
+    @SneakyThrows
+    public void sendEmailFromTemplateSync(Locale locale,
+                                          String templateName,
+                                          String subject,
+                                          String email,
+                                          String from,
+                                          Map<String, Object> objectModel,
+                                          Map<String, InputStreamSource> attachments) {
+        TenantKey tenantKey = TenantContextUtils.getRequiredTenantKey(tenantContextHolder.getContext());
+        String templateKey = EmailTemplateUtil.emailTemplateKey(tenantKey, locale.getLanguage(), templateName);
+        String emailTemplate = tenantEmailTemplateService.getEmailTemplate(templateKey);
+        Template mailTemplate = new Template(templateKey, emailTemplate, freeMarkerConfiguration);
+        String content = FreeMarkerTemplateUtils.processTemplateIntoString(mailTemplate, objectModel);
+        MailParams mailParams = resolve(subject, from, templateName, locale);
+        doMailSend(email,
+                mailParams.getSubject(),
+                content,
+                mailParams.getFrom(),
+                attachments,
+                mailProviderService.getJavaMailSender(tenantKey.getValue()));
     }
 
     /**
@@ -314,31 +338,8 @@ public class MailService {
                    Map<String, InputStreamSource> attachments,
                    JavaMailSender javaMailSender) {
 
-        // Prepare message using a Spring helper
-        MimeMessage mimeMessage = javaMailSender.createMimeMessage();
-        MimeMessageHelper message;
         try {
-            boolean hasAttachments = !isEmpty(attachments) &&
-                attachments
-                    .entrySet()
-                    .stream()
-                    .allMatch(entry -> nonNull(entry.getKey()) && nonNull(entry.getValue()));
-
-            log.debug("Send email[multipart '{}' and html '{}' and attachmentFilenames '{}' to '{}'] with subject '{}' and content={}",
-                hasAttachments, true, ofNullable(attachments).map(Map::keySet).orElse(null), to, subject, content);
-
-            message = new MimeMessageHelper(mimeMessage, hasAttachments, StandardCharsets.UTF_8.name());
-            message.setTo(to);
-            message.setFrom(from);
-            message.setSubject(subject);
-            message.setText(content, true);
-            if (hasAttachments) {
-                for (Map.Entry<String, InputStreamSource> entry : attachments.entrySet()) {
-                    message.addAttachment(entry.getKey(), entry.getValue());
-                }
-            }
-            javaMailSender.send(mimeMessage);
-            log.debug("Sent email to User '{}'", to);
+            doMailSend(to, subject, content, from, attachments, javaMailSender);
         } catch (Exception e) {
             if (log.isDebugEnabled()) {
                 log.debug("Email could not be sent to user '{}'", to, e);
@@ -346,6 +347,38 @@ public class MailService {
                 log.warn("Email could not be sent to user '{}': {}", to, e.getMessage());
             }
         }
+    }
+
+    private void doMailSend(String to,
+                            String subject,
+                            String content,
+                            String from,
+                            Map<String, InputStreamSource> attachments,
+                            JavaMailSender javaMailSender) throws MessagingException {
+        // Prepare message using a Spring helper
+        MimeMessage mimeMessage = javaMailSender.createMimeMessage();
+        MimeMessageHelper message;
+        boolean hasAttachments = !isEmpty(attachments) &&
+            attachments
+                .entrySet()
+                .stream()
+                .allMatch(entry -> nonNull(entry.getKey()) && nonNull(entry.getValue()));
+
+        log.debug("Send email[multipart '{}' and html '{}' and attachmentFilenames '{}' to '{}'] with subject '{}' and content={}",
+            hasAttachments, true, ofNullable(attachments).map(Map::keySet).orElse(null), to, subject, content);
+
+        message = new MimeMessageHelper(mimeMessage, hasAttachments, StandardCharsets.UTF_8.name());
+        message.setTo(to);
+        message.setFrom(from);
+        message.setSubject(subject);
+        message.setText(content, true);
+        if (hasAttachments) {
+            for (Map.Entry<String, InputStreamSource> entry : attachments.entrySet()) {
+                message.addAttachment(entry.getKey(), entry.getValue());
+            }
+        }
+        javaMailSender.send(mimeMessage);
+        log.debug("Sent email to User '{}'", to);
     }
 
     /**
