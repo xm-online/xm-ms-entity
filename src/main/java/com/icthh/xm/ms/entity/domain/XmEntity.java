@@ -11,6 +11,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.deser.std.UntypedObjectDeserializer;
+import com.icthh.xm.ms.entity.config.jsonb.Jsonb;
 import com.icthh.xm.ms.entity.domain.converter.MapToStringConverter;
 import com.icthh.xm.ms.entity.domain.listener.AvatarUrlListener;
 import com.icthh.xm.ms.entity.domain.listener.XmEntityElasticSearchListener;
@@ -183,7 +184,12 @@ public class XmEntity implements Serializable, Persistable<Long> {
     /**
      * Data property represents entity fields as JSON structure. Fields specified by
      * Formly and could use them for form building.
+     *
+     * Field that stored in postgres as jsonb, and in other as varchar.
+     * For postgres it's object and for other db need to string converter.
+     * @see com.icthh.xm.ms.entity.config.jsonb.JsonbTypeRegistrator
      */
+    @Jsonb
     @ApiModelProperty(value = "Data property represents entity fields as JSON structure. Fields specified by Formly and could use them for form building.")
     @JsonDeserialize(using = UntypedObjectDeserializer.class)
     @Convert(converter = MapToStringConverter.class)

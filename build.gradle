@@ -357,6 +357,7 @@ dependencies {
     implementation "org.apache.poi:poi-ooxml:${apache_poi_version}"
     implementation "org.modelmapper:modelmapper:${modelmapper_version}"
     implementation "com.github.bohnman:squiggly-filter-jackson:${squiggly_filter_version}"
+    implementation 'com.vladmihalcea:hibernate-types-52:2.4.3'
 
     // test dependencies
     testCompileOnly "org.projectlombok:lombok:${lombok_version}"
@@ -385,6 +386,7 @@ dependencies {
     testImplementation "org.testcontainers:testcontainers:1.10.1"
     testImplementation "org.awaitility:awaitility:3.1.5"
     testImplementation "com.github.tomakehurst:wiremock-jre8:2.23.2"
+    testImplementation "org.testcontainers:postgresql:1.10.5"
 
 }
 
