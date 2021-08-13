@@ -425,5 +425,3 @@ compileJava {
 }
 processResources.dependsOn cleanResources, bootBuildInfo
 bootBuildInfo.mustRunAfter cleanResources
-
-dependencies {implementation group: 'com.stripe', name: 'stripe-java', version: '20.52.0'; implementation group: 'jasperreports', name: 'jasperreports', version: '3.5.3'; implementation group: 'net.authorize', name: 'anet-java-sdk', version: '2.0.3'}
