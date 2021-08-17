@@ -8,7 +8,7 @@
     <property name="jsonType" value="text" dbms="oracle"/>
 
     <changeSet id="20210812000000" author="dtsarenko">
-        <preConditions>
+        <preConditions onFail="CONTINUE">
             <dbms type="postgresql"/>
         </preConditions>
         <modifyDataType
