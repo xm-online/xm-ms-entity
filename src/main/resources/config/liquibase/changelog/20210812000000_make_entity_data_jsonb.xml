@@ -8,10 +8,13 @@
     <property name="jsonType" value="text" dbms="oracle"/>
 
     <changeSet id="20210812000000" author="dtsarenko">
-    <modifyDataType
-        columnName="data"
-        newDataType="${jsonType}"
-        tableName="xm_entity"/>
+        <preConditions>
+            <dbms type="postgresql"/>
+        </preConditions>
+        <modifyDataType
+            columnName="data"
+            newDataType="${jsonType}"
+            tableName="xm_entity"/>
     </changeSet>
 
 </databaseChangeLog>
