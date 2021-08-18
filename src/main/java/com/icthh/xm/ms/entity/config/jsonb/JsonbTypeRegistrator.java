@@ -15,6 +15,7 @@ import org.hibernate.boot.internal.MetadataImpl;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.boot.spi.SessionFactoryBuilderFactory;
 import org.hibernate.boot.spi.SessionFactoryBuilderImplementor;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.PostgreSQL95Dialect;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Property;
@@ -31,16 +32,17 @@ public class JsonbTypeRegistrator implements SessionFactoryBuilderFactory {
     public SessionFactoryBuilder getSessionFactoryBuilder(final MetadataImplementor metadata,
         final SessionFactoryBuilderImplementor defaultBuilder) {
         MetadataImpl metadataImpl = (MetadataImpl) metadata;
-        if (metadataImpl.getDatabase().getDialect() instanceof PostgreSQL95Dialect) {
+        Dialect dialect = metadataImpl.getDatabase().getDialect();
+        if (dialect instanceof PostgreSQL95Dialect) {
             log.info(
                 "Run on {} dialect. Metadata will be processed. "
                     + "And field marker as @Jsonb will be replaced to jsonb type.",
-                metadataImpl.getDatabase().getDialect());
+                dialect);
 
             metadataImpl.getEntityBindings().forEach(mapping ->
                 updateEntityMapping(metadataImpl, mapping.getDeclaredPropertyIterator(), mapping.getMappedClass()));
         } else {
-            log.info("Run on {} dialect. Metadata will not be processed", metadataImpl.getDatabase().getDialect());
+            log.info("Run on {} dialect. Metadata will not be processed", dialect);
         }
         return defaultBuilder;
     }
