@@ -2,6 +2,7 @@ package com.icthh.xm.ms.entity.lep;
 
 import com.icthh.xm.commons.config.client.service.TenantConfigService;
 import com.icthh.xm.commons.lep.BaseProceedingLep;
+import com.icthh.xm.commons.lep.spring.LepThreadHelper;
 import com.icthh.xm.commons.permission.service.PermissionCheckService;
 import com.icthh.xm.commons.security.XmAuthenticationContext;
 import com.icthh.xm.commons.tenant.TenantContext;
@@ -32,6 +33,7 @@ public class LepContext {
     public Object commons;
     public Object inArgs;
     public BaseProceedingLep lep;
+    public LepThreadHelper thread;
     public XmAuthenticationContext authContext;
     public TenantContext tenantContext;
     public Object methodResult;
