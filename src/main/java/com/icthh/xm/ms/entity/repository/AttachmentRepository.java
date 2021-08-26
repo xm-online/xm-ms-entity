@@ -4,7 +4,6 @@ import com.icthh.xm.commons.permission.access.repository.ResourceRepository;
 import com.icthh.xm.ms.entity.domain.Attachment;
 import java.util.List;
 
-import com.icthh.xm.ms.entity.domain.XmEntity;
 import org.hibernate.Hibernate;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
