@@ -114,6 +114,7 @@ public class FunctionResourceIntTest extends AbstractSpringBootTest {
         String body = "return [result: lepContext.inArgs.functionInput.files[0].getInputStream().text]";
         String functionPrefix = "/config/tenants/RESINTTEST/entity/lep/function/";
         leps.onRefresh(functionPrefix + "Function$$UPLOAD$$tenant.groovy", loadData ? body : null);
+        leps.onRefresh(functionPrefix + "some/package/Function$$UPLOAD$$tenant.groovy", loadData ? body : null);
         String packageTestBody = "return lepContext.inArgs";
         leps.onRefresh(functionPrefix + "package/Function$$FUNCTION$PACKAGE_TEST$$tenant.groovy", loadData ? packageTestBody : null);
         leps.onRefresh(functionPrefix + "package/FunctionWithXmEntity$$FUNCTION_WITH_ENTITY$PACKAGE_TEST$$tenant.groovy", loadData ? packageTestBody : null);
@@ -158,6 +159,16 @@ public class FunctionResourceIntTest extends AbstractSpringBootTest {
                .andDo(print())
                .andExpect(jsonPath("$.data.result").value("test no json content"))
                .andExpect(status().isOk());
+    }
+
+    @Test
+    @SneakyThrows
+    public void testUploadInPackageFunction() {
+        MockMultipartFile file = new MockMultipartFile("file", "orig", "text/plain", "test no json content" .getBytes(UTF_8));
+        mockMvc.perform(multipart("/api/functions/some/package/UPLOAD/upload").file(file))
+                .andDo(print())
+                .andExpect(jsonPath("$.data.result").value("test no json content"))
+                .andExpect(status().isOk());
     }
 
     @Test

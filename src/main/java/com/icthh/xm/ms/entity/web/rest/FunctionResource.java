@@ -41,6 +41,7 @@ import org.springframework.web.servlet.ModelAndView;
 public class FunctionResource {
 
     private static final String ENTITY_NAME_FUNCTION_CONTEXT = "functionContext";
+    private static final String UPLOAD = "/upload";
 
     private final FunctionService functionService;
 
@@ -164,14 +165,16 @@ public class FunctionResource {
     }
 
     @Timed
-    @PostMapping(value = "/functions/{functionKey:.+}/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PostMapping(value = "/functions/**" + UPLOAD, consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasPermission({'functionKey': #functionKey}, 'FUNCTION.UPLOAD.CALL')")
     @SneakyThrows
     @PrivilegeDescription("Privilege to call upload function")
-    public ResponseEntity<Object> callUploadFunction(@PathVariable("functionKey") String functionKey,
+    public ResponseEntity<Object> callUploadFunction(HttpServletRequest request,
                                                      @RequestParam(value = "file", required = false) List<MultipartFile> files,
                                                      HttpServletRequest httpServletRequest) {
         Map<String, Object> functionInput = of("httpServletRequest", httpServletRequest, "files", files);
+        String functionKey = getFunctionKey(request);
+        functionKey = functionKey.substring(0, functionKey.length() - UPLOAD.length());
         FunctionContext result = functionService.execute(functionKey, functionInput);
         return ResponseEntity.ok().body(result.functionResult());
     }
