@@ -16,6 +16,9 @@ import com.icthh.xm.ms.entity.repository.search.PermittedSearchRepository;
 import com.icthh.xm.ms.entity.service.impl.StartUpdateDateGenerationStrategy;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.codec.digest.DigestUtils;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -161,6 +164,14 @@ public class AttachmentService {
     @LogicExtensionPoint("Delete")
     public void delete(Long id) {
         attachmentRepository.deleteById(id);
+    }
+
+    public void deleteAll(Iterable<Attachment> entities) {
+        attachmentRepository.deleteAll(entities);
+    }
+
+    public Page<Attachment> findAll(Specification<Attachment> spec, Pageable pageable) {
+        return attachmentRepository.findAll(spec, pageable);
     }
 
     /**

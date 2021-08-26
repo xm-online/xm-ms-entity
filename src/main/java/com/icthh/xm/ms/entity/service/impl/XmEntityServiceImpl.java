@@ -295,13 +295,19 @@ public class XmEntityServiceImpl implements XmEntityService {
     public Page<XmEntity> findAll(Pageable pageable, String typeKey, String privilegeKey) {
         log.debug("Request to get all XmEntities");
         if (StringUtils.isNoneBlank(typeKey)) {
-            Set<String> typeKeys = xmEntitySpecService.findNonAbstractTypesByPrefix(typeKey).stream()
-                .map(TypeSpec::getKey).collect(toSet());
-            log.debug("Find by typeKeys {}", typeKeys);
+            Set<String> typeKeys = getTypeKeyHierarchy(typeKey);
             return xmEntityPermittedRepository.findAllByTypeKeyIn(pageable, typeKeys, privilegeKey);
         } else {
             return xmEntityPermittedRepository.findAll(pageable, XmEntity.class, privilegeKey);
         }
+    }
+
+    @Override
+    public Set<String> getTypeKeyHierarchy(String typeKey) {
+        Set<String> typeKeys = xmEntitySpecService.findNonAbstractTypesByPrefix(typeKey).stream()
+            .map(TypeSpec::getKey).collect(toSet());
+        log.debug("Find by typeKeys {}", typeKeys);
+        return typeKeys;
     }
 
     @Transactional(readOnly = true)

@@ -35,6 +35,8 @@ public interface XmEntityService extends ResourceRepository {
 
     Page<XmEntity> findAll(Pageable pageable, String typeGroup, String privilegeKey);
 
+    Set<String> getTypeKeyHierarchy(String typeKey);
+
     List<XmEntity> findAll(Specification<XmEntity> spec);
 
     /**
