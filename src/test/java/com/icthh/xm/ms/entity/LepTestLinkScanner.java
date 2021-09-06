@@ -24,6 +24,7 @@ public class LepTestLinkScanner {
     private static final String XM_REPOSITORY_TENANTS = "config".concat(SEPARATOR).concat("tenants");
     private static final String XM_REPOSITORY_MS_TEST = XM_MS_NAME.concat(SEPARATOR).concat("test");
     private static final String XM_REPOSITORY_MS_LEP = XM_MS_NAME.concat(SEPARATOR).concat("lep");
+    private static final String XM_COMMONS_MS_LEP = "commons".concat(SEPARATOR).concat("lep");
 
     private static final String LEP_TEST_HOME = "src".concat(SEPARATOR).concat("test").concat(SEPARATOR).concat("lep");
     private static final String LEP_SCRIPT_HOME = "src".concat(SEPARATOR).concat("main").concat(SEPARATOR).concat("lep");
@@ -82,8 +83,17 @@ public class LepTestLinkScanner {
             .peek(SymLink::createSymLink)
             .count();
 
-        System.out.println("created links count: " + count);
+        Path envCommonsPath = Paths.get(XM_REPOSITORY_HOME, XM_REPOSITORY_TENANTS, XM_COMMONS_MS_LEP);
+        if (Files.exists(envCommonsPath)) {
+            System.out.println("Create env commons link");
+            new SymLink(
+                    Paths.get(PROJECT_ROOT, LEP_SCRIPT_HOME, XM_COMMONS_MS_LEP),
+                    envCommonsPath
+            ).createSymLink();
+            count++;
+        }
 
+        System.out.println("created links count: " + count);
     }
 
     public static class SymLink {
