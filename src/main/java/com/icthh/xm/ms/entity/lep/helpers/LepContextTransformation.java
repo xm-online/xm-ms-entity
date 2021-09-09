@@ -74,12 +74,8 @@ public class LepContextTransformation extends AbstractASTTransformation {
         });
 
         String mockClass = "class A { public A(Object lepContext) { \n " + body + " } }";
-        try {
-            var ast = new AstBuilder().buildFromString(CANONICALIZATION, false, mockClass);
-            classNode.addConstructor(((ClassNode) ast.get(1)).getDeclaredConstructors().get(0));
-        } catch (Throwable t) {
-            System.out.println(t);
-        }
+        var ast = new AstBuilder().buildFromString(CANONICALIZATION, false, mockClass);
+        classNode.addConstructor(((ClassNode) ast.get(1)).getDeclaredConstructors().get(0));
     }
 
     private boolean isLepService(FieldNode field) {
