@@ -31,6 +31,7 @@ class LepContextTransformationUnitTest {
         assertSame(mockLepContext.repositories.xmEntity, t.repo)
         assertSame(mockLepContext.templates.rest, t.rest)
         assertSame(mockLepContext.templates.plainRest, t.plainRest)
+        assertSame(mockLepContext, t.lepContext)
 
         assertSame(mockLepContext.services.xmEntity, t.anotherService.entityService)
         assertSame(mockLepContext.authContext, t.anotherService.auth)
@@ -43,6 +44,7 @@ class LepContextTransformationUnitTest {
         final RestTemplate plainRest
         final XmEntityRepository repo
         final AnotherTestLepService anotherService
+        final LepContext lepContext
     }
 
     @ToString

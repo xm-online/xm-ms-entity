@@ -29,7 +29,7 @@ public class LepContextTransformation extends AbstractASTTransformation {
 
     static {
         Map<String, List<String>> fields = getFields("", LepContext.class);
-        fields.put(LepContext.class.getCanonicalName(), List.of("lepContext"));
+        fields.put(LepContext.class.getCanonicalName(), List.of("with{it}"));
         LEP_CONTEXT_FIELDS = Map.copyOf(fields);
     }
 
@@ -73,7 +73,7 @@ public class LepContextTransformation extends AbstractASTTransformation {
             }
         });
 
-        String mockClass = "class A { public A(Object lepContext) { \n " + body + " } }";
+        String mockClass = "class A { public A(Object lepContext) { \n " + body + " \n }  }";
         var ast = new AstBuilder().buildFromString(CANONICALIZATION, false, mockClass);
         classNode.addConstructor(((ClassNode) ast.get(1)).getDeclaredConstructors().get(0));
     }
