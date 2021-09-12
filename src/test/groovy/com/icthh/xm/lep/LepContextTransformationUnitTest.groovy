@@ -14,6 +14,9 @@ import static org.junit.Assert.*
 
 class LepContextTransformationUnitTest {
 
+
+    public static final String FINAL_STRING_VALUE = "some value inited in constructor"
+
     @Test
     public void test() {
         def mockLepContext = new LepContext()
@@ -35,6 +38,7 @@ class LepContextTransformationUnitTest {
 
         assertSame(mockLepContext.services.xmEntity, t.anotherService.entityService)
         assertSame(mockLepContext.authContext, t.anotherService.auth)
+        assertEquals(FINAL_STRING_VALUE, t.anotherService.valueInitedInConstructor)
     }
 
     @ToString
@@ -52,6 +56,11 @@ class LepContextTransformationUnitTest {
     public static class AnotherTestLepService {
         final XmEntityService entityService
         final XmAuthenticationContext auth
+        final String valueInitedInConstructor
+
+        AnotherTestLepService(def lepContext) {
+            valueInitedInConstructor = FINAL_STRING_VALUE
+        }
     }
 
 }
