@@ -4,9 +4,12 @@ import com.icthh.xm.ms.entity.lep.LepContext;
 import org.apache.commons.lang.mutable.MutableLong;
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.ClassNode;
+import org.codehaus.groovy.ast.ConstructorNode;
 import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.Parameter;
+import org.codehaus.groovy.ast.VariableScope;
 import org.codehaus.groovy.ast.builder.AstBuilder;
+import org.codehaus.groovy.ast.stmt.BlockStatement;
 import org.codehaus.groovy.control.SourceUnit;
 import org.codehaus.groovy.transform.AbstractASTTransformation;
 import org.codehaus.groovy.transform.GroovyASTTransformation;
@@ -16,8 +19,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import static java.util.Arrays.stream;
 import static org.codehaus.groovy.control.CompilePhase.CANONICALIZATION;
@@ -29,7 +32,7 @@ public class LepContextTransformation extends AbstractASTTransformation {
 
     static {
         Map<String, List<String>> fields = getFields("", LepContext.class);
-        fields.put(LepContext.class.getCanonicalName(), List.of("lepContext"));
+        fields.put(LepContext.class.getCanonicalName(), List.of("with{it}"));
         LEP_CONTEXT_FIELDS = Map.copyOf(fields);
     }
 
@@ -54,28 +57,67 @@ public class LepContextTransformation extends AbstractASTTransformation {
     @Override
     public void visit(ASTNode[] nodes, SourceUnit source) {
         ClassNode classNode = (ClassNode) nodes[1];
+
+        StringBuilder body = generateFinalFieldAssigments(classNode);
+        var constructor = findExistingLepConstructor(classNode);
+
+        String mockClass = "class A { public A(Object lepContext) { \n " + body + " \n } }";
+        var ast = new AstBuilder().buildFromString(CANONICALIZATION, false, mockClass);
+        ConstructorNode generatedConstructor = ((ClassNode) ast.get(1)).getDeclaredConstructors().get(0);
+        if (constructor.isPresent()) {
+            ConstructorNode original = constructor.get();
+            original.setCode(new BlockStatement(List.of(
+                    generatedConstructor.getCode(), original.getCode()
+            ), new VariableScope()));
+        } else {
+            classNode.addConstructor(generatedConstructor);
+        }
+    }
+
+    private StringBuilder generateFinalFieldAssigments(ClassNode classNode) {
         StringBuilder body = new StringBuilder();
         MutableLong serviceIndex = new MutableLong(0);
         classNode.getFields().forEach(field -> {
             if (field.isFinal() && isInLepContext(field)) {
-                String lepContextFieldName = getFieldName(field);
-                body.append("this.").append(field.getName())
-                        .append(" = lepContext.").append(lepContextFieldName)
-                        .append("\n");
+                generateFieldFromLepContextAssigment(body, field);
             } else if (field.isFinal() && isLepService(field)) {
                 serviceIndex.increment();
-                String serviceVarName = "service_" + serviceIndex.intValue();
-                body.append("String ").append(serviceVarName).append(" = ")
-                        .append("'").append(field.getType().getName()).append("'\n");
-                body.append("this.").append(field.getName())
-                        .append(" = Class.forName(").append(serviceVarName).append(").getDeclaredConstructor(Object.class).newInstance(lepContext)")
-                        .append("\n");
+                generetaLepServiceCreations(body, field, serviceIndex.intValue());
             }
         });
+        return body;
+    }
 
-        String mockClass = "class A { public A(Object lepContext) { \n " + body + " } }";
-        var ast = new AstBuilder().buildFromString(CANONICALIZATION, false, mockClass);
-        classNode.addConstructor(((ClassNode) ast.get(1)).getDeclaredConstructors().get(0));
+    private void generetaLepServiceCreations(StringBuilder body, FieldNode field, int serviceNumber) {
+        String serviceVarName = "service_" + serviceNumber;
+        body.append("String ").append(serviceVarName).append(" = ")
+                .append("'").append(field.getType().getName()).append("'\n");
+        body.append("this.").append(field.getName())
+                .append(" = Class.forName(").append(serviceVarName).append(").getDeclaredConstructor(Object.class).newInstance(lepContext)")
+                .append("\n");
+    }
+
+    private void generateFieldFromLepContextAssigment(StringBuilder body, FieldNode field) {
+        String lepContextFieldName = getFieldName(field);
+        body.append("this.").append(field.getName())
+                .append(" = lepContext.").append(lepContextFieldName)
+                .append("\n");
+    }
+
+    private Optional<ConstructorNode> findExistingLepConstructor(ClassNode classNode) {
+        return classNode.getDeclaredConstructors().stream().filter(it -> {
+            if (it.getParameters().length == 1) {
+                Parameter parameter = it.getParameters()[0];
+                ClassNode parameterType = parameter.getType();
+                return parameter.getName().equals("lepContext")
+                        && (typeEqual(parameterType, LepContext.class) || typeEqual(parameterType, Object.class));
+            }
+            return false;
+        }).findFirst();
+    }
+
+    private boolean typeEqual(ClassNode classNode, Class<?> type) {
+        return classNode.getName().equals(type.getCanonicalName());
     }
 
     private boolean isLepService(FieldNode field) {
