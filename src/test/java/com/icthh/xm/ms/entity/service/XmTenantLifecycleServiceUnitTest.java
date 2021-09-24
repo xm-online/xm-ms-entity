@@ -15,11 +15,14 @@ import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.lep.LepXmEntityMsConstants;
 import com.icthh.xm.ms.entity.service.XmTenantLifecycleService.ServiceInfo;
 import com.icthh.xm.ms.entity.web.client.tenant.TenantClient;
+import lombok.SneakyThrows;
+import lombok.val;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
+import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -171,6 +174,13 @@ public class XmTenantLifecycleServiceUnitTest extends AbstractUnitTest {
 
         assertEquals(1, xmEntity.getData().size());
         assertEquals(true, ((ServiceInfo) ((Map) xmEntity.getData().get(SERVICE_NAME)).get("create")).isSuccess());
+    }
+
+    @Test
+    @SneakyThrows
+    public void testServiceInfoSerializable(){
+        val serviceInfo = new XmTenantLifecycleService.ServiceInfo(false, "error message");
+        new ObjectOutputStream(System.out).writeObject(serviceInfo);
     }
 
     private XmEntity getEntity() {

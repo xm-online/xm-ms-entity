@@ -10,7 +10,6 @@ import com.google.common.collect.Sets;
 import com.icthh.xm.commons.gen.model.Tenant;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.ms.entity.config.ApplicationProperties;
-import com.icthh.xm.ms.entity.domain.EntityState;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.web.client.tenant.TenantClient;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +19,7 @@ import org.apache.commons.lang.StringUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -160,7 +160,7 @@ public class XmTenantLifecycleService {
     }
 
     @Value
-    public static class ServiceInfo {
+    public static class ServiceInfo implements Serializable {
 
         private boolean success;
         private String errorMessage;
