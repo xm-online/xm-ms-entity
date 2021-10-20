@@ -64,6 +64,7 @@ import com.icthh.xm.ms.entity.repository.XmEntityPermittedRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityRepositoryInternal;
 import com.icthh.xm.ms.entity.repository.search.XmEntityPermittedSearchRepository;
 import com.icthh.xm.ms.entity.service.AttachmentService;
+import com.icthh.xm.ms.entity.service.JsonValidationService;
 import com.icthh.xm.ms.entity.service.LifecycleLepStrategy;
 import com.icthh.xm.ms.entity.service.LifecycleLepStrategyFactory;
 import com.icthh.xm.ms.entity.service.LinkService;
@@ -135,6 +136,7 @@ public class XmEntityServiceImpl implements XmEntityService {
     private final TypeKeyWithExtends typeKeyWithExtends;
     private final SimpleTemplateProcessor simpleTemplateProcessors;
     private final EventRepository eventRepository;
+    private final JsonValidationService validator;
 
     private XmEntityServiceImpl self;
 
@@ -866,4 +868,10 @@ public class XmEntityServiceImpl implements XmEntityService {
             .orElse(null);
     }
 
+    @Override
+    public boolean isValidJsonSchema(XmEntity value) {
+        return xmEntitySpecService.getDataJsonSchemaByKey(value.getTypeKey())
+            .map(js -> validator.validateJson(value.getData(), js).isSuccess())
+            .orElse(true);
+    }
 }
