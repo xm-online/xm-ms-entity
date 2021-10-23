@@ -46,11 +46,13 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.IntStream;
 import javax.persistence.EntityManager;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.text.StrSubstitutor;
+import org.apache.commons.lang3.mutable.MutableInt;
 import org.elasticsearch.action.search.SearchPhaseExecutionException;
 import org.junit.After;
 import org.junit.Before;
@@ -436,6 +438,26 @@ public class XmEntityServiceIntTest extends AbstractSpringBootTest {
         assertEquals(2L, result.get(0)[1]);
         assertEquals("ENTITY2jpql", result.get(1)[0]);
         assertEquals(3L, result.get(1)[1]);
+    }
+
+    @Test
+    @WithMockUser(authorities = "SUPER-ADMIN")
+    public void testJpqlWithAnyResultAndPagination() throws Exception {
+
+        // Initialize the database
+        IntStream.range(30, 120).forEach(it -> {
+            xmEntityService.save(new XmEntity().typeKey("ENTITY1jpql").name("###" + Math.floorDiv(it, 3)).key(randomUUID()));
+        });
+
+        // language=JPAQL
+        String query = "SELECT entity.name, count(entity.id) FROM XmEntity entity WHERE entity.typeKey = 'ENTITY1jpql' GROUP BY entity.name ORDER BY entity.name";
+        List<Object[]> result = (List<Object[]>) xmEntityRepository.findAll(query, Map.of(), PageRequest.of(1, 10));
+        log.info("Entities {}", result);
+        MutableInt i = new MutableInt(0);
+        result.forEach(it -> {
+            assertEquals(it[0], "###2" + i.getAndIncrement());
+            assertEquals(it[1], 3L);
+        });
     }
 
     @Test
