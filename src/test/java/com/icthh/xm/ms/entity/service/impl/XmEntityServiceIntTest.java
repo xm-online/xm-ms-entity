@@ -446,11 +446,11 @@ public class XmEntityServiceIntTest extends AbstractSpringBootTest {
 
         // Initialize the database
         IntStream.range(30, 120).forEach(it -> {
-            xmEntityService.save(new XmEntity().typeKey("ENTITY1jpql").name("###" + Math.floorDiv(it, 3)).key(randomUUID()));
+            xmEntityService.save(new XmEntity().typeKey("ENTITYjpql").name("###" + Math.floorDiv(it, 3)).key(randomUUID()));
         });
 
         // language=JPAQL
-        String query = "SELECT entity.name, count(entity.id) FROM XmEntity entity WHERE entity.typeKey = 'ENTITY1jpql' GROUP BY entity.name ORDER BY entity.name";
+        String query = "SELECT entity.name, count(entity.id) FROM XmEntity entity WHERE entity.typeKey = 'ENTITYjpql' GROUP BY entity.name ORDER BY entity.name";
         List<Object[]> result = (List<Object[]>) xmEntityRepository.findAll(query, Map.of(), PageRequest.of(1, 10));
         log.info("Entities {}", result);
         MutableInt i = new MutableInt(0);

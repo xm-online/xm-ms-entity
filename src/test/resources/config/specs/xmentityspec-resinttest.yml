@@ -406,6 +406,11 @@ types:
             - key: en2en1
               builderType: SEARCH
               typeKey: ENTITY1
+    - key: ENTITYjpql
+      isApp: false
+      isAbstract: false
+      isNameRequired: false
+      isKeyRequired: false
     - key: ENTITY1jpql
       isApp: false
       isAbstract: false
