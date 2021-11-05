@@ -39,6 +39,7 @@ import com.icthh.xm.ms.entity.repository.XmEntityRepositoryInternal;
 import com.icthh.xm.ms.entity.repository.search.XmEntityPermittedSearchRepository;
 import com.icthh.xm.ms.entity.repository.search.XmEntitySearchRepository;
 import com.icthh.xm.ms.entity.service.AttachmentService;
+import com.icthh.xm.ms.entity.service.JsonValidationService;
 import com.icthh.xm.ms.entity.service.LifecycleLepStrategyFactory;
 import com.icthh.xm.ms.entity.service.LinkService;
 import com.icthh.xm.ms.entity.service.ProfileService;
@@ -186,7 +187,8 @@ public class EntityServiceImplIntTest extends AbstractSpringBootTest {
             springXmEntityRepository,
             new TypeKeyWithExtends(tenantConfigService),
             new SimpleTemplateProcessor(objectMapper),
-            eventRepository
+            eventRepository,
+            mock(JsonValidationService.class)
         );
         xmEntityService.setSelf(xmEntityService);
 
