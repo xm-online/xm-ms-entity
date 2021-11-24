@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd
+                        http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd">
+
+    <changeSet id="20211110000000" author="ssenko">
+        <createIndex tableName="xm_entity" indexName="entity_type_key_idx">
+            <column name="type_key" />
+        </createIndex>
+        <createIndex tableName="xm_entity" indexName="entity_type_state_idx">
+            <column name="type_key" />
+            <column name="state_key" />
+        </createIndex>
+        <createIndex tableName="xm_entity" indexName="entity_state_idx">
+            <column name="state_key" />
+        </createIndex>
+    </changeSet>
+</databaseChangeLog>
