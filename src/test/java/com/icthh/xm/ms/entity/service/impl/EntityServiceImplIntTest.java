@@ -8,6 +8,7 @@ import static java.time.Instant.now;
 import static java.util.Arrays.asList;
 import static java.util.UUID.randomUUID;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -50,9 +51,13 @@ import com.icthh.xm.ms.entity.service.XmEntityTemplatesSpecService;
 import com.icthh.xm.ms.entity.util.XmHttpEntityUtils;
 import java.math.BigInteger;
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.After;
@@ -209,6 +214,29 @@ public class EntityServiceImplIntTest extends AbstractSpringBootTest {
     @After
     public void afterTest() {
         tenantContextHolder.getPrivilegedContext().destroyCurrentContext();
+    }
+
+    @Test
+    @Transactional
+    public void testFindOneByTypeKeyAndKey() {
+        saveXmEntities();
+
+        XmEntity xmEntity = xmEntityRepository.findOneByKeyAndTypeKey("UNIQ-E-F1", "TEST_SEARCH");
+        assertEquals("UNIQ-E-F1", xmEntity.getKey());
+        assertEquals("A-B1", xmEntity.getName());
+        assertEquals("TEST_SEARCH", xmEntity.getTypeKey());
+        assertEquals("value", xmEntity.getData().get("key"));
+    }
+
+    @Test
+    @Transactional
+    public void testGetSequenceNextValString() {
+        int incrementValue = 50;
+
+        long seq = xmEntityRepository.getSequenceNextValString("hibernate_sequence");
+        long seq2 = xmEntityRepository.getSequenceNextValString("hibernate_sequence");
+
+        assertEquals(seq + incrementValue, seq2);
     }
 
     @Test
@@ -456,7 +484,21 @@ public class EntityServiceImplIntTest extends AbstractSpringBootTest {
         return link;
     }
 
-
+    private void saveXmEntities() {
+        Map<String, Object> xmEntityData = new HashMap<>();
+        xmEntityData.put("key", "value");
+        List<XmEntity> entityList = new ArrayList<>();
+        for (int i = 0; i < 2; i++) {
+            XmEntity entity = new XmEntity().typeKey("TEST_SEARCH")
+                    .name("A-B" + i)
+                    .key("UNIQ-E-F" + i)
+                    .data(xmEntityData)
+                    .startDate(new Date().toInstant())
+                    .updateDate(new Date().toInstant());
+            entityList.add(entity);
+        }
+        xmEntityRepository.saveAll(entityList);
+    }
 
     @Test(expected = DataIntegrityViolationException.class)
     @Transactional

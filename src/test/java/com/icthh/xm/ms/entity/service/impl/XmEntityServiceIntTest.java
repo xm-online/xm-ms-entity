@@ -67,6 +67,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.ElasticsearchException;
 import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 public class XmEntityServiceIntTest extends AbstractSpringBootTest {
@@ -676,29 +677,6 @@ public class XmEntityServiceIntTest extends AbstractSpringBootTest {
         assertThat(scrollResult.getTotalPages()).isEqualTo(1);
 
         indexConfiguration.onRefresh("/config/tenants/RESINTTEST/entity/index_config.json", null);
-    }
-
-    @Test
-    @WithMockUser(authorities = "SUPER-ADMIN")
-    public void testFindOneByTypeKeyAndKey() {
-        saveXmEntities();
-
-        XmEntity xmEntity = xmEntityRepository.findOneByKeyAndTypeKey("E-F1", "TEST_SEARCH");
-        assertEquals("E-F1", xmEntity.getKey());
-        assertEquals("A-B1", xmEntity.getName());
-        assertEquals("TEST_SEARCH", xmEntity.getTypeKey());
-        assertEquals("value", xmEntity.getData().get("key"));
-    }
-
-    @Test
-    public void testGetSequenceNextValString() {
-        int incrementValue = 50;
-        saveXmEntities();
-
-        long seq = xmEntityRepository.getSequenceNextValString("hibernate_sequence");
-        long seq2 = xmEntityRepository.getSequenceNextValString("hibernate_sequence");
-
-        assertEquals(seq + incrementValue, seq2);
     }
 
     @Test
