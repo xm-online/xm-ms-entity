@@ -218,20 +218,6 @@ public class EntityServiceImplIntTest extends AbstractSpringBootTest {
 
     @Test
     @Transactional
-    public void testFindOneByTypeKeyAndKey() {
-        List<XmEntity> xmEntities = saveXmEntities();
-
-        XmEntity xmEntity = xmEntityRepository.findOneByKeyAndTypeKey("UNIQ-E-F1", "TEST_SEARCH");
-        assertEquals("UNIQ-E-F1", xmEntity.getKey());
-        assertEquals("A-B1", xmEntity.getName());
-        assertEquals("TEST_SEARCH", xmEntity.getTypeKey());
-        assertEquals("value", xmEntity.getData().get("key"));
-
-        xmEntityRepository.deleteAll(xmEntities);
-    }
-
-    @Test
-    @Transactional
     public void testGetSequenceNextValString() {
         int incrementValue = 50;
 
