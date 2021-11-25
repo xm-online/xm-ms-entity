@@ -219,13 +219,15 @@ public class EntityServiceImplIntTest extends AbstractSpringBootTest {
     @Test
     @Transactional
     public void testFindOneByTypeKeyAndKey() {
-        saveXmEntities();
+        List<XmEntity> xmEntities = saveXmEntities();
 
         XmEntity xmEntity = xmEntityRepository.findOneByKeyAndTypeKey("UNIQ-E-F1", "TEST_SEARCH");
         assertEquals("UNIQ-E-F1", xmEntity.getKey());
         assertEquals("A-B1", xmEntity.getName());
         assertEquals("TEST_SEARCH", xmEntity.getTypeKey());
         assertEquals("value", xmEntity.getData().get("key"));
+
+        xmEntityRepository.deleteAll(xmEntities);
     }
 
     @Test
@@ -484,7 +486,7 @@ public class EntityServiceImplIntTest extends AbstractSpringBootTest {
         return link;
     }
 
-    private void saveXmEntities() {
+    private List<XmEntity> saveXmEntities() {
         Map<String, Object> xmEntityData = new HashMap<>();
         xmEntityData.put("key", "value");
         List<XmEntity> entityList = new ArrayList<>();
@@ -497,7 +499,7 @@ public class EntityServiceImplIntTest extends AbstractSpringBootTest {
                     .updateDate(new Date().toInstant());
             entityList.add(entity);
         }
-        xmEntityRepository.saveAll(entityList);
+        return xmEntityRepository.saveAll(entityList);
     }
 
     @Test(expected = DataIntegrityViolationException.class)
