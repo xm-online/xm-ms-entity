@@ -68,6 +68,8 @@ public interface XmEntityRepository {
 
     List<?> findAll(String jpql, Map<String, Object> args);
 
+    List<?> findAll(String jpql, Map<String, Object> args, Pageable pageable);
+
     Page<XmEntity> findAllByTypeKeyIn(Pageable pageable, Set<String> typeKeys);
 
     XmEntityIdKeyTypeKey findOneIdKeyTypeKeyByKey(String key);

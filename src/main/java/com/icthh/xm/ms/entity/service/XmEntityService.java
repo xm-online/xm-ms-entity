@@ -140,4 +140,12 @@ public interface XmEntityService extends ResourceRepository {
 
     byte[] exportEntities(String fileFormat, String typeKey);
 
+    /**
+     * Checks an entity against a json schema.
+     * If the scheme is absent - returns true.
+     *
+     * @param value Entity of XM
+     * @return True if entity is valid
+     */
+    boolean isValidJsonSchema(XmEntity value);
 }

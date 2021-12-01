@@ -2,6 +2,8 @@ package com.icthh.xm.ms.entity.repository.entitygraph;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.support.JpaEntityInformation;
 import org.springframework.data.jpa.repository.support.SimpleJpaRepository;
 
@@ -18,6 +20,7 @@ import java.util.List;
 import java.util.Map;
 
 import static org.hibernate.jpa.QueryHints.HINT_LOADGRAPH;
+import static org.springframework.data.jpa.repository.query.QueryUtils.toOrders;
 
 @Slf4j
 public class EntityGraphRepositoryImpl<T, I extends Serializable>
@@ -72,6 +75,17 @@ public class EntityGraphRepositoryImpl<T, I extends Serializable>
     public List<?> findAll(String jpql, Map<String, Object> args) {
         Query query = entityManager.createQuery(jpql);
         args.forEach(query::setParameter);
+        return query.getResultList();
+    }
+
+    @Override
+    public List<?> findAll(String jpql, Map<String, Object> args, Pageable pageable) {
+        Query query = entityManager.createQuery(jpql);
+        args.forEach(query::setParameter);
+        if (pageable.isPaged()) {
+            query.setFirstResult((int) pageable.getOffset());
+            query.setMaxResults(pageable.getPageSize());
+        }
         return query.getResultList();
     }
 

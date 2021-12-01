@@ -1,0 +1,46 @@
+name: set tags project version
+
+on:
+  push:
+    branches:
+      - main
+      - master
+
+jobs:
+  set_tags:
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          ref: ${{ github.ref }}
+
+      - name: Set up JDK
+        uses: actions/setup-java@v1
+        with:
+          java-version: '11'
+          distribution: 'adopt'
+
+      - name: Set Tag
+        run: |
+          set -e
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          version=`./gradlew -q  getProjectVersion`
+          tags=$(echo -n $version |  awk -F '.' '{printf $0" "$1"."$2" "$1}')
+          for tag in $tags
+          do
+              if git tag -l | egrep -q "^v"$tag"$"
+              then
+                  git tag -d "v"$tag
+              fi
+              git tag -a "v"$tag -m "add tag $tag"
+          done
+      - name: Push changes
+        uses: ad-m/github-push-action@v0.6.0
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          branch: ${{ github.ref }}
+          tags: true
+          force: true
