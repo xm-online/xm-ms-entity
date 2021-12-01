@@ -383,10 +383,11 @@ dependencies {
     liquibaseRuntime "com.h2database:h2"
     //jhipster-needle-gradle-dependency - JHipster will add additional dependencies here
     testImplementation "com.adobe.testing:s3mock-junit4:2.0.11"
-    testImplementation "org.testcontainers:testcontainers:1.10.1"
+    testImplementation "org.testcontainers:testcontainers:1.16.0"
     testImplementation "org.awaitility:awaitility:3.1.5"
     testImplementation "com.github.tomakehurst:wiremock-jre8:2.23.2"
-    testImplementation "org.testcontainers:postgresql:1.10.5"
+    testImplementation "org.testcontainers:postgresql:1.16.0"
+    testImplementation "org.jetbrains:annotations:13.0"
 
 }
 
