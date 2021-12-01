@@ -60,11 +60,9 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityManager;
-import java.lang.reflect.Field;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.Executor;
-import java.util.concurrent.locks.Lock;
 
 /**
  * Test class for the ElasticsearchIndexResource REST controller and ElasticsearchIndexService service.
@@ -224,7 +222,7 @@ public class ElasticsearchIndexResourceIntTest extends AbstractSpringBootTest {
 //        saved = xmEntityService.findOne(IdOrKey.of(saved.getId()));
 
         reindexWithRestApi();
-        waitReindex();
+
         searchRepository.refresh();
 
         assert attachment.getXmEntity().getId() != null;
@@ -711,14 +709,5 @@ public class ElasticsearchIndexResourceIntTest extends AbstractSpringBootTest {
         spec.setIndexAfterSaveEnabled(indexAfterSave);
         spec.setIndexAfterDeleteEnabled(indexAfterDelete);
         return Optional.of(spec);
-    }
-
-    @SneakyThrows
-    private void waitReindex() {
-        //elasticsearchIndexService
-        Field reindexLock = ElasticsearchIndexService.class.getDeclaredField("reindexLock");
-        Lock lockObject = (Lock) reindexLock.get(elasticsearchIndexService);
-        lockObject.lock();
-        lockObject.unlock();
     }
 }
