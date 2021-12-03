@@ -644,7 +644,7 @@ public class XmEntityServiceIntTest extends AbstractSpringBootTest {
 
         saveXmEntities();
 
-        String config = loadFile("config/elastic_config.json");
+        String config = loadFile("config/elastic_config_window1000.json");
         indexConfiguration.onRefresh("/config/tenants/RESINTTEST/entity/index_config.json", config);
         elasticsearchIndexService.reindexAll();
 
@@ -654,6 +654,7 @@ public class XmEntityServiceIntTest extends AbstractSpringBootTest {
         assertThat(zeroPageContent.size()).isEqualTo(2);
 
         indexConfiguration.onRefresh("/config/tenants/RESINTTEST/entity/index_config.json", null);
+        elasticsearchIndexService.reindexAll();
     }
 
     @Test
