@@ -106,6 +106,8 @@ public class ProfileServiceIntTest extends AbstractSpringBootTest {
     @Test
     @Transactional
     public void deleteProfile() {
+        init();
+
         XmEntity entity = XmEntityResourceIntTest.createEntity();
         entity.setTypeKey("TYPE1");
         Profile profile = new Profile();
