@@ -215,7 +215,9 @@ public class ElasticsearchIndexResourceIntTest extends AbstractSpringBootTest {
     @Transactional
     public void reindexComplexEntity() {
         XmEntity saved = transactionExecutor.doInSeparateTransaction(() -> {
-            return xmEntityService.save(createEntityComplexIncoming().typeKey(DEFAULT_TYPE_KEY));
+            var e = xmEntityService.save(createEntityComplexIncoming().typeKey(DEFAULT_TYPE_KEY));
+            xmEntityRepositoryInternal.flush();
+            return e;
         });
         Tag tag = saved.getTags().iterator().next();
         Attachment attachment = saved.getAttachments().iterator().next();
