@@ -135,14 +135,4 @@ public class XmEntityGeneratorServiceIntTest extends AbstractSpringBootTest {
         }
     }
 
-    @Test
-    @SneakyThrows
-    public void generateXmEntityWithRequiredDataFields() {
-        XmEntity generatedEntity = xmEntityGeneratorService.generateXmEntity("TYPE3");
-        log.info(new ObjectMapper().writeValueAsString(generatedEntity));
-
-        Set<ConstraintViolation<XmEntity>> constraintViolations = validator.validate(generatedEntity);
-        assertEquals(0, constraintViolations.size());
-    }
-
 }

@@ -15,6 +15,7 @@ import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.repository.ProfileRepository;
 import com.icthh.xm.ms.entity.repository.search.XmEntitySearchRepository;
 import com.icthh.xm.ms.entity.web.rest.XmEntityResourceIntTest;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -22,6 +23,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.transaction.BeforeTransaction;
 import org.springframework.transaction.annotation.Transactional;
 
+@Slf4j
 public class ProfileServiceIntTest extends AbstractSpringBootTest {
 
     private static final Long ID = 1L;
@@ -106,7 +108,7 @@ public class ProfileServiceIntTest extends AbstractSpringBootTest {
     @Test
     @Transactional
     public void deleteProfile() {
-        init();
+        log.info("CURRENT TENANT {}", tenantContextHolder.getTenantKey());
 
         XmEntity entity = XmEntityResourceIntTest.createEntity();
         entity.setTypeKey("TYPE1");
