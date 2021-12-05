@@ -8,6 +8,7 @@ import com.icthh.xm.lep.api.LepManager;
 import com.icthh.xm.ms.entity.AbstractSpringBootTest;
 import com.icthh.xm.ms.entity.domain.Location;
 import com.icthh.xm.ms.entity.web.rest.LocationResourceIntTest;
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -68,6 +69,11 @@ public class LocationServiceIntTest extends AbstractSpringBootTest {
     @BeforeTransaction
     public void beforeTransaction() {
         TenantContextUtils.setTenant(tenantContextHolder, "RESINTTEST");
+    }
+
+    @After
+    public void tearDown() {
+        tenantContextHolder.getPrivilegedContext().destroyCurrentContext();
     }
 
     public List<Location> initLocations() {

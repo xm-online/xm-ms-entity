@@ -10,6 +10,7 @@ import com.icthh.xm.ms.entity.domain.Link;
 import com.icthh.xm.ms.entity.domain.Link_;
 import com.icthh.xm.ms.entity.security.access.DynamicPermissionCheckService;
 import com.icthh.xm.ms.entity.web.rest.LinkResourceIntTest;
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -68,6 +69,10 @@ public class LinkServiceIntTest extends AbstractSpringBootTest {
         expected = initLinks();
     }
 
+    @After
+    public void tearDown() {
+        tenantContextHolder.getPrivilegedContext().destroyCurrentContext();
+    }
 
     @Test
     @Transactional
