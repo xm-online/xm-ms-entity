@@ -159,10 +159,10 @@ public class ElasticsearchIndexResourceIntTest extends AbstractSpringBootTest {
             ctx.setValue(THREAD_CONTEXT_KEY_AUTH_CONTEXT, authenticationContextHolder.getContext());
         });
 
-        //if (!elasticInited) {
+        if (!elasticInited) {
             initElasticsearch();
-        //    elasticInited = true;
-        //}
+            elasticInited = true;
+        }
         // ???
         xmEntityRepositoryInternal.deleteAll();
         cleanElasticsearch();
@@ -214,7 +214,9 @@ public class ElasticsearchIndexResourceIntTest extends AbstractSpringBootTest {
     @Test
     @Transactional
     public void reindexComplexEntity() {
-        XmEntity saved = xmEntityService.save(createEntityComplexIncoming().typeKey(DEFAULT_TYPE_KEY));
+        XmEntity saved = transactionExecutor.doInSeparateTransaction(() -> {
+            return xmEntityService.save(createEntityComplexIncoming().typeKey(DEFAULT_TYPE_KEY));
+        });
         Tag tag = saved.getTags().iterator().next();
         Attachment attachment = saved.getAttachments().iterator().next();
         Location location = saved.getLocations().iterator().next();
