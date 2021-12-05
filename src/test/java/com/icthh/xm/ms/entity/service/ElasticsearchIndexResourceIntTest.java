@@ -159,10 +159,10 @@ public class ElasticsearchIndexResourceIntTest extends AbstractSpringBootTest {
             ctx.setValue(THREAD_CONTEXT_KEY_AUTH_CONTEXT, authenticationContextHolder.getContext());
         });
 
-        if (!elasticInited) {
+        //if (!elasticInited) {
             initElasticsearch();
-            elasticInited = true;
-        }
+        //    elasticInited = true;
+        //}
         // ???
         xmEntityRepositoryInternal.deleteAll();
         cleanElasticsearch();
