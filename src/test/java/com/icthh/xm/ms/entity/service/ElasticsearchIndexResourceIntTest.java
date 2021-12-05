@@ -148,7 +148,6 @@ public class ElasticsearchIndexResourceIntTest extends AbstractSpringBootTest {
 
     @BeforeTransaction
     public void beforeTransaction() {
-        tenantContextHolder.getPrivilegedContext().destroyCurrentContext();
         TenantContextUtils.setTenant(tenantContextHolder, "RESINTTEST");
     }
 
@@ -603,7 +602,6 @@ public class ElasticsearchIndexResourceIntTest extends AbstractSpringBootTest {
 
         long reindexed = elasticsearchIndexService.reindexByIds(Lists.newArrayList(id1, id2));
         assertEquals(2L, reindexed);
-        elasticsearchTemplate.refresh(XmEntity.class);
 
         mockMvc.perform(get("/api/_search/xm-entities?query=*:*"))
                .andExpect(status().isOk())
@@ -616,7 +614,6 @@ public class ElasticsearchIndexResourceIntTest extends AbstractSpringBootTest {
 
         reindexed = elasticsearchIndexService.reindexByIds(Lists.newArrayList(id3));
         assertEquals(1L, reindexed);
-        elasticsearchTemplate.refresh(XmEntity.class);
 
         mockMvc.perform(get("/api/_search/xm-entities?query=*:*"))
                .andExpect(status().isOk())

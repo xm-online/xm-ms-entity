@@ -144,9 +144,8 @@ test {
     classes.mustRunAfter 'clean'
     systemProperty "spring.profiles.active", "test"
     mkdir("src/test/features")
-//    include '**/*UnitTest*'
-//    include '**/*IntTest*'
-    include '**/*ElasticsearchIndexResourceIntTest*'
+    include '**/*UnitTest*'
+    include '**/*IntTest*'
 
     // to run all test that was not categorized
     useJUnit {
