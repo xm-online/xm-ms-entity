@@ -1,3 +1,8 @@
+logging:
+    level:
+        org.hibernate.SQL: DEBUG
+        org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+
 spring:
     profiles:
         active: pg-test
@@ -16,6 +21,7 @@ spring:
             hibernate.generate_statistics: true
             hibernate.hbm2ddl.auto: none
             hibernate.dialect: com.icthh.xm.ms.entity.config.jsonb.CustomPostgreSQL95Dialect
+            hibernate.format_sql: true
     liquibase:
         change-log: config/liquibase/master.xml
 
