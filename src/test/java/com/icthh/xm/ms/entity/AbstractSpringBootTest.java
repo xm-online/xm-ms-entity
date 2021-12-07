@@ -8,9 +8,12 @@ import com.icthh.xm.ms.entity.domain.XmEntity;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.time.StopWatch;
 import org.elasticsearch.index.query.QueryBuilders;
+import org.junit.*;
 import org.junit.experimental.categories.Category;
 import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -18,8 +21,7 @@ import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
 import org.springframework.data.elasticsearch.core.query.DeleteQuery;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.testcontainers.elasticsearch.ElasticsearchContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
+import org.testcontainers.utility.DockerImageName;
 
 /**
  * Abstract test for extension for any SpringBoot test.
@@ -36,25 +38,14 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 })
 @Category(AbstractSpringBootTest.class)
 @Slf4j
-@Testcontainers
 public abstract class AbstractSpringBootTest {
 
-    @Container
-    private static ElasticsearchContainer elasticsearchContainer = new BookElasticsearchContainer();
+    @ClassRule
+    public static ElasticsearchContainer elasticsearchContainer = new BookElasticsearchContainer();
 
 
     @Autowired
     private ElasticsearchTemplate elasticsearchTemplate;
-
-    @BeforeAll
-    static void setUp() {
-        elasticsearchContainer.start();
-    }
-
-    @AfterAll
-    static void destroy() {
-        elasticsearchContainer.stop();
-    }
 
     /**
      * Clean data from elastic by delete all query without index deletion due to performance reasons.
@@ -71,6 +62,21 @@ public abstract class AbstractSpringBootTest {
 
     }
 
+    @BeforeAll
+    public static void startElastic() {
+        elasticsearchContainer.start();
+    }
+
+    @AfterAll
+    public static void stopElastic() {
+        elasticsearchContainer.stop();
+    }
+
+    @BeforeEach
+    public void beforeElastic() {
+        initElasticsearch();
+    }
+
     /**
      * Recreates Index in elasticsearch.
      *
@@ -81,8 +87,9 @@ public abstract class AbstractSpringBootTest {
     protected void initElasticsearch() {
 
         StopWatch stopWatch = StopWatch.createStarted();
-
-        elasticsearchTemplate.deleteIndex(XmEntity.class);
+        if (elasticsearchTemplate.indexExists(XmEntity.class)) {
+            elasticsearchTemplate.deleteIndex(XmEntity.class);
+        }
         elasticsearchTemplate.createIndex(XmEntity.class);
         elasticsearchTemplate.putMapping(XmEntity.class);
 

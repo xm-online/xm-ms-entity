@@ -3,6 +3,7 @@ package com.icthh.xm.ms.entity.config.elasticsearch;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.elasticsearch.client.Client;
+import org.elasticsearch.client.transport.TransportClient;
 import org.springframework.boot.autoconfigure.data.elasticsearch.ElasticsearchProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.test.context.TestConfiguration;
@@ -10,8 +11,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Primary;
 import org.springframework.data.elasticsearch.client.NodeClientFactoryBean;
 
-@TestConfiguration
-@EnableConfigurationProperties(ElasticsearchProperties.class)
+//@TestConfiguration
+//@EnableConfigurationProperties(ElasticsearchProperties.class)
 @RequiredArgsConstructor
 @Slf4j
 public class EmbeddedElasticsearchConfig {
@@ -36,7 +37,10 @@ public class EmbeddedElasticsearchConfig {
         return client;
     }
 
+
     private Client initClient() throws Exception {
+
+
         log.info("Init embedded elasticsearchClient for TEST");
         NodeClientFactoryBean factoryBean = new NodeClientFactoryBean(true);
         String pathHome = elasticsearchProperties.getProperties()
