@@ -183,9 +183,6 @@ public class ElasticsearchIndexResourceIntTest extends AbstractSpringBootTest {
         cleanElasticsearch();
         elasticsearchTemplate.refresh(XmEntity.class);
 
-        String config = loadFile("config/elastic_config.json");
-        indexConfiguration.onRefresh("/config/tenants/RESINTTEST/entity/index_config.json", config);
-
         elasticsearchIndexService = new ElasticsearchIndexService(xmEntityRepositoryInternal,
                                                                   xmEntitySearchRepository,
                                                                   elasticsearchTemplate,
@@ -211,7 +208,6 @@ public class ElasticsearchIndexResourceIntTest extends AbstractSpringBootTest {
         }).when(executor).execute(any(Runnable.class));
 
         xmEntityElasticSearchListener.setXmEntitySpecService(xmEntitySpecServiceMock);
-        elasticsearchIndexService.reindexAll();
     }
 
     @After
@@ -246,14 +242,6 @@ public class ElasticsearchIndexResourceIntTest extends AbstractSpringBootTest {
         log.info("Current repository state {}", ((Page)searchRepository.findAll()).getContent());
         log.info("Current permitted repository state {}", permittedSearchRepository.search("id:" + saved.getId(),
                 PageRequest.of(0, 20), XmEntity.class, "XMENTITY.SEARCH").getContent());
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String roleKey = Optional.ofNullable(authentication)
-                    .map(Authentication::getAuthorities)
-                    .map(Collection::stream)
-                    .flatMap(Stream::findFirst)
-                    .map(GrantedAuthority::getAuthority)
-                    .orElse(null);
-        log.info("Role {}", roleKey);
 
         assert attachment.getXmEntity().getId() != null;
         assert location.getXmEntity().getId() != null;

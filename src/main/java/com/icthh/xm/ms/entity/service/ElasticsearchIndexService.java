@@ -252,6 +252,7 @@ public class ElasticsearchIndexService {
                 log.info("Indexing page {} of {}, pageSize {}", i, xmEntityRepositoryInternal.count(spec) / PAGE_SIZE, PAGE_SIZE);
                 Page<XmEntity> results = xmEntityRepositoryInternal.findAll(spec, page);
                 results.map(entity -> loadEntityRelationships(relationshipGetters, entity));
+                log.info("Reindex entities {}", results.getContent());
                 xmEntitySearchRepository.saveAll(results.getContent());
                 reindexed += results.getContent().size();
                 entityManager.clear();
