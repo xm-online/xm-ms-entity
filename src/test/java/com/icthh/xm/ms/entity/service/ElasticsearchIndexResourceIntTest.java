@@ -2,6 +2,7 @@ package com.icthh.xm.ms.entity.service;
 
 import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_AUTH_CONTEXT;
 import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_TENANT_CONTEXT;
+import static com.icthh.xm.ms.entity.service.impl.XmEntityServiceIntTest.loadFile;
 import static com.icthh.xm.ms.entity.web.rest.TestUtil.sameInstant;
 import static com.icthh.xm.ms.entity.web.rest.XmEntityResourceExtendedIntTest.createEntity;
 import static com.icthh.xm.ms.entity.web.rest.XmEntityResourceExtendedIntTest.createEntityComplexIncoming;
@@ -168,6 +169,10 @@ public class ElasticsearchIndexResourceIntTest extends AbstractSpringBootTest {
         cleanElasticsearch();
         elasticsearchTemplate.refresh(XmEntity.class);
 
+        String config = loadFile("config/elastic_config.json");
+        indexConfiguration.onRefresh("/config/tenants/RESINTTEST/entity/index_config.json", config);
+        elasticsearchIndexService.reindexAll();
+
         elasticsearchIndexService = new ElasticsearchIndexService(xmEntityRepositoryInternal,
                                                                   xmEntitySearchRepository,
                                                                   elasticsearchTemplate,
@@ -214,11 +219,7 @@ public class ElasticsearchIndexResourceIntTest extends AbstractSpringBootTest {
     @Test
     @Transactional
     public void reindexComplexEntity() {
-        XmEntity saved = transactionExecutor.doInSeparateTransaction(() -> {
-            var e = xmEntityService.save(createEntityComplexIncoming().typeKey(DEFAULT_TYPE_KEY));
-            xmEntityRepositoryInternal.flush();
-            return e;
-        });
+        XmEntity saved = xmEntityService.save(createEntityComplexIncoming().typeKey(DEFAULT_TYPE_KEY));
         Tag tag = saved.getTags().iterator().next();
         Attachment attachment = saved.getAttachments().iterator().next();
         Location location = saved.getLocations().iterator().next();
