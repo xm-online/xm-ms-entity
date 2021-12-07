@@ -171,7 +171,6 @@ public class ElasticsearchIndexResourceIntTest extends AbstractSpringBootTest {
 
         String config = loadFile("config/elastic_config.json");
         indexConfiguration.onRefresh("/config/tenants/RESINTTEST/entity/index_config.json", config);
-        elasticsearchIndexService.reindexAll();
 
         elasticsearchIndexService = new ElasticsearchIndexService(xmEntityRepositoryInternal,
                                                                   xmEntitySearchRepository,
@@ -198,7 +197,7 @@ public class ElasticsearchIndexResourceIntTest extends AbstractSpringBootTest {
         }).when(executor).execute(any(Runnable.class));
 
         xmEntityElasticSearchListener.setXmEntitySpecService(xmEntitySpecServiceMock);
-
+        elasticsearchIndexService.reindexAll();
     }
 
     @After
