@@ -498,7 +498,9 @@ public class XmEntityServiceImpl implements XmEntityService {
     @FindWithPermission("XMENTITY.SEARCH")
     @PrivilegeDescription("Privilege to search for the xmEntity corresponding to the query")
     public Page<XmEntity> search(String query, Pageable pageable, String privilegeKey) {
-        return xmEntityPermittedSearchRepository.search(query, pageable, XmEntity.class, privilegeKey);
+        var result = xmEntityPermittedSearchRepository.search(query, pageable, XmEntity.class, privilegeKey);
+        log.info("Result of search in service {}", result.getContent());
+        return result;
     }
 
     @LogicExtensionPoint("SearchV2")

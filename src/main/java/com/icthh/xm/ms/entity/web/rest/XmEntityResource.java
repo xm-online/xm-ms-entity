@@ -234,6 +234,7 @@ public class XmEntityResource {
             @RequestParam String query,
             @ApiParam Pageable pageable) {
         Page<XmEntity> page = xmEntityService.search(query, pageable, null);
+        log.info("Result of search in web {}", page.getContent())
         HttpHeaders headers = PaginationUtil
             .generateSearchPaginationHttpHeaders(query, page,
                 "/api/_search/xm-entities");
