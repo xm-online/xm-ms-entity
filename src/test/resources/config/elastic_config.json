@@ -5,9 +5,6 @@
                 "limit": 10000
             }
         },
-        "max_result_window" : 1000000,
-        "blocks": {
-            "read_only_allow_delete": null
-        }
+        "max_result_window" : 1000000
     }
 }

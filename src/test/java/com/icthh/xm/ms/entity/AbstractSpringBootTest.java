@@ -9,12 +9,17 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.time.StopWatch;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
 import org.springframework.data.elasticsearch.core.query.DeleteQuery;
 import org.springframework.test.context.junit4.SpringRunner;
+import org.testcontainers.elasticsearch.ElasticsearchContainer;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
 
 /**
  * Abstract test for extension for any SpringBoot test.
@@ -27,15 +32,29 @@ import org.springframework.test.context.junit4.SpringRunner;
     EntityApp.class,
     SecurityBeanOverrideConfiguration.class,
     WebappTenantOverrideConfiguration.class,
-    LepConfiguration.class,
-    EmbeddedElasticsearchConfig.class
+    LepConfiguration.class
 })
 @Category(AbstractSpringBootTest.class)
 @Slf4j
+@Testcontainers
 public abstract class AbstractSpringBootTest {
+
+    @Container
+    private static ElasticsearchContainer elasticsearchContainer = new BookElasticsearchContainer();
+
 
     @Autowired
     private ElasticsearchTemplate elasticsearchTemplate;
+
+    @BeforeAll
+    static void setUp() {
+        elasticsearchContainer.start();
+    }
+
+    @AfterAll
+    static void destroy() {
+        elasticsearchContainer.stop();
+    }
 
     /**
      * Clean data from elastic by delete all query without index deletion due to performance reasons.
