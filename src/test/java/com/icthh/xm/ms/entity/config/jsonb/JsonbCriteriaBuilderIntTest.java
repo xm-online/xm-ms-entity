@@ -555,6 +555,36 @@ public class JsonbCriteriaBuilderIntTest extends AbstractSpringBootTest {
         assertEquals(entities.get(0).getId(), secondEntity.getId());
     }
 
+    @Test
+    public void jsonExtractPathTextTestOneValuePath() {
+        XmEntity firstEntity = createEntity(Map.of(FIRST_DATA_KEY, "AAA"));
+        firstEntity = entityRepository.save(firstEntity);
+
+        String jpql = "SELECT jsonb_to_string(e.data, :firstDataKey) FROM XmEntity e";
+
+        Map<String, Object> queryParams = Map.of(FIRST_DATA_KEY, FIRST_DATA_KEY);
+
+        List<?> firstDataKeys = entityRepository.findAll(jpql, queryParams);
+
+        assertEquals(firstDataKeys.size(), 1);
+        assertEquals(firstDataKeys.get(0), "AAA");
+    }
+
+    @Test
+    public void jsonExtractPathTextTestMultipleValuePath() {
+        XmEntity firstEntity = createEntity(Map.of(FIRST_DATA_KEY, Map.of(SECOND_DATA_KEY, "AAA")));
+        firstEntity = entityRepository.save(firstEntity);
+
+        String jpql = "SELECT jsonb_to_string(e.data, :firstDataKey, :secondDataKey) FROM XmEntity e";
+
+        Map<String, Object> queryParams = Map.of(FIRST_DATA_KEY, FIRST_DATA_KEY, SECOND_DATA_KEY, SECOND_DATA_KEY);
+
+        List<?> firstDataKeys = entityRepository.findAll(jpql, queryParams);
+
+        assertEquals(firstDataKeys.size(), 1);
+        assertEquals(firstDataKeys.get(0), "AAA");
+    }
+
     public static XmEntity createEntity(Map<String, Object> data) {
         return new XmEntity()
             .typeKey("TYPE1")
