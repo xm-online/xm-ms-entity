@@ -54,6 +54,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.text.StrSubstitutor;
 import org.apache.commons.lang3.mutable.MutableInt;
 import org.elasticsearch.action.search.SearchPhaseExecutionException;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -66,6 +67,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.ElasticsearchException;
 import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 public class XmEntityServiceIntTest extends AbstractSpringBootTest {
@@ -642,7 +644,7 @@ public class XmEntityServiceIntTest extends AbstractSpringBootTest {
 
         saveXmEntities();
 
-        String config = loadFile("config/elastic_config.json");
+        String config = loadFile("config/elastic_config_window1000.json");
         indexConfiguration.onRefresh("/config/tenants/RESINTTEST/entity/index_config.json", config);
         elasticsearchIndexService.reindexAll();
 
@@ -652,6 +654,7 @@ public class XmEntityServiceIntTest extends AbstractSpringBootTest {
         assertThat(zeroPageContent.size()).isEqualTo(2);
 
         indexConfiguration.onRefresh("/config/tenants/RESINTTEST/entity/index_config.json", null);
+        elasticsearchIndexService.reindexAll();
     }
 
     @Test

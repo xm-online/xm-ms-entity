@@ -72,6 +72,8 @@ public interface XmEntityRepository {
 
     Page<XmEntity> findAllByTypeKeyIn(Pageable pageable, Set<String> typeKeys);
 
+    XmEntity findOneByKeyAndTypeKey(String key, String typeKey);
+
     XmEntityIdKeyTypeKey findOneIdKeyTypeKeyByKey(String key);
 
     XmEntityIdKeyTypeKey findOneIdKeyTypeKeyById(Long id);
@@ -131,4 +133,7 @@ public interface XmEntityRepository {
     void delete(Iterable<? extends XmEntity> entities);
 
     void deleteAll(Iterable<? extends XmEntity> entities);
+
+    Long getSequenceNextValString(String sequenceName);
+
 }

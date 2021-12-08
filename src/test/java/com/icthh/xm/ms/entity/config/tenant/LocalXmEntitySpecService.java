@@ -47,7 +47,7 @@ public class LocalXmEntitySpecService extends XmEntitySpecService {
 
     @Override
     protected Map<String, TypeSpec> getTypeSpecs() {
-        String tenantName = getRequiredTenantKeyValue(tenantContextHolder);
+        String tenantName = tenantContextHolder.getTenantKey();
         String config = getXmEntitySpec(tenantName);
         String key = applicationProperties.getSpecificationPathPattern().replace("{tenantName}", tenantName);
         this.onRefresh(key, config);

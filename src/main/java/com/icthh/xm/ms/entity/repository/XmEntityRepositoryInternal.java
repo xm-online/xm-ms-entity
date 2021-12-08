@@ -30,4 +30,7 @@ public interface XmEntityRepositoryInternal extends XmEntityRepository {
     long count(Specification<XmEntity> spec);
 
     void deleteAll();
+
+    Long getSequenceNextValString(String sequenceName);
+
 }
