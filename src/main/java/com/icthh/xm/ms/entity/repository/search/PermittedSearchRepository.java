@@ -142,8 +142,6 @@ public class PermittedSearchRepository {
 
     public <T> Page<T> searchForPage(SearchDto searchDto, String privilegeKey) {
         SearchQuery query = buildQuery(searchDto.getQuery(), searchDto.getPageable(), privilegeKey, searchDto.getFetchSourceFilter());
-        Page<T> result = getElasticsearchTemplate().queryForPage(query, searchDto.getEntityClass());
-        log.info("Result in repository {}", result.getContent());
-        return result;
+        return getElasticsearchTemplate().queryForPage(query, searchDto.getEntityClass());
     }
 }

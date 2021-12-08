@@ -130,7 +130,7 @@ String[] testCategories = ['com.icthh.xm.ms.entity.AbstractSpringBootTest',
 
 Closure testLoggingConf = {
     exceptionFormat = 'full'
-    events "passed", "skipped", "failed", "standardError" , "standardOut"
+    events "passed", "skipped", "failed"//, "standardError" //, "standardOut"
 }
 
 test {

@@ -29,7 +29,6 @@ import com.icthh.xm.ms.entity.web.rest.util.HeaderUtil;
 import com.icthh.xm.ms.entity.web.rest.util.PaginationUtil;
 import com.icthh.xm.ms.entity.web.rest.util.RespContentUtil;
 import io.swagger.annotations.ApiParam;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Page;
@@ -68,7 +67,6 @@ import javax.validation.Valid;
 /**
  * REST controller for managing XmEntity.
  */
-@Slf4j
 @RestController
 @RequestMapping("/api")
 public class XmEntityResource {
@@ -236,7 +234,6 @@ public class XmEntityResource {
             @RequestParam String query,
             @ApiParam Pageable pageable) {
         Page<XmEntity> page = xmEntityService.search(query, pageable, null);
-        log.info("Result of search in web {}", page.getContent());
         HttpHeaders headers = PaginationUtil
             .generateSearchPaginationHttpHeaders(query, page,
                 "/api/_search/xm-entities");
