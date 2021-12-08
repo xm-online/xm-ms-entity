@@ -2,9 +2,11 @@ package com.icthh.xm.ms.entity.service;
 
 import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_AUTH_CONTEXT;
 import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_TENANT_CONTEXT;
+import static com.icthh.xm.ms.entity.service.impl.XmEntityServiceIntTest.loadFile;
 import static com.icthh.xm.ms.entity.web.rest.TestUtil.sameInstant;
 import static com.icthh.xm.ms.entity.web.rest.XmEntityResourceExtendedIntTest.createEntity;
 import static com.icthh.xm.ms.entity.web.rest.XmEntityResourceExtendedIntTest.createEntityComplexIncoming;
+import static java.lang.String.format;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.hasSize;
@@ -37,10 +39,12 @@ import com.icthh.xm.ms.entity.domain.ext.IdOrKey;
 import com.icthh.xm.ms.entity.domain.listener.XmEntityElasticSearchListener;
 import com.icthh.xm.ms.entity.domain.spec.TypeSpec;
 import com.icthh.xm.ms.entity.repository.XmEntityRepositoryInternal;
+import com.icthh.xm.ms.entity.repository.search.PermittedSearchRepository;
 import com.icthh.xm.ms.entity.repository.search.XmEntitySearchRepository;
 import com.icthh.xm.ms.entity.web.rest.ElasticsearchIndexResource;
 import com.icthh.xm.ms.entity.web.rest.XmEntityResource;
 import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 import org.assertj.core.util.Lists;
 import org.junit.After;
 import org.junit.Before;
@@ -49,10 +53,15 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
 import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.transaction.BeforeTransaction;
 import org.springframework.test.web.servlet.MockMvc;
@@ -60,9 +69,11 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityManager;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.Executor;
+import java.util.stream.Stream;
 
 /**
  * Test class for the ElasticsearchIndexResource REST controller and ElasticsearchIndexService service.
@@ -70,6 +81,7 @@ import java.util.concurrent.Executor;
  * @see ElasticsearchIndexResource
  * @see ElasticsearchIndexService
  */
+@Slf4j
 @WithMockUser(authorities = {"SUPER-ADMIN"})
 public class ElasticsearchIndexResourceIntTest extends AbstractSpringBootTest {
 
@@ -133,6 +145,9 @@ public class ElasticsearchIndexResourceIntTest extends AbstractSpringBootTest {
     private EntityManager entityManager;
 
     @Autowired
+    private PermittedSearchRepository permittedSearchRepository;
+
+    @Autowired
     private SeparateTransactionExecutor transactionExecutor;
 
     private ElasticsearchIndexService elasticsearchIndexService;
@@ -159,14 +174,15 @@ public class ElasticsearchIndexResourceIntTest extends AbstractSpringBootTest {
             ctx.setValue(THREAD_CONTEXT_KEY_AUTH_CONTEXT, authenticationContextHolder.getContext());
         });
 
-        if (!elasticInited) {
-            initElasticsearch();
-            elasticInited = true;
-        }
+        initElasticsearch();
+
         // ???
         xmEntityRepositoryInternal.deleteAll();
         cleanElasticsearch();
         elasticsearchTemplate.refresh(XmEntity.class);
+
+        mappingConfiguration.onRefresh("/config/tenants/RESINTTEST/entity/mapping.json", null);
+        indexConfiguration.onRefresh("/config/tenants/RESINTTEST/entity/index_config.json", null);
 
         elasticsearchIndexService = new ElasticsearchIndexService(xmEntityRepositoryInternal,
                                                                   xmEntitySearchRepository,
@@ -193,7 +209,6 @@ public class ElasticsearchIndexResourceIntTest extends AbstractSpringBootTest {
         }).when(executor).execute(any(Runnable.class));
 
         xmEntityElasticSearchListener.setXmEntitySpecService(xmEntitySpecServiceMock);
-
     }
 
     @After
@@ -214,6 +229,8 @@ public class ElasticsearchIndexResourceIntTest extends AbstractSpringBootTest {
     @Test
     @Transactional
     public void reindexComplexEntity() {
+        log.info("Current repository state {}", ((Page)searchRepository.findAll()).getContent());
+
         XmEntity saved = xmEntityService.save(createEntityComplexIncoming().typeKey(DEFAULT_TYPE_KEY));
         Tag tag = saved.getTags().iterator().next();
         Attachment attachment = saved.getAttachments().iterator().next();
@@ -224,6 +241,10 @@ public class ElasticsearchIndexResourceIntTest extends AbstractSpringBootTest {
         reindexWithRestApi();
 
         searchRepository.refresh();
+
+        log.info("Current repository state {}", ((Page)searchRepository.findAll()).getContent());
+        log.info("Current permitted repository state {}", permittedSearchRepository.search("id:" + saved.getId(),
+                PageRequest.of(0, 20), XmEntity.class, "XMENTITY.SEARCH").getContent());
 
         assert attachment.getXmEntity().getId() != null;
         assert location.getXmEntity().getId() != null;

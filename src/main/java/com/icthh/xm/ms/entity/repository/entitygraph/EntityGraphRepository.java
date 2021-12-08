@@ -18,4 +18,7 @@ public interface EntityGraphRepository<T, ID extends Serializable> extends JpaRe
     List<?> findAll(String jpql, Map<String, Object> args);
 
     List<?> findAll(String jpql, Map<String, Object> args, Pageable pageable);
+
+    Long getSequenceNextValString(String sequenceName);
+
 }

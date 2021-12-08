@@ -22,6 +22,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.transaction.BeforeTransaction;
 import org.springframework.transaction.annotation.Transactional;
 
+@Transactional
 public class ProfileServiceIntTest extends AbstractSpringBootTest {
 
     private static final Long ID = 1L;
@@ -104,7 +105,6 @@ public class ProfileServiceIntTest extends AbstractSpringBootTest {
     }
 
     @Test
-    @Transactional
     public void deleteProfile() {
         XmEntity entity = XmEntityResourceIntTest.createEntity();
         entity.setTypeKey("TYPE1");

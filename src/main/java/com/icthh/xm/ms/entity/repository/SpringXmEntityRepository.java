@@ -38,6 +38,8 @@ public interface SpringXmEntityRepository extends
 
     Page<XmEntity> findAllByTypeKeyIn(Pageable pageable, Set<String> typeKeys);
 
+    XmEntity findOneByKeyAndTypeKey(String key, String typeKey);
+
     XmEntityIdKeyTypeKey findOneIdKeyTypeKeyById(Long id);
 
     XmEntityIdKeyTypeKey findOneIdKeyTypeKeyByKey(String key);

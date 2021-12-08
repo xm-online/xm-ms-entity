@@ -442,6 +442,7 @@ public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
         TenantContext tenantContext = mock(TenantContext.class);
         when(tenantContext.getTenantKey()).thenReturn(Optional.of(TenantKey.valueOf(resinttest)));
         when(tenantContextHolder.getContext()).thenReturn(tenantContext);
+        when(tenantContextHolder.getTenantKey()).thenReturn(resinttest);
     }
 
 

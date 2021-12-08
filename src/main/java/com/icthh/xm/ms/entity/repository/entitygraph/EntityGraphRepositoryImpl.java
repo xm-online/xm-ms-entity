@@ -2,10 +2,16 @@ package com.icthh.xm.ms.entity.repository.entitygraph;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
+import org.hibernate.Session;
+import org.hibernate.SessionFactory;
+import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.jdbc.dialect.internal.StandardDialectResolver;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.support.JpaEntityInformation;
 import org.springframework.data.jpa.repository.support.SimpleJpaRepository;
+import org.springframework.jdbc.support.incrementer.AbstractSequenceMaxValueIncrementer;
 
 import javax.persistence.EntityGraph;
 import javax.persistence.EntityManager;
@@ -16,6 +22,7 @@ import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
 import java.io.Serializable;
+import java.math.BigInteger;
 import java.util.List;
 import java.util.Map;
 
@@ -31,7 +38,8 @@ public class EntityGraphRepositoryImpl<T, I extends Serializable>
 
     private final Class<T> domainClass;
 
-    public EntityGraphRepositoryImpl(JpaEntityInformation<T, I> entityInformation, EntityManager entityManager) {
+    public EntityGraphRepositoryImpl(JpaEntityInformation<T, I> entityInformation,
+                                     EntityManager entityManager) {
         super(entityInformation, entityManager);
 
         this.entityManager = entityManager;
@@ -89,6 +97,12 @@ public class EntityGraphRepositoryImpl<T, I extends Serializable>
         return query.getResultList();
     }
 
+    public Long getSequenceNextValString(String sequenceName) {
+        Dialect dialect = getDialect(entityManager);
+        Query query = entityManager.createNativeQuery(dialect.getSequenceNextValString(sequenceName));
+        return ((BigInteger) query.getSingleResult()).longValue();
+    }
+
     private EntityGraph<T> createEntityGraph(List<String> embed) {
         EntityGraph<T> graph = entityManager.createEntityGraph(domainClass);
         if (CollectionUtils.isNotEmpty(embed)) {
@@ -117,6 +131,12 @@ public class EntityGraphRepositoryImpl<T, I extends Serializable>
         }
 
         subGraph.addAttributeNodes(nextFieldName);
+    }
+
+    private Dialect getDialect(EntityManager entityManager) {
+        Session session = entityManager.unwrap(Session.class);
+        SessionFactory sessionFactory = session.getSessionFactory();
+        return ((SessionFactoryImplementor) sessionFactory).getJdbcServices().getDialect();
     }
 
 }

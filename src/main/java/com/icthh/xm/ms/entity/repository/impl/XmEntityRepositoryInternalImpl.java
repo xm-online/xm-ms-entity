@@ -51,6 +51,11 @@ public class XmEntityRepositoryInternalImpl implements XmEntityRepositoryInterna
     }
 
     @Override
+    public XmEntity findOneByKeyAndTypeKey(String key, String typeKey) {
+        return springXmEntityRepository.findOneByKeyAndTypeKey(key, typeKey);
+    }
+
+    @Override
     public XmEntityIdKeyTypeKey findOneIdKeyTypeKeyById(Long id) {
         return springXmEntityRepository.findOneIdKeyTypeKeyById(id);
     }
@@ -247,6 +252,11 @@ public class XmEntityRepositoryInternalImpl implements XmEntityRepositoryInterna
         return springXmEntityRepository.saveAll(entities);
     }
 
+    @Override
+    public Long getSequenceNextValString(String sequenceName) {
+        return springXmEntityRepository.getSequenceNextValString(sequenceName);
+    }
+
     /**
      * For backward compatibility in LEPs.
      * <p>
@@ -281,6 +291,7 @@ public class XmEntityRepositoryInternalImpl implements XmEntityRepositoryInterna
     public Optional<XmEntityVersion> findVersionById(Long id) {
         return springXmEntityRepository.findVersionById(id);
     }
+
 
     private <S extends XmEntity> void updateVersion(S entity) {
         if (!entity.isNew() && entity.getVersion() == null) {
