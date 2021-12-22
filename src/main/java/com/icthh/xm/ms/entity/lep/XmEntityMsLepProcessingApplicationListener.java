@@ -30,6 +30,7 @@ import static com.icthh.xm.ms.entity.lep.LepXmEntityMsConstants.BINDING_SUB_KEY_
 import static com.icthh.xm.ms.entity.lep.LepXmEntityMsConstants.BINDING_SUB_KEY_TEMPLATE_REST;
 import static com.icthh.xm.ms.entity.lep.LepXmEntityMsConstants.BINDING_SUB_KEY_TEMPLATE_PLAIN_REST;
 import static com.icthh.xm.ms.entity.lep.LepXmEntityMsConstants.BINDING_SUB_KEY_TEMPLATE_S3;
+import static com.icthh.xm.ms.entity.lep.LepXmEntityMsConstants.BINDING_KEY_METER_REGISTRY;
 
 import com.icthh.xm.commons.config.client.service.TenantConfigService;
 import com.icthh.xm.commons.lep.commons.CommonsExecutor;
@@ -61,6 +62,7 @@ import com.icthh.xm.ms.entity.service.metrics.CustomMetricsContext;
 import java.util.HashMap;
 import java.util.Map;
 
+import io.micrometer.core.instrument.MeterRegistry;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
 import org.springframework.web.client.RestTemplate;
@@ -98,6 +100,7 @@ public class XmEntityMsLepProcessingApplicationListener extends SpringLepProcess
     private final SeparateTransactionExecutor transactionExecutor;
     private final CustomMetricsContext customMetricsContext;
     private final KafkaTemplateService kafkaTemplateService;
+    private final MeterRegistry meterRegistry;
 
     @Override
     protected void bindExecutionContext(ScopedContext executionContext) {
@@ -127,6 +130,7 @@ public class XmEntityMsLepProcessingApplicationListener extends SpringLepProcess
 
         executionContext.setValue(BINDING_METRICS_CONTEXT, customMetricsContext);
 
+        executionContext.setValue(BINDING_KEY_METER_REGISTRY, meterRegistry);
         // repositories
         Map<String, Object> repositories = new HashMap<>();
         repositories.put(BINDING_SUB_KEY_REPOSITORY_XM_ENTITY, xmEntityRepository);
