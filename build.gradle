@@ -401,8 +401,8 @@ spotbugs {
 }
 
 pmd {
-    rulePriority = 3
-    toolVersion = '5.5.4'
+    toolVersion = "6.41.0"
+    rulesMinimumPriority = 3
     ignoreFailures = true
     ruleSetFiles = files("./qa/pmd.xml")
 }
@@ -412,7 +412,7 @@ task cleanResources(type: Delete) {
 }
 
 wrapper {
-    gradleVersion = "6.0.1"
+    gradleVersion = "6.9.2"
 }
 
 task stage(dependsOn: 'bootWar') {
