@@ -358,6 +358,7 @@ dependencies {
     implementation "org.modelmapper:modelmapper:${modelmapper_version}"
     implementation "com.github.bohnman:squiggly-filter-jackson:${squiggly_filter_version}"
     implementation 'com.vladmihalcea:hibernate-types-52:2.4.3'
+    implementation "com.azure:azure-storage-blob:12.13.0"
 
     // test dependencies
     testCompileOnly "org.projectlombok:lombok:${lombok_version}"
