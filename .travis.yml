@@ -9,6 +9,7 @@ addons:
       secure: AnVD/9K3ZTZsnhgd4T4iqShqbh8ylol7yBkplosOzF+j06IOpukuieqnXR3+01kbccc6+297RO4Wk2bvAMoWlXWb0l96Dcw/V0EwKZgVwsoNLCSXdNlLlVyMx3bgs6h/OQNO9Q8bVAFoajy7oWJhAdqKpgJQn/+kA3u8BnrTwg53TE75r+TGsbzw1mjBD0K8L5V9gjwHbwaX8+ENcVH5pQJn8LpFfVSbI1RiyRZXnMl57BEpugwSQ+WMIiA+Q0ICeEH01VsKT0y7c4tXvhQT2BHfF9KTB9hOVtn+Ow1CEBJ2PaPy/eVVFdepWSf+KxgWz3b2mii5l/ZzxbOaKo3QSrcvyCzAwxC0uc+4TlQAcbBe0fzC5USytvlJeWsor2tkFEyhvbIoy+ksyVwzuUqsHyoK4zEBAqxd768l4T11gohzIc7cNbjYdbLWtyDiqy0DcIGmOqzZny8R+8qNim2tzKFWDb6rTFnWwSXxPeI3Hk5qPDMtnqxMZx/TOUa2YYh8Us0EMlK9+XGq7sdiS36kb5HAcL7zX9RqSsKOeOYDpXicWkJfeTW3Fm/VOhXB7aEPRBt4xsRWWHdUDucObSA5iq5pGS6XHshPjejvAK9j9m6tdCKtt4g1o41oHIzVnsDGZzoFCZq3qMULGCx5Gsa3VSudcpl44+EtEEIXdE2rc7Q=
     branches:
     - master
+    - main
 
 script:
   - set -e
@@ -18,7 +19,7 @@ script:
   - export DOCKER_REPO=$(echo  -n $TRAVIS_REPO_SLUG | sed -e 's/^xm-online\//xmonline\//g')
   - export IMAGE_BRANCH=$(echo -n $TRAVIS_BRANCH | sed -e 's/\//-/g')
   - export PROJECT_VERSION="$IMAGE_BRANCH"
-  - if [ "$IMAGE_BRANCH" == "master" ]; 
+  - if [ "$IMAGE_BRANCH" == "master" ] || [ "$IMAGE_BRANCH" == "main" ]; 
     then 
         PROJECT_VERSION=$(./gradlew -q  getProjectVersion);
         export SONAR_PK=$(echo  -n $TRAVIS_REPO_SLUG | sed -e 's/\//:/g');
@@ -47,4 +48,7 @@ notifications:
   slack:
     rooms:
       secure: eHvxMZJsCw0vBFWkSsL8YIwam4b43HppJ2m9I+QhW6v/oG7LdxxKeDjpTOn7ramXZxxGZEqibA5QjilMqnraPzHy3lqo7x8+LQXMN5sfDI/B6TZmWZ5r2oEr384L3p02xLwalA2I18xjPwWEQFdERL4wzJNvvXIki/T3X3GGi4pglAfyM6gLTsP0H0fA4WSj8e6Z9Ap7B1UD3tcwKk6+9vbJUEmc+HTx6my317hkmbi/I6mXZb9p63q2yvKnjEaU8vlULYls3gPxQDrozLbDMN5dFATS2p5mqrJVNY8r3gcJb0l38eFVzl09YWiNTfEWgT9k1zi3O9FF8GG2VyJQv8i4LGcwZE1Wrdd1iakWugXlHTnROD1wjmgIwN7f0UBX6VXztJ92NXqKus5CkfBioksi45uHLJJFbnz8vMXQCCkidW/VVg91GitMjN1s16JcXbBbQMShpmZ07Jub+zn7pIy2y6xHGQSRe3Z2wf7rI8VjqyH3OnuGT/HLLEaslGWuPTSaswoO1HljG61ttjoPk1czfeABeNQGzmzYgPEVENBRhjr46AR95Thyjbo803B/fsk/uFDVAVrLZZAveqQvl7gNcewLyRetDWKm95GM30Sl8vZkhHXJc9OIHu17QOnsjTKaBa2J6CVTT+E3f6Fc5Pyr4FxfZN/FK99MDf6GWFg=
-
+branches:
+   only:
+     - master
+     - main
