@@ -49,10 +49,8 @@ public class JsonValidationService {
 
     @SneakyThrows
     private ProcessingReport validate(Map<String, Object> data, JsonSchema jsonSchema) {
-        String stringData = objectMapper.writeValueAsString(data);
-        log.debug("Validation data. map: {}, jsonData: {}", data, stringData);
-
-        JsonNode dataNode = JsonLoader.fromString(stringData);
+        log.debug("Validation data. map: {}", data);
+        JsonNode dataNode = objectMapper.valueToTree(data);
         return jsonSchema.validate(dataNode);
     }
 

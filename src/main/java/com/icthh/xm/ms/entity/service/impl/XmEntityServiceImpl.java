@@ -95,6 +95,8 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.text.StrSubstitutor;
 import org.apache.commons.lang3.StringUtils;
+import org.hibernate.collection.internal.PersistentSet;
+import org.hibernate.collection.spi.PersistentCollection;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
@@ -104,8 +106,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpEntity;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.CollectionUtils;
-import org.springframework.util.ObjectUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 /**
@@ -195,24 +195,44 @@ public class XmEntityServiceImpl implements XmEntityService {
             }
         }
 
-        // FIXME It is hack to link each tag with entity before persisting. may be there is more elegant solution.
-        xmEntity.updateXmEntityReference(xmEntity.getAttachments(), Attachment::setXmEntity);
-        xmEntity.updateXmEntityReference(xmEntity.getCalendars(), Calendar::setXmEntity);
-        xmEntity.updateXmEntityReference(xmEntity.getLocations(), Location::setXmEntity);
-        xmEntity.updateXmEntityReference(xmEntity.getRatings(), Rating::setXmEntity);
-        xmEntity.updateXmEntityReference(xmEntity.getTags(), Tag::setXmEntity);
-        xmEntity.updateXmEntityReference(xmEntity.getComments(), Comment::setXmEntity);
-        xmEntity.updateXmEntityReference(xmEntity.getTargets(), Link::setSource);
-        xmEntity.updateXmEntityReference(xmEntity.getSources(), Link::setTarget);
-        xmEntity.updateXmEntityReference(xmEntity.getVotes(), Vote::setXmEntity);
-        nullSafe(xmEntity.getTargets()).forEach(link ->
-            link.setTarget(xmEntityRepository.getOne(link.getTarget().getId())));
-        nullSafe(xmEntity.getSources()).forEach(link ->
-            link.setSource(xmEntityRepository.getOne(link.getSource().getId())));
+        self.processReferences(xmEntity);
         processUniqueField(xmEntity, oldEntity);
         processName(xmEntity);
 
         return xmEntityRepository.save(xmEntity);
+    }
+
+    @LogicExtensionPoint(value = "ProcessReferences", resolver = XmEntityTypeKeyResolver.class)
+    public void processReferences(XmEntity xmEntity) {
+        self.processReferencesGeneralLep(xmEntity);
+    }
+
+    @LogicExtensionPoint("ProcessReferences")
+    public void processReferencesGeneralLep(XmEntity xmEntity) {
+
+        Boolean disableIfPersistent = xmEntitySpecService
+                .getTypeSpecByKey(xmEntity.getTypeKey())
+                .map(TypeSpec::getDisablePersistentReferenceProcessingOnSave)
+                .orElse(Boolean.FALSE);
+
+        // FIXME It is hack to link each tag with entity before persisting. may be there is more elegant solution.
+        xmEntity.updateXmEntityReference(xmEntity.getAttachments(), Attachment::setXmEntity, disableIfPersistent);
+        xmEntity.updateXmEntityReference(xmEntity.getCalendars(), Calendar::setXmEntity, disableIfPersistent);
+        xmEntity.updateXmEntityReference(xmEntity.getLocations(), Location::setXmEntity, disableIfPersistent);
+        xmEntity.updateXmEntityReference(xmEntity.getRatings(), Rating::setXmEntity, disableIfPersistent);
+        xmEntity.updateXmEntityReference(xmEntity.getTags(), Tag::setXmEntity, disableIfPersistent);
+        xmEntity.updateXmEntityReference(xmEntity.getComments(), Comment::setXmEntity, disableIfPersistent);
+        xmEntity.updateXmEntityReference(xmEntity.getTargets(), Link::setSource, disableIfPersistent);
+        xmEntity.updateXmEntityReference(xmEntity.getSources(), Link::setTarget, disableIfPersistent);
+        xmEntity.updateXmEntityReference(xmEntity.getVotes(), Vote::setXmEntity, disableIfPersistent);
+        if (!(disableIfPersistent && xmEntity.getTargets() instanceof PersistentCollection)) {
+            nullSafe(xmEntity.getTargets()).forEach(link ->
+                    link.setTarget(xmEntityRepository.getOne(link.getTarget().getId())));
+        }
+        if (!(disableIfPersistent && xmEntity.getSources() instanceof PersistentCollection)) {
+            nullSafe(xmEntity.getSources()).forEach(link ->
+                    link.setSource(xmEntityRepository.getOne(link.getSource().getId())));
+        }
     }
 
     private void processName(XmEntity xmEntity) {
@@ -233,15 +253,10 @@ public class XmEntityServiceImpl implements XmEntityService {
 
     @SneakyThrows
     private void processUniqueField(XmEntity xmEntity, Optional<XmEntity> oldEntity) {
-        oldEntity.ifPresent(it -> it.getUniqueFields().clear());
-        oldEntity.ifPresent(uniqueFieldRepository::deleteByXmEntity);
-        xmEntity.getUniqueFields().clear();
 
         if (isEmpty(xmEntity.getData())) {
             return;
         }
-
-        String json = objectMapper.writeValueAsString(xmEntity.getData());
 
         Set<UniqueFieldSpec> uniqueFieldSpecs = xmEntitySpecService
             .getTypeSpecByKey(xmEntity.getTypeKey())
@@ -251,6 +266,12 @@ public class XmEntityServiceImpl implements XmEntityService {
         if (uniqueFieldSpecs.isEmpty()) {
             return;
         }
+
+        oldEntity.ifPresent(it -> it.getUniqueFields().clear());
+        oldEntity.ifPresent(uniqueFieldRepository::deleteByXmEntity);
+        xmEntity.getUniqueFields().clear();
+
+        String json = objectMapper.writeValueAsString(xmEntity.getData());
 
         DocumentContext document = JsonPath.using(defaultConfiguration().addOptions(SUPPRESS_EXCEPTIONS)).parse(json);
 

@@ -1,6 +1,8 @@
 package com.icthh.xm.ms.entity.domain;
 
 import static com.icthh.xm.ms.entity.config.Constants.REGEX_EOL;
+import static com.icthh.xm.ms.entity.validator.NotNullBySpecField.KEY;
+import static com.icthh.xm.ms.entity.validator.NotNullBySpecField.NAME;
 import static javax.persistence.CascadeType.ALL;
 import static javax.persistence.CascadeType.MERGE;
 import static javax.persistence.CascadeType.PERSIST;
@@ -17,6 +19,7 @@ import com.icthh.xm.ms.entity.domain.listener.AvatarUrlListener;
 import com.icthh.xm.ms.entity.domain.listener.XmEntityElasticSearchListener;
 import com.icthh.xm.ms.entity.validator.JsonData;
 import com.icthh.xm.ms.entity.validator.NotNull;
+import com.icthh.xm.ms.entity.validator.NotNullBySpecField;
 import com.icthh.xm.ms.entity.validator.StateKey;
 import com.icthh.xm.ms.entity.validator.TypeKey;
 import io.swagger.annotations.ApiModel;
@@ -51,6 +54,7 @@ import lombok.Setter;
 import org.apache.commons.collections4.CollectionUtils;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.hibernate.collection.spi.PersistentCollection;
 import org.springframework.data.domain.Persistable;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
@@ -81,8 +85,8 @@ import org.springframework.data.elasticsearch.annotations.FieldType;
         @NamedAttributeNode("functionContexts")
     })
 @EntityListeners({AvatarUrlListener.class, XmEntityElasticSearchListener.class})
-@NotNull(fieldName = "name")
-@NotNull(fieldName = "key")
+@NotNull(field = NAME)
+@NotNull(field = KEY)
 public class XmEntity implements Serializable, Persistable<Long> {
 
     private static final long serialVersionUID = 1L;
@@ -737,6 +741,14 @@ public class XmEntity implements Serializable, Persistable<Long> {
     }
 
     public <T> void updateXmEntityReference(Collection<T> objects, BiConsumer<T, XmEntity> xmEntitySetter) {
+        updateXmEntityReference(objects, xmEntitySetter, false);
+    }
+
+    public <T> void updateXmEntityReference(Collection<T> objects, BiConsumer<T, XmEntity> xmEntitySetter,
+                                            Boolean disableIfPersistent) {
+        if (disableIfPersistent && objects instanceof PersistentCollection) {
+            return;
+        }
         if (CollectionUtils.isNotEmpty(objects)) {
             objects.forEach(object -> xmEntitySetter.accept(object, this));
         }

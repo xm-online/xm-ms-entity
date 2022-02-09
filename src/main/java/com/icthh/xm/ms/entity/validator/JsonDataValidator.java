@@ -46,7 +46,7 @@ public class JsonDataValidator implements ConstraintValidator<JsonData, XmEntity
 
     @Override
     public boolean isValid(XmEntity value, ConstraintValidatorContext context) {
-        TypeSpec typeSpecification = xmEntitySpecService.getTypeSpecByKey(value.getTypeKey()).orElse(null);
+        TypeSpec typeSpecification = xmEntitySpecService.getTypeSpecByKeyWithoutFunctionFilter(value.getTypeKey()).orElse(null);
         JsonSchema jsonSchema = xmEntitySpecService.getDataJsonSchemaByKey(value.getTypeKey()).orElse(null);
 
         if (!present(typeSpecification) || dataAndSpecificationEmpty(value, jsonSchema)) {

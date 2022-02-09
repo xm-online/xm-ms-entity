@@ -1,33 +1,34 @@
 package com.icthh.xm.ms.entity.repository.entitygraph;
 
+import com.icthh.xm.ms.entity.domain.XmEntity;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.jdbc.dialect.internal.StandardDialectResolver;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.support.JpaEntityInformation;
 import org.springframework.data.jpa.repository.support.SimpleJpaRepository;
-import org.springframework.jdbc.support.incrementer.AbstractSequenceMaxValueIncrementer;
 
 import javax.persistence.EntityGraph;
 import javax.persistence.EntityManager;
+import javax.persistence.FlushModeType;
 import javax.persistence.Query;
 import javax.persistence.Subgraph;
 import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaDelete;
 import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.CriteriaUpdate;
 import javax.persistence.criteria.Root;
 import java.io.Serializable;
 import java.math.BigInteger;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 
 import static org.hibernate.jpa.QueryHints.HINT_LOADGRAPH;
-import static org.springframework.data.jpa.repository.query.QueryUtils.toOrders;
 
 @Slf4j
 public class EntityGraphRepositoryImpl<T, I extends Serializable>
@@ -101,6 +102,23 @@ public class EntityGraphRepositoryImpl<T, I extends Serializable>
         Dialect dialect = getDialect(entityManager);
         Query query = entityManager.createNativeQuery(dialect.getSequenceNextValString(sequenceName));
         return ((BigInteger) query.getSingleResult()).longValue();
+    }
+
+    @Override
+    public void setFlushMode(FlushModeType flushMode) {
+        entityManager.setFlushMode(flushMode);
+    }
+
+    @Override
+    public int update(Function<CriteriaBuilder, CriteriaUpdate<XmEntity>> criteriaUpdate) {
+        CriteriaUpdate<XmEntity> updateQuery = criteriaUpdate.apply(entityManager.getCriteriaBuilder());
+        return entityManager.createQuery(updateQuery).executeUpdate();
+    }
+
+    @Override
+    public int delete(Function<CriteriaBuilder, CriteriaDelete<XmEntity>> criteriaDelete) {
+        CriteriaDelete<XmEntity> deleteQuery = criteriaDelete.apply(entityManager.getCriteriaBuilder());
+        return entityManager.createQuery(deleteQuery).executeUpdate();
     }
 
     private EntityGraph<T> createEntityGraph(List<String> embed) {
