@@ -646,3 +646,16 @@ types:
             {"key": "object1.field4"}
           ]
         }
+    - key: TEST_PROCESSING_REFS
+      isAbstract: false
+      links:
+        - key: TEST_PROCESSING_REFS_LINK_KEY
+          builderType: NEW
+          typeKey: TEST_PROCESSING_REFS
+    - key: TEST_NO_PROCESSING_REFS
+      isAbstract: false
+      disablePersistentReferenceProcessingOnSave: true
+      links:
+        - key: TEST_NO_PROCESSING_REFS_LINK_KEY
+          builderType: NEW
+          typeKey: TEST_NO_PROCESSING_REFS
