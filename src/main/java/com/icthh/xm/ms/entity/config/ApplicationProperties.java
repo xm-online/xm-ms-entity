@@ -59,6 +59,7 @@ public class ApplicationProperties {
     private Integer maxUploadSize;
 
     private Integer periodicMetricPoolSize;
+    private Integer elasticsearchIndexServicePageSize;
 
     private KafkaMetric kafkaMetric;
 

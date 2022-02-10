@@ -228,6 +228,7 @@ application:
     maxUploadFileSize: 1073741824
     maxUploadSize: 1073741824
     periodicMetricPoolSize: 1
+    elasticsearchIndexServicePageSize: 100
     kafkaMetric:
         enabled: true
         connectionTimeoutTopic: 1000
