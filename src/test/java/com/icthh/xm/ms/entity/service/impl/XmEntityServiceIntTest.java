@@ -11,6 +11,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static org.mockito.Mockito.when;
 
 import com.icthh.xm.commons.lep.XmLepScriptConfigServerResourceLoader;
@@ -53,6 +54,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.criteria.CriteriaDelete;
 import javax.persistence.criteria.CriteriaUpdate;
 import javax.persistence.criteria.Root;
+import javax.validation.ConstraintViolationException;
 
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -702,12 +704,19 @@ public class XmEntityServiceIntTest extends AbstractSpringBootTest {
         assertNotNull(source);
     }
 
-    @Test(expected = TransactionSystemException.class)
+    @Test
     public void whenLazySetAndProcessingDisabledSourcesWillNotBeSet() {
         XmEntity e1 = xmEntityService.save(new XmEntity().typeKey("TEST_NO_PROCESSING_REFS").name("someName").key("somKey"));
         XmEntity e2 = xmEntityService.save(new XmEntity().typeKey("TEST_NO_PROCESSING_REFS").name("someName").key("somKey"));
-        e1.getTargets().add(new Link().typeKey("TEST_NO_PROCESSING_REFS_LINK_KEY").target(e2));
-        xmEntityService.save(e1);
+        try {
+            e1.getTargets().add(new Link().typeKey("TEST_NO_PROCESSING_REFS_LINK_KEY").target(e2));
+            xmEntityService.save(e1);
+            fail("Expected TransactionSystemException");
+        } catch (TransactionSystemException e) {
+            String message = "[ConstraintViolationImpl{interpolatedMessage='must not be null', propertyPath=source, rootBeanClass=class com.icthh.xm.ms.entity.domain.Link, messageTemplate='{javax.validation.constraints.NotNull.message}'}]";
+            assertEquals(message, ((ConstraintViolationException)e.getCause().getCause()).getConstraintViolations().toString());
+        }
+        xmEntityRepository.deleteAll(List.of(e1, e2));
     }
 
     @Test
