@@ -245,7 +245,6 @@ public class EntityServiceImplIntTest extends AbstractSpringBootTest {
             XmEntity saved = xmEntityService.save(e1);
             xmEntityRepository.saveAndFlush(saved); // init validation
             fail("Expected TransactionSystemException");
-            fail("Expected TransactionSystemException");
         } catch (ConstraintViolationException e) {
             String message = "[ConstraintViolationImpl{interpolatedMessage='must not be null', propertyPath=source, rootBeanClass=class com.icthh.xm.ms.entity.domain.Link, messageTemplate='{javax.validation.constraints.NotNull.message}'}]";
             assertEquals(message, e.getConstraintViolations().toString());
