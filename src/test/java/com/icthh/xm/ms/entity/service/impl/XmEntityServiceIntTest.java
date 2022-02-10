@@ -694,51 +694,6 @@ public class XmEntityServiceIntTest extends AbstractSpringBootTest {
         xmEntityRepository.deleteInBatch(leftEntities);
     }
 
-    @Test
-    public void whenNormalSetAndProcessingDisabledSourcesWillBeSet() {
-        XmEntity e1 = xmEntityService.save(new XmEntity().typeKey("TEST_NO_PROCESSING_REFS").name("someName").key("somKey"));
-        XmEntity e2 = xmEntityService.save(new XmEntity().typeKey("TEST_NO_PROCESSING_REFS").name("someName").key("somKey"));
-        e1.setTargets(Set.of(new Link().typeKey("TEST_NO_PROCESSING_REFS_LINK_KEY").target(e2)));
-        e1 = xmEntityService.save(e1);
-        XmEntity source = e1.getTargets().iterator().next().getSource();
-        assertNotNull(source);
-    }
-
-    @Test
-    public void whenLazySetAndProcessingDisabledSourcesWillNotBeSet() {
-        XmEntity e1 = xmEntityService.save(new XmEntity().typeKey("TEST_NO_PROCESSING_REFS").name("someName").key("somKey"));
-        XmEntity e2 = xmEntityService.save(new XmEntity().typeKey("TEST_NO_PROCESSING_REFS").name("someName").key("somKey"));
-        try {
-            e1.getTargets().add(new Link().typeKey("TEST_NO_PROCESSING_REFS_LINK_KEY").target(e2));
-            xmEntityService.save(e1);
-            fail("Expected TransactionSystemException");
-        } catch (TransactionSystemException e) {
-            String message = "[ConstraintViolationImpl{interpolatedMessage='must not be null', propertyPath=source, rootBeanClass=class com.icthh.xm.ms.entity.domain.Link, messageTemplate='{javax.validation.constraints.NotNull.message}'}]";
-            assertEquals(message, ((ConstraintViolationException)e.getCause().getCause()).getConstraintViolations().toString());
-        }
-        xmEntityRepository.deleteAll(List.of(e1, e2));
-    }
-
-    @Test
-    public void whenNormalSetAndProcessingEnabledSourcesWillBeSet() {
-        XmEntity e1 = xmEntityService.save(new XmEntity().typeKey("TEST_PROCESSING_REFS").name("someName").key("somKey"));
-        XmEntity e2 = xmEntityService.save(new XmEntity().typeKey("TEST_PROCESSING_REFS").name("someName").key("somKey"));
-        e1.setTargets(Set.of(new Link().typeKey("TEST_PROCESSING_REFS_LINK_KEY").target(e2)));
-        xmEntityService.save(e1);
-        XmEntity source = e1.getTargets().iterator().next().getSource();
-        assertNotNull(source);
-    }
-
-    @Test
-    public void whenLazySetAndProcessingEnabledSourcesWillBeSet() {
-        XmEntity e1 = xmEntityService.save(new XmEntity().typeKey("TEST_PROCESSING_REFS").name("someName").key("somKey"));
-        XmEntity e2 = xmEntityService.save(new XmEntity().typeKey("TEST_PROCESSING_REFS").name("someName").key("somKey"));
-        e1.getTargets().add(new Link().typeKey("TEST_PROCESSING_REFS_LINK_KEY").target(e2));
-        xmEntityService.save(e1);
-        XmEntity source = e1.getTargets().iterator().next().getSource();
-        assertNotNull(source);
-    }
-
     @Test(expected = SearchPhaseExecutionException.class)
     @WithMockUser(authorities = "SUPER-ADMIN")
     public void testSearchFailWithMaxResultWindow1000() {

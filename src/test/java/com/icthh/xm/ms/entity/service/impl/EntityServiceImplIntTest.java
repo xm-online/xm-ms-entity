@@ -9,6 +9,8 @@ import static java.util.Arrays.asList;
 import static java.util.UUID.randomUUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -57,6 +59,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -74,9 +77,12 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpEntity;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.annotation.Rollback;
 import org.springframework.test.context.transaction.BeforeTransaction;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+
+import javax.validation.ConstraintViolationException;
 
 @Slf4j
 public class EntityServiceImplIntTest extends AbstractSpringBootTest {
@@ -225,6 +231,64 @@ public class EntityServiceImplIntTest extends AbstractSpringBootTest {
         long seq2 = xmEntityRepository.getSequenceNextValString("hibernate_sequence");
 
         assertEquals(seq + incrementValue, seq2);
+    }
+
+    @Test
+    @Rollback
+    @Transactional
+    public void whenLazySetAndProcessingDisabledSourcesWillNotBeSet() {
+        XmEntity e1 = xmEntityService.save(new XmEntity().typeKey("TEST_NO_PROCESSING_REFS").name("someName").key("somKey"));
+        XmEntity e2 = xmEntityService.save(new XmEntity().typeKey("TEST_NO_PROCESSING_REFS").name("someName").key("somKey"));
+        try {
+            e1 = xmEntityRepository.findOneById(e1.getId());
+            e1.getTargets().add(new Link().typeKey("TEST_NO_PROCESSING_REFS_LINK_KEY").target(e2));
+            XmEntity saved = xmEntityService.save(e1);
+            xmEntityRepository.saveAndFlush(saved); // init validation
+            fail("Expected TransactionSystemException");
+            fail("Expected TransactionSystemException");
+        } catch (ConstraintViolationException e) {
+            String message = "[ConstraintViolationImpl{interpolatedMessage='must not be null', propertyPath=source, rootBeanClass=class com.icthh.xm.ms.entity.domain.Link, messageTemplate='{javax.validation.constraints.NotNull.message}'}]";
+            assertEquals(message, e.getConstraintViolations().toString());
+        }
+        xmEntityRepository.deleteAll(List.of(e1, e2));
+        xmEntitySearchRepository.deleteAll();
+    }
+
+
+    @Test
+    @Rollback
+    @Transactional
+    public void whenNormalSetAndProcessingDisabledSourcesWillBeSet() {
+        XmEntity e1 = xmEntityService.save(new XmEntity().typeKey("TEST_NO_PROCESSING_REFS").name("someName").key("somKey"));
+        XmEntity e2 = xmEntityService.save(new XmEntity().typeKey("TEST_NO_PROCESSING_REFS").name("someName").key("somKey"));
+        e1.setTargets(new HashSet<>(Set.of(new Link().typeKey("TEST_NO_PROCESSING_REFS_LINK_KEY").target(e2))));
+        e1 = xmEntityService.save(e1);
+        XmEntity source = e1.getTargets().iterator().next().getSource();
+        assertNotNull(source);
+    }
+
+    @Test
+    @Rollback
+    @Transactional
+    public void whenNormalSetAndProcessingEnabledSourcesWillBeSet() {
+        XmEntity e1 = xmEntityService.save(new XmEntity().typeKey("TEST_PROCESSING_REFS").name("someName").key("somKey"));
+        XmEntity e2 = xmEntityService.save(new XmEntity().typeKey("TEST_PROCESSING_REFS").name("someName").key("somKey"));
+        e1.setTargets(new HashSet<>(Set.of(new Link().typeKey("TEST_PROCESSING_REFS_LINK_KEY").target(e2))));
+        xmEntityService.save(e1);
+        XmEntity source = e1.getTargets().iterator().next().getSource();
+        assertNotNull(source);
+    }
+
+    @Test
+    @Rollback
+    @Transactional
+    public void whenLazySetAndProcessingEnabledSourcesWillBeSet() {
+        XmEntity e1 = xmEntityService.save(new XmEntity().typeKey("TEST_PROCESSING_REFS").name("someName").key("somKey"));
+        XmEntity e2 = xmEntityService.save(new XmEntity().typeKey("TEST_PROCESSING_REFS").name("someName").key("somKey"));
+        e1.getTargets().add(new Link().typeKey("TEST_PROCESSING_REFS_LINK_KEY").target(e2));
+        xmEntityService.save(e1);
+        XmEntity source = e1.getTargets().iterator().next().getSource();
+        assertNotNull(source);
     }
 
     @Test
