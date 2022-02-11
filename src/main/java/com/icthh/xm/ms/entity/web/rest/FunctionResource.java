@@ -121,12 +121,12 @@ public class FunctionResource {
     @PreAuthorize("hasPermission({'functionKey': #functionKey}, 'FUNCTION.CALL')")
     @PrivilegeDescription("Privilege to execute a function by key (key in entity specification)")
     public ResponseEntity<Object> callFunctionWithHttpCode(@PathVariable("functionKey") String functionKey,
-                                                       @RequestBody(required = false) Map<String, Object> functionInput) {
+                                                           @RequestBody(required = false) Map<String, Object> functionInput) {
         FunctionContext result = functionService.execute(functionKey, functionInput);
 
         HashMap<String, Object> functionResult = new HashMap<>();
-        if (result.functionResult() != null) {
-            functionResult = (HashMap<String, Object>) result.functionResult();
+        if (result.functionResult() != null && result.getData()!=null) {
+            functionResult = (HashMap<String, Object>) result.getData();
         }
 
         HttpStatus httpStatus = HttpStatus.CREATED;
@@ -134,13 +134,12 @@ public class FunctionResource {
             httpStatus = (HttpStatus) functionResult.get(HTTP_STATUS_CODE_KEY);
         }
 
-        Object functionResponse = result.functionResult();
         if (functionResult.containsKey(FUNCTION_RESPONSE_KEY) && functionResult.get(FUNCTION_RESPONSE_KEY) != null) {
-            functionResponse = functionResult.get(FUNCTION_RESPONSE_KEY);
+            result.setData((Map<String, Object>) functionResult.get(FUNCTION_RESPONSE_KEY));
         }
         return ResponseEntity.status(httpStatus).location(URI.create("/api/function-contexts/" + Objects.toString(result.getId(), "")))
             .headers(HeaderUtil.createEntityCreationAlert(ENTITY_NAME_FUNCTION_CONTEXT, String.valueOf(result.getId())))
-            .body(functionResponse);
+            .body(result);
     }
 
     /**
