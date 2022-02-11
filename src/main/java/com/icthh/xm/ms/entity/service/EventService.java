@@ -8,6 +8,7 @@ import com.icthh.xm.commons.permission.annotation.FindWithPermission;
 import com.icthh.xm.commons.permission.annotation.PrivilegeDescription;
 import com.icthh.xm.commons.permission.repository.PermittedRepository;
 import com.icthh.xm.ms.entity.domain.Event;
+import com.icthh.xm.ms.entity.domain.Link;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.lep.keyresolver.EventTypeKeyResolver;
 import com.icthh.xm.ms.entity.repository.EventRepository;
@@ -137,6 +138,14 @@ public class EventService {
     @LogicExtensionPoint("DeleteAll")
     public void deleteAll(List<Event> events) {
         eventRepository.deleteAll(events);
+    }
+
+    public List<Event> saveAll(List<Event> list) {
+        return eventRepository.saveAll(list);
+    }
+
+    public void deleteInBatch(List<Event> list) {
+        eventRepository.deleteInBatch(list);
     }
 
     /**

@@ -11,6 +11,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Example;
@@ -20,6 +22,11 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Component;
+
+import javax.persistence.FlushModeType;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaDelete;
+import javax.persistence.criteria.CriteriaUpdate;
 
 @Slf4j
 @Component
@@ -257,6 +264,16 @@ public class XmEntityRepositoryInternalImpl implements XmEntityRepositoryInterna
         return springXmEntityRepository.getSequenceNextValString(sequenceName);
     }
 
+    @Override
+    public void deleteInBatch(Iterable<XmEntity> entities) {
+        springXmEntityRepository.deleteInBatch(entities);
+    }
+
+    @Override
+    public void setFlushMode(FlushModeType flushMode) {
+        springXmEntityRepository.setFlushMode(flushMode);
+    }
+
     /**
      * For backward compatibility in LEPs.
      * <p>
@@ -288,10 +305,19 @@ public class XmEntityRepositoryInternalImpl implements XmEntityRepositoryInterna
     }
 
     @Override
+    public int update(Function<CriteriaBuilder, CriteriaUpdate<XmEntity>> criteriaUpdate) {
+        return springXmEntityRepository.update(criteriaUpdate);
+    }
+
+    @Override
+    public int delete(Function<CriteriaBuilder, CriteriaDelete<XmEntity>> criteriaDelete) {
+        return springXmEntityRepository.delete(criteriaDelete);
+    }
+
+    @Override
     public Optional<XmEntityVersion> findVersionById(Long id) {
         return springXmEntityRepository.findVersionById(id);
     }
-
 
     private <S extends XmEntity> void updateVersion(S entity) {
         if (!entity.isNew() && entity.getVersion() == null) {

@@ -76,6 +76,14 @@ public class LinkService {
         return linkRepository.save(link);
     }
 
+    public List<Link> saveAll(List<Link> list) {
+        return linkRepository.saveAll(list);
+    }
+
+    public void deleteInBatch(List<Link> list) {
+        linkRepository.deleteInBatch(list);
+    }
+
     private Long entityId(XmEntity entity) {
         Long id = entity.getId();
         if (id == null) {

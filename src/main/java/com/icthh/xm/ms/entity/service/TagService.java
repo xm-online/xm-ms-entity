@@ -3,6 +3,7 @@ package com.icthh.xm.ms.entity.service;
 import com.icthh.xm.commons.permission.annotation.FindWithPermission;
 import com.icthh.xm.commons.permission.annotation.PrivilegeDescription;
 import com.icthh.xm.commons.permission.repository.PermittedRepository;
+import com.icthh.xm.ms.entity.domain.Event;
 import com.icthh.xm.ms.entity.domain.Tag;
 import com.icthh.xm.ms.entity.repository.TagRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
@@ -85,5 +86,13 @@ public class TagService {
      */
     public void delete(Long id) {
         tagRepository.deleteById(id);
+    }
+
+    public List<Tag> saveAll(List<Tag> list) {
+        return tagRepository.saveAll(list);
+    }
+
+    public void deleteInBatch(List<Tag> list) {
+        tagRepository.deleteInBatch(list);
     }
 }

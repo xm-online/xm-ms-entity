@@ -17,7 +17,7 @@ import java.lang.annotation.Target;
 @Repeatable(XmEntityFieldNotNulls.class)
 public @interface NotNull {
 
-    String fieldName();
+    NotNullBySpecField field();
 
     String message() default "{javax.validation.constraints.NotNull.message}";
 

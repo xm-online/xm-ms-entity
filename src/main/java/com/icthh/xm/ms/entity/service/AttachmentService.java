@@ -8,6 +8,7 @@ import com.icthh.xm.commons.permission.annotation.FindWithPermission;
 import com.icthh.xm.commons.permission.repository.PermittedRepository;
 import com.icthh.xm.commons.permission.annotation.PrivilegeDescription;
 import com.icthh.xm.ms.entity.domain.Attachment;
+import com.icthh.xm.ms.entity.domain.Link;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.domain.spec.AttachmentSpec;
 import com.icthh.xm.ms.entity.repository.AttachmentRepository;
@@ -186,6 +187,14 @@ public class AttachmentService {
     @PrivilegeDescription("Privilege to search for the attachment corresponding to the query")
     public List<Attachment> search(String query, String privilegeKey) {
         return permittedSearchRepository.search(query, Attachment.class, privilegeKey);
+    }
+
+    public List<Attachment> saveAll(List<Attachment> list) {
+        return attachmentRepository.saveAll(list);
+    }
+
+    public void deleteInBatch(List<Attachment> list) {
+        attachmentRepository.deleteInBatch(list);
     }
 
     protected AttachmentSpec getSpec(XmEntity entity, Attachment attachment) {

@@ -20,11 +20,11 @@ public class XmEntityFieldNotNullValidator implements ConstraintValidator<NotNul
     @Autowired
     private XmEntitySpecService xmEntitySpecService;
 
-    private String fieldName;
+    private NotNullBySpecField field;
 
     @Override
     public void initialize(NotNull notNull) {
-        fieldName = notNull.fieldName();
+        field = notNull.field();
     }
 
     @Override
@@ -36,16 +36,12 @@ public class XmEntityFieldNotNullValidator implements ConstraintValidator<NotNul
             return true;
         }
 
-        Field specField = TypeSpec.class.getDeclaredField("is" + capitalize(fieldName) + "Required");
-        specField.setAccessible(true);
-        Object isFieldRequired = specField.get(typeSpec);
-        Field valueField = XmEntity.class.getDeclaredField(fieldName);
-        valueField.setAccessible(true);
-        Object fieldValue = valueField.get(xmEntity);
+        Boolean isFieldRequired = field.isRequiredExtractor.apply(typeSpec);
+        Object fieldValue = field.valueExtractor.apply(xmEntity);
         if (TRUE.equals(isFieldRequired) && fieldValue == null) {
             ctx.disableDefaultConstraintViolation();
             ctx.buildConstraintViolationWithTemplate("{javax.validation.constraints.NotNull.message}")
-                .addPropertyNode(fieldName)
+                .addPropertyNode(field.fieldName)
                 .addConstraintViolation();
             return false;
         }

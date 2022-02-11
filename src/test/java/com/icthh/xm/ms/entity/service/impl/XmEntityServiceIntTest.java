@@ -10,6 +10,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static org.mockito.Mockito.when;
 
 import com.icthh.xm.commons.lep.XmLepScriptConfigServerResourceLoader;
@@ -33,28 +35,33 @@ import com.icthh.xm.ms.entity.domain.Rating;
 import com.icthh.xm.ms.entity.domain.Tag;
 import com.icthh.xm.ms.entity.domain.Vote;
 import com.icthh.xm.ms.entity.domain.XmEntity;
+import com.icthh.xm.ms.entity.domain.XmEntity_;
 import com.icthh.xm.ms.entity.domain.ext.IdOrKey;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
 import com.icthh.xm.ms.entity.service.ElasticsearchIndexService;
 import com.icthh.xm.ms.entity.service.SeparateTransactionExecutor;
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import javax.persistence.EntityManager;
+import javax.persistence.criteria.CriteriaDelete;
+import javax.persistence.criteria.CriteriaUpdate;
+import javax.persistence.criteria.Root;
+import javax.validation.ConstraintViolationException;
+
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.text.StrSubstitutor;
 import org.apache.commons.lang3.mutable.MutableInt;
 import org.elasticsearch.action.search.SearchPhaseExecutionException;
-import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -67,6 +74,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.ElasticsearchException;
 import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.transaction.TransactionSystemException;
 import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
@@ -637,12 +645,61 @@ public class XmEntityServiceIntTest extends AbstractSpringBootTest {
         assertEquals(allEntitis.size(), 4);
     }
 
+    @Test
+    public void testCriteriaUpdate() {
+        List<Long> ids = saveXmEntities(10).stream().map(XmEntity::getId).collect(Collectors.toList());
+        int count = xmEntityRepository.update((cb) -> {
+            CriteriaUpdate<XmEntity> update = cb.createCriteriaUpdate(XmEntity.class);
+            Root<XmEntity> root = update.from(XmEntity.class);
+            update.set(XmEntity_.description, "new value");
+            update.where(cb.lessThanOrEqualTo(root.get(XmEntity_.name), "A-B5"));
+            return update;
+        });
+
+        List<XmEntity> entities = xmEntityRepository.findAll("SELECT e FROM XmEntity e WHERE e.id in :id",
+                Map.of("id", ids), List.of());
+        assertEquals(10, entities.size());
+        assertTrue(entities.stream().filter(it -> it.getName().compareTo("A-B5") > 0).noneMatch(it -> "new value".equals(it.getDescription())));
+        assertTrue(entities.stream().filter(it -> it.getName().compareTo("A-B5") <= 0).allMatch(it -> "new value".equals(it.getDescription())));
+        System.out.println(count);
+        xmEntityRepository.deleteInBatch(entities);
+    }
+
+    @Test
+    public void testCriteriaDelete() {
+        List<Long> ids = saveXmEntities(10).stream().map(XmEntity::getId).collect(Collectors.toList());
+        xmEntityRepository.delete((cb) -> {
+            CriteriaDelete<XmEntity> delete = cb.createCriteriaDelete(XmEntity.class);
+            Root<XmEntity> root = delete.from(XmEntity.class);
+            delete.where(cb.lessThanOrEqualTo(root.get(XmEntity_.name), "A-B5"));
+            return delete;
+        });
+        List<XmEntity> leftEntities = xmEntityRepository.findAll("SELECT e FROM XmEntity e WHERE e.id in :id",
+                Map.of("id", ids), List.of());
+        assertEquals(4, leftEntities.size());
+        assertTrue(leftEntities.stream().allMatch(it -> it.getName().compareTo("A-B5") > 0));
+        xmEntityRepository.deleteInBatch(leftEntities);
+    }
+
+    @Test
+    public void testBatchDelete() {
+        List<XmEntity> xmEntities = saveXmEntities(10);
+        List<Long> ids = xmEntities.stream().map(XmEntity::getId).collect(Collectors.toList());
+        List<XmEntity> toDelete = xmEntities.stream().filter(it -> it.getName().compareTo("A-B5") <= 0).collect(Collectors.toList());
+        xmEntityRepository.deleteInBatch(toDelete);
+        List<XmEntity> leftEntities = xmEntityRepository.findAll("SELECT e FROM XmEntity e WHERE e.id in :id",
+                Map.of("id", ids), List.of());
+        assertEquals(4, leftEntities.size());
+        assertTrue(leftEntities.stream().allMatch(it -> it.getName().compareTo("A-B5") > 0));
+        xmEntityRepository.deleteInBatch(leftEntities);
+    }
+
     @Test(expected = SearchPhaseExecutionException.class)
     @WithMockUser(authorities = "SUPER-ADMIN")
     public void testSearchFailWithMaxResultWindow1000() {
         elasticsearchIndexService.reindexAll();
 
-        saveXmEntities();
+        saveXmEntities(2);
 
         String config = loadFile("config/elastic_config_window1000.json");
         indexConfiguration.onRefresh("/config/tenants/RESINTTEST/entity/index_config.json", config);
@@ -662,7 +719,7 @@ public class XmEntityServiceIntTest extends AbstractSpringBootTest {
     public void testSearchWithScroll() {
         elasticsearchIndexService.reindexAll();
 
-        saveXmEntities();
+        saveXmEntities(2);
 
         String config = loadFile("config/elastic_config.json");
         indexConfiguration.onRefresh("/config/tenants/RESINTTEST/entity/index_config.json", config);
@@ -715,11 +772,11 @@ public class XmEntityServiceIntTest extends AbstractSpringBootTest {
         entities.forEach(it -> xmEntityService.delete(it.getId()));
     }
 
-    private void saveXmEntities() {
+    private List<XmEntity> saveXmEntities(int count) {
         Map<String, Object> xmEntityData = new HashMap<>();
         xmEntityData.put("key", "value");
         List<XmEntity> entityList = new ArrayList<>();
-        for (int i = 0; i < 2; i++) {
+        for (int i = 0; i < count; i++) {
             XmEntity entity = new XmEntity().typeKey("TEST_SEARCH")
                 .name("A-B" + i)
                 .key("E-F" + i)
@@ -728,7 +785,7 @@ public class XmEntityServiceIntTest extends AbstractSpringBootTest {
                 .updateDate(new Date().toInstant());
             entityList.add(entity);
         }
-        xmEntityRepository.saveAll(entityList);
+        return xmEntityRepository.saveAll(entityList);
     }
 
 }

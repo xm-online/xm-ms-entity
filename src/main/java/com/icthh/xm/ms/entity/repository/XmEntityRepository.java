@@ -4,11 +4,11 @@ import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.projection.XmEntityIdKeyTypeKey;
 import com.icthh.xm.ms.entity.projection.XmEntityStateProjection;
 
-import java.sql.ResultSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
 
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.Page;
@@ -16,6 +16,11 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.repository.query.Param;
+
+import javax.persistence.FlushModeType;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaDelete;
+import javax.persistence.criteria.CriteriaUpdate;
 
 /**
  * Repository interface accessible by LEP scripts.
@@ -135,5 +140,13 @@ public interface XmEntityRepository {
     void deleteAll(Iterable<? extends XmEntity> entities);
 
     Long getSequenceNextValString(String sequenceName);
+
+    void deleteInBatch(Iterable<XmEntity> entities);
+
+    void setFlushMode(FlushModeType flushMode);
+
+    int update(Function<CriteriaBuilder, CriteriaUpdate<XmEntity>> criteriaUpdate);
+
+    int delete(Function<CriteriaBuilder, CriteriaDelete<XmEntity>> criteriaDelete);
 
 }
