@@ -101,13 +101,7 @@ public class EventResource {
     @GetMapping("/events")
     @Timed
     public List<Event> getAllEvents(EventFilter eventFilter) {
-        List<Event> result;
-        if (eventFilter == null) {
-            result = eventService.findAll(null);
-        } else {
-            return eventService.findAllByFilter(eventFilter);
-        }
-        return result;
+        return eventFilter == null ? eventService.findAll(null) : eventService.findAllByFilter(eventFilter);
     }
 
     /**
