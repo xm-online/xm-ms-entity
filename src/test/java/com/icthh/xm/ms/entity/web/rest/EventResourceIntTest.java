@@ -494,6 +494,27 @@ public class EventResourceIntTest extends AbstractSpringBootTest {
 
     @Test
     @Transactional
+    @WithMockUser(authorities = "SUPER-ADMIN")
+    public void getAllEventsByAssignedFilter() throws Exception {
+        // Initialize the database
+        eventRepository.saveAndFlush(event);
+
+        // Get all the eventList
+        restEventMockMvc.perform(get("/api/events?assignedId.equals=" + event.getAssigned().getId()))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+            .andExpect(jsonPath("$.[*].id").value(hasItem(event.getId().intValue())))
+            .andExpect(jsonPath("$.[*].typeKey").value(hasItem(DEFAULT_TYPE_KEY)))
+            .andExpect(jsonPath("$.[*].repeatRuleKey").value(hasItem(DEFAULT_REPEAT_RULE_KEY)))
+            .andExpect(jsonPath("$.[*].title").value(hasItem(DEFAULT_TITLE)))
+            .andExpect(jsonPath("$.[*].description").value(hasItem(DEFAULT_DESCRIPTION)))
+            .andExpect(jsonPath("$.[*].startDate").value(hasItem(DEFAULT_START_DATE.toString())))
+            .andExpect(jsonPath("$.[*].endDate").value(hasItem(DEFAULT_END_DATE.toString())))
+            .andExpect(jsonPath("$.[*].assigned").value(hasItem(event.getAssigned().getId().intValue())));
+    }
+
+    @Test
+    @Transactional
     public void getEvent() throws Exception {
         // Initialize the database
         eventRepository.saveAndFlush(event);

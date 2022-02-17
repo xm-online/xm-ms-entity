@@ -31,4 +31,6 @@ public class EventFilter implements Serializable {
     private InstantFilter startDate;
 
     private InstantFilter endDate;
+
+    private LongFilter assignedId;
 }
