@@ -6,15 +6,16 @@ import com.icthh.xm.commons.tenant.TenantContextUtils;
 import com.icthh.xm.lep.api.LepManager;
 import com.icthh.xm.ms.entity.AbstractSpringBootTest;
 import com.icthh.xm.ms.entity.domain.Event;
+import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.service.query.filter.EventFilter;
 import io.github.jhipster.service.filter.InstantFilter;
 
+import io.github.jhipster.service.filter.LongFilter;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.Assert;
 
-import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.transaction.BeforeTransaction;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,6 +29,8 @@ import java.util.List;
 
 import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_AUTH_CONTEXT;
 import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_TENANT_CONTEXT;
+import static java.time.Instant.now;
+import static java.util.UUID.randomUUID;
 
 public class EventQueryServiceIntTest extends AbstractSpringBootTest {
 
@@ -70,6 +73,23 @@ public class EventQueryServiceIntTest extends AbstractSpringBootTest {
         Assert.assertEquals(expected.size() - 1, actual.size());
     }
 
+    @Test
+    @Transactional
+    public void findAllByAssignedTest() {
+        Event eventWithAssigned = initEventWithAssigned();
+        Long assignedId = eventWithAssigned.getAssigned().getId();
+
+        EventFilter eventFilter = new EventFilter();
+        LongFilter longFilter = new LongFilter();
+        longFilter.setEquals(assignedId);
+        eventFilter.setAssignedId(longFilter);
+        List<Event> actual = eventService.findAllByFilter(eventFilter);
+
+        Assert.assertNotNull(actual);
+        Assert.assertEquals(1, actual.size());
+        Assert.assertEquals(assignedId, actual.stream().findFirst().orElseThrow().getAssigned().getId());
+    }
+
     @BeforeTransaction
     public void beforeTransaction() {
         TenantContextUtils.setTenant(tenantContextHolder, "TEST");
@@ -95,6 +115,22 @@ public class EventQueryServiceIntTest extends AbstractSpringBootTest {
             .endDate(LocalDate.parse("2019-01-27").atTime(LocalTime.parse("20:00")).toInstant(ZoneOffset.UTC));
         events.add(event);
         return events;
+    }
+
+    private Event initEventWithAssigned() {
+        XmEntity assigned = new XmEntity()
+            .typeKey("TYPE1")
+            .startDate(now())
+            .updateDate(now())
+            .name("DEFAULT_XM_ENTITY_NAME")
+            .key(randomUUID());
+        em.persist(assigned);
+
+        Event event = createEntity();
+        event.setAssigned(assigned);
+        em.persist(event);
+        em.flush();
+        return event;
     }
 
     /**

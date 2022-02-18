@@ -3,6 +3,7 @@ package com.icthh.xm.ms.entity.service.query;
 import com.icthh.xm.ms.entity.domain.Calendar_;
 import com.icthh.xm.ms.entity.domain.Event;
 import com.icthh.xm.ms.entity.domain.Event_;
+import com.icthh.xm.ms.entity.domain.XmEntity_;
 import com.icthh.xm.ms.entity.repository.EventRepository;
 import com.icthh.xm.ms.entity.service.query.filter.EventFilter;
 import io.github.jhipster.service.QueryService;
@@ -79,6 +80,10 @@ public class EventQueryService extends QueryService<Event> {
             }
             if (filter.getEndDate() != null) {
                 specification = specification.and(buildRangeSpecification(filter.getEndDate(), Event_.endDate));
+            }
+            if (filter.getAssignedId() != null) {
+                specification = specification.and(buildSpecification(filter.getAssignedId(),
+                    root -> root.get(Event_.assigned).get(XmEntity_.ID)));
             }
         }
         return specification;
