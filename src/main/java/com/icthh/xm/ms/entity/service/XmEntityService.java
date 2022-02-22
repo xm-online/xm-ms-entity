@@ -20,6 +20,7 @@ import java.util.function.Consumer;
 import javax.annotation.Nullable;
 
 import org.apache.commons.lang3.NotImplementedException;
+import org.intellij.lang.annotations.Language;
 import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -47,7 +48,7 @@ public interface XmEntityService extends ResourceRepository {
      * @return list of xm entities
      */
     @Transactional(readOnly = true)
-    List<XmEntity> findAll(String jpql, Map<String, Object> args, List<String> embed);
+    List<XmEntity> findAll(@Language("HQL") String jpql, Map<String, Object> args, List<String> embed);
 
     Page<XmEntity> findByIds(Pageable pageable, Set<Long> ids, Set<String> embed, String privilegeKey);
 
