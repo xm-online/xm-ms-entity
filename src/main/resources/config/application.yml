@@ -206,6 +206,7 @@ application:
     lep:
         tenant-script-storage: XM_MS_CONFIG
         lep-resource-path-pattern: /config/tenants/{tenantName}/entity/lep/resources/**/*
+        full-recompile-on-lep-update: false
     amazon:
         avatar:
             # XmEntity.avatarUrl should match this pattern to persist only last part into DB, otherwise set to null

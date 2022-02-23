@@ -10,6 +10,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 
+import org.intellij.lang.annotations.Language;
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -69,11 +70,11 @@ public interface XmEntityRepository {
 
     List<XmEntity> findAll(Specification<XmEntity> spec, Sort sort);
 
-    List<XmEntity> findAll(String jpql, Map<String, Object> args, List<String> embed);
+    List<XmEntity> findAll(@Language("HQL") String jpql, Map<String, Object> args, List<String> embed);
 
-    List<?> findAll(String jpql, Map<String, Object> args);
+    List<?> findAll(@Language("HQL") String jpql, Map<String, Object> args);
 
-    List<?> findAll(String jpql, Map<String, Object> args, Pageable pageable);
+    List<?> findAll(@Language("HQL") String jpql, Map<String, Object> args, Pageable pageable);
 
     Page<XmEntity> findAllByTypeKeyIn(Pageable pageable, Set<String> typeKeys);
 
