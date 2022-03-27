@@ -58,7 +58,7 @@ public class JsonDataValidator implements ConstraintValidator<JsonData, XmEntity
             return false;
         }
 
-        return validate(value.getData(), jsonSchema, context);
+        return validate(value, jsonSchema, context);
     }
 
     private static boolean present(Object object) {
@@ -74,12 +74,13 @@ public class JsonDataValidator implements ConstraintValidator<JsonData, XmEntity
     }
 
     @SneakyThrows
-    private boolean validate(Map<String, Object> data, JsonSchema jsonSchema, ConstraintValidatorContext context) {
+    private boolean validate(XmEntity value, JsonSchema jsonSchema, ConstraintValidatorContext context) {
 
-        final ProcessingReport report = jsonValidationService.validateJson(data, jsonSchema);
+        final ProcessingReport report = jsonValidationService.validateJson(value.getData(), jsonSchema);
         boolean isSuccess = report.isSuccess();
         if (!isSuccess) {
-            log.error("Validation data report: {}", report.toString().replaceAll(REGEX_EOL, " | "));
+            log.error("Validation data report for entity with typeKey {} and id {}: {}",
+                    value.getTypeKey(), value.getId(), report.toString().replaceAll(REGEX_EOL, " | "));
             context.disableDefaultConstraintViolation();
 
             List<?> message = stream(report.spliterator(), false)

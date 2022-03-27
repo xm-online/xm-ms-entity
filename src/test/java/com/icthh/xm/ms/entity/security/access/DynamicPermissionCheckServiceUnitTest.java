@@ -1,25 +1,16 @@
 package com.icthh.xm.ms.entity.security.access;
 
-import static com.google.common.collect.Maps.newHashMap;
-import static com.google.common.collect.Sets.newHashSet;
-import static com.icthh.xm.ms.entity.security.access.DynamicPermissionCheckService.CONFIG_SECTION;
-import static com.icthh.xm.ms.entity.security.access.DynamicPermissionCheckService.FeatureContext;
-import static com.icthh.xm.ms.entity.service.impl.FunctionServiceImpl.FUNCTION_CALL_PRIV;
-import static com.icthh.xm.ms.entity.service.impl.FunctionServiceImpl.XM_ENITITY_FUNCTION_CALL_PRIV;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
-import static org.assertj.core.util.Lists.newArrayList;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.icthh.xm.commons.config.client.config.XmConfigProperties;
-import com.icthh.xm.commons.config.client.service.TenantConfigService;
 import com.icthh.xm.commons.permission.constants.RoleConstant;
 import com.icthh.xm.commons.permission.domain.Permission;
 import com.icthh.xm.commons.permission.service.PermissionCheckService;
+import com.icthh.xm.commons.permission.service.PermissionService;
+import com.icthh.xm.commons.tenant.PlainTenant;
+import com.icthh.xm.commons.tenant.Tenant;
+import com.icthh.xm.commons.tenant.TenantContext;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
+import com.icthh.xm.commons.tenant.TenantKey;
 import com.icthh.xm.ms.entity.AbstractUnitTest;
 import com.icthh.xm.ms.entity.config.XmEntityTenantConfigService;
 import com.icthh.xm.ms.entity.domain.spec.FunctionSpec;
@@ -35,11 +26,30 @@ import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.provider.OAuth2Authentication;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+
+import static com.google.common.collect.Maps.newHashMap;
+import static com.google.common.collect.Sets.newHashSet;
+import static com.icthh.xm.commons.permission.constants.RoleConstant.SUPER_ADMIN;
+import static com.icthh.xm.ms.entity.security.access.DynamicPermissionCheckService.CONFIG_SECTION;
+import static com.icthh.xm.ms.entity.security.access.DynamicPermissionCheckService.FeatureContext;
+import static com.icthh.xm.ms.entity.service.impl.FunctionServiceImpl.FUNCTION_CALL_PRIV;
+import static com.icthh.xm.ms.entity.service.impl.FunctionServiceImpl.XM_ENITITY_FUNCTION_CALL_PRIV;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.assertj.core.util.Lists.newArrayList;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 @RunWith(MockitoJUnitRunner.class)
 public class DynamicPermissionCheckServiceUnitTest extends AbstractUnitTest {
@@ -47,15 +57,36 @@ public class DynamicPermissionCheckServiceUnitTest extends AbstractUnitTest {
     private static final String DYNAMIC_FUNCTION_PERMISSION_FEATURE = "dynamicPermissionCheckEnabled";
 
     @Mock
+    private OAuth2Authentication auth;
+    @Mock
+    private TenantContextHolder tenantContextHolder;
+    @Mock
     private PermissionCheckService permissionCheckService;
+    @Mock
+    private PermissionService permissionService;
     @Spy
     private XmEntityTenantConfigService tenantConfig = new XmEntityTenantConfigService(new XmConfigProperties(),
                                                                                        tenantContextHolder());
 
     private TenantContextHolder tenantContextHolder() {
         TenantContextHolder mock = mock(TenantContextHolder.class);
-        when(mock.getTenantKey()).thenReturn("XM");
+        applyMock(mock);
         return mock;
+    }
+
+    private void applyMock(TenantContextHolder mock) {
+        when(mock.getTenantKey()).thenReturn("XM");
+        when(mock.getContext()).thenReturn(new TenantContext() {
+            @Override
+            public boolean isInitialized() {
+                return true;
+            }
+
+            @Override
+            public Optional<Tenant> getTenant() {
+                return Optional.of(new PlainTenant(new TenantKey("XM")));
+            }
+        });
     }
 
     @InjectMocks
@@ -64,6 +95,8 @@ public class DynamicPermissionCheckServiceUnitTest extends AbstractUnitTest {
 
     @Before
     public void setUp() {
+        when(permissionService.getPermissions("XM")).thenReturn(new HashMap<>());
+        applyMock(tenantContextHolder);
     }
 
     @After
@@ -156,7 +189,20 @@ public class DynamicPermissionCheckServiceUnitTest extends AbstractUnitTest {
     }
 
     @Test
+    public void filterFunctionPermissionForSuperAdmin() {
+        // TODO
+        when(auth.getAuthorities()).thenReturn(List.of(new SimpleGrantedAuthority(SUPER_ADMIN)));
+        SecurityContextHolder.getContext().setAuthentication(auth);
+        filterFunctionPermission("F1", "F2", "F3");
+        SecurityContextHolder.getContext().setAuthentication(null);
+    }
+
+    @Test
     public void resultInvertedIfFunctionFilterFeatureIsOn() {
+        filterFunctionPermission("F1", "F3");
+    }
+
+    public void filterFunctionPermission(String... expected) {
         //setUp enabled feature
         final Map<String, Object> config = getMockedConfig(CONFIG_SECTION,
                                                            DYNAMIC_FUNCTION_PERMISSION_FEATURE, Boolean.TRUE);
@@ -180,7 +226,7 @@ public class DynamicPermissionCheckServiceUnitTest extends AbstractUnitTest {
                                                                                     FunctionSpec::getDynamicPrivilegeKey);
 
         assertThat(result.getFunctions().stream().map(FunctionSpec::getKey))
-            .containsExactly("F1", "F3");
+                .containsExactly(expected);
 
     }
 

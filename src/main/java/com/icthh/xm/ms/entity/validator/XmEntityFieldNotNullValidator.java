@@ -43,6 +43,7 @@ public class XmEntityFieldNotNullValidator implements ConstraintValidator<NotNul
             ctx.buildConstraintViolationWithTemplate("{javax.validation.constraints.NotNull.message}")
                 .addPropertyNode(field.fieldName)
                 .addConstraintViolation();
+            log.error("Field {} is required on entity with typeKey {} and id {}", field.fieldName, xmEntity.getTypeKey(), xmEntity.getId());
             return false;
         }
         return true;

@@ -1,5 +1,6 @@
 package com.icthh.xm.ms.entity.security.access;
 
+import static com.icthh.xm.commons.permission.constants.RoleConstant.SUPER_ADMIN;
 import static com.icthh.xm.ms.entity.util.CustomCollectionUtils.nullSafe;
 import static java.lang.String.format;
 
@@ -125,6 +126,10 @@ public class DynamicPermissionCheckService {
             return outterType;
         }
 
+        if (isSuperAdmin()) {
+            return outterType;
+        }
+
         List<I> filteredList = Lists.newArrayList();
 
         Set<String> lPermissions = getRoleFunctionPermissions();
@@ -173,7 +178,7 @@ public class DynamicPermissionCheckService {
         Predicate<Permission> isEnabled = permission -> !permission.isDisabled();
         Predicate<Permission> isIsNotDeleted = permission -> !permission.isDeleted();
 
-        if (RoleConstant.SUPER_ADMIN.equals(roleKey)) {
+        if (SUPER_ADMIN.equals(roleKey)) {
             return isConfigSection.and(isEnabled).and(isIsNotDeleted);
         }
 
@@ -237,6 +242,10 @@ public class DynamicPermissionCheckService {
     private boolean isDynamicChangeStatePermissionEnabled() {
         //TODO feature discussion needed
         throw new UnsupportedOperationException("isDynamicChangeStatePermissionEnabled Not implementer");
+    }
+
+    private boolean isSuperAdmin() {
+        return SecurityUtils.getCurrentUserRole().filter(SUPER_ADMIN::equals).isPresent();
     }
 
 }
