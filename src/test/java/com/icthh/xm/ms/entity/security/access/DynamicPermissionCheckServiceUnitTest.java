@@ -190,7 +190,6 @@ public class DynamicPermissionCheckServiceUnitTest extends AbstractUnitTest {
 
     @Test
     public void filterFunctionPermissionForSuperAdmin() {
-        // TODO
         when(auth.getAuthorities()).thenReturn(List.of(new SimpleGrantedAuthority(SUPER_ADMIN)));
         SecurityContextHolder.getContext().setAuthentication(auth);
         filterFunctionPermission("F1", "F2", "F3");
