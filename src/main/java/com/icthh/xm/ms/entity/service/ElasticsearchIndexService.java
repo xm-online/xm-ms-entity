@@ -15,7 +15,10 @@ import com.icthh.xm.ms.entity.repository.XmEntityRepositoryInternal;
 import com.icthh.xm.ms.entity.repository.search.XmEntitySearchRepository;
 import lombok.AccessLevel;
 import lombok.Setter;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.lang3.time.StopWatch;
 import org.elasticsearch.ResourceAlreadyExistsException;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -30,8 +33,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.beans.IntrospectionException;
 import java.beans.PropertyDescriptor;
+import java.io.File;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
@@ -102,8 +107,8 @@ public class ElasticsearchIndexService {
         TenantKey tenantKey = TenantContextUtils.getRequiredTenantKey(tenantContextHolder);
         String rid = MdcUtils.getRid();
         return CompletableFuture.supplyAsync(() -> execForCustomContext(tenantKey,
-            rid,
-            selfReference::reindexAll), executor);
+                                                                        rid,
+                                                                        selfReference::reindexAll), executor);
     }
 
     /**
@@ -121,8 +126,8 @@ public class ElasticsearchIndexService {
         TenantKey tenantKey = TenantContextUtils.getRequiredTenantKey(tenantContextHolder);
         String rid = MdcUtils.getRid();
         return CompletableFuture.supplyAsync(() -> execForCustomContext(tenantKey,
-            rid,
-            () -> selfReference.reindexByTypeKey(typeKey)), executor);
+                                                                        rid,
+                                                                        () -> selfReference.reindexByTypeKey(typeKey)), executor);
     }
 
     /**
@@ -140,8 +145,8 @@ public class ElasticsearchIndexService {
         TenantKey tenantKey = TenantContextUtils.getRequiredTenantKey(tenantContextHolder);
         String rid = MdcUtils.getRid();
         return CompletableFuture.supplyAsync(() -> execForCustomContext(tenantKey,
-            rid,
-            () -> selfReference.reindexByIds(ids)), executor);
+                                                                        rid,
+                                                                        () -> selfReference.reindexByIds(ids)), executor);
     }
 
     /**
@@ -229,6 +234,7 @@ public class ElasticsearchIndexService {
         return reindexXmEntity(spec, null);
     }
 
+    @SneakyThrows
     private long reindexXmEntity(@Nullable Specification<XmEntity> spec,  Integer startFrom) {
 
         StopWatch stopWatch = StopWatch.createStarted();
@@ -240,19 +246,29 @@ public class ElasticsearchIndexService {
 
         if (xmEntityRepositoryInternal.count(spec) > 0) {
             List<Method> relationshipGetters = Arrays.stream(clazz.getDeclaredFields())
-                .filter(field -> field.getType().equals(Set.class))
-                .filter(field -> field.getAnnotation(OneToMany.class) != null)
-                .filter(field -> field.getAnnotation(JsonIgnore.class) == null)
-                .map(field -> extractFieldGetter(clazz, field))
-                .filter(Objects::nonNull)
-                .collect(Collectors.toList());
+                                                     .filter(field -> field.getType().equals(Set.class))
+                                                     .filter(field -> field.getAnnotation(OneToMany.class) != null)
+                                                     .filter(field -> field.getAnnotation(JsonIgnore.class) == null)
+                                                     .map(field -> extractFieldGetter(clazz, field))
+                                                     .filter(Objects::nonNull)
+                                                     .collect(Collectors.toList());
 
-                for (int i = startFrom; i <= xmEntityRepositoryInternal.count(spec) / PAGE_SIZE ; i++) {
+            for (int i = startFrom; i <= xmEntityRepositoryInternal.count(spec) / PAGE_SIZE ; i++) {
                 Pageable page = PageRequest.of(i, PAGE_SIZE);
                 log.info("Indexing page {} of {}, pageSize {}", i, xmEntityRepositoryInternal.count(spec) / PAGE_SIZE, PAGE_SIZE);
                 Page<XmEntity> results = xmEntityRepositoryInternal.findAll(spec, page);
-                if (i == 26) {
-                    log.info("\n\n{}\n\n", results);
+                if (i == 26 || i == 27) {
+                    log.info("\n\n INDEX ::: {}\n\n", i);
+                    File file = new File("entity-reindex.csv");
+                    CSVPrinter printer = CSVFormat.DEFAULT.print(file, Charset.defaultCharset());
+                    for (XmEntity xmEntity : results.getContent()) {
+                        printer.printRecord(xmEntity.toString());
+                    }
+                    printer.printRecord("\n\n\n");
+                    printer.flush();
+                    for (XmEntity xmEntity : results.getContent()) {
+                        log.info("\n{}\n", xmEntity.toString());
+                    }
                 }
                 results.map(entity -> loadEntityRelationships(relationshipGetters, entity));
                 xmEntitySearchRepository.saveAll(results.getContent());
@@ -261,7 +277,7 @@ public class ElasticsearchIndexService {
             }
         }
         log.info("Elasticsearch: Indexed [{}] rows for {} in {} ms",
-            reindexed, clazz.getSimpleName(), stopWatch.getTime());
+                 reindexed, clazz.getSimpleName(), stopWatch.getTime());
         return reindexed;
 
     }
@@ -289,7 +305,7 @@ public class ElasticsearchIndexService {
             elasticsearchTemplate.putMapping(clazz);
         }
         log.info("elasticsearch index was recreated for {} in {} ms",
-            XmEntity.class.getSimpleName(), stopWatch.getTime());
+                 XmEntity.class.getSimpleName(), stopWatch.getTime());
     }
 
     private Method extractFieldGetter(final Class<XmEntity> clazz, final Field field) {
@@ -297,7 +313,7 @@ public class ElasticsearchIndexService {
             return new PropertyDescriptor(field.getName(), clazz).getReadMethod();
         } catch (IntrospectionException e) {
             log.error("Error retrieving getter for class {}, field {}. Field will NOT be indexed",
-                clazz.getSimpleName(), field.getName(), e);
+                      clazz.getSimpleName(), field.getName(), e);
             return null;
         }
     }
