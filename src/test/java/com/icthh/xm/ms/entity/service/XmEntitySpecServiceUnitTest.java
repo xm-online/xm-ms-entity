@@ -159,13 +159,12 @@ public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
                                             tenantContextHolder,
                                             new EntityCustomPrivilegeService(
                                                 commonConfigRepository,
-                                                permissionProperties,
-                                                roleService,
                                                 asList(
                                                     new ApplicationCustomPrivilegesExtractor(),
                                                     new FunctionCustomPrivilegesExtractor(tenantConfig),
                                                     new FunctionWithXmEntityCustomPrivilegesExtractor(tenantConfig)
-                                                )
+                                                ),
+                                                new XmEntityTenantConfigService(new XmConfigProperties(), tenantContextHolder)
                                             ),
                                             dynamicPermissionCheckService,
                                             tenantConfig);

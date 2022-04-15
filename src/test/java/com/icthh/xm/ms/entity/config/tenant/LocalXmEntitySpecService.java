@@ -16,6 +16,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Map;
 
 @Slf4j
@@ -36,7 +37,7 @@ public class LocalXmEntitySpecService extends XmEntitySpecService {
                                     DynamicPermissionCheckService dynamicPermissionCheckService,
                                     XmEntityTenantConfigService tenantConfigService) {
         super(tenantConfigRepository, applicationProperties,
-            tenantContextHolder, entityCustomPrivilegeService, dynamicPermissionCheckService, tenantConfigService);
+            tenantContextHolder, List.of(entityCustomPrivilegeService), dynamicPermissionCheckService, tenantConfigService);
 
         this.applicationProperties = applicationProperties;
         this.tenantContextHolder = tenantContextHolder;
@@ -51,6 +52,7 @@ public class LocalXmEntitySpecService extends XmEntitySpecService {
         String config = getXmEntitySpec(tenantName);
         String key = applicationProperties.getSpecificationPathPattern().replace("{tenantName}", tenantName);
         this.onRefresh(key, config);
+        this.refreshFinished(List.of(key));
         return super.getTypeSpecs();
     }
 

@@ -109,7 +109,7 @@ public class XmEntitySpecService implements RefreshableConfiguration {
     private final TenantConfigRepository tenantConfigRepository;
     private final ApplicationProperties applicationProperties;
     private final TenantContextHolder tenantContextHolder;
-    private final EntityCustomPrivilegeService entityCustomPrivilegeService;
+    private final List<EntitySpecUpdateListener> entitySpecUpdateListeners;
     private final DynamicPermissionCheckService dynamicPermissionCheckService;
     private final XmEntityTenantConfigService tenantConfigService;
 
@@ -152,15 +152,26 @@ public class XmEntitySpecService implements RefreshableConfiguration {
     public void onRefresh(String updatedKey, String config) {
 
         try {
-            String pathPattern = getPathPattern(updatedKey);
-            String tenant = matcher.extractUriTemplateVariables(pathPattern, updatedKey).get(TENANT_NAME);
+            String tenant = extractTenantName(updatedKey);
             updateByFileState(updatedKey, config, tenant);
-            Map<String, TypeSpec> tenantEntitySpec = updateByTenantState(tenant);
-            entityCustomPrivilegeService.updateCustomPermission(tenantEntitySpec, tenant);
+            updateByTenantState(tenant);
             log.info("Specification was for tenant {} updated from file {}", tenant, updatedKey);
         } catch (Exception e) {
             log.error("Error read xm specification from path " + updatedKey, e);
         }
+    }
+
+    @Override
+    public void refreshFinished(Collection<String> paths) {
+        Set<String> tenants = paths.stream().map(this::extractTenantName).collect(Collectors.toSet());
+        tenants.forEach(tenantKey -> {
+            Map<String, TypeSpec> tenantEntitySpec = nullSafe(typesByTenant.get(tenantKey));
+            entitySpecUpdateListeners.forEach(it -> it.onEntitySpecUpdate(tenantEntitySpec, tenantKey));
+        });
+    }
+
+    private String extractTenantName(String it) {
+        return matcher.extractUriTemplateVariables(getPathPattern(it), it).get(TENANT_NAME);
     }
 
     private String getPathPattern(String updatedKey) {
@@ -724,6 +735,10 @@ public class XmEntitySpecService implements RefreshableConfiguration {
                 }
             }
         }
+    }
+
+    public interface EntitySpecUpdateListener {
+        void onEntitySpecUpdate(Map<String, TypeSpec> specs, String tenantKey);
     }
 
 }

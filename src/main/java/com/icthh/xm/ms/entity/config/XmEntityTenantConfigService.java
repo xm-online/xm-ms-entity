@@ -70,6 +70,8 @@ public class XmEntityTenantConfigService extends TenantConfigService {
     @Data
     public static class XmEntityTenantConfig {
 
+        private Boolean disableDynamicPrivilegesGeneration = false;
+
         @JsonProperty("entity-functions")
         private EntityFunctions entityFunctions = new EntityFunctions();
         @Data
