@@ -2,9 +2,7 @@ package com.icthh.xm.ms.entity.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-import com.fasterxml.jackson.module.jsonSchema.JsonSchemaGenerator;
 import com.github.fge.jackson.JsonLoader;
 import com.github.fge.jsonschema.core.report.ProcessingReport;
 import com.github.fge.jsonschema.main.JsonSchema;
@@ -34,7 +32,6 @@ import com.icthh.xm.ms.entity.domain.spec.StateSpec;
 import com.icthh.xm.ms.entity.domain.spec.TagSpec;
 import com.icthh.xm.ms.entity.domain.spec.TypeSpec;
 import com.icthh.xm.ms.entity.domain.spec.UniqueFieldSpec;
-import com.icthh.xm.ms.entity.domain.spec.XmEntitySpec;
 import com.icthh.xm.ms.entity.security.access.DynamicPermissionCheckService;
 import com.icthh.xm.ms.entity.service.privileges.custom.ApplicationCustomPrivilegesExtractor;
 import com.icthh.xm.ms.entity.service.privileges.custom.EntityCustomPrivilegeService;
@@ -54,7 +51,6 @@ import org.springframework.core.io.ClassPathResource;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.StringWriter;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
@@ -65,7 +61,6 @@ import java.util.stream.Collectors;
 
 import static com.google.common.collect.ImmutableMap.of;
 import static com.google.common.collect.Maps.newHashMap;
-import static com.icthh.xm.ms.entity.config.Constants.REGEX_EOL;
 import static com.icthh.xm.ms.entity.config.TenantConfigMockConfiguration.getXmEntitySpec;
 import static com.icthh.xm.ms.entity.security.access.DynamicPermissionCheckService.CONFIG_SECTION;
 import static com.icthh.xm.ms.entity.util.CustomCollectionUtils.nullSafe;
@@ -76,12 +71,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.ArgumentMatchers.refEq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
@@ -154,21 +149,20 @@ public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
     private XmEntitySpecService createXmEntitySpecService(ApplicationProperties applicationProperties,
                                                                 TenantContextHolder tenantContextHolder) {
 
-        return new LocalXmEntitySpecService(tenantConfigRepository,
+        return spy(new LocalXmEntitySpecService(tenantConfigRepository,
                                             applicationProperties,
                                             tenantContextHolder,
                                             new EntityCustomPrivilegeService(
                                                 commonConfigRepository,
-                                                permissionProperties,
-                                                roleService,
                                                 asList(
                                                     new ApplicationCustomPrivilegesExtractor(),
                                                     new FunctionCustomPrivilegesExtractor(tenantConfig),
                                                     new FunctionWithXmEntityCustomPrivilegesExtractor(tenantConfig)
-                                                )
+                                                ),
+                                                tenantConfig
                                             ),
                                             dynamicPermissionCheckService,
-                                            tenantConfig);
+                                            tenantConfig));
     }
 
     @Test
@@ -445,7 +439,6 @@ public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
         when(tenantContextHolder.getTenantKey()).thenReturn(resinttest);
     }
 
-
     private void enableDynamicPermissionCheck() {
         XmEntityTenantConfig config = new XmEntityTenantConfig();
         when(tenantConfig.getXmEntityTenantConfig("TEST")).thenReturn(config);
@@ -470,6 +463,22 @@ public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
         String expectedCustomPrivileges = readFile("config/privileges/expected-custom-privileges-with-function.yml");
 
         testUpdateCustomerPrivileges(customPrivileges, expectedCustomPrivileges);
+    }
+
+    @Test
+    @SneakyThrows
+    public void testDisableCustomPrivilegesGeneration() {
+        disableDynamicPrivilegesGeneration();
+        when(roleService.getRoles("TEST")).thenReturn(of("TEST_ROLE", new Role()));
+        xmEntitySpecService.getTypeSpecs();
+        verify(xmEntitySpecService).refreshFinished(List.of("/config/tenants/TEST/entity/specs/xmentityspecs.yml"));
+        verifyNoMoreInteractions(commonConfigRepository);
+    }
+
+    private void disableDynamicPrivilegesGeneration() {
+        XmEntityTenantConfig config = new XmEntityTenantConfig();
+        config.setDisableDynamicPrivilegesGeneration(true);
+        when(tenantConfig.getXmEntityTenantConfig("TEST")).thenReturn(config);
     }
 
     private void testUpdateCustomerPrivileges(String customPrivileges, String expectedCustomPrivileges) {
