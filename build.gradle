@@ -264,12 +264,12 @@ dependencies {
     implementation "com.fasterxml.jackson.core:jackson-annotations"
     implementation "com.fasterxml.jackson.core:jackson-databind"
     implementation "com.fasterxml.jackson.module:jackson-module-afterburner"
-    implementation "org.hibernate:hibernate-core"
+    implementation "org.hibernate:hibernate-core:${hibernate_version}"
     implementation "com.zaxxer:HikariCP"
     implementation "org.apache.commons:commons-lang3"
     implementation "commons-io:commons-io"
     implementation "javax.transaction:javax.transaction-api"
-    implementation "org.hibernate:hibernate-entitymanager"
+    implementation "org.hibernate:hibernate-entitymanager:${hibernate_version}"
     implementation "org.hibernate.validator:hibernate-validator"
     implementation "org.liquibase:liquibase-core"
     liquibaseRuntime "org.liquibase:liquibase-core"
@@ -358,6 +358,17 @@ dependencies {
     implementation "org.modelmapper:modelmapper:${modelmapper_version}"
     implementation "com.github.bohnman:squiggly-filter-jackson:${squiggly_filter_version}"
     implementation 'com.vladmihalcea:hibernate-types-52:2.4.3'
+
+    // security fixes
+    implementation "io.netty:netty-buffer:${netty_version}"
+    implementation "io.netty:netty-codec:${netty_version}"
+    implementation "io.netty:netty-codec-http:${netty_version}"
+    implementation "io.netty:netty-common:${netty_version}"
+    implementation "io.netty:netty-handler:${netty_version}"
+    implementation "io.netty:netty-resolver:${netty_version}"
+    implementation "io.netty:netty-transport:${netty_version}"
+    implementation "commons-beanutils:commons-beanutils:${beanutils_version}"
+    implementation "io.undertow:undertow-core:2.2.17.Final"
 
     implementation 'com.intellij:annotations:12.0'
 
