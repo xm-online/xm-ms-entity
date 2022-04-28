@@ -50,3 +50,4 @@ branches:
    only:
      - master
      - main
+     - security_update
