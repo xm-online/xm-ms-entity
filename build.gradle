@@ -368,7 +368,7 @@ dependencies {
     implementation "io.netty:netty-resolver:${netty_version}"
     implementation "io.netty:netty-transport:${netty_version}"
     implementation "commons-beanutils:commons-beanutils:${beanutils_version}"
-    implementation "io.undertow:undertow-core:2.2.17.Final"
+    implementation "io.undertow:undertow-core:${undertow_version}"
 
     implementation 'com.intellij:annotations:12.0'
 
