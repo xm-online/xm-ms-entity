@@ -191,7 +191,7 @@ public class FunctionResource {
             .map(uri -> ResponseEntity.created(uri)
                 .headers(HeaderUtil.createEntityCreationAlert(ENTITY_NAME_FUNCTION_CONTEXT, String.valueOf(result.getId())))
                 .body(result.functionResult()))
-            .orElseGet(() -> ResponseEntity
+            .orElse(ResponseEntity
                 .status(HttpStatus.CREATED.value())
                 .body(result.functionResult()));
     }
