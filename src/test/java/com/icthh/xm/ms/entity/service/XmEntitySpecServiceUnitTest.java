@@ -728,6 +728,8 @@ public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
 
     @Test
     public void testFindFunctionByKey() {
+        // init typespecs
+        xmEntitySpecService.getTypeSpecs();
         FunctionSpec functionSpec = xmEntitySpecService.findFunction("FUNCTION1").orElse(null);
         assertNotNull(functionSpec);
         assertEquals(functionSpec.getKey(), "FUNCTION1");
@@ -749,6 +751,8 @@ public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
 
     @Test
     public void testFindFunctionByPath() {
+        // init typespecs
+        xmEntitySpecService.getTypeSpecs();
         FunctionSpec functionSpec = xmEntitySpecService.findFunction("call/function/by-path/111").orElse(null);
         assertNotNull(functionSpec);
         assertEquals(functionSpec.getKey(), "FUNCTION3");
