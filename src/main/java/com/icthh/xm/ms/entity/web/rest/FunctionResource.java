@@ -12,7 +12,7 @@ import com.icthh.xm.ms.entity.web.rest.util.HeaderUtil;
 import java.net.URI;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
+import java.util.Optional;
 import javax.servlet.http.HttpServletRequest;
 import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -95,7 +95,7 @@ public class FunctionResource {
     public ResponseEntity<Object> callFunction(@PathVariable("functionKey") String functionKey,
                                                @RequestBody(required = false) Map<String, Object> functionInput) {
         FunctionContext result = functionService.execute(functionKey, functionInput);
-        return processCreatedResponce(result);
+        return processCreatedResponse(result);
     }
 
     /**
@@ -112,7 +112,7 @@ public class FunctionResource {
     public ResponseEntity<Object> callAnonymousFunction(@PathVariable("functionKey") String functionKey,
                                                @RequestBody(required = false) Map<String, Object> functionInput) {
         FunctionContext result = functionService.executeAnonymous(functionKey, functionInput);
-        return processCreatedResponce(result);
+        return processCreatedResponse(result);
     }
 
     /**
@@ -185,24 +185,15 @@ public class FunctionResource {
         return new AntPathMatcher().extractPathWithinPattern(bestMatchingPattern, path);
     }
 
-    private ResponseEntity<Object> processCreatedResponce(FunctionContext result) {
-        URI uri = buildCtxUri(result);
-        if (uri == null) {
-            return ResponseEntity
-                .status(HttpStatus.CREATED.value())
-                .body(result.functionResult());
-        } else {
-            return ResponseEntity.created(uri)
+    private ResponseEntity<Object> processCreatedResponse(FunctionContext result) {
+        return Optional.ofNullable(result.getId())
+            .map(id -> URI.create(ENTITY_NAME_FUNCTION_PATH + id))
+            .map(uri -> ResponseEntity.created(uri)
                 .headers(HeaderUtil.createEntityCreationAlert(ENTITY_NAME_FUNCTION_CONTEXT, String.valueOf(result.getId())))
-                .body(result.functionResult());
-        }
-    }
-
-    private URI buildCtxUri(FunctionContext result) {
-        if (result.getId() == null) {
-            return null;
-        }
-        return URI.create(ENTITY_NAME_FUNCTION_PATH + Objects.toString(result.getId(), ""));
+                .body(result.functionResult()))
+            .orElseGet(() -> ResponseEntity
+                .status(HttpStatus.CREATED.value())
+                .body(result.functionResult()));
     }
 
 }
