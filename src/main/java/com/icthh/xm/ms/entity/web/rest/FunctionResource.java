@@ -18,6 +18,7 @@ import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -41,6 +42,9 @@ import org.springframework.web.servlet.ModelAndView;
 public class FunctionResource {
 
     private static final String ENTITY_NAME_FUNCTION_CONTEXT = "functionContext";
+
+    private static final String ENTITY_NAME_FUNCTION_PATH = "/api/function-contexts/";
+
     private static final String UPLOAD = "/upload";
 
     private final FunctionService functionService;
@@ -91,9 +95,7 @@ public class FunctionResource {
     public ResponseEntity<Object> callFunction(@PathVariable("functionKey") String functionKey,
                                                @RequestBody(required = false) Map<String, Object> functionInput) {
         FunctionContext result = functionService.execute(functionKey, functionInput);
-        return ResponseEntity.created(URI.create("/api/function-contexts/" + Objects.toString(result.getId(), "")))
-            .headers(HeaderUtil.createEntityCreationAlert(ENTITY_NAME_FUNCTION_CONTEXT, String.valueOf(result.getId())))
-            .body(result.functionResult());
+        return processCreatedResponce(result);
     }
 
     /**
@@ -110,9 +112,7 @@ public class FunctionResource {
     public ResponseEntity<Object> callAnonymousFunction(@PathVariable("functionKey") String functionKey,
                                                @RequestBody(required = false) Map<String, Object> functionInput) {
         FunctionContext result = functionService.executeAnonymous(functionKey, functionInput);
-        return ResponseEntity.created(URI.create("/api/function-contexts/" + Objects.toString(result.getId(), "")))
-            .headers(HeaderUtil.createEntityCreationAlert(ENTITY_NAME_FUNCTION_CONTEXT, String.valueOf(result.getId())))
-            .body(result.functionResult());
+        return processCreatedResponce(result);
     }
 
     /**
@@ -184,4 +184,25 @@ public class FunctionResource {
         String bestMatchingPattern = request.getAttribute(BEST_MATCHING_PATTERN_ATTRIBUTE).toString();
         return new AntPathMatcher().extractPathWithinPattern(bestMatchingPattern, path);
     }
+
+    private ResponseEntity<Object> processCreatedResponce(FunctionContext result) {
+        URI uri = buildCtxUri(result);
+        if (uri == null) {
+            return ResponseEntity
+                .status(HttpStatus.CREATED.value())
+                .body(result.functionResult());
+        } else {
+            return ResponseEntity.created(uri)
+                .headers(HeaderUtil.createEntityCreationAlert(ENTITY_NAME_FUNCTION_CONTEXT, String.valueOf(result.getId())))
+                .body(result.functionResult());
+        }
+    }
+
+    private URI buildCtxUri(FunctionContext result) {
+        if (result.getId() == null) {
+            return null;
+        }
+        return URI.create(ENTITY_NAME_FUNCTION_PATH + Objects.toString(result.getId(), ""));
+    }
+
 }
