@@ -134,6 +134,11 @@ types:
                 - STATE5
                 - STATE6
             withEntityId: true
+          - key: FUNCTION3
+            path: call/function/by-path/{id}
+            name: { en: "Function 3" }
+            saveFunctionContext: false
+            withEntityId: false
 
     - key: TYPE1.SUBTYPE1
       name: { en: "Subtype 1", ru: "Подтип 1" }
@@ -169,6 +174,13 @@ types:
           - key: LOCATION3
             name: { en: "Location 3", ru:  "Адрес 3" }
             max: 1
+      functions:
+          - key: in/package/FUNCTION4
+            path: call/function/by-path/{id}/and/param/{param}
+            name: { en: "Function 4" }
+            saveFunctionContext: false
+            withEntityId: false
+
     - key: TYPE1-OTHER
       name: { en: "Type 1 other", ru: "Тип 1 другая" }
       isApp: false

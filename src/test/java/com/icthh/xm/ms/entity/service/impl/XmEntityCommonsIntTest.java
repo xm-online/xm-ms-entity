@@ -86,7 +86,7 @@ public class XmEntityCommonsIntTest extends AbstractSpringBootTest {
     @Transactional
     public void testCommons() {
         initLeps();
-        Map<String, Object> name = functionService.execute("NAME", of());
+        Map<String, Object> name = functionService.execute("NAME", of(), null);
         log.info("RESULT {}", name);
         assertThat(name.get("result")).isEqualTo("RESULT [1, 2, 5] | COMMON_ARGUMENT");
     }

@@ -11,7 +11,6 @@ import com.icthh.xm.commons.config.client.config.XmConfigProperties;
 import com.icthh.xm.commons.config.client.repository.CommonConfigRepository;
 import com.icthh.xm.commons.config.client.repository.TenantConfigRepository;
 import com.icthh.xm.commons.config.domain.Configuration;
-import com.icthh.xm.commons.permission.config.PermissionProperties;
 import com.icthh.xm.commons.permission.domain.Role;
 import com.icthh.xm.commons.permission.service.RoleService;
 import com.icthh.xm.commons.tenant.TenantContext;
@@ -42,6 +41,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
@@ -71,6 +71,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
@@ -114,7 +115,6 @@ public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
 
     @Mock
     private CommonConfigRepository commonConfigRepository;
-    private PermissionProperties permissionProperties = new PermissionProperties();
     @Mock
     private RoleService roleService;
     @Mock
@@ -206,7 +206,7 @@ public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
 
         List<FunctionSpec> functions = flattenFunctions(types);
 
-        assertThat(functions.size()).isEqualTo(4);
+        assertThat(functions.size()).isEqualTo(6);
 
     }
 
@@ -261,7 +261,7 @@ public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
         assertThat(keys).containsExactlyInAnyOrder(KEY1, KEY2, KEY6);
 
         List<FunctionSpec> functions = flattenFunctions(types);
-        assertThat(functions.size()).isEqualTo(3);
+        assertThat(functions.size()).isEqualTo(4);
     }
 
     @Test
@@ -291,7 +291,7 @@ public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
         assertThat(keys).containsExactlyInAnyOrder(KEY2, KEY3, KEY5, KEY6);
 
         List<FunctionSpec> functions = flattenFunctions(types);
-        assertThat(functions.size()).isEqualTo(3);
+        assertThat(functions.size()).isEqualTo(5);
     }
 
     @Test
@@ -486,13 +486,18 @@ public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
         Map<String, Configuration> configs = of(
             privilegesPath, new Configuration(privilegesPath, customPrivileges)
                                                );
-        when(commonConfigRepository.getConfig(isNull(), eq(asList(privilegesPath)))).thenReturn(configs);
+        when(commonConfigRepository.getConfig(isNull(), eq(List.of(privilegesPath)))).thenReturn(configs);
         when(roleService.getRoles("TEST")).thenReturn(of("TEST_ROLE", new Role()));
 
         xmEntitySpecService.getTypeSpecs();
 
-        verify(commonConfigRepository).getConfig(isNull(), eq(asList(privilegesPath)));
-        verify(commonConfigRepository).updateConfigFullPath(refEq(new Configuration(privilegesPath, expectedCustomPrivileges)), eq(sha1Hex(customPrivileges)));
+        verify(commonConfigRepository).getConfig(isNull(), eq(List.of(privilegesPath)));
+
+        ArgumentCaptor<Configuration> captor = ArgumentCaptor.forClass(Configuration.class);
+        verify(commonConfigRepository).updateConfigFullPath(captor.capture(), eq(sha1Hex(customPrivileges)));
+        assertEquals(privilegesPath, captor.getValue().getPath());
+        assertEquals(expectedCustomPrivileges, captor.getValue().getContent());
+
         verifyNoMoreInteractions(commonConfigRepository);
     }
 
@@ -516,14 +521,18 @@ public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
 
     private void testCreateCustomPrivileges(String privileges) {
         String privilegesPath = PRIVILEGES_PATH;
-        when(commonConfigRepository.getConfig(isNull(), eq(asList(privilegesPath)))).thenReturn(null);
+        when(commonConfigRepository.getConfig(isNull(), eq(List.of(privilegesPath)))).thenReturn(null);
         when(roleService.getRoles("TEST")).thenReturn(of("ROLE_ADMIN", new Role(), "ROLE_AGENT", new Role()));
 
         xmEntitySpecService.getTypeSpecs();
 
-        verify(commonConfigRepository).getConfig(isNull(), eq(asList(privilegesPath)));
-        verify(commonConfigRepository)
-            .updateConfigFullPath(refEq(new Configuration(privilegesPath, privileges)), isNull());
+        verify(commonConfigRepository).getConfig(isNull(), eq(List.of(privilegesPath)));
+
+        ArgumentCaptor<Configuration> captor = ArgumentCaptor.forClass(Configuration.class);
+        verify(commonConfigRepository).updateConfigFullPath(captor.capture(), isNull());
+        assertEquals(privilegesPath, captor.getValue().getPath());
+        assertEquals(privileges, captor.getValue().getContent());
+
         verifyNoMoreInteractions(commonConfigRepository);
     }
 
@@ -564,7 +573,7 @@ public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
     public void testUpdateRealPermissionFile(String privileges) {
         String privilegesPath = PRIVILEGES_PATH;
         Map<String, Configuration> configs = of();
-        when(commonConfigRepository.getConfig(isNull(), eq(asList(privilegesPath)))).thenReturn(configs);
+        when(commonConfigRepository.getConfig(isNull(), eq(List.of(privilegesPath)))).thenReturn(configs);
         when(roleService.getRoles("TEST")).thenReturn(of(
             "ROLE_ADMIN", new Role(),
             "ROLE_AGENT", new Role()
@@ -572,7 +581,7 @@ public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
 
         xmEntitySpecService.getTypeSpecs();
 
-        verify(commonConfigRepository).getConfig(isNull(), eq(asList(privilegesPath)));
+        verify(commonConfigRepository).getConfig(isNull(), eq(List.of(privilegesPath)));
         verify(commonConfigRepository).updateConfigFullPath(refEq(new Configuration(privilegesPath, privileges)), isNull());
         verifyNoMoreInteractions(commonConfigRepository);
     }
@@ -715,6 +724,40 @@ public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
         TypeSpec extendedEntityWithExtends = typeSpecsWithExtends.get("BASE_ENTITY.EXTENDS");
         assertEqualsJson(baseDataFrom, baseEntityWithExtends.getDataForm());
         assertEqualsJson(bothDataFrom, extendedEntityWithExtends.getDataForm());
+    }
+
+    @Test
+    public void testFindFunctionByKey() {
+        FunctionSpec functionSpec = xmEntitySpecService.findFunction("FUNCTION1").orElse(null);
+        assertNotNull(functionSpec);
+        assertEquals(functionSpec.getKey(), "FUNCTION1");
+        assertNull(functionSpec.getPath());
+
+        functionSpec = xmEntitySpecService.findFunction("FUNCTION3").orElse(null);
+        assertNotNull(functionSpec);
+        assertEquals(functionSpec.getKey(), "FUNCTION3");
+        assertEquals(functionSpec.getPath(), "call/function/by-path/{id}");
+
+        functionSpec = xmEntitySpecService.findFunction("in/package/FUNCTION4").orElse(null);
+        assertNotNull(functionSpec);
+        assertEquals(functionSpec.getKey(), "in/package/FUNCTION4");
+        assertEquals(functionSpec.getPath(), "call/function/by-path/{id}/and/param/{param}");
+
+        functionSpec = xmEntitySpecService.findFunction("FUNCTION_NOT_FOUND").orElse(null);
+        assertNull(functionSpec);
+    }
+
+    @Test
+    public void testFindFunctionByPath() {
+        FunctionSpec functionSpec = xmEntitySpecService.findFunction("call/function/by-path/111").orElse(null);
+        assertNotNull(functionSpec);
+        assertEquals(functionSpec.getKey(), "FUNCTION3");
+        assertEquals(functionSpec.getPath(), "call/function/by-path/{id}");
+
+        functionSpec = xmEntitySpecService.findFunction("call/function/by-path/D42/and/param/my-param-value").orElse(null);
+        assertNotNull(functionSpec);
+        assertEquals(functionSpec.getKey(), "in/package/FUNCTION4");
+        assertEquals(functionSpec.getPath(), "call/function/by-path/{id}/and/param/{param}");
     }
 
     @SneakyThrows

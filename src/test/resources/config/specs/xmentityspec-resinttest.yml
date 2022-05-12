@@ -516,6 +516,8 @@ types:
           - key: package/FUNCTION.PACKAGE-TEST
           - key: package/FUNCTION-WITH-ENTITY.PACKAGE-TEST
             withEntityId: true
+          - key: package/FUNCTION.PATH-PACKAGE-TEST
+            path: custom/urlpath/{id}/param/{param}/{another}
     - key: TEST_EXPORT_1
       name: {en: "TEST_EXPORT_1"}
       isApp: false

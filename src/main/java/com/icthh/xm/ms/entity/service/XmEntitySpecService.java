@@ -384,9 +384,11 @@ public class XmEntitySpecService implements RefreshableConfiguration {
 
     @IgnoreLogginAspect
     public Optional<FunctionSpec> findFunction(String functionKey) {
+        long start = System.currentTimeMillis();
         for (TypeSpec ts : getTypeSpecs().values()) {
             for (FunctionSpec fs : nullSafe(ts.getFunctions())) {
-                if (fs.getKey().equals(functionKey)) {
+                boolean matchByPath = fs.getPath() != null && matcher.match(fs.getPath(), functionKey);
+                if (fs.getKey().equals(functionKey) || matchByPath) {
                     return Optional.of(fs);
                 }
             }

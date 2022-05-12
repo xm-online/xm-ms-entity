@@ -29,7 +29,7 @@ public interface FunctionService {
      * @param functionInput function input context
      * @return function execution result
      */
-    FunctionContext execute(String functionKey, Map<String, Object> functionInput);
+    FunctionContext execute(String functionKey, Map<String, Object> functionInput, String httpMethod);
 
      /**
      * Execute anonymous function.
