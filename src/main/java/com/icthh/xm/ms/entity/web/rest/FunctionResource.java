@@ -97,9 +97,7 @@ public class FunctionResource {
     public ResponseEntity<Object> callPostFunction(@PathVariable("functionKey") String functionKey,
                                                    @RequestBody(required = false) Map<String, Object> functionInput) {
         FunctionContext result = functionService.execute(functionKey, functionInput, "POST");
-        return ResponseEntity.created(URI.create("/api/function-contexts/" + Objects.toString(result.getId(), "")))
-            .headers(HeaderUtil.createEntityCreationAlert(ENTITY_NAME_FUNCTION_CONTEXT, String.valueOf(result.getId())))
-            .body(result.functionResult());
+        return processCreatedResponse(result);
     }
 
     /**
