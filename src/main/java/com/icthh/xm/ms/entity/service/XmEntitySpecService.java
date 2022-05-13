@@ -60,7 +60,6 @@ import com.icthh.xm.ms.entity.domain.spec.TypeSpec;
 import com.icthh.xm.ms.entity.domain.spec.UniqueFieldSpec;
 import com.icthh.xm.ms.entity.domain.spec.XmEntitySpec;
 import com.icthh.xm.ms.entity.security.access.DynamicPermissionCheckService;
-import com.icthh.xm.ms.entity.service.privileges.custom.EntityCustomPrivilegeService;
 
 import java.io.IOException;
 import java.io.StringWriter;
@@ -105,6 +104,7 @@ public class XmEntitySpecService implements RefreshableConfiguration {
     private final ConcurrentHashMap<String, Map<String, TypeSpec>> typesByTenant = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, Map<String, String>> typesByTenantByFile = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, Map<String, com.github.fge.jsonschema.main.JsonSchema>> dataSpecJsonSchemas = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, Map<String, FunctionSpec>> functionsByTenant = new ConcurrentHashMap<>();
 
     private final TenantConfigRepository tenantConfigRepository;
     private final ApplicationProperties applicationProperties;
@@ -194,6 +194,16 @@ public class XmEntitySpecService implements RefreshableConfiguration {
         typesByTenant.put(tenant, tenantEntitySpec);
         inheritance(tenantEntitySpec, tenant);
         processUniqueFields(tenantEntitySpec);
+
+        var functionSpec = tenantEntitySpec.values().stream()
+                .map(TypeSpec::getFunctions)
+                .filter(Objects::nonNull)
+                .flatMap(Collection::stream)
+                .collect(Collectors.toMap(FunctionSpec::getKey, fs -> fs, (t, t2) -> t));
+        if (functionSpec.isEmpty()) {
+            functionsByTenant.remove(tenant);
+        }
+        functionsByTenant.put(tenant, functionSpec);
 
         var dataSchemas = new HashMap<String, com.github.fge.jsonschema.main.JsonSchema>();
         JsonSchemaFactory jsonSchemaFactory = JsonSchemaFactory.byDefault();
@@ -384,14 +394,15 @@ public class XmEntitySpecService implements RefreshableConfiguration {
 
     @IgnoreLogginAspect
     public Optional<FunctionSpec> findFunction(String functionKey) {
-        for (TypeSpec ts : getTypeSpecs().values()) {
-            for (FunctionSpec fs : nullSafe(ts.getFunctions())) {
-                if (fs.getKey().equals(functionKey)) {
-                    return Optional.of(fs);
-                }
-            }
-        }
-        return Optional.empty();
+
+        Map<String, FunctionSpec> functions = nullSafe(functionsByTenant.get(getTenantKeyValue()));
+        return Optional.of(functions)
+                .map(fs -> fs.get(functionKey))
+                .or(() -> functions.values().stream()
+                        .filter(fs -> fs.getPath() != null)
+                        .filter(fs -> matcher.match(fs.getPath(), functionKey))
+                        .findFirst());
+
     }
 
     @IgnoreLogginAspect

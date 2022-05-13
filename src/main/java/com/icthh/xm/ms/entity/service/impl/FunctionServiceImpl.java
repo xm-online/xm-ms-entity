@@ -2,8 +2,8 @@ package com.icthh.xm.ms.entity.service.impl;
 
 import static java.util.Collections.emptyList;
 
-import com.icthh.xm.commons.exceptions.BusinessException;
 import com.icthh.xm.commons.exceptions.EntityNotFoundException;
+import com.icthh.xm.commons.logging.LoggingAspectConfig;
 import com.icthh.xm.ms.entity.config.XmEntityTenantConfigService;
 import com.icthh.xm.ms.entity.domain.FunctionContext;
 import com.icthh.xm.ms.entity.domain.XmEntity;
@@ -31,6 +31,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.AntPathMatcher;
 
 /**
  * The {@link FunctionServiceImpl} class.
@@ -55,11 +56,13 @@ public class FunctionServiceImpl implements FunctionService {
     private final JsonValidationService jsonValidationService;
     private final XmEntityTenantConfigService xmEntityTenantConfigService;
 
+    private final AntPathMatcher matcher = new AntPathMatcher();
+
     /**
      * {@inheritDoc}
      */
     @Override
-    public FunctionContext execute(final String functionKey, final Map<String, Object> functionInput) {
+    public FunctionContext execute(final String functionKey, final Map<String, Object> functionInput, String httpMethod) {
 
         Objects.requireNonNull(functionKey, "functionKey can't be null");
         Map<String, Object> vInput = CustomCollectionUtils.emptyIfNull(functionInput);
@@ -71,8 +74,13 @@ public class FunctionServiceImpl implements FunctionService {
 
         validateFunctionInput(functionSpec, functionInput);
 
+        if (functionSpec.getPath() != null && matcher.match(functionSpec.getPath(), functionKey)) {
+            Map<String, String> pathParams = matcher.extractUriTemplateVariables(functionSpec.getPath(), functionKey);
+            functionInput.putAll(pathParams);
+        }
+
         // execute function
-        Map<String, Object> data = functionExecutorService.execute(functionKey, vInput);
+        Map<String, Object> data = functionExecutorService.execute(functionSpec.getKey(), vInput, httpMethod);
         return processFunctionResult(functionKey, data, functionSpec);
     }
 
