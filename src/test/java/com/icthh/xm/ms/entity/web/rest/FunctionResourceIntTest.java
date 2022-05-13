@@ -340,4 +340,40 @@ public class FunctionResourceIntTest extends AbstractSpringBootTest {
         leps.onRefresh(funcKey, null);
     }
 
+    @Test
+    @Transactional
+    @SneakyThrows
+    public void testFunctionExposedByCustomPath() {
+        String functionPrefix = "/config/tenants/RESINTTEST/entity/lep/function/";
+        String functionApi = "/api/functions/";
+        String functionKey = "package/FUNCTION.PATH-PACKAGE-TEST";
+        String functionLepKey = functionPrefix + "package/Function$$FUNCTION$PATH_PACKAGE_TEST$$tenant.groovy";
+
+        leps.onRefresh(functionLepKey, "[input: lepContext.inArgs.functionInput, method: lepContext.inArgs.httpMethod]");
+
+        // can resolve function by path
+        mockMvc.perform(post(functionApi + "custom/urlpath/157/param/29/code42")
+                                .content("{\"paramInBody\": 27.5}")
+                                .contentType(APPLICATION_JSON_VALUE))
+                .andDo(print())
+                .andExpect(jsonPath("$.data.input.paramInBody").value(27.5))
+                .andExpect(jsonPath("$.data.input.id").value("157"))
+                .andExpect(jsonPath("$.data.input.param").value("29"))
+                .andExpect(jsonPath("$.data.input.another").value("code42"))
+                .andExpect(status().is2xxSuccessful());
+
+        // can resolve function by key
+        mockMvc.perform(post(functionApi + functionKey)
+                                .content("{\"paramInBody\": 27.5}")
+                                .contentType(APPLICATION_JSON_VALUE))
+                .andDo(print())
+                .andExpect(jsonPath("$.data.input.paramInBody").value(27.5))
+                .andExpect(jsonPath("$.data.input.id").doesNotExist())
+                .andExpect(jsonPath("$.data.input.param").doesNotExist())
+                .andExpect(jsonPath("$.data.input.another").doesNotExist())
+                .andExpect(status().is2xxSuccessful());
+
+        leps.onRefresh(functionLepKey, null);
+    }
+
 }

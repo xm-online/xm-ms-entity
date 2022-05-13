@@ -2,6 +2,7 @@ package com.icthh.xm.ms.entity.service;
 
 import com.icthh.xm.commons.lep.LogicExtensionPoint;
 import com.icthh.xm.commons.lep.spring.LepService;
+import com.icthh.xm.commons.logging.aop.IgnoreLogginAspect;
 import com.icthh.xm.ms.entity.domain.ext.IdOrKey;
 import com.icthh.xm.ms.entity.lep.keyresolver.FunctionLepKeyResolver;
 import java.util.Map;
@@ -9,6 +10,7 @@ import java.util.Map;
 /**
  * The {@link FunctionExecutorService} interface.
  */
+@IgnoreLogginAspect
 @LepService(group = "function")
 public interface FunctionExecutorService {
 
@@ -35,7 +37,7 @@ public interface FunctionExecutorService {
      * @return function result data
      */
     @LogicExtensionPoint(value = "Function", resolver = FunctionLepKeyResolver.class)
-    Map<String, Object> execute(String functionKey, Map<String, Object> functionInput);
+    Map<String, Object> execute(String functionKey, Map<String, Object> functionInput, String httpMethod);
 
     /**
      * Execute anonymous function.
