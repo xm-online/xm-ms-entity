@@ -514,6 +514,8 @@ types:
       isKeyRequired: false
       functions:
           - key: package/FUNCTION.PACKAGE-TEST
+          - key: package/FUNCTION.PACKAGE-TEST-CTX
+            saveFunctionContext: true
           - key: package/FUNCTION-WITH-ENTITY.PACKAGE-TEST
             withEntityId: true
           - key: package/FUNCTION.PATH-PACKAGE-TEST
