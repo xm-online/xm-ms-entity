@@ -4,6 +4,7 @@ import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_AUTH_CO
 import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_TENANT_CONTEXT;
 import static com.icthh.xm.commons.tenant.TenantContextUtils.getRequiredTenantKeyValue;
 import static com.icthh.xm.ms.entity.config.TenantConfigMockConfiguration.getXmEntityTemplatesSpec;
+import static liquibase.util.StringUtils.repeat;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.everyItem;
@@ -40,6 +41,7 @@ import com.icthh.xm.ms.entity.config.ApplicationProperties;
 import com.icthh.xm.ms.entity.config.Constants;
 import com.icthh.xm.ms.entity.config.InternalTransactionService;
 import com.icthh.xm.ms.entity.config.XmEntityTenantConfigService;
+import com.icthh.xm.ms.entity.domain.Comment;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.domain.spec.StateSpec;
 import com.icthh.xm.ms.entity.lep.keyresolver.TypeKeyWithExtends;
@@ -903,6 +905,18 @@ public class XmEntityResourceIntTest extends AbstractSpringBootTest {
                 "INVALID_NEXT_STATE").contentType(
                 TestUtil.APPLICATION_JSON_UTF8)).andExpect(
             status().is4xxClientError());
+    }
+
+    @Test
+    @Transactional
+    public void saveWithLongName() {
+        XmEntity entity = createEntity();
+        String name = repeat("some", 250);
+        entity.setName(name);
+        xmEntityServiceImpl.save(xmEntity);
+        XmEntity saved = xmEntityServiceImpl.save(entity);
+        em.flush();
+        assertThat(saved.getName().length()).isEqualTo(1000);
     }
 
     @Test
