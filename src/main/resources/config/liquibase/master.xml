@@ -81,4 +81,6 @@
     <include file="classpath:config/liquibase/changelog/20210812000000_make_entity_data_jsonb.xml" relativeToChangelogFile="false"/>
 
     <include file="classpath:config/liquibase/changelog/20211110000000_add_index_by_typeKey.xml" relativeToChangelogFile="false"/>
+
+    <include file="classpath:config/liquibase/changelog/20220517000000_increase_entity_name_size.xml" relativeToChangelogFile="false"/>
 </databaseChangeLog>
