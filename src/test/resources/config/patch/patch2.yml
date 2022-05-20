@@ -1,0 +1,6 @@
+---
+databaseChangeLog:
+  - operationType: CREATE_SEQUENCE
+    changeSetId: b1
+    sequenceName: sequenceName1
+

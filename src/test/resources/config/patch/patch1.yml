@@ -1,0 +1,28 @@
+---
+databaseChangeLog:
+  - operationType: CREATE_SEQUENCE
+    changeSetId: c1
+    author: ssenko
+    sequenceName: testSequenceName
+    incrementBy: 1
+    startValue: 5
+    minValue: 2
+    maxValue: 10
+    cycle: true
+  - operationType: CREATE_INDEX
+    changeSetId: c2
+    unique: true
+    indexName: unique_attachment_url
+    tableName: attachment
+    indexType: BTREE
+    indexExpression: content_url
+    condition: type_key = 'PHOTO'
+  - operationType: CREATE_INDEX
+    changeSetId: c3
+    indexName: entity_value_index
+    indexExpression: jsonb_path_query_first(data, '$.field1'::jsonpath)
+  - operationType: CREATE_JSONPATH_INDEX
+    changeSetId: c4
+    indexName: unique_field2_index
+    unique: true
+    jsonPath: $.field2

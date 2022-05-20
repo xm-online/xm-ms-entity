@@ -6,6 +6,8 @@ import com.icthh.xm.commons.lep.spring.LepService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
+import java.util.Collection;
+
 @Slf4j
 @Component
 @LepService(group = "service.config")
@@ -26,5 +28,11 @@ public class ConfigRefreshListener implements RefreshableConfiguration {
     @Override
     public void onInit(String configKey, String configValue) {
         onRefresh(configKey, configValue);
+    }
+
+    @Override
+    @LogicExtensionPoint(value = "RefreshFinished")
+    public void refreshFinished(Collection<String> paths) {
+        RefreshableConfiguration.super.refreshFinished(paths);
     }
 }
