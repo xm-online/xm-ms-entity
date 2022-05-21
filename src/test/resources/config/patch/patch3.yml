@@ -7,12 +7,12 @@ databaseChangeLog:
     sequenceName: testSequenceName
     changeSetId: cs2
   - operationType: DROP_INDEX
-    indexName: unique_attachment_url
-    tableName: attachment
+    indexName: entity_value_index
     changeSetId: cs3
   - operationType: DROP_INDEX
-    indexName: entity_value_index
+    indexName: unique_field2_index
     changeSetId: cs4
   - operationType: DROP_INDEX
-    indexName: unique_field2_index
+    indexName: unique_attachment_url
+    tableName: attachment
     changeSetId: cs5

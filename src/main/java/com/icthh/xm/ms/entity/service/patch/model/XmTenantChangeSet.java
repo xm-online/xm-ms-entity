@@ -26,10 +26,10 @@ public abstract class XmTenantChangeSet {
                 "changeSetId", changeSetId
         ));
         patch.append(changeSet);
-        patch.append(changeSetBody());
+        patch.append(changeSetBody(tenantName));
         patch.append("</changeSet>");
         return patch.toString();
     }
 
-    protected abstract String changeSetBody();
+    protected abstract String changeSetBody(String tenantName);
 }

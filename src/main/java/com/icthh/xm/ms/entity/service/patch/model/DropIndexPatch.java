@@ -19,7 +19,7 @@ public class DropIndexPatch extends XmTenantChangeSet {
     private String tableName = XM_ENTITY_TABLE_NAME;
 
     @Override
-    protected String changeSetBody() {
+    protected String changeSetBody(String tenantName) {
         return replace("<dropIndex indexName=\"${indexName}\" tableName=\"${tableName}\"/>", Map.of(
                 "indexName", indexName,
                 "tableName", isBlank(tableName) ? XM_ENTITY_TABLE_NAME : tableName

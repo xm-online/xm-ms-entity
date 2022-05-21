@@ -663,3 +663,10 @@ types:
         - key: TEST_NO_PROCESSING_REFS_LINK_KEY
           builderType: NEW
           typeKey: TEST_NO_PROCESSING_REFS
+    - key: TEST_ENTITY_WITH_ATTACHMENT
+      name: { en: "TEST_ENTITY_WITH_ATTACHMENT" }
+      isApp: false
+      isAbstract: false
+      attachments:
+        - key: PHOTO
+        - key: DOCUMENT

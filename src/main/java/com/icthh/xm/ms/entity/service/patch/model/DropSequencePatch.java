@@ -16,7 +16,7 @@ public class DropSequencePatch extends XmTenantChangeSet {
     private String sequenceName;
 
     @Override
-    protected String changeSetBody() {
+    protected String changeSetBody(String tenantName) {
         return replace("<dropSequence sequenceName=\"${sequenceName}\" />", Map.of(
                 "sequenceName", sequenceName.toLowerCase()
         ));

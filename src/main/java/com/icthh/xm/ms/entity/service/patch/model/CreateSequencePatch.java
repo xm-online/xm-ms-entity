@@ -27,7 +27,7 @@ public class CreateSequencePatch extends XmTenantChangeSet {
     private Boolean ordered;
 
     @Override
-    protected String changeSetBody() {
+    protected String changeSetBody(String tenantName) {
         StringBuilder out = new StringBuilder();
         out.append("<createSequence ");
         appendIfNotNull(cycle, "cycle", out);

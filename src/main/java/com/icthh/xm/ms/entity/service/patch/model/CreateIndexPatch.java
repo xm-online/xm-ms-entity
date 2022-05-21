@@ -27,12 +27,14 @@ public abstract class CreateIndexPatch extends XmTenantChangeSet {
     private String tableName = XM_ENTITY_TABLE_NAME;
 
     @Override
-    protected String changeSetBody() {
+    protected String changeSetBody(String tenantName) {
         String sql = "CREATE ${unique} INDEX IF NOT EXISTS ${indexName} ON ${tableName} ${indexType} (${indexExpression}) ${condition}";
+        String tableName = isBlank(this.tableName) ? XM_ENTITY_TABLE_NAME : this.tableName;
+        String schemaName = tenantName.toLowerCase();
         sql = replace(sql, Map.of(
                 "unique", TRUE.equals(unique) ? "UNIQUE" : "",
                 "indexName", indexName,
-                "tableName", isBlank(tableName) ? XM_ENTITY_TABLE_NAME : tableName,
+                "tableName", schemaName + "." + tableName,
                 "indexType", isBlank(indexType) ? "" : "USING " + indexType,
                 "indexExpression", getIndexExpression(),
                 "condition", isBlank(condition) ? "" : "WHERE " + condition
