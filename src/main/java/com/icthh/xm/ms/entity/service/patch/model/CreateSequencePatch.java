@@ -35,7 +35,7 @@ public class CreateSequencePatch extends XmTenantChangeSet {
         appendIfNotNull(maxValue, "maxValue", out);
         appendIfNotNull(minValue, "minValue", out);
         appendIfNotNull(ordered, "ordered", out);
-        appendIfNotNull(sequenceName, "sequenceName", out);
+        appendIfNotNull(sequenceName.toLowerCase(), "sequenceName", out);
         appendIfNotNull(startValue, "startValue", out);
         out.append(" />");
         return out.toString();

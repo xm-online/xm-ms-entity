@@ -8,6 +8,8 @@ import com.icthh.xm.commons.config.client.api.RefreshableConfiguration;
 import com.icthh.xm.ms.entity.service.patch.model.XmTenantPatch;
 import com.icthh.xm.ms.entity.service.patch.model.XmTenantPatchType;
 import com.icthh.xm.ms.entity.service.patch.model.XmTenantPatchValidationException;
+import liquibase.Contexts;
+import liquibase.LabelExpression;
 import liquibase.Liquibase;
 import liquibase.database.Database;
 import liquibase.database.DatabaseFactory;
@@ -21,6 +23,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.time.StopWatch;
+import org.hibernate.engine.jdbc.connections.spi.MultiTenantConnectionProvider;
 import org.springframework.stereotype.Component;
 import org.springframework.util.AntPathMatcher;
 
@@ -29,6 +32,7 @@ import javax.validation.Validation;
 import javax.validation.Validator;
 import javax.validation.ValidatorFactory;
 import java.io.InputStream;
+import java.io.StringWriter;
 import java.sql.Connection;
 import java.util.Collection;
 import java.util.LinkedHashMap;
@@ -57,13 +61,13 @@ public class TenantDbPatchService implements RefreshableConfiguration {
 
     private final Map<String, Map<String, TenantDbPatch>> configuration = new ConcurrentHashMap<>();
     private final AntPathMatcher matcher = new AntPathMatcher();
-    private final DataSource dataSource;
+    private final MultiTenantConnectionProvider multiTenantConnectionProvider;
     private final String liquibaseTemplate;
     private final ObjectMapper objectMapper;
 
     @SneakyThrows
-    public TenantDbPatchService(DataSource dataSource) {
-        this.dataSource = dataSource;
+    public TenantDbPatchService(MultiTenantConnectionProvider multiTenantConnectionProvider) {
+        this.multiTenantConnectionProvider = multiTenantConnectionProvider;
         InputStream liquibaseTemplateResource = getClass().getClassLoader().getResourceAsStream("config/liquibase-patch-template.xml");
         this.liquibaseTemplate = IOUtils.toString(liquibaseTemplateResource, UTF_8);
 
@@ -113,8 +117,9 @@ public class TenantDbPatchService implements RefreshableConfiguration {
     private void applyPath(String tenant) {
         StopWatch stopWatch = StopWatch.createStarted();
         log.info("Start apply patch for tenant {}", tenant);
-        try (Connection connection = dataSource.getConnection()) {
+        try (Connection connection = multiTenantConnectionProvider.getConnection(tenant)) {
             Database database = DatabaseFactory.getInstance().findCorrectDatabaseImplementation(new JdbcConnection(connection));
+            database.setDefaultSchemaName(tenant.toLowerCase());
 
             var patchesMap = this.configuration.getOrDefault(tenant, Map.of());
             List<TenantDbPatch> patches = patchesMap.values().stream().sorted(comparing(TenantDbPatch::getFilename)).collect(toList());
@@ -126,12 +131,7 @@ public class TenantDbPatchService implements RefreshableConfiguration {
                 log.info("Start apply {} | {}ms", patch.filename, stopWatch.getTime(MILLISECONDS));
                 ResourceAccessor resourceAccessor = new MockResourceAccessor(content);
                 Liquibase liquibase = new Liquibase(patch.filename + ".xml", resourceAccessor, database);
-                if (database.supportsSchemas()) {
-                    database.setDefaultSchemaName(tenant.toLowerCase());
-                } else if (database.supportsCatalogs()) {
-                    database.setDefaultCatalogName(tenant.toLowerCase());
-                }
-                liquibase.update(tenant);
+                liquibase.update(new Contexts(tenant), new LabelExpression());
                 log.info("{} applied finished | {}ms", patch.filename, stopWatch.getTime(MILLISECONDS));
             }
 

@@ -6,8 +6,8 @@ databaseChangeLog:
     sequenceName: testSequenceName
     incrementBy: 1
     startValue: 5
-    minValue: 2
-    maxValue: 10
+    minValue: 3
+    maxValue: 7
     cycle: true
   - operationType: CREATE_INDEX
     changeSetId: c2

@@ -106,16 +106,20 @@ public class TenantDbPatchServiceIntTest extends AbstractSpringBootTest {
             return "";
         });
 
-        log.info(">>> {}", jdbcTemplate.queryForList("SELECT nextval('sequenceName1')"));
-
         separateTransactionExecutor.doInSeparateTransaction(() -> {
             long sv = xmEntityRepository.getSequenceNextValString("sequenceName1");
-            log.info("sv {}", sv);
+            assertEquals(1, sv);
 
-            for(int i = 0; i < 50; i++) {
-                sv = xmEntityRepository.getSequenceNextValString("testSequenceName");
-                log.info("sv {}", sv);
-            }
+            sv = xmEntityRepository.getSequenceNextValString("testSequenceName");
+            // startValue: 5
+            assertEquals(5, sv);
+            sv = xmEntityRepository.getSequenceNextValString("testSequenceName");
+            assertEquals(6, sv);
+            sv = xmEntityRepository.getSequenceNextValString("testSequenceName");
+            assertEquals(7, sv);
+            sv = xmEntityRepository.getSequenceNextValString("testSequenceName");
+            // cycle: true, maxValue: 7, minValue: 3
+            assertEquals(3, sv);
             return "";
         });
 
