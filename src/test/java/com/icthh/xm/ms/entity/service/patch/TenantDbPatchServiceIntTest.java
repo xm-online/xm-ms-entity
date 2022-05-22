@@ -33,7 +33,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.util.TestPropertyValues;
 import org.springframework.context.ApplicationContextInitializer;
 import org.springframework.context.ConfigurableApplicationContext;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
@@ -46,6 +45,7 @@ import javax.validation.ConstraintViolation;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 
 import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_AUTH_CONTEXT;
 import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_TENANT_CONTEXT;
@@ -118,6 +118,7 @@ public class TenantDbPatchServiceIntTest extends AbstractSpringBootTest {
 
     @After
     public void tearDown() {
+        // TODO remove liquibase content in table
         lepManager.endThreadContext();
         tenantContextHolder.getPrivilegedContext().destroyCurrentContext();
     }
@@ -132,7 +133,29 @@ public class TenantDbPatchServiceIntTest extends AbstractSpringBootTest {
         applyPatch(assertion);
     }
 
-    // TODO add test by json field
+    @Test(expected = TestUniqColumnIndexException.class)
+    public void testApplyPatchAndAssertUniqDataFieldIndex() {
+        SeparateTransactionExecutor.Task<String> assertion = () -> {
+            xmEntityService.save(new XmEntity().typeKey("TEST_ENTITY_WITH_ATTACHMENT").name("name").key("key")
+                    .data(Map.of("field2", "value")));
+            xmEntityService.save(new XmEntity().typeKey("TEST_ENTITY_WITH_ATTACHMENT").name("name1").key("key1")
+                    .data(Map.of("field2", "value1")));
+            em.flush();
+            try {
+                xmEntityService.save(new XmEntity().typeKey("TEST_ENTITY_WITH_ATTACHMENT").name("name2").key("key2")
+                        .data(Map.of("field2", "value1")));
+                em.flush();
+                fail();
+            } catch (Exception ex) {
+                assertEquals("ERROR: duplicate key value violates unique constraint \"unique_field2_index\"\n" +
+                                "  Detail: Key (jsonb_path_query_first(data, '$.\"field2\"'::jsonpath))=(\"value1\") already exists.",
+                        ex.getCause().getCause().getMessage());
+                throw new TestUniqColumnIndexException();
+            }
+            return "";
+        };
+        applyPatch(assertion);
+    }
 
     @Test(expected = TestUniqColumnIndexException.class)
     public void testApplyPatchAndAssertUniqColumnIndex() {
@@ -160,8 +183,10 @@ public class TenantDbPatchServiceIntTest extends AbstractSpringBootTest {
     private void applyPatch(SeparateTransactionExecutor.Task<String> assertion) {
         String configPrefix = "/config/tenants/RESINTTEST/entity/dbPatches/";
 
-        assertNotContainsSequences(List.of("testsequencename", "sequencename1"));
-        assertNotContainsIndexes(List.of("unique_attachment_url", "entity_value_index", "unique_field2_index"));
+        separateTransactionExecutor.doInSeparateTransaction(() -> {
+            jdbcTemplate.execute("DELETE FROM resinttest.databasechangelog WHERE filename in ('patch1.xml', 'patch2.xml', 'patch3.xml')");
+            return "";
+        });
 
         separateTransactionExecutor.doInSeparateTransaction(() -> {
             tenantDbPatchService.onRefresh(configPrefix + "patch1.yml", loadFile("patch1.yml"));
@@ -187,6 +212,8 @@ public class TenantDbPatchServiceIntTest extends AbstractSpringBootTest {
 
         assertNotContainsSequences(List.of("testsequencename", "sequencename1"));
         assertNotContainsIndexes(List.of("unique_attachment_url", "entity_value_index", "unique_field2_index"));
+
+        tenantDbPatchService.onRefresh(configPrefix + "patch3.yml", null);
     }
 
     private void assertNotContainsSequences(List<String> names) {

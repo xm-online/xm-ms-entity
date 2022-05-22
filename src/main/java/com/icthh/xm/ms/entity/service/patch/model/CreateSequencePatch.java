@@ -28,14 +28,19 @@ public class CreateSequencePatch extends XmTenantChangeSet {
 
     @Override
     protected String changeSetBody(String tenantName) {
+        String seqName = sequenceName.toLowerCase();
+
         StringBuilder out = new StringBuilder();
+        out.append("<preConditions onFail=\"MARK_RAN\"><not><sequenceExists ");
+        appendIfNotNull(seqName, "sequenceName", out);
+        out.append("/></not></preConditions>");
         out.append("<createSequence ");
         appendIfNotNull(cycle, "cycle", out);
         appendIfNotNull(incrementBy, "incrementBy", out);
         appendIfNotNull(maxValue, "maxValue", out);
         appendIfNotNull(minValue, "minValue", out);
         appendIfNotNull(ordered, "ordered", out);
-        appendIfNotNull(sequenceName.toLowerCase(), "sequenceName", out);
+        appendIfNotNull(seqName, "sequenceName", out);
         appendIfNotNull(startValue, "startValue", out);
         out.append(" />");
         return out.toString();

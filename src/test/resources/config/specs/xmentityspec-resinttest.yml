@@ -670,3 +670,13 @@ types:
       attachments:
         - key: PHOTO
         - key: DOCUMENT
+      dataSpec: |
+        {
+            "type": "object",
+            "properties": {
+                "field2": {
+                    "title": "field2",
+                    "type": "string"
+                }
+            }
+        }
