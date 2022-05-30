@@ -58,6 +58,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
@@ -160,6 +161,8 @@ public class EntityServiceImplIntTest extends AbstractSpringBootTest {
     @Autowired
     private ObjectMapper objectMapper;
 
+    Locale locale;
+
     @BeforeTransaction
     public void beforeTransaction() {
 
@@ -215,11 +218,14 @@ public class EntityServiceImplIntTest extends AbstractSpringBootTest {
         self = new Profile();
         self.setXmentity(sourceEntity);
         when(profileService.getSelfProfile()).thenReturn(self);
+        locale = Locale.getDefault();
+        Locale.setDefault(Locale.US);
     }
 
     @After
     public void afterTest() {
         tenantContextHolder.getPrivilegedContext().destroyCurrentContext();
+        Locale.setDefault(locale);
     }
 
     @Test
