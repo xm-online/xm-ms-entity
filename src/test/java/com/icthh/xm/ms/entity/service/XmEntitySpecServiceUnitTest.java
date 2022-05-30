@@ -64,6 +64,7 @@ import static com.google.common.collect.Maps.newHashMap;
 import static com.icthh.xm.ms.entity.config.TenantConfigMockConfiguration.getXmEntitySpec;
 import static com.icthh.xm.ms.entity.security.access.DynamicPermissionCheckService.CONFIG_SECTION;
 import static com.icthh.xm.ms.entity.util.CustomCollectionUtils.nullSafe;
+import static com.icthh.xm.ms.entity.web.rest.XmEntitySaveIntTest.loadFile;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
 import static org.apache.commons.codec.digest.DigestUtils.sha1Hex;
@@ -107,7 +108,6 @@ public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
 
     private static final String KEY6 = "TYPE3";
     private static final String PRIVILEGES_PATH = "/config/tenants/TEST/custom-privileges.yml";
-    private static final Path SPEC_PATH = Paths.get("./src/test/resources/config/specs/xmentityspec-xm.yml");
 
     private XmEntitySpecService xmEntitySpecService;
 
@@ -559,7 +559,7 @@ public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
     public void testXmEntitySpecSchemaGeneration() {
         String jsonSchema = xmEntitySpecService.generateJsonSchema();
         ObjectMapper objectMapper = new ObjectMapper(new YAMLFactory());
-        JsonNode xmentityspec = objectMapper.readTree(new File(SPEC_PATH.toString()));
+        JsonNode xmentityspec = objectMapper.readTree(loadFile("config/specs/xmentityspec-xm.yml"));
 
         JsonNode schemaNode = JsonLoader.fromString(jsonSchema);
         JsonSchemaFactory factory = JsonSchemaFactory.byDefault();
