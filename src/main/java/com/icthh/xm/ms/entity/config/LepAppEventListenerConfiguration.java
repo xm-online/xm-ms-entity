@@ -1,5 +1,6 @@
 package com.icthh.xm.ms.entity.config;
 
+import com.codahale.metrics.MetricRegistry;
 import com.icthh.xm.commons.config.client.service.TenantConfigService;
 import com.icthh.xm.commons.lep.commons.CommonsService;
 import com.icthh.xm.commons.permission.service.PermissionCheckService;
@@ -65,15 +66,19 @@ public class LepAppEventListenerConfiguration {
         ElasticsearchIndexService elasticsearchIndexService,
         SeparateTransactionExecutor transactionExecutor,
         CustomMetricsContext customMetricsContext,
-        KafkaTemplateService kafkaTemplateService) {
+        KafkaTemplateService kafkaTemplateService,
+        @Qualifier("metricRegistry") MetricRegistry metricRegistry
+    ) {
 
-        return new XmEntityMsLepProcessingApplicationListener(xmEntityService,
-                        xmTenantLifecycleService, xmEntityRepository, profileService, linkService,
-                        mailService, tenantConfigService, attachmentService, loadBalancedRestTemplateWithTimeout, plainRestTemplate,
-                        requestFactory, locationService, tagService, profileEventProducer, commentService,
-                        commonsService, permissionCheckService, eventService, calendarService, tenantLepResource,
-                        amazonS3Template, elasticsearchTemplate, permittedSearchRepository, elasticsearchIndexService,
-                        transactionExecutor, customMetricsContext, kafkaTemplateService);
+        return new XmEntityMsLepProcessingApplicationListener(
+            xmEntityService,
+            xmTenantLifecycleService, xmEntityRepository, profileService, linkService,
+            mailService, tenantConfigService, attachmentService, loadBalancedRestTemplateWithTimeout, plainRestTemplate,
+            requestFactory, locationService, tagService, profileEventProducer, commentService,
+            commonsService, permissionCheckService, eventService, calendarService, tenantLepResource,
+            amazonS3Template, elasticsearchTemplate, permittedSearchRepository, elasticsearchIndexService,
+            transactionExecutor, customMetricsContext, kafkaTemplateService, metricRegistry
+        );
     }
 
 }

@@ -1,5 +1,6 @@
 package com.icthh.xm.ms.entity.lep;
 
+import com.codahale.metrics.MetricRegistry;
 import com.icthh.xm.commons.config.client.service.TenantConfigService;
 import com.icthh.xm.commons.lep.BaseProceedingLep;
 import com.icthh.xm.commons.lep.spring.LepThreadHelper;
@@ -42,6 +43,7 @@ public class LepContext {
     public LepRepositories repositories;
     public LepTemplates templates;
     public CustomMetricsContext metricsContext;
+    public MetricRegistry metricRegistry;
 
     public static class LepServices {
         public Object xmTenantLifeCycle; // do not user this field
