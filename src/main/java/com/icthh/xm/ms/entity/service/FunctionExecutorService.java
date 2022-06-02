@@ -47,6 +47,6 @@ public interface FunctionExecutorService {
      * @return function result data
      */
     @LogicExtensionPoint(value = "AnonymousFunction", resolver = FunctionLepKeyResolver.class)
-    Map<String, Object> executeAnonymousFunction(String functionKey, Map<String, Object> functionInput);
+    Map<String, Object> executeAnonymousFunction(String functionKey, Map<String, Object> functionInput, String httpMethod);
 
 }

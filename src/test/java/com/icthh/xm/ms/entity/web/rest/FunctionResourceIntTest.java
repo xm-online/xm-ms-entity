@@ -376,4 +376,40 @@ public class FunctionResourceIntTest extends AbstractSpringBootTest {
         leps.onRefresh(functionLepKey, null);
     }
 
+    @Test
+    @Transactional
+    @SneakyThrows
+    public void testAnonymousFunctionExposedByCustomPath() {
+        String functionPrefix = "/config/tenants/RESINTTEST/entity/lep/function/";
+        String functionApi = "/api/functions/anonymous/";
+        String functionKey = "package/FUNCTION_WITH_ANONYMOUS_SET_TO_TRUE.PATH-PACKAGE-TEST";
+        String functionLepKey = functionPrefix + "package/AnonymousFunction$$FUNCTION_WITH_ANONYMOUS_SET_TO_TRUE$PATH_PACKAGE_TEST$$tenant.groovy";
+
+        leps.onRefresh(functionLepKey, "[input: lepContext.inArgs.functionInput, method: lepContext.inArgs.httpMethod]");
+
+        // can resolve function by path
+        mockMvc.perform(post(functionApi + "another/urlpath/220/with/37.4/and/tes27")
+                                .content("{\"paramInBody\": 29.77}")
+                                .contentType(APPLICATION_JSON_VALUE))
+                .andDo(print())
+                .andExpect(jsonPath("$.data.input.paramInBody").value(29.77))
+                .andExpect(jsonPath("$.data.input.id").value("220"))
+                .andExpect(jsonPath("$.data.input.param").value("37.4"))
+                .andExpect(jsonPath("$.data.input.another").value("tes27"))
+                .andExpect(status().is2xxSuccessful());
+
+        // can resolve function by key
+        mockMvc.perform(post(functionApi + functionKey)
+                                .content("{\"paramInBody\": 27.5}")
+                                .contentType(APPLICATION_JSON_VALUE))
+                .andDo(print())
+                .andExpect(jsonPath("$.data.input.paramInBody").value(27.5))
+                .andExpect(jsonPath("$.data.input.id").doesNotExist())
+                .andExpect(jsonPath("$.data.input.param").doesNotExist())
+                .andExpect(jsonPath("$.data.input.another").doesNotExist())
+                .andExpect(status().is2xxSuccessful());
+
+        leps.onRefresh(functionLepKey, null);
+    }
+
 }

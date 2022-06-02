@@ -1,13 +1,12 @@
 package com.icthh.xm.ms.entity.config.tenant;
 
-import static com.icthh.xm.commons.tenant.TenantContextUtils.getRequiredTenantKeyValue;
 import static com.icthh.xm.ms.entity.config.TenantConfigMockConfiguration.getXmEntitySpec;
 
 import com.icthh.xm.commons.config.client.repository.TenantConfigRepository;
-import com.icthh.xm.commons.config.client.service.TenantConfigService;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.ms.entity.config.ApplicationProperties;
 import com.icthh.xm.ms.entity.config.XmEntityTenantConfigService;
+import com.icthh.xm.ms.entity.domain.spec.FunctionSpec;
 import com.icthh.xm.ms.entity.domain.spec.TypeSpec;
 import com.icthh.xm.ms.entity.security.access.DynamicPermissionCheckService;
 import com.icthh.xm.ms.entity.service.privileges.custom.EntityCustomPrivilegeService;
@@ -18,6 +17,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @Slf4j
 @Service
@@ -56,4 +56,12 @@ public class LocalXmEntitySpecService extends XmEntitySpecService {
         return super.getTypeSpecs();
     }
 
+    @Override
+    public Optional<FunctionSpec> findFunction(String functionKey) {
+        return super.findFunction(functionKey)
+                .or(() -> {
+                    getTypeSpecs(); // trigger refresh config which populates functionsByTenant cache
+                    return super.findFunction(functionKey);
+                });
+    }
 }

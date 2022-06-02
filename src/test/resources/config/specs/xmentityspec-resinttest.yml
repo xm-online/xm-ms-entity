@@ -506,6 +506,9 @@ types:
             anonymous: false
           - key: FUNCTION_WITH_ANONYMOUS_SET_TO_TRUE
             anonymous: true
+          - key: package/FUNCTION_WITH_ANONYMOUS_SET_TO_TRUE.PATH-PACKAGE-TEST
+            path: another/urlpath/{id}/with/{param}/and/{another}
+            anonymous: true
     - key: TEST_FUNCTION_WITH_PACKAGE
       name: { en: "TEST_FUNCTION_WITH_PACKAGE" }
       isApp: false

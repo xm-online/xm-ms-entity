@@ -367,7 +367,30 @@ public class FunctionServiceImplUnitTest extends AbstractUnitTest {
         FunctionContext result = functionService.execute("my/api-path/with/101/and/value2", new HashMap<>(), "POST");
 
         //THEN
-        Assert.assertEquals(result.getData().size(), 2);
+        Assert.assertEquals(2, result.getData().size());
+        Assert.assertEquals("101", result.getData().get("param1"));
+        Assert.assertEquals("value2", result.getData().get("param2"));
+    }
+
+    @Test
+    public void executeAnonymousWithPathDefinedInFunctionSpec() {
+        FunctionSpec spec = new FunctionSpec();
+        spec.setKey("FUNCTION_WITH_PATH");
+        spec.setPath("my/api-path/with/{param1}/and/{param2}");
+        spec.setAnonymous(true);
+
+        //GIVEN
+        when(xmEntitySpecService.findFunction("my/api-path/with/101/and/value2"))
+                .thenReturn(Optional.of(spec));
+
+        when(functionExecutorService.executeAnonymousFunction(eq("FUNCTION_WITH_PATH"), any(), eq("POST")))
+                .thenAnswer(invocation -> new HashMap<>(invocation.getArgument(1)));
+
+        //WHEN
+        FunctionContext result = functionService.executeAnonymous("my/api-path/with/101/and/value2", new HashMap<>(), "POST");
+
+        //THEN
+        Assert.assertEquals(2, result.getData().size());
         Assert.assertEquals("101", result.getData().get("param1"));
         Assert.assertEquals("value2", result.getData().get("param2"));
     }

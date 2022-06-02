@@ -3,7 +3,6 @@ package com.icthh.xm.ms.entity.service.impl;
 import static java.util.Collections.emptyList;
 
 import com.icthh.xm.commons.exceptions.EntityNotFoundException;
-import com.icthh.xm.commons.logging.LoggingAspectConfig;
 import com.icthh.xm.ms.entity.config.XmEntityTenantConfigService;
 import com.icthh.xm.ms.entity.domain.FunctionContext;
 import com.icthh.xm.ms.entity.domain.XmEntity;
@@ -74,10 +73,7 @@ public class FunctionServiceImpl implements FunctionService {
 
         validateFunctionInput(functionSpec, functionInput);
 
-        if (functionSpec.getPath() != null && matcher.match(functionSpec.getPath(), functionKey)) {
-            Map<String, String> pathParams = matcher.extractUriTemplateVariables(functionSpec.getPath(), functionKey);
-            functionInput.putAll(pathParams);
-        }
+        enrichInputFromPathParams(functionKey, functionInput, functionSpec);
 
         // execute function
         Map<String, Object> data = functionExecutorService.execute(functionSpec.getKey(), vInput, httpMethod);
@@ -107,7 +103,7 @@ public class FunctionServiceImpl implements FunctionService {
         // validate that current XmEntity has function
         FunctionSpec functionSpec = findFunctionSpec(functionKey, projection);
 
-        //orElseThorw is replaced by war message
+        //orElseThrow is replaced by war message
         assertCallAllowedByState(functionSpec, projection);
 
         validateFunctionInput(functionSpec, functionInput);
@@ -132,7 +128,7 @@ public class FunctionServiceImpl implements FunctionService {
     }
 
     @Override
-    public FunctionContext executeAnonymous(String functionKey, Map<String, Object> functionInput) {
+    public FunctionContext executeAnonymous(String functionKey, Map<String, Object> functionInput, String httpMethod) {
         FunctionSpec functionSpec = findFunctionSpec(functionKey, null);
 
         if (!functionSpec.getAnonymous()) {
@@ -142,8 +138,10 @@ public class FunctionServiceImpl implements FunctionService {
         Objects.requireNonNull(functionKey, "functionKey can't be null");
         Map<String, Object> vInput = CustomCollectionUtils.emptyIfNull(functionInput);
 
+        enrichInputFromPathParams(functionKey, vInput, functionSpec);
+
         // execute function
-        Map<String, Object> data = functionExecutorService.executeAnonymousFunction(functionKey, vInput);
+        Map<String, Object> data = functionExecutorService.executeAnonymousFunction(functionSpec.getKey(), vInput, httpMethod);
         return processFunctionResult(functionKey, data, functionSpec);
     }
 
@@ -218,6 +216,13 @@ public class FunctionServiceImpl implements FunctionService {
         functionResult.setBinaryDataField(functionSpec.getBinaryDataField());
         functionResult.setBinaryDataType(functionSpec.getBinaryDataType());
         return functionResult;
+    }
+
+    private void enrichInputFromPathParams(String functionKey, Map<String, Object> functionInput, FunctionSpec functionSpec) {
+        if (functionSpec.getPath() != null && matcher.match(functionSpec.getPath(), functionKey)) {
+            Map<String, String> pathParams = matcher.extractUriTemplateVariables(functionSpec.getPath(), functionKey);
+            functionInput.putAll(pathParams);
+        }
     }
 
 }
