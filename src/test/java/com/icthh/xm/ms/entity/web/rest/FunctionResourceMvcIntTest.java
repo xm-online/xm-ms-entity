@@ -66,8 +66,8 @@ public class FunctionResourceMvcIntTest extends AbstractWebMvcTest {
 
     @Test
     @SneakyThrows
-    public void testCallAnonymousFunction() {
-        when(functionService.executeAnonymous("SOME-ANONYMOUS-FUNCTION_KEY.TROLOLO", of("var1", "val1", "var2", "val2")))
+    public void testCallPostAnonymousFunction() {
+        when(functionService.executeAnonymous("SOME-ANONYMOUS-FUNCTION_KEY.TROLOLO", of("var1", "val1", "var2", "val2"), "POST"))
             .thenReturn(new FunctionContext().data(of("test", "result")));
         mockMvc.perform(post("/api/functions/anonymous/SOME-ANONYMOUS-FUNCTION_KEY.TROLOLO")
             .contentType(TestUtil.APPLICATION_JSON_UTF8)
@@ -75,10 +75,22 @@ public class FunctionResourceMvcIntTest extends AbstractWebMvcTest {
             .andDo(print())
             .andExpect(jsonPath("$.data.test").value("result"))
             .andExpect(status().isCreated());
-        verify(functionService).executeAnonymous(eq("SOME-ANONYMOUS-FUNCTION_KEY.TROLOLO"), eq(of("var1", "val1", "var2", "val2")));
+        verify(functionService).executeAnonymous(eq("SOME-ANONYMOUS-FUNCTION_KEY.TROLOLO"), eq(of("var1", "val1", "var2", "val2")), eq("POST"));
     }
 
     @Test
+    @SneakyThrows
+    public void testCallGetAnonymousFunction() {
+        when(functionService.executeAnonymous("SOME-ANONYMOUS-FUNCTION_KEY.TROLOLO", of("var1", "val1", "var2", "val2"), "GET"))
+                .thenReturn(new FunctionContext().data(of("test", "result")));
+        mockMvc.perform(get("/api/functions/anonymous/SOME-ANONYMOUS-FUNCTION_KEY.TROLOLO?var1=val1&var2=val2"))
+                .andDo(print())
+                .andExpect(jsonPath("$.data.test").value("result"))
+                .andExpect(status().isOk());
+        verify(functionService).executeAnonymous(eq("SOME-ANONYMOUS-FUNCTION_KEY.TROLOLO"), eq(of("var1", "val1", "var2", "val2")), eq("GET"));
+    }
+
+        @Test
     @SneakyThrows
     public void testCallPutFunction() {
         when(functionService.execute("SOME-FUNCTION_KEY.TROLOLO", of("var1", "val1", "var2", "val2"), "PUT"))

@@ -27,6 +27,7 @@ public interface FunctionService {
      *
      * @param functionKey   the function key, unique in Tenant
      * @param functionInput function input context
+     * @param httpMethod HTTP method used to invoke the function
      * @return function execution result
      */
     FunctionContext execute(String functionKey, Map<String, Object> functionInput, String httpMethod);
@@ -36,8 +37,9 @@ public interface FunctionService {
      *
      * @param functionKey   the function key, unique in Tenant
      * @param functionInput function input context
+     * @param httpMethod HTTP method used to invoke the function
      * @return function execution result
      */
-    FunctionContext executeAnonymous(String functionKey, Map<String, Object> functionInput);
+    FunctionContext executeAnonymous(String functionKey, Map<String, Object> functionInput, String httpMethod);
 
 }
