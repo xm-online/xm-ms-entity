@@ -73,7 +73,7 @@ public class FunctionServiceImpl implements FunctionService {
 
         validateFunctionInput(functionSpec, functionInput);
 
-        enrichInputFromPathParams(functionKey, functionInput, functionSpec);
+        enrichInputFromPathParams(functionKey, vInput, functionSpec);
 
         // execute function
         Map<String, Object> data = functionExecutorService.execute(functionSpec.getKey(), vInput, httpMethod);
