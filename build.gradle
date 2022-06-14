@@ -246,11 +246,6 @@ dependencies {
 
     // Use ", version: jhipster_dependencies_version, changing: true" if you want
     // to use a SNAPSHOT release instead of a stable release
-
-
-    implementation "org.apache.commons:commons-csv:1.8"
-
-
     implementation "io.github.jhipster:jhipster-framework"
     implementation "io.dropwizard.metrics:metrics-core"
     implementation "io.dropwizard.metrics:metrics-json"
