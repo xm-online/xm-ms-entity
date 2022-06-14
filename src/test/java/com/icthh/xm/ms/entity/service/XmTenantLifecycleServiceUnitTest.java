@@ -52,16 +52,17 @@ public class XmTenantLifecycleServiceUnitTest extends AbstractUnitTest {
     @Mock
     private TenantContext tenantContext;
 
+    @Mock
+    TenantContextHolder tenantContextHolder;
+
     @Before
     public void before() {
         MockitoAnnotations.initMocks(this);
 
-        TenantContextHolder tenantContextHolder = mock(TenantContextHolder.class);
-
         when(applicationProperties.getTenantWithCreationAccessList()).thenReturn(Collections.singletonList(TENANT_KEY));
         when(tenantContextHolder.getContext()).thenReturn(tenantContext);
         when(tenantContext.getTenant()).thenReturn(Optional.of(tenant));
-        when(tenant.getTenantKey()).thenReturn(TenantKey.valueOf(TENANT_KEY));
+        when(tenantContextHolder.getTenantKey()).thenReturn(TENANT_KEY);
         when(tenant.isSuper()).thenReturn(true);
 
         xmTenantLifecycleService = new XmTenantLifecycleService(tenantClients,
@@ -70,7 +71,7 @@ public class XmTenantLifecycleServiceUnitTest extends AbstractUnitTest {
 
     @Test
     public void testNoTenant() throws Exception {
-        when(tenantContext.getTenant()).thenReturn(Optional.empty());
+        when(tenantContextHolder.getTenantKey()).thenReturn(null);
 
         IllegalArgumentException exception = null;
         try {
@@ -85,7 +86,7 @@ public class XmTenantLifecycleServiceUnitTest extends AbstractUnitTest {
 
     @Test
     public void testTenantIsNotInTheCreationAccessList() throws Exception {
-        when(tenant.getTenantKey()).thenReturn(TenantKey.valueOf("xm2"));
+        when(tenantContextHolder.getTenantKey()).thenReturn("xm2");
 
         IllegalArgumentException exception = null;
         try {
