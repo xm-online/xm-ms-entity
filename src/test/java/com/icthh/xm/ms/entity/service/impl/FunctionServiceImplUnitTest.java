@@ -363,11 +363,22 @@ public class FunctionServiceImplUnitTest extends AbstractUnitTest {
         when(functionExecutorService.execute(eq("FUNCTION_WITH_PATH"), any(), eq("POST")))
                 .thenAnswer(invocation -> new HashMap<>(invocation.getArgument(1)));
 
-        //WHEN
-        FunctionContext result = functionService.execute("my/api-path/with/101/and/value2", new HashMap<>(), "POST");
+        //WHEN input null
+        FunctionContext result = functionService.execute("my/api-path/with/101/and/value2", null, "POST");
 
         //THEN
         Assert.assertEquals(2, result.getData().size());
+        Assert.assertEquals("101", result.getData().get("param1"));
+        Assert.assertEquals("value2", result.getData().get("param2"));
+
+        //WHEN input not null
+        HashMap<String, Object> input = new HashMap<>();
+        input.put("key", "value");
+        result = functionService.execute("my/api-path/with/101/and/value2", input, "POST");
+
+        //THEN
+        Assert.assertEquals(3, result.getData().size());
+        Assert.assertEquals("value", result.getData().get("key"));
         Assert.assertEquals("101", result.getData().get("param1"));
         Assert.assertEquals("value2", result.getData().get("param2"));
     }
