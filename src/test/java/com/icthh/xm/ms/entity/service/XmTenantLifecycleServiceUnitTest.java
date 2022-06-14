@@ -70,21 +70,6 @@ public class XmTenantLifecycleServiceUnitTest extends AbstractUnitTest {
     }
 
     @Test
-    public void testNoTenant() throws Exception {
-        when(tenantContextHolder.getTenantKey()).thenReturn(null);
-
-        IllegalArgumentException exception = null;
-        try {
-            xmTenantLifecycleService.changeState(getEntity(), EntityState.ACTIVE.name(), context);
-        } catch (IllegalArgumentException e) {
-            exception = e;
-        }
-
-        assertNotNull(exception);
-        assertEquals("Tenant not supplied", exception.getMessage());
-    }
-
-    @Test
     public void testTenantIsNotInTheCreationAccessList() throws Exception {
         when(tenantContextHolder.getTenantKey()).thenReturn("xm2");
 
