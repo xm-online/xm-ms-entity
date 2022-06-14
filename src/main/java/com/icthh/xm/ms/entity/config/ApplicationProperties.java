@@ -63,6 +63,9 @@ public class ApplicationProperties {
 
     private KafkaMetric kafkaMetric;
 
+    private String livenessProbeTimeoutSeconds;
+    private String readinessProbeTimeoutSeconds;
+
     @Getter
     @Setter
     public static class Amazon {

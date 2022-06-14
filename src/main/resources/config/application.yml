@@ -51,6 +51,8 @@ management:
             prometheus:
                 enabled: true
                 step: 60
+        tags:
+            application: ${spring.application.name}
 
 spring:
     application:
@@ -233,7 +235,8 @@ application:
         enabled: true
         connectionTimeoutTopic: 1000
         metricTopics: system_topic
-
+    liveness-probe-timeout-seconds: 3
+    readiness-probe-timeout-seconds: 3
 # ===================================================================
 # Timeline specific properties
 #
