@@ -37,7 +37,7 @@ public class XmTenantLifecycleServiceUnitTest extends AbstractUnitTest {
     private static final String SERVICE_NAME = "test";
     private static final String EXEC_ERROR = "Service call failed";
     private static final String SUCCESS_NAME = "success";
-    private static final String TENANT_KEY = "xm";
+    private static final String TENANT_KEY = "XM";
 
     private XmTenantLifecycleService xmTenantLifecycleService;
     private List<TenantClient> tenantClients = new ArrayList<>();
@@ -71,7 +71,7 @@ public class XmTenantLifecycleServiceUnitTest extends AbstractUnitTest {
 
     @Test
     public void testTenantIsNotInTheCreationAccessList() throws Exception {
-        when(tenantContextHolder.getTenantKey()).thenReturn("xm2");
+        when(tenantContextHolder.getTenantKey()).thenReturn("XM2");
 
         IllegalArgumentException exception = null;
         try {
@@ -81,7 +81,7 @@ public class XmTenantLifecycleServiceUnitTest extends AbstractUnitTest {
         }
 
         assertNotNull(exception);
-        assertEquals("Creating new tenants allowed only from super tenant", exception.getMessage());
+        assertEquals("Error creating tenant with key XM2. Creating new tenants allowed only from super tenant", exception.getMessage());
     }
 
     @Test
