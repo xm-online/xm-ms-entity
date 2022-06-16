@@ -52,8 +52,8 @@ public class XmTenantLifecycleService {
      */
     public void changeState(XmEntity xmEntity, String nextStateKey, Map<String, Object> context) {
         if (!applicationProperties.getTenantWithCreationAccessList().contains(tenantContextHolder.getTenantKey().toUpperCase())) {
-            throw new IllegalArgumentException("Error creating tenant with key" + tenantContextHolder.getTenantKey() +
-                "Creating new tenants allowed only from super tenant");
+            throw new IllegalArgumentException("Error creating tenant with key " + tenantContextHolder.getTenantKey() +
+                ". Creating new tenants allowed only from super tenant");
         }
 
         // noinspection unchecked

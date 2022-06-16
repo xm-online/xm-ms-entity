@@ -81,7 +81,7 @@ public class XmTenantLifecycleServiceUnitTest extends AbstractUnitTest {
         }
 
         assertNotNull(exception);
-        assertEquals("Creating new tenants allowed only from super tenant", exception.getMessage());
+        assertEquals("Error creating tenant with key XM2. Creating new tenants allowed only from super tenant", exception.getMessage());
     }
 
     @Test
