@@ -2,7 +2,7 @@
 <!DOCTYPE configuration>
 
 <configuration scan="true">
-
+    <springProperty scope="context" name="springAppName" source="spring.application.name"/>
     <!--<include resource="org/springframework/boot/logging/logback/base.xml"/>-->
 
 <!-- The FILE and ASYNC appenders are here as examples for a production configuration -->
@@ -27,14 +27,14 @@
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
             <charset>utf-8</charset>
-            <Pattern>%d %-5level [%thread] [%X{rid}] %logger{0}: %msg%n</Pattern>
+            <Pattern>%d %-5level [%thread] [${springAppName:-}] [%X{traceId:-}] [%X{rid}] %logger{0}: %msg%n</Pattern>
         </encoder>
     </appender>
 
     <appender name="STDOUT_JSON" class="ch.qos.logback.core.ConsoleAppender">
         <encoder class="net.logstash.logback.encoder.LogstashEncoder"/>
     </appender>
-    
+
     <logger name="com.icthh.xm.ms.entity" level="#logback.loglevel#"/>
 
     <logger name="io.github.jhipster" level="#logback.loglevel#"/>
