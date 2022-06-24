@@ -352,6 +352,7 @@ dependencies {
     implementation "com.icthh.xm.commons:xm-commons-mail:${xm_commons_version}"
     implementation "com.icthh.xm.commons:xm-commons-topic:${xm_commons_version}"
     implementation "com.icthh.xm.commons:xm-commons-logging-configurable:${xm_commons_version}"
+    implementation "com.icthh.xm.commons:xm-commons-logging-trace:${xm_commons_version}"
 
     implementation "org.freemarker:freemarker:${freemarker_version}"
     implementation "org.apache.poi:poi-ooxml:${apache_poi_version}"
