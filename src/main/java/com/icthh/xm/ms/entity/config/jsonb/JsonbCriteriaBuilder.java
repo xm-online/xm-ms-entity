@@ -7,6 +7,10 @@ import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 import lombok.RequiredArgsConstructor;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+
 @RequiredArgsConstructor
 public class JsonbCriteriaBuilder {
 
@@ -119,6 +123,10 @@ public class JsonbCriteriaBuilder {
         return criteriaBuilder.lessThanOrEqualTo(
             JsonbUtils.jsonQuery(criteriaBuilder, root, jsonPath, String.class),
             JsonbUtils.toJsonB(criteriaBuilder, expression, String.class));
+    }
+
+    public Predicate in(Root<XmEntity> root, String jsonPath, Object object) {
+        return JsonbUtils.jsonQuery(criteriaBuilder, root, jsonPath).in((List) object);
     }
 
 }
