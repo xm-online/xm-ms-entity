@@ -13,6 +13,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 
+import com.icthh.xm.ms.entity.repository.selection.EntitySelection;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Example;
@@ -124,8 +125,8 @@ public class XmEntityRepositoryInternalImpl implements XmEntityRepositoryInterna
         return springXmEntityRepository.findAll(spec, sort);
     }
     @Override
-    public <P> List<P> findAll(Specification<XmEntity> spec, Sort sort, Class<P> projectionClass) {
-        return springXmEntityRepository.findAll(spec, sort, projectionClass);
+    public <P> List<P> findAll(Specification<XmEntity> spec, EntitySelection<P> selection, Sort sort, Class<P> projectionClass) {
+        return springXmEntityRepository.findAll(spec, selection, sort, projectionClass);
     }
 
     @Override

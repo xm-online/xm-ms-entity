@@ -1,6 +1,7 @@
 package com.icthh.xm.ms.entity.repository.entitygraph;
 
 import com.icthh.xm.ms.entity.domain.XmEntity;
+import com.icthh.xm.ms.entity.repository.selection.EntitySelection;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.hibernate.Session;
@@ -10,15 +11,13 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.data.jpa.repository.query.QueryUtils;
 import org.springframework.data.jpa.repository.support.JpaEntityInformation;
 import org.springframework.data.jpa.repository.support.SimpleJpaRepository;
-import org.springframework.data.jpa.repository.query.QueryUtils;
-import org.springframework.data.mapping.PropertyPath;
 import org.springframework.data.projection.ProjectionFactory;
 
 import javax.persistence.*;
 import javax.persistence.criteria.*;
-import java.beans.PropertyDescriptor;
 import java.io.Serializable;
 import java.math.BigInteger;
 import java.util.*;
@@ -97,38 +96,16 @@ public class EntityGraphRepositoryImpl<T, I extends Serializable>
     }
 
     @Override
-    public <P> List<P> findAll(Specification<?> spec, Sort sort, Class<P> projectionClass) {
+    public <P> List<P> findAll(Specification<?> spec, EntitySelection<P> selection, Sort sort, Class<P> projectionClass) {
         CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
-        CriteriaQuery<Tuple> tupleQuery = criteriaBuilder.createTupleQuery();
-        Root<?> root = tupleQuery.from(domainClass);
+        CriteriaQuery<P> query = criteriaBuilder.createQuery(projectionClass);
+        Root<?> root = query.from(domainClass);
+        query.select(selection.buildSelection(root, criteriaBuilder, projectionClass));
+        query.where(spec.toPredicate((Root) root, query, criteriaBuilder));
+        query.orderBy(QueryUtils.toOrders(sort, root, criteriaBuilder));
+        TypedQuery<P> typedQuery = entityManager.createQuery(query);
 
-        Set<Selection<?>> selections = new HashSet<>();
-        List<PropertyDescriptor> inputProperties = projectionFactory.getProjectionInformation(projectionClass).getInputProperties();
-        for (PropertyDescriptor propertyDescriptor : inputProperties) {
-            String property = propertyDescriptor.getName();
-            PropertyPath path = PropertyPath.from(property, domainClass);
-            selections.add(toExpressionRecursively(root, path).alias(property));
-
-        }
-
-        tupleQuery.multiselect(new ArrayList<>(selections))
-            .where(spec.toPredicate((Root) root, tupleQuery, criteriaBuilder))
-            .orderBy(QueryUtils.toOrders(sort, root, criteriaBuilder));
-
-        TypedQuery<Tuple> query = entityManager.createQuery(tupleQuery);
-        List<Tuple> results = query.getResultList();
-
-        List<P> projectedResults = new ArrayList<>(results.size());
-        for (Tuple tuple : results) {
-            Map<String, Object> mappedResult = new HashMap<>(tuple.getElements().size());
-            for (TupleElement<?> element : tuple.getElements()) {
-                String name = element.getAlias();
-                mappedResult.put(name, tuple.get(name));
-            }
-            projectedResults.add(projectionFactory.createProjection(projectionClass, mappedResult));
-        }
-
-        return projectedResults;
+        return typedQuery.getResultList();
     }
 
     public Long getSequenceNextValString(String sequenceName) {

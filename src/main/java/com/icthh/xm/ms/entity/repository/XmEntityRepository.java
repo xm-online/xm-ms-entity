@@ -10,6 +10,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 
+import com.icthh.xm.ms.entity.repository.selection.EntitySelection;
 import org.intellij.lang.annotations.Language;
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.Page;
@@ -70,7 +71,7 @@ public interface XmEntityRepository {
 
     List<XmEntity> findAll(Specification<XmEntity> spec, Sort sort);
 
-    <P> List<P> findAll(Specification<XmEntity> spec, Sort sort, Class<P> projectionClass);
+    <P> List<P> findAll(Specification<XmEntity> spec, EntitySelection<P> selection,  Sort sort, Class<P> projectionClass);
 
     List<XmEntity> findAll(@Language("HQL") String jpql, Map<String, Object> args, List<String> embed);
 
