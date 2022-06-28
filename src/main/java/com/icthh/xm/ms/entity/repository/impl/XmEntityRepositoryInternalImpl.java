@@ -123,6 +123,10 @@ public class XmEntityRepositoryInternalImpl implements XmEntityRepositoryInterna
     public List<XmEntity> findAll(Specification<XmEntity> spec, Sort sort) {
         return springXmEntityRepository.findAll(spec, sort);
     }
+    @Override
+    public <P> List<P> findAll(Specification<XmEntity> spec, Sort sort, Class<P> projectionClass) {
+        return springXmEntityRepository.findAll(spec, sort, projectionClass);
+    }
 
     @Override
     public List<XmEntity> findAll(String jpql, Map<String, Object> args, List<String> embed) {

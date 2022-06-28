@@ -2,6 +2,8 @@ package com.icthh.xm.ms.entity.repository.entitygraph;
 
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.repository.NoRepositoryBean;
 
@@ -24,6 +26,8 @@ public interface EntityGraphRepository<T, ID extends Serializable> extends JpaRe
     List<?> findAll(String jpql, Map<String, Object> args);
 
     List<?> findAll(String jpql, Map<String, Object> args, Pageable pageable);
+
+    <P> List<P> findAll(Specification<?> spec, Sort sort, Class<P> projectionClass);
 
     Long getSequenceNextValString(String sequenceName);
 

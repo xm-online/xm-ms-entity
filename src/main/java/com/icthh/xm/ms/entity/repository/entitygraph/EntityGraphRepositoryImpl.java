@@ -8,24 +8,20 @@ import org.hibernate.SessionFactory;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.support.JpaEntityInformation;
 import org.springframework.data.jpa.repository.support.SimpleJpaRepository;
+import org.springframework.data.jpa.repository.query.QueryUtils;
+import org.springframework.data.mapping.PropertyPath;
+import org.springframework.data.projection.ProjectionFactory;
 
-import javax.persistence.EntityGraph;
-import javax.persistence.EntityManager;
-import javax.persistence.FlushModeType;
-import javax.persistence.Query;
-import javax.persistence.Subgraph;
-import javax.persistence.TypedQuery;
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaDelete;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.CriteriaUpdate;
-import javax.persistence.criteria.Root;
+import javax.persistence.*;
+import javax.persistence.criteria.*;
+import java.beans.PropertyDescriptor;
 import java.io.Serializable;
 import java.math.BigInteger;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Function;
 
 import static org.hibernate.jpa.QueryHints.HINT_LOADGRAPH;
@@ -38,6 +34,8 @@ public class EntityGraphRepositoryImpl<T, I extends Serializable>
     private final EntityManager entityManager;
 
     private final Class<T> domainClass;
+
+    private ProjectionFactory projectionFactory;
 
     public EntityGraphRepositoryImpl(JpaEntityInformation<T, I> entityInformation,
                                      EntityManager entityManager) {
@@ -96,6 +94,41 @@ public class EntityGraphRepositoryImpl<T, I extends Serializable>
             query.setMaxResults(pageable.getPageSize());
         }
         return query.getResultList();
+    }
+
+    @Override
+    public <P> List<P> findAll(Specification<?> spec, Sort sort, Class<P> projectionClass) {
+        CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
+        CriteriaQuery<Tuple> tupleQuery = criteriaBuilder.createTupleQuery();
+        Root<?> root = tupleQuery.from(domainClass);
+
+        Set<Selection<?>> selections = new HashSet<>();
+        List<PropertyDescriptor> inputProperties = projectionFactory.getProjectionInformation(projectionClass).getInputProperties();
+        for (PropertyDescriptor propertyDescriptor : inputProperties) {
+            String property = propertyDescriptor.getName();
+            PropertyPath path = PropertyPath.from(property, domainClass);
+            selections.add(toExpressionRecursively(root, path).alias(property));
+
+        }
+
+        tupleQuery.multiselect(new ArrayList<>(selections))
+            .where(spec.toPredicate((Root) root, tupleQuery, criteriaBuilder))
+            .orderBy(QueryUtils.toOrders(sort, root, criteriaBuilder));
+
+        TypedQuery<Tuple> query = entityManager.createQuery(tupleQuery);
+        List<Tuple> results = query.getResultList();
+
+        List<P> projectedResults = new ArrayList<>(results.size());
+        for (Tuple tuple : results) {
+            Map<String, Object> mappedResult = new HashMap<>(tuple.getElements().size());
+            for (TupleElement<?> element : tuple.getElements()) {
+                String name = element.getAlias();
+                mappedResult.put(name, tuple.get(name));
+            }
+            projectedResults.add(projectionFactory.createProjection(projectionClass, mappedResult));
+        }
+
+        return projectedResults;
     }
 
     public Long getSequenceNextValString(String sequenceName) {

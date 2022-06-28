@@ -70,6 +70,8 @@ public interface XmEntityRepository {
 
     List<XmEntity> findAll(Specification<XmEntity> spec, Sort sort);
 
+    <P> List<P> findAll(Specification<XmEntity> spec, Sort sort, Class<P> projectionClass);
+
     List<XmEntity> findAll(@Language("HQL") String jpql, Map<String, Object> args, List<String> embed);
 
     List<?> findAll(@Language("HQL") String jpql, Map<String, Object> args);
