@@ -13,7 +13,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 
-import com.icthh.xm.ms.entity.repository.selection.EntitySelection;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Example;
@@ -25,9 +24,12 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Component;
 
 import javax.persistence.FlushModeType;
+import javax.persistence.Tuple;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaDelete;
 import javax.persistence.criteria.CriteriaUpdate;
+import javax.persistence.criteria.Root;
+import javax.persistence.criteria.Selection;
 
 @Slf4j
 @Component
@@ -125,8 +127,8 @@ public class XmEntityRepositoryInternalImpl implements XmEntityRepositoryInterna
         return springXmEntityRepository.findAll(spec, sort);
     }
     @Override
-    public <P> List<P> findAll(Specification<XmEntity> spec, EntitySelection<P> selection, Sort sort, Class<P> projectionClass) {
-        return springXmEntityRepository.findAll(spec, selection, sort, projectionClass);
+    public List<Tuple> findAll(Specification<XmEntity> spec, Function<Root<XmEntity>, List<Selection<?>>> fields, Pageable pageable) {
+        return springXmEntityRepository.findAll(spec, fields, pageable);
     }
 
     @Override
