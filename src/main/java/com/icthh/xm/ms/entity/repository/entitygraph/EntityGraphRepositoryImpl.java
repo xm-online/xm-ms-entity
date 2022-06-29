@@ -7,13 +7,11 @@ import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.jetbrains.annotations.NotNull;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.query.QueryUtils;
 import org.springframework.data.jpa.repository.support.JpaEntityInformation;
 import org.springframework.data.jpa.repository.support.SimpleJpaRepository;
-import org.springframework.data.projection.ProjectionFactory;
 
 import javax.persistence.EntityGraph;
 import javax.persistence.EntityManager;
@@ -21,7 +19,6 @@ import javax.persistence.FlushModeType;
 import javax.persistence.Query;
 import javax.persistence.Subgraph;
 import javax.persistence.Tuple;
-import javax.persistence.TupleElement;
 import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaDelete;
@@ -34,7 +31,6 @@ import java.math.BigInteger;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 import static org.hibernate.jpa.QueryHints.HINT_LOADGRAPH;
 
@@ -46,8 +42,6 @@ public class EntityGraphRepositoryImpl<T, I extends Serializable>
     private final EntityManager entityManager;
 
     private final Class<T> domainClass;
-
-    private ProjectionFactory projectionFactory;
 
     public EntityGraphRepositoryImpl(JpaEntityInformation<T, I> entityInformation,
                                      EntityManager entityManager) {
