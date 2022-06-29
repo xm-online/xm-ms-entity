@@ -98,9 +98,9 @@ public class EntityGraphRepositoryImpl<T, I extends Serializable>
     @Override
     public <P> List<P> findAll(Specification<?> spec, EntitySelection<P> selection, Sort sort, Class<P> projectionClass) {
         CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
-        CriteriaQuery<P> query = criteriaBuilder.createQuery(projectionClass);
+        CriteriaQuery<Tuple> query = criteriaBuilder.createTupleQuery();
         Root<?> root = query.from(domainClass);
-        query.select(selection.buildSelection(root, criteriaBuilder, projectionClass));
+        query.multiselect((selection.buildSelection(root, criteriaBuilder, projectionClass));
         query.where(spec.toPredicate((Root) root, query, criteriaBuilder));
         query.orderBy(QueryUtils.toOrders(sort, root, criteriaBuilder));
         TypedQuery<P> typedQuery = entityManager.createQuery(query);

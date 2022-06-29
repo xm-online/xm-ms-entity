@@ -13,14 +13,18 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.transaction.BeforeTransaction;
 import org.springframework.transaction.annotation.Transactional;
+import org.testcontainers.shaded.org.apache.commons.io.IOUtils;
 
+import java.io.InputStream;
 import java.util.Map;
 
 import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_AUTH_CONTEXT;
 import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_TENANT_CONTEXT;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.assertTrue;
 
 
@@ -75,6 +79,23 @@ public class LepContextCastIntTest extends AbstractSpringBootTest {
         leps.onRefresh(funcKey, function);
         Map<String, Object> result = functionExecutorService.execute(functionKey, Map.of(), null);
         assertTrue(result.get("context") instanceof LepContext);
+        leps.onRefresh(funcKey, null);
+    }
+
+    @Test
+    @Transactional
+    @SneakyThrows
+    public void testFindAllByFields() {
+        String functionPrefix = "/config/tenants/RESINTTEST/entity/lep/function/";
+        String functionKey = "FIND-ALL-BY-FIELDS";
+        String funcKey = functionPrefix + "Function$$FIND_ALL_BY_FIELDS$$tenant.groovy";
+
+        InputStream cfgInputStream = new ClassPathResource("config/testlep/Function$$FIND_All_BY_FIELDS$$around.groovy").getInputStream();
+        String function = IOUtils.toString(cfgInputStream, UTF_8);
+
+        leps.onRefresh(funcKey, function);
+        Map<String, Object> result = functionExecutorService.execute(functionKey, Map.of(), null);
+
         leps.onRefresh(funcKey, null);
     }
 
