@@ -14,8 +14,6 @@ import com.icthh.xm.ms.entity.AbstractSpringBootTest;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.domain.XmEntity_;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
-
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import javax.persistence.criteria.CriteriaQuery;
@@ -46,8 +44,6 @@ public class JsonbCriteriaBuilderIntTest extends AbstractSpringBootTest {
     public static final String SECOND_DATA_KEY = "secondDataKey";
     public static final String FIRST_DATA_VALUE = "firstDataValue";
     public static final String SECOND_DATA_VALUE = "secondDataValue";
-    public static final String THIRD_DATA_VALUE = "thirdDataValue";
-    public static final List<String> DATA_LIST_VALUE = new ArrayList<>(List.of("firstDataValue", "secondDataValue"));
 
     @ClassRule
     public static PostgreSQLContainer postgreSQLContainer = new PostgreSQLContainer("postgres:12.7")
@@ -587,23 +583,6 @@ public class JsonbCriteriaBuilderIntTest extends AbstractSpringBootTest {
 
         assertEquals(firstDataKeys.size(), 1);
         assertEquals(firstDataKeys.get(0), "AAA");
-    }
-
-    @Test
-    public void inJsonbObjectTest() {
-        XmEntity firstEntity = createEntity(Map.of(FIRST_DATA_KEY, FIRST_DATA_VALUE));
-        XmEntity secondEntity = createEntity(Map.of(FIRST_DATA_KEY, THIRD_DATA_VALUE));
-        XmEntity thirdEntity = createEntity(Map.of());
-        entityRepository.saveAll(List.of(firstEntity, secondEntity, thirdEntity));
-
-        List<XmEntity> entities = entityRepository.findAll(Specification.where((root, query, cb) -> {
-            JsonbCriteriaBuilder jsonbCriteriaBuilder = new JsonbCriteriaBuilder(cb);
-            return jsonbCriteriaBuilder.in(root, "$.firstDataKey", DATA_LIST_VALUE);
-        }));
-
-        assertEquals(entities.size(), 1);
-        assertEquals(entities.get(0).getData().get(FIRST_DATA_KEY), FIRST_DATA_VALUE);
-
     }
 
     public static XmEntity createEntity(Map<String, Object> data) {
