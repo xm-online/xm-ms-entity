@@ -24,9 +24,12 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Component;
 
 import javax.persistence.FlushModeType;
+import javax.persistence.Tuple;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaDelete;
 import javax.persistence.criteria.CriteriaUpdate;
+import javax.persistence.criteria.Root;
+import javax.persistence.criteria.Selection;
 
 @Slf4j
 @Component
@@ -122,6 +125,10 @@ public class XmEntityRepositoryInternalImpl implements XmEntityRepositoryInterna
     @Override
     public List<XmEntity> findAll(Specification<XmEntity> spec, Sort sort) {
         return springXmEntityRepository.findAll(spec, sort);
+    }
+    @Override
+    public List<Tuple> findAll(Specification<XmEntity> spec, Function<Root<XmEntity>, List<Selection<?>>> fields, Pageable pageable) {
+        return springXmEntityRepository.findAll(spec, fields, pageable);
     }
 
     @Override

@@ -19,9 +19,12 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.repository.query.Param;
 
 import javax.persistence.FlushModeType;
+import javax.persistence.Tuple;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaDelete;
 import javax.persistence.criteria.CriteriaUpdate;
+import javax.persistence.criteria.Root;
+import javax.persistence.criteria.Selection;
 
 /**
  * Repository interface accessible by LEP scripts.
@@ -69,6 +72,8 @@ public interface XmEntityRepository {
     Page<XmEntity> findAll(Specification<XmEntity> spec, Pageable pageable);
 
     List<XmEntity> findAll(Specification<XmEntity> spec, Sort sort);
+
+    List<Tuple> findAll(Specification<XmEntity> spec, Function<Root<XmEntity>, List<Selection<?>>> fields, Pageable pageable);
 
     List<XmEntity> findAll(@Language("HQL") String jpql, Map<String, Object> args, List<String> embed);
 
