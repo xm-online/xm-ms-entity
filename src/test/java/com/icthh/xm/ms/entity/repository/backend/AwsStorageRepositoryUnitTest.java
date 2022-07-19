@@ -6,6 +6,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
+import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.ms.entity.AbstractUnitTest;
 import com.icthh.xm.ms.entity.config.ApplicationProperties;
 import com.icthh.xm.ms.entity.config.amazon.AmazonS3Template;
@@ -16,9 +17,9 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.mock.web.MockMultipartFile;
 
-public class StorageRepositoryUnitTest extends AbstractUnitTest {
+public class AwsStorageRepositoryUnitTest extends AbstractUnitTest {
 
-    private StorageRepository storageRepository;
+    private AwsStorageRepository awsStorageRepository;
     @Mock
     private ApplicationProperties applicationProperties;
     @Mock
@@ -30,10 +31,13 @@ public class StorageRepositoryUnitTest extends AbstractUnitTest {
     @Mock
     private ApplicationProperties.Amazon.S3 s3;
 
+    @Mock
+    private TenantContextHolder tenantContextHolder;
+
     @Before
     public void before() {
         MockitoAnnotations.initMocks(this);
-        storageRepository = new StorageRepository(applicationProperties, amazonS3Template);
+        awsStorageRepository = new AwsStorageRepository(applicationProperties, amazonS3Template, tenantContextHolder);
     }
 
     @Test
@@ -43,7 +47,7 @@ public class StorageRepositoryUnitTest extends AbstractUnitTest {
         when(aws.getTemplate()).thenReturn("template");
         when(amazon.getS3()).thenReturn(s3);
         when(s3.getBucket()).thenReturn("bucket");
-        storageRepository.store(new MockMultipartFile("test.jpg", "mytest.jpg", "application/json", "trulala".getBytes()), 7);
+        awsStorageRepository.store(new MockMultipartFile("test.jpg", "mytest.jpg", "application/json", "trulala".getBytes()), 7);
 
         verify(applicationProperties, times(2)).getAmazon();
         verify(amazonS3Template).save(any(), any());

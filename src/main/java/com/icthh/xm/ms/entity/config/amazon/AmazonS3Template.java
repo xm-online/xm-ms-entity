@@ -18,6 +18,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.net.URLConnection;
+
+import com.icthh.xm.ms.entity.service.dto.UploadResultDto;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -73,7 +75,7 @@ public class AmazonS3Template {
      * @param inputStream is the file that will be saved
      */
     @SneakyThrows
-    public String save(String bucket, String key, InputStream inputStream, Integer contentLength, String fileName) {
+    public UploadResultDto save(String bucket, String key, InputStream inputStream, Integer contentLength, String fileName) {
         ObjectMetadata metadata = new ObjectMetadata();
         metadata.setContentType(URLConnection.guessContentTypeFromStream(inputStream));
         metadata.addUserMetadata(FILE_NAME_ATTRIBUTE, fileName);
@@ -85,7 +87,7 @@ public class AmazonS3Template {
         Upload upload = getTransferManager().upload(request);
         try {
             UploadResult uploadResult = upload.waitForUploadResult();
-            return uploadResult.getKey();
+            return UploadResultDto.from(uploadResult);
         } catch (AmazonClientException ex) {
             throw new IOException(ex);
         } catch (InterruptedException ex) {
@@ -132,7 +134,7 @@ public class AmazonS3Template {
     }
 
     private String prepareBucketName(String bucketPrefix, String bucket) {
-        String formatted = bucketPrefix + bucket.toLowerCase().replace("_", "-");
+        String formatted = bucketPrefix + "-" + bucket.toLowerCase().replace("_", "-");
         log.info("Formatted bucket name: {}", formatted);
         return formatted;
     }
@@ -146,6 +148,11 @@ public class AmazonS3Template {
     public S3Object get(String key) {
         String bucket = applicationProperties.getAmazon().getS3().getBucket();
         return getAmazonS3Client().getObject(bucket, key);
+    }
+
+    public void delete(String bucket, String key) {
+        log.info("Delete from bucket = {}, key = {}", bucket, key);
+        getAmazonS3Client().deleteObject(bucket, key);
     }
 
     public S3Object get(String bucket, String key) {

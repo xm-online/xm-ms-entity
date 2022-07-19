@@ -12,11 +12,15 @@ import com.github.dockerjava.api.model.PortBinding;
 import com.github.dockerjava.api.model.Ports;
 import com.icthh.xm.ms.entity.AbstractUnitTest;
 import com.icthh.xm.ms.entity.config.ApplicationProperties;
+
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.function.Consumer;
+
+import com.icthh.xm.ms.entity.service.dto.UploadResultDto;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.junit.Assert;
@@ -24,8 +28,15 @@ import org.junit.ClassRule;
 import org.junit.Test;
 import org.testcontainers.containers.GenericContainer;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.assertThrows;
+
 @Slf4j
 public class AmazonS3TemplateUnitTest extends AbstractUnitTest {
+
+    private static final String PREFIX = "test";
+    private static final String BUCKET = "bucket_for_TEST";
+    private static final String KEY = "testkey";
 
     private final ApplicationProperties applicationProperties = new ApplicationProperties();
     private final AmazonS3Template s3Template = new AmazonS3Template(applicationProperties, this::createS3Client);
@@ -62,16 +73,47 @@ public class AmazonS3TemplateUnitTest extends AbstractUnitTest {
 
     @Test
     public void saveAndLoadByLink() throws Exception {
-        log.info("{}", mockS3.isRunning());
         String content = "content string";
-        InputStream stream = IOUtils.toInputStream(content, StandardCharsets.UTF_8);
-        s3Template.createBucketIfNotExist("test-", "bucket_for_TEST");
-        s3Template.save("test-bucket-for-test", "testkey", stream, content .getBytes().length, "filename");
-        URL expirableLink = s3Template.createExpirableLink("test-bucket-for-test", "testkey", 100500L);
+        UploadResultDto resultDto = uploadFileToS3(content);
+        assertFileSaved(resultDto);
+
+        URL expirableLink = s3Template.createExpirableLink(prepareBucketName(), resultDto.getKey(), 100500L);
         log.info("link: {}", expirableLink);
         String value = IOUtils.toString(expirableLink, StandardCharsets.UTF_8);
         Assert.assertEquals(content, value);
     }
 
+    @Test
+    public void deleteByBucketAndKey() throws Exception {
+        String content = "content string";
+        UploadResultDto resultDto = uploadFileToS3(content);
+        assertFileSaved(resultDto);
 
+        s3Template.delete(resultDto.getBucketName(), resultDto.getKey());
+
+        URL expirableLink = s3Template.createExpirableLink(prepareBucketName(), resultDto.getKey(), 100500L);
+        Exception exception = assertThrows(FileNotFoundException.class, () -> {
+            IOUtils.toString(expirableLink, StandardCharsets.UTF_8);
+        });
+
+        Assert.assertEquals(FileNotFoundException.class, exception.getClass());
+    }
+
+    private UploadResultDto uploadFileToS3(String content) {
+        log.info("{}", mockS3.isRunning());
+        InputStream stream = IOUtils.toInputStream(content, StandardCharsets.UTF_8);
+        s3Template.createBucketIfNotExist(PREFIX, BUCKET);
+        return s3Template.save(prepareBucketName(), KEY, stream, content.getBytes().length, "filename");
+    }
+
+    private void assertFileSaved(UploadResultDto resultDto) {
+        assertThat(resultDto).isNotNull();
+        assertThat(resultDto.getKey()).isEqualTo(KEY);
+        assertThat(resultDto.getBucketName()).isEqualTo(prepareBucketName());
+        assertThat(resultDto.getETag()).isNotBlank();
+    }
+
+    private String prepareBucketName() {
+        return PREFIX + "-" + BUCKET.toLowerCase().replace("_", "-");
+    }
 }

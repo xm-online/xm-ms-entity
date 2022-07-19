@@ -1,6 +1,6 @@
 package com.icthh.xm.ms.entity.service;
 
-import com.icthh.xm.ms.entity.repository.backend.StorageRepository;
+import com.icthh.xm.ms.entity.repository.backend.AwsStorageRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpEntity;
@@ -13,13 +13,13 @@ import org.springframework.web.multipart.MultipartFile;
 @RequiredArgsConstructor
 public class StorageService {
 
-    private final StorageRepository storageRepository;
+    private final AwsStorageRepository awsStorageRepository;
 
     public String store(MultipartFile file, Integer size) {
-        return storageRepository.store(file, size);
+        return awsStorageRepository.store(file, size);
     }
 
     public String store(HttpEntity<Resource> httpEntity, Integer size) {
-        return storageRepository.store(httpEntity, size);
+        return awsStorageRepository.store(httpEntity, size);
     }
 }

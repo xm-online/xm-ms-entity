@@ -27,6 +27,7 @@ import com.icthh.xm.ms.entity.repository.AttachmentRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
 import com.icthh.xm.ms.entity.repository.search.PermittedSearchRepository;
 import com.icthh.xm.ms.entity.service.AttachmentService;
+import com.icthh.xm.ms.entity.service.ContentService;
 import com.icthh.xm.ms.entity.service.XmEntitySpecService;
 import com.icthh.xm.ms.entity.service.impl.StartUpdateDateGenerationStrategy;
 import org.junit.After;
@@ -135,6 +136,9 @@ public class AttachmentResourceIntTest extends AbstractSpringBootTest {
     @Autowired
     private LepManager lepManager;
 
+    @Autowired
+    private ContentService contentService;
+
     @BeforeTransaction
     public void beforeTransaction() {
         TenantContextUtils.setTenant(tenantContextHolder, "RESINTTEST");
@@ -153,6 +157,7 @@ public class AttachmentResourceIntTest extends AbstractSpringBootTest {
         when(startUpdateDateGenerationStrategy.generateStartDate()).thenReturn(DEFAULT_START_DATE);
 
         attachmentService = new AttachmentService(attachmentRepository,
+                                                  contentService,
                                                   permittedRepository,
                                                   permittedSearchRepository,
                                                   startUpdateDateGenerationStrategy,

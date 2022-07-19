@@ -1,13 +1,20 @@
 package com.icthh.xm.ms.entity.repository.backend;
 
 import com.icthh.xm.commons.exceptions.BusinessException;
+import com.icthh.xm.commons.tenant.TenantContextHolder;
+import com.icthh.xm.commons.tenant.TenantContextUtils;
+import com.icthh.xm.commons.tenant.TenantKey;
 import com.icthh.xm.ms.entity.config.ApplicationProperties;
 import com.icthh.xm.ms.entity.config.amazon.AmazonS3Template;
+import com.icthh.xm.ms.entity.domain.Content;
+import com.icthh.xm.ms.entity.service.dto.UploadResultDto;
 import com.icthh.xm.ms.entity.util.ImageResizeUtil;
 import com.icthh.xm.ms.entity.util.XmHttpEntityUtils;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URL;
 import java.util.UUID;
 
 import lombok.RequiredArgsConstructor;
@@ -22,10 +29,11 @@ import org.springframework.web.multipart.MultipartFile;
 @Slf4j
 @RequiredArgsConstructor
 @Component
-public class StorageRepository {
+public class AwsStorageRepository {
 
     private final ApplicationProperties applicationProperties;
     private final AmazonS3Template amazonS3Template;
+    private final TenantContextHolder tenantContextHolder;
 
     @SneakyThrows
     public String store(MultipartFile file, Integer size) {
@@ -36,6 +44,28 @@ public class StorageRepository {
     public String store(HttpEntity<Resource> httpEntity, Integer size) {
         return store(httpEntity.getBody().getInputStream(), size,
             httpEntity.getHeaders().getContentType().getType(), XmHttpEntityUtils.getFileName(httpEntity.getHeaders()));
+    }
+
+    @SneakyThrows
+    public UploadResultDto store(Content content, String fileName) {
+        TenantKey tenantKey = TenantContextUtils.getRequiredTenantKey(tenantContextHolder);
+        String bucket = amazonS3Template.createBucketIfNotExist(applicationProperties.getAmazon().getS3().getBucketPrefix(), tenantKey.getValue());
+        String key = UUID.randomUUID().toString();
+
+        try (ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(content.getValue())) {
+            return amazonS3Template.save(bucket, key, byteArrayInputStream, content.getValue().length, fileName);
+        }
+    }
+
+    @SneakyThrows
+    public void delete(String bucket, String key) {
+        amazonS3Template.delete(bucket, key);
+    }
+
+    @SneakyThrows
+    public URL createExpirableLink(String bucket, String key) {
+        Long expireLinkTime = applicationProperties.getAmazon().getAws().getExpireLinkTimeInMillis();
+        return amazonS3Template.createExpirableLink(bucket, key, expireLinkTime);
     }
 
     private String store(InputStream stream, Integer size, String contentType, String name) {

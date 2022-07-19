@@ -87,6 +87,7 @@ public class ApplicationProperties {
             private String region;
             private String accessKeyId;
             private String accessKeySecret;
+            private Long expireLinkTimeInMillis;
         }
 
         @Getter
