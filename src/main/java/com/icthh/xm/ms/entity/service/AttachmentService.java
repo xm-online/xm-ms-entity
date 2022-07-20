@@ -232,4 +232,10 @@ public class AttachmentService {
         }
     }
 
+    @Transactional(readOnly = true)
+    public String getAttachmentDownloadLink(Long id) {
+        return findById(id)
+            .map(attachment -> contentService.createExpirableLink(attachment.getContentUrl()))
+            .orElseThrow(() -> new EntityNotFoundException("Attachment not found by id" + id));
+    }
 }

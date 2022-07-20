@@ -159,10 +159,10 @@ public class ContentServiceIntTest extends AbstractSpringBootTest {
         Mockito.when(amazonS3Template.createExpirableLink(eq(bucketName), eq(fileName),
             eq(applicationProperties.getAmazon().getAws().getExpireLinkTimeInMillis()))).thenReturn(new URL(contentPathUrl));
 
-        Attachment result = contentService.enrichContent(attachmentSpec, attachment);
+        String result = contentService.createExpirableLink(attachment.getContentUrl());
 
-        assertThat(result.getContentUrl()).isNotBlank();
-        assertThat(result.getContentUrl()).isEqualTo(contentPathUrl);
+        assertThat(result).isNotBlank();
+        assertThat(result).isEqualTo(contentPathUrl);
     }
 
     private String prepareBucketName() {

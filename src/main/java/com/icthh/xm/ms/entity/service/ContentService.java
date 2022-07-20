@@ -1,5 +1,6 @@
 package com.icthh.xm.ms.entity.service;
 
+import com.amazonaws.util.IOUtils;
 import com.icthh.xm.commons.permission.annotation.FindWithPermission;
 import com.icthh.xm.commons.permission.annotation.PrivilegeDescription;
 import com.icthh.xm.commons.permission.repository.PermittedRepository;
@@ -10,6 +11,7 @@ import com.icthh.xm.ms.entity.domain.spec.AttachmentSpec;
 import com.icthh.xm.ms.entity.repository.AttachmentRepository;
 import com.icthh.xm.ms.entity.repository.ContentRepository;
 import com.icthh.xm.ms.entity.repository.backend.S3StorageRepository;
+import com.icthh.xm.ms.entity.service.dto.S3ObjectDto;
 import com.icthh.xm.ms.entity.service.dto.UploadResultDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,6 +20,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.IOException;
 import java.util.List;
 
 @Slf4j
@@ -78,7 +81,23 @@ public class ContentService {
 
     public Attachment enrichContent(AttachmentSpec spec, Attachment attachment) {
         if (spec.getStoreType() == AttachmentStoreType.S3) {
-            attachment.setContentUrl(createExpirableLink(attachment.getContentUrl()));
+            Pair<String, String> s3BucketNameKey = getS3BucketNameKey(attachment.getContentUrl());
+            S3ObjectDto s3Object = s3StorageRepository.getS3Object(s3BucketNameKey.getKey(), s3BucketNameKey.getValue());
+            Content content = attachment.getContent();
+            if (content == null) {
+                content = new Content();
+                attachment.setContent(content);
+            }
+
+            try {
+                content.setValue(IOUtils.toByteArray(s3Object.getObjectContent()));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+            attachment.setValueContentType(s3Object.getContentType());
+            attachment.setValueContentSize(s3Object.getContentLength());
+            attachment.setContentChecksum(s3Object.getETag());
         } else {
             AttachmentRepository.enrich(attachment);
         }
@@ -86,7 +105,7 @@ public class ContentService {
         return attachment;
     }
 
-    private String createExpirableLink(String contentUrl) {
+    public String createExpirableLink(String contentUrl) {
         Pair<String, String> s3BucketNameKey = getS3BucketNameKey(contentUrl);
         return s3StorageRepository.createExpirableLink(s3BucketNameKey.getKey(), s3BucketNameKey.getValue()).toString();
     }
@@ -94,7 +113,7 @@ public class ContentService {
     private Pair<String, String> getS3BucketNameKey(String contentUrl) {
         String[] split = contentUrl.split(FILE_NAME_SEPARATOR);
         if (split.length != 2) {
-            throw new IllegalArgumentException("Invalid format for link = " + contentUrl);
+            throw new IllegalArgumentException("Invalid format for url = " + contentUrl);
         }
 
         return Pair.of(split[0], split[1]);

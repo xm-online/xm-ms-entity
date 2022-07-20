@@ -14,6 +14,7 @@ import com.amazonaws.services.s3.transfer.TransferManagerBuilder;
 import com.amazonaws.services.s3.transfer.Upload;
 import com.amazonaws.services.s3.transfer.model.UploadResult;
 import com.icthh.xm.ms.entity.config.ApplicationProperties;
+import com.icthh.xm.ms.entity.service.dto.S3ObjectDto;
 import com.icthh.xm.ms.entity.service.dto.UploadResultDto;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
@@ -137,13 +138,16 @@ public class AmazonS3Template {
     private String prepareBucketName(String bucketPrefix, String bucket) {
         String formatted;
         if (StringUtils.isBlank(bucketPrefix)) {
-            formatted = bucket.toLowerCase().replace("_", "-");
+            formatted = prepareString(bucket);
         } else {
-            formatted = bucketPrefix.toLowerCase().replace("_", "-")
-                + "-" + bucket.toLowerCase().replace("_", "-");
+            formatted = prepareString(bucketPrefix)+ "-" + prepareString(bucket);
         }
         log.info("Formatted bucket name: {}", formatted);
         return formatted;
+    }
+
+    private String prepareString(String str) {
+        return str.toLowerCase().replace("_", "-");
     }
 
     /**
@@ -164,6 +168,11 @@ public class AmazonS3Template {
 
     public S3Object get(String bucket, String key) {
         return getAmazonS3Client().getObject(bucket, key);
+    }
+
+    public S3ObjectDto getS3Object(String bucket, String key) {
+        S3Object s3Object = get(bucket, key);
+        return S3ObjectDto.from(s3Object);
     }
 
     /**

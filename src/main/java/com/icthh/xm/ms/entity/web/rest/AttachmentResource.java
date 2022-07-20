@@ -133,4 +133,19 @@ public class AttachmentResource {
         return ResponseEntity.ok().headers(HeaderUtil.createEntityDeletionAlert(ENTITY_NAME, id.toString())).build();
     }
 
+    /**
+     * GET  /attachments/:id : get the "id" attachment.
+     *
+     * @param id the id of the attachment to retrieve
+     * @return the ResponseEntity with status 200 (OK) and url for attachment download, or with status 404 (Not Found)
+     */
+    @GetMapping("/attachments/{id}/download-link")
+    @Timed
+    @PostAuthorize("hasPermission({'returnObject': returnObject.body}, 'ATTACHMENT.GET_LIST.ITEM')")
+    @PrivilegeDescription("Privilege to get attachment by id")
+    public ResponseEntity<String> getAttachmentDownloadLink(@PathVariable Long id) {
+        String downloadLink = attachmentService.getAttachmentDownloadLink(id);
+        return RespContentUtil.wrapOrNotFound(Optional.ofNullable(downloadLink));
+    }
+
 }
