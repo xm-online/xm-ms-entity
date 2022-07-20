@@ -11,9 +11,10 @@ import com.icthh.xm.ms.entity.config.amazon.AmazonS3Template;
 import com.icthh.xm.ms.entity.domain.Attachment;
 import com.icthh.xm.ms.entity.domain.AttachmentStoreType;
 import com.icthh.xm.ms.entity.domain.Content;
+import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.domain.spec.AttachmentSpec;
 import com.icthh.xm.ms.entity.repository.ContentRepository;
-import com.icthh.xm.ms.entity.repository.backend.AwsStorageRepository;
+import com.icthh.xm.ms.entity.repository.backend.S3StorageRepository;
 import com.icthh.xm.ms.entity.service.ContentService;
 import com.icthh.xm.ms.entity.service.dto.UploadResultDto;
 import lombok.SneakyThrows;
@@ -45,7 +46,7 @@ public class ContentServiceIntTest extends AbstractSpringBootTest {
     private static final String TENANT_KEY = "RESINTTEST";
 
     private ContentService contentService;
-    private AwsStorageRepository awsStorageRepository;
+    private S3StorageRepository s3StorageRepository;
 
     @Autowired
     private PermittedRepository permittedRepository;
@@ -85,8 +86,8 @@ public class ContentServiceIntTest extends AbstractSpringBootTest {
 
         enrichAmazonProperties(applicationProperties.getAmazon());
 
-        awsStorageRepository = new AwsStorageRepository(applicationProperties, amazonS3Template, tenantContextHolder);
-        contentService = new ContentService(permittedRepository, contentRepository, awsStorageRepository);
+        s3StorageRepository = new S3StorageRepository(applicationProperties, amazonS3Template, tenantContextHolder);
+        contentService = new ContentService(permittedRepository, contentRepository, s3StorageRepository);
     }
 
     private void enrichAmazonProperties(ApplicationProperties.Amazon amazon) {
@@ -119,11 +120,15 @@ public class ContentServiceIntTest extends AbstractSpringBootTest {
     @Test
     @Transactional
     public void shouldSaveContentInAws() {
+        XmEntity xmEntity = new XmEntity();
+        xmEntity.setTypeKey("T");
+
         AttachmentSpec attachmentSpec = new AttachmentSpec();
-        attachmentSpec.setStoreType(AttachmentStoreType.AWS);
+        attachmentSpec.setStoreType(AttachmentStoreType.S3);
 
         Attachment attachment = new Attachment();
         attachment.setName("test.doc");
+        attachment.setXmEntity(xmEntity);
 
         Content content = new Content();
         content.setValue("A".getBytes());
@@ -142,7 +147,7 @@ public class ContentServiceIntTest extends AbstractSpringBootTest {
     @Transactional
     public void shouldReturnLinkFromAws() throws MalformedURLException {
         AttachmentSpec attachmentSpec = new AttachmentSpec();
-        attachmentSpec.setStoreType(AttachmentStoreType.AWS);
+        attachmentSpec.setStoreType(AttachmentStoreType.S3);
 
         String fileName = "fileName";
         String bucketName = prepareBucketName();

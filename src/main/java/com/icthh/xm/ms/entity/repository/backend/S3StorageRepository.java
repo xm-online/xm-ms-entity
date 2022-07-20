@@ -29,7 +29,7 @@ import org.springframework.web.multipart.MultipartFile;
 @Slf4j
 @RequiredArgsConstructor
 @Component
-public class AwsStorageRepository {
+public class S3StorageRepository {
 
     private final ApplicationProperties applicationProperties;
     private final AmazonS3Template amazonS3Template;
@@ -47,10 +47,12 @@ public class AwsStorageRepository {
     }
 
     @SneakyThrows
-    public UploadResultDto store(Content content, String fileName) {
+    public UploadResultDto store(Content content, String folderName, String fileName) {
         TenantKey tenantKey = TenantContextUtils.getRequiredTenantKey(tenantContextHolder);
         String bucket = amazonS3Template.createBucketIfNotExist(applicationProperties.getAmazon().getS3().getBucketPrefix(), tenantKey.getValue());
-        String key = UUID.randomUUID().toString();
+
+        String normalizeFolderName = folderName.toLowerCase().replace("_", "-").replace(".", "-");
+        String key = normalizeFolderName + "/" + UUID.randomUUID().toString();
 
         try (ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(content.getValue())) {
             return amazonS3Template.save(bucket, key, byteArrayInputStream, content.getValue().length, fileName);

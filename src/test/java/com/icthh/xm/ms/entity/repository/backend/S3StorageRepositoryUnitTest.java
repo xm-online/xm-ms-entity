@@ -17,9 +17,9 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.mock.web.MockMultipartFile;
 
-public class AwsStorageRepositoryUnitTest extends AbstractUnitTest {
+public class S3StorageRepositoryUnitTest extends AbstractUnitTest {
 
-    private AwsStorageRepository awsStorageRepository;
+    private S3StorageRepository s3StorageRepository;
     @Mock
     private ApplicationProperties applicationProperties;
     @Mock
@@ -37,7 +37,7 @@ public class AwsStorageRepositoryUnitTest extends AbstractUnitTest {
     @Before
     public void before() {
         MockitoAnnotations.initMocks(this);
-        awsStorageRepository = new AwsStorageRepository(applicationProperties, amazonS3Template, tenantContextHolder);
+        s3StorageRepository = new S3StorageRepository(applicationProperties, amazonS3Template, tenantContextHolder);
     }
 
     @Test
@@ -47,7 +47,7 @@ public class AwsStorageRepositoryUnitTest extends AbstractUnitTest {
         when(aws.getTemplate()).thenReturn("template");
         when(amazon.getS3()).thenReturn(s3);
         when(s3.getBucket()).thenReturn("bucket");
-        awsStorageRepository.store(new MockMultipartFile("test.jpg", "mytest.jpg", "application/json", "trulala".getBytes()), 7);
+        s3StorageRepository.store(new MockMultipartFile("test.jpg", "mytest.jpg", "application/json", "trulala".getBytes()), 7);
 
         verify(applicationProperties, times(2)).getAmazon();
         verify(amazonS3Template).save(any(), any());

@@ -22,6 +22,7 @@ import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
 import com.icthh.xm.ms.entity.AbstractSpringBootTest;
 import com.icthh.xm.ms.entity.domain.Attachment;
+import com.icthh.xm.ms.entity.domain.Content;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.repository.AttachmentRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
@@ -210,8 +211,15 @@ public class AttachmentResourceIntTest extends AbstractSpringBootTest {
             .startDate(DEFAULT_START_DATE)
             .endDate(DEFAULT_END_DATE)
             .valueContentType(DEFAULT_VALUE_CONTENT_TYPE)
-            .valueContentSize(DEFAULT_VALUE_CONTENT_SIZE);
+            .valueContentSize(DEFAULT_VALUE_CONTENT_SIZE)
+            .content(createContent("A"));
          return attachment;
+    }
+
+    private static Content createContent(String value) {
+        Content content = new Content();
+        content.setValue(value.getBytes());
+        return content;
     }
 
     @Test
@@ -484,7 +492,8 @@ public class AttachmentResourceIntTest extends AbstractSpringBootTest {
             .startDate(UPDATED_START_DATE)
             .endDate(UPDATED_END_DATE)
             .valueContentType(UPDATED_VALUE_CONTENT_TYPE)
-            .valueContentSize(UPDATED_VALUE_CONTENT_SIZE);
+            .valueContentSize(UPDATED_VALUE_CONTENT_SIZE)
+            .content(createContent("AA"));
 
         restAttachmentMockMvc.perform(put("/api/attachments")
                                           .contentType(TestUtil.APPLICATION_JSON_UTF8)

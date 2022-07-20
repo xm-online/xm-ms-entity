@@ -14,17 +14,18 @@ import com.amazonaws.services.s3.transfer.TransferManagerBuilder;
 import com.amazonaws.services.s3.transfer.Upload;
 import com.amazonaws.services.s3.transfer.model.UploadResult;
 import com.icthh.xm.ms.entity.config.ApplicationProperties;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URL;
-import java.net.URLConnection;
-
 import com.icthh.xm.ms.entity.service.dto.UploadResultDto;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang.StringUtils;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
+import java.net.URLConnection;
 
 @Slf4j
 @Component
@@ -134,7 +135,13 @@ public class AmazonS3Template {
     }
 
     private String prepareBucketName(String bucketPrefix, String bucket) {
-        String formatted = bucketPrefix + "-" + bucket.toLowerCase().replace("_", "-");
+        String formatted;
+        if (StringUtils.isBlank(bucketPrefix)) {
+            formatted = bucket.toLowerCase().replace("_", "-");
+        } else {
+            formatted = bucketPrefix.toLowerCase().replace("_", "-")
+                + "-" + bucket.toLowerCase().replace("_", "-");
+        }
         log.info("Formatted bucket name: {}", formatted);
         return formatted;
     }

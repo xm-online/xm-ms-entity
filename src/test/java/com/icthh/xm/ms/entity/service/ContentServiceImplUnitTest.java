@@ -8,7 +8,7 @@ import com.icthh.xm.ms.entity.domain.Content;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.domain.spec.AttachmentSpec;
 import com.icthh.xm.ms.entity.repository.ContentRepository;
-import com.icthh.xm.ms.entity.repository.backend.AwsStorageRepository;
+import com.icthh.xm.ms.entity.repository.backend.S3StorageRepository;
 import com.icthh.xm.ms.entity.service.dto.UploadResultDto;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.junit.Before;
@@ -24,7 +24,7 @@ public class ContentServiceImplUnitTest extends AbstractUnitTest {
 
     private PermittedRepository permittedRepository;
     private ContentRepository contentRepository;
-    private AwsStorageRepository awsStorageRepository;
+    private S3StorageRepository s3StorageRepository;
 
 
     private ContentService contentService;
@@ -36,9 +36,9 @@ public class ContentServiceImplUnitTest extends AbstractUnitTest {
     public void setUp() {
         permittedRepository = Mockito.mock(PermittedRepository.class);
         contentRepository = Mockito.mock(ContentRepository.class);
-        awsStorageRepository = Mockito.mock(AwsStorageRepository.class);
+        s3StorageRepository = Mockito.mock(S3StorageRepository.class);
         contentService = new ContentService(
-            permittedRepository, contentRepository, awsStorageRepository
+            permittedRepository, contentRepository, s3StorageRepository
         );
     }
 
@@ -73,7 +73,7 @@ public class ContentServiceImplUnitTest extends AbstractUnitTest {
     @Test
     public void shouldSaveContentInAws() {
         AttachmentSpec attachmentSpec = new AttachmentSpec();
-        attachmentSpec.setStoreType(AttachmentStoreType.AWS);
+        attachmentSpec.setStoreType(AttachmentStoreType.S3);
 
         XmEntity e = new XmEntity();
         e.setTypeKey("T");
@@ -87,13 +87,13 @@ public class ContentServiceImplUnitTest extends AbstractUnitTest {
         a.setContent(c);
         a.setXmEntity(e);
 
-        UploadResultDto result = new UploadResultDto("bucketName", "key", "eTag");
+        UploadResultDto result = new UploadResultDto("bucketName", "T/key", "A");
 
-        when(awsStorageRepository.store(c, a.getName())).thenReturn(result);
+        when(s3StorageRepository.store(c, e.getTypeKey(), a.getName())).thenReturn(result);
 
         Attachment save = contentService.save(attachmentSpec, a, c);
         assertThat(save.getContentUrl()).isEqualTo(result.getBucketName() + "::" + result.getKey());
-        assertThat(save.getContentChecksum()).isEqualTo(DigestUtils.sha256Hex(result.getETag()));
+        assertThat(save.getContentChecksum()).isEqualTo(result.getETag());
         assertThat(save.getValueContentSize()).isEqualTo(result.getETag().getBytes().length);
     }
 }
