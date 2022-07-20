@@ -174,8 +174,7 @@ public class AttachmentService {
     @LogicExtensionPoint("Delete")
     public void delete(Long id) {
         findById(id).ifPresent(attachment -> {
-            AttachmentSpec spec = getSpec(attachment.getXmEntity(), attachment);
-            contentService.delete(spec, attachment);
+            contentService.delete(attachment);
             attachmentRepository.deleteById(attachment.getId());
         });
     }
@@ -235,6 +234,7 @@ public class AttachmentService {
     @Transactional(readOnly = true)
     public String getAttachmentDownloadLink(Long id) {
         return findById(id)
+            .filter(contentService::supportDownloadLink)
             .map(attachment -> contentService.createExpirableLink(attachment.getContentUrl()))
             .orElseThrow(() -> new EntityNotFoundException("Attachment not found by id" + id));
     }

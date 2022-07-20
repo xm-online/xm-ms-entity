@@ -14,8 +14,10 @@ import com.icthh.xm.ms.entity.repository.backend.S3StorageRepository;
 import com.icthh.xm.ms.entity.service.dto.S3ObjectDto;
 import com.icthh.xm.ms.entity.service.dto.UploadResultDto;
 import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -72,13 +74,14 @@ public class ContentService {
         return uploadResult.getBucketName() + FILE_NAME_SEPARATOR + uploadResult.getKey();
     }
 
-    public void delete(AttachmentSpec spec, Attachment attachment) {
-        if (spec.getStoreType() == AttachmentStoreType.S3) {
+    public void delete(Attachment attachment) {
+        if (isS3Compatible(attachment.getContentUrl())) {
             Pair<String, String> s3BucketNameKey = getS3BucketNameKey(attachment.getContentUrl());
             s3StorageRepository.delete(s3BucketNameKey.getKey(), s3BucketNameKey.getValue());
         }
     }
 
+    @SneakyThrows
     public Attachment enrichContent(AttachmentSpec spec, Attachment attachment) {
         if (spec.getStoreType() == AttachmentStoreType.S3) {
             Pair<String, String> s3BucketNameKey = getS3BucketNameKey(attachment.getContentUrl());
@@ -89,11 +92,7 @@ public class ContentService {
                 attachment.setContent(content);
             }
 
-            try {
-                content.setValue(IOUtils.toByteArray(s3Object.getObjectContent()));
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+            content.setValue(IOUtils.toByteArray(s3Object.getObjectContent()));
 
             attachment.setValueContentType(s3Object.getContentType());
             attachment.setValueContentSize(s3Object.getContentLength());
@@ -110,6 +109,10 @@ public class ContentService {
         return s3StorageRepository.createExpirableLink(s3BucketNameKey.getKey(), s3BucketNameKey.getValue()).toString();
     }
 
+    public boolean supportDownloadLink (Attachment attachment) {
+        return isS3Compatible(attachment.getContentUrl());
+    }
+
     private Pair<String, String> getS3BucketNameKey(String contentUrl) {
         String[] split = contentUrl.split(FILE_NAME_SEPARATOR);
         if (split.length != 2) {
@@ -117,5 +120,9 @@ public class ContentService {
         }
 
         return Pair.of(split[0], split[1]);
+    }
+
+    private boolean isS3Compatible(String contentUrl) {
+        return StringUtils.contains(contentUrl, FILE_NAME_SEPARATOR);
     }
 }
