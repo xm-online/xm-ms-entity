@@ -8,7 +8,7 @@ import com.icthh.xm.commons.permission.annotation.FindWithPermission;
 import com.icthh.xm.commons.permission.repository.PermittedRepository;
 import com.icthh.xm.commons.permission.annotation.PrivilegeDescription;
 import com.icthh.xm.ms.entity.domain.Attachment;
-import com.icthh.xm.ms.entity.domain.Link;
+import com.icthh.xm.ms.entity.domain.Content;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.domain.spec.AttachmentSpec;
 import com.icthh.xm.ms.entity.repository.AttachmentRepository;
@@ -16,7 +16,6 @@ import com.icthh.xm.ms.entity.repository.XmEntityRepository;
 import com.icthh.xm.ms.entity.repository.search.PermittedSearchRepository;
 import com.icthh.xm.ms.entity.service.impl.StartUpdateDateGenerationStrategy;
 import lombok.RequiredArgsConstructor;
-import org.apache.commons.codec.digest.DigestUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -40,6 +39,7 @@ public class AttachmentService {
     public static final String MAX_RESTRICTION = "error.attachment.max";
 
     private final AttachmentRepository attachmentRepository;
+    private final ContentService contentService;
 
     private final PermittedRepository permittedRepository;
 
@@ -85,11 +85,15 @@ public class AttachmentService {
 
         attachment.setXmEntity(entity);
 
+        Content content = null;
         if (attachment.getContent() != null) {
-            byte[] content = attachment.getContent().getValue();
-            attachment.setContentChecksum(DigestUtils.sha256Hex(content));
+            content = attachment.getContent();
+            attachment.setContent(null);
         }
-        return attachmentRepository.save(attachment);
+
+        Attachment savedAttachment = attachmentRepository.save(attachment);
+        savedAttachment = contentService.save(savedAttachment, content);
+        return attachmentRepository.save(savedAttachment);
     }
 
     /**
@@ -129,7 +133,7 @@ public class AttachmentService {
     @Transactional(readOnly = true)
     public Optional<Attachment> getOneWithContent(Long id) {
         return attachmentRepository.findById(id)
-            .map(AttachmentRepository::enrich);
+            .map(contentService::enrichContent);
     }
 
     /**
@@ -164,7 +168,10 @@ public class AttachmentService {
      */
     @LogicExtensionPoint("Delete")
     public void delete(Long id) {
-        attachmentRepository.deleteById(id);
+        findById(id).ifPresent(attachment -> {
+            contentService.delete(attachment);
+            attachmentRepository.deleteById(attachment.getId());
+        });
     }
 
     public void deleteAll(Iterable<Attachment> entities) {
@@ -219,4 +226,11 @@ public class AttachmentService {
         }
     }
 
+    @Transactional(readOnly = true)
+    public String getAttachmentDownloadLink(Long id) {
+        return findById(id)
+            .filter(contentService::supportDownloadLink)
+            .map(contentService::createExpirableLink)
+            .orElseThrow(() -> new EntityNotFoundException("Attachment not found by id" + id));
+    }
 }

@@ -5,7 +5,6 @@ import com.icthh.xm.commons.permission.access.repository.ResourceRepository;
 import com.icthh.xm.ms.entity.repository.AttachmentRepository;
 import com.icthh.xm.ms.entity.repository.CalendarRepository;
 import com.icthh.xm.ms.entity.repository.CommentRepository;
-import com.icthh.xm.ms.entity.repository.ContentRepository;
 import com.icthh.xm.ms.entity.repository.EventRepository;
 import com.icthh.xm.ms.entity.repository.LinkRepository;
 import com.icthh.xm.ms.entity.repository.LocationRepository;
@@ -29,7 +28,6 @@ public class EntityResourceFactory implements ResourceFactory {
     private final AttachmentRepository attachmentRepository;
     private final CalendarRepository calendarRepository;
     private final CommentRepository commentRepository;
-    private final ContentRepository contentRepository;
     private final EventRepository eventRepository;
     private final LinkRepository linkRepository;
     private final LocationRepository locationRepository;
@@ -39,7 +37,7 @@ public class EntityResourceFactory implements ResourceFactory {
     private final XmEntityService xmEntityService;
 
     public EntityResourceFactory(AttachmentRepository attachmentRepository, CalendarRepository calendarRepository,
-                                 CommentRepository commentRepository, ContentRepository contentRepository,
+                                 CommentRepository commentRepository,
                                  EventRepository eventRepository, LinkRepository linkRepository,
                                  LocationRepository locationRepository, RatingRepository ratingRepository,
                                  TagRepository tagRepository, VoteRepository voteRepository,
@@ -47,7 +45,6 @@ public class EntityResourceFactory implements ResourceFactory {
         this.attachmentRepository = attachmentRepository;
         this.calendarRepository = calendarRepository;
         this.commentRepository = commentRepository;
-        this.contentRepository = contentRepository;
         this.eventRepository = eventRepository;
         this.linkRepository = linkRepository;
         this.locationRepository = locationRepository;
@@ -62,7 +59,6 @@ public class EntityResourceFactory implements ResourceFactory {
         repositories.put("attachment", attachmentRepository);
         repositories.put("calendar", calendarRepository);
         repositories.put("comment", commentRepository);
-        repositories.put("content", contentRepository);
         repositories.put("event", eventRepository);
         repositories.put("link", linkRepository);
         repositories.put("location", locationRepository);

@@ -11,6 +11,7 @@ import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.domain.spec.AttachmentSpec;
 import com.icthh.xm.ms.entity.repository.AttachmentRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
+import com.icthh.xm.ms.entity.repository.backend.S3StorageRepository;
 import com.icthh.xm.ms.entity.repository.search.PermittedSearchRepository;
 import com.icthh.xm.ms.entity.service.impl.StartUpdateDateGenerationStrategy;
 import org.junit.Before;
@@ -40,6 +41,7 @@ public class AttachmentServiceImplUnitTest  extends AbstractUnitTest {
     private StartUpdateDateGenerationStrategy startUpdateDateGenerationStrategy;
     private XmEntityRepository xmEntityRepository;
     private XmEntitySpecService xmEntitySpecService;
+    private ContentService contentService;
 
     @Rule
     public final ExpectedException exception = ExpectedException.none();
@@ -52,9 +54,10 @@ public class AttachmentServiceImplUnitTest  extends AbstractUnitTest {
         startUpdateDateGenerationStrategy = Mockito.mock(StartUpdateDateGenerationStrategy.class);
         xmEntityRepository = Mockito.mock(XmEntityRepository.class);
         xmEntitySpecService = Mockito.mock(XmEntitySpecService.class);
+        contentService = Mockito.mock(ContentService.class);
         attachmentService = new AttachmentService(
-            attachmentRepository, permittedRepository, permittedSearchRepository, startUpdateDateGenerationStrategy,
-            xmEntityRepository, xmEntitySpecService
+            attachmentRepository, contentService, permittedRepository, permittedSearchRepository,
+            startUpdateDateGenerationStrategy, xmEntityRepository, xmEntitySpecService
         );
     }
 
@@ -243,26 +246,104 @@ public class AttachmentServiceImplUnitTest  extends AbstractUnitTest {
 
     @Test
     public void getByIdWithContext() {
+        XmEntity e = new XmEntity();
+        e.setTypeKey("T");
+
+        Content c = new Content();
+        c.setValue("A".getBytes());
+
         Attachment a = new Attachment();
+        a.setTypeKey("A.T");
         a.setId(1L);
+        a.setContent(c);
+        a.setXmEntity(e);
+
+        AttachmentSpec spec = new AttachmentSpec();
+        spec.setKey("A.T");
+
         when(attachmentRepository.findById(1L)).thenReturn(Optional.of(a));
+        when(xmEntitySpecService.findAttachment("T", "A.T")).thenReturn(Optional.of(spec));
+        when(contentService.enrichContent(a)).thenReturn(a);
+
         assertThat(attachmentService.getOneWithContent(1L).get().getId()).isEqualTo(1L);
         assertThat(attachmentService.getOneWithContent(2L).isPresent()).isEqualTo(false);
     }
 
     @Test
     public void findByIdWithContext() {
+        XmEntity e = new XmEntity();
+        e.setTypeKey("T");
+
+        Content c = new Content();
+        c.setValue("A".getBytes());
+
         Attachment a = new Attachment();
+        a.setTypeKey("A.T");
         a.setId(1L);
+        a.setContent(c);
+        a.setXmEntity(e);
+
+        AttachmentSpec spec = new AttachmentSpec();
+        spec.setKey("A.T");
+
+        when(xmEntitySpecService.findAttachment("T", "A.T")).thenReturn(Optional.of(spec));
         when(attachmentRepository.findById(1L)).thenReturn(Optional.of(a));
+        when(contentService.enrichContent(a)).thenReturn(a);
+
         assertThat(attachmentService.findOneWithContent(1L).getId()).isEqualTo(1L);
         assertThat(attachmentService.findOneWithContent(2L)).isNull();
     }
 
     @Test
-    public void shouldDeleteItem() {
+    public void shouldDeleteItemInDb() {
+        XmEntity e = new XmEntity();
+        e.setTypeKey("T");
+
+        Content c = new Content();
+        c.setValue("A".getBytes());
+
+        Attachment a = new Attachment();
+        a.setTypeKey("A.T");
+        a.setId(1L);
+        a.setContent(c);
+        a.setXmEntity(e);
+
+        when(attachmentRepository.findById(1L)).thenReturn(Optional.of(a));
+
         attachmentService.delete(1L);
         verify(attachmentRepository, Mockito.times(1)).deleteById(1L);
+        verify(contentService, Mockito.times(1)).delete(a);
+    }
+
+    @Test
+    public void shouldDeleteItemInS3() {
+        S3StorageRepository s3StorageRepository  = Mockito.mock(S3StorageRepository.class);
+        ContentService contentService = new ContentService(null, null, s3StorageRepository, xmEntitySpecService);
+
+        attachmentService = new AttachmentService(
+            attachmentRepository, contentService, permittedRepository, permittedSearchRepository,
+            startUpdateDateGenerationStrategy, xmEntityRepository, xmEntitySpecService
+        );
+
+
+        XmEntity e = new XmEntity();
+        e.setTypeKey("T");
+
+        Content c = new Content();
+        c.setValue("A".getBytes());
+
+        Attachment a = new Attachment();
+        a.setTypeKey("A.T");
+        a.setId(1L);
+        a.setContentUrl("bucket::fileName.png");
+        a.setContent(c);
+        a.setXmEntity(e);
+
+        when(attachmentRepository.findById(1L)).thenReturn(Optional.of(a));
+
+        attachmentService.delete(1L);
+        verify(attachmentRepository, Mockito.times(1)).deleteById(1L);
+        verify(s3StorageRepository, Mockito.times(1)).delete("bucket", "fileName.png");
     }
 
 }

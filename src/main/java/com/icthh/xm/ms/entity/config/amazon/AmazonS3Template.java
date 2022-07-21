@@ -14,15 +14,21 @@ import com.amazonaws.services.s3.transfer.TransferManagerBuilder;
 import com.amazonaws.services.s3.transfer.Upload;
 import com.amazonaws.services.s3.transfer.model.UploadResult;
 import com.icthh.xm.ms.entity.config.ApplicationProperties;
+import com.icthh.xm.ms.entity.domain.Content;
+import com.icthh.xm.ms.entity.service.dto.S3ObjectDto;
+import com.icthh.xm.ms.entity.service.dto.UploadResultDto;
+import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang.StringUtils;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.stereotype.Component;
+
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.net.URLConnection;
-import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.annotation.Lazy;
-import org.springframework.stereotype.Component;
 
 @Slf4j
 @Component
@@ -72,8 +78,21 @@ public class AmazonS3Template {
      * @param key         is the name of the file to save in the bucket
      * @param inputStream is the file that will be saved
      */
-    @SneakyThrows
     public String save(String bucket, String key, InputStream inputStream, Integer contentLength, String fileName) {
+        UploadResult uploadResult = upload(bucket, key, inputStream, contentLength, fileName);
+        return uploadResult.getKey();
+    }
+
+    @SneakyThrows
+    public UploadResultDto save(String bucket, String key, Content content, String fileName) {
+        try (ByteArrayInputStream inputStream = new ByteArrayInputStream(content.getValue())) {
+            UploadResult uploadResult = upload(bucket, key, inputStream, content.getValue().length, fileName);
+            return UploadResultDto.from(uploadResult);
+        }
+    }
+
+    @SneakyThrows
+    private UploadResult upload(String bucket, String key, InputStream inputStream, Integer contentLength, String fileName) {
         ObjectMetadata metadata = new ObjectMetadata();
         metadata.setContentType(URLConnection.guessContentTypeFromStream(inputStream));
         metadata.addUserMetadata(FILE_NAME_ATTRIBUTE, fileName);
@@ -84,8 +103,7 @@ public class AmazonS3Template {
 
         Upload upload = getTransferManager().upload(request);
         try {
-            UploadResult uploadResult = upload.waitForUploadResult();
-            return uploadResult.getKey();
+            return upload.waitForUploadResult();
         } catch (AmazonClientException ex) {
             throw new IOException(ex);
         } catch (InterruptedException ex) {
@@ -132,9 +150,18 @@ public class AmazonS3Template {
     }
 
     private String prepareBucketName(String bucketPrefix, String bucket) {
-        String formatted = bucketPrefix + bucket.toLowerCase().replace("_", "-");
+        String formatted;
+        if (StringUtils.isBlank(bucketPrefix)) {
+            formatted = prepareString(bucket);
+        } else {
+            formatted = prepareString(bucketPrefix)+ "-" + prepareString(bucket);
+        }
         log.info("Formatted bucket name: {}", formatted);
         return formatted;
+    }
+
+    private String prepareString(String str) {
+        return str.toLowerCase().replace("_", "-");
     }
 
     /**
@@ -148,8 +175,18 @@ public class AmazonS3Template {
         return getAmazonS3Client().getObject(bucket, key);
     }
 
+    public void delete(String bucket, String key) {
+        log.info("Delete from bucket = {}, key = {}", bucket, key);
+        getAmazonS3Client().deleteObject(bucket, key);
+    }
+
     public S3Object get(String bucket, String key) {
         return getAmazonS3Client().getObject(bucket, key);
+    }
+
+    public S3ObjectDto getS3Object(String bucket, String key) {
+        S3Object s3Object = get(bucket, key);
+        return S3ObjectDto.from(s3Object);
     }
 
     /**
