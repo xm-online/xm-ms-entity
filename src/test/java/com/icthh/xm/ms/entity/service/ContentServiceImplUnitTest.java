@@ -17,6 +17,8 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.mockito.Mockito;
 
+import java.util.Optional;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
@@ -25,6 +27,7 @@ public class ContentServiceImplUnitTest extends AbstractUnitTest {
     private PermittedRepository permittedRepository;
     private ContentRepository contentRepository;
     private S3StorageRepository s3StorageRepository;
+    private XmEntitySpecService xmEntitySpecService;
 
 
     private ContentService contentService;
@@ -37,8 +40,9 @@ public class ContentServiceImplUnitTest extends AbstractUnitTest {
         permittedRepository = Mockito.mock(PermittedRepository.class);
         contentRepository = Mockito.mock(ContentRepository.class);
         s3StorageRepository = Mockito.mock(S3StorageRepository.class);
+        xmEntitySpecService = Mockito.mock(XmEntitySpecService.class);
         contentService = new ContentService(
-            permittedRepository, contentRepository, s3StorageRepository
+            permittedRepository, contentRepository, s3StorageRepository, xmEntitySpecService
         );
     }
 
@@ -63,8 +67,10 @@ public class ContentServiceImplUnitTest extends AbstractUnitTest {
         result.setValue("A".getBytes());
 
         when(contentRepository.save(c)).thenReturn(result);
+        Mockito.when(xmEntitySpecService.findAttachment(e.getTypeKey(), a.getTypeKey()))
+            .thenReturn(Optional.of(attachmentSpec));
 
-        Attachment save = contentService.save(attachmentSpec, a, c);
+        Attachment save = contentService.save(a, c);
         assertThat(save.getContent().getId()).isEqualTo(222L);
         assertThat(save.getContentChecksum()).isEqualTo(DigestUtils.sha256Hex(c.getValue()));
         assertThat(save.getValueContentSize()).isEqualTo(c.getValue().length);
@@ -89,9 +95,11 @@ public class ContentServiceImplUnitTest extends AbstractUnitTest {
 
         UploadResultDto result = new UploadResultDto("bucketName", "T/key", "A");
 
+        Mockito.when(xmEntitySpecService.findAttachment(e.getTypeKey(), a.getTypeKey()))
+            .thenReturn(Optional.of(attachmentSpec));
         when(s3StorageRepository.store(c, e.getTypeKey(), a.getName())).thenReturn(result);
 
-        Attachment save = contentService.save(attachmentSpec, a, c);
+        Attachment save = contentService.save(a, c);
         assertThat(save.getContentUrl()).isEqualTo(result.getBucketName() + "::" + result.getKey());
         assertThat(save.getContentChecksum()).isEqualTo(result.getETag());
         assertThat(save.getValueContentSize()).isEqualTo(result.getETag().getBytes().length);

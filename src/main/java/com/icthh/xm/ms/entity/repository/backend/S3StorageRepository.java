@@ -11,14 +11,6 @@ import com.icthh.xm.ms.entity.service.dto.S3ObjectDto;
 import com.icthh.xm.ms.entity.service.dto.UploadResultDto;
 import com.icthh.xm.ms.entity.util.ImageResizeUtil;
 import com.icthh.xm.ms.entity.util.XmHttpEntityUtils;
-
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URL;
-import java.util.Optional;
-import java.util.UUID;
-
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -28,12 +20,16 @@ import org.springframework.http.HttpEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
+import java.util.UUID;
+
 @Slf4j
 @RequiredArgsConstructor
 @Component
 public class S3StorageRepository {
 
-    private static final long DEFAULT_EXPIRIBLE_LINK_TIME = 60000L;
 
     private final ApplicationProperties applicationProperties;
     private final AmazonS3Template amazonS3Template;
@@ -58,9 +54,7 @@ public class S3StorageRepository {
         String normalizeFolderName = folderName.toLowerCase().replace("_", "-").replace(".", "-");
         String key = normalizeFolderName + "/" + UUID.randomUUID().toString();
 
-        try (ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(content.getValue())) {
-            return amazonS3Template.save(bucket, key, byteArrayInputStream, content.getValue().length, fileName);
-        }
+        return amazonS3Template.save(bucket, key, content, fileName);
     }
 
     @SneakyThrows
@@ -69,9 +63,7 @@ public class S3StorageRepository {
     }
 
     @SneakyThrows
-    public URL createExpirableLink(String bucket, String key) {
-        Long expireLinkTime = Optional.ofNullable(applicationProperties.getAmazon().getAws().getExpireLinkTimeInMillis())
-            .orElse(DEFAULT_EXPIRIBLE_LINK_TIME);
+    public URL createExpirableLink(String bucket, String key, Long expireLinkTime) {
         return amazonS3Template.createExpirableLink(bucket, key, expireLinkTime);
     }
 

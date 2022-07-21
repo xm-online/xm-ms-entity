@@ -222,7 +222,6 @@ application:
             region:
             access-key-id:
             access-key-secret:
-            expire-link-time-in-millis:
         s3:
             bucket:
             bucket-prefix:

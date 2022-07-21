@@ -16,6 +16,7 @@ import com.icthh.xm.ms.entity.domain.spec.AttachmentSpec;
 import com.icthh.xm.ms.entity.repository.ContentRepository;
 import com.icthh.xm.ms.entity.repository.backend.S3StorageRepository;
 import com.icthh.xm.ms.entity.service.ContentService;
+import com.icthh.xm.ms.entity.service.XmEntitySpecService;
 import com.icthh.xm.ms.entity.service.dto.UploadResultDto;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -32,11 +33,12 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Optional;
 
 import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_AUTH_CONTEXT;
 import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_TENANT_CONTEXT;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.contains;
 import static org.mockito.ArgumentMatchers.eq;
 
 @Slf4j
@@ -69,6 +71,9 @@ public class ContentServiceIntTest extends AbstractSpringBootTest {
     @Mock
     private AmazonS3Template amazonS3Template;
 
+    @Mock
+    private XmEntitySpecService xmEntitySpecService;
+
     @BeforeTransaction
     public void beforeTransaction() {
         TenantContextUtils.setTenant(tenantContextHolder, TENANT_KEY);
@@ -87,12 +92,11 @@ public class ContentServiceIntTest extends AbstractSpringBootTest {
         enrichAmazonProperties(applicationProperties.getAmazon());
 
         s3StorageRepository = new S3StorageRepository(applicationProperties, amazonS3Template, tenantContextHolder);
-        contentService = new ContentService(permittedRepository, contentRepository, s3StorageRepository);
+        contentService = new ContentService(permittedRepository, contentRepository, s3StorageRepository, xmEntitySpecService);
     }
 
     private void enrichAmazonProperties(ApplicationProperties.Amazon amazon) {
         amazon.getS3().setBucketPrefix(PREFIX);
-        amazon.getAws().setExpireLinkTimeInMillis(10000L);
     }
 
     @After
@@ -106,11 +110,20 @@ public class ContentServiceIntTest extends AbstractSpringBootTest {
     @Transactional
     public void shouldSaveContentInDb() {
         AttachmentSpec attachmentSpec = new AttachmentSpec();
+
+        XmEntity xmEntity = new XmEntity();
+        xmEntity.setTypeKey("T");
+
         Attachment attachment = new Attachment();
+        attachment.setXmEntity(xmEntity);
+
         Content content = new Content();
         content.setValue("A".getBytes());
 
-        Attachment save = contentService.save(attachmentSpec, attachment, content);
+        Mockito.when(xmEntitySpecService.findAttachment(xmEntity.getTypeKey(), attachment.getTypeKey()))
+            .thenReturn(Optional.of(attachmentSpec));
+
+        Attachment save = contentService.save(attachment, content);
 
         assertThat(save.getContent().getId()).isNotNull();
         assertThat(save.getContentChecksum()).isEqualTo(DigestUtils.sha256Hex(content.getValue()));
@@ -125,6 +138,7 @@ public class ContentServiceIntTest extends AbstractSpringBootTest {
 
         AttachmentSpec attachmentSpec = new AttachmentSpec();
         attachmentSpec.setStoreType(AttachmentStoreType.S3);
+        attachmentSpec.setExpireLinkTimeInMillis(100000L);
 
         Attachment attachment = new Attachment();
         attachment.setName("test.doc");
@@ -135,10 +149,12 @@ public class ContentServiceIntTest extends AbstractSpringBootTest {
 
         String bucketName = prepareBucketName();
         Mockito.when(amazonS3Template.createBucketIfNotExist(PREFIX, TENANT_KEY)).thenReturn(bucketName);
-        Mockito.when(amazonS3Template.save(eq(bucketName), any(), any(), eq(content.getValue().length),
+        Mockito.when(amazonS3Template.save(eq(bucketName), contains(attachment.getXmEntity().getTypeKey().toLowerCase() + "/"), eq(content),
             eq(attachment.getName()))).thenReturn(new UploadResultDto(bucketName, "someFileKey", "etag"));
+        Mockito.when(xmEntitySpecService.findAttachment(xmEntity.getTypeKey(), attachment.getTypeKey()))
+            .thenReturn(Optional.of(attachmentSpec));
 
-        Attachment save = contentService.save(attachmentSpec, attachment, content);
+        Attachment save = contentService.save(attachment, content);
         assertThat(save.getContentUrl()).isNotBlank();
         assertThat(save.getContentUrl()).isEqualTo(bucketName + "::someFileKey");
     }
@@ -148,18 +164,27 @@ public class ContentServiceIntTest extends AbstractSpringBootTest {
     public void shouldReturnLinkFromAws() throws MalformedURLException {
         AttachmentSpec attachmentSpec = new AttachmentSpec();
         attachmentSpec.setStoreType(AttachmentStoreType.S3);
+        attachmentSpec.setExpireLinkTimeInMillis(100000L);
 
         String fileName = "fileName";
         String bucketName = prepareBucketName();
         String contentUrl = bucketName + "::" + fileName;
+
+        XmEntity xmEntity = new XmEntity();
+        xmEntity.setTypeKey("T");
+
         Attachment attachment = new Attachment();
         attachment.setContentUrl(contentUrl);
+        attachment.setXmEntity(xmEntity);
 
         String contentPathUrl = "http://localhost:8090/" + bucketName + "/fileName";
         Mockito.when(amazonS3Template.createExpirableLink(eq(bucketName), eq(fileName),
-            eq(applicationProperties.getAmazon().getAws().getExpireLinkTimeInMillis()))).thenReturn(new URL(contentPathUrl));
+            eq(attachmentSpec.getExpireLinkTimeInMillis()))).thenReturn(new URL(contentPathUrl));
 
-        String result = contentService.createExpirableLink(attachment.getContentUrl());
+        Mockito.when(xmEntitySpecService.findAttachment(xmEntity.getTypeKey(), attachment.getTypeKey()))
+            .thenReturn(Optional.of(attachmentSpec));
+
+        String result = contentService.createExpirableLink(attachment);
 
         assertThat(result).isNotBlank();
         assertThat(result).isEqualTo(contentPathUrl);

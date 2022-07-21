@@ -92,9 +92,7 @@ public class AttachmentService {
         }
 
         Attachment savedAttachment = attachmentRepository.save(attachment);
-
-        savedAttachment = contentService.save(spec, savedAttachment, content);
-
+        savedAttachment = contentService.save(savedAttachment, content);
         return attachmentRepository.save(savedAttachment);
     }
 
@@ -135,10 +133,7 @@ public class AttachmentService {
     @Transactional(readOnly = true)
     public Optional<Attachment> getOneWithContent(Long id) {
         return attachmentRepository.findById(id)
-            .map(attachment -> {
-                AttachmentSpec spec = getSpec(attachment.getXmEntity(), attachment);
-                return contentService.enrichContent(spec, attachment);
-            });
+            .map(contentService::enrichContent);
     }
 
     /**
@@ -235,7 +230,7 @@ public class AttachmentService {
     public String getAttachmentDownloadLink(Long id) {
         return findById(id)
             .filter(contentService::supportDownloadLink)
-            .map(attachment -> contentService.createExpirableLink(attachment.getContentUrl()))
+            .map(contentService::createExpirableLink)
             .orElseThrow(() -> new EntityNotFoundException("Attachment not found by id" + id));
     }
 }

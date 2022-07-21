@@ -1,12 +1,14 @@
 package com.icthh.xm.ms.entity.service;
 
 import com.amazonaws.util.IOUtils;
+import com.icthh.xm.commons.exceptions.EntityNotFoundException;
 import com.icthh.xm.commons.permission.annotation.FindWithPermission;
 import com.icthh.xm.commons.permission.annotation.PrivilegeDescription;
 import com.icthh.xm.commons.permission.repository.PermittedRepository;
 import com.icthh.xm.ms.entity.domain.Attachment;
 import com.icthh.xm.ms.entity.domain.AttachmentStoreType;
 import com.icthh.xm.ms.entity.domain.Content;
+import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.domain.spec.AttachmentSpec;
 import com.icthh.xm.ms.entity.repository.AttachmentRepository;
 import com.icthh.xm.ms.entity.repository.ContentRepository;
@@ -22,8 +24,8 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 
 @Slf4j
 @Service
@@ -32,10 +34,12 @@ import java.util.List;
 public class ContentService {
 
     private static final String FILE_NAME_SEPARATOR = "::";
+    private static final long DEFAULT_EXPIRIBLE_LINK_TIME = 60000L;
 
     private final PermittedRepository permittedRepository;
     private final ContentRepository contentRepository;
     private final S3StorageRepository s3StorageRepository;
+    private final XmEntitySpecService xmEntitySpecService;
 
     @Transactional(readOnly = true)
     @FindWithPermission("CONTENT.GET_LIST")
@@ -44,7 +48,7 @@ public class ContentService {
         return permittedRepository.findAll(Content.class, privilegeKey);
     }
 
-    public Attachment save(AttachmentSpec spec, Attachment attachment, Content content) {
+    public Attachment save(Attachment attachment, Content content) {
         // XmEntityServiceImpl.addFileAttachment(XmEntity entity, MultipartFile file) already save file
         if (attachment.getContentUrl() != null && content == null) {
             return attachment;
@@ -54,6 +58,7 @@ public class ContentService {
             throw new IllegalArgumentException("Attachment content is null!");
         }
 
+        AttachmentSpec spec = getSpec(attachment.getXmEntity(), attachment);
         if (spec.getStoreType() == AttachmentStoreType.S3) {
             String folderName = attachment.getXmEntity().getTypeKey();
             UploadResultDto uploadResult = s3StorageRepository.store(content, folderName, attachment.getName());
@@ -82,7 +87,8 @@ public class ContentService {
     }
 
     @SneakyThrows
-    public Attachment enrichContent(AttachmentSpec spec, Attachment attachment) {
+    public Attachment enrichContent(Attachment attachment) {
+        AttachmentSpec spec = getSpec(attachment.getXmEntity(), attachment);
         if (spec.getStoreType() == AttachmentStoreType.S3) {
             Pair<String, String> s3BucketNameKey = getS3BucketNameKey(attachment.getContentUrl());
             S3ObjectDto s3Object = s3StorageRepository.getS3Object(s3BucketNameKey.getKey(), s3BucketNameKey.getValue());
@@ -104,9 +110,11 @@ public class ContentService {
         return attachment;
     }
 
-    public String createExpirableLink(String contentUrl) {
-        Pair<String, String> s3BucketNameKey = getS3BucketNameKey(contentUrl);
-        return s3StorageRepository.createExpirableLink(s3BucketNameKey.getKey(), s3BucketNameKey.getValue()).toString();
+    public String createExpirableLink(Attachment attachment) {
+        Pair<String, String> s3BucketNameKey = getS3BucketNameKey(attachment.getContentUrl());
+        AttachmentSpec spec = getSpec(attachment.getXmEntity(), attachment);
+        Long expireLinkTime = Optional.ofNullable(spec.getExpireLinkTimeInMillis()).orElse(DEFAULT_EXPIRIBLE_LINK_TIME);
+        return s3StorageRepository.createExpirableLink(s3BucketNameKey.getKey(), s3BucketNameKey.getValue(), expireLinkTime).toString();
     }
 
     public boolean supportDownloadLink (Attachment attachment) {
@@ -124,5 +132,14 @@ public class ContentService {
 
     private boolean isS3Compatible(String contentUrl) {
         return StringUtils.contains(contentUrl, FILE_NAME_SEPARATOR);
+    }
+
+    private AttachmentSpec getSpec(XmEntity entity, Attachment attachment) {
+        return xmEntitySpecService
+            .findAttachment(entity.getTypeKey(), attachment.getTypeKey())
+            .orElseThrow(
+                () -> new EntityNotFoundException("Spec.Attachment not found for entity type key " + entity.getTypeKey()
+                    + " and attachment key: " + attachment.getTypeKey())
+            );
     }
 }

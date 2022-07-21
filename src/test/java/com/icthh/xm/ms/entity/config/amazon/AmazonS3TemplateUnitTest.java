@@ -20,6 +20,7 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.function.Consumer;
 
+import com.icthh.xm.ms.entity.domain.Content;
 import com.icthh.xm.ms.entity.service.dto.UploadResultDto;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
@@ -99,11 +100,12 @@ public class AmazonS3TemplateUnitTest extends AbstractUnitTest {
         Assert.assertEquals(FileNotFoundException.class, exception.getClass());
     }
 
-    private UploadResultDto uploadFileToS3(String content) {
+    private UploadResultDto uploadFileToS3(String strContent) {
         log.info("{}", mockS3.isRunning());
-        InputStream stream = IOUtils.toInputStream(content, StandardCharsets.UTF_8);
+        Content content = new Content();
+        content.setValue(strContent.getBytes(StandardCharsets.UTF_8));
         s3Template.createBucketIfNotExist(PREFIX, BUCKET);
-        return s3Template.save(prepareBucketName(), KEY, stream, content.getBytes().length, "filename");
+        return s3Template.save(prepareBucketName(), KEY, content, "filename");
     }
 
     private void assertFileSaved(UploadResultDto resultDto) {

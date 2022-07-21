@@ -14,6 +14,7 @@ import com.amazonaws.services.s3.transfer.TransferManagerBuilder;
 import com.amazonaws.services.s3.transfer.Upload;
 import com.amazonaws.services.s3.transfer.model.UploadResult;
 import com.icthh.xm.ms.entity.config.ApplicationProperties;
+import com.icthh.xm.ms.entity.domain.Content;
 import com.icthh.xm.ms.entity.service.dto.S3ObjectDto;
 import com.icthh.xm.ms.entity.service.dto.UploadResultDto;
 import lombok.RequiredArgsConstructor;
@@ -23,6 +24,7 @@ import org.apache.commons.lang.StringUtils;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
@@ -76,8 +78,21 @@ public class AmazonS3Template {
      * @param key         is the name of the file to save in the bucket
      * @param inputStream is the file that will be saved
      */
+    public String save(String bucket, String key, InputStream inputStream, Integer contentLength, String fileName) {
+        UploadResult uploadResult = upload(bucket, key, inputStream, contentLength, fileName);
+        return uploadResult.getKey();
+    }
+
     @SneakyThrows
-    public UploadResultDto save(String bucket, String key, InputStream inputStream, Integer contentLength, String fileName) {
+    public UploadResultDto save(String bucket, String key, Content content, String fileName) {
+        try (ByteArrayInputStream inputStream = new ByteArrayInputStream(content.getValue())) {
+            UploadResult uploadResult = upload(bucket, key, inputStream, content.getValue().length, fileName);
+            return UploadResultDto.from(uploadResult);
+        }
+    }
+
+    @SneakyThrows
+    private UploadResult upload(String bucket, String key, InputStream inputStream, Integer contentLength, String fileName) {
         ObjectMetadata metadata = new ObjectMetadata();
         metadata.setContentType(URLConnection.guessContentTypeFromStream(inputStream));
         metadata.addUserMetadata(FILE_NAME_ATTRIBUTE, fileName);
@@ -88,8 +103,7 @@ public class AmazonS3Template {
 
         Upload upload = getTransferManager().upload(request);
         try {
-            UploadResult uploadResult = upload.waitForUploadResult();
-            return UploadResultDto.from(uploadResult);
+            return upload.waitForUploadResult();
         } catch (AmazonClientException ex) {
             throw new IOException(ex);
         } catch (InterruptedException ex) {

@@ -263,7 +263,7 @@ public class AttachmentServiceImplUnitTest  extends AbstractUnitTest {
 
         when(attachmentRepository.findById(1L)).thenReturn(Optional.of(a));
         when(xmEntitySpecService.findAttachment("T", "A.T")).thenReturn(Optional.of(spec));
-        when(contentService.enrichContent(spec, a)).thenReturn(a);
+        when(contentService.enrichContent(a)).thenReturn(a);
 
         assertThat(attachmentService.getOneWithContent(1L).get().getId()).isEqualTo(1L);
         assertThat(attachmentService.getOneWithContent(2L).isPresent()).isEqualTo(false);
@@ -288,7 +288,7 @@ public class AttachmentServiceImplUnitTest  extends AbstractUnitTest {
 
         when(xmEntitySpecService.findAttachment("T", "A.T")).thenReturn(Optional.of(spec));
         when(attachmentRepository.findById(1L)).thenReturn(Optional.of(a));
-        when(contentService.enrichContent(spec, a)).thenReturn(a);
+        when(contentService.enrichContent(a)).thenReturn(a);
 
         assertThat(attachmentService.findOneWithContent(1L).getId()).isEqualTo(1L);
         assertThat(attachmentService.findOneWithContent(2L)).isNull();
@@ -318,7 +318,7 @@ public class AttachmentServiceImplUnitTest  extends AbstractUnitTest {
     @Test
     public void shouldDeleteItemInS3() {
         S3StorageRepository s3StorageRepository  = Mockito.mock(S3StorageRepository.class);
-        ContentService contentService = new ContentService(null, null, s3StorageRepository);
+        ContentService contentService = new ContentService(null, null, s3StorageRepository, xmEntitySpecService);
 
         attachmentService = new AttachmentService(
             attachmentRepository, contentService, permittedRepository, permittedSearchRepository,
