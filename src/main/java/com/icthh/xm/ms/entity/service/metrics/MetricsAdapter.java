@@ -8,12 +8,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.map.LRUMap;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
 import java.util.Map;
 import java.util.Optional;
 
 @Slf4j
-@Component
+@Service
 public class MetricsAdapter {
     private static final int MAX_SIZE_CACHE = 1000;
     private static final String DEFAULT_NAME = "defaultName";

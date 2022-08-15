@@ -27,6 +27,7 @@ import com.icthh.xm.ms.entity.service.TagService;
 import com.icthh.xm.ms.entity.service.XmEntityService;
 import com.icthh.xm.ms.entity.service.mail.MailService;
 import com.icthh.xm.ms.entity.service.metrics.CustomMetricsContext;
+import com.icthh.xm.ms.entity.service.metrics.MetricsAdapter;
 import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
 import org.springframework.web.client.RestTemplate;
 
@@ -65,6 +66,7 @@ public class LepContext {
         public TenantLepResource lepResource;
         public ElasticsearchIndexService elasticsearchIndexService;
         public SeparateTransactionExecutor separateTransactionExecutor;
+        public MetricsAdapter metricsAdapter;
     }
 
     public static class LepRepositories {

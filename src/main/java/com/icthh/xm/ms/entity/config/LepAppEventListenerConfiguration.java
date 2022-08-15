@@ -25,6 +25,7 @@ import com.icthh.xm.ms.entity.service.XmEntityService;
 import com.icthh.xm.ms.entity.service.XmTenantLifecycleService;
 import com.icthh.xm.ms.entity.service.mail.MailService;
 import com.icthh.xm.ms.entity.service.metrics.CustomMetricsContext;
+import com.icthh.xm.ms.entity.service.metrics.MetricsAdapter;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -65,15 +66,17 @@ public class LepAppEventListenerConfiguration {
         ElasticsearchIndexService elasticsearchIndexService,
         SeparateTransactionExecutor transactionExecutor,
         CustomMetricsContext customMetricsContext,
-        KafkaTemplateService kafkaTemplateService) {
+        KafkaTemplateService kafkaTemplateService,
+        MetricsAdapter metricsAdapter
+    ) {
 
         return new XmEntityMsLepProcessingApplicationListener(xmEntityService,
-                        xmTenantLifecycleService, xmEntityRepository, profileService, linkService,
-                        mailService, tenantConfigService, attachmentService, loadBalancedRestTemplateWithTimeout, plainRestTemplate,
-                        requestFactory, locationService, tagService, profileEventProducer, commentService,
-                        commonsService, permissionCheckService, eventService, calendarService, tenantLepResource,
-                        amazonS3Template, elasticsearchTemplate, permittedSearchRepository, elasticsearchIndexService,
-                        transactionExecutor, customMetricsContext, kafkaTemplateService);
+            xmTenantLifecycleService, xmEntityRepository, profileService, linkService,
+            mailService, tenantConfigService, attachmentService, loadBalancedRestTemplateWithTimeout, plainRestTemplate,
+            requestFactory, locationService, tagService, profileEventProducer, commentService,
+            commonsService, permissionCheckService, eventService, calendarService, tenantLepResource,
+            amazonS3Template, elasticsearchTemplate, permittedSearchRepository, elasticsearchIndexService,
+            transactionExecutor, customMetricsContext, kafkaTemplateService, metricsAdapter);
     }
 
 }
