@@ -7,7 +7,6 @@ import io.micrometer.core.instrument.Tag;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.map.LRUMap;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
 import java.util.Map;
@@ -40,7 +39,7 @@ public class MetricsAdapter {
      * @param name        Counter name (necessary if counter not found) - optional
      * @param description Description of counter (necessary if counter not found) - optional
      */
-    public void increment(String[] tags, Double amount, String name, String description) {
+    public void inc(String[] tags, Double amount, String name, String description) {
         log.debug("Inc : {}, {}, {}, {}", tags, amount, name, description);
         try {
             validation(tags, amount, name, description);
@@ -67,7 +66,7 @@ public class MetricsAdapter {
      * @param name        Counter name (necessary if counter not found) - optional
      * @param description Description of counter (necessary if counter not found) - optional
      */
-    public void increment(Tag tag, Double amount, String name, String description) {
+    public void inc(Tag tag, Double amount, String name, String description) {
         log.debug("Inc : {}, {}, {}, {}", tag, amount, name, description);
         try {
             validation(tag, amount, name, description);
@@ -83,28 +82,28 @@ public class MetricsAdapter {
         }
     }
 
-    public void increment(String[] tags, String name, String description) {
-        increment(tags, 1.0, name, description);
+    public void inc(String[] tags, String name, String description) {
+        inc(tags, 1.0, name, description);
     }
 
-    public void increment(String[] tags) {
-        increment(tags, 1.0, DEFAULT_NAME, DEFAULT_DESC);
+    public void inc(String[] tags) {
+        inc(tags, 1.0, DEFAULT_NAME, DEFAULT_DESC);
     }
 
-    public void increment(String[] tags, Double amount) {
-        increment(tags, amount, DEFAULT_NAME, DEFAULT_DESC);
+    public void inc(String[] tags, Double amount) {
+        inc(tags, amount, DEFAULT_NAME, DEFAULT_DESC);
     }
 
-    public void increment(Tag tag, String name, String description) {
-        increment(tag, 1.0, name, description);
+    public void inc(Tag tag, String name, String description) {
+        inc(tag, 1.0, name, description);
     }
 
-    public void increment(Tag tag) {
-        increment(tag, 1.0, DEFAULT_NAME, DEFAULT_DESC);
+    public void inc(Tag tag) {
+        inc(tag, 1.0, DEFAULT_NAME, DEFAULT_DESC);
     }
 
-    public void increment(Tag tag, Double amount) {
-        increment(tag, amount, DEFAULT_NAME, DEFAULT_DESC);
+    public void inc(Tag tag, Double amount) {
+        inc(tag, amount, DEFAULT_NAME, DEFAULT_DESC);
     }
 
     /**
