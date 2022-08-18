@@ -5,30 +5,21 @@ import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Tag;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections4.map.LRUMap;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.Map;
 import java.util.Optional;
 
 @Slf4j
 @Service
 public class MetricsAdapter {
-    private static final int MAX_SIZE_CACHE = 1000;
     private static final String DEFAULT_NAME = "defaultName";
     private static final String DEFAULT_DESC = "Default counter";
-    private final Map<String, Counter> countersCache;
     private final MeterRegistry meterRegistry;
-
-    public MetricsAdapter(Map<String, Counter> countersCache, MeterRegistry meterRegistry) {
-        this.countersCache = Optional.ofNullable(countersCache).orElse(new LRUMap<>(MAX_SIZE_CACHE));
-        this.meterRegistry = meterRegistry;
-    }
 
     @Autowired
     public MetricsAdapter(MeterRegistry meterRegistry) {
-        this(new LRUMap<>(MAX_SIZE_CACHE), meterRegistry);
+        this.meterRegistry = meterRegistry;
     }
 
     /**
@@ -46,13 +37,8 @@ public class MetricsAdapter {
             if (tags == null || tags.length == 0) {
                 throw new IllegalArgumentException("List of tags is empty");
             }
-            String key = buildUniqueKey(tags, name);
-            Counter counter = countersCache.get(key);
-            if (counter == null) {
-                counter = register(tags, name, description);
-            }
+            Counter counter = register(tags, name, description);
             counter.increment(amount);
-            log.debug("Got counter by key {} after inc", key);
         } catch (Throwable e) {
             log.error("Metric increment failed: ", e);
         }
@@ -70,13 +56,8 @@ public class MetricsAdapter {
         log.debug("Inc : {}, {}, {}, {}", tag, amount, name, description);
         try {
             validation(tag, amount, name, description);
-            var key = buildUniqueKey(tag, name);
-            Counter counter = countersCache.get(key);
-            if (counter == null) {
-                counter = register(tag, name, description);
-            }
+            Counter counter = register(tag, name, description);
             counter.increment(amount);
-            log.debug("Got counter by key {} after inc", key);
         } catch (Throwable e) {
             log.error("Metric increment failed: ", e);
         }
@@ -116,14 +97,7 @@ public class MetricsAdapter {
      */
     private Counter register(String[] tags, String name, String description) {
         log.debug("Reg : {}, {}, {}", tags, name, description);
-        String key = buildUniqueKey(tags, name);
-        var counter = countersCache.get(key);
-        if (counter == null) {
-            counter = Counter.builder(name).description(description).tags(tags).register(meterRegistry);
-            countersCache.put(key, counter);
-        }
-        log.debug("Got counter by key {}", key);
-        return counter;
+        return Counter.builder(name).description(description).tags(tags).register(meterRegistry);
     }
 
     /**
@@ -136,22 +110,7 @@ public class MetricsAdapter {
      */
     private Counter register(Tag tag, String name, String description) {
         log.debug("Reg : {}, {}, {}", tag, name, description);
-        var key = buildUniqueKey(tag, name);
-        var counter = countersCache.get(key);
-        if (counter == null) {
-            counter = Counter.builder(name).description(description).tag(tag.getKey(), tag.getValue()).register(meterRegistry);
-            countersCache.put(key, counter);
-        }
-        log.debug("Got counter by key {}", key);
-        return counter;
-    }
-
-    private static String buildUniqueKey(String[] tags, String name) {
-        return String.join(",", tags) + "_" + name;
-    }
-
-    private static String buildUniqueKey(Tag tag, String name) {
-        return tag.toString() + "_" + name;
+        return Counter.builder(name).description(description).tag(tag.getKey(), tag.getValue()).register(meterRegistry);
     }
 
     private void validation(Object tags, Double amount, String name, String description) {
