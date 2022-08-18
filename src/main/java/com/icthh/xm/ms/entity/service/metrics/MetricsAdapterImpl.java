@@ -65,27 +65,6 @@ public class MetricsAdapterImpl implements MetricsAdapter {
         return Counter.builder(name).description(description).tags(tags).register(meterRegistry);
     }
 
-    /**
-     * Registers counter to collect metrics
-     *
-     * @param tag         Tag with key and value
-     * @param name        Counter name
-     * @param description Description of counter
-     * @return Created counter
-     */
-    private Counter register(Tag tag, String name, String description) {
-        log.debug("Reg : {}, {}, {}", tag, name, description);
-        return Counter.builder(name).description(description).tag(tag.getKey(), tag.getValue()).register(meterRegistry);
-    }
-
-    private void validation(String tagKey, String tagValue, String name, String description, Double amount) {
-        Optional.ofNullable(tagKey).filter(s -> !s.isBlank()).orElseThrow(() -> new IllegalArgumentException("Tag key is empty"));
-        Optional.ofNullable(tagValue).filter(s -> !s.isBlank()).orElseThrow(() -> new IllegalArgumentException("Tag value is empty"));
-        Optional.ofNullable(name).filter(s -> !s.isBlank()).orElseThrow(() -> new IllegalArgumentException("Name is empty"));
-        Optional.ofNullable(description).filter(s -> !s.isBlank()).orElseThrow(() -> new IllegalArgumentException("Description is empty"));
-        Optional.ofNullable(amount).orElseThrow(() -> new IllegalArgumentException("Amount is `null`"));
-    }
-
     private void validation(String[] tags, String name, String description, Double amount) {
         Optional.ofNullable(tags).orElseThrow(() -> new IllegalArgumentException("Tags are `null`"));
         Optional.ofNullable(name).filter(s -> !s.isBlank()).orElseThrow(() -> new IllegalArgumentException("Name is empty"));
