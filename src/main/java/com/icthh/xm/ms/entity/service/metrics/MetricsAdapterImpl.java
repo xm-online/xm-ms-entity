@@ -25,9 +25,6 @@ public class MetricsAdapterImpl implements MetricsAdapter {
         log.debug("Inc : {}, {}, {}, {}", tags, amount, name, description);
         try {
             validation(tags, name, description, amount);
-            if (tags == null || tags.length == 0) {
-                throw new IllegalArgumentException("List of tags is empty");
-            }
             Counter counter = register(tags, name, description);
             counter.increment(amount);
         } catch (Throwable e) {
@@ -65,9 +62,12 @@ public class MetricsAdapterImpl implements MetricsAdapter {
     }
 
     private void validation(String[] tags, String name, String description, Double amount) {
-        Optional.ofNullable(tags).orElseThrow(() -> new IllegalArgumentException("Tags are `null`"));
         Optional.ofNullable(name).filter(s -> !s.isBlank()).orElseThrow(() -> new IllegalArgumentException("Name is empty"));
         Optional.ofNullable(description).filter(s -> !s.isBlank()).orElseThrow(() -> new IllegalArgumentException("Description is empty"));
         Optional.ofNullable(amount).orElseThrow(() -> new IllegalArgumentException("Amount is `null`"));
+        Optional.ofNullable(tags).orElseThrow(() -> new IllegalArgumentException("Tags are `null`"));
+        if (tags.length == 0) {
+            throw new IllegalArgumentException("List of tags is empty");
+        }
     }
 }

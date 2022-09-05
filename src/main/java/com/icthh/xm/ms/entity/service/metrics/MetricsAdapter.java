@@ -34,9 +34,9 @@ public interface MetricsAdapter {
 
     void inc(String[] tags);
 
-    public void inc(String[] tags, Double amount);
+    void inc(String[] tags, Double amount);
 
-    public void inc(String tagKey, String tagValue);
+    void inc(String tagKey, String tagValue);
 
-    public void inc(String tagKey, String tagValue, Double amount);
+    void inc(String tagKey, String tagValue, Double amount);
 }
