@@ -9,7 +9,7 @@ public interface MetricsAdapter {
      * @param name        Counter name (necessary if counter not found) - optional
      * @param description Description of counter (necessary if counter not found) - optional
      */
-    void inc(String[] tags, Double amount, String name, String description);
+    void increment(String[] tags, Double amount, String name, String description);
 
     /**
      * Increments the value into a counter. If counter is not exist, will be generated based on tag
@@ -20,23 +20,23 @@ public interface MetricsAdapter {
      * @param name        Counter name (necessary if counter not found) - optional
      * @param description Description of counter (necessary if counter not found) - optional
      */
-    default void inc(String tagKey, String tagValue, Double amount, String name, String description) {
-        inc(new String[]{tagKey, tagValue}, amount, name, description);
+    default void increment(String tagKey, String tagValue, Double amount, String name, String description) {
+        increment(new String[]{tagKey, tagValue}, amount, name, description);
     }
 
-    default void inc(String[] tags, String name, String description) {
-        inc(tags, 1.0, name, description);
+    default void increment(String[] tags, String name, String description) {
+        increment(tags, 1.0, name, description);
     }
 
-    default void inc(String tagKey, String tagValue, String name, String description) {
-        inc(tagKey, tagValue, 1.0, name, description);
+    default void increment(String tagKey, String tagValue, String name, String description) {
+        increment(tagKey, tagValue, 1.0, name, description);
     }
 
-    void inc(String[] tags);
+    void increment(String[] tags);
 
-    void inc(String[] tags, Double amount);
+    void increment(String[] tags, Double amount);
 
-    void inc(String tagKey, String tagValue);
+    void increment(String tagKey, String tagValue);
 
-    void inc(String tagKey, String tagValue, Double amount);
+    void increment(String tagKey, String tagValue, Double amount);
 }

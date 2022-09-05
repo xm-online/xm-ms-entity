@@ -21,7 +21,7 @@ public class MetricsAdapterImpl implements MetricsAdapter {
         this.meterRegistry = meterRegistry;
     }
 
-    public void inc(String[] tags, Double amount, String name, String description) {
+    public void increment(String[] tags, Double amount, String name, String description) {
         log.debug("Inc : {}, {}, {}, {}", tags, amount, name, description);
         try {
             validation(tags, name, description, amount);
@@ -32,20 +32,20 @@ public class MetricsAdapterImpl implements MetricsAdapter {
         }
     }
 
-    public void inc(String[] tags) {
-        inc(tags, 1.0, DEFAULT_NAME, DEFAULT_DESC);
+    public void increment(String[] tags) {
+        increment(tags, 1.0, DEFAULT_NAME, DEFAULT_DESC);
     }
 
-    public void inc(String[] tags, Double amount) {
-        inc(tags, amount, DEFAULT_NAME, DEFAULT_DESC);
+    public void increment(String[] tags, Double amount) {
+        increment(tags, amount, DEFAULT_NAME, DEFAULT_DESC);
     }
 
-    public void inc(String tagKey, String tagValue) {
-        inc(tagKey, tagValue, 1.0, DEFAULT_NAME, DEFAULT_DESC);
+    public void increment(String tagKey, String tagValue) {
+        increment(tagKey, tagValue, 1.0, DEFAULT_NAME, DEFAULT_DESC);
     }
 
-    public void inc(String tagKey, String tagValue, Double amount) {
-        inc(tagKey, tagValue, amount, DEFAULT_NAME, DEFAULT_DESC);
+    public void increment(String tagKey, String tagValue, Double amount) {
+        increment(tagKey, tagValue, amount, DEFAULT_NAME, DEFAULT_DESC);
     }
 
     /**
