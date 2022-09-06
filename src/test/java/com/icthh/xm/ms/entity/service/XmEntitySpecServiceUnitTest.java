@@ -36,6 +36,8 @@ import com.icthh.xm.ms.entity.service.privileges.custom.ApplicationCustomPrivile
 import com.icthh.xm.ms.entity.service.privileges.custom.EntityCustomPrivilegeService;
 import com.icthh.xm.ms.entity.service.privileges.custom.FunctionCustomPrivilegesExtractor;
 import com.icthh.xm.ms.entity.service.privileges.custom.FunctionWithXmEntityCustomPrivilegesExtractor;
+import com.icthh.xm.ms.entity.service.processor.DefinitionSpecProcessor;
+import com.icthh.xm.ms.entity.service.processor.FormSpecProcessor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
@@ -48,11 +50,8 @@ import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
 import org.springframework.core.io.ClassPathResource;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -119,6 +118,10 @@ public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
     private RoleService roleService;
     @Mock
     private TenantConfigRepository tenantConfigRepository;
+    @Mock
+    private DefinitionSpecProcessor definitionSpecProcessor;
+    @Mock
+    private FormSpecProcessor formSpecProcessor;
     @InjectMocks
     @Spy
     private DynamicPermissionCheckService dynamicPermissionCheckService;
@@ -162,7 +165,7 @@ public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
                                                 tenantConfig
                                             ),
                                             dynamicPermissionCheckService,
-                                            tenantConfig));
+                                            tenantConfig,definitionSpecProcessor,formSpecProcessor));
     }
 
     @Test
@@ -628,6 +631,18 @@ public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
         setExtendsFormAndSpec(true);
         TypeSpec extendedEntityWithGlobalExtends = typeSpecs.get("BASE_ENTITY.SEPARATE_FILE_EXTENDS_ENABLED");
         assertTrue(validateByJsonSchema(extendedEntityWithGlobalExtends.getDataSpec(), bothEntityData));
+    }
+
+    @Test
+    public void testJsonService(){
+
+        JsonListenerService jsonListenerService = new JsonListenerService("entity");
+        jsonListenerService.onRefresh("/config/tenants/XM/entity/xmentityspec/definitions/package1file.json", "{uaa: {type: 'object', 'properties': {'field': 1}}}");
+
+        String config = getXmEntitySpec("resinttest-part-2");
+        String key = SPEC_FOLDER_URL.replace("{tenantName}", "RESINTTEST") + "/file.yml";
+        xmEntitySpecService.onRefresh(key, config);
+
     }
 
     @Test

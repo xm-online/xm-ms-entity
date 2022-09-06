@@ -1,4 +1,13 @@
 ---
+definitions:
+    - key: package1
+      ref: "xmentityspec/definitions/package1file.json"
+    - key: priceChangeUsage
+      value: "{'PriceChargeUsage':{'type':'object','allOf':[{'$ref':''#/package1/uaa'},{'properties':{'perEvery':{'type':'number'},'unit':{'type':'string'}}}]}}"
+
+forms:
+    - key: userform
+      ref: "xmentityspec/forms/userform.json"
 types:
     - key: BASE_ENTITY.SEPARATE_FILE_EXTENDS_ENABLED
       isApp: false
@@ -15,7 +24,8 @@ types:
             "object1": {
               "type" : "object",
               "properties" : {
-                "field6" : {"type" : "string" }
+                "field6" : {"type" : "string" },
+                "field34" : {"$ref":  "#/xmEntityDefinition/package1/uaa"}
               }
             }
           }
@@ -25,6 +35,8 @@ types:
         {
           "form": [
             {"key": "field5"},
-            {"key": "object1.field6"}
+            {"key": "object1.field6"},
+            {"$ref":  "#/xmEntityForm/userform"},
+            {"$ref":  "#/xmEntityForm/requestform"}
           ]
         }

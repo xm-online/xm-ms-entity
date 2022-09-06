@@ -9,8 +9,10 @@ import com.icthh.xm.ms.entity.config.XmEntityTenantConfigService;
 import com.icthh.xm.ms.entity.domain.spec.FunctionSpec;
 import com.icthh.xm.ms.entity.domain.spec.TypeSpec;
 import com.icthh.xm.ms.entity.security.access.DynamicPermissionCheckService;
+import com.icthh.xm.ms.entity.service.processor.DefinitionSpecProcessor;
 import com.icthh.xm.ms.entity.service.privileges.custom.EntityCustomPrivilegeService;
 import com.icthh.xm.ms.entity.service.XmEntitySpecService;
+import com.icthh.xm.ms.entity.service.processor.FormSpecProcessor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
@@ -35,9 +37,11 @@ public class LocalXmEntitySpecService extends XmEntitySpecService {
                                     TenantContextHolder tenantContextHolder,
                                     EntityCustomPrivilegeService entityCustomPrivilegeService,
                                     DynamicPermissionCheckService dynamicPermissionCheckService,
-                                    XmEntityTenantConfigService tenantConfigService) {
+                                    XmEntityTenantConfigService tenantConfigService,
+                                    DefinitionSpecProcessor definitionSpecProcessor,
+                                    FormSpecProcessor formSpecProcessor) {
         super(tenantConfigRepository, applicationProperties,
-            tenantContextHolder, List.of(entityCustomPrivilegeService), dynamicPermissionCheckService, tenantConfigService);
+            tenantContextHolder, List.of(entityCustomPrivilegeService), dynamicPermissionCheckService, tenantConfigService, definitionSpecProcessor, formSpecProcessor);
 
         this.applicationProperties = applicationProperties;
         this.tenantContextHolder = tenantContextHolder;

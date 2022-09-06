@@ -46,19 +46,7 @@ import com.icthh.xm.ms.entity.config.XmEntityTenantConfigService;
 import com.icthh.xm.ms.entity.config.XmEntityTenantConfigService.XmEntityTenantConfig;
 import com.icthh.xm.ms.entity.domain.Calendar;
 import com.icthh.xm.ms.entity.domain.ext.TypeSpecParameter;
-import com.icthh.xm.ms.entity.domain.spec.AttachmentSpec;
-import com.icthh.xm.ms.entity.domain.spec.CalendarSpec;
-import com.icthh.xm.ms.entity.domain.spec.EventSpec;
-import com.icthh.xm.ms.entity.domain.spec.FunctionSpec;
-import com.icthh.xm.ms.entity.domain.spec.LinkSpec;
-import com.icthh.xm.ms.entity.domain.spec.LocationSpec;
-import com.icthh.xm.ms.entity.domain.spec.NextSpec;
-import com.icthh.xm.ms.entity.domain.spec.RatingSpec;
-import com.icthh.xm.ms.entity.domain.spec.StateSpec;
-import com.icthh.xm.ms.entity.domain.spec.TagSpec;
-import com.icthh.xm.ms.entity.domain.spec.TypeSpec;
-import com.icthh.xm.ms.entity.domain.spec.UniqueFieldSpec;
-import com.icthh.xm.ms.entity.domain.spec.XmEntitySpec;
+import com.icthh.xm.ms.entity.domain.spec.*;
 import com.icthh.xm.ms.entity.security.access.DynamicPermissionCheckService;
 
 import java.io.IOException;
@@ -78,6 +66,9 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import com.icthh.xm.ms.entity.service.processor.DefinitionSpecProcessor;
+import com.icthh.xm.ms.entity.service.processor.FormSpecProcessor;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -97,9 +88,8 @@ public class XmEntitySpecService implements RefreshableConfiguration {
     private static final String TYPE_SEPARATOR_REGEXP = "\\.";
     private static final String TYPE_SEPARATOR = ".";
     private static final String TENANT_NAME = "tenantName";
-    private static final String XM_ENTITY_DEFINITION = "xmEntityDefinition";
+    private static final String XM_ENTITY_INHERITANCE_DEFINITION = "xmEntityInheritanceDefinition";
     private final AntPathMatcher matcher = new AntPathMatcher();
-
     private final ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
     private final ConcurrentHashMap<String, Map<String, TypeSpec>> typesByTenant = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, Map<String, String>> typesByTenantByFile = new ConcurrentHashMap<>();
@@ -112,6 +102,8 @@ public class XmEntitySpecService implements RefreshableConfiguration {
     private final List<EntitySpecUpdateListener> entitySpecUpdateListeners;
     private final DynamicPermissionCheckService dynamicPermissionCheckService;
     private final XmEntityTenantConfigService tenantConfigService;
+    private final DefinitionSpecProcessor definitionSpecProcessor;
+    private final FormSpecProcessor formSpecProcessor;
 
     /**
      * Search of all entity Type specifications.
@@ -188,6 +180,9 @@ public class XmEntitySpecService implements RefreshableConfiguration {
     private Map<String, TypeSpec> updateByTenantState(String tenant) {
         var tenantEntitySpec = new LinkedHashMap<String, TypeSpec>();
         typesByTenantByFile.get(tenant).values().stream().map(this::toTypeSpecsMap).forEach(tenantEntitySpec::putAll);
+        definitionSpecProcessor.updateDefinitionStateByTenant(tenant,typesByTenantByFile);
+        formSpecProcessor.updateFormStateByTenant(tenant, typesByTenantByFile);
+
         if (tenantEntitySpec.isEmpty()) {
             typesByTenant.remove(tenant);
         }
@@ -208,6 +203,8 @@ public class XmEntitySpecService implements RefreshableConfiguration {
         var dataSchemas = new HashMap<String, com.github.fge.jsonschema.main.JsonSchema>();
         JsonSchemaFactory jsonSchemaFactory = JsonSchemaFactory.byDefault();
         for (TypeSpec typeSpec : tenantEntitySpec.values()) {
+            definitionSpecProcessor.processTypeSpec(tenant,typeSpec);
+            formSpecProcessor.processTypeSpec(tenant, typeSpec);
             addJsonSchema(dataSchemas, jsonSchemaFactory, typeSpec);
         }
         dataSpecJsonSchemas.put(tenant, dataSchemas);
@@ -643,8 +640,8 @@ public class XmEntitySpecService implements RefreshableConfiguration {
             if (parent.containsKey("additionalProperties")) {
                 parent.put("additionalProperties", true);
             }
-            target.put(XM_ENTITY_DEFINITION, Map.of(parentType.getKey(), parent));
-            target.put("$ref", "#/" + XM_ENTITY_DEFINITION + "/" + parentType.getKey());
+            target.put(XM_ENTITY_INHERITANCE_DEFINITION, Map.of(parentType.getKey(), parent));
+            target.put("$ref", "#/" + XM_ENTITY_INHERITANCE_DEFINITION + "/" + parentType.getKey());
             String mergedJson = objectMapper.writeValueAsString(target);
             type.setDataSpec(mergedJson);
         } else {
