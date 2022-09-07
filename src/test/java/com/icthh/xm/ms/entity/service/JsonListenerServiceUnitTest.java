@@ -13,6 +13,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @RunWith(MockitoJUnitRunner.class)
 public class JsonListenerServiceUnitTest extends AbstractUnitTest {
+
     private static final String ENTITY_APP_NAME = "entity";
     private static final String TENANT_NAME = "XM";
     private static final String PATH_TO_FILE = "/config/tenants/XM/entity/xmentityspec/definitions/user.json";
@@ -20,7 +21,7 @@ public class JsonListenerServiceUnitTest extends AbstractUnitTest {
     private JsonListenerService subject;
 
     @Before
-    public void setUp(){
+    public void setUp() {
         subject = new JsonListenerService(ENTITY_APP_NAME);
     }
 
@@ -32,7 +33,7 @@ public class JsonListenerServiceUnitTest extends AbstractUnitTest {
     }
 
     @Test
-    public void isListeningConfiguration_whenFileNotJson_fail(){
+    public void isListeningConfiguration_whenFileNotJson_fail() {
         String incorrectFile = "/config/tenants/XM/entity/definitions/user.yml";
         boolean actual = subject.isListeningConfiguration(incorrectFile);
 
@@ -40,8 +41,8 @@ public class JsonListenerServiceUnitTest extends AbstractUnitTest {
     }
 
     @Test
-    public void onRefresh_success(){
-        String relativePath = "definitions/user.json";
+    public void onRefresh_success() {
+        String relativePath = "xmentityspec/definitions/user.json";
 
         subject.onRefresh(PATH_TO_FILE, CONFIG);
 
@@ -51,8 +52,8 @@ public class JsonListenerServiceUnitTest extends AbstractUnitTest {
     }
 
     @Test
-    public void onRefresh_whenConfigEmpty_fail(){
-        subject.onRefresh(PATH_TO_FILE,null);
+    public void onRefresh_whenConfigEmpty_fail() {
+        subject.onRefresh(PATH_TO_FILE, null);
 
         Map<String, String> actual = subject.getSpecificationByTenant(TENANT_NAME);
 
@@ -60,7 +61,7 @@ public class JsonListenerServiceUnitTest extends AbstractUnitTest {
     }
 
     @Test
-    public void getSpecificationByTenantRelativePath_success(){
+    public void getSpecificationByTenantRelativePath_success() {
         String relativePath = "xmentityspec/definitions/user.json";
         subject.onRefresh(PATH_TO_FILE, CONFIG);
 
@@ -69,11 +70,13 @@ public class JsonListenerServiceUnitTest extends AbstractUnitTest {
         assertThat(actual).isEqualTo(CONFIG);
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void getSpecificationByTenantRelativePath_whenPathNotEquals_fail(){
+    @Test
+    public void getSpecificationByTenantRelativePath_whenPathNotEquals_fail() {
         String notRelativePath = "not/relative/path/user.json";
         subject.onRefresh(PATH_TO_FILE, CONFIG);
 
-        subject.getSpecificationByTenantRelativePath(TENANT_NAME, notRelativePath);
+        String specificationByTenantRelativePath = subject.getSpecificationByTenantRelativePath(TENANT_NAME, notRelativePath);
+
+        assertThat(specificationByTenantRelativePath).isEmpty();
     }
 }

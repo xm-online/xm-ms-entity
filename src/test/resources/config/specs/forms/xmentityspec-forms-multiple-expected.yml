@@ -1,0 +1,28 @@
+---
+types:
+    - key: XM
+      dataForm: |
+       {
+          "form": [
+              {
+                  "user": {
+                      "key": "userKey",
+                      "value": "userValue",
+                      "keyDetails": "userDetailsKey",
+                      "name": "testKey",
+                      "description": "testDescription"
+                  },
+                  "name": "testKey",
+                  "description": "testDescription"
+              }
+          ]
+       }
+forms:
+    - key: testKey
+      ref: xmentityspec/forms/specification-forms.json
+    - key: userDetails
+      value: |
+        {
+            "keyDetails": "userDetailsKey",
+            "$ref": "#/xmEntityForm/testKey"
+        }

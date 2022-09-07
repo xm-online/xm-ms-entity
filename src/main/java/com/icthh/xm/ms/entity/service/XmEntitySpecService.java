@@ -46,7 +46,19 @@ import com.icthh.xm.ms.entity.config.XmEntityTenantConfigService;
 import com.icthh.xm.ms.entity.config.XmEntityTenantConfigService.XmEntityTenantConfig;
 import com.icthh.xm.ms.entity.domain.Calendar;
 import com.icthh.xm.ms.entity.domain.ext.TypeSpecParameter;
-import com.icthh.xm.ms.entity.domain.spec.*;
+import com.icthh.xm.ms.entity.domain.spec.AttachmentSpec;
+import com.icthh.xm.ms.entity.domain.spec.CalendarSpec;
+import com.icthh.xm.ms.entity.domain.spec.EventSpec;
+import com.icthh.xm.ms.entity.domain.spec.FunctionSpec;
+import com.icthh.xm.ms.entity.domain.spec.LinkSpec;
+import com.icthh.xm.ms.entity.domain.spec.LocationSpec;
+import com.icthh.xm.ms.entity.domain.spec.NextSpec;
+import com.icthh.xm.ms.entity.domain.spec.RatingSpec;
+import com.icthh.xm.ms.entity.domain.spec.StateSpec;
+import com.icthh.xm.ms.entity.domain.spec.TagSpec;
+import com.icthh.xm.ms.entity.domain.spec.TypeSpec;
+import com.icthh.xm.ms.entity.domain.spec.UniqueFieldSpec;
+import com.icthh.xm.ms.entity.domain.spec.XmEntitySpec;
 import com.icthh.xm.ms.entity.security.access.DynamicPermissionCheckService;
 
 import java.io.IOException;
@@ -203,8 +215,8 @@ public class XmEntitySpecService implements RefreshableConfiguration {
         var dataSchemas = new HashMap<String, com.github.fge.jsonschema.main.JsonSchema>();
         JsonSchemaFactory jsonSchemaFactory = JsonSchemaFactory.byDefault();
         for (TypeSpec typeSpec : tenantEntitySpec.values()) {
-            definitionSpecProcessor.processTypeSpec(tenant,typeSpec);
-            formSpecProcessor.processTypeSpec(tenant, typeSpec);
+            typeSpec = definitionSpecProcessor.processTypeSpec(tenant,typeSpec);
+            typeSpec = formSpecProcessor.processTypeSpec(tenant, typeSpec);
             addJsonSchema(dataSchemas, jsonSchemaFactory, typeSpec);
         }
         dataSpecJsonSchemas.put(tenant, dataSchemas);

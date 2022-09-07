@@ -634,18 +634,6 @@ public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
     }
 
     @Test
-    public void testJsonService(){
-
-        JsonListenerService jsonListenerService = new JsonListenerService("entity");
-        jsonListenerService.onRefresh("/config/tenants/XM/entity/xmentityspec/definitions/package1file.json", "{uaa: {type: 'object', 'properties': {'field': 1}}}");
-
-        String config = getXmEntitySpec("resinttest-part-2");
-        String key = SPEC_FOLDER_URL.replace("{tenantName}", "RESINTTEST") + "/file.yml";
-        xmEntitySpecService.onRefresh(key, config);
-
-    }
-
-    @Test
     public void testExtendsDataSpec() {
 
         mockTenant("RESINTTEST");

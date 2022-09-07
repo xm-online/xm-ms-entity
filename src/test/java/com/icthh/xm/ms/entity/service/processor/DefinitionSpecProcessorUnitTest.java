@@ -22,28 +22,29 @@ import static java.util.Collections.singletonList;
 import static org.junit.Assert.assertEquals;
 
 @RunWith(MockitoJUnitRunner.class)
-public class FormSpecProcessorUnitTest extends AbstractUnitTest {
+public class DefinitionSpecProcessorUnitTest extends AbstractUnitTest {
+
     private static final String ENTITY_APP_NAME = "entity";
     private static final String TENANT = "XM";
-    private static final String PATH_TO_FILE = "/config/tenants/XM/entity/xmentityspec/forms/specification-forms.json";
-    private FormSpecProcessor subject;
+    private static final String PATH_TO_FILE = "/config/tenants/XM/entity/xmentityspec/definitions/specification-definitions.json";
+    private DefinitionSpecProcessor subject;
     private ObjectMapper objectMapper;
 
     @Before
     public void setUp() {
         JsonListenerService jsonListenerService = new JsonListenerService(ENTITY_APP_NAME);
-        subject = new FormSpecProcessor(jsonListenerService);
+        subject = new DefinitionSpecProcessor(jsonListenerService);
         objectMapper = new ObjectMapper();
-        jsonListenerService.onRefresh(PATH_TO_FILE, loadFile("config/specs/forms/specification-forms.json"));
+        jsonListenerService.onRefresh(PATH_TO_FILE, loadFile("config/specs/definitions/specification-definitions.json"));
     }
 
     @Test
-    public void shouldProcessTypeSpecWithSingleReferences() throws Exception {
-        XmEntitySpec inputXmEntitySpec = loadXmEntitySpecByFileName("xmentityspec-forms-input");
-        XmEntitySpec expectedXmEntitySpec = loadXmEntitySpecByFileName("xmentityspec-forms-input-expected");
+    public void shouldProcessTypeSpecWithSingleDefinition() throws Exception {
+        XmEntitySpec inputXmEntitySpec = loadXmEntitySpecByFileName("xmentityspec-definitions-input");
+        XmEntitySpec expectedXmEntitySpec = loadXmEntitySpecByFileName("xmentityspec-definitions-input-expected");
         TypeSpec typeSpec = inputXmEntitySpec.getTypes().get(0);
 
-        subject.updateFormStateByTenant(TENANT, Map.of(TENANT, Map.of(TENANT, objectMapper.writeValueAsString(inputXmEntitySpec))));
+        subject.updateDefinitionStateByTenant(TENANT, Map.of(TENANT, Map.of(TENANT, objectMapper.writeValueAsString(inputXmEntitySpec))));
         TypeSpec actual = subject.processTypeSpec(TENANT, typeSpec);
 
         XmEntitySpec actualXmEntitySpec = createXmEntitySpec(singletonList(actual),
@@ -54,24 +55,28 @@ public class FormSpecProcessorUnitTest extends AbstractUnitTest {
     }
 
     @Test
-    public void shouldNotProcessTypeSpecIfPossibleRecursion() throws Exception {
-        XmEntitySpec inputXmEntitySpec = loadXmEntitySpecByFileName("xmentityspec-forms-recursive");
-
+    public void shouldProcessTypeSpecIfRecursion() throws Exception {
+        XmEntitySpec inputXmEntitySpec = loadXmEntitySpecByFileName("xmentityspec-definitions-recursive");
+        XmEntitySpec expectedXmEntitySpec = loadXmEntitySpecByFileName("xmentityspec-definitions-recursive-expected");
         TypeSpec typeSpec = inputXmEntitySpec.getTypes().get(0);
 
-        subject.updateFormStateByTenant(TENANT, Map.of(TENANT, Map.of(TENANT, objectMapper.writeValueAsString(inputXmEntitySpec))));
+        subject.updateDefinitionStateByTenant(TENANT, Map.of(TENANT, Map.of(TENANT, objectMapper.writeValueAsString(inputXmEntitySpec))));
         TypeSpec actual = subject.processTypeSpec(TENANT, typeSpec);
 
-        assertEquals(actual.getDataForm(), typeSpec.getDataForm());
+        XmEntitySpec actualXmEntitySpec = createXmEntitySpec(singletonList(actual),
+            inputXmEntitySpec.getForms(),
+            inputXmEntitySpec.getDefinitions());
+
+        assertEqualsEntities(expectedXmEntitySpec, actualXmEntitySpec);
     }
 
     @Test
-    public void shouldProcessTypeSpecWithMultipleForms() throws Exception {
-        XmEntitySpec inputXmEntitySpec = loadXmEntitySpecByFileName("xmentityspec-forms-multiple");
-        XmEntitySpec expectedXmEntitySpec = loadXmEntitySpecByFileName("xmentityspec-forms-multiple-expected");
+    public void shouldProcessTypeSpecWithMultipleDefinitions() throws Exception {
+        XmEntitySpec inputXmEntitySpec = loadXmEntitySpecByFileName("xmentityspec-definitions-multiple");
+        XmEntitySpec expectedXmEntitySpec = loadXmEntitySpecByFileName("xmentityspec-definitions-multiple-expected");
         TypeSpec typeSpec = inputXmEntitySpec.getTypes().get(0);
 
-        subject.updateFormStateByTenant(TENANT, Map.of(TENANT, Map.of(TENANT, objectMapper.writeValueAsString(inputXmEntitySpec))));
+        subject.updateDefinitionStateByTenant(TENANT, Map.of(TENANT, Map.of(TENANT, objectMapper.writeValueAsString(inputXmEntitySpec))));
         TypeSpec actual = subject.processTypeSpec(TENANT, typeSpec);
 
         XmEntitySpec actualXmEntitySpec = createXmEntitySpec(singletonList(actual),
@@ -84,21 +89,7 @@ public class FormSpecProcessorUnitTest extends AbstractUnitTest {
     @SneakyThrows
     private XmEntitySpec loadXmEntitySpecByFileName(String name) {
         ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
-        return mapper.readValue(loadFile("config/specs/forms/" + name + ".yml"), XmEntitySpec.class);
-    }
-
-    @SneakyThrows
-    private void assertEqualsEntities(XmEntitySpec expected, XmEntitySpec actual) {
-        ObjectMapper objectMapper = new ObjectMapper(new YAMLFactory());
-        TypeSpec expectedTypeSpec = expected.getTypes().get(0);
-        TypeSpec actualTypeSpec = actual.getTypes().get(0);
-        Map expectedForm = objectMapper.readValue(expectedTypeSpec.getDataForm(), Map.class);
-        Map actualForm = objectMapper.readValue(actualTypeSpec.getDataForm(), Map.class);
-
-        assertEquals(expectedForm, actualForm);
-        assertEquals(expectedTypeSpec.getKey(), actualTypeSpec.getKey());
-        assertEquals(expected.getDefinitions(), actual.getDefinitions());
-        assertEquals(expected.getForms(), actual.getForms());
+        return mapper.readValue(loadFile("config/specs/definitions/" + name + ".yml"), XmEntitySpec.class);
     }
 
     private XmEntitySpec createXmEntitySpec(List<TypeSpec> typeSpecs,
@@ -109,5 +100,19 @@ public class FormSpecProcessorUnitTest extends AbstractUnitTest {
         xmEntitySpec.setDefinitions(definitionSpecs);
         xmEntitySpec.setForms(formSpecs);
         return xmEntitySpec;
+    }
+
+    @SneakyThrows
+    private void assertEqualsEntities(XmEntitySpec expected, XmEntitySpec actual) {
+        ObjectMapper objectMapper = new ObjectMapper(new YAMLFactory());
+        TypeSpec expectedTypeSpec = expected.getTypes().get(0);
+        TypeSpec actualTypeSpec = actual.getTypes().get(0);
+        Map expectedTree = objectMapper.readValue(expectedTypeSpec.getDataSpec(), Map.class);
+        Map actualTree = objectMapper.readValue(actualTypeSpec.getDataSpec(), Map.class);
+
+        assertEquals(expectedTree, actualTree);
+        assertEquals(expectedTypeSpec.getKey(), actualTypeSpec.getKey());
+        assertEquals(expected.getDefinitions(), actual.getDefinitions());
+        assertEquals(expected.getForms(), actual.getForms());
     }
 }

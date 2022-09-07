@@ -11,13 +11,12 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import static java.lang.String.format;
 import static java.util.Optional.ofNullable;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
-@Service
 @Slf4j
+@Service
 public class JsonListenerService implements RefreshableConfiguration {
     private static final String TENANT_NAME = "tenantName";
     private final Map<String, Map<String, String>> tenantsSpecificationsByPath;
@@ -33,7 +32,7 @@ public class JsonListenerService implements RefreshableConfiguration {
     @Override
     public void onRefresh(String updatedKey, String config) {
         String tenantName = matcher.extractUriTemplateVariables(mappingPath, updatedKey).get(TENANT_NAME);
-        String relativePath = matcher.extractPathWithinPattern(mappingPath, updatedKey);
+        String relativePath = updatedKey.substring(updatedKey.indexOf("xmentityspec"));
 
         if (isBlank(config)) {
             tenantsSpecificationsByPath.remove(tenantName);
@@ -41,7 +40,7 @@ public class JsonListenerService implements RefreshableConfiguration {
         }
 
         tenantsSpecificationsByPath.putIfAbsent(tenantName, new ConcurrentHashMap<>());
-        tenantsSpecificationsByPath.get(tenantName).put(format("%s/%s","xmentityspec",relativePath), config);
+        tenantsSpecificationsByPath.get(tenantName).put(relativePath, config);
     }
 
     @Override
@@ -51,11 +50,11 @@ public class JsonListenerService implements RefreshableConfiguration {
 
     public String getSpecificationByTenantRelativePath(String tenant, String relativePath) {
         return ofNullable(getSpecificationByTenant(tenant))
-            .map(xm->xm.get(relativePath))
+            .map(xm -> xm.get(relativePath))
             .orElse(EMPTY);
     }
 
-    protected Map<String,String> getSpecificationByTenant(String tenant){
+    protected Map<String, String> getSpecificationByTenant(String tenant) {
         return tenantsSpecificationsByPath.get(tenant);
     }
 }

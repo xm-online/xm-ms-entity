@@ -8,12 +8,12 @@ import com.icthh.xm.ms.entity.service.JsonListenerService;
 import lombok.SneakyThrows;
 import org.springframework.util.AntPathMatcher;
 
-import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 public abstract class SpecProcessor {
-    protected static final String REF = "$ref";
 
+    protected static final String REF = "$ref";
     protected final AntPathMatcher matcher;
     protected final ObjectMapper mapper;
     protected final JsonListenerService jsonListenerService;
@@ -27,11 +27,11 @@ public abstract class SpecProcessor {
     public abstract TypeSpec processTypeSpec(String tenant, TypeSpec typeSpec);
 
     @SneakyThrows
-    protected List<String> findDataSpecReferencesByPattern(String dataSpec, String refPattern){
+    protected Set<String> findDataSpecReferencesByPattern(String dataSpec, String refPattern) {
         return JsonLoader.fromString(dataSpec)
             .findValuesAsText(REF)
             .stream()
             .filter(value -> matcher.matchStart(refPattern, value))
-            .collect(Collectors.toList());
+            .collect(Collectors.toSet());
     }
 }

@@ -9,13 +9,16 @@ import com.icthh.xm.ms.entity.domain.spec.TypeSpec;
 import com.icthh.xm.ms.entity.domain.spec.XmEntitySpec;
 import com.icthh.xm.ms.entity.service.JsonListenerService;
 import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
+import org.springframework.stereotype.Component;
 
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -23,10 +26,13 @@ import java.util.stream.Collectors;
 import static java.util.Optional.ofNullable;
 import static org.springframework.util.CollectionUtils.isEmpty;
 
+@Slf4j
+@Component
 public class FormSpecProcessor extends SpecProcessor {
     private static final String REF_FORM_PATTERN = "#/xmEntityForm/**/*";
     private static final String KEY_FORM_TEMPLATE = "#/xmEntityForm/{formKey}";
-    private final ConcurrentHashMap<String, Map<String, FormSpec>> formsByTenant;
+    private static final int POSSIBLE_RECURSIVE_LIMIT = 10;
+    private final Map<String, Map<String, FormSpec>> formsByTenant;
 
     public FormSpecProcessor(JsonListenerService jsonListenerService) {
         super(jsonListenerService);
@@ -46,35 +52,38 @@ public class FormSpecProcessor extends SpecProcessor {
     @SneakyThrows
     @Override
     public TypeSpec processTypeSpec(String tenant, TypeSpec typeSpec) {
-        List<String> existingReferenceValues = findDataSpecReferencesByPattern(typeSpec.getDataForm(), REF_FORM_PATTERN);
+        if (StringUtils.isNotBlank(typeSpec.getDataForm()) && !formsByTenant.get(tenant).isEmpty()) {
+            TypeSpec updatedTypeSpec = typeSpec.toBuilder().build();
 
-        if (existingReferenceValues.isEmpty()) {
-            return typeSpec;
+            for (int i = 0; i < POSSIBLE_RECURSIVE_LIMIT; i++) {
+                Set<String> existingReferenceValues = findDataSpecReferencesByPattern(updatedTypeSpec.getDataForm(), REF_FORM_PATTERN);
+
+                if (existingReferenceValues.isEmpty()) {
+                    return updatedTypeSpec;
+                }
+
+                Map<String, String> specifications = collectTenantSpecifications(existingReferenceValues, tenant);
+                resolveReferences(specifications, updatedTypeSpec);
+            }
+            log.warn("Maximum iteration limit reached: {}. Could be recursion and form has not been processed", POSSIBLE_RECURSIVE_LIMIT);
         }
-
-        Map<String, String> specifications = collectTenantSpecifications(existingReferenceValues, tenant);
-        resolveReferences(specifications, typeSpec);
-
-        return processTypeSpec(tenant, typeSpec);
+        return typeSpec;
     }
 
-    private Map<String, String> collectTenantSpecifications(List<String> existingReferences, String tenant) {
+    private Map<String, String> collectTenantSpecifications(Set<String> existingReferences, String tenant) {
         Map<String, String> specificationsByRelativePath = new LinkedHashMap<>();
 
         for (String formPath : existingReferences) {
             String formKey = matcher.extractUriTemplateVariables(KEY_FORM_TEMPLATE, formPath).get("formKey");
 
             if (StringUtils.isNotBlank(formKey)) {
-
-                ofNullable(formsByTenant.get(tenant).get(formKey)).ifPresent(formSpec -> {
-
-                        String tenantSpecification = ofNullable(formSpec.getValue())
-                            .orElse(jsonListenerService.getSpecificationByTenantRelativePath(tenant, formSpec.getRef()));
-
-                        specificationsByRelativePath.put(formSpec.getKey(), tenantSpecification);
-                    }
-                );
-
+                ofNullable(formsByTenant.get(tenant))
+                    .map(x -> x.get(formKey))
+                    .map(formSpec -> getFormSpecificationByFile(tenant, formSpec))
+                    .filter(StringUtils::isNotBlank)
+                    .ifPresentOrElse(
+                        specification -> specificationsByRelativePath.put(formKey, specification),
+                        () -> log.warn("The form specification for key:{} and tenant:{} was not found.", formKey, tenant));
             }
         }
         return specificationsByRelativePath;
@@ -82,13 +91,16 @@ public class FormSpecProcessor extends SpecProcessor {
 
     private void resolveReferences(Map<String, String> specifications, TypeSpec typeSpec) throws JsonProcessingException {
         ObjectMapper objectMapper = new ObjectMapper();
-        var defaults = objectMapper.readValue(typeSpec.getDataForm(), JsonNode.class);
+        JsonNode defaults = objectMapper.readValue(typeSpec.getDataForm(), JsonNode.class);
         JsonNode jsonNode = replaceReferences(defaults, specifications);
-
 
         typeSpec.setDataForm(objectMapper.writeValueAsString(jsonNode));
     }
 
+    private String getFormSpecificationByFile(String tenant, FormSpec formSpec) {
+        return ofNullable(formSpec.getValue())
+            .orElseGet(() -> jsonListenerService.getSpecificationByTenantRelativePath(tenant, formSpec.getRef()));
+    }
 
     private JsonNode replaceReferences(JsonNode node, Map<String, String> specifications) {
         if (node.isObject()) {
@@ -108,8 +120,7 @@ public class FormSpecProcessor extends SpecProcessor {
                         .filter(value::contains)
                         .findAny()
                         .ifPresent(key -> objectNode.setAll(
-                            convertSpecificationToObjectNode(specifications.get(key))
-                        ));
+                            convertSpecificationToObjectNode(specifications.get(key))));
                 }
                 replaceReferences(entry.getValue(), specifications);
             }
@@ -136,6 +147,7 @@ public class FormSpecProcessor extends SpecProcessor {
         } else {
             return definitionSpecs.stream().collect(Collectors.toMap(FormSpec::getKey, Function.identity(),
                 (u, v) -> {
+                    log.warn("Duplicate key found: {}", u);
                     throw new IllegalStateException(String.format("Duplicate key %s", u));
                 }, LinkedHashMap::new));
         }
