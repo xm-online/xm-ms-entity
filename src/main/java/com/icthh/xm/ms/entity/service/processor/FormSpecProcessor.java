@@ -59,7 +59,8 @@ public class FormSpecProcessor extends SpecProcessor {
                 Set<String> existingReferenceValues = findDataSpecReferencesByPattern(updatedTypeSpec.getDataForm(), REF_FORM_PATTERN);
 
                 if (existingReferenceValues.isEmpty()) {
-                    return updatedTypeSpec;
+                    typeSpec.setDataForm(updatedTypeSpec.getDataForm());
+                    return typeSpec;
                 }
 
                 Map<String, String> specifications = collectTenantSpecifications(existingReferenceValues, tenant);
@@ -105,24 +106,24 @@ public class FormSpecProcessor extends SpecProcessor {
     private JsonNode replaceReferences(JsonNode node, Map<String, String> specifications) {
         if (node.isObject()) {
             ObjectNode objectNode = (ObjectNode) node;
-            Iterator<Map.Entry<String, JsonNode>> it = objectNode.fields();
+            Iterator<Map.Entry<String, JsonNode>> it = convertToFailSafeIterator(objectNode.fields());
 
             while (it.hasNext()) {
                 Map.Entry<String, JsonNode> entry = it.next();
                 String jsonKey = entry.getKey();
-
+                JsonNode value = entry.getValue();
                 if (jsonKey.equals(REF)) {
-                    String value = entry.getValue().asText();
+                    String textValue = entry.getValue().asText();
                     objectNode.remove(REF);
 
                     specifications.keySet()
                         .stream()
-                        .filter(value::contains)
+                        .filter(textValue::contains)
                         .findAny()
                         .ifPresent(key -> objectNode.setAll(
                             convertSpecificationToObjectNode(specifications.get(key))));
                 }
-                replaceReferences(entry.getValue(), specifications);
+                replaceReferences(value, specifications);
             }
         }
         if (node.isArray()) {
@@ -135,7 +136,8 @@ public class FormSpecProcessor extends SpecProcessor {
 
     @SneakyThrows
     private ObjectNode convertSpecificationToObjectNode(String specification) {
-        return (ObjectNode) mapper.readTree(specification);
+        ObjectMapper objectMapper = new ObjectMapper();
+        return (ObjectNode) objectMapper.readTree(specification);
     }
 
     @SneakyThrows
@@ -151,5 +153,12 @@ public class FormSpecProcessor extends SpecProcessor {
                     throw new IllegalStateException(String.format("Duplicate key %s", u));
                 }, LinkedHashMap::new));
         }
+    }
+
+    private Iterator<Map.Entry<String, JsonNode>> convertToFailSafeIterator(Iterator<Map.Entry<String, JsonNode>> failFastIterator){
+        ConcurrentHashMap<String, JsonNode> concurrentHashMap = new ConcurrentHashMap<>();
+
+        failFastIterator.forEachRemaining((entry)->concurrentHashMap.put(entry.getKey(),entry.getValue()));
+        return concurrentHashMap.entrySet().iterator();
     }
 }

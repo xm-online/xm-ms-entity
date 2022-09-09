@@ -1,0 +1,7 @@
+{
+    "key": "adminLogin",
+    "title": {
+        "en": "Admin login"
+    },
+    "type": "string"
+}

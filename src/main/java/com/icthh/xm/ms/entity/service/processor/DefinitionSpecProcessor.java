@@ -1,6 +1,7 @@
 package com.icthh.xm.ms.entity.service.processor;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.icthh.xm.ms.entity.domain.spec.DefinitionSpec;
 import com.icthh.xm.ms.entity.domain.spec.TypeSpec;
 import com.icthh.xm.ms.entity.domain.spec.XmEntitySpec;
@@ -67,12 +68,14 @@ public class DefinitionSpecProcessor extends SpecProcessor {
     @SneakyThrows
     public TypeSpec processTypeSpec(String tenant, TypeSpec typeSpec) {
         if (StringUtils.isNotBlank(typeSpec.getDataSpec()) && !definitionsByTenant.get(tenant).isEmpty()){
-            var target = mapper.readValue(typeSpec.getDataSpec(), Map.class);
+            ObjectMapper objectMapper = new ObjectMapper();
+
+            var target = objectMapper.readValue(typeSpec.getDataSpec(), Map.class);
 
             processDataSpec(tenant, typeSpec.getDataSpec());
 
             target.put(XM_ENTITY_DEFINITION, entityDefinitions);
-            String mergedJson = mapper.writeValueAsString(target);
+            String mergedJson = objectMapper.writeValueAsString(target);
             typeSpec.setDataSpec(mergedJson);
         }
         return typeSpec;

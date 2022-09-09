@@ -57,7 +57,8 @@ public class TenantConfigMockConfiguration {
                                             entityCustomPrivilegeService,
                                             dynamicPermissionCheckService,
                                             xmEntityTenantConfigService,
-            definitionSpecProcessor, formSpecProcessor);
+                                            definitionSpecProcessor,
+                                            formSpecProcessor);
     }
 
     @Bean

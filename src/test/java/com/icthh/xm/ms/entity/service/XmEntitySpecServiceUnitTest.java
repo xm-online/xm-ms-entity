@@ -165,7 +165,9 @@ public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
                                                 tenantConfig
                                             ),
                                             dynamicPermissionCheckService,
-                                            tenantConfig,definitionSpecProcessor,formSpecProcessor));
+                                            tenantConfig,
+                                            definitionSpecProcessor,
+                                            formSpecProcessor));
     }
 
     @Test
