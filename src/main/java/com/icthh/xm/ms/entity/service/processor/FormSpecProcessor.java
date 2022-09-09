@@ -155,10 +155,10 @@ public class FormSpecProcessor extends SpecProcessor {
         }
     }
 
-    private Iterator<Map.Entry<String, JsonNode>> convertToFailSafeIterator(Iterator<Map.Entry<String, JsonNode>> failFastIterator){
+    private Iterator<Map.Entry<String, JsonNode>> convertToFailSafeIterator(Iterator<Map.Entry<String, JsonNode>> failFastIterator) {
         ConcurrentHashMap<String, JsonNode> concurrentHashMap = new ConcurrentHashMap<>();
 
-        failFastIterator.forEachRemaining((entry)->concurrentHashMap.put(entry.getKey(),entry.getValue()));
+        failFastIterator.forEachRemaining((entry) -> concurrentHashMap.put(entry.getKey(), entry.getValue()));
         return concurrentHashMap.entrySet().iterator();
     }
 }

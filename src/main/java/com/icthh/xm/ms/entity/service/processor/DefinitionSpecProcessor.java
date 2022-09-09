@@ -31,12 +31,10 @@ public class DefinitionSpecProcessor extends SpecProcessor {
     private static final String REF_DEFINITION_PATTERN = "#/xmEntityDefinition/**/*";
     private static final String KEY_DEFINITION_TEMPLATE = "#/xmEntityDefinition/{definitionKey}/*";
     private final Map<String, Map<String, DefinitionSpec>> definitionsByTenant;
-    private final Map<String, Map<String, Object>> entityDefinitions;
 
     public DefinitionSpecProcessor(JsonListenerService jsonListenerService) {
         super(jsonListenerService);
         this.definitionsByTenant = new ConcurrentHashMap<>();
-        this.entityDefinitions = new LinkedHashMap<>();
     }
 
     public void updateDefinitionStateByTenant(String tenant, Map<String, Map<String, String>> typesByTenantByFile) {
@@ -67,12 +65,12 @@ public class DefinitionSpecProcessor extends SpecProcessor {
     @Override
     @SneakyThrows
     public TypeSpec processTypeSpec(String tenant, TypeSpec typeSpec) {
-        if (StringUtils.isNotBlank(typeSpec.getDataSpec()) && !definitionsByTenant.get(tenant).isEmpty()){
+        if (StringUtils.isNotBlank(typeSpec.getDataSpec()) && !definitionsByTenant.get(tenant).isEmpty()) {
             ObjectMapper objectMapper = new ObjectMapper();
-
+            Map<String, Map<String, Object>> entityDefinitions = new LinkedHashMap<>();
             var target = objectMapper.readValue(typeSpec.getDataSpec(), Map.class);
 
-            processDataSpec(tenant, typeSpec.getDataSpec());
+            processDataSpec(tenant, typeSpec.getDataSpec(), entityDefinitions);
 
             target.put(XM_ENTITY_DEFINITION, entityDefinitions);
             String mergedJson = objectMapper.writeValueAsString(target);
@@ -82,14 +80,14 @@ public class DefinitionSpecProcessor extends SpecProcessor {
     }
 
     @SneakyThrows
-    private void processDataSpec(String tenant, String value) {
+    private void processDataSpec(String tenant, String value, Map<String, Map<String, Object>> entityDefinitions) {
         Set<String> dataSpecReferencesByPattern = findDataSpecReferencesByPattern(value, REF_DEFINITION_PATTERN);
         if (dataSpecReferencesByPattern.isEmpty()) {
             return;
         }
         for (String dataRef : dataSpecReferencesByPattern) {
-
             String definitionKey = matcher.extractUriTemplateVariables(KEY_DEFINITION_TEMPLATE, dataRef).get("definitionKey");
+
             if (entityDefinitions.containsKey(definitionKey)) {
                 return;
             }
@@ -100,8 +98,8 @@ public class DefinitionSpecProcessor extends SpecProcessor {
                     .filter(StringUtils::isNotBlank)
                     .ifPresentOrElse(
                         specification -> {
-                            updateEntityDefinitionSpecification(specification, definitionKey);
-                            processDataSpec(tenant, specification);
+                            updateEntityDefinitionSpecification(specification, definitionKey, entityDefinitions);
+                            processDataSpec(tenant, specification, entityDefinitions);
                         },
                         () -> log.warn("The definition specification for key:{} and tenant:{} was not found.",
                             definitionKey, tenant));
@@ -114,7 +112,8 @@ public class DefinitionSpecProcessor extends SpecProcessor {
             .orElseGet(() -> jsonListenerService.getSpecificationByTenantRelativePath(tenant, definitionSpec.getRef()));
     }
 
-    private void updateEntityDefinitionSpecification(String specification, String definitionKey) {
+    private void updateEntityDefinitionSpecification(String specification, String definitionKey,
+                                                     Map<String, Map<String, Object>> entityDefinitions) {
         try {
             var mapSpecification = mapper.readValue(specification, Map.class);
             entityDefinitions.put(definitionKey, mapSpecification);
