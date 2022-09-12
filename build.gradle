@@ -20,7 +20,7 @@ plugins {
     id "checkstyle"
     id "org.springframework.boot"
     id "com.google.cloud.tools.jib"
-    // id "com.gorylenko.gradle-git-properties"
+    id "com.gorylenko.gradle-git-properties"
     id "net.ltgt.apt-eclipse"
     id "net.ltgt.apt-idea"
     id "net.ltgt.apt"
