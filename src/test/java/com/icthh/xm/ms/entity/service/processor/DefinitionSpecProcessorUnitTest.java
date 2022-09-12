@@ -45,9 +45,9 @@ public class DefinitionSpecProcessorUnitTest extends AbstractUnitTest {
         TypeSpec typeSpec = inputXmEntitySpec.getTypes().get(0);
 
         subject.updateDefinitionStateByTenant(TENANT, Map.of(TENANT, Map.of(TENANT, objectMapper.writeValueAsString(inputXmEntitySpec))));
-        TypeSpec actual = subject.processTypeSpec(TENANT, typeSpec);
+        subject.processTypeSpec(TENANT, typeSpec::setDataSpec, typeSpec::getDataSpec);
 
-        XmEntitySpec actualXmEntitySpec = createXmEntitySpec(singletonList(actual),
+        XmEntitySpec actualXmEntitySpec = createXmEntitySpec(singletonList(typeSpec),
             inputXmEntitySpec.getForms(),
             inputXmEntitySpec.getDefinitions());
 
@@ -61,9 +61,9 @@ public class DefinitionSpecProcessorUnitTest extends AbstractUnitTest {
         TypeSpec typeSpec = inputXmEntitySpec.getTypes().get(0);
 
         subject.updateDefinitionStateByTenant(TENANT, Map.of(TENANT, Map.of(TENANT, objectMapper.writeValueAsString(inputXmEntitySpec))));
-        TypeSpec actual = subject.processTypeSpec(TENANT, typeSpec);
+        subject.processTypeSpec(TENANT, typeSpec::setDataSpec, typeSpec::getDataSpec);
 
-        XmEntitySpec actualXmEntitySpec = createXmEntitySpec(singletonList(actual),
+        XmEntitySpec actualXmEntitySpec = createXmEntitySpec(singletonList(typeSpec),
             inputXmEntitySpec.getForms(),
             inputXmEntitySpec.getDefinitions());
 
@@ -77,9 +77,9 @@ public class DefinitionSpecProcessorUnitTest extends AbstractUnitTest {
         TypeSpec typeSpec = inputXmEntitySpec.getTypes().get(0);
 
         subject.updateDefinitionStateByTenant(TENANT, Map.of(TENANT, Map.of(TENANT, objectMapper.writeValueAsString(inputXmEntitySpec))));
-        TypeSpec actual = subject.processTypeSpec(TENANT, typeSpec);
+        subject.processTypeSpec(TENANT, typeSpec::setDataSpec, typeSpec::getDataSpec);
 
-        XmEntitySpec actualXmEntitySpec = createXmEntitySpec(singletonList(actual),
+        XmEntitySpec actualXmEntitySpec = createXmEntitySpec(singletonList(typeSpec),
             inputXmEntitySpec.getForms(),
             inputXmEntitySpec.getDefinitions());
 

@@ -31,6 +31,7 @@ import com.icthh.xm.ms.entity.domain.spec.StateSpec;
 import com.icthh.xm.ms.entity.domain.spec.TagSpec;
 import com.icthh.xm.ms.entity.domain.spec.TypeSpec;
 import com.icthh.xm.ms.entity.domain.spec.UniqueFieldSpec;
+import com.icthh.xm.ms.entity.domain.spec.XmEntitySpec;
 import com.icthh.xm.ms.entity.security.access.DynamicPermissionCheckService;
 import com.icthh.xm.ms.entity.service.privileges.custom.ApplicationCustomPrivilegesExtractor;
 import com.icthh.xm.ms.entity.service.privileges.custom.EntityCustomPrivilegeService;
@@ -119,9 +120,7 @@ public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
     @Mock
     private TenantConfigRepository tenantConfigRepository;
     @Mock
-    private DefinitionSpecProcessor definitionSpecProcessor;
-    @Mock
-    private FormSpecProcessor formSpecProcessor;
+    private JsonListenerService jsonListenerService;
     @InjectMocks
     @Spy
     private DynamicPermissionCheckService dynamicPermissionCheckService;
@@ -166,8 +165,8 @@ public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
                                             ),
                                             dynamicPermissionCheckService,
                                             tenantConfig,
-                                            definitionSpecProcessor,
-                                            formSpecProcessor));
+                                            new DefinitionSpecProcessor(jsonListenerService),
+                                            new FormSpecProcessor(jsonListenerService)));
     }
 
     @Test
@@ -767,6 +766,43 @@ public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
         assertNotNull(functionSpec);
         assertEquals(functionSpec.getKey(), "in/package/FUNCTION4");
         assertEquals(functionSpec.getPath(), "call/function/by-path/{id}/and/param/{param}");
+    }
+
+    @Test
+    public void testUpdateTenantByStateWithDefinitionsAndForms() throws Exception {
+        ObjectMapper objectMapper = new ObjectMapper(new YAMLFactory());
+        String config = getXmEntitySpec("specifications");
+        String key = SPEC_FOLDER_URL.replace("{tenantName}", "RESINTTEST") + "/file.yml";
+        mockTenant("RESINTTEST");
+
+        xmEntitySpecService.onRefresh(key, config);
+
+        TypeSpec actualTypeSpec = xmEntitySpecService.getTypeSpecs().get("DEMO.TEST");
+        FunctionSpec actualFunctionSpec = actualTypeSpec.getFunctions().get(0);
+        NextSpec actualNextSpec = actualTypeSpec.getStates().get(0).getNext().get(0);
+
+        XmEntitySpec expectedXmEntity = objectMapper.readValue(getXmEntitySpec("specifications-expected"), XmEntitySpec.class);
+        TypeSpec expectedTypeSpec = expectedXmEntity.getTypes().get(0);
+        FunctionSpec expectedFunctionSpec = expectedTypeSpec.getFunctions().get(0);
+        NextSpec expectedNextSpec = expectedTypeSpec.getStates().get(0).getNext().get(0);
+
+        assertEqualsTypeSpecFields(actualTypeSpec.getDataSpec(), expectedTypeSpec.getDataSpec());
+        assertEqualsTypeSpecFields(actualTypeSpec.getDataForm(), expectedTypeSpec.getDataForm());
+        assertEqualsTypeSpecFields(actualFunctionSpec.getInputSpec(), expectedFunctionSpec.getInputSpec());
+        assertEqualsTypeSpecFields(actualFunctionSpec.getInputForm(), expectedFunctionSpec.getInputForm());
+        assertEqualsTypeSpecFields(actualFunctionSpec.getContextDataSpec(), expectedFunctionSpec.getContextDataSpec());
+        assertEqualsTypeSpecFields(actualFunctionSpec.getContextDataForm(), expectedFunctionSpec.getContextDataForm());
+        assertEqualsTypeSpecFields(actualNextSpec.getInputSpec(), expectedNextSpec.getInputSpec());
+        assertEqualsTypeSpecFields(actualNextSpec.getInputForm(), expectedNextSpec.getInputForm());
+    }
+
+    @SneakyThrows
+    private void assertEqualsTypeSpecFields(String expectedField, String actualField) {
+        ObjectMapper objectMapper = new ObjectMapper();
+        Map expected = objectMapper.readValue(expectedField, Map.class);
+        Map actual = objectMapper.readValue(actualField, Map.class);
+
+        assertEquals(actual, expected);
     }
 
     @SneakyThrows

@@ -44,9 +44,9 @@ public class FormSpecProcessorUnitTest extends AbstractUnitTest {
         TypeSpec typeSpec = inputXmEntitySpec.getTypes().get(0);
 
         subject.updateFormStateByTenant(TENANT, Map.of(TENANT, Map.of(TENANT, objectMapper.writeValueAsString(inputXmEntitySpec))));
-        TypeSpec actual = subject.processTypeSpec(TENANT, typeSpec);
+        subject.processTypeSpec(TENANT, typeSpec::setDataForm, typeSpec::getDataForm);
 
-        XmEntitySpec actualXmEntitySpec = createXmEntitySpec(singletonList(actual),
+        XmEntitySpec actualXmEntitySpec = createXmEntitySpec(singletonList(typeSpec),
             inputXmEntitySpec.getForms(),
             inputXmEntitySpec.getDefinitions());
 
@@ -60,9 +60,9 @@ public class FormSpecProcessorUnitTest extends AbstractUnitTest {
         TypeSpec typeSpec = inputXmEntitySpec.getTypes().get(0);
 
         subject.updateFormStateByTenant(TENANT, Map.of(TENANT, Map.of(TENANT, objectMapper.writeValueAsString(inputXmEntitySpec))));
-        TypeSpec actual = subject.processTypeSpec(TENANT, typeSpec);
+        subject.processTypeSpec(TENANT, typeSpec::setDataForm, typeSpec::getDataForm);
 
-        assertEquals(actual.getDataForm(), typeSpec.getDataForm());
+        assertEquals(inputXmEntitySpec.getTypes().get(0).getDataForm(), typeSpec.getDataForm());
     }
 
     @Test
@@ -72,9 +72,9 @@ public class FormSpecProcessorUnitTest extends AbstractUnitTest {
         TypeSpec typeSpec = inputXmEntitySpec.getTypes().get(0);
 
         subject.updateFormStateByTenant(TENANT, Map.of(TENANT, Map.of(TENANT, objectMapper.writeValueAsString(inputXmEntitySpec))));
-        TypeSpec actual = subject.processTypeSpec(TENANT, typeSpec);
+        subject.processTypeSpec(TENANT, typeSpec::setDataForm, typeSpec::getDataForm);
 
-        XmEntitySpec actualXmEntitySpec = createXmEntitySpec(singletonList(actual),
+        XmEntitySpec actualXmEntitySpec = createXmEntitySpec(singletonList(typeSpec),
             inputXmEntitySpec.getForms(),
             inputXmEntitySpec.getDefinitions());
 

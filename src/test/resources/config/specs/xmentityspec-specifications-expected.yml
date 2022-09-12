@@ -7,39 +7,46 @@ types:
             "type": "object",
             "properties": {
               "tenantKey": {"$ref": "#/xmEntityDefinition/tenantKey/tenantKey"}},
-            "required": ["tenantKey"]
+            "required": ["tenantKey"],
+            "xmEntityDefinition":{"tenantKey":{"tenantKey":{"type":"string"}}}}
           }
       dataForm: |
           {
             "form": [
-              {"$ref": "#/xmEntityForm/tenantKey"}]
+              {"key": "tenantKey", "title": {"en": "Tenant key"}, "type": "string"}]
           }
       functions:
           - key: ORDER-RATE
             name: { en: "Test", ru: "Тест" }
+            saveFunctionContext: false
+            withEntityId: true
             inputSpec: |
                 {
                     "type": "object",
                     "properties": {
                         "tenantKey": {"$ref": "#/xmEntityDefinition/tenantKey/tenantKey"}},
-                    "required": ["tenantKey"]
+                    "required": ["tenantKey"],
+                     "xmEntityDefinition":{"tenantKey":{"tenantKey":{"type":"string"}}}}
+
                 }
             inputForm: |
                 {
                     "form": [
-                        {"$ref": "#/xmEntityForm/tenantKey"}]
+                        {"key": "tenantKey", "title": {"en": "Tenant key"}, "type": "string"}]
                 }
             contextDataSpec: |
                 {
                     "type": "object",
                     "properties": {
                         "tenantKey": {"$ref": "#/xmEntityDefinition/tenantKey/tenantKey"}},
-                    "required": ["tenantKey"]
+                    "required": ["tenantKey"],
+                    "xmEntityDefinition":{"tenantKey":{"tenantKey":{"type":"string"}}}}
+
                 }
             contextDataForm: |
                 {
                     "form": [
-                        {"$ref": "#/xmEntityForm/tenantKey"}]
+                        {"key": "tenantKey", "title": {"en": "Tenant key"}, "type": "string"}]
                 }
 
       states:
@@ -53,12 +60,14 @@ types:
                         "type": "object",
                         "properties": {
                           "tenantKey": {"$ref": "#/xmEntityDefinition/tenantKey/tenantKey"}},
-                        "required": ["tenantKey"]
+                        "required": ["tenantKey"],
+                        "xmEntityDefinition":{"tenantKey":{"tenantKey":{"type":"string"}}}}
+
                       }
                   inputForm: |
                       {
                         "form": [
-                          {"$ref": "#/xmEntityForm/tenantKey"}]
+                          {"key": "tenantKey", "title": {"en": "Tenant key"}, "type": "string"}]
                       }
 definitions:
     - key: tenantKey

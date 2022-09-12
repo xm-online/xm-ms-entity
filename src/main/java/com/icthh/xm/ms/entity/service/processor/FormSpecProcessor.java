@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.icthh.xm.ms.entity.domain.spec.FormSpec;
-import com.icthh.xm.ms.entity.domain.spec.TypeSpec;
 import com.icthh.xm.ms.entity.domain.spec.XmEntitySpec;
 import com.icthh.xm.ms.entity.service.JsonListenerService;
 import lombok.SneakyThrows;
@@ -20,7 +19,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import static java.util.Optional.ofNullable;
@@ -51,24 +52,24 @@ public class FormSpecProcessor extends SpecProcessor {
 
     @SneakyThrows
     @Override
-    public TypeSpec processTypeSpec(String tenant, TypeSpec typeSpec) {
-        if (StringUtils.isNotBlank(typeSpec.getDataForm()) && !formsByTenant.get(tenant).isEmpty()) {
-            TypeSpec updatedTypeSpec = typeSpec.toBuilder().build();
+    public void processTypeSpec(String tenant, Consumer<String> setter, Supplier<String> getter) {
+        String typeSpecForm = getter.get();
+        if (StringUtils.isNotBlank(typeSpecForm) && !formsByTenant.get(tenant).isEmpty()) {
+            String updatedSpecForm = typeSpecForm;
 
             for (int i = 0; i < POSSIBLE_RECURSIVE_LIMIT; i++) {
-                Set<String> existingReferenceValues = findDataSpecReferencesByPattern(updatedTypeSpec.getDataForm(), REF_FORM_PATTERN);
+                Set<String> existingReferenceValues = findDataSpecReferencesByPattern(updatedSpecForm, REF_FORM_PATTERN);
 
                 if (existingReferenceValues.isEmpty()) {
-                    typeSpec.setDataForm(updatedTypeSpec.getDataForm());
-                    return typeSpec;
+                    setter.accept(updatedSpecForm);
+                    return;
                 }
 
                 Map<String, String> specifications = collectTenantSpecifications(existingReferenceValues, tenant);
-                resolveReferences(specifications, updatedTypeSpec);
+                updatedSpecForm = resolveReferences(specifications, updatedSpecForm);
             }
             log.warn("Maximum iteration limit reached: {}. Could be recursion and form has not been processed", POSSIBLE_RECURSIVE_LIMIT);
         }
-        return typeSpec;
     }
 
     private Map<String, String> collectTenantSpecifications(Set<String> existingReferences, String tenant) {
@@ -90,12 +91,12 @@ public class FormSpecProcessor extends SpecProcessor {
         return specificationsByRelativePath;
     }
 
-    private void resolveReferences(Map<String, String> specifications, TypeSpec typeSpec) throws JsonProcessingException {
+    private String resolveReferences(Map<String, String> specifications, String typeSpecForm) throws JsonProcessingException {
         ObjectMapper objectMapper = new ObjectMapper();
-        JsonNode defaults = objectMapper.readValue(typeSpec.getDataForm(), JsonNode.class);
+        JsonNode defaults = objectMapper.readValue(typeSpecForm, JsonNode.class);
         JsonNode jsonNode = replaceReferences(defaults, specifications);
 
-        typeSpec.setDataForm(objectMapper.writeValueAsString(jsonNode));
+        return objectMapper.writeValueAsString(jsonNode);
     }
 
     private String getFormSpecificationByFile(String tenant, FormSpec formSpec) {

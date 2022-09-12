@@ -3,7 +3,6 @@ package com.icthh.xm.ms.entity.service.processor;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.icthh.xm.ms.entity.domain.spec.DefinitionSpec;
-import com.icthh.xm.ms.entity.domain.spec.TypeSpec;
 import com.icthh.xm.ms.entity.domain.spec.XmEntitySpec;
 import com.icthh.xm.ms.entity.service.JsonListenerService;
 import lombok.SneakyThrows;
@@ -17,7 +16,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import static java.util.Optional.ofNullable;
@@ -64,19 +65,19 @@ public class DefinitionSpecProcessor extends SpecProcessor {
 
     @Override
     @SneakyThrows
-    public TypeSpec processTypeSpec(String tenant, TypeSpec typeSpec) {
-        if (StringUtils.isNotBlank(typeSpec.getDataSpec()) && !definitionsByTenant.get(tenant).isEmpty()) {
+    public void processTypeSpec(String tenant, Consumer<String> setter, Supplier<String> getter) {
+        String spec = getter.get();
+        if (StringUtils.isNotBlank(spec) && !definitionsByTenant.get(tenant).isEmpty()) {
             ObjectMapper objectMapper = new ObjectMapper();
             Map<String, Map<String, Object>> entityDefinitions = new LinkedHashMap<>();
-            var target = objectMapper.readValue(typeSpec.getDataSpec(), Map.class);
+            var target = objectMapper.readValue(spec, Map.class);
 
-            processDataSpec(tenant, typeSpec.getDataSpec(), entityDefinitions);
+            processDataSpec(tenant, spec, entityDefinitions);
 
             target.put(XM_ENTITY_DEFINITION, entityDefinitions);
             String mergedJson = objectMapper.writeValueAsString(target);
-            typeSpec.setDataSpec(mergedJson);
+            setter.accept(mergedJson);
         }
-        return typeSpec;
     }
 
     @SneakyThrows

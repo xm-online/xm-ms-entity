@@ -192,7 +192,7 @@ public class XmEntitySpecService implements RefreshableConfiguration {
     private Map<String, TypeSpec> updateByTenantState(String tenant) {
         var tenantEntitySpec = new LinkedHashMap<String, TypeSpec>();
         typesByTenantByFile.get(tenant).values().stream().map(this::toTypeSpecsMap).forEach(tenantEntitySpec::putAll);
-        definitionSpecProcessor.updateDefinitionStateByTenant(tenant,typesByTenantByFile);
+        definitionSpecProcessor.updateDefinitionStateByTenant(tenant, typesByTenantByFile);
         formSpecProcessor.updateFormStateByTenant(tenant, typesByTenantByFile);
 
         if (tenantEntitySpec.isEmpty()) {
@@ -215,12 +215,35 @@ public class XmEntitySpecService implements RefreshableConfiguration {
         var dataSchemas = new HashMap<String, com.github.fge.jsonschema.main.JsonSchema>();
         JsonSchemaFactory jsonSchemaFactory = JsonSchemaFactory.byDefault();
         for (TypeSpec typeSpec : tenantEntitySpec.values()) {
-            typeSpec = definitionSpecProcessor.processTypeSpec(tenant,typeSpec);
-            typeSpec = formSpecProcessor.processTypeSpec(tenant, typeSpec);
+            processTypeSpec(tenant, typeSpec);
             addJsonSchema(dataSchemas, jsonSchemaFactory, typeSpec);
         }
         dataSpecJsonSchemas.put(tenant, dataSchemas);
         return tenantEntitySpec;
+    }
+
+    private void processTypeSpec(String tenant, TypeSpec typeSpec) {
+        definitionSpecProcessor.processTypeSpec(tenant, typeSpec::setDataSpec, typeSpec::getDataSpec);
+        formSpecProcessor.processTypeSpec(tenant, typeSpec::setDataForm, typeSpec::getDataForm);
+
+        Stream.ofNullable(typeSpec.getStates())
+            .flatMap(Collection::stream)
+            .map(StateSpec::getNext)
+            .filter(Objects::nonNull)
+            .flatMap(Collection::stream)
+            .forEach(nextSpec -> {
+                definitionSpecProcessor.processTypeSpec(tenant, nextSpec::setInputSpec, nextSpec::getInputSpec);
+                formSpecProcessor.processTypeSpec(tenant,nextSpec::setInputForm, nextSpec::getInputForm);
+            });
+
+        Stream.ofNullable(typeSpec.getFunctions())
+            .flatMap(Collection::stream)
+            .forEach(functionSpec -> {
+                definitionSpecProcessor.processTypeSpec(tenant, functionSpec::setInputSpec, functionSpec::getInputSpec);
+                definitionSpecProcessor.processTypeSpec(tenant, functionSpec::setContextDataSpec, functionSpec::getContextDataSpec);
+                formSpecProcessor.processTypeSpec(tenant,functionSpec::setInputForm, functionSpec::getInputForm);
+                formSpecProcessor.processTypeSpec(tenant,functionSpec::setContextDataForm, functionSpec::getContextDataForm);
+            });
     }
 
     private void addJsonSchema(HashMap<String, com.github.fge.jsonschema.main.JsonSchema> dataSchemas,
