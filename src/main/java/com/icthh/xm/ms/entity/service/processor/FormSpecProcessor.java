@@ -121,8 +121,9 @@ public class FormSpecProcessor extends SpecProcessor {
                         .stream()
                         .filter(textValue::contains)
                         .findAny()
-                        .ifPresent(key -> objectNode.setAll(
-                            convertSpecificationToObjectNode(specifications.get(key))));
+                        .map(specifications::get)
+                        .map(this::convertSpecificationToObjectNode)
+                        .ifPresent(objectNode::setAll);
                 }
                 replaceReferences(value, specifications);
             }
