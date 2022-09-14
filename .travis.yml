@@ -1,6 +1,6 @@
 ranguage: java
 jdk:
-- openjdk11
+- oraclejdk11
 install: true
 addons:
   sonarcloud:

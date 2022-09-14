@@ -9,11 +9,16 @@ import lombok.Data;
 import java.util.List;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonPropertyOrder({ "types" })
+@JsonPropertyOrder({"types", "definitions", "forms"})
 @Data
 public class XmEntitySpec {
 
     @JsonProperty("types")
     private List<TypeSpec> types = null;
 
+    @JsonProperty("definitions")
+    private List<DefinitionSpec> definitions = null;
+
+    @JsonProperty("forms")
+    private List<FormSpec> forms = null;
 }
