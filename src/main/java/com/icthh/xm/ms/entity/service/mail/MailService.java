@@ -338,7 +338,7 @@ public class MailService {
                 }
             }
             javaMailSender.send(mimeMessage);
-            log.debug("Sent email to User '{}'", to);
+            log.info("Sent email to User '{}'", to);
         } catch (Exception e) {
             if (log.isDebugEnabled()) {
                 log.debug("Email could not be sent to user '{}'", to, e);
