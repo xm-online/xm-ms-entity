@@ -78,6 +78,9 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import com.icthh.xm.ms.entity.service.processor.DefinitionSpecProcessor;
+import com.icthh.xm.ms.entity.service.processor.FormSpecProcessor;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -97,9 +100,8 @@ public class XmEntitySpecService implements RefreshableConfiguration {
     private static final String TYPE_SEPARATOR_REGEXP = "\\.";
     private static final String TYPE_SEPARATOR = ".";
     private static final String TENANT_NAME = "tenantName";
-    private static final String XM_ENTITY_DEFINITION = "xmEntityDefinition";
+    private static final String XM_ENTITY_INHERITANCE_DEFINITION = "xmEntityInheritanceDefinition";
     private final AntPathMatcher matcher = new AntPathMatcher();
-
     private final ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
     private final ConcurrentHashMap<String, Map<String, TypeSpec>> typesByTenant = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, Map<String, String>> typesByTenantByFile = new ConcurrentHashMap<>();
@@ -112,6 +114,8 @@ public class XmEntitySpecService implements RefreshableConfiguration {
     private final List<EntitySpecUpdateListener> entitySpecUpdateListeners;
     private final DynamicPermissionCheckService dynamicPermissionCheckService;
     private final XmEntityTenantConfigService tenantConfigService;
+    private final DefinitionSpecProcessor definitionSpecProcessor;
+    private final FormSpecProcessor formSpecProcessor;
 
     /**
      * Search of all entity Type specifications.
@@ -188,6 +192,9 @@ public class XmEntitySpecService implements RefreshableConfiguration {
     private Map<String, TypeSpec> updateByTenantState(String tenant) {
         var tenantEntitySpec = new LinkedHashMap<String, TypeSpec>();
         typesByTenantByFile.get(tenant).values().stream().map(this::toTypeSpecsMap).forEach(tenantEntitySpec::putAll);
+        definitionSpecProcessor.updateDefinitionStateByTenant(tenant, typesByTenantByFile);
+        formSpecProcessor.updateFormStateByTenant(tenant, typesByTenantByFile);
+
         if (tenantEntitySpec.isEmpty()) {
             typesByTenant.remove(tenant);
         }
@@ -208,10 +215,35 @@ public class XmEntitySpecService implements RefreshableConfiguration {
         var dataSchemas = new HashMap<String, com.github.fge.jsonschema.main.JsonSchema>();
         JsonSchemaFactory jsonSchemaFactory = JsonSchemaFactory.byDefault();
         for (TypeSpec typeSpec : tenantEntitySpec.values()) {
+            processTypeSpec(tenant, typeSpec);
             addJsonSchema(dataSchemas, jsonSchemaFactory, typeSpec);
         }
         dataSpecJsonSchemas.put(tenant, dataSchemas);
         return tenantEntitySpec;
+    }
+
+    private void processTypeSpec(String tenant, TypeSpec typeSpec) {
+        definitionSpecProcessor.processTypeSpec(tenant, typeSpec::setDataSpec, typeSpec::getDataSpec);
+        formSpecProcessor.processTypeSpec(tenant, typeSpec::setDataForm, typeSpec::getDataForm);
+
+        Stream.ofNullable(typeSpec.getStates())
+            .flatMap(Collection::stream)
+            .map(StateSpec::getNext)
+            .filter(Objects::nonNull)
+            .flatMap(Collection::stream)
+            .forEach(nextSpec -> {
+                definitionSpecProcessor.processTypeSpec(tenant, nextSpec::setInputSpec, nextSpec::getInputSpec);
+                formSpecProcessor.processTypeSpec(tenant,nextSpec::setInputForm, nextSpec::getInputForm);
+            });
+
+        Stream.ofNullable(typeSpec.getFunctions())
+            .flatMap(Collection::stream)
+            .forEach(functionSpec -> {
+                definitionSpecProcessor.processTypeSpec(tenant, functionSpec::setInputSpec, functionSpec::getInputSpec);
+                definitionSpecProcessor.processTypeSpec(tenant, functionSpec::setContextDataSpec, functionSpec::getContextDataSpec);
+                formSpecProcessor.processTypeSpec(tenant,functionSpec::setInputForm, functionSpec::getInputForm);
+                formSpecProcessor.processTypeSpec(tenant,functionSpec::setContextDataForm, functionSpec::getContextDataForm);
+            });
     }
 
     private void addJsonSchema(HashMap<String, com.github.fge.jsonschema.main.JsonSchema> dataSchemas,
@@ -643,8 +675,8 @@ public class XmEntitySpecService implements RefreshableConfiguration {
             if (parent.containsKey("additionalProperties")) {
                 parent.put("additionalProperties", true);
             }
-            target.put(XM_ENTITY_DEFINITION, Map.of(parentType.getKey(), parent));
-            target.put("$ref", "#/" + XM_ENTITY_DEFINITION + "/" + parentType.getKey());
+            target.put(XM_ENTITY_INHERITANCE_DEFINITION, Map.of(parentType.getKey(), parent));
+            target.put("$ref", "#/" + XM_ENTITY_INHERITANCE_DEFINITION + "/" + parentType.getKey());
             String mergedJson = objectMapper.writeValueAsString(target);
             type.setDataSpec(mergedJson);
         } else {

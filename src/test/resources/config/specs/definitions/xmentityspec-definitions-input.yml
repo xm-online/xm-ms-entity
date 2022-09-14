@@ -1,0 +1,16 @@
+---
+types:
+    - key: XM
+      dataSpec: |
+          {
+              "type": "object",
+              "properties": {
+                  "uaa": {
+                      "$ref": "#/xmEntityDefinition/create/User"
+                  }
+              }
+          }
+
+definitions:
+    - key: create
+      ref: xmentityspec/definitions/specification-definitions.json
