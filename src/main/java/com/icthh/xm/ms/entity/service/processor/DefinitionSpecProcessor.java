@@ -10,6 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -39,8 +40,11 @@ public class DefinitionSpecProcessor extends SpecProcessor {
     }
 
     public void updateDefinitionStateByTenant(String tenant, Map<String, Map<String, String>> typesByTenantByFile) {
-        var definitionEntitySpec = new LinkedHashMap<String, DefinitionSpec>();
-        typesByTenantByFile.get(tenant).values().stream().map(this::toDefinitionSpecsMap).forEach(definitionEntitySpec::putAll);
+        var definitionEntitySpec = typesByTenantByFile.get(tenant).values().stream()
+            .map(this::toDefinitionSpecsMap)
+            .map(Map::entrySet)
+            .flatMap(Collection::stream)
+            .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (key1, key2) -> key1, LinkedHashMap::new));
 
         if (definitionEntitySpec.isEmpty()) {
             definitionsByTenant.remove(tenant);

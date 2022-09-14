@@ -12,6 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.stereotype.Component;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -41,8 +42,11 @@ public class FormSpecProcessor extends SpecProcessor {
     }
 
     public void updateFormStateByTenant(String tenant, Map<String, Map<String, String>> typesByTenantByFile) {
-        var definitionEntitySpec = new LinkedHashMap<String, FormSpec>();
-        typesByTenantByFile.get(tenant).values().stream().map(this::toFormSpecsMap).forEach(definitionEntitySpec::putAll);
+        var definitionEntitySpec = typesByTenantByFile.get(tenant).values().stream()
+            .map(this::toFormSpecsMap)
+            .map(Map::entrySet)
+            .flatMap(Collection::stream)
+            .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (key1, key2) -> key1, LinkedHashMap::new));
 
         if (definitionEntitySpec.isEmpty()) {
             formsByTenant.remove(tenant);
