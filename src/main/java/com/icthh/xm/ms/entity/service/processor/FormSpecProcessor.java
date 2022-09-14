@@ -42,16 +42,16 @@ public class FormSpecProcessor extends SpecProcessor {
     }
 
     public void updateFormStateByTenant(String tenant, Map<String, Map<String, String>> typesByTenantByFile) {
-        var definitionEntitySpec = typesByTenantByFile.get(tenant).values().stream()
+        var formEntitySpec = typesByTenantByFile.get(tenant).values().stream()
             .map(this::toFormSpecsMap)
             .map(Map::entrySet)
             .flatMap(Collection::stream)
             .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (key1, key2) -> key1, LinkedHashMap::new));
 
-        if (definitionEntitySpec.isEmpty()) {
+        if (formEntitySpec.isEmpty()) {
             formsByTenant.remove(tenant);
         }
-        formsByTenant.put(tenant, definitionEntitySpec);
+        formsByTenant.put(tenant, formEntitySpec);
     }
 
     @SneakyThrows
@@ -149,11 +149,11 @@ public class FormSpecProcessor extends SpecProcessor {
     @SneakyThrows
     private Map<String, FormSpec> toFormSpecsMap(String config) {
         XmEntitySpec xmEntitySpec = mapper.readValue(config, XmEntitySpec.class);
-        List<FormSpec> definitionSpecs = xmEntitySpec.getForms();
-        if (isEmpty(definitionSpecs)) {
+        List<FormSpec> formSpecs = xmEntitySpec.getForms();
+        if (isEmpty(formSpecs)) {
             return Collections.emptyMap();
         } else {
-            return definitionSpecs.stream().collect(Collectors.toMap(FormSpec::getKey, Function.identity(),
+            return formSpecs.stream().collect(Collectors.toMap(FormSpec::getKey, Function.identity(),
                 (u, v) -> {
                     log.warn("Duplicate key found: {}", u);
                     throw new IllegalStateException(String.format("Duplicate key %s", u));
