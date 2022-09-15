@@ -6,8 +6,11 @@ types:
               "type": "object",
               "properties": {
                   "uaa": {
-                      "$ref": "#/xmEntityDefinition/userDetails/UserDetails"
-                  }
+                      "$ref": "#/xmEntityDefinition/userDetails"
+                  },
+                  "entity": {
+                    "$ref": "#/xmEntityDefinition/userDetails/UserDetails"
+                }
               }
           }
 

@@ -11,7 +11,9 @@ types:
                       "$ref": "#/xmEntityForm/userDetails"
                   },
                   "$ref": "#/xmEntityForm/testKey"
-              }
+              },
+              {"$ref": "#/xmEntityForm/arrayForm"},
+              {"lastKey": "lastValue"}
           ]
        }
 forms:
@@ -23,3 +25,10 @@ forms:
             "keyDetails": "userDetailsKey",
             "$ref": "#/xmEntityForm/testKey"
         }
+    - key: arrayForm
+      value: |
+        [
+         {"name": "testName"},
+         {"key2": "value2"}
+        ]
+

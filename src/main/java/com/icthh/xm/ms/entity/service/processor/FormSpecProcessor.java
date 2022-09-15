@@ -3,6 +3,7 @@ package com.icthh.xm.ms.entity.service.processor;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.icthh.xm.ms.entity.domain.spec.FormSpec;
 import com.icthh.xm.ms.entity.domain.spec.XmEntitySpec;
@@ -12,6 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
@@ -20,6 +22,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -98,7 +101,7 @@ public class FormSpecProcessor extends SpecProcessor {
     private String resolveReferences(Map<String, String> specifications, String typeSpecForm) throws JsonProcessingException {
         ObjectMapper objectMapper = new ObjectMapper();
         JsonNode defaults = objectMapper.readValue(typeSpecForm, JsonNode.class);
-        JsonNode jsonNode = replaceReferences(defaults, specifications);
+        JsonNode jsonNode = replaceReferences(defaults, specifications, null);
 
         return objectMapper.writeValueAsString(jsonNode);
     }
@@ -108,7 +111,7 @@ public class FormSpecProcessor extends SpecProcessor {
             .orElseGet(() -> jsonListenerService.getSpecificationByTenantRelativePath(tenant, formSpec.getRef()));
     }
 
-    private JsonNode replaceReferences(JsonNode node, Map<String, String> specifications) {
+    private JsonNode replaceReferences(JsonNode node, Map<String, String> specifications, JsonNode parentNode) {
         if (node.isObject()) {
             ObjectNode objectNode = (ObjectNode) node;
             Iterator<Map.Entry<String, JsonNode>> it = convertToFailSafeIterator(objectNode.fields());
@@ -126,24 +129,42 @@ public class FormSpecProcessor extends SpecProcessor {
                         .filter(textValue::contains)
                         .findAny()
                         .map(specifications::get)
-                        .map(this::convertSpecificationToObjectNode)
-                        .ifPresent(objectNode::setAll);
+                        .map(this::convertSpecificationToObjectNodes)
+                        .ifPresent(objectNodes -> {
+                            if (objectNodes.size() > 1) {
+                                processArrayNode(objectNodes, parentNode);
+                            } else {
+                                objectNodes.forEach(objectNode::setAll);
+                            }
+                        });
                 }
-                replaceReferences(value, specifications);
+                replaceReferences(value, specifications, node);
             }
         }
         if (node.isArray()) {
-            for (JsonNode jsonNode : node) {
-                replaceReferences(jsonNode, specifications);
+            CopyOnWriteArrayList<JsonNode> failSafeIterator = new CopyOnWriteArrayList<>();
+            node.iterator().forEachRemaining(failSafeIterator::add);
+
+            for (JsonNode jsonNode : failSafeIterator) {
+                replaceReferences(jsonNode, specifications, node);
             }
         }
         return node;
     }
 
     @SneakyThrows
-    private ObjectNode convertSpecificationToObjectNode(String specification) {
+    private List<ObjectNode> convertSpecificationToObjectNodes(String specification) {
         ObjectMapper objectMapper = new ObjectMapper();
-        return (ObjectNode) objectMapper.readTree(specification);
+        JsonNode jsonNode = objectMapper.readValue(specification, JsonNode.class);
+
+        if (jsonNode.isArray()) {
+            ArrayNode arrayNode = (ArrayNode) jsonNode;
+            List<ObjectNode> objectNodes = new ArrayList<>();
+            arrayNode.forEach(node -> node.fields().forEachRemaining(entry ->
+                objectNodes.add(objectMapper.createObjectNode().set(entry.getKey(), entry.getValue()))));
+            return objectNodes;
+        }
+        return Collections.singletonList((ObjectNode) jsonNode);
     }
 
     @SneakyThrows
@@ -166,5 +187,23 @@ public class FormSpecProcessor extends SpecProcessor {
 
         failFastIterator.forEachRemaining((entry) -> concurrentHashMap.put(entry.getKey(), entry.getValue()));
         return concurrentHashMap.entrySet().iterator();
+    }
+
+    private void processArrayNode(List<ObjectNode> objectNodes, JsonNode parentNode) {
+        if (parentNode.isArray()) {
+            ArrayNode parentArray = (ArrayNode) parentNode;
+            List<JsonNode> newParentArray = new ArrayList<>();
+            parentArray.elements().forEachRemaining(element -> {
+                if (element.isEmpty()) {
+                    newParentArray.addAll(objectNodes);
+                } else {
+                    newParentArray.add(element);
+                }
+            });
+            parentArray.removeAll();
+            parentArray.addAll(newParentArray);
+        } else {
+            log.warn("Parsing could not be finished. Array has been injected to the object instead of array.");
+        }
     }
 }
