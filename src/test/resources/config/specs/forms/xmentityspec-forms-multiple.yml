@@ -8,11 +8,14 @@ types:
                   "user": {
                       "key": "userKey",
                       "value": "userValue",
+                      "items": [
+                         {"$ref": "#/xmEntityForm/multiplyArrayForm"}
+                      ],
                       "$ref": "#/xmEntityForm/userDetails"
                   },
-                  "$ref": "#/xmEntityForm/testKey"
+                  "$ref": "#/xmEntityForm/multiplyArrayForm"
               },
-              {"$ref": "#/xmEntityForm/arrayForm"},
+              {"$ref": "#/xmEntityForm/singleArrayForm"},
               {"lastKey": "lastValue"}
           ]
        }
@@ -25,10 +28,16 @@ forms:
             "keyDetails": "userDetailsKey",
             "$ref": "#/xmEntityForm/testKey"
         }
-    - key: arrayForm
+    - key: singleArrayForm
       value: |
         [
-         {"name": "testName"},
-         {"key2": "value2"}
+         {"name": "testName"}
         ]
+    - key: multiplyArrayForm
+      value: |
+          [
+            {"key1": "value1"},
+            {"key2": "value2"}
+          ]
+
 

@@ -132,7 +132,7 @@ public class FormSpecProcessor extends SpecProcessor {
                         .map(this::convertSpecificationToObjectNodes)
                         .ifPresent(objectNodes -> {
                             if (objectNodes.size() > 1) {
-                                processArrayNode(objectNodes, parentNode);
+                                processArrayNode(objectNodes, parentNode, objectNode);
                             } else {
                                 objectNodes.forEach(objectNode::setAll);
                             }
@@ -142,10 +142,10 @@ public class FormSpecProcessor extends SpecProcessor {
             }
         }
         if (node.isArray()) {
-            CopyOnWriteArrayList<JsonNode> failSafeIterator = new CopyOnWriteArrayList<>();
-            node.iterator().forEachRemaining(failSafeIterator::add);
+            ArrayList<JsonNode> copiedList = new ArrayList<>();
+            node.iterator().forEachRemaining(copiedList::add);
 
-            for (JsonNode jsonNode : failSafeIterator) {
+            for (JsonNode jsonNode : copiedList) {
                 replaceReferences(jsonNode, specifications, node);
             }
         }
@@ -189,12 +189,15 @@ public class FormSpecProcessor extends SpecProcessor {
         return concurrentHashMap.entrySet().iterator();
     }
 
-    private void processArrayNode(List<ObjectNode> objectNodes, JsonNode parentNode) {
+    private void processArrayNode(List<ObjectNode> objectNodes, JsonNode parentNode, ObjectNode objectNode) {
         if (parentNode.isArray()) {
             ArrayNode parentArray = (ArrayNode) parentNode;
             List<JsonNode> newParentArray = new ArrayList<>();
             parentArray.elements().forEachRemaining(element -> {
                 if (element.isEmpty()) {
+                    newParentArray.addAll(objectNodes);
+                } else if (objectNode.equals(element)) {
+                    newParentArray.add(element);
                     newParentArray.addAll(objectNodes);
                 } else {
                     newParentArray.add(element);

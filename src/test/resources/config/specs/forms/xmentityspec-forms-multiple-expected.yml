@@ -8,15 +8,18 @@ types:
                   "user": {
                       "key": "userKey",
                       "value": "userValue",
+                      "items" : [
+                        {"key1":"value1"},
+                        {"key2":"value2"}
+                      ],
                       "keyDetails": "userDetailsKey",
                       "name": "testKey",
                       "description": "testDescription"
-                  },
-                  "name": "testKey",
-                  "description": "testDescription"
+                  }
               },
-              {"name": "testName"},
+              {"key1": "value1"},
               {"key2": "value2"},
+              {"name": "testName"},
               {"lastKey": "lastValue"}
              ]
        }
@@ -29,9 +32,15 @@ forms:
             "keyDetails": "userDetailsKey",
             "$ref": "#/xmEntityForm/testKey"
         }
-    - key: arrayForm
+    - key: singleArrayForm
       value: |
           [
-           {"name": "testName"},
-           {"key2": "value2"}
+           {"name": "testName"}
           ]
+    - key: multiplyArrayForm
+      value: |
+          [
+            {"key1": "value1"},
+            {"key2": "value2"}
+          ]
+
