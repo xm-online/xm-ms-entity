@@ -159,8 +159,7 @@ public class FormSpecProcessor extends SpecProcessor {
         if (jsonNode.isArray()) {
             ArrayNode arrayNode = (ArrayNode) jsonNode;
             List<ObjectNode> objectNodes = new ArrayList<>();
-            arrayNode.forEach(node -> node.fields().forEachRemaining(entry ->
-                objectNodes.add(objectMapper.createObjectNode().set(entry.getKey(), entry.getValue()))));
+            arrayNode.forEach(node -> objectNodes.add(objectMapper.createObjectNode().setAll((ObjectNode) node)));
             return objectNodes;
         }
         return Collections.singletonList((ObjectNode) jsonNode);
