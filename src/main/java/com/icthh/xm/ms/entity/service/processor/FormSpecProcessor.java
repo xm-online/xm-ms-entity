@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ContainerNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.databind.node.TextNode;
 import com.icthh.xm.ms.entity.domain.spec.FormSpec;
 import com.icthh.xm.ms.entity.domain.spec.XmEntitySpec;
 import com.icthh.xm.ms.entity.service.JsonListenerService;
@@ -28,6 +29,8 @@ import org.springframework.stereotype.Component;
 
 import static com.google.common.collect.Lists.newArrayList;
 import static java.util.Optional.ofNullable;
+import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.modelmapper.internal.util.Objects.firstNonNull;
 import static org.springframework.util.CollectionUtils.isEmpty;
 
 @Slf4j
@@ -114,17 +117,22 @@ public class FormSpecProcessor extends SpecProcessor {
         if (node.isObject()) {
             ObjectNode objectNode = (ObjectNode) node;
 
-            Map<String, JsonNode> nodesIterator = copyToMap(objectNode.fields());
-            JsonNode refNode = nodesIterator.get(REF);
+            Map<String, JsonNode> objectMap = copyToMap(objectNode.fields());
+            JsonNode refNode = objectMap.get(REF);
+            JsonNode keyNode = objectMap.getOrDefault(KEY, mapper.createObjectNode());
+
             objectNode.remove(REF);
-            refNode = refNode != null ? refNode : mapper.createObjectNode();
-            String refPath = refNode.asText();
+            if (refNode != null && objectNode.size() == 1) {
+                objectNode.remove(KEY);
+            }
 
+            String refPath = firstNonNull(refNode, mapper.createObjectNode()).asText();
             String formSpec = specifications.getOrDefault(refPath, "{}");
-            var specJsonNode = this.convertSpecificationToObjectNodes(formSpec);
-            injectJsonNode(parentNode, objectNode, specJsonNode, refPath);
+            var fromSpecNode = this.convertSpecificationToObjectNodes(formSpec);
+            processFromSpecNode(fromSpecNode, keyNode.asText());
+            injectJsonNode(parentNode, objectNode, fromSpecNode, refPath);
 
-            nodesIterator.values().forEach(childNode -> replaceReferences(childNode, specifications, objectNode));
+            objectMap.values().forEach(childNode -> replaceReferences(childNode, specifications, objectNode));
         } else if (node.isArray()) {
             List<JsonNode> copiedList = newArrayList(node.iterator());
             for (JsonNode jsonNode : copiedList) {
@@ -132,6 +140,27 @@ public class FormSpecProcessor extends SpecProcessor {
             }
         }
         return node;
+    }
+
+    private void processFromSpecNode(JsonNode fromSpecNode, String prefix) {
+        if (isBlank(prefix)) {
+            return;
+        }
+
+        if (fromSpecNode.isObject()) {
+            ObjectNode objectNode = (ObjectNode) fromSpecNode;
+            Map<String, JsonNode> objectMap = copyToMap(objectNode.fields());
+            JsonNode keyNode = objectMap.get(KEY);
+            if (keyNode != null) {
+                objectNode.put(KEY, prefix + '.' + keyNode.asText());
+            }
+            objectMap.values().forEach(it -> this.processFromSpecNode(it, prefix));
+        } else if (fromSpecNode.isArray()) {
+            List<JsonNode> copiedList = newArrayList(fromSpecNode.iterator());
+            for (JsonNode jsonNode : copiedList) {
+                processFromSpecNode(jsonNode, prefix);
+            }
+        }
     }
 
     private void injectJsonNode(ContainerNode<?> parentNode, ObjectNode objectNode, ContainerNode<?> jsonNode, String refPath) {

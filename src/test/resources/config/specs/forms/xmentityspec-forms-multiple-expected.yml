@@ -11,7 +11,7 @@ types:
                       "items" : [
                         {"index": 1},
                         {"index": 2},
-                        {"name": "testName"},
+                        {"name": "testName", "key": "userKey[].fieldName"},
                         {"index": 3},
                         {"key1":"value1"},
                         {"key2":"value2"},
@@ -24,7 +24,7 @@ types:
               },
               {"key1": "value1"},
               {"key2": "value2"},
-              {"name": "testName"},
+              {"name": "testName", "key": "fieldName"},
               {
                  "keyDetails": "userDetailsKey",
                  "name": "testKey",
@@ -45,7 +45,7 @@ forms:
     - key: singleArrayForm
       value: |
           [
-           {"name": "testName"}
+           {"name": "testName", "key": "fieldName"}
           ]
     - key: multiplyArrayForm
       value: |

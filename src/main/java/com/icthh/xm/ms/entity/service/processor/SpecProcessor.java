@@ -15,6 +15,7 @@ import java.util.stream.Collectors;
 public abstract class SpecProcessor {
 
     protected static final String REF = "$ref";
+    protected static final String KEY = "key";
     protected final AntPathMatcher matcher;
     protected final ObjectMapper mapper;
     protected final JsonListenerService jsonListenerService;

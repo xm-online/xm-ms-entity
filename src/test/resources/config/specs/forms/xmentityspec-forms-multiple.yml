@@ -12,7 +12,7 @@ types:
                          {"index": 1},
                          {"$ref": "#/xmEntityForm/singleArrayFormNotExists"},
                          {"index": 2},
-                         {"$ref": "#/xmEntityForm/singleArrayForm"},
+                         {"$ref": "#/xmEntityForm/singleArrayForm", "key": "userKey[]"},
                          {"index": 3},        
                          {"$ref": "#/xmEntityForm/multiplyArrayForm"},
                          {"index": 4}
@@ -38,7 +38,7 @@ forms:
     - key: singleArrayForm
       value: |
         [
-         {"name": "testName"}
+         {"name": "testName", "key": "fieldName"}
         ]
     - key: multiplyArrayForm
       value: |
