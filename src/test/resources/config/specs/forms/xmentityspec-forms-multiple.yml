@@ -9,13 +9,20 @@ types:
                       "key": "userKey",
                       "value": "userValue",
                       "items": [
-                         {"$ref": "#/xmEntityForm/multiplyArrayForm"}
+                         {"index": 1},
+                         {"$ref": "#/xmEntityForm/singleArrayFormNotExists"},
+                         {"index": 2},
+                         {"$ref": "#/xmEntityForm/singleArrayForm"},
+                         {"index": 3},        
+                         {"$ref": "#/xmEntityForm/multiplyArrayForm"},
+                         {"index": 4}
                       ],
                       "$ref": "#/xmEntityForm/userDetails"
                   },
                   "$ref": "#/xmEntityForm/multiplyArrayForm"
               },
               {"$ref": "#/xmEntityForm/singleArrayForm"},
+              {"$ref": "#/xmEntityForm/userDetails"},
               {"lastKey": "lastValue"}
           ]
        }

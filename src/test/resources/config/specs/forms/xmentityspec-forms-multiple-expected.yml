@@ -9,8 +9,13 @@ types:
                       "key": "userKey",
                       "value": "userValue",
                       "items" : [
+                        {"index": 1},
+                        {"index": 2},
+                        {"name": "testName"},
+                        {"index": 3},
                         {"key1":"value1"},
-                        {"key2":"value2"}
+                        {"key2":"value2"},
+                        {"index": 4}
                       ],
                       "keyDetails": "userDetailsKey",
                       "name": "testKey",
@@ -20,6 +25,11 @@ types:
               {"key1": "value1"},
               {"key2": "value2"},
               {"name": "testName"},
+              {
+                 "keyDetails": "userDetailsKey",
+                 "name": "testKey",
+                 "description": "testDescription"
+              },
               {"lastKey": "lastValue"}
              ]
        }
