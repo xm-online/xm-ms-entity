@@ -1,6 +1,7 @@
 package com.icthh.xm.ms.entity.service.processor;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.icthh.xm.ms.entity.AbstractUnitTest;
 import com.icthh.xm.ms.entity.domain.spec.DefinitionSpec;
@@ -92,10 +93,11 @@ public class FormSpecProcessorUnitTest extends AbstractUnitTest {
         ObjectMapper objectMapper = new ObjectMapper(new YAMLFactory());
         TypeSpec expectedTypeSpec = expected.getTypes().get(0);
         TypeSpec actualTypeSpec = actual.getTypes().get(0);
-        Map expectedForm = objectMapper.readValue(expectedTypeSpec.getDataForm(), Map.class);
-        Map actualForm = objectMapper.readValue(actualTypeSpec.getDataForm(), Map.class);
+        Map<?, ?> expectedForm = objectMapper.readValue(expectedTypeSpec.getDataForm(), Map.class);
+        Map<?, ?> actualForm = objectMapper.readValue(actualTypeSpec.getDataForm(), Map.class);
 
-        assertEquals(expectedForm, actualForm);
+        ObjectWriter prettyPrinter = new ObjectMapper().writerWithDefaultPrettyPrinter();
+        assertEquals(prettyPrinter.writeValueAsString(expectedForm), prettyPrinter.writeValueAsString(actualForm));
         assertEquals(expectedTypeSpec.getKey(), actualTypeSpec.getKey());
         assertEquals(expected.getDefinitions(), actual.getDefinitions());
         assertEquals(expected.getForms(), actual.getForms());

@@ -8,14 +8,30 @@ types:
                   "user": {
                       "key": "userKey",
                       "value": "userValue",
+                      "items" : [
+                        {"index": 1},
+                        {"index": 2},
+                        {"name": "testName", "key": "userKey[].fieldName"},
+                        {"index": 3},
+                        {"key1":"value1"},
+                        {"key2":"value2"},
+                        {"index": 4}
+                      ],
                       "keyDetails": "userDetailsKey",
                       "name": "testKey",
                       "description": "testDescription"
-                  },
-                  "name": "testKey",
-                  "description": "testDescription"
-              }
-          ]
+                  }
+              },
+              {"key1": "value1"},
+              {"key2": "value2"},
+              {"name": "testName", "key": "fieldName"},
+              {
+                 "keyDetails": "userDetailsKey",
+                 "name": "testKey",
+                 "description": "testDescription"
+              },
+              {"lastKey": "lastValue"}
+             ]
        }
 forms:
     - key: testKey
@@ -26,3 +42,15 @@ forms:
             "keyDetails": "userDetailsKey",
             "$ref": "#/xmEntityForm/testKey"
         }
+    - key: singleArrayForm
+      value: |
+          [
+           {"name": "testName", "key": "fieldName"}
+          ]
+    - key: multiplyArrayForm
+      value: |
+          [
+            {"key1": "value1"},
+            {"key2": "value2"}
+          ]
+

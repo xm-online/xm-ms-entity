@@ -8,10 +8,22 @@ types:
                   "user": {
                       "key": "userKey",
                       "value": "userValue",
+                      "items": [
+                         {"index": 1},
+                         {"$ref": "#/xmEntityForm/singleArrayFormNotExists"},
+                         {"index": 2},
+                         {"$ref": "#/xmEntityForm/singleArrayForm", "key": "userKey[]"},
+                         {"index": 3},        
+                         {"$ref": "#/xmEntityForm/multiplyArrayForm"},
+                         {"index": 4}
+                      ],
                       "$ref": "#/xmEntityForm/userDetails"
                   },
-                  "$ref": "#/xmEntityForm/testKey"
-              }
+                  "$ref": "#/xmEntityForm/multiplyArrayForm"
+              },
+              {"$ref": "#/xmEntityForm/singleArrayForm"},
+              {"$ref": "#/xmEntityForm/userDetails"},
+              {"lastKey": "lastValue"}
           ]
        }
 forms:
@@ -23,3 +35,16 @@ forms:
             "keyDetails": "userDetailsKey",
             "$ref": "#/xmEntityForm/testKey"
         }
+    - key: singleArrayForm
+      value: |
+        [
+         {"name": "testName", "key": "fieldName"}
+        ]
+    - key: multiplyArrayForm
+      value: |
+          [
+            {"key1": "value1"},
+            {"key2": "value2"}
+          ]
+
+
