@@ -23,6 +23,8 @@ types:
               },
               {"$ref": "#/xmEntityForm/singleArrayForm"},
               {"$ref": "#/xmEntityForm/userDetails"},
+              {"$ref": "#/xmEntityForm/formWithSubForm", "key": "prefix1"},
+              {"$ref": "#/xmEntityForm/formWithSubFormWithKey", "key": "prefix2"},
               {"lastKey": "lastValue"}
           ]
        }
@@ -46,5 +48,20 @@ forms:
             {"key1": "value1"},
             {"key2": "value2"}
           ]
-
-
+    - key: formWithSubForm
+      value: |
+        [
+            {"key": "formWithSubFormField", "type": "string"},
+            { "$ref": "#/xmEntityForm/subForm" }
+        ]
+    - key: formWithSubFormWithKey
+      value: |
+        [
+            {"key": "formWithSubFormField", "type": "string"},
+            { "$ref": "#/xmEntityForm/subForm", "key": "formWithSubFormKey" }
+        ]
+    - key: subForm
+      value: |
+        [
+            {"key": "subForm", "type": "string"}
+        ]
