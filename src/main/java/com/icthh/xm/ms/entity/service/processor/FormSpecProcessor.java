@@ -153,6 +153,8 @@ public class FormSpecProcessor extends SpecProcessor {
             JsonNode keyNode = objectMap.get(KEY);
             if (keyNode != null) {
                 objectNode.put(KEY, prefix + '.' + keyNode.asText());
+            } else if (objectMap.containsKey(REF)) {
+                objectNode.put(KEY, prefix);
             }
             objectMap.values().forEach(it -> this.processFromSpecNode(it, prefix));
         } else if (fromSpecNode.isArray()) {
