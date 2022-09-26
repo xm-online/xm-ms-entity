@@ -30,10 +30,11 @@ import java.util.EnumSet;
 
 import org.springframework.web.multipart.commons.CommonsMultipartResolver;
 
-import javax.servlet.DispatcherType;
-import javax.servlet.FilterRegistration;
-import javax.servlet.ServletContext;
-import javax.servlet.ServletRegistration;
+import javax.servlet.*;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import static org.springframework.http.HttpMethod.OPTIONS;
 
 /**
  * Configuration of web application with Servlet 3.0 APIs.
@@ -136,6 +137,21 @@ public class WebConfigurer implements ServletContextInitializer, WebServerFactor
             source.registerCorsConfiguration("/v2/api-docs", config);
         }
         return new CorsFilter(source);
+    }
+
+    @Bean
+    public Filter corsOptionsMethod() {
+        return (servletRequest, servletResponse, filterChain) -> {
+            HttpServletRequest request = (HttpServletRequest) servletRequest;
+            if (request.getMethod().equalsIgnoreCase(OPTIONS.name())) {
+                HttpServletResponse response = (HttpServletResponse) servletResponse;
+                response.addHeader("Access-Control-Max-Age", "1728000");
+                response.setStatus(204);
+                filterChain.doFilter(request, response);
+            } else {
+                filterChain.doFilter(servletRequest, servletResponse);
+            }
+        };
     }
 
     @Bean(name = "multipartResolver")
