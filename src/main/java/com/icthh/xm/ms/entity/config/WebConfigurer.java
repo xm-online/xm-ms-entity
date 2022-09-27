@@ -132,7 +132,7 @@ public class WebConfigurer implements ServletContextInitializer, WebServerFactor
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         CorsConfiguration config = jHipsterProperties.getCors();
         if (config.getAllowedOrigins() != null && !config.getAllowedOrigins().isEmpty()) {
-            log.debug("Registering CORS filter");
+            log.info("Registering CORS filter");
             source.registerCorsConfiguration("/api/**", config);
             source.registerCorsConfiguration("/v2/api-docs", config);
         }
@@ -141,9 +141,11 @@ public class WebConfigurer implements ServletContextInitializer, WebServerFactor
 
     @Bean
     public Filter corsOptionsMethod() {
+        log.info("\n\nREGISTER CORS OPTIONS METHOD FILTER\n\n\n");
         return (servletRequest, servletResponse, filterChain) -> {
             HttpServletRequest request = (HttpServletRequest) servletRequest;
             if (request.getMethod().equalsIgnoreCase(OPTIONS.name())) {
+                log.info("\n\nOPTIONS REQUEST\n\n\n");
                 HttpServletResponse response = (HttpServletResponse) servletResponse;
                 response.addHeader("Access-Control-Max-Age", "1728000");
                 response.setStatus(204);
