@@ -238,6 +238,15 @@ configurations {
 }
 
 repositories {
+    maven {
+        url itsf_artifactory_contextUrl + "/libs-release-local"
+        allowInsecureProtocol = true
+
+        credentials {
+            username = itsf_artifactory_user
+            password = itsf_artifactory_password
+        }
+    }
     mavenLocal()
     mavenCentral()
     jcenter()
