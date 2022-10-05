@@ -1,0 +1,46 @@
+import java.time.format.DateTimeFormatter
+
+jar {
+    enabled = true
+    from "./build/classes/java/main"
+    from "./build/resources/main"
+}
+
+publishing {
+    publications {
+        def timestamp = "v" + DateTimeFormatter.ofPattern("yyyy-MM-dd.HH-mm-ss").format(LocalDateTime.now())
+        def customVersion = "withCustomCommons-${timestamp}"
+        codeWithCustomVersion(MavenPublication) {
+            artifact jar
+            artifactId 'xm-ms-entity'
+            group 'xm-online'
+            version customVersion
+        }
+        latest(MavenPublication) {
+            artifact jar
+            artifactId 'xm-ms-entity'
+            group 'xm-online'
+            version 'latest'
+        }
+    }
+    repositories {
+        maven {
+            name 'artifactory-release-local'
+            url "$itsf_artifactory_contextUrl/"
+            credentials {
+                username itsf_artifactory_user
+                password itsf_artifactory_password
+            }
+        }
+    }
+}
+
+dependencies {
+    compile "com.oracle.ojdbc:ojdbc8:19.3.0.0"
+    compile "org.apache.commons:commons-csv:1.6"
+    compile "com.jcraft:jsch:0.1.55"
+    compile group: 'com.monitorjbl', name: 'xlsx-streamer', version: '2.1.0'
+    implementation "org.lightcouch:lightcouch:0.2.0"
+    compile group: 'org.locationtech.spatial4j', name: 'spatial4j', version: '0.7'
+
+}
