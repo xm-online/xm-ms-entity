@@ -372,13 +372,7 @@ public class XmEntityServiceImpl implements XmEntityService {
     @Transactional(readOnly = true)
     public XmEntity findOne(IdOrKey idOrKey) {
         log.debug("Request to get XmEntity : {}", idOrKey);
-        Long xmEntityId;
-        if (idOrKey.isKey()) {
-            XmEntityIdKeyTypeKey projection = getXmEntityIdKeyTypeKey(idOrKey);
-            xmEntityId = projection.getId();
-        } else {
-            xmEntityId = idOrKey.getId();
-        }
+        Long xmEntityId = entityIdByKey(idOrKey);
         return findOneById(xmEntityId);
     }
 
@@ -386,15 +380,8 @@ public class XmEntityServiceImpl implements XmEntityService {
     @Override
     @Transactional(readOnly = true)
     public XmEntity findOne(IdOrKey idOrKey, List<String> embed) {
-        final Long entityId;
-        if (idOrKey.isKey()) {
-            XmEntityIdKeyTypeKey projection = getXmEntityIdKeyTypeKey(idOrKey);
-            entityId = projection.getId();
-        } else {
-            entityId = idOrKey.getId();
-        }
-
-        XmEntity xmEntity = xmEntityRepository.findOne(entityId, embed);
+        Long xmEntityId = entityIdByKey(idOrKey);
+        XmEntity xmEntity = xmEntityRepository.findOne(xmEntityId, embed);
         return xmEntity == null ? xmEntity : self.getOneEntity(xmEntity);
     }
 
@@ -425,13 +412,7 @@ public class XmEntityServiceImpl implements XmEntityService {
     @Transactional
     public XmEntity selectAndUpdate(IdOrKey idOrKey, Consumer<XmEntity> consumer) {
         log.debug("Request to get XmEntity : {}", idOrKey);
-        Long xmEntityId;
-        if (idOrKey.isKey()) {
-            XmEntityIdKeyTypeKey projection = getXmEntityIdKeyTypeKey(idOrKey);
-            xmEntityId = projection.getId();
-        } else {
-            xmEntityId = idOrKey.getId();
-        }
+        Long xmEntityId = entityIdByKey(idOrKey);
         XmEntity entity = xmEntityRepository.findOneByIdForUpdate(xmEntityId);
         consumer.accept(entity);
         return save(entity);
@@ -580,12 +561,7 @@ public class XmEntityServiceImpl implements XmEntityService {
             return self.search(query, pageable, privilegeKey);
         }
 
-        Long id;
-        if (idOrKey.isId()) {
-            id = idOrKey.getId();
-        } else {
-            id = getXmEntityIdKeyTypeKey(idOrKey).getId();
-        }
+        Long id = entityIdByKey(idOrKey);
 
         List<LinkProjection> links = linkService.findLinkProjectionsBySourceIdAndTypeKey(id, linkTypeKey);
         Set<Long> ids = links.stream()
@@ -900,4 +876,16 @@ public class XmEntityServiceImpl implements XmEntityService {
             .map(js -> validator.validateJson(value.getData(), js).isSuccess())
             .orElse(true);
     }
+
+    private Long entityIdByKey(IdOrKey idOrKey) {
+        Long xmEntityId;
+        if (idOrKey.isKey()) {
+            XmEntityIdKeyTypeKey projection = getXmEntityIdKeyTypeKey(idOrKey);
+            xmEntityId = projection.getId();
+        } else {
+            xmEntityId = idOrKey.getId();
+        }
+        return xmEntityId;
+    }
+
 }
