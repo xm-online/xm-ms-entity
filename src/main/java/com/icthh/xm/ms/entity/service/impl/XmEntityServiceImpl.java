@@ -65,7 +65,6 @@ import com.jayway.jsonpath.JsonPath;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.text.StrSubstitutor;
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.collection.spi.PersistentCollection;
@@ -387,13 +386,7 @@ public class XmEntityServiceImpl implements XmEntityService {
     @Override
     @Transactional(readOnly = true)
     public XmEntity findOne(IdOrKey idOrKey, List<String> embed) {
-
-        if (CollectionUtils.isEmpty(embed)) {
-            return findOne(idOrKey);
-        }
-
         final Long entityId;
-
         if (idOrKey.isKey()) {
             XmEntityIdKeyTypeKey projection = getXmEntityIdKeyTypeKey(idOrKey);
             entityId = projection.getId();
