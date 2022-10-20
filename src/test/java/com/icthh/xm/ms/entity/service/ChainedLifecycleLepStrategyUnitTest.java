@@ -4,6 +4,7 @@ import com.icthh.xm.ms.entity.AbstractUnitTest;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.domain.ext.IdOrKey;
 import com.icthh.xm.ms.entity.lep.keyresolver.TypeKeyWithExtends;
+import com.icthh.xm.ms.entity.security.access.DynamicPermissionCheckService;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -30,9 +31,15 @@ public class ChainedLifecycleLepStrategyUnitTest extends AbstractUnitTest {
     @Mock
     TypeKeyWithExtends typeKeyWithExtends;
 
+    @Mock
+    DynamicPermissionCheckService dynamicPermissionCheckService;
+
+    @Mock
+    XmEntityService xmEntityService;
+
     @Before
     public void setUp() {
-        service = new ChainedLifecycleLepStrategy(lifeCycleService, typeKeyWithExtends);
+        service = new ChainedLifecycleLepStrategy(lifeCycleService, typeKeyWithExtends, dynamicPermissionCheckService, xmEntityService);
         ReflectionUtils.makeAccessible(Objects.requireNonNull(
             ReflectionUtils.findField(ChainedLifecycleLepStrategy.class, "internal")));
         ReflectionUtils.setField(Objects.requireNonNull(

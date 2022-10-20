@@ -1,5 +1,6 @@
 package com.icthh.xm.ms.entity.service;
 
+import com.icthh.xm.commons.exceptions.EntityNotFoundException;
 import com.icthh.xm.commons.lep.LogicExtensionPoint;
 import com.icthh.xm.commons.lep.spring.LepService;
 import com.icthh.xm.commons.logging.LoggingAspectConfig;
@@ -10,6 +11,8 @@ import com.icthh.xm.ms.entity.lep.keyresolver.ChangeStateTargetStateLepKeyResolv
 import com.icthh.xm.ms.entity.lep.keyresolver.ChangeStateTransitionLepKeyResolver;
 import com.icthh.xm.ms.entity.lep.keyresolver.TargetEntityTypeLepKeyResolver;
 import com.icthh.xm.ms.entity.lep.keyresolver.TypeKeyWithExtends;
+import com.icthh.xm.ms.entity.projection.XmEntityStateProjection;
+import com.icthh.xm.ms.entity.security.access.DynamicPermissionCheckService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Lazy;
@@ -18,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.util.Map;
+import java.util.function.Supplier;
 
 
 @Slf4j
@@ -27,8 +31,14 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class ChainedLifecycleLepStrategy implements LifecycleLepStrategy {
 
+    public static final String CHANE_STATE_PERMISSION = "XMENTITY.STATE";
+
     private final XmEntityLifeCycleService lifeCycleService;
     private final TypeKeyWithExtends typeKeyWithExtends;
+
+    private final DynamicPermissionCheckService dynamicPermissionCheckService;
+
+    private final XmEntityService xmEntityService;
 
     @Resource
     @Lazy
@@ -63,6 +73,9 @@ public class ChainedLifecycleLepStrategy implements LifecycleLepStrategy {
             String nextTypeKey = typeKeyWithExtends.nextTypeKey(xmEntityTypeKey);
             return internal.changeStateByXmEntity(idOrKey, nextTypeKey, nextStateKey, context, baseTypeKey);
         } else {
+            dynamicPermissionCheckService.checkContextPermission(DynamicPermissionCheckService.FeatureContext.CHANGE_STATE,
+                CHANE_STATE_PERMISSION,
+                buildPrefix(idOrKey, xmEntityTypeKey, nextStateKey));
             return lifeCycleService.changeState(idOrKey, nextStateKey, context);
         }
     }
@@ -90,6 +103,20 @@ public class ChainedLifecycleLepStrategy implements LifecycleLepStrategy {
     public XmEntity changeState(IdOrKey idOrKey, String xmEntityTypeKey, String prevStateKey, String nextStateKey, Map<String, Object> context) {
         return internal.changeStateByTransition(idOrKey, xmEntityTypeKey, prevStateKey, nextStateKey, context);
     }
+
+    protected Supplier<String> buildPrefix(IdOrKey idOrKey, String typeKey, String nextState) {
+        return () -> {
+            XmEntityStateProjection stateProjectionById = xmEntityService.findStateProjectionById(idOrKey)
+                .orElseThrow(() -> new EntityNotFoundException("XmEntity with key [" + idOrKey + "] not found"));
+
+            if (!typeKey.equals(stateProjectionById.getTypeKey())) {
+                log.error("Entity typeKey={} differs from expected type {}", stateProjectionById.getTypeKey(), typeKey);
+                throw new EntityNotFoundException("XmEntity with key [" + idOrKey + "] not found");
+            }
+            return typeKey + "." + stateProjectionById.getStateKey() + "." + nextState;
+        };
+    }
+
 }
 
 

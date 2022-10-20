@@ -1,14 +1,9 @@
 package com.icthh.xm.ms.entity.security.access;
 
-import static com.icthh.xm.commons.permission.constants.RoleConstant.SUPER_ADMIN;
-import static com.icthh.xm.ms.entity.util.CustomCollectionUtils.nullSafe;
-import static java.lang.String.format;
-
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.icthh.xm.commons.logging.aop.IgnoreLogginAspect;
-import com.icthh.xm.commons.permission.constants.RoleConstant;
 import com.icthh.xm.commons.permission.domain.Permission;
 import com.icthh.xm.commons.permission.service.PermissionCheckService;
 import com.icthh.xm.commons.permission.service.PermissionService;
@@ -18,6 +13,15 @@ import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
 import com.icthh.xm.ms.entity.config.XmEntityTenantConfigService;
 import com.icthh.xm.ms.entity.security.SecurityUtils;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Service;
+import org.springframework.validation.annotation.Validated;
 
 import java.util.Collection;
 import java.util.List;
@@ -31,15 +35,9 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
-import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.stereotype.Service;
-import org.springframework.validation.annotation.Validated;
+import static com.icthh.xm.commons.permission.constants.RoleConstant.SUPER_ADMIN;
+import static com.icthh.xm.ms.entity.util.CustomCollectionUtils.nullSafe;
+import static java.lang.String.format;
 
 @Slf4j
 @Validated
@@ -83,6 +81,26 @@ public class DynamicPermissionCheckService {
     private final PermissionService permissionService;
     private final TenantContextHolder tenantContextHolder;
     private final XmAuthenticationContextHolder xmAuthenticationContextHolder;
+
+    /**
+     * Checks if user has permission with dynamic key feature
+     * if some feature defined by FeatureContext in tenantConfigService enabled TRUE,
+     * then check by @checkContextPermission applied P('XXX'.'YYY') otherwise only basePermission evaluated
+     * @param featureContext FUNCTION|CHANGE_STATE
+     * @param basePermission base permission 'XXX'
+     * @param suffixSupplier supplier of permission suffix
+     * @return result from PermissionCheckService.hasPermission
+     */
+    @IgnoreLogginAspect
+    public boolean checkContextPermission(FeatureContext featureContext, String basePermission, Supplier<String> suffixSupplier) {
+        Preconditions.checkArgument(StringUtils.isNotEmpty(basePermission));
+        if (featureContext.isEnabled(this)) {
+            String suffix = suffixSupplier.get();
+            Preconditions.checkArgument(StringUtils.isNotEmpty(suffix));
+            return checkContextPermission(basePermission, suffix);
+        }
+        return assertPermission(basePermission);
+    }
 
     /**
      * Checks if user has permission with dynamic key feature

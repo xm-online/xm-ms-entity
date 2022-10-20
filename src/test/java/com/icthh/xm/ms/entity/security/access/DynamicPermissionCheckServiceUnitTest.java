@@ -118,7 +118,7 @@ public class DynamicPermissionCheckServiceUnitTest extends AbstractUnitTest {
     @Test
     public void checkContextPermissionFailsIfSuffixPermissionIsNull() {
         assertThatExceptionOfType(IllegalArgumentException.class)
-            .isThrownBy(() -> dynamicPermissionCheckService.checkContextPermission(FeatureContext.FUNCTION, "XXX", null));
+            .isThrownBy(() -> dynamicPermissionCheckService.checkContextPermission(FeatureContext.FUNCTION, "XXX", (String) null));
     }
 
     @Test
@@ -161,7 +161,7 @@ public class DynamicPermissionCheckServiceUnitTest extends AbstractUnitTest {
     @Test
     public void checkStateChangePermissionFailsIfSuffixPermissionIsNull() {
         assertThatExceptionOfType(IllegalArgumentException.class)
-            .isThrownBy(() -> dynamicPermissionCheckService.checkContextPermission(FeatureContext.CHANGE_STATE, "XXX", null));
+            .isThrownBy(() -> dynamicPermissionCheckService.checkContextPermission(FeatureContext.CHANGE_STATE, "XXX", (String) null));
     }
 
     @Test
