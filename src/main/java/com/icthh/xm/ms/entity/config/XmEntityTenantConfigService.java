@@ -81,7 +81,6 @@ public class XmEntityTenantConfigService extends TenantConfigService {
             private Boolean validateFunctionInput = false;
         }
 
-        @JsonProperty("entity-states")
         private EntityFunctions entityStates = new EntityFunctions();
 
         private DynamicTypeKeyPermission dynamicTypeKeyPermission = new DynamicTypeKeyPermission();
