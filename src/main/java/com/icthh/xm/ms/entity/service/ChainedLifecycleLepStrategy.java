@@ -38,7 +38,7 @@ public class ChainedLifecycleLepStrategy implements LifecycleLepStrategy {
 
     private final DynamicPermissionCheckService dynamicPermissionCheckService;
 
-    private final XmEntityService xmEntityService;
+    private final XmEntityProjectionService xmEntityProjectionService;
 
     @Resource
     @Lazy
@@ -106,7 +106,7 @@ public class ChainedLifecycleLepStrategy implements LifecycleLepStrategy {
 
     protected Supplier<String> buildPrefix(IdOrKey idOrKey, String typeKey, String nextState) {
         return () -> {
-            XmEntityStateProjection stateProjectionById = xmEntityService.findStateProjectionById(idOrKey)
+            XmEntityStateProjection stateProjectionById = xmEntityProjectionService.findStateProjectionById(idOrKey)
                 .orElseThrow(() -> new EntityNotFoundException("XmEntity with key [" + idOrKey + "] not found"));
 
             if (!typeKey.equals(stateProjectionById.getTypeKey())) {

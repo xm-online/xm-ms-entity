@@ -35,11 +35,11 @@ public class ChainedLifecycleLepStrategyUnitTest extends AbstractUnitTest {
     DynamicPermissionCheckService dynamicPermissionCheckService;
 
     @Mock
-    XmEntityService xmEntityService;
+    XmEntityProjectionService xmEntityProjectionService;
 
     @Before
     public void setUp() {
-        service = new ChainedLifecycleLepStrategy(lifeCycleService, typeKeyWithExtends, dynamicPermissionCheckService, xmEntityService);
+        service = new ChainedLifecycleLepStrategy(lifeCycleService, typeKeyWithExtends, dynamicPermissionCheckService, xmEntityProjectionService);
         ReflectionUtils.makeAccessible(Objects.requireNonNull(
             ReflectionUtils.findField(ChainedLifecycleLepStrategy.class, "internal")));
         ReflectionUtils.setField(Objects.requireNonNull(
