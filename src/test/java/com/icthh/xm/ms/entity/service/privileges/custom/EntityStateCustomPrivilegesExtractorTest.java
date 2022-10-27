@@ -2,9 +2,9 @@ package com.icthh.xm.ms.entity.service.privileges.custom;
 
 import com.icthh.xm.ms.entity.AbstractUnitTest;
 import com.icthh.xm.ms.entity.config.XmEntityTenantConfigService;
-import com.icthh.xm.ms.entity.domain.spec.NextSpec;
 import com.icthh.xm.ms.entity.domain.spec.StateSpec;
 import com.icthh.xm.ms.entity.domain.spec.TypeSpec;
+import com.icthh.xm.ms.entity.util.TypeSpecTestUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -13,8 +13,6 @@ import org.mockito.junit.MockitoJUnitRunner;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
-import java.util.stream.Collectors;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.mockito.Mockito.when;
@@ -90,32 +88,10 @@ public class EntityStateCustomPrivilegesExtractorTest extends AbstractUnitTest {
         TypeSpec spec = new TypeSpec();
         spec.setKey(typeKey);
 
-        List<StateSpec> stateSpecs = states.stream().map(key -> {
-            StateSpec stateSpec = new StateSpec();
-            stateSpec.setKey(key);
-
-            List<NextSpec> collect = newNextStates(key, nextStates, filterSelf);
-
-            stateSpec.setNext(collect);
-            return stateSpec;
-        }).collect(Collectors.toList());
+        List<StateSpec> stateSpecs = TypeSpecTestUtils.newStateSpecs(states, nextStates, filterSelf);
 
         spec.setStates(stateSpecs);
         return spec;
-    }
-
-    private List<NextSpec> newNextStates(String currentState, List<String> next, boolean filterSelf) {
-        return next.stream()
-            .map(nextKey -> {
-                if (filterSelf && currentState.equals(nextKey)) {
-                    return null;
-                }
-                NextSpec nextSpec = new NextSpec();
-                nextSpec.setStateKey(nextKey);
-                return nextSpec;
-            })
-            .filter(Objects::nonNull)
-            .collect(Collectors.toList());
     }
 
 }

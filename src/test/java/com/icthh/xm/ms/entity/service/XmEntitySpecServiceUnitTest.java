@@ -50,6 +50,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.security.oauth2.provider.OAuth2Authentication;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -61,10 +62,9 @@ import java.util.stream.Collectors;
 
 import static com.google.common.collect.ImmutableMap.of;
 import static com.google.common.collect.Maps.newHashMap;
+import static com.icthh.xm.commons.permission.constants.RoleConstant.SUPER_ADMIN;
 import static com.icthh.xm.ms.entity.config.TenantConfigMockConfiguration.getXmEntitySpec;
-import static com.icthh.xm.ms.entity.security.access.DynamicPermissionCheckService.CONFIG_SECTION;
 import static com.icthh.xm.ms.entity.util.CustomCollectionUtils.nullSafe;
-import static com.icthh.xm.ms.entity.web.rest.XmEntitySaveIntTest.loadFile;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
 import static org.apache.commons.codec.digest.DigestUtils.sha1Hex;
@@ -127,6 +127,8 @@ public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
     @Spy
     private XmEntityTenantConfigService tenantConfig = new XmEntityTenantConfigService(new XmConfigProperties(),
                                                                                        tenantContextHolder());
+    @Mock
+    private OAuth2Authentication auth;
 
     private TenantContextHolder tenantContextHolder() {
         TenantContextHolder mock = mock(TenantContextHolder.class);
@@ -171,16 +173,18 @@ public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
 
     @Test
     public void testTypeSpecByKey() {
-        TypeSpec type = xmEntitySpecService.getTypeSpecByKey(KEY1).orElse(null);
-        assertNotNull(type);
-        assertEquals(KEY1, type.getKey());
+        withMockUser(auth, SUPER_ADMIN, () -> {
+            TypeSpec type = xmEntitySpecService.getTypeSpecByKey(KEY1).orElse(null);
+            assertNotNull(type);
+            assertEquals(KEY1, type.getKey());
 
-        type = xmEntitySpecService.getTypeSpecByKey(KEY3).orElse(null);
-        assertNotNull(type);
-        assertEquals(KEY3, type.getKey());
+            type = xmEntitySpecService.getTypeSpecByKey(KEY3).orElse(null);
+            assertNotNull(type);
+            assertEquals(KEY3, type.getKey());
 
-        Optional<TypeSpec> typeSpecByKey = xmEntitySpecService.getTypeSpecByKey(KEY4);
-        assertThat(typeSpecByKey).isEmpty();
+            Optional<TypeSpec> typeSpecByKey = xmEntitySpecService.getTypeSpecByKey(KEY4);
+            assertThat(typeSpecByKey).isEmpty();
+        });
     }
 
     @Test
@@ -199,19 +203,19 @@ public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
 
     @Test
     public void testFindAllTypes() {
+        withMockUser(auth, SUPER_ADMIN, () -> {
+            prepareConfig(newHashMap());
+            List<TypeSpec> types = xmEntitySpecService.findAllTypes();
+            assertNotNull(types);
+            assertEquals(5, types.size());
 
-        prepareConfig(newHashMap());
-        List<TypeSpec> types = xmEntitySpecService.findAllTypes();
-        assertNotNull(types);
-        assertEquals(5, types.size());
+            List<String> keys = types.stream().map(TypeSpec::getKey).collect(Collectors.toList());
+            assertThat(keys).containsExactlyInAnyOrder(KEY1, KEY2, KEY3, KEY5, KEY6);
 
-        List<String> keys = types.stream().map(TypeSpec::getKey).collect(Collectors.toList());
-        assertThat(keys).containsExactlyInAnyOrder(KEY1, KEY2, KEY3, KEY5, KEY6);
+            List<FunctionSpec> functions = flattenFunctions(types);
 
-        List<FunctionSpec> functions = flattenFunctions(types);
-
-        assertThat(functions.size()).isEqualTo(6);
-
+            assertThat(functions.size()).isEqualTo(6);
+        });
     }
 
     @Test
@@ -239,109 +243,126 @@ public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
 
     @Test
     public void testFindAllTypesWithFunctionFilterAndNoPrivilege() {
-        prepareConfig(getMockedConfig(CONFIG_SECTION,
+        prepareConfig(getMockedConfig(FunctionCustomPrivilegesExtractor.SECTION_NAME,
             DYNAMIC_FUNCTION_PERMISSION_FEATURE, Boolean.TRUE));
 
-        List<TypeSpec> types = xmEntitySpecService.findAllTypes();
-        assertNotNull(types);
-        assertEquals(5, types.size());
+        withMockUser(auth, SUPER_ADMIN, () -> {
+            List<TypeSpec> types = xmEntitySpecService.findAllTypes();
+            assertNotNull(types);
+            assertEquals(5, types.size());
 
-        List<String> keys = types.stream().map(TypeSpec::getKey).collect(Collectors.toList());
-        assertThat(keys).containsExactlyInAnyOrder(KEY1, KEY2, KEY3, KEY5, KEY6);
+            List<String> keys = types.stream().map(TypeSpec::getKey).collect(Collectors.toList());
+            assertThat(keys).containsExactlyInAnyOrder(KEY1, KEY2, KEY3, KEY5, KEY6);
 
-        List<FunctionSpec> functions = flattenFunctions(types);
+            List<FunctionSpec> functions = flattenFunctions(types);
 
-        assertThat(functions.size()).isEqualTo(0);
+            assertThat(functions.size()).isEqualTo(0);
+        });
     }
 
     @Test
     public void testFindAllAppTypes() {
-        prepareConfig(newHashMap());
-        List<TypeSpec> types = xmEntitySpecService.findAllAppTypes();
-        assertNotNull(types);
-        assertEquals(3, types.size());
+        withMockUser(auth, SUPER_ADMIN, () -> {
+            prepareConfig(newHashMap());
+            List<TypeSpec> types = xmEntitySpecService.findAllAppTypes();
+            assertNotNull(types);
+            assertEquals(3, types.size());
 
-        List<String> keys = types.stream().map(TypeSpec::getKey).collect(Collectors.toList());
-        assertThat(keys).containsExactlyInAnyOrder(KEY1, KEY2, KEY6);
+            List<String> keys = types.stream().map(TypeSpec::getKey).collect(Collectors.toList());
+            assertThat(keys).containsExactlyInAnyOrder(KEY1, KEY2, KEY6);
 
-        List<FunctionSpec> functions = flattenFunctions(types);
-        assertThat(functions.size()).isEqualTo(4);
+            List<FunctionSpec> functions = flattenFunctions(types);
+            assertThat(functions.size()).isEqualTo(4);
+        });
     }
 
     @Test
     public void testFindAllAppTypesWithFunctionFilterAndNoPrivilege() {
-        prepareConfig(getMockedConfig(CONFIG_SECTION,
+        prepareConfig(getMockedConfig(FunctionCustomPrivilegesExtractor.SECTION_NAME,
             DYNAMIC_FUNCTION_PERMISSION_FEATURE, Boolean.TRUE));
-        List<TypeSpec> types = xmEntitySpecService.findAllAppTypes();
-        assertNotNull(types);
-        assertEquals(3, types.size());
 
-        List<String> keys = types.stream().map(TypeSpec::getKey).collect(Collectors.toList());
-        assertThat(keys).containsExactlyInAnyOrder(KEY1, KEY2, KEY6);
+        withMockUser(auth, SUPER_ADMIN, () -> {
+            List<TypeSpec> types = xmEntitySpecService.findAllAppTypes();
+            assertNotNull(types);
+            assertEquals(3, types.size());
 
-        List<FunctionSpec> functions = flattenFunctions(types);
+            List<String> keys = types.stream().map(TypeSpec::getKey).collect(Collectors.toList());
+            assertThat(keys).containsExactlyInAnyOrder(KEY1, KEY2, KEY6);
 
-        assertThat(functions.size()).isEqualTo(0);
+            List<FunctionSpec> functions = flattenFunctions(types);
+
+            assertThat(functions.size()).isEqualTo(0);
+        });
+
     }
 
     @Test
     public void testFindAllNonAbstractTypes() {
         prepareConfig(newHashMap());
-        List<TypeSpec> types = xmEntitySpecService.findAllNonAbstractTypes();
-        assertNotNull(types);
-        assertEquals(4, types.size());
+        withMockUser(auth, SUPER_ADMIN, () -> {
+            List<TypeSpec> types = xmEntitySpecService.findAllNonAbstractTypes();
+            assertNotNull(types);
+            assertEquals(4, types.size());
 
-        List<String> keys = types.stream().map(TypeSpec::getKey).collect(Collectors.toList());
-        assertThat(keys).containsExactlyInAnyOrder(KEY2, KEY3, KEY5, KEY6);
+            List<String> keys = types.stream().map(TypeSpec::getKey).collect(Collectors.toList());
+            assertThat(keys).containsExactlyInAnyOrder(KEY2, KEY3, KEY5, KEY6);
 
-        List<FunctionSpec> functions = flattenFunctions(types);
-        assertThat(functions.size()).isEqualTo(5);
+            List<FunctionSpec> functions = flattenFunctions(types);
+            assertThat(functions.size()).isEqualTo(5);
+        });
     }
 
     @Test
     public void testFindAllNonAbstractTypesWithFunctionFilterAndNoPrivilege() {
-        prepareConfig(getMockedConfig(CONFIG_SECTION,
+        prepareConfig(getMockedConfig(FunctionCustomPrivilegesExtractor.SECTION_NAME,
             DYNAMIC_FUNCTION_PERMISSION_FEATURE, Boolean.TRUE));
 
-        List<TypeSpec> types = xmEntitySpecService.findAllNonAbstractTypes();
-        assertNotNull(types);
-        assertEquals(4, types.size());
+        withMockUser(auth, SUPER_ADMIN, () -> {
+            List<TypeSpec> types = xmEntitySpecService.findAllNonAbstractTypes();
+            assertNotNull(types);
+            assertEquals(4, types.size());
 
-        List<String> keys = types.stream().map(TypeSpec::getKey).collect(Collectors.toList());
-        assertThat(keys).containsExactlyInAnyOrder(KEY2, KEY3, KEY5, KEY6);
+            List<String> keys = types.stream().map(TypeSpec::getKey).collect(Collectors.toList());
+            assertThat(keys).containsExactlyInAnyOrder(KEY2, KEY3, KEY5, KEY6);
 
-        List<FunctionSpec> functions = flattenFunctions(types);
-        assertThat(functions.size()).isEqualTo(0);
+            List<FunctionSpec> functions = flattenFunctions(types);
+            assertThat(functions.size()).isEqualTo(0);
+        });
     }
 
     @Test
     public void testFindNonAbstractTypesByPrefix() {
-        List<TypeSpec> types = xmEntitySpecService.findNonAbstractTypesByPrefix(KEY1);
-        assertNotNull(types);
-        assertEquals(1, types.size());
+        withMockUser(auth, SUPER_ADMIN, () -> {
+            List<TypeSpec> types = xmEntitySpecService.findNonAbstractTypesByPrefix(KEY1);
+            assertNotNull(types);
+            assertEquals(1, types.size());
 
-        List<String> keys = types.stream().map(TypeSpec::getKey).collect(Collectors.toList());
-        assertThat(keys).containsExactlyInAnyOrder(KEY3);
+            List<String> keys = types.stream().map(TypeSpec::getKey).collect(Collectors.toList());
+            assertThat(keys).containsExactlyInAnyOrder(KEY3);
+        });
     }
 
     @Test
     public void testFindNonAbstractTypesByRootPrefix() {
-        List<TypeSpec> types = xmEntitySpecService.findNonAbstractTypesByPrefix(ROOT_KEY);
-        assertNotNull(types);
-        assertEquals(4, types.size());
-
-        List<String> keys = types.stream().map(TypeSpec::getKey).collect(Collectors.toList());
-        assertThat(keys).containsExactlyInAnyOrder(KEY2, KEY3, KEY5, KEY6);
+        withMockUser(auth, SUPER_ADMIN, () -> {
+            List<TypeSpec> types = xmEntitySpecService.findNonAbstractTypesByPrefix(ROOT_KEY);
+            assertNotNull(types);
+            assertEquals(4, types.size());
+            List<String> keys = types.stream().map(TypeSpec::getKey).collect(Collectors.toList());
+            assertThat(keys).containsExactlyInAnyOrder(KEY2, KEY3, KEY5, KEY6);
+        });
     }
 
     @Test
     public void testFindNonAbstractTypesByPrefixEqualKey() {
-        List<TypeSpec> types = xmEntitySpecService.findNonAbstractTypesByPrefix(KEY2);
-        assertNotNull(types);
-        assertEquals(1, types.size());
+        withMockUser(auth, SUPER_ADMIN, () -> {
+            List<TypeSpec> types = xmEntitySpecService.findNonAbstractTypesByPrefix(KEY2);
+            assertNotNull(types);
+            assertEquals(1, types.size());
 
-        List<String> keys = types.stream().map(TypeSpec::getKey).collect(Collectors.toList());
-        assertThat(keys).containsExactlyInAnyOrder(KEY2);
+            List<String> keys = types.stream().map(TypeSpec::getKey).collect(Collectors.toList());
+            assertThat(keys).containsExactlyInAnyOrder(KEY2);
+        });
     }
 
     @Test
@@ -406,11 +427,13 @@ public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
 
     @Test
     public void testGetAllKeys() {
-        Map<String, Map<String, Set<String>>> keys = xmEntitySpecService.getAllKeys();
-        assertNotNull(keys);
-        assertEquals(5, keys.size());
-        assertEquals(1, keys.get("TYPE1").get("LinkSpec").size());
-        assertEquals(3, keys.get("TYPE1").get("StateSpec").size());
+        withMockUser(auth, SUPER_ADMIN, () -> {
+            Map<String, Map<String, Set<String>>> keys = xmEntitySpecService.getAllKeys();
+            assertNotNull(keys);
+            assertEquals(5, keys.size());
+            assertEquals(1, keys.get("TYPE1").get("LinkSpec").size());
+            assertEquals(3, keys.get("TYPE1").get("StateSpec").size());
+        });
     }
 
     @Test
@@ -556,22 +579,6 @@ public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
         String privileges = readFile("config/privileges/new-privileges-with-functions.yml");
 
         testUpdateRealPermissionFile(privileges);
-    }
-
-    @Test
-    @SneakyThrows
-    public void testXmEntitySpecSchemaGeneration() {
-        String jsonSchema = xmEntitySpecService.generateJsonSchema();
-        ObjectMapper objectMapper = new ObjectMapper(new YAMLFactory());
-        JsonNode xmentityspec = objectMapper.readTree(loadFile("config/specs/xmentityspec-xm.yml"));
-
-        JsonNode schemaNode = JsonLoader.fromString(jsonSchema);
-        JsonSchemaFactory factory = JsonSchemaFactory.byDefault();
-        JsonSchema schema = factory.getJsonSchema(schemaNode);
-        ProcessingReport report = schema.validate(xmentityspec);
-
-        boolean isSuccess = report.isSuccess();
-        assertTrue(report.toString(), isSuccess);
     }
 
     public void testUpdateRealPermissionFile(String privileges) {
@@ -799,8 +806,8 @@ public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
     @SneakyThrows
     private void assertEqualsTypeSpecFields(String expectedField, String actualField) {
         ObjectMapper objectMapper = new ObjectMapper();
-        Map expected = objectMapper.readValue(expectedField, Map.class);
-        Map actual = objectMapper.readValue(actualField, Map.class);
+        Map<?, ?> expected = objectMapper.readValue(expectedField, Map.class);
+        Map<?, ?> actual = objectMapper.readValue(actualField, Map.class);
 
         assertEquals(actual, expected);
     }

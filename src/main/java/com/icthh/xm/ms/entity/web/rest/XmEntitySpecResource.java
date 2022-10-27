@@ -1,7 +1,5 @@
 package com.icthh.xm.ms.entity.web.rest;
 
-import static org.springframework.http.MediaType.TEXT_PLAIN_VALUE;
-
 import com.codahale.metrics.annotation.Timed;
 import com.icthh.xm.commons.logging.LoggingAspectConfig;
 import com.icthh.xm.commons.permission.annotation.PrivilegeDescription;
@@ -9,6 +7,7 @@ import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.domain.spec.TypeSpec;
 import com.icthh.xm.ms.entity.service.XmEntityGeneratorService;
 import com.icthh.xm.ms.entity.service.XmEntitySpecService;
+import com.icthh.xm.ms.entity.service.spec.JsonSchemaGenerationService;
 import com.icthh.xm.ms.entity.web.rest.util.HeaderUtil;
 import com.icthh.xm.ms.entity.web.rest.util.RespContentUtil;
 import io.swagger.annotations.ApiParam;
@@ -34,6 +33,8 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static org.springframework.http.MediaType.TEXT_PLAIN_VALUE;
+
 /**
  * REST controller for managing XmEntitySpec.
  */
@@ -47,6 +48,7 @@ public class XmEntitySpecResource {
 
     private final XmEntitySpecService xmEntitySpecService;
     private final XmEntityGeneratorService xmEntityGeneratorService;
+    private final JsonSchemaGenerationService jsonSchemaGenerationService;
 
     public enum Filter {
 
@@ -54,7 +56,7 @@ public class XmEntitySpecResource {
         APP(XmEntitySpecService.isApp()),
         NON_ABSTRACT(XmEntitySpecService.isNotAbstract());
 
-        private Predicate<TypeSpec> typeSpecPredicate;
+        private final Predicate<TypeSpec> typeSpecPredicate;
 
         Filter(final Predicate<TypeSpec> typeSpecPredicate) {
             this.typeSpecPredicate = typeSpecPredicate;
@@ -94,7 +96,7 @@ public class XmEntitySpecResource {
     @PostFilter("hasPermission({'log': false}, 'XMENTITY_SPEC.SCHEMA.GET')")
     @PrivilegeDescription("Privilege to get the xmEntity specification json schema")
     public ResponseEntity<String> getSpecSchema() {
-        return RespContentUtil.wrapOrNotFound(xmEntitySpecService.generateJsonSchema());
+        return RespContentUtil.wrapOrNotFound(jsonSchemaGenerationService.generateJsonSchema());
     }
 
     /**
@@ -134,7 +136,6 @@ public class XmEntitySpecResource {
      * POST  /xm-entity-specs/ : Generate a new xmEntity.
      *
      * @return the ResponseEntity with status 201 (Created) and with body the new xmEntity
-     * @throws URISyntaxException if the Location URI syntax is incorrect
      */
     @LoggingAspectConfig(inputExcludeParams = "xmEntitySpec")
     @PostMapping(value = "/xm-entity-specs", consumes = {TEXT_PLAIN_VALUE})

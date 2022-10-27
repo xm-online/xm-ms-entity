@@ -13,6 +13,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -21,10 +22,17 @@ import java.util.stream.Stream;
 @RequiredArgsConstructor
 public class EntityStateCustomPrivilegesExtractor implements CustomPrivilegesExtractor {
 
-    protected static final String SECTION_NAME = "entity-states";
+    public static final String SECTION_NAME = "entity-states";
     protected static final String PRIVILEGE_PREFIX = "XMENTITY.STATE.";
 
     private final XmEntityTenantConfigService tenantConfigService;
+
+    public static String buildPermissionKey(String typeKey, String stateKey, String nextStateKey) {
+        Objects.requireNonNull(typeKey);
+        Objects.requireNonNull(stateKey);
+        Objects.requireNonNull(nextStateKey);
+        return PRIVILEGE_PREFIX + typeKey + "." + stateKey + "." + nextStateKey;
+    }
 
     @Override
     public String getSectionName() {
@@ -72,7 +80,7 @@ public class EntityStateCustomPrivilegesExtractor implements CustomPrivilegesExt
             .stream()
             .map(NextSpec::getStateKey)
             .filter(StringUtils::isNotEmpty)
-            .map(nextState -> PRIVILEGE_PREFIX + specKey + "." + stateSpec.getKey() + "." + nextState);
+            .map(nextState -> buildPermissionKey(specKey, stateSpec.getKey(), nextState));
     }
 
 }

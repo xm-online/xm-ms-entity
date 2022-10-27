@@ -1,24 +1,5 @@
 package com.icthh.xm.ms.entity.web.rest;
 
-import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_AUTH_CONTEXT;
-import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_TENANT_CONTEXT;
-import static com.icthh.xm.commons.tenant.TenantContextUtils.setTenant;
-import static com.icthh.xm.ms.entity.config.TenantConfigMockConfiguration.getXmEntitySpec;
-import static com.icthh.xm.ms.entity.util.IsCollectionNotContaining.hasNotItem;
-import static org.assertj.core.api.Assertions.not;
-import static org.hamcrest.Matchers.allOf;
-import static org.hamcrest.Matchers.contains;
-import static org.hamcrest.Matchers.hasItem;
-import static org.hamcrest.Matchers.hasSize;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.icthh.xm.commons.i18n.error.web.ExceptionTranslator;
 import com.icthh.xm.commons.security.XmAuthenticationContext;
@@ -29,8 +10,8 @@ import com.icthh.xm.ms.entity.AbstractSpringBootTest;
 import com.icthh.xm.ms.entity.service.XmEntityGeneratorService;
 import com.icthh.xm.ms.entity.service.XmEntitySpecService;
 import com.icthh.xm.ms.entity.service.impl.XmEntityServiceImpl;
+import com.icthh.xm.ms.entity.service.spec.JsonSchemaGenerationService;
 import lombok.SneakyThrows;
-import org.hamcrest.core.IsEqual;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -40,6 +21,22 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+
+import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_AUTH_CONTEXT;
+import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_TENANT_CONTEXT;
+import static com.icthh.xm.commons.tenant.TenantContextUtils.setTenant;
+import static com.icthh.xm.ms.entity.config.TenantConfigMockConfiguration.getXmEntitySpec;
+import static com.icthh.xm.ms.entity.util.IsCollectionNotContaining.hasNotItem;
+import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.hasSize;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
  * Test class for the XmEntitySpecResource REST controller.
@@ -65,6 +62,9 @@ public class XmEntitySpecResourceIntTest extends AbstractSpringBootTest {
 
     @Autowired
     private XmEntitySpecService xmEntitySpecService;
+
+    @Autowired
+    private JsonSchemaGenerationService jsonSchemaGenerationService;
 
     @Autowired
     private TenantContextHolder tenantContextHolder;
@@ -105,7 +105,8 @@ public class XmEntitySpecResourceIntTest extends AbstractSpringBootTest {
             xmEntitySpecService, authContextHolder, objectMapper);
 
         XmEntitySpecResource xmEntitySpecResource = new XmEntitySpecResource(xmEntitySpecService,
-            xmEntityGeneratorService);
+            xmEntityGeneratorService, jsonSchemaGenerationService);
+
         this.restXmEntitySpecMockMvc = MockMvcBuilders.standaloneSetup(xmEntitySpecResource)
             .setControllerAdvice(exceptionTranslator).build();
     }
