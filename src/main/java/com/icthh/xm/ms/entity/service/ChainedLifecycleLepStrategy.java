@@ -106,7 +106,7 @@ public class ChainedLifecycleLepStrategy implements LifecycleLepStrategy {
 
     protected Supplier<String> buildPrefix(IdOrKey idOrKey, String typeKey, String nextState) {
         return () -> {
-            XmEntityStateProjection stateProjectionById = xmEntityProjectionService.findStateProjectionById(idOrKey)
+            XmEntityStateProjection stateProjectionById = xmEntityProjectionService.findStateProjection(idOrKey)
                 .orElseThrow(() -> new EntityNotFoundException("XmEntity with key [" + idOrKey + "] not found"));
 
             if (!typeKey.equals(stateProjectionById.getTypeKey())) {
