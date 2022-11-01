@@ -1,32 +1,10 @@
 package com.icthh.xm.ms.entity.service;
 
-import static com.github.fge.jackson.NodeType.OBJECT;
-import static com.github.fge.jackson.NodeType.getNodeType;
-import static com.google.common.collect.Iterables.getFirst;
-import static com.icthh.xm.ms.entity.domain.ext.TypeSpecParameter.ACCESS;
-import static com.icthh.xm.ms.entity.domain.ext.TypeSpecParameter.ATTACHMENTS;
-import static com.icthh.xm.ms.entity.domain.ext.TypeSpecParameter.CALENDARS;
-import static com.icthh.xm.ms.entity.domain.ext.TypeSpecParameter.FUNCTIONS;
-import static com.icthh.xm.ms.entity.domain.ext.TypeSpecParameter.LINKS;
-import static com.icthh.xm.ms.entity.domain.ext.TypeSpecParameter.LOCATIONS;
-import static com.icthh.xm.ms.entity.domain.ext.TypeSpecParameter.RATINGS;
-import static com.icthh.xm.ms.entity.domain.ext.TypeSpecParameter.STATES;
-import static com.icthh.xm.ms.entity.domain.ext.TypeSpecParameter.TAGS;
-import static com.icthh.xm.ms.entity.util.CustomCollectionUtils.nullSafe;
-import static com.icthh.xm.ms.entity.util.CustomCollectionUtils.union;
-import static java.lang.Boolean.FALSE;
-import static java.lang.Boolean.TRUE;
-import static java.util.Collections.emptyList;
-import static java.util.Optional.ofNullable;
-import static org.springframework.util.CollectionUtils.isEmpty;
-
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
-import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.module.jsonSchema.JsonSchema;
-import com.fasterxml.jackson.module.jsonSchema.JsonSchemaGenerator;
 import com.fasterxml.jackson.module.jsonSchema.types.ArraySchema;
 import com.fasterxml.jackson.module.jsonSchema.types.ObjectSchema;
 import com.fasterxml.jackson.module.jsonSchema.types.StringSchema;
@@ -60,9 +38,16 @@ import com.icthh.xm.ms.entity.domain.spec.TypeSpec;
 import com.icthh.xm.ms.entity.domain.spec.UniqueFieldSpec;
 import com.icthh.xm.ms.entity.domain.spec.XmEntitySpec;
 import com.icthh.xm.ms.entity.security.access.DynamicPermissionCheckService;
+import com.icthh.xm.ms.entity.service.processor.DefinitionSpecProcessor;
+import com.icthh.xm.ms.entity.service.processor.FormSpecProcessor;
+import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.stereotype.Service;
+import org.springframework.util.AntPathMatcher;
 
 import java.io.IOException;
-import java.io.StringWriter;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -79,14 +64,25 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import com.icthh.xm.ms.entity.service.processor.DefinitionSpecProcessor;
-import com.icthh.xm.ms.entity.service.processor.FormSpecProcessor;
-import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
-import org.springframework.stereotype.Service;
-import org.springframework.util.AntPathMatcher;
+import static com.github.fge.jackson.NodeType.OBJECT;
+import static com.github.fge.jackson.NodeType.getNodeType;
+import static com.google.common.collect.Iterables.getFirst;
+import static com.icthh.xm.ms.entity.domain.ext.TypeSpecParameter.ACCESS;
+import static com.icthh.xm.ms.entity.domain.ext.TypeSpecParameter.ATTACHMENTS;
+import static com.icthh.xm.ms.entity.domain.ext.TypeSpecParameter.CALENDARS;
+import static com.icthh.xm.ms.entity.domain.ext.TypeSpecParameter.FUNCTIONS;
+import static com.icthh.xm.ms.entity.domain.ext.TypeSpecParameter.LINKS;
+import static com.icthh.xm.ms.entity.domain.ext.TypeSpecParameter.LOCATIONS;
+import static com.icthh.xm.ms.entity.domain.ext.TypeSpecParameter.RATINGS;
+import static com.icthh.xm.ms.entity.domain.ext.TypeSpecParameter.STATES;
+import static com.icthh.xm.ms.entity.domain.ext.TypeSpecParameter.TAGS;
+import static com.icthh.xm.ms.entity.util.CustomCollectionUtils.nullSafe;
+import static com.icthh.xm.ms.entity.util.CustomCollectionUtils.union;
+import static java.lang.Boolean.FALSE;
+import static java.lang.Boolean.TRUE;
+import static java.util.Collections.emptyList;
+import static java.util.Optional.ofNullable;
+import static org.springframework.util.CollectionUtils.isEmpty;
 
 /**
  * XM Entity Specification service, that provides extra possibilities to
@@ -733,20 +729,6 @@ public class XmEntitySpecService implements RefreshableConfiguration {
             clone::getFunctions,
             clone::setFunctions,
             FunctionSpec::getDynamicPrivilegeKey);
-    }
-
-    @SneakyThrows
-    public String generateJsonSchema() {
-        ObjectMapper mapper = new ObjectMapper();
-        mapper.configure(SerializationFeature.WRITE_ENUMS_USING_TO_STRING, true);
-
-        JsonSchemaGenerator schemaGen = new JsonSchemaGenerator(mapper);
-        JsonSchema jsonSchema = schemaGen.generateSchema(XmEntitySpec.class);
-        rejectAdditionalProperties(jsonSchema);
-        StringWriter json = new StringWriter();
-        mapper.configure(SerializationFeature.INDENT_OUTPUT, true);
-        mapper.writeValue(json, jsonSchema);
-        return json.toString();
     }
 
     private static void rejectAdditionalProperties(JsonSchema jsonSchema) {
