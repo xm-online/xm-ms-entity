@@ -1,14 +1,9 @@
 package com.icthh.xm.ms.entity.security.access;
 
-import static com.icthh.xm.commons.permission.constants.RoleConstant.SUPER_ADMIN;
-import static com.icthh.xm.ms.entity.util.CustomCollectionUtils.nullSafe;
-import static java.lang.String.format;
-
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.icthh.xm.commons.logging.aop.IgnoreLogginAspect;
-import com.icthh.xm.commons.permission.constants.RoleConstant;
 import com.icthh.xm.commons.permission.domain.Permission;
 import com.icthh.xm.commons.permission.service.PermissionCheckService;
 import com.icthh.xm.commons.permission.service.PermissionService;
@@ -17,7 +12,21 @@ import com.icthh.xm.commons.security.XmAuthenticationContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
 import com.icthh.xm.ms.entity.config.XmEntityTenantConfigService;
+import com.icthh.xm.ms.entity.domain.spec.FunctionSpec;
+import com.icthh.xm.ms.entity.domain.spec.NextSpec;
+import com.icthh.xm.ms.entity.domain.spec.TypeSpec;
 import com.icthh.xm.ms.entity.security.SecurityUtils;
+import com.icthh.xm.ms.entity.service.privileges.custom.EntityStateCustomPrivilegesExtractor;
+import com.icthh.xm.ms.entity.service.privileges.custom.FunctionCustomPrivilegesExtractor;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Service;
+import org.springframework.validation.annotation.Validated;
 
 import java.util.Collection;
 import java.util.List;
@@ -31,15 +40,9 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
-import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.stereotype.Service;
-import org.springframework.validation.annotation.Validated;
+import static com.icthh.xm.commons.permission.constants.RoleConstant.SUPER_ADMIN;
+import static com.icthh.xm.ms.entity.util.CustomCollectionUtils.nullSafe;
+import static java.lang.String.format;
 
 @Slf4j
 @Validated
@@ -47,10 +50,7 @@ import org.springframework.validation.annotation.Validated;
 @Service
 public class DynamicPermissionCheckService {
 
-    /**
-     * Permission aggregation section in custom privileges
-     */
-    public static final String CONFIG_SECTION = "entity-functions";
+    protected static Set<String> PERMISSION_SECTIONS = Set.of(FunctionCustomPrivilegesExtractor.SECTION_NAME, EntityStateCustomPrivilegesExtractor.SECTION_NAME);
 
     /**
      * Feature switcher implementation
@@ -90,6 +90,26 @@ public class DynamicPermissionCheckService {
      * then check by @checkContextPermission applied P('XXX'.'YYY') otherwise only basePermission evaluated
      * @param featureContext FUNCTION|CHANGE_STATE
      * @param basePermission base permission 'XXX'
+     * @param suffixSupplier supplier of permission suffix
+     * @return result from PermissionCheckService.hasPermission
+     */
+    @IgnoreLogginAspect
+    public boolean checkContextPermission(FeatureContext featureContext, String basePermission, Supplier<String> suffixSupplier) {
+        Preconditions.checkArgument(StringUtils.isNotEmpty(basePermission));
+        if (featureContext.isEnabled(this)) {
+            String suffix = suffixSupplier.get();
+            Preconditions.checkArgument(StringUtils.isNotEmpty(suffix));
+            return checkContextPermission(basePermission, suffix);
+        }
+        return assertPermission(basePermission);
+    }
+
+    /**
+     * Checks if user has permission with dynamic key feature
+     * if some feature defined by FeatureContext in tenantConfigService enabled TRUE,
+     * then check by @checkContextPermission applied P('XXX'.'YYY') otherwise only basePermission evaluated
+     * @param featureContext FUNCTION|CHANGE_STATE
+     * @param basePermission base permission 'XXX'
      * @param suffix context permission 'YYY'
      * @return result from PermissionCheckService.hasPermission
      */
@@ -107,7 +127,7 @@ public class DynamicPermissionCheckService {
      * Checks if user has permission with dynamic key feature permission = basePermission + "." + suffix
      * @param basePermission - base permission
      * @param suffix - suffix
-     * @return result result from PermissionCheckService.hasPermission(permission) from assertPermission
+     * @return result value from PermissionCheckService.hasPermission(permission) from assertPermission
      */
     private boolean checkContextPermission(String basePermission, String suffix) {
         Preconditions.checkArgument(StringUtils.isNotEmpty(basePermission));
@@ -116,35 +136,70 @@ public class DynamicPermissionCheckService {
         return assertPermission(permission);
     }
 
-    @IgnoreLogginAspect
-    public <T, I> T filterInnerListByPermission(final T outterType,
-                                                Supplier<List<I>> innerGetter,
-                                                Consumer<List<I>> innerSetter,
-                                                Function<I, String> innerKeyGetter) {
+    public TypeSpec evaluateDynamicPermissions(TypeSpec spec) {
 
-        if (!FeatureContext.FUNCTION.isEnabled(this)) {
-            return outterType;
-        }
+        TypeSpec specClone = spec.toBuilder().build();
 
         if (isSuperAdmin()) {
-            return outterType;
+            return specClone;
+        }
+
+        Set<String> lPermissions = getRoleFunctionPermissions();
+
+        specClone = filterInnerFunctionListByPermission(lPermissions, specClone,
+            specClone::getFunctions,
+            specClone::setFunctions,
+            FunctionSpec::getDynamicPrivilegeKey);
+
+        specClone = filterInnerStateListByPermission(lPermissions, specClone);
+
+        return specClone;
+    }
+
+    @IgnoreLogginAspect
+    protected  <T, I> T filterInnerFunctionListByPermission(
+        final Set<String> permissions, final T outerType, Supplier<List<I>> innerGetter,
+        Consumer<List<I>> innerSetter, Function<I, String> innerKeyGetter) {
+
+        if (!FeatureContext.FUNCTION.isEnabled(this)) {
+            return outerType;
         }
 
         List<I> filteredList = Lists.newArrayList();
 
-        Set<String> lPermissions = getRoleFunctionPermissions();
 
-        if (!lPermissions.isEmpty()) {
+        if (!permissions.isEmpty()) {
             filteredList = nullSafe(innerGetter.get())
                                       .stream()
-                                      .filter(item -> lPermissions.contains(innerKeyGetter.apply(item)))
+                                      .filter(item -> permissions.contains(innerKeyGetter.apply(item)))
                                       .collect(Collectors.toList());
         }
 
         innerSetter.accept(filteredList);
 
-        return outterType;
+        return outerType;
 
+    }
+
+    @IgnoreLogginAspect
+    protected  TypeSpec filterInnerStateListByPermission(
+        final Set<String> permissions, final TypeSpec typeSpec) {
+
+        if (!FeatureContext.CHANGE_STATE.isEnabled(this)) {
+            return typeSpec;
+        }
+
+        String key = typeSpec.getKey();
+
+        nullSafe(typeSpec.getStates()).forEach(stateSpec -> {
+            List<NextSpec> filteredNextStates = nullSafe(stateSpec.getNext()).stream()
+                .filter(nextSpec -> permissions.contains(
+                    EntityStateCustomPrivilegesExtractor.buildPermissionKey(key, stateSpec.getKey(), nextSpec.getStateKey())))
+                .collect(Collectors.toList());
+            stateSpec.setNext(filteredNextStates);
+        });
+
+        return typeSpec;
     }
 
     /**
@@ -155,12 +210,13 @@ public class DynamicPermissionCheckService {
 
         //TODO throw error here, after migration to new test paradigm
         final Optional<String> userRole = SecurityUtils.getCurrentUserRole();
-        if (!userRole.isPresent()) {
+        if (userRole.isEmpty()) {
             return Sets.newHashSet();
         }
 
-        Map<String, Permission> permissions = permissionService.getPermissions(
-            TenantContextUtils.getRequiredTenantKeyValue(tenantContextHolder.getContext()));
+        String tenantKey = TenantContextUtils.getRequiredTenantKeyValue(tenantContextHolder.getContext());
+        Map<String, Permission> permissions = permissionService.getPermissions(tenantKey);
+
         return nullSafe(permissions).values().stream()
                                     .filter(functionPermissionMatcher(userRole.get()))
                                     .map(Permission::getPrivilegeKey)
@@ -169,11 +225,11 @@ public class DynamicPermissionCheckService {
 
     /**
      * is permission belongs to functional or not?
-     * @param roleKey
+     * @param roleKey current user role key
      */
     Predicate<Permission> functionPermissionMatcher(String roleKey) {
 
-        Predicate<Permission> isConfigSection = permission -> StringUtils.equals(CONFIG_SECTION, permission.getMsName());
+        Predicate<Permission> isConfigSection = permission -> PERMISSION_SECTIONS.contains(permission.getMsName());
         Predicate<Permission> isAssignedToRole = permission -> StringUtils.equals(roleKey, permission.getRoleKey());
         Predicate<Permission> isEnabled = permission -> !permission.isDisabled();
         Predicate<Permission> isIsNotDeleted = permission -> !permission.isDeleted();
@@ -240,8 +296,7 @@ public class DynamicPermissionCheckService {
      * @return true if feature enabled
      */
     private boolean isDynamicChangeStatePermissionEnabled() {
-        //TODO feature discussion needed
-        throw new UnsupportedOperationException("isDynamicChangeStatePermissionEnabled Not implementer");
+        return tenantConfigService.getXmEntityTenantConfig().getEntityStates().getDynamicPermissionCheckEnabled();
     }
 
     private boolean isSuperAdmin() {

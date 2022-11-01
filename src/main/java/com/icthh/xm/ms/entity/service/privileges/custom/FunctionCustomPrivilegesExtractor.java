@@ -19,7 +19,7 @@ import static java.util.stream.Collectors.toList;
 @RequiredArgsConstructor
 public class FunctionCustomPrivilegesExtractor implements CustomPrivilegesExtractor {
 
-    private static final String SECTION_NAME = "entity-functions";
+    public static final String SECTION_NAME = "entity-functions";
     private static final String PRIVILEGE_PREFIX = "FUNCTION.CALL.";
 
     private final XmEntityTenantConfigService tenantConfigService;
