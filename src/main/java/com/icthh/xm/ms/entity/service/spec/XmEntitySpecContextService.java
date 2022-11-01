@@ -88,7 +88,12 @@ public class XmEntitySpecContextService {
     }
 
     public List<TypeSpec> getDynamicTypeSpec(String tenantKey) {
-        String currentUserRole = SecurityUtils.getCurrentUserRole().orElseThrow(() -> new IllegalArgumentException("User role not defined"));
+
+        String currentUserRole = SecurityUtils.getCurrentUserRole().orElse(null);
+        if (StringUtils.isEmpty(currentUserRole)) {
+            return List.of();
+        }
+
         final String mapKey = tenantKey + "." + currentUserRole;
         Function<String, List<TypeSpec>> function = filterDynamicSpec(tenantKey);
         return typesByTenantRole.computeIfAbsent(mapKey, function);

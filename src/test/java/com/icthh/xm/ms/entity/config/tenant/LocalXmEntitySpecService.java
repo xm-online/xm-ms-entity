@@ -56,6 +56,7 @@ public class LocalXmEntitySpecService extends XmEntitySpecService {
 
     @Override
     protected Map<String, TypeSpec> getTypeSpecs() {
+        log.warn("OVERRIDEN FUNCTION IS USED");
         String tenantName = tenantContextHolder.getTenantKey();
         String config = getXmEntitySpec(tenantName);
         String key = applicationProperties.getSpecificationPathPattern().replace("{tenantName}", tenantName);
@@ -66,6 +67,7 @@ public class LocalXmEntitySpecService extends XmEntitySpecService {
 
     @Override
     public Optional<FunctionSpec> findFunction(String functionKey) {
+        log.warn("OVERRIDEN FUNCTION IS USED");
         return super.findFunction(functionKey)
                 .or(() -> {
                     getTypeSpecs(); // trigger refresh config which populates functionsByTenant cache
