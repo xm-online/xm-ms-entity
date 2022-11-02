@@ -24,6 +24,7 @@ import com.icthh.xm.ms.entity.repository.EventRepository;
 import com.icthh.xm.ms.entity.repository.LinkRepository;
 import com.icthh.xm.ms.entity.repository.SpringXmEntityRepository;
 import com.icthh.xm.ms.entity.repository.UniqueFieldRepository;
+import com.icthh.xm.ms.entity.repository.XmEntityProjectionRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityRepositoryInternal;
 import com.icthh.xm.ms.entity.repository.search.XmEntityPermittedSearchRepository;
 import com.icthh.xm.ms.entity.repository.search.XmEntitySearchRepository;
@@ -137,8 +138,6 @@ public class EntityServiceImplIntTest extends AbstractSpringBootTest {
 
     @Autowired
     private XmEntityTenantConfigService tenantConfigService;
-    @Autowired
-    private XmEntityProjectionService xmEntityProjectionService;
 
     @Mock
     private ProfileService profileService;
@@ -151,6 +150,9 @@ public class EntityServiceImplIntTest extends AbstractSpringBootTest {
 
     @Mock
     private XmAuthenticationContext context;
+
+    @Autowired
+    private XmEntityProjectionRepository xmEntityProjectionRepository;
 
     private Profile self;
 
@@ -184,6 +186,8 @@ public class EntityServiceImplIntTest extends AbstractSpringBootTest {
         String config = getXmEntityTemplatesSpec(tenantName);
         String key = applicationProperties.getSpecificationTemplatesPathPattern().replace("{tenantName}", tenantName);
         xmEntityTemplatesSpecService.onRefresh(key, config);
+
+        XmEntityProjectionService xmEntityProjectionService = new XmEntityProjectionServiceImpl(xmEntityProjectionRepository, profileService);
 
         xmEntityService = new XmEntityServiceImpl(
             xmEntitySpecService,
