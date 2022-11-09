@@ -1,21 +1,5 @@
 package com.icthh.xm.ms.entity.service.impl;
 
-import static com.icthh.xm.ms.entity.domain.spec.LinkSpec.NEW_BUILDER_TYPE;
-import static com.icthh.xm.ms.entity.domain.spec.LinkSpec.SEARCH_BUILDER_TYPE;
-import static com.icthh.xm.ms.entity.util.CustomCollectionUtils.nullSafe;
-import static com.jayway.jsonpath.Configuration.defaultConfiguration;
-import static com.jayway.jsonpath.Option.SUPPRESS_EXCEPTIONS;
-import static java.lang.Boolean.TRUE;
-import static java.util.Collections.emptyList;
-import static java.util.Collections.singletonList;
-import static java.util.Optional.ofNullable;
-import static java.util.stream.Collectors.toMap;
-import static java.util.stream.Collectors.toSet;
-import static org.apache.commons.collections.MapUtils.isEmpty;
-import static org.apache.commons.lang3.StringUtils.isBlank;
-import static org.apache.commons.lang3.StringUtils.isNoneBlank;
-import static org.springframework.beans.BeanUtils.isSimpleValueType;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.icthh.xm.commons.exceptions.BusinessException;
 import com.icthh.xm.commons.exceptions.EntityNotFoundException;
@@ -71,6 +55,7 @@ import com.icthh.xm.ms.entity.service.LinkService;
 import com.icthh.xm.ms.entity.service.ProfileService;
 import com.icthh.xm.ms.entity.service.SimpleTemplateProcessor;
 import com.icthh.xm.ms.entity.service.StorageService;
+import com.icthh.xm.ms.entity.service.XmEntityProjectionService;
 import com.icthh.xm.ms.entity.service.XmEntityService;
 import com.icthh.xm.ms.entity.service.XmEntitySpecService;
 import com.icthh.xm.ms.entity.service.XmEntityTemplatesSpecService;
@@ -78,24 +63,11 @@ import com.icthh.xm.ms.entity.service.dto.LinkSourceDto;
 import com.icthh.xm.ms.entity.service.dto.SearchDto;
 import com.jayway.jsonpath.DocumentContext;
 import com.jayway.jsonpath.JsonPath;
-import java.net.URI;
-import java.time.Instant;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.function.Consumer;
-import java.util.stream.Collectors;
-import javax.annotation.Nullable;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.text.StrSubstitutor;
 import org.apache.commons.lang3.StringUtils;
-import org.hibernate.collection.internal.PersistentSet;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -107,6 +79,34 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+
+import javax.annotation.Nullable;
+import java.net.URI;
+import java.time.Instant;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.function.Consumer;
+import java.util.stream.Collectors;
+
+import static com.icthh.xm.ms.entity.domain.spec.LinkSpec.NEW_BUILDER_TYPE;
+import static com.icthh.xm.ms.entity.domain.spec.LinkSpec.SEARCH_BUILDER_TYPE;
+import static com.icthh.xm.ms.entity.util.CustomCollectionUtils.nullSafe;
+import static com.jayway.jsonpath.Configuration.defaultConfiguration;
+import static com.jayway.jsonpath.Option.SUPPRESS_EXCEPTIONS;
+import static java.lang.Boolean.TRUE;
+import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
+import static java.util.stream.Collectors.toMap;
+import static java.util.stream.Collectors.toSet;
+import static org.apache.commons.collections.MapUtils.isEmpty;
+import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.apache.commons.lang3.StringUtils.isNoneBlank;
+import static org.springframework.beans.BeanUtils.isSimpleValueType;
 
 /**
  * Service Implementation for managing XmEntity.
@@ -137,6 +137,8 @@ public class XmEntityServiceImpl implements XmEntityService {
     private final SimpleTemplateProcessor simpleTemplateProcessors;
     private final EventRepository eventRepository;
     private final JsonValidationService validator;
+
+    private final XmEntityProjectionService xmEntityProjectionService;
 
     private XmEntityServiceImpl self;
 
@@ -775,15 +777,7 @@ public class XmEntityServiceImpl implements XmEntityService {
     @Transactional(readOnly = true)
     @Override
     public Optional<XmEntityStateProjection> findStateProjectionById(IdOrKey idOrKey) {
-        XmEntityStateProjection projection;
-        if (idOrKey.isId()) {
-            // ID case
-            projection = xmEntityRepository.findStateProjectionById(idOrKey.getId());
-        } else {
-            // KEY case
-            projection = xmEntityRepository.findStateProjectionByKey(idOrKey.getKey());
-        }
-        return ofNullable(projection);
+        return xmEntityProjectionService.findStateProjection(idOrKey);
     }
 
     @Override
@@ -837,29 +831,8 @@ public class XmEntityServiceImpl implements XmEntityService {
     @Transactional(readOnly = true)
     @Override
     public XmEntityIdKeyTypeKey getXmEntityIdKeyTypeKey(IdOrKey idOrKey) {
-        XmEntityIdKeyTypeKey projection;
-        if (idOrKey.isId()) {
-            // ID case
-            projection = xmEntityRepository.findOneIdKeyTypeKeyById(idOrKey.getId());
-            if (projection == null) {
-                throw new EntityNotFoundException("XmEntity with id [" + idOrKey.getId() + "] not found");
-            }
-        } else if (idOrKey.isSelf()) {
-            // SELF keys
-            XmEntity profile = profile();
-            projection = xmEntityRepository.findOneIdKeyTypeKeyById(profile.getId());
-            if (projection == null) {
-                throw new EntityNotFoundException("XmEntity with key [" + idOrKey.getId() + "] not found");
-            }
-        } else {
-            // KEY case
-            projection = xmEntityRepository.findOneIdKeyTypeKeyByKey(idOrKey.getKey());
-            if (projection == null) {
-                throw new EntityNotFoundException("XmEntity with key [" + idOrKey.getKey() + "] not found");
-            }
-        }
-
-        return projection;
+        return xmEntityProjectionService.findXmEntityIdKeyTypeKey(idOrKey)
+            .orElseThrow(() -> new EntityNotFoundException("XmEntity with id [" + idOrKey + "] not found"));
     }
 
     @Override

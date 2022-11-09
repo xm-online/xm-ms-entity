@@ -26,6 +26,7 @@ import com.icthh.xm.ms.entity.service.ProfileService;
 import com.icthh.xm.ms.entity.service.SimpleTemplateProcessor;
 import com.icthh.xm.ms.entity.service.StorageService;
 import com.icthh.xm.ms.entity.service.TenantService;
+import com.icthh.xm.ms.entity.service.XmEntityProjectionService;
 import com.icthh.xm.ms.entity.service.XmEntitySpecService;
 import com.icthh.xm.ms.entity.service.XmEntityTemplatesSpecService;
 import com.icthh.xm.ms.entity.service.impl.StartUpdateDateGenerationStrategy;
@@ -147,6 +148,9 @@ public class XmEntityResourceSpecIntTest extends AbstractSpringBootTest {
     @Autowired
     private JsonValidationService validationService;
 
+    @Autowired
+    private XmEntityProjectionService xmEntityProjectionService;
+
     @BeforeTransaction
     public void beforeTransaction() {
         TenantContextUtils.setTenant(tenantContextHolder, "SPECIFICATIONS");
@@ -185,7 +189,8 @@ public class XmEntityResourceSpecIntTest extends AbstractSpringBootTest {
             new TypeKeyWithExtends(tenantConfigService),
             new SimpleTemplateProcessor(objectMapper),
             eventRepository,
-            validationService);
+            validationService,
+            xmEntityProjectionService);
 
         xmEntityServiceImpl.setSelf(xmEntityServiceImpl);
 

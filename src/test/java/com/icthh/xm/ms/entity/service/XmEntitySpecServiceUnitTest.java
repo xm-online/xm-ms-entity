@@ -64,7 +64,6 @@ import static com.google.common.collect.Maps.newHashMap;
 import static com.icthh.xm.ms.entity.config.TenantConfigMockConfiguration.getXmEntitySpec;
 import static com.icthh.xm.ms.entity.security.access.DynamicPermissionCheckService.CONFIG_SECTION;
 import static com.icthh.xm.ms.entity.util.CustomCollectionUtils.nullSafe;
-import static com.icthh.xm.ms.entity.web.rest.XmEntitySaveIntTest.loadFile;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
 import static org.apache.commons.codec.digest.DigestUtils.sha1Hex;
@@ -556,22 +555,6 @@ public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
         String privileges = readFile("config/privileges/new-privileges-with-functions.yml");
 
         testUpdateRealPermissionFile(privileges);
-    }
-
-    @Test
-    @SneakyThrows
-    public void testXmEntitySpecSchemaGeneration() {
-        String jsonSchema = xmEntitySpecService.generateJsonSchema();
-        ObjectMapper objectMapper = new ObjectMapper(new YAMLFactory());
-        JsonNode xmentityspec = objectMapper.readTree(loadFile("config/specs/xmentityspec-xm.yml"));
-
-        JsonNode schemaNode = JsonLoader.fromString(jsonSchema);
-        JsonSchemaFactory factory = JsonSchemaFactory.byDefault();
-        JsonSchema schema = factory.getJsonSchema(schemaNode);
-        ProcessingReport report = schema.validate(xmentityspec);
-
-        boolean isSuccess = report.isSuccess();
-        assertTrue(report.toString(), isSuccess);
     }
 
     public void testUpdateRealPermissionFile(String privileges) {
