@@ -1,15 +1,6 @@
 package com.icthh.xm.ms.entity.repository;
 
 import com.icthh.xm.ms.entity.domain.XmEntity;
-import com.icthh.xm.ms.entity.projection.XmEntityIdKeyTypeKey;
-import com.icthh.xm.ms.entity.projection.XmEntityStateProjection;
-
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.function.Function;
-
 import org.intellij.lang.annotations.Language;
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.Page;
@@ -25,11 +16,16 @@ import javax.persistence.criteria.CriteriaDelete;
 import javax.persistence.criteria.CriteriaUpdate;
 import javax.persistence.criteria.Root;
 import javax.persistence.criteria.Selection;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.function.Function;
 
 /**
  * Repository interface accessible by LEP scripts.
  */
-public interface XmEntityRepository {
+public interface XmEntityRepository extends XmEntityProjectionRepository {
 
     Optional<XmEntity> findById(Long id);
 
@@ -84,14 +80,6 @@ public interface XmEntityRepository {
     Page<XmEntity> findAllByTypeKeyIn(Pageable pageable, Set<String> typeKeys);
 
     XmEntity findOneByKeyAndTypeKey(String key, String typeKey);
-
-    XmEntityIdKeyTypeKey findOneIdKeyTypeKeyByKey(String key);
-
-    XmEntityIdKeyTypeKey findOneIdKeyTypeKeyById(Long id);
-
-    XmEntityStateProjection findStateProjectionByKey(String key);
-
-    XmEntityStateProjection findStateProjectionById(Long id);
 
     XmEntity getOne(Long id);
 

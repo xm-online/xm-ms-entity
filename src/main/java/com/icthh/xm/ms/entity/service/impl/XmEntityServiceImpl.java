@@ -55,6 +55,7 @@ import com.icthh.xm.ms.entity.service.LinkService;
 import com.icthh.xm.ms.entity.service.ProfileService;
 import com.icthh.xm.ms.entity.service.SimpleTemplateProcessor;
 import com.icthh.xm.ms.entity.service.StorageService;
+import com.icthh.xm.ms.entity.service.XmEntityProjectionService;
 import com.icthh.xm.ms.entity.service.XmEntityService;
 import com.icthh.xm.ms.entity.service.XmEntitySpecService;
 import com.icthh.xm.ms.entity.service.XmEntityTemplatesSpecService;
@@ -137,6 +138,8 @@ public class XmEntityServiceImpl implements XmEntityService {
     private final SimpleTemplateProcessor simpleTemplateProcessors;
     private final EventRepository eventRepository;
     private final JsonValidationService validator;
+
+    private final XmEntityProjectionService xmEntityProjectionService;
 
     private XmEntityServiceImpl self;
 
@@ -756,15 +759,7 @@ public class XmEntityServiceImpl implements XmEntityService {
     @Transactional(readOnly = true)
     @Override
     public Optional<XmEntityStateProjection> findStateProjectionById(IdOrKey idOrKey) {
-        XmEntityStateProjection projection;
-        if (idOrKey.isId()) {
-            // ID case
-            projection = xmEntityRepository.findStateProjectionById(idOrKey.getId());
-        } else {
-            // KEY case
-            projection = xmEntityRepository.findStateProjectionByKey(idOrKey.getKey());
-        }
-        return ofNullable(projection);
+        return xmEntityProjectionService.findStateProjection(idOrKey);
     }
 
     @Override
@@ -818,29 +813,8 @@ public class XmEntityServiceImpl implements XmEntityService {
     @Transactional(readOnly = true)
     @Override
     public XmEntityIdKeyTypeKey getXmEntityIdKeyTypeKey(IdOrKey idOrKey) {
-        XmEntityIdKeyTypeKey projection;
-        if (idOrKey.isId()) {
-            // ID case
-            projection = xmEntityRepository.findOneIdKeyTypeKeyById(idOrKey.getId());
-            if (projection == null) {
-                throw new EntityNotFoundException("XmEntity with id [" + idOrKey.getId() + "] not found");
-            }
-        } else if (idOrKey.isSelf()) {
-            // SELF keys
-            XmEntity profile = profile();
-            projection = xmEntityRepository.findOneIdKeyTypeKeyById(profile.getId());
-            if (projection == null) {
-                throw new EntityNotFoundException("XmEntity with key [" + idOrKey.getId() + "] not found");
-            }
-        } else {
-            // KEY case
-            projection = xmEntityRepository.findOneIdKeyTypeKeyByKey(idOrKey.getKey());
-            if (projection == null) {
-                throw new EntityNotFoundException("XmEntity with key [" + idOrKey.getKey() + "] not found");
-            }
-        }
-
-        return projection;
+        return xmEntityProjectionService.findXmEntityIdKeyTypeKey(idOrKey)
+            .orElseThrow(() -> new EntityNotFoundException("XmEntity with id [" + idOrKey + "] not found"));
     }
 
     @Override
