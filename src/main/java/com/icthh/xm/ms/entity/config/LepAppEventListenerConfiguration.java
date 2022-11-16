@@ -1,6 +1,8 @@
 package com.icthh.xm.ms.entity.config;
 
 import com.icthh.xm.commons.config.client.service.TenantConfigService;
+import com.icthh.xm.commons.domain.event.service.EventPublisher;
+import com.icthh.xm.commons.domain.event.service.OutboxTransportService;
 import com.icthh.xm.commons.lep.commons.CommonsService;
 import com.icthh.xm.commons.permission.service.PermissionCheckService;
 import com.icthh.xm.commons.topic.service.KafkaTemplateService;
@@ -67,7 +69,9 @@ public class LepAppEventListenerConfiguration {
         SeparateTransactionExecutor transactionExecutor,
         CustomMetricsContext customMetricsContext,
         KafkaTemplateService kafkaTemplateService,
-        MetricsAdapter metricsAdapter
+        MetricsAdapter metricsAdapter,
+        EventPublisher eventPublisher,
+        OutboxTransportService outboxTransportService
     ) {
 
         return new XmEntityMsLepProcessingApplicationListener(xmEntityService,
@@ -76,7 +80,8 @@ public class LepAppEventListenerConfiguration {
             requestFactory, locationService, tagService, profileEventProducer, commentService,
             commonsService, permissionCheckService, eventService, calendarService, tenantLepResource,
             amazonS3Template, elasticsearchTemplate, permittedSearchRepository, elasticsearchIndexService,
-            transactionExecutor, customMetricsContext, kafkaTemplateService, metricsAdapter);
+            transactionExecutor, customMetricsContext, kafkaTemplateService, metricsAdapter,
+            eventPublisher, outboxTransportService);
     }
 
 }

@@ -4,7 +4,7 @@ spring:
     datasource:
         driver-class-name: org.postgresql.Driver
     jpa:
-        database-platform: com.icthh.xm.ms.entity.config.jsonb.CustomPostgreSQL95Dialect
+        database-platform: com.icthh.xm.commons.migration.db.jsonb.CustomPostgreSQL95Dialect
         database: POSTGRESQL
         show-sql: true
         hibernate:
@@ -15,7 +15,7 @@ spring:
             hibernate.cache.use_query_cache: false
             hibernate.generate_statistics: true
             hibernate.hbm2ddl.auto: none
-            hibernate.dialect: com.icthh.xm.ms.entity.config.jsonb.CustomPostgreSQL95Dialect
+            hibernate.dialect: com.icthh.xm.commons.migration.db.jsonb.CustomPostgreSQL95Dialect
     liquibase:
         change-log: config/liquibase/master.xml
 

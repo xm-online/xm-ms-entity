@@ -1,7 +1,7 @@
 package com.icthh.xm.ms.entity.config.jsonb;
 
-import static com.icthh.xm.ms.entity.config.jsonb.CustomPostgreSQL95Dialect.JSON_QUERY;
-import static com.icthh.xm.ms.entity.config.jsonb.CustomPostgreSQL95Dialect.TO_JSON_B;
+import static com.icthh.xm.commons.migration.db.jsonb.CustomPostgreSQL95Dialect.JSON_QUERY;
+import static com.icthh.xm.commons.migration.db.jsonb.CustomPostgreSQL95Dialect.TO_JSON_B;
 
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.domain.XmEntity_;

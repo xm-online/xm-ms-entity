@@ -1,6 +1,8 @@
 package com.icthh.xm.ms.entity.lep;
 
 import com.icthh.xm.commons.config.client.service.TenantConfigService;
+import com.icthh.xm.commons.domain.event.service.EventPublisher;
+import com.icthh.xm.commons.domain.event.service.OutboxTransportService;
 import com.icthh.xm.commons.lep.BaseProceedingLep;
 import com.icthh.xm.commons.lep.spring.LepThreadHelper;
 import com.icthh.xm.commons.lep.spring.lepservice.LepServiceFactory;
@@ -67,6 +69,8 @@ public class LepContext {
         public ElasticsearchIndexService elasticsearchIndexService;
         public SeparateTransactionExecutor separateTransactionExecutor;
         public MetricsAdapter metricsAdapter;
+        public EventPublisher eventPublisher;
+        public OutboxTransportService outboxTransportService;
     }
 
     public static class LepRepositories {

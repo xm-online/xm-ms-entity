@@ -41,7 +41,7 @@ spring:
           poolName: Hikari
           auto-commit: false
     jpa:
-        database-platform: com.icthh.xm.ms.entity.config.jsonb.CustomPostgreSQL95Dialect
+        database-platform: com.icthh.xm.commons.migration.db.jsonb.CustomPostgreSQL95Dialect
         database: POSTGRESQL
         show-sql: false
         properties:
@@ -57,7 +57,7 @@ spring:
             #hibernate.cache.hazelcast.use_lite_member: true
             hibernate.show_sql: false
             hibernate.format_sql: false
-            hibernate.dialect: com.icthh.xm.ms.entity.config.jsonb.CustomPostgreSQL95Dialect
+            hibernate.dialect: com.icthh.xm.commons.migration.db.jsonb.CustomPostgreSQL95Dialect
     data:
         elasticsearch:
             cluster-name:
