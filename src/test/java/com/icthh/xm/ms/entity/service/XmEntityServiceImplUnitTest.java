@@ -77,6 +77,8 @@ public class XmEntityServiceImplUnitTest extends AbstractUnitTest {
     UniqueFieldRepository uniqueFieldRepository;
     @Mock
     TypeKeyWithExtends typeKeyWithExtends;
+    @Mock
+    XmEntityProjectionService xmEntityProjectionService;
 
     @Spy
     private ObjectMapper mapper = new ObjectMapper();
@@ -181,8 +183,8 @@ public class XmEntityServiceImplUnitTest extends AbstractUnitTest {
         IdOrKey idOrKey = IdOrKey.of(TEST_KEY);
 
         XmEntity xmEntity = EntityUtils.newEntity();
-        when(xmEntityRepository.findOneIdKeyTypeKeyByKey(TEST_KEY)).thenReturn(EntityUtils.projectionFromEntity(xmEntity));
         when(xmEntityRepository.findOneById(TEST_ID)).thenReturn(xmEntity);
+        when(xmEntityProjectionService.findXmEntityIdKeyTypeKey(idOrKey)).thenReturn(Optional.of(EntityUtils.projectionFromEntity(xmEntity)));
 
         XmEntity one = xmEntityService.findOne(idOrKey);
         assertEquals(TEST_ID, one.getId());
@@ -216,7 +218,7 @@ public class XmEntityServiceImplUnitTest extends AbstractUnitTest {
     public void findOneByKeyWithEmbeddedShouldReturnValue() {
         IdOrKey idOrKey = IdOrKey.of(TEST_KEY);
         XmEntity xmEntity = EntityUtils.newEntity();
-        when(xmEntityRepository.findOneIdKeyTypeKeyByKey(TEST_KEY)).thenReturn(EntityUtils.projectionFromEntity(xmEntity));
+        when(xmEntityProjectionService.findXmEntityIdKeyTypeKey(idOrKey)).thenReturn(Optional.of(EntityUtils.projectionFromEntity(xmEntity)));
         when(xmEntityRepository.findOne(eq(TEST_ID), anyList())).thenReturn(xmEntity);
         XmEntity one = xmEntityService.findOne(idOrKey, List.of("data"));
         assertEquals(TEST_ID, one.getId());
