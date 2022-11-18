@@ -1,15 +1,5 @@
 package com.icthh.xm.ms.entity.service;
 
-import static com.google.common.collect.ImmutableMap.of;
-import static java.util.Arrays.asList;
-import static java.util.Collections.emptyList;
-import static java.util.stream.Collectors.toList;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.icthh.xm.commons.config.client.service.TenantConfigService;
@@ -20,6 +10,7 @@ import com.icthh.xm.ms.entity.domain.FunctionContext;
 import com.icthh.xm.ms.entity.domain.Link;
 import com.icthh.xm.ms.entity.domain.UniqueField;
 import com.icthh.xm.ms.entity.domain.XmEntity;
+import com.icthh.xm.ms.entity.domain.ext.IdOrKey;
 import com.icthh.xm.ms.entity.domain.spec.StateSpec;
 import com.icthh.xm.ms.entity.domain.spec.TypeSpec;
 import com.icthh.xm.ms.entity.domain.spec.UniqueFieldSpec;
@@ -30,12 +21,7 @@ import com.icthh.xm.ms.entity.repository.XmEntityRepositoryInternal;
 import com.icthh.xm.ms.entity.repository.search.XmEntitySearchRepository;
 import com.icthh.xm.ms.entity.service.impl.StartUpdateDateGenerationStrategy;
 import com.icthh.xm.ms.entity.service.impl.XmEntityServiceImpl;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import com.icthh.xm.ms.entity.util.EntityUtils;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
@@ -47,6 +33,27 @@ import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+
+import static com.google.common.collect.ImmutableMap.of;
+import static com.icthh.xm.ms.entity.util.EntityUtils.TEST_ID;
+import static com.icthh.xm.ms.entity.util.EntityUtils.TEST_KEY;
+import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
+import static java.util.stream.Collectors.toList;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @Slf4j
 @RunWith(MockitoJUnitRunner.class)
@@ -70,6 +77,8 @@ public class XmEntityServiceImplUnitTest extends AbstractUnitTest {
     UniqueFieldRepository uniqueFieldRepository;
     @Mock
     TypeKeyWithExtends typeKeyWithExtends;
+    @Mock
+    XmEntityProjectionService xmEntityProjectionService;
 
     @Spy
     private ObjectMapper mapper = new ObjectMapper();
@@ -156,6 +165,65 @@ public class XmEntityServiceImplUnitTest extends AbstractUnitTest {
         List<StateSpec> states = asList(new StateSpec().key("FIRST_STATE"), new StateSpec().key("NEXT_STATE"), new StateSpec().key("ORHTER_STATE"));
         when(xmEntitySpecService.nextStates("TEST_TYPE_KEY", "CURRENT_STATE")).thenReturn(states);
         xmEntityService.assertStateTransition("NEXT_STATE",  mockEntityProjection());
+    }
+
+    @Test
+    public void findOneByIdShouldReturnValue() {
+        IdOrKey idOrKey = IdOrKey.of(TEST_ID);
+        XmEntity xmEntity = EntityUtils.newEntity();
+        when(xmEntityRepository.findOneById(idOrKey.getId())).thenReturn(xmEntity);
+        XmEntity one = xmEntityService.findOne(idOrKey);
+        assertEquals(TEST_ID, one.getId());
+        assertEquals(TEST_TYPE_KEY, one.getTypeKey());
+        assertEquals(TEST_KEY, one.getKey());
+    }
+
+    @Test
+    public void findOneByKeyShouldReturnValue() {
+        IdOrKey idOrKey = IdOrKey.of(TEST_KEY);
+
+        XmEntity xmEntity = EntityUtils.newEntity();
+        when(xmEntityRepository.findOneById(TEST_ID)).thenReturn(xmEntity);
+        when(xmEntityProjectionService.findXmEntityIdKeyTypeKey(idOrKey)).thenReturn(Optional.of(EntityUtils.projectionFromEntity(xmEntity)));
+
+        XmEntity one = xmEntityService.findOne(idOrKey);
+        assertEquals(TEST_ID, one.getId());
+        assertEquals(TEST_TYPE_KEY, one.getTypeKey());
+        assertEquals(TEST_KEY, one.getKey());
+    }
+
+    @Test
+    public void findOneByIdWithEmptyEmbeddedShouldReturnValue() {
+        IdOrKey idOrKey = IdOrKey.of(TEST_ID);
+        XmEntity xmEntity = EntityUtils.newEntity();
+        when(xmEntityRepository.findOne(eq(TEST_ID), anyList())).thenReturn(xmEntity);
+        XmEntity one = xmEntityService.findOne(idOrKey, List.of());
+        assertEquals(TEST_ID, one.getId());
+        assertEquals(TEST_TYPE_KEY, one.getTypeKey());
+        assertEquals(TEST_KEY, one.getKey());
+    }
+
+    @Test
+    public void findOneByIdWithEmbeddedShouldReturnValue() {
+        IdOrKey idOrKey = IdOrKey.of(TEST_ID);
+        XmEntity xmEntity = EntityUtils.newEntity();
+        when(xmEntityRepository.findOne(eq(TEST_ID), anyList())).thenReturn(xmEntity);
+        XmEntity one = xmEntityService.findOne(idOrKey, List.of("data"));
+        assertEquals(TEST_ID, one.getId());
+        assertEquals(TEST_TYPE_KEY, one.getTypeKey());
+        assertEquals(TEST_KEY, one.getKey());
+    }
+
+    @Test
+    public void findOneByKeyWithEmbeddedShouldReturnValue() {
+        IdOrKey idOrKey = IdOrKey.of(TEST_KEY);
+        XmEntity xmEntity = EntityUtils.newEntity();
+        when(xmEntityProjectionService.findXmEntityIdKeyTypeKey(idOrKey)).thenReturn(Optional.of(EntityUtils.projectionFromEntity(xmEntity)));
+        when(xmEntityRepository.findOne(eq(TEST_ID), anyList())).thenReturn(xmEntity);
+        XmEntity one = xmEntityService.findOne(idOrKey, List.of("data"));
+        assertEquals(TEST_ID, one.getId());
+        assertEquals(TEST_TYPE_KEY, one.getTypeKey());
+        assertEquals(TEST_KEY, one.getKey());
     }
 
     private XmEntityStateProjection mockEntityProjection() {
