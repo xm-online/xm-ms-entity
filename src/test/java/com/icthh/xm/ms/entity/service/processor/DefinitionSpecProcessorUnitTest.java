@@ -26,7 +26,7 @@ public class DefinitionSpecProcessorUnitTest extends AbstractUnitTest {
 
     private static final String ENTITY_APP_NAME = "entity";
     private static final String TENANT = "XM";
-    private static final String PATH_TO_FILE = "/config/tenants/XM/entity/xmentityspec/definitions/specification-definitions.json";
+    private static final String RELATIVE_PATH_TO_FILE = "xmentityspec/definitions/specification-definitions.json";
     private DefinitionSpecProcessor subject;
     private ObjectMapper objectMapper;
 
@@ -35,7 +35,7 @@ public class DefinitionSpecProcessorUnitTest extends AbstractUnitTest {
         JsonListenerService jsonListenerService = new JsonListenerService();
         subject = new DefinitionSpecProcessor(jsonListenerService);
         objectMapper = new ObjectMapper();
-        jsonListenerService.processTenantSpecification(TENANT, PATH_TO_FILE, loadFile("config/specs/definitions/specification-definitions.json"));
+        jsonListenerService.processTenantSpecification(TENANT, RELATIVE_PATH_TO_FILE, loadFile("config/specs/definitions/specification-definitions.json"));
     }
 
     @Test
