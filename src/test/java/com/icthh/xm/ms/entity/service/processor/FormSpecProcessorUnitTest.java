@@ -1,5 +1,6 @@
 package com.icthh.xm.ms.entity.service.processor;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
@@ -8,7 +9,7 @@ import com.icthh.xm.ms.entity.domain.spec.DefinitionSpec;
 import com.icthh.xm.ms.entity.domain.spec.FormSpec;
 import com.icthh.xm.ms.entity.domain.spec.TypeSpec;
 import com.icthh.xm.ms.entity.domain.spec.XmEntitySpec;
-import com.icthh.xm.ms.entity.service.JsonListenerService;
+import com.icthh.xm.ms.entity.service.json.JsonListenerService;
 import lombok.SneakyThrows;
 import org.junit.Before;
 import org.junit.Test;
@@ -24,18 +25,17 @@ import static org.junit.Assert.assertEquals;
 
 @RunWith(MockitoJUnitRunner.class)
 public class FormSpecProcessorUnitTest extends AbstractUnitTest {
-    private static final String ENTITY_APP_NAME = "entity";
     private static final String TENANT = "XM";
-    private static final String PATH_TO_FILE = "/config/tenants/XM/entity/xmentityspec/forms/specification-forms.json";
+    private static final String RELATIVE_PATH_TO_FILE = "xmentityspec/forms/specification-forms.json";
     private FormSpecProcessor subject;
     private ObjectMapper objectMapper;
+    private JsonListenerService jsonListenerService;
 
     @Before
     public void setUp() {
-        JsonListenerService jsonListenerService = new JsonListenerService(ENTITY_APP_NAME);
+        jsonListenerService = new JsonListenerService();
         subject = new FormSpecProcessor(jsonListenerService);
         objectMapper = new ObjectMapper();
-        jsonListenerService.onRefresh(PATH_TO_FILE, loadFile("config/specs/forms/specification-forms.json"));
     }
 
     @Test
@@ -43,6 +43,7 @@ public class FormSpecProcessorUnitTest extends AbstractUnitTest {
         XmEntitySpec inputXmEntitySpec = loadXmEntitySpecByFileName("xmentityspec-forms-input");
         XmEntitySpec expectedXmEntitySpec = loadXmEntitySpecByFileName("xmentityspec-forms-input-expected");
         TypeSpec typeSpec = inputXmEntitySpec.getTypes().get(0);
+        jsonListenerService.processTenantSpecification(TENANT, RELATIVE_PATH_TO_FILE, loadFile("config/specs/forms/specification-forms.json"));
 
         subject.updateFormStateByTenant(TENANT, Map.of(TENANT, Map.of(TENANT, objectMapper.writeValueAsString(inputXmEntitySpec))));
         subject.processTypeSpec(TENANT, typeSpec::setDataForm, typeSpec::getDataForm);
@@ -57,8 +58,8 @@ public class FormSpecProcessorUnitTest extends AbstractUnitTest {
     @Test
     public void shouldNotProcessTypeSpecIfPossibleRecursion() throws Exception {
         XmEntitySpec inputXmEntitySpec = loadXmEntitySpecByFileName("xmentityspec-forms-recursive");
-
         TypeSpec typeSpec = inputXmEntitySpec.getTypes().get(0);
+        jsonListenerService.processTenantSpecification(TENANT, RELATIVE_PATH_TO_FILE, loadFile("config/specs/forms/specification-forms.json"));
 
         subject.updateFormStateByTenant(TENANT, Map.of(TENANT, Map.of(TENANT, objectMapper.writeValueAsString(inputXmEntitySpec))));
         subject.processTypeSpec(TENANT, typeSpec::setDataForm, typeSpec::getDataForm);
@@ -71,6 +72,7 @@ public class FormSpecProcessorUnitTest extends AbstractUnitTest {
         XmEntitySpec inputXmEntitySpec = loadXmEntitySpecByFileName("xmentityspec-forms-multiple");
         XmEntitySpec expectedXmEntitySpec = loadXmEntitySpecByFileName("xmentityspec-forms-multiple-expected");
         TypeSpec typeSpec = inputXmEntitySpec.getTypes().get(0);
+        jsonListenerService.processTenantSpecification(TENANT, RELATIVE_PATH_TO_FILE, loadFile("config/specs/forms/specification-forms.json"));
 
         subject.updateFormStateByTenant(TENANT, Map.of(TENANT, Map.of(TENANT, objectMapper.writeValueAsString(inputXmEntitySpec))));
         subject.processTypeSpec(TENANT, typeSpec::setDataForm, typeSpec::getDataForm);
@@ -80,6 +82,16 @@ public class FormSpecProcessorUnitTest extends AbstractUnitTest {
             inputXmEntitySpec.getDefinitions());
 
         assertEqualsEntities(expectedXmEntitySpec, actualXmEntitySpec);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void shouldThrowIllegalArgumentExceptionWhenProcessTypeSpecWithNotValidJson()throws JsonProcessingException {
+        XmEntitySpec inputXmEntitySpec = loadXmEntitySpecByFileName("xmentityspec-forms-input");
+        TypeSpec typeSpec = inputXmEntitySpec.getTypes().get(0);
+        jsonListenerService.processTenantSpecification(TENANT, RELATIVE_PATH_TO_FILE, "{,}");
+
+        subject.updateFormStateByTenant(TENANT, Map.of(TENANT, Map.of(TENANT, objectMapper.writeValueAsString(inputXmEntitySpec))));
+        subject.processTypeSpec(TENANT, typeSpec::setDataForm, typeSpec::getDataForm);
     }
 
     @SneakyThrows

@@ -7,7 +7,7 @@ import com.icthh.xm.ms.entity.domain.spec.DefinitionSpec;
 import com.icthh.xm.ms.entity.domain.spec.FormSpec;
 import com.icthh.xm.ms.entity.domain.spec.TypeSpec;
 import com.icthh.xm.ms.entity.domain.spec.XmEntitySpec;
-import com.icthh.xm.ms.entity.service.JsonListenerService;
+import com.icthh.xm.ms.entity.service.json.JsonListenerService;
 import lombok.SneakyThrows;
 import org.junit.Before;
 import org.junit.Test;
@@ -32,10 +32,10 @@ public class DefinitionSpecProcessorUnitTest extends AbstractUnitTest {
 
     @Before
     public void setUp() {
-        JsonListenerService jsonListenerService = new JsonListenerService(ENTITY_APP_NAME);
+        JsonListenerService jsonListenerService = new JsonListenerService();
         subject = new DefinitionSpecProcessor(jsonListenerService);
         objectMapper = new ObjectMapper();
-        jsonListenerService.onRefresh(PATH_TO_FILE, loadFile("config/specs/definitions/specification-definitions.json"));
+        jsonListenerService.processTenantSpecification(TENANT, PATH_TO_FILE, loadFile("config/specs/definitions/specification-definitions.json"));
     }
 
     @Test

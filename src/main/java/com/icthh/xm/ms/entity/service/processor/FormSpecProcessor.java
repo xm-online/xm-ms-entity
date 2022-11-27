@@ -6,10 +6,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ContainerNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.fasterxml.jackson.databind.node.TextNode;
 import com.icthh.xm.ms.entity.domain.spec.FormSpec;
 import com.icthh.xm.ms.entity.domain.spec.XmEntitySpec;
-import com.icthh.xm.ms.entity.service.JsonListenerService;
+import com.icthh.xm.ms.entity.service.json.JsonListenerService;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
@@ -29,6 +28,7 @@ import org.springframework.stereotype.Component;
 
 import static com.google.common.collect.Lists.newArrayList;
 import static java.util.Optional.ofNullable;
+import static org.apache.commons.lang.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.modelmapper.internal.util.Objects.firstNonNull;
 import static org.springframework.util.CollectionUtils.isEmpty;
@@ -128,7 +128,7 @@ public class FormSpecProcessor extends SpecProcessor {
 
             String refPath = firstNonNull(refNode, mapper.createObjectNode()).asText();
             String formSpec = specifications.getOrDefault(refPath, "{}");
-            var fromSpecNode = this.convertSpecificationToObjectNodes(formSpec);
+            var fromSpecNode = this.convertSpecificationToObjectNodes(formSpec, refPath);
             processFromSpecNode(fromSpecNode, keyNode.asText());
             injectJsonNode(parentNode, objectNode, fromSpecNode, refPath);
 
@@ -185,10 +185,14 @@ public class FormSpecProcessor extends SpecProcessor {
         }
     }
 
-    @SneakyThrows
-    private ContainerNode<?> convertSpecificationToObjectNodes(String specification) {
-        ObjectMapper objectMapper = new ObjectMapper();
-        return objectMapper.readValue(specification, ContainerNode.class);
+    private ContainerNode<?> convertSpecificationToObjectNodes(String specification, String ref) {
+        try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            return objectMapper.readValue(specification, ContainerNode.class);
+        } catch (JsonProcessingException e) {
+            log.error("The form specification by ref: {} could not be processed. Error: {}", ref, e.getMessage());
+            throw new IllegalArgumentException(e.getMessage());
+        }
     }
 
     @SneakyThrows

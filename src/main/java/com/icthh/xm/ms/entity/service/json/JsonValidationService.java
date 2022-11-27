@@ -1,4 +1,4 @@
-package com.icthh.xm.ms.entity.service;
+package com.icthh.xm.ms.entity.service.json;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
