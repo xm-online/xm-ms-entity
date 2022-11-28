@@ -24,9 +24,9 @@ types:
                 {
                     "type": "object",
                     "properties": {
-                        "tenantKey": {"$ref": "#/xmEntityDefinition/tenantKey/tenantKey"}},
+                        "tenantKey": {"$ref": "#/xmEntityDefinition/tenantKeyFromFile/tenantKey"}},
                     "required": ["tenantKey"],
-                     "xmEntityDefinition":{"tenantKey":{"tenantKey":{"type":"string"}}}}
+                     "xmEntityDefinition":{"tenantKeyFromFile":{"tenantKey":{"type":"string"}}}}
 
                 }
             inputForm: |
@@ -38,9 +38,9 @@ types:
                 {
                     "type": "object",
                     "properties": {
-                        "tenantKey": {"$ref": "#/xmEntityDefinition/tenantKey/tenantKey"}},
+                        "tenantKey": {"$ref": "#/xmEntityDefinition/tenantKeyFromFile/tenantKey"}},
                     "required": ["tenantKey"],
-                    "xmEntityDefinition":{"tenantKey":{"tenantKey":{"type":"string"}}}}
+                    "xmEntityDefinition":{"tenantKeyFromFile":{"tenantKey":{"type":"string"}}}}
 
                 }
             contextDataForm: |
@@ -73,8 +73,12 @@ definitions:
     - key: tenantKey
       value: |
           {"tenantKey":{"type": "string"}}
+    - key: tenantKeyFromFile
+      ref: xmentityspec/definitions/definition-specification-int.json
 
 forms:
     - key: tenantKey
       value: |
           {"key": "tenantKey", "title": {"en": "Tenant key"}, "type": "string"}
+    - key: tenantKeyFromFile
+      ref: xmentityspec/forms/form-specification-int.json

@@ -65,6 +65,7 @@ import static com.google.common.collect.Maps.newHashMap;
 import static com.icthh.xm.ms.entity.config.TenantConfigMockConfiguration.getXmEntitySpec;
 import static com.icthh.xm.ms.entity.security.access.DynamicPermissionCheckService.CONFIG_SECTION;
 import static com.icthh.xm.ms.entity.util.CustomCollectionUtils.nullSafe;
+import static com.icthh.xm.ms.entity.web.rest.XmEntitySaveIntTest.loadFile;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
 import static org.apache.commons.codec.digest.DigestUtils.sha1Hex;
@@ -108,6 +109,8 @@ public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
 
     private static final String KEY6 = "TYPE3";
     private static final String PRIVILEGES_PATH = "/config/tenants/TEST/custom-privileges.yml";
+    private static final String RELATIVE_FORMS_PATH_TO_FILE = "xmentityspec/forms/form-specification-int.json";
+    private static final String RELATIVE_DEFINITIONS_PATH_TO_FILE = "xmentityspec/definitions/definition-specification-int.json";
 
     private XmEntitySpecService xmEntitySpecService;
 
@@ -119,8 +122,7 @@ public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
     private RoleService roleService;
     @Mock
     private TenantConfigRepository tenantConfigRepository;
-    @Mock
-    private JsonListenerService jsonListenerService;
+    private JsonListenerService jsonListenerService = new JsonListenerService();
     @InjectMocks
     @Spy
     private DynamicPermissionCheckService dynamicPermissionCheckService;
@@ -758,7 +760,8 @@ public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
         String config = getXmEntitySpec("specifications");
         String key = SPEC_FOLDER_URL.replace("{tenantName}", "RESINTTEST") + "/file.yml";
         mockTenant("RESINTTEST");
-
+        jsonListenerService.processTenantSpecification("RESINTTEST", RELATIVE_FORMS_PATH_TO_FILE, loadFile("config/specs/form-specification-int.json"));
+        jsonListenerService.processTenantSpecification("RESINTTEST", RELATIVE_DEFINITIONS_PATH_TO_FILE, loadFile("config/specs/definition-specification-int.json"));
         xmEntitySpecService.onRefresh(key, config);
 
         TypeSpec actualTypeSpec = xmEntitySpecService.getTypeSpecs().get("DEMO.TEST");
@@ -766,6 +769,42 @@ public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
         NextSpec actualNextSpec = actualTypeSpec.getStates().get(0).getNext().get(0);
 
         XmEntitySpec expectedXmEntity = objectMapper.readValue(getXmEntitySpec("specifications-expected"), XmEntitySpec.class);
+        TypeSpec expectedTypeSpec = expectedXmEntity.getTypes().get(0);
+        FunctionSpec expectedFunctionSpec = expectedTypeSpec.getFunctions().get(0);
+        NextSpec expectedNextSpec = expectedTypeSpec.getStates().get(0).getNext().get(0);
+
+        assertEqualsTypeSpecFields(actualTypeSpec.getDataSpec(), expectedTypeSpec.getDataSpec());
+        assertEqualsTypeSpecFields(actualTypeSpec.getDataForm(), expectedTypeSpec.getDataForm());
+        assertEqualsTypeSpecFields(actualFunctionSpec.getInputSpec(), expectedFunctionSpec.getInputSpec());
+        assertEqualsTypeSpecFields(actualFunctionSpec.getInputForm(), expectedFunctionSpec.getInputForm());
+        assertEqualsTypeSpecFields(actualFunctionSpec.getContextDataSpec(), expectedFunctionSpec.getContextDataSpec());
+        assertEqualsTypeSpecFields(actualFunctionSpec.getContextDataForm(), expectedFunctionSpec.getContextDataForm());
+        assertEqualsTypeSpecFields(actualNextSpec.getInputSpec(), expectedNextSpec.getInputSpec());
+        assertEqualsTypeSpecFields(actualNextSpec.getInputForm(), expectedNextSpec.getInputForm());
+    }
+
+    @Test
+    public void testUpdateTenantByStateWithDefinitionsAndFormsAndUpdatedJsonFile() throws Exception {
+        ObjectMapper objectMapper = new ObjectMapper(new YAMLFactory());
+        String config = getXmEntitySpec("specifications");
+        String key = SPEC_FOLDER_URL.replace("{tenantName}", "RESINTTEST") + "/file.yml";
+        mockTenant("RESINTTEST");
+
+        jsonListenerService.processTenantSpecification("RESINTTEST", RELATIVE_FORMS_PATH_TO_FILE, loadFile("config/specs/form-specification-int.json"));
+        jsonListenerService.processTenantSpecification("RESINTTEST", RELATIVE_DEFINITIONS_PATH_TO_FILE, loadFile("config/specs/definition-specification-int.json"));
+
+        xmEntitySpecService.onRefresh(key, config);
+
+        jsonListenerService.processTenantSpecification("RESINTTEST", RELATIVE_FORMS_PATH_TO_FILE, loadFile("config/specs/updated-form-specification-int.json"));
+        jsonListenerService.processTenantSpecification("RESINTTEST", RELATIVE_DEFINITIONS_PATH_TO_FILE, loadFile("config/specs/updated-definition-specification-int.json"));
+
+        xmEntitySpecService.onRefresh(key, config);
+
+        TypeSpec actualTypeSpec = xmEntitySpecService.getTypeSpecs().get("DEMO.TEST");
+        FunctionSpec actualFunctionSpec = actualTypeSpec.getFunctions().get(0);
+        NextSpec actualNextSpec = actualTypeSpec.getStates().get(0).getNext().get(0);
+
+        XmEntitySpec expectedXmEntity = objectMapper.readValue(getXmEntitySpec("specifications-updated-expected"), XmEntitySpec.class);
         TypeSpec expectedTypeSpec = expectedXmEntity.getTypes().get(0);
         FunctionSpec expectedFunctionSpec = expectedTypeSpec.getFunctions().get(0);
         NextSpec expectedNextSpec = expectedTypeSpec.getStates().get(0).getNext().get(0);

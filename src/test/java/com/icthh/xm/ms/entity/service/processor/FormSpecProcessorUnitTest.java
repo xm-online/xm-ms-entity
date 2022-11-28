@@ -84,7 +84,7 @@ public class FormSpecProcessorUnitTest extends AbstractUnitTest {
         assertEqualsEntities(expectedXmEntitySpec, actualXmEntitySpec);
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test(expected = JsonProcessingException.class)
     public void shouldThrowIllegalArgumentExceptionWhenProcessTypeSpecWithNotValidJson()throws JsonProcessingException {
         XmEntitySpec inputXmEntitySpec = loadXmEntitySpecByFileName("xmentityspec-forms-input");
         TypeSpec typeSpec = inputXmEntitySpec.getTypes().get(0);

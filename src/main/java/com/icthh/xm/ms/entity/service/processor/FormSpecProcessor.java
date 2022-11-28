@@ -185,13 +185,14 @@ public class FormSpecProcessor extends SpecProcessor {
         }
     }
 
+    @SneakyThrows
     private ContainerNode<?> convertSpecificationToObjectNodes(String specification, String ref) {
         try {
             ObjectMapper objectMapper = new ObjectMapper();
             return objectMapper.readValue(specification, ContainerNode.class);
         } catch (JsonProcessingException e) {
             log.error("The form specification by ref: {} could not be processed. Error: {}", ref, e.getMessage());
-            throw new IllegalArgumentException(e.getMessage());
+            throw e;
         }
     }
 
