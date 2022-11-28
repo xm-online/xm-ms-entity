@@ -27,6 +27,7 @@ public final class LepXmEntityMsConstants {
     public static final String BINDING_SUB_KEY_SERVICE_SEPARATE_TRANSACTION_EXECUTOR = "separateTransactionExecutor";
     public static final String BINDING_SUB_KEY_SERVICE_EVENT_PUBLISHER = "eventPublisher";
     public static final String BINDING_SUB_KEY_SERVICE_OUTBOX_TRANSPORT = "outboxTransportService";
+    public static final String BINDING_SUB_KEY_SERVICE_DOMAIN_EVENT_FACTORY = "domainEventFactory";
 
     public static final String BINDING_KEY_REPOSITORIES = "repositories";
     public static final String BINDING_SUB_KEY_REPOSITORY_XM_ENTITY = "xmEntity";
