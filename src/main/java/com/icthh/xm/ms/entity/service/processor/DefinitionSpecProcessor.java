@@ -4,7 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.icthh.xm.ms.entity.domain.spec.DefinitionSpec;
 import com.icthh.xm.ms.entity.domain.spec.XmEntitySpec;
-import com.icthh.xm.ms.entity.service.JsonListenerService;
+import com.icthh.xm.ms.entity.service.json.JsonListenerService;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;

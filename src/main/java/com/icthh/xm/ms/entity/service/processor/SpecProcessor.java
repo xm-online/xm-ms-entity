@@ -3,7 +3,7 @@ package com.icthh.xm.ms.entity.service.processor;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.github.fge.jackson.JsonLoader;
-import com.icthh.xm.ms.entity.service.JsonListenerService;
+import com.icthh.xm.ms.entity.service.json.JsonListenerService;
 import lombok.SneakyThrows;
 import org.springframework.util.AntPathMatcher;
 

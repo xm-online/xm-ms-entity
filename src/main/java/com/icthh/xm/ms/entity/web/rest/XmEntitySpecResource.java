@@ -5,7 +5,7 @@ import com.icthh.xm.commons.logging.LoggingAspectConfig;
 import com.icthh.xm.commons.permission.annotation.PrivilegeDescription;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.domain.spec.TypeSpec;
-import com.icthh.xm.ms.entity.service.JsonSchemaGenerationService;
+import com.icthh.xm.ms.entity.service.json.JsonSchemaGenerationService;
 import com.icthh.xm.ms.entity.service.XmEntityGeneratorService;
 import com.icthh.xm.ms.entity.service.XmEntitySpecService;
 import com.icthh.xm.ms.entity.web.rest.util.HeaderUtil;

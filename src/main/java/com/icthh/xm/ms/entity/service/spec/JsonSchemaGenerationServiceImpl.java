@@ -8,7 +8,7 @@ import com.fasterxml.jackson.module.jsonSchema.types.ArraySchema;
 import com.fasterxml.jackson.module.jsonSchema.types.ObjectSchema;
 import com.fasterxml.jackson.module.jsonSchema.types.StringSchema;
 import com.icthh.xm.ms.entity.domain.spec.XmEntitySpec;
-import com.icthh.xm.ms.entity.service.JsonSchemaGenerationService;
+import com.icthh.xm.ms.entity.service.json.JsonSchemaGenerationService;
 import lombok.SneakyThrows;
 import org.springframework.stereotype.Component;
 
