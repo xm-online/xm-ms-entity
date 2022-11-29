@@ -16,14 +16,14 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 
 @RunWith(MockitoJUnitRunner.class)
-public class JsonListenerConfigurationUnitTest extends AbstractUnitTest {
+public class JsonConfigurationListenerUnitTest extends AbstractUnitTest {
 
     private static final String ENTITY_APP_NAME = "entity";
     private static final String TENANT_NAME = "XM";
     private static final String PATH_TO_FILE = "/config/tenants/XM/entity/xmentityspec/definitions/user.json";
     private static final String CONFIG = "{user: type: object}";
 
-    private JsonListenerConfiguration subject;
+    private JsonConfigurationListener subject;
     @Mock
     private JsonListenerService jsonListenerService;
     @Mock
@@ -31,7 +31,7 @@ public class JsonListenerConfigurationUnitTest extends AbstractUnitTest {
 
     @Before
     public void setUp() {
-        subject = new JsonListenerConfiguration(ENTITY_APP_NAME, xmEntitySpecContextService, jsonListenerService);
+        subject = new JsonConfigurationListener(ENTITY_APP_NAME, xmEntitySpecContextService, jsonListenerService);
     }
 
     @Test

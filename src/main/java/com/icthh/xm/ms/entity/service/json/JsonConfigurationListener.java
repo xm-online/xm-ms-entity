@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
-public class JsonListenerConfiguration implements RefreshableConfiguration {
+public class JsonConfigurationListener implements RefreshableConfiguration {
 
     private final String mappingPath;
     private final AntPathMatcher matcher;
@@ -20,7 +20,7 @@ public class JsonListenerConfiguration implements RefreshableConfiguration {
 
     private static final String TENANT_NAME = "tenantName";
 
-    public JsonListenerConfiguration(@Value("${spring.application.name}") String appName,
+    public JsonConfigurationListener(@Value("${spring.application.name}") String appName,
                                      XmEntitySpecContextService xmEntitySpecContextService,
                                      JsonListenerService jsonListenerService) {
         this.xmEntitySpecContextService = xmEntitySpecContextService;
