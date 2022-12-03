@@ -48,7 +48,7 @@ import com.icthh.xm.ms.entity.repository.XmEntityPermittedRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityRepositoryInternal;
 import com.icthh.xm.ms.entity.repository.search.XmEntityPermittedSearchRepository;
 import com.icthh.xm.ms.entity.service.AttachmentService;
-import com.icthh.xm.ms.entity.service.JsonValidationService;
+import com.icthh.xm.ms.entity.service.json.JsonValidationService;
 import com.icthh.xm.ms.entity.service.LifecycleLepStrategy;
 import com.icthh.xm.ms.entity.service.LifecycleLepStrategyFactory;
 import com.icthh.xm.ms.entity.service.LinkService;
@@ -101,6 +101,7 @@ import static com.jayway.jsonpath.Option.SUPPRESS_EXCEPTIONS;
 import static java.lang.Boolean.TRUE;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
+import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toMap;
 import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.collections.MapUtils.isEmpty;
@@ -374,13 +375,7 @@ public class XmEntityServiceImpl implements XmEntityService {
     @Transactional(readOnly = true)
     public XmEntity findOne(IdOrKey idOrKey) {
         log.debug("Request to get XmEntity : {}", idOrKey);
-        Long xmEntityId;
-        if (idOrKey.isKey()) {
-            XmEntityIdKeyTypeKey projection = getXmEntityIdKeyTypeKey(idOrKey);
-            xmEntityId = projection.getId();
-        } else {
-            xmEntityId = idOrKey.getId();
-        }
+        Long xmEntityId = entityIdByKey(idOrKey);
         return findOneById(xmEntityId);
     }
 
@@ -388,10 +383,8 @@ public class XmEntityServiceImpl implements XmEntityService {
     @Override
     @Transactional(readOnly = true)
     public XmEntity findOne(IdOrKey idOrKey, List<String> embed) {
-        if (idOrKey.isKey()) {
-            throw new IllegalArgumentException("Key mode is not supported yet");
-        }
-        XmEntity xmEntity = xmEntityRepository.findOne(idOrKey.getId(), embed);
+        Long xmEntityId = entityIdByKey(idOrKey);
+        XmEntity xmEntity = xmEntityRepository.findOne(xmEntityId, embed);
         return xmEntity == null ? xmEntity : self.getOneEntity(xmEntity);
     }
 
@@ -422,13 +415,7 @@ public class XmEntityServiceImpl implements XmEntityService {
     @Transactional
     public XmEntity selectAndUpdate(IdOrKey idOrKey, Consumer<XmEntity> consumer) {
         log.debug("Request to get XmEntity : {}", idOrKey);
-        Long xmEntityId;
-        if (idOrKey.isKey()) {
-            XmEntityIdKeyTypeKey projection = getXmEntityIdKeyTypeKey(idOrKey);
-            xmEntityId = projection.getId();
-        } else {
-            xmEntityId = idOrKey.getId();
-        }
+        Long xmEntityId = entityIdByKey(idOrKey);
         XmEntity entity = xmEntityRepository.findOneByIdForUpdate(xmEntityId);
         consumer.accept(entity);
         return save(entity);
@@ -577,12 +564,7 @@ public class XmEntityServiceImpl implements XmEntityService {
             return self.search(query, pageable, privilegeKey);
         }
 
-        Long id;
-        if (idOrKey.isId()) {
-            id = idOrKey.getId();
-        } else {
-            id = getXmEntityIdKeyTypeKey(idOrKey).getId();
-        }
+        Long id = entityIdByKey(idOrKey);
 
         List<LinkProjection> links = linkService.findLinkProjectionsBySourceIdAndTypeKey(id, linkTypeKey);
         Set<Long> ids = links.stream()
@@ -868,4 +850,16 @@ public class XmEntityServiceImpl implements XmEntityService {
             .map(js -> validator.validateJson(value.getData(), js).isSuccess())
             .orElse(true);
     }
+
+    private Long entityIdByKey(IdOrKey idOrKey) {
+        Long xmEntityId;
+        if (idOrKey.isKey()) {
+            XmEntityIdKeyTypeKey projection = getXmEntityIdKeyTypeKey(idOrKey);
+            xmEntityId = projection.getId();
+        } else {
+            xmEntityId = idOrKey.getId();
+        }
+        return xmEntityId;
+    }
+
 }
