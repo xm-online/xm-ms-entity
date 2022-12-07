@@ -54,6 +54,7 @@ public class DatabaseConfiguration {
     private final Logger log = LoggerFactory.getLogger(DatabaseConfiguration.class);
 
     private static final String JPA_PACKAGES = "com.icthh.xm.ms.entity.domain";
+    private static final String OUTBOX_JPA_PACKAGES = "com.icthh.xm.commons.domainevent.outbox.domain";
 
     private final Environment env;
     private final JpaProperties jpaProperties;
@@ -133,7 +134,7 @@ public class DatabaseConfiguration {
 
         LocalContainerEntityManagerFactoryBean em = new LocalContainerEntityManagerFactoryBean();
         em.setDataSource(dataSource);
-        em.setPackagesToScan(JPA_PACKAGES);
+        em.setPackagesToScan(JPA_PACKAGES, OUTBOX_JPA_PACKAGES);
         em.setJpaVendorAdapter(jpaVendorAdapter());
         em.setJpaPropertyMap(properties);
         return em;
