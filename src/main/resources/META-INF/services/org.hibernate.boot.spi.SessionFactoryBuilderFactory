@@ -1,1 +1,1 @@
-com.icthh.xm.ms.entity.config.jsonb.JsonbTypeRegistrator
+com.icthh.xm.commons.migration.db.jsonb.JsonbTypeRegistrator
