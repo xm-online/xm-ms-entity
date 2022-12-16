@@ -1,17 +1,15 @@
 package com.icthh.xm.ms.entity.repository.kafka;
 
-import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_AUTH_CONTEXT;
-import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_TENANT_CONTEXT;
-
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import com.icthh.xm.lep.api.LepManager;
 import com.icthh.xm.commons.logging.util.MdcUtils;
 import com.icthh.xm.commons.security.XmAuthenticationContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
+import com.icthh.xm.lep.api.LepManager;
 import com.icthh.xm.ms.entity.domain.kafka.SystemEvent;
+import com.icthh.xm.ms.entity.service.IndexReloadService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -21,6 +19,9 @@ import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 
+import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_AUTH_CONTEXT;
+import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_TENANT_CONTEXT;
+
 @Slf4j
 @Service
 public class SystemQueueConsumer {
@@ -29,15 +30,17 @@ public class SystemQueueConsumer {
     private final XmAuthenticationContextHolder authContextHolder;
     private final SystemConsumerService systemConsumerService;
     private final LepManager lepManager;
+    private final IndexReloadService indexReloadService;
 
     public SystemQueueConsumer(TenantContextHolder tenantContextHolder,
                                XmAuthenticationContextHolder authContextHolder,
                                SystemConsumerService systemConsumerService,
-                               LepManager lepManager) {
+                               LepManager lepManager, IndexReloadService indexReloadService) {
         this.tenantContextHolder = tenantContextHolder;
         this.authContextHolder = authContextHolder;
         this.systemConsumerService = systemConsumerService;
         this.lepManager = lepManager;
+        this.indexReloadService = indexReloadService;
     }
 
     /**
@@ -65,6 +68,11 @@ public class SystemQueueConsumer {
                     return;
                 }
                 init(event.getTenantKey(), event.getUserLogin());
+
+                if ("INDEX_RELOAD_ENTITY".equals(event.getEventType())) {
+                    indexReloadService.reloadData(event);
+                    return;
+                }
 
                 systemConsumerService.acceptSystemEvent(event);
 
