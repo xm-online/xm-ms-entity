@@ -8,7 +8,6 @@ import com.icthh.xm.ms.entity.EntityApp;
 import com.icthh.xm.ms.entity.config.SecurityBeanOverrideConfiguration;
 import com.icthh.xm.ms.entity.config.tenant.WebappTenantOverrideConfiguration;
 import com.icthh.xm.ms.entity.domain.Profile;
-import com.icthh.xm.ms.entity.service.IndexReloadService;
 import com.icthh.xm.ms.entity.service.ProfileService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -111,15 +110,12 @@ public class SystemQueueConsumerUnitTest {
     @Autowired
     private LepManager lepManager;
 
-    @Autowired
-    private IndexReloadService indexReloadService;
-
     @Before
     public void init() {
         TenantContextUtils.setTenant(tenantContextHolder, "TEST");
 
         profileService = mock(ProfileService.class);
-        consumer = new SystemQueueConsumer(tenantContextHolder, authContextHolder, systemConsumerService, lepManager, indexReloadService);
+        consumer = new SystemQueueConsumer(tenantContextHolder, authContextHolder, systemConsumerService, lepManager);
     }
 
     @After

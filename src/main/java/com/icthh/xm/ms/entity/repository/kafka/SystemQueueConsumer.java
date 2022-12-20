@@ -9,7 +9,6 @@ import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
 import com.icthh.xm.lep.api.LepManager;
 import com.icthh.xm.ms.entity.domain.kafka.SystemEvent;
-import com.icthh.xm.ms.entity.service.IndexReloadService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -30,17 +29,15 @@ public class SystemQueueConsumer {
     private final XmAuthenticationContextHolder authContextHolder;
     private final SystemConsumerService systemConsumerService;
     private final LepManager lepManager;
-    private final IndexReloadService indexReloadService;
 
     public SystemQueueConsumer(TenantContextHolder tenantContextHolder,
                                XmAuthenticationContextHolder authContextHolder,
                                SystemConsumerService systemConsumerService,
-                               LepManager lepManager, IndexReloadService indexReloadService) {
+                               LepManager lepManager) {
         this.tenantContextHolder = tenantContextHolder;
         this.authContextHolder = authContextHolder;
         this.systemConsumerService = systemConsumerService;
         this.lepManager = lepManager;
-        this.indexReloadService = indexReloadService;
     }
 
     /**
@@ -68,11 +65,6 @@ public class SystemQueueConsumer {
                     return;
                 }
                 init(event.getTenantKey(), event.getUserLogin());
-
-                if ("INDEX_RELOAD_ENTITY".equals(event.getEventType())) {
-                    indexReloadService.reloadData(event);
-                    return;
-                }
 
                 systemConsumerService.acceptSystemEvent(event);
 
