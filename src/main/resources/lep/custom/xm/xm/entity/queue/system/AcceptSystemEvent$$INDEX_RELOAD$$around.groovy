@@ -18,7 +18,8 @@ import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Pageable
 import org.springframework.data.jpa.domain.Specification
 
-final String DB_TOPIC_FORMAT = "event.%s.db";
+final String APP_NAME = "entity"
+final String DB_TOPIC_FORMAT = "event.%s.db"
 final int PAGE_SIZE = 1000;
 
 @Field ObjectMapper objectMapper = new ObjectMapper()
@@ -43,9 +44,14 @@ for (int i = 0; i <= count / PAGE_SIZE; i++) {
     Pageable page = PageRequest.of(i, PAGE_SIZE);
     Page<XmEntity> all = xmEntityRepositoryInternal.findAll(spec, page);
     all.getContent()
-        .collect { it -> toEvent(it, tenantKey) }
-        .each { domainEvent -> kafkaTemplateService.send(dbTopic, toJson(domainEvent)) }
+        .each { it ->
+            DomainEvent domainEvent = toEvent(it, tenantKey, APP_NAME)
+            String jsonEvent = toJson(domainEvent)
+            kafkaTemplateService.send(dbTopic, jsonEvent)
+        }
 }
+
+log.info("Finish process reload for tenant {}, data count {}", tenantKey, count)
 
 return
 
@@ -71,14 +77,14 @@ private static Specification<XmEntity> composeSpecifications(List<Specification<
     return specification;
 }
 
-private static DomainEvent toEvent(XmEntity entity, String tenantKey) {
+private static DomainEvent toEvent(XmEntity entity, String tenantKey, String appName) {
     return DomainEvent.builder()
         .id(UUID.randomUUID()) // TODO ?
         .txId(String.valueOf(entity.id)) // TODO ?
         .aggregateId(XmEntity.class.getSimpleName())
         .aggregateType(entity.typeKey)
-        .operation(DefaultDomainEventOperation.READ.name())
-        .msName("entity") // TODO ?
+        .operation(DefaultDomainEventOperation.READ.name()) // TODO need add reload operation
+        .msName(appName)
         .source(DefaultDomainEventSource.DB.name())
         .userKey(null)
         .clientId(null)
