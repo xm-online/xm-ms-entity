@@ -78,10 +78,11 @@ private static Specification<XmEntity> composeSpecifications(List<Specification<
 }
 
 private static DomainEvent toEvent(XmEntity entity, String tenantKey, String appName) {
+    UUID uuid = UUID.randomUUID()
     return DomainEvent.builder()
-        .id(UUID.randomUUID()) // TODO ?
-        .txId(String.valueOf(entity.id)) // TODO ?
-        .aggregateId(XmEntity.class.getSimpleName())
+        .id(uuid) // TODO ?
+        .txId(uuid.toString()) // TODO ?
+        .aggregateId(String.valueOf(entity.id))
         .aggregateType(entity.typeKey)
         .operation(DefaultDomainEventOperation.READ.name()) // TODO need add reload operation
         .msName(appName)
