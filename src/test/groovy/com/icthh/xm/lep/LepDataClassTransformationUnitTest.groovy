@@ -26,7 +26,7 @@ class LepDataClassTransformationUnitTest {
         assert mapFromClass instanceof Map
 
         assert mapFromClass.a == 1
-        assert mapFromClass.b == 200
+        assert mapFromClass.b != 200
         assert mapFromClass.c == 3
     }
 
@@ -34,12 +34,6 @@ class LepDataClassTransformationUnitTest {
     public static class MyClass {
         int a = 0;
         int b = 0;
-
-        static MyClass of(Map<String, Object> data) {
-            MyClass instance = data;
-            instance.__data__ = data;
-            return instance
-        }
     }
 
 }
