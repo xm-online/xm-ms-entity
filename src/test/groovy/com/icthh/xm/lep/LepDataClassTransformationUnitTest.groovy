@@ -26,7 +26,7 @@ class LepDataClassTransformationUnitTest {
         assert mapFromClass instanceof Map
 
         assert mapFromClass.a == 1
-        assert mapFromClass.b != 200
+        assert mapFromClass.b == 200
         assert mapFromClass.c == 3
     }
 
