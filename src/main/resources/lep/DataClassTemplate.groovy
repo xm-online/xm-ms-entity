@@ -2,8 +2,6 @@
 class DataClassTemplate implements Map {
 
     protected transient def __data__ = [:]
-    //def propertyMissing(String name, value) { __data__[name] = value }
-    //def propertyMissing(String name) { __data__[name] }
 
     DataClassTemplate() {}
 

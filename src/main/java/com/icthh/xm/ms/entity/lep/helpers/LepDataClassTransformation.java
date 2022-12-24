@@ -1,10 +1,7 @@
 package com.icthh.xm.ms.entity.lep.helpers;
 
-import groovy.lang.Delegate;
 import java.util.Arrays;
-import java.util.Map;
 import org.codehaus.groovy.ast.ASTNode;
-import org.codehaus.groovy.ast.AnnotationNode;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.builder.AstBuilder;
 import org.codehaus.groovy.control.SourceUnit;
@@ -12,7 +9,6 @@ import org.codehaus.groovy.transform.AbstractASTTransformation;
 import org.codehaus.groovy.transform.GroovyASTTransformation;
 
 import static com.icthh.xm.ms.entity.util.ResourceUtils.getResourceAsStr;
-import static org.codehaus.groovy.ast.ClassHelper.make;
 import static org.codehaus.groovy.control.CompilePhase.CANONICALIZATION;
 import static org.codehaus.groovy.control.CompilePhase.SEMANTIC_ANALYSIS;
 
