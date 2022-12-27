@@ -25,10 +25,6 @@ public interface XmEntityRepositoryInternal extends XmEntityRepository {
 
     void flush();
 
-    long count();
-
-    long count(Specification<XmEntity> spec);
-
     void deleteAll();
 
     Long getSequenceNextValString(String sequenceName);

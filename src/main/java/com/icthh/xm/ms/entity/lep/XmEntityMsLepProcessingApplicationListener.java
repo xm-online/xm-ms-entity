@@ -21,6 +21,7 @@ import static com.icthh.xm.ms.entity.lep.LepXmEntityMsConstants.BINDING_SUB_KEY_
 import static com.icthh.xm.ms.entity.lep.LepXmEntityMsConstants.BINDING_SUB_KEY_SERVICE_LINK;
 import static com.icthh.xm.ms.entity.lep.LepXmEntityMsConstants.BINDING_SUB_KEY_SERVICE_LOCATION_SERVICE;
 import static com.icthh.xm.ms.entity.lep.LepXmEntityMsConstants.BINDING_SUB_KEY_SERVICE_MAIL_SERVICE;
+import static com.icthh.xm.ms.entity.lep.LepXmEntityMsConstants.BINDING_SUB_KEY_SERVICE_OBJECT_MAPPER;
 import static com.icthh.xm.ms.entity.lep.LepXmEntityMsConstants.BINDING_SUB_KEY_SERVICE_PROFILE;
 import static com.icthh.xm.ms.entity.lep.LepXmEntityMsConstants.BINDING_SUB_KEY_SERVICE_SEPARATE_TRANSACTION_EXECUTOR;
 import static com.icthh.xm.ms.entity.lep.LepXmEntityMsConstants.BINDING_SUB_KEY_SERVICE_TAG_SERVICE;
@@ -34,6 +35,7 @@ import static com.icthh.xm.ms.entity.lep.LepXmEntityMsConstants.BINDING_SUB_KEY_
 import static com.icthh.xm.ms.entity.lep.LepXmEntityMsConstants.BINDING_SUB_KEY_TEMPLATE_S3;
 import static com.icthh.xm.ms.entity.lep.LepXmEntityMsConstants.BINDING_KEY_METRICS_ADAPTER;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.icthh.xm.commons.config.client.service.TenantConfigService;
 import com.icthh.xm.commons.domainevent.service.EventPublisher;
 import com.icthh.xm.commons.domainevent.service.builder.DomainEventFactory;
@@ -107,6 +109,7 @@ public class XmEntityMsLepProcessingApplicationListener extends SpringLepProcess
     private final MetricsAdapter metricsAdapter;
     private final EventPublisher eventPublisher;
     private final DomainEventFactory domainEventFactory;
+    public ObjectMapper objectMapper;
 
     @Override
     protected void bindExecutionContext(ScopedContext executionContext) {
@@ -132,6 +135,7 @@ public class XmEntityMsLepProcessingApplicationListener extends SpringLepProcess
         services.put(BINDING_KEY_METRICS_ADAPTER, metricsAdapter);
         services.put(BINDING_SUB_KEY_SERVICE_EVENT_PUBLISHER, eventPublisher);
         services.put(BINDING_SUB_KEY_SERVICE_DOMAIN_EVENT_FACTORY, domainEventFactory);
+        services.put(BINDING_SUB_KEY_SERVICE_OBJECT_MAPPER, objectMapper);
 
         executionContext.setValue(BINDING_KEY_COMMONS, new CommonsExecutor(commonsService));
 

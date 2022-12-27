@@ -1,5 +1,6 @@
 package com.icthh.xm.ms.entity.lep;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.icthh.xm.commons.config.client.service.TenantConfigService;
 import com.icthh.xm.commons.domainevent.outbox.service.OutboxTransportService;
 import com.icthh.xm.commons.domainevent.service.EventPublisher;
@@ -73,6 +74,7 @@ public class LepContext {
         public MetricsAdapter metricsAdapter;
         public EventPublisher eventPublisher;
         public DomainEventFactory domainEventFactory;
+        public ObjectMapper objectMapper;
     }
 
     public static class LepRepositories {

@@ -9,7 +9,7 @@ import com.icthh.xm.commons.tenant.TenantContext
 import com.icthh.xm.commons.tenant.TenantContextUtils
 import com.icthh.xm.commons.topic.service.KafkaTemplateService
 import com.icthh.xm.ms.entity.domain.XmEntity
-import com.icthh.xm.ms.entity.repository.XmEntityRepositoryInternal
+import com.icthh.xm.ms.entity.repository.XmEntityRepository
 import groovy.transform.Field
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -22,18 +22,18 @@ final String APP_NAME = "entity"
 final String DB_TOPIC_FORMAT = "event.%s.db"
 final int PAGE_SIZE = 1000;
 
-@Field ObjectMapper objectMapper = new ObjectMapper()
+@Field ObjectMapper objectMapper = lepContext.services.objectMapper
 
 Logger log = LoggerFactory.getLogger(getClass())
 Map<String, Object> eventData = lepContext.inArgs.event?.data as Map<String, Object>
 TenantContext tenantContext = lepContext.tenantContext
 KafkaTemplateService kafkaTemplateService = lepContext.templates.kafka
-XmEntityRepositoryInternal xmEntityRepositoryInternal = lepContext.lepServices.getInstance(XmEntityRepositoryInternal.class)
+XmEntityRepository xmEntityRepository = lepContext.repositories.xmEntity
 
 String tenantKey = TenantContextUtils.getRequiredTenantKeyValue(tenantContext)
 Specification<XmEntity> spec = buildSpecification(eventData)
 
-long count = xmEntityRepositoryInternal.count(spec)
+long count = xmEntityRepository.count(spec)
 if (count <= 0) {
     log.info("Finish reload data, cause count <= 0!")
     return
@@ -42,7 +42,7 @@ if (count <= 0) {
 String dbTopic = String.format(DB_TOPIC_FORMAT, tenantKey)
 for (int i = 0; i <= count / PAGE_SIZE; i++) {
     Pageable page = PageRequest.of(i, PAGE_SIZE);
-    Page<XmEntity> all = xmEntityRepositoryInternal.findAll(spec, page);
+    Page<XmEntity> all = xmEntityRepository.findAll(spec, page);
     all.getContent()
         .each { it ->
             DomainEvent domainEvent = toEvent(it, tenantKey, APP_NAME)
