@@ -98,7 +98,8 @@ public class XmEntityGeneratorService {
             .data(generateXmEntityData(typeSpec))
             .locations(generateLocations(typeSpec.getLocations()))
             .tags(generateTags(typeSpec))
-            .createdBy(authContextHolder.getContext().getRequiredUserKey());
+            .createdBy(authContextHolder.getContext().getRequiredUserKey())
+            .updatedBy(authContextHolder.getContext().getRequiredUserKey());
 
         return xmEntityService.save(xmEntity);
     }

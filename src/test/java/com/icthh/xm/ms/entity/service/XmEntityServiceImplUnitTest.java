@@ -4,6 +4,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.icthh.xm.commons.config.client.service.TenantConfigService;
 import com.icthh.xm.commons.exceptions.BusinessException;
+import com.icthh.xm.commons.security.XmAuthenticationContext;
+import com.icthh.xm.commons.security.XmAuthenticationContextHolder;
 import com.icthh.xm.ms.entity.AbstractUnitTest;
 import com.icthh.xm.ms.entity.domain.Comment;
 import com.icthh.xm.ms.entity.domain.FunctionContext;
@@ -79,6 +81,10 @@ public class XmEntityServiceImplUnitTest extends AbstractUnitTest {
     TypeKeyWithExtends typeKeyWithExtends;
     @Mock
     XmEntityProjectionService xmEntityProjectionService;
+    @Mock
+    XmAuthenticationContextHolder authContextHolder;
+    @Mock
+    XmAuthenticationContext authContext;
 
     @Spy
     private ObjectMapper mapper = new ObjectMapper();
@@ -96,6 +102,7 @@ public class XmEntityServiceImplUnitTest extends AbstractUnitTest {
         when(typeKeyWithExtends.doInheritance(TEST_TYPE_KEY)).thenReturn(false);
         when(startUpdateDateGenerationStrategy.preProcessStartUpdateDates(any(), any(), any(), any(), any(), any()))
             .thenReturn(Optional.of(new XmEntity()));
+        when(authContextHolder.getContext()).thenReturn(authContext);
 
         TypeSpec typeSpec = new TypeSpec();
         typeSpec.setUniqueFields(new HashSet<>(asList(new UniqueFieldSpec("$.uniqueExistsField"),
@@ -131,7 +138,7 @@ public class XmEntityServiceImplUnitTest extends AbstractUnitTest {
         ArgumentCaptor<XmEntity> argument = ArgumentCaptor.forClass(XmEntity.class);
         verify(xmEntityRepository).save(argument.capture());
         Set<UniqueField> uniqueFields = argument.getValue().getUniqueFields();
-        assertEquals(uniqueFields.size(), 6);
+        assertEquals(6, uniqueFields.size());
         log.info("{}", uniqueFields.stream().map(uf -> uf.getFieldJsonPath() + "|" + uf.getFieldValue()).collect(toList()));
         assertTrue(uniqueFields.contains(new UniqueField(null, "$.uniqueObject", "{\"notUniqueField\":\"value2\"}", TEST_TYPE_KEY, xmEntity)));
         assertTrue(uniqueFields.contains(new UniqueField(null, "$.uniqueExistsField", "50", TEST_TYPE_KEY, xmEntity)));
@@ -284,12 +291,15 @@ public class XmEntityServiceImplUnitTest extends AbstractUnitTest {
     @Test
     @Transactional
     public void nameTemplateTest() {
+        when(authContextHolder.getContext()).thenReturn(authContext);
+
         XmEntity entity = new XmEntity();
         entity.setTypeKey("TEST_TYPE_KEY");
         entity.setId(15L);
         entity.setStateKey("TEST_S_K");
         entity.setData(of("a", of("b", of("c", of("d", "dvalue", "e", asList("e1", "e2"))))));
         entity.setCreatedBy("test");
+        entity.setUpdatedBy("test2");
 
         String namePattern = "Name generate from ${id} and ${key:unknown} and ${stateKey} and ${data.a.b.c.d.f} and ${data.a.b.c} and ${data.a.b.c.k} and ${data.a.b.c.e[1]} and ${data.a.b.c.e[2]}";
         TypeSpec typeSpec = TypeSpec.builder().namePattern(namePattern).build();
@@ -298,5 +308,24 @@ public class XmEntityServiceImplUnitTest extends AbstractUnitTest {
         xmEntityService.save(entity);
         log.info(entity.getName());
         assertEquals("Name generate from 15 and unknown and TEST_S_K and  and {d=dvalue, e=[\"e1\",\"e2\"]} and  and e2 and ", entity.getName());
+    }
+
+    @Test
+    public void saveShouldOverrideUpdatedByFromAuthContext() {
+        when(authContextHolder.getContext()).thenReturn(authContext);
+        when(authContext.getUserKey()).thenReturn(Optional.of("test3"));
+
+        XmEntity entity = new XmEntity();
+        entity.setTypeKey("TEST_TYPE_KEY");
+        entity.setId(15L);
+        entity.setUpdatedBy("test2");
+
+        xmEntityService.save(entity);
+
+        ArgumentCaptor<XmEntity> argument = ArgumentCaptor.forClass(XmEntity.class);
+        verify(xmEntityRepository).save(argument.capture());
+
+        XmEntity actualEntity = argument.getValue();
+        assertEquals("test3", actualEntity.getUpdatedBy());
     }
 }
