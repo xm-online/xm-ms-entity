@@ -197,6 +197,8 @@ public class XmEntityServiceImpl implements XmEntityService {
                 xmEntity.setStateKey(findFirstStateForTypeKey(xmEntity.getTypeKey()));
             }
         }
+        xmEntity.setUpdatedBy(authContextHolder.getContext().getUserKey().orElse(null));
+
 
         self.processReferences(xmEntity);
         processUniqueField(xmEntity, oldEntity);

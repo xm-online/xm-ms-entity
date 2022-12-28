@@ -214,6 +214,13 @@ public class XmEntity implements Serializable, Persistable<Long> {
     @Column(name = "created_by")
     private String createdBy;
 
+    /**
+     * Updated by user key.
+     */
+    @ApiModelProperty(value = "Updated by user key.")
+    @Column(name = "updated_by")
+    private String updatedBy;
+
     @Column(name = "version")
     @Version
     @Getter
@@ -461,6 +468,19 @@ public class XmEntity implements Serializable, Persistable<Long> {
 
     public void setCreatedBy(String createdBy) {
         this.createdBy = createdBy;
+    }
+
+    public String getUpdatedBy() {
+        return updatedBy;
+    }
+
+    public XmEntity updatedBy(String updatedBy) {
+        this.updatedBy = updatedBy;
+        return this;
+    }
+
+    public void setUpdatedBy(String updatedBy) {
+        this.updatedBy = updatedBy;
     }
 
     public Set<Attachment> getAttachments() {
@@ -790,6 +810,7 @@ public class XmEntity implements Serializable, Persistable<Long> {
             + ", data='" + getData() + "'"
             + ", removed='" + isRemoved() + "'"
             + ", createdBy='" + getCreatedBy() + "'"
+            + ", updatedBy='" + getUpdatedBy() + "'"
             + ", version='" + getVersion() + "'"
             + "}";
     }
