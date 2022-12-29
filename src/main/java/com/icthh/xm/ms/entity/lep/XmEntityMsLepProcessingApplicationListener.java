@@ -109,7 +109,7 @@ public class XmEntityMsLepProcessingApplicationListener extends SpringLepProcess
     private final MetricsAdapter metricsAdapter;
     private final EventPublisher eventPublisher;
     private final DomainEventFactory domainEventFactory;
-    public ObjectMapper objectMapper;
+    private final ObjectMapper objectMapper;
 
     @Override
     protected void bindExecutionContext(ScopedContext executionContext) {

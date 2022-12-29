@@ -20,7 +20,7 @@ import org.springframework.data.jpa.domain.Specification
 
 final String APP_NAME = "entity"
 final String DB_TOPIC_FORMAT = "event.%s.db"
-final int PAGE_SIZE = 1000;
+final int PAGE_SIZE = 1000
 
 @Field ObjectMapper objectMapper = lepContext.services.objectMapper
 
@@ -41,8 +41,8 @@ if (count <= 0) {
 
 String dbTopic = String.format(DB_TOPIC_FORMAT, tenantKey)
 for (int i = 0; i <= count / PAGE_SIZE; i++) {
-    Pageable page = PageRequest.of(i, PAGE_SIZE);
-    Page<XmEntity> all = xmEntityRepository.findAll(spec, page);
+    Pageable page = PageRequest.of(i, PAGE_SIZE)
+    Page<XmEntity> all = xmEntityRepository.findAll(spec, page)
     all.getContent()
         .each { it ->
             DomainEvent domainEvent = toEvent(it, tenantKey, APP_NAME)
@@ -58,13 +58,13 @@ return
 private static Specification<XmEntity> buildSpecification(Map<String, Object> params) {
     List<Specification<XmEntity>> specifications = params.entrySet()
         .collect { entry -> buildForEquals(entry.getKey(), entry.getValue()) }
-    return composeSpecifications(specifications);
+    return composeSpecifications(specifications)
 }
 
 private static Specification<XmEntity> buildForEquals(String key, Object value) {
     return Specification.where({
         root, query, cb -> cb.and(cb.equal(root.get(key), value))
-    });
+    })
 }
 
 private static Specification<XmEntity> composeSpecifications(List<Specification<XmEntity>> specifications) {
@@ -74,7 +74,7 @@ private static Specification<XmEntity> composeSpecifications(List<Specification<
     specifications.each {
         specification = specification.and(it)
     }
-    return specification;
+    return specification
 }
 
 private static DomainEvent toEvent(XmEntity entity, String tenantKey, String appName) {
@@ -97,5 +97,5 @@ private static DomainEvent toEvent(XmEntity entity, String tenantKey, String app
 }
 
 private String toJson(DomainEvent domainEvent) {
-    return objectMapper.writeValueAsString(domainEvent);
+    return objectMapper.writeValueAsString(domainEvent)
 }
