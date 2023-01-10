@@ -44,6 +44,7 @@ public class SimpleXmEntitySerializer extends JsonObjectSerializer<XmEntity> {
         write(jsonGenerator, provider, "data", value.getData());
         write(jsonGenerator, provider, "removed", value.isRemoved());
         write(jsonGenerator, provider, "createdBy", value.getCreatedBy());
+        write(jsonGenerator, provider, "updatedBy", value.getUpdatedBy());
     }
 
 }

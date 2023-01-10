@@ -57,6 +57,7 @@ public class TenantDefaultUserProfileProvisioner implements TenantProvisioner {
         entity.setStartDate(Instant.now());
         entity.setUpdateDate(Instant.now());
         entity.setCreatedBy(Constants.SYSTEM_ACCOUNT);
+        entity.setUpdatedBy(Constants.SYSTEM_ACCOUNT);
 
         Profile profile = new Profile();
         profile.setXmentity(entity);
