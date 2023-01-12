@@ -5,7 +5,6 @@ import static org.elasticsearch.index.query.QueryBuilders.queryStringQuery;
 import static org.springframework.data.elasticsearch.core.query.Query.DEFAULT_PAGE;
 
 import com.icthh.xm.commons.permission.service.PermissionCheckService;
-import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.repository.search.translator.SpelToElasticTranslator;
 import com.icthh.xm.ms.entity.service.dto.SearchDto;
 import lombok.RequiredArgsConstructor;
@@ -141,7 +140,8 @@ public class PermittedSearchRepository {
     }
 
     public <T> Page<T> searchForPage(SearchDto searchDto, String privilegeKey) {
-        SearchQuery query = buildQuery(searchDto.getQuery(), searchDto.getPageable(), privilegeKey, searchDto.getFetchSourceFilter());
+        FetchSourceFilter fetchSourceFilter = new FetchSourceFilter(searchDto.getFetchSourceFilter().getIncludes(), searchDto.getFetchSourceFilter().getExcludes());
+        SearchQuery query = buildQuery(searchDto.getQuery(), searchDto.getPageable(), privilegeKey, fetchSourceFilter);
         return getElasticsearchTemplate().queryForPage(query, searchDto.getEntityClass());
     }
 }

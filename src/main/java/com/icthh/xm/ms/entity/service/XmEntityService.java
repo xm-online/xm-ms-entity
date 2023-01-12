@@ -24,7 +24,6 @@ import org.intellij.lang.annotations.Language;
 import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.elasticsearch.core.query.FetchSourceFilter;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpEntity;
 import org.springframework.transaction.annotation.Transactional;
