@@ -140,7 +140,10 @@ public class PermittedSearchRepository {
     }
 
     public <T> Page<T> searchForPage(SearchDto searchDto, String privilegeKey) {
-        FetchSourceFilter fetchSourceFilter = new FetchSourceFilter(searchDto.getFetchSourceFilter().getIncludes(), searchDto.getFetchSourceFilter().getExcludes());
+        FetchSourceFilter fetchSourceFilter = null;
+        if (searchDto.getFetchSourceFilter() != null) {
+            fetchSourceFilter = new FetchSourceFilter(searchDto.getFetchSourceFilter().getIncludes(), searchDto.getFetchSourceFilter().getExcludes());
+        }
         SearchQuery query = buildQuery(searchDto.getQuery(), searchDto.getPageable(), privilegeKey, fetchSourceFilter);
         return getElasticsearchTemplate().queryForPage(query, searchDto.getEntityClass());
     }
