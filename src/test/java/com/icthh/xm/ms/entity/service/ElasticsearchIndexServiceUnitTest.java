@@ -1,5 +1,6 @@
 package com.icthh.xm.ms.entity.service;
 
+import com.icthh.xm.ms.entity.service.search.ElasticsearchTemplateWrapper;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
@@ -23,7 +24,6 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
 import org.springframework.util.ReflectionUtils;
 
 import javax.persistence.EntityManager;
@@ -41,7 +41,8 @@ public class ElasticsearchIndexServiceUnitTest extends AbstractUnitTest {
     @Mock
     private XmEntitySearchRepository xmEntitySearchRepository;
     @Mock
-    private ElasticsearchTemplate elasticsearchTemplate;
+    private ElasticsearchTemplateWrapper elasticsearchTemplateWrapper;
+
     @Mock
     private EntityManager entityManager;
     @Mock
@@ -79,9 +80,9 @@ public class ElasticsearchIndexServiceUnitTest extends AbstractUnitTest {
 
         Class<XmEntity> entityClass = XmEntity.class;
 
-        verify(elasticsearchTemplate).deleteIndex(entityClass);
-        verify(elasticsearchTemplate).createIndex(entityClass);
-        verify(elasticsearchTemplate).putMapping(entityClass);
+        verify(elasticsearchTemplateWrapper).deleteIndex(entityClass);
+        verify(elasticsearchTemplateWrapper).createIndex(entityClass);
+        verify(elasticsearchTemplateWrapper).putMapping(entityClass);
 
         verify(xmEntityRepository, times(4)).count(any());
 
