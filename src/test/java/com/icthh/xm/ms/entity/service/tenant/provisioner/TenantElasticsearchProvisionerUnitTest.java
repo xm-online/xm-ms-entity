@@ -1,5 +1,6 @@
 package com.icthh.xm.ms.entity.service.tenant.provisioner;
 
+import com.icthh.xm.ms.entity.service.search.ElasticsearchTemplateWrapper;
 import static org.mockito.Mockito.verifyZeroInteractions;
 
 import com.icthh.xm.commons.gen.model.Tenant;
@@ -14,12 +15,11 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
-import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
 
 public class TenantElasticsearchProvisionerUnitTest extends AbstractUnitTest {
 
     @Mock
-    private ElasticsearchTemplate elasticsearchTemplate;
+    private ElasticsearchTemplateWrapper elasticsearchTemplateWrapper;
     @Spy
     private TenantContextHolder tenantContextHolder = new DefaultTenantContextHolder();
 
@@ -29,7 +29,7 @@ public class TenantElasticsearchProvisionerUnitTest extends AbstractUnitTest {
     public void setUp() {
         MockitoAnnotations.initMocks(this);
 
-        provisioner = new TenantElasticsearchProvisioner(elasticsearchTemplate, tenantContextHolder);
+        provisioner = new TenantElasticsearchProvisioner(elasticsearchTemplateWrapper, tenantContextHolder);
     }
 
     @Test
@@ -37,11 +37,11 @@ public class TenantElasticsearchProvisionerUnitTest extends AbstractUnitTest {
 
         provisioner.createTenant(new Tenant().tenantKey("NEWTENANT"));
 
-        InOrder inOrder = Mockito.inOrder(elasticsearchTemplate, tenantContextHolder);
+        InOrder inOrder = Mockito.inOrder(elasticsearchTemplateWrapper, tenantContextHolder);
 
         inOrder.verify(tenantContextHolder).getPrivilegedContext();
-        inOrder.verify(elasticsearchTemplate).createIndex(XmEntity.class);
-        inOrder.verify(elasticsearchTemplate).putMapping(XmEntity.class);
+        inOrder.verify(elasticsearchTemplateWrapper).createIndex(XmEntity.class);
+        inOrder.verify(elasticsearchTemplateWrapper).putMapping(XmEntity.class);
         inOrder.verifyNoMoreInteractions();
     }
 
@@ -49,7 +49,7 @@ public class TenantElasticsearchProvisionerUnitTest extends AbstractUnitTest {
     public void manageTenant() {
 
         provisioner.manageTenant("NEWTENANT", "ACTIVE");
-        verifyZeroInteractions(elasticsearchTemplate);
+        verifyZeroInteractions(elasticsearchTemplateWrapper);
         verifyZeroInteractions(tenantContextHolder);
 
     }
@@ -59,10 +59,10 @@ public class TenantElasticsearchProvisionerUnitTest extends AbstractUnitTest {
 
         provisioner.deleteTenant("NEWTENANT");
 
-        InOrder inOrder = Mockito.inOrder(elasticsearchTemplate, tenantContextHolder);
+        InOrder inOrder = Mockito.inOrder(elasticsearchTemplateWrapper, tenantContextHolder);
 
         inOrder.verify(tenantContextHolder).getPrivilegedContext();
-        inOrder.verify(elasticsearchTemplate).deleteIndex(XmEntity.class);
+        inOrder.verify(elasticsearchTemplateWrapper).deleteIndex(XmEntity.class);
         inOrder.verifyNoMoreInteractions();
     }
 }
