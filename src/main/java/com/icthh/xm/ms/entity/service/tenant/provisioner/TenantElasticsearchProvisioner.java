@@ -60,7 +60,7 @@ public class TenantElasticsearchProvisioner implements TenantProvisioner {
     }
 
     private String composeName(String tenantCode) {
-        return tenantCode.toLowerCase() + "-xmentity";
+        return tenantCode.toLowerCase() + "_xmentity";
     }
 
 }

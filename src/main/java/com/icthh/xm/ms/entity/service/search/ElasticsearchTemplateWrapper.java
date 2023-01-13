@@ -48,7 +48,7 @@ public class ElasticsearchTemplateWrapper implements ElasticsearchOperations {
 
     @Override
     public <T> boolean createIndex(Class<T> clazz) {
-        return elasticsearchTemplate.createIndex(clazz);
+        throw new UnsupportedOperationException("Not implemented");
     }
 
     @Override
@@ -258,12 +258,12 @@ public class ElasticsearchTemplateWrapper implements ElasticsearchOperations {
 
     @Override
     public <T> boolean deleteIndex(Class<T> clazz) {
-        return elasticsearchTemplate.deleteIndex(clazz);
+        throw new UnsupportedOperationException("Not implemented");
     }
 
     @Override
     public boolean deleteIndex(String indexName) {
-        throw new UnsupportedOperationException("Not implemented");
+        return elasticsearchTemplate.deleteIndex(indexName);
     }
 
     @Override
