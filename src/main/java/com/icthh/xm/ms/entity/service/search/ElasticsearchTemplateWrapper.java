@@ -36,6 +36,10 @@ public class ElasticsearchTemplateWrapper implements ElasticsearchOperations {
 
     private final ElasticsearchTemplate elasticsearchTemplate;
 
+    public static String composeIndexName(String tenantCode) {
+        return tenantCode.toLowerCase() + "_xmentity";
+    }
+
     @Override
     public ElasticsearchConverter getElasticsearchConverter() {
         throw new UnsupportedOperationException("Not implemented");
@@ -58,12 +62,12 @@ public class ElasticsearchTemplateWrapper implements ElasticsearchOperations {
 
     @Override
     public boolean createIndex(String indexName, Object settings) {
-        throw new UnsupportedOperationException("Not implemented");
+        return elasticsearchTemplate.createIndex(indexName, settings);
     }
 
     @Override
     public <T> boolean createIndex(Class<T> clazz, Object settings) {
-        return elasticsearchTemplate.createIndex(clazz, settings);
+        throw new UnsupportedOperationException("Not implemented");
     }
 
     @Override

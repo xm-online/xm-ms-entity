@@ -49,18 +49,15 @@ public class TenantElasticsearchProvisioner implements TenantProvisioner {
     }
 
     private void createTenantDocuments(Tenant tenant) {
-        String idxKey = composeName(tenant.getTenantKey());
+        String idxKey = ElasticsearchTemplateWrapper.composeIndexName(tenant.getTenantKey());
         elasticsearchTemplateWrapper.createIndex(idxKey);
         elasticsearchTemplateWrapper.putMapping(XmEntity.class);
         log.info("created elasticsearch index for class: {}", XmEntity.class);
     }
 
     private void deleteTenantDocuments(String tenantKey) {
-        elasticsearchTemplateWrapper.deleteIndex(composeName(tenantKey));
-    }
-
-    private String composeName(String tenantCode) {
-        return tenantCode.toLowerCase() + "_xmentity";
+        String idxKey = ElasticsearchTemplateWrapper.composeIndexName(tenantKey);
+        elasticsearchTemplateWrapper.deleteIndex(idxKey);
     }
 
 }

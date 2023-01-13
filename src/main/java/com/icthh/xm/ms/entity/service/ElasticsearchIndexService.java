@@ -269,12 +269,15 @@ public class ElasticsearchIndexService {
 
         StopWatch stopWatch = StopWatch.createStarted();
 
-        elasticsearchTemplateWrapper.deleteIndex(clazz);
+        TenantKey tenantKey = TenantContextUtils.getRequiredTenantKey(tenantContextHolder);
+        String idxKey = ElasticsearchTemplateWrapper.composeIndexName(tenantKey.getValue());
+
+        elasticsearchTemplateWrapper.deleteIndex(idxKey);
         try {
             if (indexConfiguration.isConfigExists()) {
-                elasticsearchTemplateWrapper.createIndex(clazz, indexConfiguration.getConfiguration());
+                elasticsearchTemplateWrapper.createIndex(idxKey, indexConfiguration.getConfiguration());
             } else {
-                elasticsearchTemplateWrapper.createIndex(clazz);
+                elasticsearchTemplateWrapper.createIndex(idxKey);
             }
         } catch (ResourceAlreadyExistsException e) {
             log.info("Do nothing. Index was already concurrently recreated by some other service");
