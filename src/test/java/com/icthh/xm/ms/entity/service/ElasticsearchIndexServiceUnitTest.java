@@ -1,5 +1,9 @@
 package com.icthh.xm.ms.entity.service;
 
+import com.icthh.xm.commons.tenant.PlainTenant;
+import com.icthh.xm.commons.tenant.Tenant;
+import com.icthh.xm.commons.tenant.TenantContext;
+import com.icthh.xm.commons.tenant.TenantKey;
 import com.icthh.xm.ms.entity.service.search.ElasticsearchTemplateWrapper;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -30,6 +34,7 @@ import javax.persistence.EntityManager;
 import java.lang.reflect.Field;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 @RunWith(MockitoJUnitRunner.class)
 public class ElasticsearchIndexServiceUnitTest extends AbstractUnitTest {
@@ -69,6 +74,16 @@ public class ElasticsearchIndexServiceUnitTest extends AbstractUnitTest {
     @SneakyThrows
     private void prepareInternal() {
         Class<XmEntity> entityClass = XmEntity.class;
+        when(tenantContextHolder.getContext()).thenReturn(new TenantContext() {
+            @Override
+            public boolean isInitialized() {
+                return true;
+            }
+            @Override
+            public Optional<Tenant> getTenant() {
+                return Optional.of(new PlainTenant(new TenantKey("XM")));
+            }
+        });
         when(xmEntityRepository.count(null)).thenReturn(10L);
         when(xmEntityRepository.findAll(null, PageRequest.of(0, 100))).thenReturn(
             new PageImpl<>(Collections.singletonList(createObject(entityClass))));
@@ -80,8 +95,8 @@ public class ElasticsearchIndexServiceUnitTest extends AbstractUnitTest {
 
         Class<XmEntity> entityClass = XmEntity.class;
 
-        verify(elasticsearchTemplateWrapper).deleteIndex(entityClass);
-        verify(elasticsearchTemplateWrapper).createIndex(entityClass);
+        verify(elasticsearchTemplateWrapper).deleteIndex("xm_xmentity");
+        verify(elasticsearchTemplateWrapper).createIndex("xm_xmentity");
         verify(elasticsearchTemplateWrapper).putMapping(entityClass);
 
         verify(xmEntityRepository, times(4)).count(any());
