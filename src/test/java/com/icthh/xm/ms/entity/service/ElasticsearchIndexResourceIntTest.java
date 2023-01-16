@@ -181,8 +181,7 @@ public class ElasticsearchIndexResourceIntTest extends AbstractSpringBootTest {
         indexConfiguration.onRefresh("/config/tenants/RESINTTEST/entity/index_config.json", null);
 
         elasticsearchIndexService = new ElasticsearchIndexService(xmEntityRepositoryInternal,
-                                                                  xmEntitySearchRepository,
-                                                                  new ElasticsearchTemplateWrapper(elasticsearchTemplate),
+                                                                  new ElasticsearchTemplateWrapper(elasticsearchTemplate, xmEntitySearchRepository),
                                                                   tenantContextHolder,
                                                                   mappingConfiguration,
                                                                   indexConfiguration,

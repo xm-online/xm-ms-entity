@@ -1,6 +1,8 @@
 package com.icthh.xm.ms.entity.service.search;
 
 
+import com.icthh.xm.ms.entity.domain.XmEntity;
+import com.icthh.xm.ms.entity.repository.search.XmEntitySearchRepository;
 import lombok.RequiredArgsConstructor;
 import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.client.Client;
@@ -35,9 +37,20 @@ import java.util.Map;
 public class ElasticsearchTemplateWrapper implements ElasticsearchOperations {
 
     private final ElasticsearchTemplate elasticsearchTemplate;
+    private final XmEntitySearchRepository xmEntitySearchRepository;
 
     public static String composeIndexName(String tenantCode) {
         return tenantCode.toLowerCase() + "_xmentity";
+    }
+
+    /**
+     * This is method, for removing xmEntitySearchRepository from java code.
+     * Instead of xmEntitySearchRepository.saveAll impl via Elastic driver or other approach
+     * @param list
+     * @return
+     */
+    public Iterable<XmEntity> saveAll(List<XmEntity> list) {
+        return xmEntitySearchRepository.saveAll(list);
     }
 
     @Override
