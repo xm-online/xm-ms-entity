@@ -1,5 +1,3 @@
-package lep.custom.xm.xm.entity.queue.system
-
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.icthh.xm.commons.domainevent.domain.DomainEvent
 import com.icthh.xm.commons.domainevent.domain.DomainEventPayload
