@@ -1,5 +1,6 @@
 package com.icthh.xm.ms.entity.config;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.icthh.xm.commons.config.client.service.TenantConfigService;
 import com.icthh.xm.commons.domainevent.service.EventPublisher;
 import com.icthh.xm.commons.domainevent.service.builder.DomainEventFactory;
@@ -71,7 +72,8 @@ public class LepAppEventListenerConfiguration {
         KafkaTemplateService kafkaTemplateService,
         MetricsAdapter metricsAdapter,
         EventPublisher eventPublisher,
-        DomainEventFactory domainEventFactory
+        DomainEventFactory domainEventFactory,
+        ObjectMapper objectMapper
     ) {
 
         return new XmEntityMsLepProcessingApplicationListener(xmEntityService,
@@ -81,7 +83,7 @@ public class LepAppEventListenerConfiguration {
             commonsService, permissionCheckService, eventService, calendarService, tenantLepResource,
             amazonS3Template, elasticsearchTemplate, permittedSearchRepository, elasticsearchIndexService,
             transactionExecutor, customMetricsContext, kafkaTemplateService, metricsAdapter,
-            eventPublisher, domainEventFactory);
+            eventPublisher, domainEventFactory, objectMapper);
     }
 
 }
