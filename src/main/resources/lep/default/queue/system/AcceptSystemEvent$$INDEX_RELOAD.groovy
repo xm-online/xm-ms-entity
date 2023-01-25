@@ -3,6 +3,7 @@ import com.icthh.xm.commons.domainevent.domain.DomainEvent
 import com.icthh.xm.commons.domainevent.domain.DomainEventPayload
 import com.icthh.xm.commons.domainevent.domain.enums.DefaultDomainEventOperation
 import com.icthh.xm.commons.domainevent.domain.enums.DefaultDomainEventSource
+import com.icthh.xm.commons.logging.util.MdcUtils
 import com.icthh.xm.commons.tenant.TenantContext
 import com.icthh.xm.commons.tenant.TenantContextUtils
 import com.icthh.xm.commons.topic.service.KafkaTemplateService
@@ -76,10 +77,9 @@ private static Specification<XmEntity> composeSpecifications(List<Specification<
 }
 
 private static DomainEvent toEvent(XmEntity entity, String tenantKey, String appName) {
-    UUID uuid = UUID.randomUUID()
     return DomainEvent.builder()
-        .id(uuid) // TODO ?
-        .txId(uuid.toString()) // TODO ?
+        .id(UUID.randomUUID())
+        .txId(MdcUtils.getRid())
         .aggregateId(String.valueOf(entity.id))
         .aggregateType(entity.typeKey)
         .operation(DefaultDomainEventOperation.READ.name()) // TODO need add reload operation
