@@ -11,7 +11,9 @@ import com.icthh.xm.ms.entity.service.processor.DefinitionSpecProcessor;
 import com.icthh.xm.ms.entity.service.processor.FormSpecProcessor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.Collections;
@@ -29,6 +31,8 @@ import static org.springframework.util.CollectionUtils.isEmpty;
 @Service
 public class XmEntitySpecContextService {
 
+    private final String maxFileSize;
+
     private final DefinitionSpecProcessor definitionSpecProcessor;
     private final FormSpecProcessor formSpecProcessor;
     private final SpecInheritanceProcessor specInheritanceProcessor;
@@ -40,13 +44,16 @@ public class XmEntitySpecContextService {
     private final ConcurrentHashMap<String, Map<String, TypeSpec>> typesByTenant = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, Map<String, String>> typesByTenantByFile = new ConcurrentHashMap<>();
 
-    public XmEntitySpecContextService(DefinitionSpecProcessor definitionSpecProcessor, FormSpecProcessor formSpecProcessor, XmEntityTenantConfigService tenantConfigService) {
+    public XmEntitySpecContextService(DefinitionSpecProcessor definitionSpecProcessor, FormSpecProcessor formSpecProcessor,
+                                      XmEntityTenantConfigService tenantConfigService,
+                                      @Value("${spring.servlet.multipart.max-file-size:1MB}") String maxFileSize) {
         this.definitionSpecProcessor = definitionSpecProcessor;
         this.formSpecProcessor = formSpecProcessor;
         this.specInheritanceProcessor = new SpecInheritanceProcessor(tenantConfigService);
         this.dataSpecJsonSchemaService = new DataSpecJsonSchemaService(definitionSpecProcessor, formSpecProcessor);
         this.specFieldsProcessor = new SpecFieldsProcessor();
         this.functionByTenantService = new FunctionByTenantService();
+        this.maxFileSize = maxFileSize;
     }
 
     public Map<String, TypeSpec> typesByTenant(String tenantKey) {
@@ -115,12 +122,25 @@ public class XmEntitySpecContextService {
         } else {
             // Convert List<TypeSpec> to Map<key, TypeSpec>
             Map<String, TypeSpec> result = typeSpecs.stream()
+                .map(this::enrichAttachmentSpec)
                 .collect(Collectors.toMap(TypeSpec::getKey, Function.identity(),
                     (u, v) -> {
                         throw new IllegalStateException(String.format("Duplicate key %s", u));
                     }, LinkedHashMap::new));
             return result;
         }
+    }
+
+    private TypeSpec enrichAttachmentSpec(TypeSpec typeSpec) {
+        if (CollectionUtils.isEmpty(typeSpec.getAttachments())) {
+            return typeSpec;
+        }
+
+        typeSpec.getAttachments().stream()
+            .filter(it -> StringUtils.isEmpty(it.getSize()))
+            .forEach(it -> it.setSize(maxFileSize));
+
+        return typeSpec;
     }
 
 }

@@ -56,8 +56,6 @@ public class ApplicationProperties {
 
     private Integer requestCacheLimit;
     private List<String> requestCacheIgnoredPathPatternList = Collections.emptyList();
-    private Integer maxUploadFileSize;
-    private Integer maxUploadSize;
 
     private Integer periodicMetricPoolSize;
 

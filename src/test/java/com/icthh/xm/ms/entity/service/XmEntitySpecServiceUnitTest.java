@@ -112,6 +112,8 @@ public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
     private static final String RELATIVE_FORMS_PATH_TO_FILE = "xmentityspec/forms/form-specification-int.json";
     private static final String RELATIVE_DEFINITIONS_PATH_TO_FILE = "xmentityspec/definitions/definition-specification-int.json";
 
+    private static final String MAX_FILE_SIZE = "1Mb";
+
     private XmEntitySpecService xmEntitySpecService;
 
     private TenantContextHolder tenantContextHolder;
@@ -168,7 +170,7 @@ public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
                                             dynamicPermissionCheckService,
                                             tenantConfig,
                                             new DefinitionSpecProcessor(jsonListenerService),
-                                            new FormSpecProcessor(jsonListenerService)));
+                                            new FormSpecProcessor(jsonListenerService), MAX_FILE_SIZE));
     }
 
     @Test

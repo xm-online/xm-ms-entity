@@ -92,10 +92,11 @@ spring:
             enabled: false
     thymeleaf:
         mode: XHTML
-    http:
+    servlet:
         multipart:
-            max-file-size: 20MB
-            max-request-size: 20MB
+            enabled: true
+            max-file-size: 10MB
+            max-request-size: 10MB
     kafka:
         consumer:
             group-id: entity
@@ -227,8 +228,6 @@ application:
             bucket-prefix:
     elasticSchemaSuffix: ""
     requestCacheIgnoredPathPatternList: /api/functions/*/upload
-    maxUploadFileSize: 1073741824
-    maxUploadSize: 1073741824
     periodicMetricPoolSize: 1
     kafkaMetric:
         enabled: true

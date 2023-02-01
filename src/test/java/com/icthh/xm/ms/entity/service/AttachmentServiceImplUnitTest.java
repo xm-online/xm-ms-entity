@@ -84,6 +84,21 @@ public class AttachmentServiceImplUnitTest  extends AbstractUnitTest {
     }
 
     @Test
+    public void shouldFailIfAttachmentContentSizeBiggerOfSpecValue() {
+        AttachmentSpec spec = new AttachmentSpec();
+        spec.setKey("KEY1");
+        spec.setSize("1");
+
+       Content c = new Content();
+       c.setValue("Hello world!".getBytes());
+
+        when(attachmentRepository.countByXmEntityIdAndTypeKey(1L, "KEY1")).thenReturn(1);
+        exception.expect(BusinessException.class);
+        exception.expect(hasProperty("code", is(AttachmentService.SIZE_RESTRICTION)));
+        attachmentService.assertFileSize(spec, c);
+    }
+
+    @Test
     public void shouldFailIfSpecNotFound() {
         XmEntity e = new XmEntity();
         e.setTypeKey("TYPE");
@@ -130,6 +145,7 @@ public class AttachmentServiceImplUnitTest  extends AbstractUnitTest {
 
         AttachmentSpec spec = new AttachmentSpec();
         spec.setKey("A.T");
+        spec.setSize("1MB");
 
         when(xmEntityRepository.findById(1L)).thenReturn(Optional.of(e));
         when(xmEntitySpecService.findAttachment("T", "A.T")).thenReturn(Optional.of(spec));
@@ -158,6 +174,7 @@ public class AttachmentServiceImplUnitTest  extends AbstractUnitTest {
         AttachmentSpec spec = new AttachmentSpec();
         spec.setKey("A.T");
         spec.setMax(1);
+        spec.setSize("1MB");
 
         XmEntity mocked = new XmEntity();
         mocked.setId(1L);
@@ -173,6 +190,45 @@ public class AttachmentServiceImplUnitTest  extends AbstractUnitTest {
 
         exception.expect(BusinessException.class);
         exception.expect(hasProperty("code", is(AttachmentService.MAX_RESTRICTION)));
+        attachmentService.save(a);
+    }
+
+    @Test
+    public void shouldFailForMaxContentSize() {
+        XmEntity e = new XmEntity();
+        e.setTypeKey("T");
+        e.setId(1L);
+
+        Content c = new Content();
+        c.setValue("Hello world!".getBytes());
+
+        Attachment a = new Attachment();
+        a.setTypeKey("A.T");
+        a.setContent(c);
+        a.setXmEntity(e);
+
+        Attachment result = new Attachment();
+        result.setId(222L);
+
+        AttachmentSpec spec = new AttachmentSpec();
+        spec.setKey("A.T");
+        spec.setMax(1);
+        spec.setSize("1");
+
+        XmEntity mocked = new XmEntity();
+        mocked.setId(1L);
+        mocked.setTypeKey("T");
+        Attachment a1 = new Attachment();
+        a1.setTypeKey("A.T");
+        mocked.addAttachments(a1);
+
+        when(xmEntityRepository.findById(1L)).thenReturn(Optional.of(mocked));
+        when(xmEntitySpecService.findAttachment("T", "A.T")).thenReturn(Optional.of(spec));
+        when(attachmentRepository.save(any())).thenReturn(result);
+        when(attachmentRepository.countByXmEntityIdAndTypeKey(1L, "A.T")).thenReturn(1);
+
+        exception.expect(BusinessException.class);
+        exception.expect(hasProperty("code", is(AttachmentService.SIZE_RESTRICTION)));
         attachmentService.save(a);
     }
 
@@ -196,6 +252,7 @@ public class AttachmentServiceImplUnitTest  extends AbstractUnitTest {
         AttachmentSpec spec = new AttachmentSpec();
         spec.setKey("A.T");
         spec.setMax(2); //1 is added in Mock
+        spec.setSize("1MB");
 
         XmEntity mocked = new XmEntity();
         mocked.setId(1L);

@@ -83,7 +83,7 @@ public class Content implements Serializable {
     public String toString() {
         return "Content{" +
             "id=" + getId() +
-            ", value='" + Arrays.toString(getValue()) + "'" +
+            ", value size='" + getValue().length + "'" +
             "}";
     }
 }
