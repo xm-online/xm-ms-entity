@@ -20,8 +20,10 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.function.Consumer;
 
+import com.icthh.xm.ms.entity.domain.Attachment;
 import com.icthh.xm.ms.entity.domain.Content;
 import com.icthh.xm.ms.entity.service.dto.UploadResultDto;
+import com.icthh.xm.ms.entity.util.FileUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.junit.Assert;
@@ -78,7 +80,12 @@ public class AmazonS3TemplateUnitTest extends AbstractUnitTest {
         UploadResultDto resultDto = uploadFileToS3(content);
         assertFileSaved(resultDto);
 
-        URL expirableLink = s3Template.createExpirableLink(prepareBucketName(), resultDto.getKey(), 100500L);
+        Attachment attachment = new Attachment();
+        attachment.setName("fileName.json");
+        attachment.setContentChecksum(resultDto.getETag());
+        attachment.setContentUrl(resultDto.getBucketName() + FileUtils.FILE_NAME_SEPARATOR + resultDto.getKey());
+
+        URL expirableLink = s3Template.createExpirableLink(attachment, 100500L);
         log.info("link: {}", expirableLink);
         String value = IOUtils.toString(expirableLink, StandardCharsets.UTF_8);
         Assert.assertEquals(content, value);
@@ -92,7 +99,12 @@ public class AmazonS3TemplateUnitTest extends AbstractUnitTest {
 
         s3Template.delete(resultDto.getBucketName(), resultDto.getKey());
 
-        URL expirableLink = s3Template.createExpirableLink(prepareBucketName(), resultDto.getKey(), 100500L);
+        Attachment attachment = new Attachment();
+        attachment.setName("fileName.json");
+        attachment.setContentChecksum(resultDto.getETag());
+        attachment.setContentUrl(resultDto.getBucketName() + FileUtils.FILE_NAME_SEPARATOR + resultDto.getKey());
+
+        URL expirableLink = s3Template.createExpirableLink(attachment, 100500L);
         Exception exception = assertThrows(FileNotFoundException.class, () -> {
             IOUtils.toString(expirableLink, StandardCharsets.UTF_8);
         });

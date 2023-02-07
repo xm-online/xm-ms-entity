@@ -15,6 +15,7 @@ import com.icthh.xm.ms.entity.repository.ContentRepository;
 import com.icthh.xm.ms.entity.repository.backend.S3StorageRepository;
 import com.icthh.xm.ms.entity.service.dto.S3ObjectDto;
 import com.icthh.xm.ms.entity.service.dto.UploadResultDto;
+import com.icthh.xm.ms.entity.util.FileUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -33,7 +34,6 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class ContentService {
 
-    private static final String FILE_NAME_SEPARATOR = "::";
     private static final long DEFAULT_EXPIRIBLE_LINK_TIME = 60000L;
 
     private final PermittedRepository permittedRepository;
@@ -76,12 +76,12 @@ public class ContentService {
     }
 
     private String s3FileName(UploadResultDto uploadResult) {
-        return uploadResult.getBucketName() + FILE_NAME_SEPARATOR + uploadResult.getKey();
+        return uploadResult.getBucketName() + FileUtils.FILE_NAME_SEPARATOR + uploadResult.getKey();
     }
 
     public void delete(Attachment attachment) {
         if (isS3Compatible(attachment.getContentUrl())) {
-            Pair<String, String> s3BucketNameKey = getS3BucketNameKey(attachment.getContentUrl());
+            Pair<String, String> s3BucketNameKey = FileUtils.getS3BucketNameKey(attachment.getContentUrl());
             s3StorageRepository.delete(s3BucketNameKey.getKey(), s3BucketNameKey.getValue());
         }
     }
@@ -90,7 +90,7 @@ public class ContentService {
     public Attachment enrichContent(Attachment attachment) {
         AttachmentSpec spec = getSpec(attachment.getXmEntity(), attachment);
         if (spec.getStoreType() == AttachmentStoreType.S3) {
-            Pair<String, String> s3BucketNameKey = getS3BucketNameKey(attachment.getContentUrl());
+            Pair<String, String> s3BucketNameKey = FileUtils.getS3BucketNameKey(attachment.getContentUrl());
             S3ObjectDto s3Object = s3StorageRepository.getS3Object(s3BucketNameKey.getKey(), s3BucketNameKey.getValue());
             Content content = attachment.getContent();
             if (content == null) {
@@ -111,27 +111,17 @@ public class ContentService {
     }
 
     public String createExpirableLink(Attachment attachment) {
-        Pair<String, String> s3BucketNameKey = getS3BucketNameKey(attachment.getContentUrl());
         AttachmentSpec spec = getSpec(attachment.getXmEntity(), attachment);
         Long expireLinkTime = Optional.ofNullable(spec.getExpireLinkTimeInMillis()).orElse(DEFAULT_EXPIRIBLE_LINK_TIME);
-        return s3StorageRepository.createExpirableLink(s3BucketNameKey.getKey(), s3BucketNameKey.getValue(), expireLinkTime).toString();
+        return s3StorageRepository.createExpirableLink(attachment, expireLinkTime).toString();
     }
 
     public boolean supportDownloadLink (Attachment attachment) {
         return isS3Compatible(attachment.getContentUrl());
     }
 
-    private Pair<String, String> getS3BucketNameKey(String contentUrl) {
-        String[] split = contentUrl.split(FILE_NAME_SEPARATOR);
-        if (split.length != 2) {
-            throw new IllegalArgumentException("Invalid format for url = " + contentUrl);
-        }
-
-        return Pair.of(split[0], split[1]);
-    }
-
     private boolean isS3Compatible(String contentUrl) {
-        return StringUtils.contains(contentUrl, FILE_NAME_SEPARATOR);
+        return StringUtils.contains(contentUrl, FileUtils.FILE_NAME_SEPARATOR);
     }
 
     private AttachmentSpec getSpec(XmEntity entity, Attachment attachment) {

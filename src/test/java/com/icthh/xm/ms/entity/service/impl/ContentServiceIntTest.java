@@ -178,7 +178,7 @@ public class ContentServiceIntTest extends AbstractSpringBootTest {
         attachment.setXmEntity(xmEntity);
 
         String contentPathUrl = "http://localhost:8090/" + bucketName + "/fileName";
-        Mockito.when(amazonS3Template.createExpirableLink(eq(bucketName), eq(fileName),
+        Mockito.when(amazonS3Template.createExpirableLink(eq(attachment),
             eq(attachmentSpec.getExpireLinkTimeInMillis()))).thenReturn(new URL(contentPathUrl));
 
         Mockito.when(xmEntitySpecService.findAttachment(xmEntity.getTypeKey(), attachment.getTypeKey()))
