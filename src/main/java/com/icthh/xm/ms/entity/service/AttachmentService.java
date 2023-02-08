@@ -233,7 +233,7 @@ public class AttachmentService {
 
 
     protected void assertFileSize(AttachmentSpec spec, Content content) {
-        if (content.getValue() == null || content.getValue().length == 0) {
+        if (content == null || content.getValue() == null || content.getValue().length == 0) {
             return;
         }
         DataSize dataSize = DataSize.parse(spec.getSize());
