@@ -2,13 +2,14 @@ package com.icthh.xm.ms.entity.util;
 
 import lombok.experimental.UtilityClass;
 import org.apache.commons.lang3.tuple.Pair;
+import org.springframework.http.ContentDisposition;
+
+import java.nio.charset.StandardCharsets;
 
 @UtilityClass
 public class FileUtils {
 
-    private static final String CONTENT_DISPOSITION_FORMAT = "attachment; filename=\"%s\"";
-
-    public static final String FILE_NAME_SEPARATOR = "::";
+   public static final String FILE_NAME_SEPARATOR = "::";
 
     public static Pair<String, String> getS3BucketNameKey(String contentUrl) {
         String[] split = contentUrl.split(FILE_NAME_SEPARATOR);
@@ -20,6 +21,9 @@ public class FileUtils {
     }
 
     public static String getContentDisposition(String fileName) {
-        return String.format(CONTENT_DISPOSITION_FORMAT, fileName);
+        return ContentDisposition.builder("attachment")
+            .filename(fileName, StandardCharsets.UTF_8)
+            .build()
+            .toString();
     }
 }

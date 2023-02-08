@@ -53,7 +53,7 @@ public class S3StorageRepository {
         String bucket = amazonS3Template.createBucketIfNotExist(applicationProperties.getAmazon().getS3().getBucketPrefix(), tenantKey.getValue());
 
         String normalizeFolderName = folderName.toLowerCase().replace("_", "-").replace(".", "-");
-        String key = normalizeFolderName + "/" + UUID.randomUUID() + "." + FilenameUtils.getExtension(fileName);
+        String key = normalizeFolderName + "/" + UUID.randomUUID();
 
         return amazonS3Template.save(bucket, key, content, fileName);
     }
