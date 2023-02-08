@@ -6,6 +6,7 @@ import com.icthh.xm.commons.tenant.TenantContextUtils;
 import com.icthh.xm.commons.tenant.TenantKey;
 import com.icthh.xm.ms.entity.config.ApplicationProperties;
 import com.icthh.xm.ms.entity.config.amazon.AmazonS3Template;
+import com.icthh.xm.ms.entity.domain.Attachment;
 import com.icthh.xm.ms.entity.domain.Content;
 import com.icthh.xm.ms.entity.service.dto.S3ObjectDto;
 import com.icthh.xm.ms.entity.service.dto.UploadResultDto;
@@ -52,7 +53,7 @@ public class S3StorageRepository {
         String bucket = amazonS3Template.createBucketIfNotExist(applicationProperties.getAmazon().getS3().getBucketPrefix(), tenantKey.getValue());
 
         String normalizeFolderName = folderName.toLowerCase().replace("_", "-").replace(".", "-");
-        String key = normalizeFolderName + "/" + UUID.randomUUID().toString();
+        String key = normalizeFolderName + "/" + UUID.randomUUID();
 
         return amazonS3Template.save(bucket, key, content, fileName);
     }
@@ -63,8 +64,8 @@ public class S3StorageRepository {
     }
 
     @SneakyThrows
-    public URL createExpirableLink(String bucket, String key, Long expireLinkTime) {
-        return amazonS3Template.createExpirableLink(bucket, key, expireLinkTime);
+    public URL createExpirableLink(Attachment attachment, Long expireLinkTime) {
+        return amazonS3Template.createExpirableLink(attachment, expireLinkTime);
     }
 
     @SneakyThrows
