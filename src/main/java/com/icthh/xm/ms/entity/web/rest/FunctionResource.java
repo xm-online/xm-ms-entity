@@ -26,6 +26,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.util.AntPathMatcher;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -79,6 +80,16 @@ public class FunctionResource {
     public ResponseEntity<Object> callPutFunction(@PathVariable("functionKey") String functionKey,
                                                            @RequestBody(required = false) Map<String, Object> functionInput) {
         FunctionContext result = functionService.execute(functionKey, functionInput, "PUT");
+        return ResponseEntity.ok().body(result.functionResult());
+    }
+
+    @Timed
+    @PatchMapping("/functions/{functionKey:.+}")
+    @PreAuthorize("hasPermission({'functionKey': #functionKey}, 'FUNCTION.PATCH.CALL')")
+    @PrivilegeDescription("Privilege to call patch function")
+    public ResponseEntity<Object> callPatchFunction(@PathVariable("functionKey") String functionKey,
+                                                    @RequestBody(required = false) Map<String, Object> functionInput) {
+        FunctionContext result = functionService.execute(functionKey, functionInput, "PATCH");
         return ResponseEntity.ok().body(result.functionResult());
     }
 
@@ -194,6 +205,14 @@ public class FunctionResource {
     public ResponseEntity<Object> callPutFunction(HttpServletRequest request,
                                                   @RequestBody(required = false) Map<String, Object> functionInput) {
         return self.callPutFunction(getFunctionKey(request), functionInput);
+    }
+
+    @IgnoreLogginAspect
+    @Timed
+    @PatchMapping("/functions/**")
+    public ResponseEntity<Object> callPatchFunction(HttpServletRequest request,
+                                                    @RequestBody(required = false) Map<String, Object> functionInput) {
+        return self.callPatchFunction(getFunctionKey(request), functionInput);
     }
 
     @IgnoreLogginAspect
