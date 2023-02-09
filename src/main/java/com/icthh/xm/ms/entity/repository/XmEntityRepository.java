@@ -143,4 +143,7 @@ public interface XmEntityRepository extends XmEntityProjectionRepository {
 
     int delete(Function<CriteriaBuilder, CriteriaDelete<XmEntity>> criteriaDelete);
 
+    long count();
+
+    long count(Specification<XmEntity> spec);
 }
