@@ -13,6 +13,7 @@ import com.icthh.xm.ms.entity.service.processor.DefinitionSpecProcessor;
 import com.icthh.xm.ms.entity.service.processor.FormSpecProcessor;
 import com.icthh.xm.ms.entity.service.spec.XmEntitySpecContextService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 
@@ -37,9 +38,10 @@ public class LocalXmEntitySpecService extends XmEntitySpecService {
                                     DynamicPermissionCheckService dynamicPermissionCheckService,
                                     XmEntityTenantConfigService tenantConfigService,
                                     DefinitionSpecProcessor definitionSpecProcessor,
-                                    FormSpecProcessor formSpecProcessor) {
+                                    FormSpecProcessor formSpecProcessor,
+                                    @Value("${spring.servlet.multipart.max-file-size:1MB}") String maxFileSize) {
         super(tenantConfigRepository, applicationProperties, tenantContextHolder,
-            new XmEntitySpecContextService(definitionSpecProcessor, formSpecProcessor, tenantConfigService),
+            new XmEntitySpecContextService(definitionSpecProcessor, formSpecProcessor, tenantConfigService, maxFileSize),
             List.of(entityCustomPrivilegeService), dynamicPermissionCheckService);
 
         this.applicationProperties = applicationProperties;

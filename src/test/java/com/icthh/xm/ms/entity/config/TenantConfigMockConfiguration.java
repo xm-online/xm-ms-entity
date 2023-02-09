@@ -22,6 +22,7 @@ import com.icthh.xm.ms.entity.service.XmEntitySpecService;
 import com.icthh.xm.ms.entity.service.processor.FormSpecProcessor;
 import lombok.SneakyThrows;
 import org.apache.commons.io.IOUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -51,7 +52,8 @@ public class TenantConfigMockConfiguration {
                                                    DynamicPermissionCheckService dynamicPermissionCheckService,
                                                    XmEntityTenantConfigService xmEntityTenantConfigService,
                                                    DefinitionSpecProcessor definitionSpecProcessor,
-                                                   FormSpecProcessor formSpecProcessor) {
+                                                   FormSpecProcessor formSpecProcessor,
+                                                   @Value("${spring.servlet.multipart.max-file-size:1MB}") String maxFileSize) {
         return new LocalXmEntitySpecService(tenantConfigRepository(),
                                             applicationProperties,
                                             tenantContextHolder,
@@ -59,7 +61,8 @@ public class TenantConfigMockConfiguration {
                                             dynamicPermissionCheckService,
                                             xmEntityTenantConfigService,
                                             definitionSpecProcessor,
-                                            formSpecProcessor);
+                                            formSpecProcessor,
+                                            maxFileSize);
     }
 
     @Bean
