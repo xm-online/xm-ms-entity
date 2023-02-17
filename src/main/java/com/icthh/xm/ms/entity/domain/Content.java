@@ -81,9 +81,10 @@ public class Content implements Serializable {
 
     @Override
     public String toString() {
+        int valueLength = getValue() == null ? 0 : getValue().length;
         return "Content{" +
             "id=" + getId() +
-            ", value='" + Arrays.toString(getValue()) + "'" +
+            ", value size='" + valueLength + "'" +
             "}";
     }
 }

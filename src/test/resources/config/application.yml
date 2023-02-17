@@ -147,6 +147,4 @@ application:
     kafka-system-queue: system_queue
     lep:
         tenant-script-storage: XM_MS_CONFIG
-    maxUploadFileSize: 1073741824
-    maxUploadSize: 1073741824
     periodicMetricPoolSize: 1

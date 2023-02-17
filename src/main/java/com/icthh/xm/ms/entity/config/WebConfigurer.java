@@ -138,14 +138,6 @@ public class WebConfigurer implements ServletContextInitializer, WebServerFactor
         return new CorsFilter(source);
     }
 
-    @Bean(name = "multipartResolver")
-    public CommonsMultipartResolver multipartResolver(ApplicationProperties applicationProperties) {
-        CommonsMultipartResolver multipartResolver = new CommonsMultipartResolver();
-        multipartResolver.setMaxUploadSizePerFile(applicationProperties.getMaxUploadFileSize());
-        multipartResolver.setMaxUploadSize(applicationProperties.getMaxUploadSize());
-        return multipartResolver;
-    }
-
     /**
      * Initializes H2 console.
      */
