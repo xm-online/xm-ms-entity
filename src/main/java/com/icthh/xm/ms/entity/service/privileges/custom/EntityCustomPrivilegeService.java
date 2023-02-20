@@ -3,6 +3,7 @@ package com.icthh.xm.ms.entity.service.privileges.custom;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator;
 import com.icthh.xm.commons.config.client.repository.CommonConfigRepository;
 import com.icthh.xm.commons.config.domain.Configuration;
 import com.icthh.xm.commons.logging.aop.IgnoreLogginAspect;
@@ -34,7 +35,10 @@ public class EntityCustomPrivilegeService implements EntitySpecUpdateListener {
     private static final String TENANT_NAME = "tenantName";
     private static final String CUSTOMER_PRIVILEGES_PATH = PATH_CONFIG_TENANT + "custom-privileges.yml";
 
-    private final ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+    private final YAMLFactory yamlFactory = new YAMLFactory()
+        .enable(YAMLGenerator.Feature.USE_PLATFORM_LINE_BREAKS);
+
+    private final ObjectMapper mapper = new ObjectMapper(yamlFactory);
 
     private final CommonConfigRepository commonConfigRepository;
 
