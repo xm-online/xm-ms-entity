@@ -24,6 +24,7 @@ import com.icthh.xm.ms.entity.AbstractSpringBootTest;
 import com.icthh.xm.ms.entity.config.IndexConfiguration;
 import com.icthh.xm.ms.entity.config.MappingConfiguration;
 import com.icthh.xm.ms.entity.config.XmEntityTenantConfigService;
+import com.icthh.xm.ms.entity.config.containers.PostgresTestContainerConfig;
 import com.icthh.xm.ms.entity.domain.Attachment;
 import com.icthh.xm.ms.entity.domain.Calendar;
 import com.icthh.xm.ms.entity.domain.Comment;
@@ -74,10 +75,14 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.ElasticsearchException;
 import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.ContextConfiguration;
 import org.springframework.transaction.TransactionSystemException;
 import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
+@ActiveProfiles("pg-test")
+@ContextConfiguration(initializers = {PostgresTestContainerConfig.Initializer.class})
 public class XmEntityServiceIntTest extends AbstractSpringBootTest {
 
     @Autowired
