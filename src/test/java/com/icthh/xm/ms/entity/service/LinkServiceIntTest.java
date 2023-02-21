@@ -11,6 +11,7 @@ import com.icthh.xm.ms.entity.domain.Link;
 import com.icthh.xm.ms.entity.domain.Link_;
 import com.icthh.xm.ms.entity.security.access.DynamicPermissionCheckService;
 import com.icthh.xm.ms.entity.web.rest.LinkResourceIntTest;
+import org.apache.commons.collections4.CollectionUtils;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -71,7 +72,9 @@ public class LinkServiceIntTest extends AbstractSpringBootTest {
             ctx.setValue(THREAD_CONTEXT_KEY_AUTH_CONTEXT, authContextHolder.getContext());
         });
 
-        expected = initLinks();
+        if (CollectionUtils.isEmpty(expected)) {
+            expected = initLinks();
+        }
     }
 
     @After
