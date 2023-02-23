@@ -79,7 +79,7 @@ public class ElasticsearchIndexServiceUnitTest extends AbstractUnitTest {
         when(xmEntityRepository.findAll(null, PageRequest.of(0, 100))).thenReturn(
             new PageImpl<>(Collections.singletonList(createObject(entityClass))));
 
-        elasticsearchTemplateWrapper = new ElasticsearchTemplateWrapper(elasticsearchTemplate, xmEntitySearchRepository);
+        elasticsearchTemplateWrapper = new ElasticsearchTemplateWrapper(tenantContextHolder, elasticsearchTemplate, xmEntitySearchRepository);
 
         service = new ElasticsearchIndexService(
             xmEntityRepository, elasticsearchTemplateWrapper, tenantContextHolder, mappingConfiguration,

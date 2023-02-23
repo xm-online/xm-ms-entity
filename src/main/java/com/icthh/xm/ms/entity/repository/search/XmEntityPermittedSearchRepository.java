@@ -1,30 +1,26 @@
 package com.icthh.xm.ms.entity.repository.search;
 
-import static java.util.stream.Collectors.toSet;
-import static org.apache.commons.lang.StringUtils.isEmpty;
-import static org.elasticsearch.index.query.QueryBuilders.boolQuery;
-import static org.elasticsearch.index.query.QueryBuilders.matchQuery;
-import static org.elasticsearch.index.query.QueryBuilders.prefixQuery;
-import static org.elasticsearch.index.query.QueryBuilders.simpleQueryStringQuery;
-import static org.elasticsearch.index.query.QueryBuilders.termsQuery;
-import static org.springframework.data.elasticsearch.core.query.Query.DEFAULT_PAGE;
-
 import com.icthh.xm.commons.permission.service.PermissionCheckService;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.repository.search.translator.SpelToElasticTranslator;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
+import static org.apache.commons.lang.StringUtils.isEmpty;
 import org.elasticsearch.index.query.BoolQueryBuilder;
+import static org.elasticsearch.index.query.QueryBuilders.boolQuery;
+import static org.elasticsearch.index.query.QueryBuilders.matchQuery;
+import static org.elasticsearch.index.query.QueryBuilders.prefixQuery;
+import static org.elasticsearch.index.query.QueryBuilders.simpleQueryStringQuery;
+import static org.elasticsearch.index.query.QueryBuilders.termsQuery;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQuery;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
+import static org.springframework.data.elasticsearch.core.query.Query.DEFAULT_PAGE;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Repository

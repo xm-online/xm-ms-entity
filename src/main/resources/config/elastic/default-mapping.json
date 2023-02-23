@@ -1,0 +1,177 @@
+{
+  "_source": {
+    "excludes": ["targets", "sources", "targets.*", "sources.*", "comments", "comments.*"]
+  },
+  "properties": {
+    "id": {
+      "type" : "long",
+      "index": "not_analyzed"
+    },
+    "description": {
+      "type": "text",
+      "index": "not_analyzed"
+    },
+    "typeKey": {
+      "type": "text",
+      "index": "not_analyzed"
+    },
+    "stateKey": {
+      "type": "keyword"
+    },
+    "key": {
+      "type": "keyword",
+      "index": "not_analyzed"
+    },
+    "targets": {
+      "type": "object",
+      "enabled": false,
+      "include_in_all": false
+    },
+    "sources": {
+      "type": "object",
+      "enabled": false,
+      "include_in_all": false
+    },
+    "comments": {
+      "type": "object",
+      "enabled": false,
+      "include_in_all": false
+    },
+    "attachments": {
+      "type": "object",
+      "enabled": false,
+      "include_in_all": false
+    },
+    "data.xmEntity": {
+      "type": "object",
+      "enabled": false,
+      "include_in_all": false
+    },
+    "data.orderItems": {
+      "type": "object",
+      "enabled": false,
+      "include_in_all": false
+    },
+    "data.transporter": {
+      "type": "object",
+      "enabled": false,
+      "include_in_all": false
+    },
+    "data.consumer.consumerId": {
+      "type": "long"
+    },
+    "data.companyTaxationSystem.ipnDateRegister": {
+      "type": "text",
+      "include_in_all": false
+    },
+    "data.activity.region": {
+      "type": "text",
+      "include_in_all": false
+    },
+    "data.totalPrice": {
+      "type": "float",
+      "index": "not_analyzed"
+    },
+    "data.goodId": {
+      "type": "keyword"
+    },
+    "data.transportShoulder.transport.dateOnVehicleLoading": {
+      "type": "text",
+      "index": "not_analyzed",
+      "include_in_all": false
+    },
+    "data.transportShoulder.warehouse.warehouseAddress": {
+      "type": "text",
+      "index": "not_analyzed",
+      "include_in_all": false
+    },
+    "data.transportShoulder.warehouse.dateUnloadingFromWh": {
+      "type": "text",
+      "index": "not_analyzed",
+      "include_in_all": false
+    },
+    "data.orderItemGroupName": {
+      "type": "text",
+      "index": "not_analyzed",
+      "include_in_all": false
+    },
+    "data.adjustedItems": {
+      "type": "object",
+      "enabled": false,
+      "include_in_all": false
+    },
+    "data.gatheredItems": {
+      "type": "object",
+      "enabled": false,
+      "include_in_all": false
+    },
+    "data.userCreatorInfo": {
+      "type": "object",
+      "enabled": false,
+      "include_in_all": false
+    },
+    "data.deliveryRoute.plannedDateAndTimeVehicleSubmission": {
+      "type": "keyword"
+    },
+    "data.contactInformation": {
+      "type": "object",
+      "enabled": false,
+      "include_in_all": false
+    },
+    "data.addressLegal": {
+      "type": "object",
+      "enabled": false,
+      "include_in_all": false
+    },
+    "data.actionTtn": {
+      "type": "object",
+      "enabled": false,
+      "include_in_all": false
+    },
+    "data.communicationType": {
+      "type": "text",
+      "include_in_all": false,
+      "index": "not_analyzed"
+    },
+    "data.generalInfo.responsiblePersonName": {
+      "type": "text",
+      "include_in_all": false,
+      "index": "not_analyzed"
+    },
+    "data.generalInfo.warehouseAddress": {
+      "type": "text",
+      "include_in_all": false,
+      "index": "not_analyzed"
+    },
+    "data.supplierInfo.expectedShipDate": {
+      "type": "text",
+      "include_in_all": false,
+      "index": "not_analyzed"
+    },
+    "data.length": {
+      "type": "float",
+      "index": "not_analyzed",
+      "include_in_all": false
+    },
+    "data.width": {
+      "type": "float",
+      "index": "not_analyzed",
+      "include_in_all": false
+    },
+    "data.height": {
+      "type": "float",
+      "index": "not_analyzed",
+      "include_in_all": false
+    },
+    "data.eventCode": {
+      "type": "object",
+      "enabled": false,
+      "include_in_all": false
+    },
+    "data.eventName": {
+      "type": "object",
+      "enabled": false,
+      "include_in_all": false
+    }
+  }
+}

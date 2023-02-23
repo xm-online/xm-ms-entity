@@ -1,20 +1,25 @@
 package com.icthh.xm.ms.entity;
 
+import com.icthh.xm.commons.tenant.TenantContextHolder;
+import com.icthh.xm.commons.tenant.TenantContextUtils;
 import com.icthh.xm.ms.entity.config.LepConfiguration;
 import com.icthh.xm.ms.entity.config.SecurityBeanOverrideConfiguration;
 import com.icthh.xm.ms.entity.config.elasticsearch.EmbeddedElasticsearchConfig;
 import com.icthh.xm.ms.entity.config.tenant.WebappTenantOverrideConfiguration;
-import com.icthh.xm.ms.entity.domain.XmEntity;
+import com.icthh.xm.ms.entity.service.search.ElasticsearchTemplateWrapper;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.time.StopWatch;
-import org.elasticsearch.index.query.QueryBuilders;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
-import org.springframework.data.elasticsearch.core.query.DeleteQuery;
 import org.springframework.test.context.junit4.SpringRunner;
+
+import java.io.IOException;
 
 /**
  * Abstract test for extension for any SpringBoot test.
@@ -40,13 +45,16 @@ public abstract class AbstractSpringBootTest {
     /**
      * Clean data from elastic by delete all query without index deletion due to performance reasons.
      */
-    protected void cleanElasticsearch() {
+    protected void cleanElasticsearch(TenantContextHolder tenantContextHolder) {
 
         StopWatch stopWatch = StopWatch.createStarted();
 
-        DeleteQuery deleteQuery = new DeleteQuery();
-        deleteQuery.setQuery(QueryBuilders.matchAllQuery());
-        elasticsearchTemplate.delete(deleteQuery, XmEntity.class);
+        String tenantName = TenantContextUtils.getRequiredTenantKeyValue(tenantContextHolder).toLowerCase();
+        String indexName = ElasticsearchTemplateWrapper.composeIndexName(tenantName);
+        elasticsearchTemplate.deleteIndex(indexName);
+        elasticsearchTemplate.createIndex(indexName);
+
+        elasticsearchTemplate.putMapping(indexName, "xmentity", getDeatultMapping());
 
         log.info("Elasticsearch index for XmEntity cleaned in {} ms", stopWatch.getTime());
 
@@ -59,16 +67,28 @@ public abstract class AbstractSpringBootTest {
      *
      * It is preferable to run only once per Test class to minimise index movement operations.
      */
-    protected void initElasticsearch() {
+    protected void initElasticsearch(TenantContextHolder tenantContextHolder) {
 
         StopWatch stopWatch = StopWatch.createStarted();
 
-        elasticsearchTemplate.deleteIndex(XmEntity.class);
-        elasticsearchTemplate.createIndex(XmEntity.class);
-        elasticsearchTemplate.putMapping(XmEntity.class);
+        String tenantName = TenantContextUtils.getRequiredTenantKeyValue(tenantContextHolder).toLowerCase();
+        String indexName = ElasticsearchTemplateWrapper.composeIndexName(tenantName);
+        elasticsearchTemplate.deleteIndex(indexName);
+        elasticsearchTemplate.createIndex(indexName);
+
+        elasticsearchTemplate.putMapping(indexName, "xmentity", getDeatultMapping());
 
         log.info("Elasticsearch index for XmEntity initialized in {} ms", stopWatch.getTime());
 
+    }
+
+    private String getDeatultMapping() {
+        String location = "/config/elastic/test-mapping.json";
+        try {
+            return IOUtils.toString(new ClassPathResource(location).getInputStream(), UTF_8);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
 }

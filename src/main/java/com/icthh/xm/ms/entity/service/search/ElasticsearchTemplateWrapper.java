@@ -1,6 +1,7 @@
 package com.icthh.xm.ms.entity.service.search;
 
 
+import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.repository.search.XmEntitySearchRepository;
 import lombok.RequiredArgsConstructor;
@@ -36,11 +37,17 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class ElasticsearchTemplateWrapper implements ElasticsearchOperations {
 
+    private final TenantContextHolder tenantContextHolder;
     private final ElasticsearchTemplate elasticsearchTemplate;
     private final XmEntitySearchRepository xmEntitySearchRepository;
 
     public static String composeIndexName(String tenantCode) {
         return tenantCode.toLowerCase() + "_xmentity";
+    }
+
+    public String getIndexName() {
+        String tenantKey = tenantContextHolder.getTenantKey();
+        return composeIndexName(tenantKey);
     }
 
     /**

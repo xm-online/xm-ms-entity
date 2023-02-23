@@ -1,0 +1,22 @@
+{
+  "_source": {
+    "excludes": ["targets", "sources", "targets.*", "sources.*", "comments", "comments.*"]
+  },
+  "properties": {
+    "id": {
+      "type" : "long"
+    },
+    "description": {
+      "type": "text"
+    },
+    "typeKey": {
+      "type": "text"
+    },
+    "stateKey": {
+      "type": "keyword"
+    },
+    "key": {
+      "type": "keyword"
+    }
+  }
+}
