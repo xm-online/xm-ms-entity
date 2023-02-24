@@ -52,7 +52,6 @@ import static org.mockito.Mockito.when;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
 import org.springframework.data.elasticsearch.core.ResultsMapper;
 import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
 import org.springframework.http.MediaType;
@@ -132,7 +131,7 @@ public class ElasticsearchIndexResourceIntTest extends AbstractSpringBootTest {
     private ResultsMapper resultsMapper;
 
     @Autowired
-    private ElasticsearchTemplate elasticsearchTemplate;
+    private ElasticsearchTemplateWrapper elasticsearchTemplateWrapper;
 
     @Autowired
     private MappingConfiguration mappingConfiguration;
@@ -191,8 +190,6 @@ public class ElasticsearchIndexResourceIntTest extends AbstractSpringBootTest {
         mappingConfiguration.onRefresh("/config/tenants/RESINTTEST/entity/mapping.json", null);
         indexConfiguration.onRefresh("/config/tenants/RESINTTEST/entity/index_config.json", null);
 
-        ElasticsearchTemplateWrapper elasticsearchTemplateWrapper = new ElasticsearchTemplateWrapper(tenantContextHolder, elasticsearchTemplate,
-            objectMapper, resultsMapper, permissionCheckService, new SpelToElasticTranslator());
         elasticsearchIndexService = new ElasticsearchIndexService(xmEntityRepositoryInternal,
                                                                   xmEntitySearchRepository,
                                                                   elasticsearchTemplateWrapper,

@@ -16,7 +16,6 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.io.ClassPathResource;
-import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import java.io.IOException;
@@ -40,7 +39,7 @@ import java.io.IOException;
 public abstract class AbstractSpringBootTest {
 
     @Autowired
-    private ElasticsearchTemplate elasticsearchTemplate;
+    private ElasticsearchTemplateWrapper elasticsearchTemplateWrapper;
 
     /**
      * Clean data from elastic by delete all query without index deletion due to performance reasons.
@@ -51,10 +50,10 @@ public abstract class AbstractSpringBootTest {
 
         String tenantName = TenantContextUtils.getRequiredTenantKeyValue(tenantContextHolder).toLowerCase();
         String indexName = ElasticsearchTemplateWrapper.composeIndexName(tenantName);
-        elasticsearchTemplate.deleteIndex(indexName);
-        elasticsearchTemplate.createIndex(indexName);
+        elasticsearchTemplateWrapper.deleteIndex(indexName);
+        elasticsearchTemplateWrapper.createIndex(indexName);
 
-        elasticsearchTemplate.putMapping(indexName, ElasticsearchTemplateWrapper.INDEX_QUERY_TYPE, getDefaultMapping());
+        elasticsearchTemplateWrapper.putMapping(indexName, ElasticsearchTemplateWrapper.INDEX_QUERY_TYPE, getDefaultMapping());
 
         log.info("Elasticsearch index for XmEntity cleaned in {} ms", stopWatch.getTime());
 
@@ -73,10 +72,10 @@ public abstract class AbstractSpringBootTest {
 
         String tenantName = TenantContextUtils.getRequiredTenantKeyValue(tenantContextHolder).toLowerCase();
         String indexName = ElasticsearchTemplateWrapper.composeIndexName(tenantName);
-        elasticsearchTemplate.deleteIndex(indexName);
-        elasticsearchTemplate.createIndex(indexName);
+        elasticsearchTemplateWrapper.deleteIndex(indexName);
+        elasticsearchTemplateWrapper.createIndex(indexName);
 
-        elasticsearchTemplate.putMapping(indexName, ElasticsearchTemplateWrapper.INDEX_QUERY_TYPE, getDefaultMapping());
+        elasticsearchTemplateWrapper.putMapping(indexName, ElasticsearchTemplateWrapper.INDEX_QUERY_TYPE, getDefaultMapping());
 
         log.info("Elasticsearch index for XmEntity initialized in {} ms", stopWatch.getTime());
 

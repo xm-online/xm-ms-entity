@@ -4,10 +4,10 @@ import static java.lang.System.currentTimeMillis;
 
 import javax.annotation.PostConstruct;
 
+import com.icthh.xm.ms.entity.service.search.ElasticsearchTemplateWrapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -16,12 +16,12 @@ public class IndexReinitializer {
     private Logger logger = LoggerFactory.getLogger(getClass());
 
     @Autowired
-    private ElasticsearchTemplate elasticsearchTemplate;
+    private ElasticsearchTemplateWrapper elasticsearchTemplateWrapper;
 
     @PostConstruct
     public void resetIndex() {
         long t = currentTimeMillis();
-        elasticsearchTemplate.deleteIndex("_all");
+        elasticsearchTemplateWrapper.deleteIndex("_all");
         t = currentTimeMillis() - t;
         logger.info("All elasticsearch indexes reset in {} ms", t);
     }
