@@ -4,6 +4,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.icthh.xm.commons.i18n.error.web.ExceptionTranslator;
 import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_AUTH_CONTEXT;
 import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_TENANT_CONTEXT;
+
+import com.icthh.xm.commons.permission.service.PermissionCheckService;
 import com.icthh.xm.commons.security.XmAuthenticationContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
@@ -21,6 +23,7 @@ import com.icthh.xm.ms.entity.domain.spec.TypeSpec;
 import com.icthh.xm.ms.entity.repository.XmEntityRepositoryInternal;
 import com.icthh.xm.ms.entity.repository.search.PermittedSearchRepository;
 import com.icthh.xm.ms.entity.repository.search.XmEntitySearchRepository;
+import com.icthh.xm.ms.entity.repository.search.translator.SpelToElasticTranslator;
 import com.icthh.xm.ms.entity.service.search.ElasticsearchTemplateWrapper;
 import com.icthh.xm.ms.entity.web.rest.ElasticsearchIndexResource;
 import static com.icthh.xm.ms.entity.web.rest.TestUtil.sameInstant;
@@ -152,6 +155,9 @@ public class ElasticsearchIndexResourceIntTest extends AbstractSpringBootTest {
     @Autowired
     private SeparateTransactionExecutor transactionExecutor;
 
+    @Autowired
+    private PermissionCheckService permissionCheckService;
+
     private ElasticsearchIndexService elasticsearchIndexService;
 
     @Mock
@@ -186,7 +192,7 @@ public class ElasticsearchIndexResourceIntTest extends AbstractSpringBootTest {
         indexConfiguration.onRefresh("/config/tenants/RESINTTEST/entity/index_config.json", null);
 
         ElasticsearchTemplateWrapper elasticsearchTemplateWrapper = new ElasticsearchTemplateWrapper(tenantContextHolder, elasticsearchTemplate,
-            objectMapper, resultsMapper);
+            objectMapper, resultsMapper, permissionCheckService, new SpelToElasticTranslator());
         elasticsearchIndexService = new ElasticsearchIndexService(xmEntityRepositoryInternal,
                                                                   xmEntitySearchRepository,
                                                                   elasticsearchTemplateWrapper,

@@ -40,7 +40,6 @@ public final class LepXmEntityMsConstants {
     public static final String BINDING_SUB_KEY_TEMPLATE_ELASTIC = "elastic";
     public static final String BINDING_SUB_KEY_TEMPLATE_KAFKA = "kafka";
     public static final String BINDING_KEY_METRICS_ADAPTER = "metricsAdapter";
-    public static final String BINDING_SUB_KEY_ELASTIC_WRAPPER = "elasticsearchTemplateWrapper";
 
     private LepXmEntityMsConstants() {
         throw new UnsupportedOperationException("Prevent creation for constructor utils class");

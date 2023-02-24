@@ -6,7 +6,6 @@ import static com.icthh.xm.ms.entity.lep.LepXmEntityMsConstants.BINDING_KEY_SERV
 import static com.icthh.xm.ms.entity.lep.LepXmEntityMsConstants.BINDING_KEY_TEMPLATES;
 import static com.icthh.xm.ms.entity.lep.LepXmEntityMsConstants.BINDING_METRICS_CONTEXT;
 import static com.icthh.xm.ms.entity.lep.LepXmEntityMsConstants.BINDING_SUB_KEY_COMMENT_SERVICE;
-import static com.icthh.xm.ms.entity.lep.LepXmEntityMsConstants.BINDING_SUB_KEY_ELASTIC_WRAPPER;
 import static com.icthh.xm.ms.entity.lep.LepXmEntityMsConstants.BINDING_SUB_KEY_PERMISSION_SERVICE;
 import static com.icthh.xm.ms.entity.lep.LepXmEntityMsConstants.BINDING_SUB_KEY_PROFILE_EVENT_PRODUCER_SERVICE;
 import static com.icthh.xm.ms.entity.lep.LepXmEntityMsConstants.BINDING_SUB_KEY_REPOSITORY_SEARCH;
@@ -70,7 +69,6 @@ import java.util.Map;
 import com.icthh.xm.ms.entity.service.metrics.MetricsAdapter;
 import com.icthh.xm.ms.entity.service.search.ElasticsearchTemplateWrapper;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
 import org.springframework.web.client.RestTemplate;
 
 /**
@@ -100,7 +98,7 @@ public class XmEntityMsLepProcessingApplicationListener extends SpringLepProcess
     private final CalendarService calendarService;
     private final TenantLepResource tenantLepResource;
     private final AmazonS3Template s3Template;
-    private final ElasticsearchTemplate elasticsearchTemplate;
+    private final ElasticsearchTemplateWrapper elasticsearchTemplateWrapper;
     private final PermittedSearchRepository permittedSearchRepository;
     private final ElasticsearchIndexService elasticsearchIndexService;
     private final SeparateTransactionExecutor transactionExecutor;
@@ -109,7 +107,6 @@ public class XmEntityMsLepProcessingApplicationListener extends SpringLepProcess
     private final MetricsAdapter metricsAdapter;
     private final EventPublisher eventPublisher;
     private final DomainEventFactory domainEventFactory;
-    private final ElasticsearchTemplateWrapper elasticsearchTemplateWrapper;
 
     @Override
     protected void bindExecutionContext(ScopedContext executionContext) {
@@ -155,9 +152,8 @@ public class XmEntityMsLepProcessingApplicationListener extends SpringLepProcess
         templates.put(BINDING_SUB_KEY_TEMPLATE_PLAIN_REST, plainRestTemplate);
         templates.put(BINDING_SUB_KEY_REQUEST_FACTORY, requestFactory);
         templates.put(BINDING_SUB_KEY_TEMPLATE_S3, s3Template);
-        templates.put(BINDING_SUB_KEY_TEMPLATE_ELASTIC, elasticsearchTemplate); // TODO switch to elasticsearchTemplateWrapper
+        templates.put(BINDING_SUB_KEY_TEMPLATE_ELASTIC, elasticsearchTemplateWrapper);
         templates.put(BINDING_SUB_KEY_TEMPLATE_KAFKA, kafkaTemplateService);
-        templates.put(BINDING_SUB_KEY_ELASTIC_WRAPPER, elasticsearchTemplateWrapper);
 
         executionContext.setValue(BINDING_KEY_TEMPLATES, templates);
     }

@@ -1,6 +1,7 @@
 package com.icthh.xm.ms.entity.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.icthh.xm.commons.permission.service.PermissionCheckService;
 import com.icthh.xm.commons.tenant.PlainTenant;
 import com.icthh.xm.commons.tenant.Tenant;
 import com.icthh.xm.commons.tenant.TenantContext;
@@ -12,6 +13,7 @@ import com.icthh.xm.ms.entity.config.MappingConfiguration;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.repository.XmEntityRepositoryInternal;
 import com.icthh.xm.ms.entity.repository.search.XmEntitySearchRepository;
+import com.icthh.xm.ms.entity.repository.search.translator.SpelToElasticTranslator;
 import com.icthh.xm.ms.entity.service.search.ElasticsearchTemplateWrapper;
 import lombok.SneakyThrows;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -63,6 +65,8 @@ public class ElasticsearchIndexServiceUnitTest extends AbstractUnitTest {
     MappingConfiguration mappingConfiguration;
     @Mock
     IndexConfiguration indexConfiguration;
+    @Mock
+    private PermissionCheckService permissionCheckService;
 
     @Before
     public void before() {
@@ -91,7 +95,7 @@ public class ElasticsearchIndexServiceUnitTest extends AbstractUnitTest {
             new PageImpl<>(Collections.singletonList(createObject(entityClass))));
 
         elasticsearchTemplateWrapper = new ElasticsearchTemplateWrapper(tenantContextHolder, elasticsearchTemplate,
-            new ObjectMapper(), new DefaultResultMapper());
+            new ObjectMapper(), new DefaultResultMapper(), permissionCheckService, new SpelToElasticTranslator());
 
         service = new ElasticsearchIndexService(
             xmEntityRepository, xmEntitySearchRepository , elasticsearchTemplateWrapper, tenantContextHolder, mappingConfiguration,
