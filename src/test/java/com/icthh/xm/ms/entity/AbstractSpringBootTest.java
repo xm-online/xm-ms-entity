@@ -54,7 +54,7 @@ public abstract class AbstractSpringBootTest {
         elasticsearchTemplate.deleteIndex(indexName);
         elasticsearchTemplate.createIndex(indexName);
 
-        elasticsearchTemplate.putMapping(indexName, "xmentity", getDeatultMapping());
+        elasticsearchTemplate.putMapping(indexName, ElasticsearchTemplateWrapper.INDEX_QUERY_TYPE, getDefaultMapping());
 
         log.info("Elasticsearch index for XmEntity cleaned in {} ms", stopWatch.getTime());
 
@@ -76,13 +76,13 @@ public abstract class AbstractSpringBootTest {
         elasticsearchTemplate.deleteIndex(indexName);
         elasticsearchTemplate.createIndex(indexName);
 
-        elasticsearchTemplate.putMapping(indexName, "xmentity", getDeatultMapping());
+        elasticsearchTemplate.putMapping(indexName, ElasticsearchTemplateWrapper.INDEX_QUERY_TYPE, getDefaultMapping());
 
         log.info("Elasticsearch index for XmEntity initialized in {} ms", stopWatch.getTime());
 
     }
 
-    private String getDeatultMapping() {
+    private String getDefaultMapping() {
         String location = "/config/elastic/test-mapping.json";
         try {
             return IOUtils.toString(new ClassPathResource(location).getInputStream(), UTF_8);

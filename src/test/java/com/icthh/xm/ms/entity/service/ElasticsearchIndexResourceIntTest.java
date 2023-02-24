@@ -1,5 +1,6 @@
 package com.icthh.xm.ms.entity.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.icthh.xm.commons.i18n.error.web.ExceptionTranslator;
 import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_AUTH_CONTEXT;
 import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_TENANT_CONTEXT;
@@ -49,6 +50,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
+import org.springframework.data.elasticsearch.core.ResultsMapper;
 import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
@@ -121,6 +123,12 @@ public class ElasticsearchIndexResourceIntTest extends AbstractSpringBootTest {
     private XmEntitySearchRepository xmEntitySearchRepository;
 
     @Autowired
+    private ObjectMapper objectMapper;
+
+    @Autowired
+    private ResultsMapper resultsMapper;
+
+    @Autowired
     private ElasticsearchTemplate elasticsearchTemplate;
 
     @Autowired
@@ -174,17 +182,20 @@ public class ElasticsearchIndexResourceIntTest extends AbstractSpringBootTest {
         xmEntityRepositoryInternal.deleteAll();
         cleanElasticsearch(tenantContextHolder);
 
-        elasticsearchTemplate.refresh(XmEntity.class);
-
         mappingConfiguration.onRefresh("/config/tenants/RESINTTEST/entity/mapping.json", null);
         indexConfiguration.onRefresh("/config/tenants/RESINTTEST/entity/index_config.json", null);
 
+        ElasticsearchTemplateWrapper elasticsearchTemplateWrapper = new ElasticsearchTemplateWrapper(tenantContextHolder, elasticsearchTemplate,
+            objectMapper, resultsMapper);
         elasticsearchIndexService = new ElasticsearchIndexService(xmEntityRepositoryInternal,
-                                                                  new ElasticsearchTemplateWrapper(tenantContextHolder, elasticsearchTemplate, xmEntitySearchRepository),
+                                                                  xmEntitySearchRepository,
+                                                                  elasticsearchTemplateWrapper,
                                                                   tenantContextHolder,
                                                                   mappingConfiguration,
                                                                   indexConfiguration,
                                                                   executor, entityManager);
+
+        elasticsearchTemplateWrapper.refresh(XmEntity.class);
 
         elasticsearchIndexService.setSelfReference(elasticsearchIndexService);
 

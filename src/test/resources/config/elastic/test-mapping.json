@@ -1,6 +1,6 @@
 {
   "_source": {
-    "excludes": ["targets", "sources", "targets.*", "sources.*", "comments", "comments.*"]
+    "excludes": []
   },
   "properties": {
     "id": {
@@ -10,7 +10,7 @@
       "type": "text"
     },
     "typeKey": {
-      "type": "text"
+      "type": "keyword"
     },
     "stateKey": {
       "type": "keyword"

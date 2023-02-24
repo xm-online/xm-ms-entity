@@ -1,5 +1,6 @@
 package com.icthh.xm.ms.entity.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.icthh.xm.commons.tenant.PlainTenant;
 import com.icthh.xm.commons.tenant.Tenant;
 import com.icthh.xm.commons.tenant.TenantContext;
@@ -20,6 +21,9 @@ import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import static org.mockito.ArgumentMatchers.any;
 import org.mockito.Mock;
+
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -27,6 +31,7 @@ import org.mockito.MockitoAnnotations;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.elasticsearch.core.DefaultResultMapper;
 import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
 import org.springframework.util.ReflectionUtils;
 
@@ -73,16 +78,23 @@ public class ElasticsearchIndexServiceUnitTest extends AbstractUnitTest {
             public Optional<Tenant> getTenant() {
                 return Optional.of(new PlainTenant(new TenantKey("XM")));
             }
+            @Override
+            public Optional<TenantKey> getTenantKey() {
+                return getTenant().map(Tenant::getTenantKey);
+            }
         });
+
+        when(tenantContextHolder.getTenantKey()).thenReturn("XM");
 
         when(xmEntityRepository.count(null)).thenReturn(10L);
         when(xmEntityRepository.findAll(null, PageRequest.of(0, 100))).thenReturn(
             new PageImpl<>(Collections.singletonList(createObject(entityClass))));
 
-        elasticsearchTemplateWrapper = new ElasticsearchTemplateWrapper(tenantContextHolder, elasticsearchTemplate, xmEntitySearchRepository);
+        elasticsearchTemplateWrapper = new ElasticsearchTemplateWrapper(tenantContextHolder, elasticsearchTemplate,
+            new ObjectMapper(), new DefaultResultMapper());
 
         service = new ElasticsearchIndexService(
-            xmEntityRepository, elasticsearchTemplateWrapper, tenantContextHolder, mappingConfiguration,
+            xmEntityRepository, xmEntitySearchRepository , elasticsearchTemplateWrapper, tenantContextHolder, mappingConfiguration,
             indexConfiguration, Executors.newSingleThreadExecutor(), entityManager);
 
         service.setSelfReference(service);
@@ -104,7 +116,7 @@ public class ElasticsearchIndexServiceUnitTest extends AbstractUnitTest {
 
         verify(elasticsearchTemplate).deleteIndex("xm_xmentity");
         verify(elasticsearchTemplate).createIndex("xm_xmentity");
-        verify(elasticsearchTemplate).putMapping(entityClass);
+        verify(elasticsearchTemplate).putMapping(eq("xm_xmentity"), eq("xmentity"), anyString());
 
         verify(xmEntityRepository, times(4)).count(any());
 

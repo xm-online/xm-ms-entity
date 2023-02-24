@@ -1,5 +1,6 @@
 package com.icthh.xm.ms.entity.service;
 
+import com.icthh.xm.ms.entity.repository.search.XmEntitySearchRepository;
 import com.icthh.xm.ms.entity.service.search.ElasticsearchTemplateWrapper;
 import static org.apache.commons.lang3.ObjectUtils.defaultIfNull;
 
@@ -59,6 +60,7 @@ public class ElasticsearchIndexService {
     private static final String XM_ENTITY_FIELD_ID = "id";
 
     private final XmEntityRepositoryInternal xmEntityRepositoryInternal;
+    private final XmEntitySearchRepository xmEntitySearchRepository;
     private final ElasticsearchTemplateWrapper elasticsearchTemplateWrapper;
     private final TenantContextHolder tenantContextHolder;
     private final MappingConfiguration mappingConfiguration;
@@ -74,6 +76,7 @@ public class ElasticsearchIndexService {
     private ElasticsearchIndexService selfReference;
 
     public ElasticsearchIndexService(XmEntityRepositoryInternal xmEntityRepositoryInternal,
+                                     XmEntitySearchRepository xmEntitySearchRepository,
                                      ElasticsearchTemplateWrapper elasticsearchTemplateWrapper,
                                      TenantContextHolder tenantContextHolder,
                                      MappingConfiguration mappingConfiguration,
@@ -81,6 +84,7 @@ public class ElasticsearchIndexService {
                                      @Qualifier("taskExecutor") Executor executor,
                                      EntityManager entityManager) {
         this.xmEntityRepositoryInternal = xmEntityRepositoryInternal;
+        this.xmEntitySearchRepository = xmEntitySearchRepository;
         this.elasticsearchTemplateWrapper = elasticsearchTemplateWrapper;
         this.tenantContextHolder = tenantContextHolder;
         this.mappingConfiguration = mappingConfiguration;
@@ -248,7 +252,7 @@ public class ElasticsearchIndexService {
                 log.info("Indexing page {} of {}, pageSize {}", i, xmEntityRepositoryInternal.count(spec) / PAGE_SIZE, PAGE_SIZE);
                 Page<XmEntity> results = xmEntityRepositoryInternal.findAll(spec, page);
                 results.map(entity -> loadEntityRelationships(relationshipGetters, entity));
-                elasticsearchTemplateWrapper.saveAll(results.getContent());
+                xmEntitySearchRepository.saveAll(results.getContent());
                 reindexed += results.getContent().size();
                 entityManager.clear();
             }

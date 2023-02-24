@@ -473,7 +473,7 @@ public class XmEntityServiceIntTest extends AbstractSpringBootTest {
     @Test
     @WithMockUser(authorities = "SUPER-ADMIN")
     public void testAdditionalMapping() {
-        elasticsearchIndexService.reindexAll();
+
 
         Map<String, Object> xmEntityData = new HashMap<>();
         xmEntityData.put("targetField", "C-D");
@@ -485,6 +485,9 @@ public class XmEntityServiceIntTest extends AbstractSpringBootTest {
             .data(of("targetField", "D-C"));
         xmEntityService.save(entity1);
         xmEntityService.save(entity2);
+
+        elasticsearchIndexService.reindexAll();
+
         PageRequest page = PageRequest.of(0, 10, Sort.by("key"));
         Page<XmEntity> search = xmEntityService.search("data.targetField: C-D", page, null);
         assertEquals(search.getContent(), asList(entity1, entity2));
@@ -762,6 +765,8 @@ public class XmEntityServiceIntTest extends AbstractSpringBootTest {
 
             return asList(entity1, entity2, entity3, entity4, entity5);
         });
+
+        elasticsearchIndexService.reindexAll();
 
         List<XmEntity> result = xmEntityService.searchXmEntitiesToLink(IdOrKey.of(entities.get(0).getId()),
             "TEST_SEARCH", "TEST_SEARCH_LINK", "name: name",

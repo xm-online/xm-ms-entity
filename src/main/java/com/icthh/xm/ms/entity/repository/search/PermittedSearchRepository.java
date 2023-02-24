@@ -5,8 +5,10 @@ import static org.elasticsearch.index.query.QueryBuilders.queryStringQuery;
 import static org.springframework.data.elasticsearch.core.query.Query.DEFAULT_PAGE;
 
 import com.icthh.xm.commons.permission.service.PermissionCheckService;
+import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.ms.entity.repository.search.translator.SpelToElasticTranslator;
 import com.icthh.xm.ms.entity.service.dto.SearchDto;
+import com.icthh.xm.ms.entity.service.search.ElasticsearchTemplateWrapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -34,6 +36,8 @@ public class PermittedSearchRepository {
     private final PermissionCheckService permissionCheckService;
     private final SpelToElasticTranslator spelToElasticTranslator;
     private final ElasticsearchTemplate elasticsearchTemplate;
+    private final TenantContextHolder tenantContextHolder;
+    private final ElasticsearchTemplateWrapper elasticsearchTemplateWrapper;
 
     /**
      * Search permitted entities.
@@ -43,7 +47,7 @@ public class PermittedSearchRepository {
      * @return permitted entities
      */
     public <T> List<T> search(String query, Class<T> entityClass, String privilegeKey) {
-        return getElasticsearchTemplate().queryForList(buildQuery(query, null, privilegeKey, null), entityClass);
+        return elasticsearchTemplateWrapper.queryForList(buildQuery(query, null, privilegeKey, null), entityClass);
     }
 
     /**
@@ -81,7 +85,7 @@ public class PermittedSearchRepository {
         String scrollId = null;
         List<T> resultList = new ArrayList<>();
         try {
-            ScrolledPage<T> scrollResult = (ScrolledPage<T>) getElasticsearchTemplate()
+            ScrolledPage<T> scrollResult = (ScrolledPage<T>) elasticsearchTemplateWrapper
                 .startScroll(scrollTimeInMillis, buildQuery(query, pageable, privilegeKey, null), entityClass);
 
             scrollId = scrollResult.getScrollId();
@@ -90,12 +94,11 @@ public class PermittedSearchRepository {
                 resultList.addAll(scrollResult.getContent());
                 scrollId = scrollResult.getScrollId();
 
-                scrollResult = (ScrolledPage<T>) getElasticsearchTemplate()
-                    .continueScroll(scrollId, scrollTimeInMillis, entityClass);
+                scrollResult = (ScrolledPage<T>) elasticsearchTemplateWrapper.continueScroll(scrollId, scrollTimeInMillis, entityClass);
             }
         } finally {
             if (nonNull(scrollId)) {
-                getElasticsearchTemplate().clearScroll(scrollId);
+                elasticsearchTemplateWrapper.clearScroll(scrollId);
             }
         }
         return new PageImpl<>(resultList, pageable, resultList.size());
@@ -106,7 +109,10 @@ public class PermittedSearchRepository {
 
         log.debug("Executing DSL '{}'", permittedQuery);
 
+        String indexName = ElasticsearchTemplateWrapper.composeIndexName(tenantContextHolder.getTenantKey());
         return new NativeSearchQueryBuilder()
+            .withIndices(indexName)
+            .withTypes(ElasticsearchTemplateWrapper.INDEX_QUERY_TYPE)
             .withQuery(queryStringQuery(permittedQuery))
             .withSourceFilter(fetchSourceFilter)
             .withPageable(pageable == null ? DEFAULT_PAGE : pageable)
@@ -145,6 +151,6 @@ public class PermittedSearchRepository {
             fetchSourceFilter = new FetchSourceFilter(searchDto.getFetchSourceFilter().getIncludes(), searchDto.getFetchSourceFilter().getExcludes());
         }
         SearchQuery query = buildQuery(searchDto.getQuery(), searchDto.getPageable(), privilegeKey, fetchSourceFilter);
-        return getElasticsearchTemplate().queryForPage(query, searchDto.getEntityClass());
+        return elasticsearchTemplateWrapper.queryForPage(query, searchDto.getEntityClass());
     }
 }

@@ -12,8 +12,10 @@ import com.icthh.xm.ms.entity.domain.Content;
 import org.elasticsearch.client.Client;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.elasticsearch.core.DefaultResultMapper;
 import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
 import org.springframework.data.elasticsearch.core.EntityMapper;
+import org.springframework.data.elasticsearch.core.ResultsMapper;
 import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
 import org.springframework.stereotype.Component;
 
@@ -28,6 +30,13 @@ public class ElasticsearchConfiguration {
                                                        SquigglyContextProvider contextProvider) {
         ObjectMapper objectMapper = jackson2ObjectMapperBuilder.createXmlMapper(false).build();
         return new ElasticsearchTemplate(client, new CustomEntityMapper(objectMapper, contextProvider));
+    }
+
+    @Bean
+    public ResultsMapper resultsMapper(Jackson2ObjectMapperBuilder jackson2ObjectMapperBuilder,
+                                       SquigglyContextProvider contextProvider) {
+        ObjectMapper objectMapper = jackson2ObjectMapperBuilder.createXmlMapper(false).build();
+        return new DefaultResultMapper(new CustomEntityMapper(objectMapper, contextProvider));
     }
 
     @Component("indexName")

@@ -1,8 +1,10 @@
 package com.icthh.xm.ms.entity.repository.search;
 
 import com.icthh.xm.commons.permission.service.PermissionCheckService;
+import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.repository.search.translator.SpelToElasticTranslator;
+import com.icthh.xm.ms.entity.service.search.ElasticsearchTemplateWrapper;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import static org.apache.commons.lang.StringUtils.isEmpty;
@@ -18,6 +20,7 @@ import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQuery;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import static org.springframework.data.elasticsearch.core.query.Query.DEFAULT_PAGE;
+
 import org.springframework.stereotype.Repository;
 
 import java.util.Set;
@@ -28,10 +31,18 @@ public class XmEntityPermittedSearchRepository extends PermittedSearchRepository
 
     private static final String TYPE_KEY = "typeKey";
 
+    private final TenantContextHolder tenantContextHolder;
+    private final ElasticsearchTemplateWrapper elasticsearchTemplateWrapper;
+
     public XmEntityPermittedSearchRepository(PermissionCheckService permissionCheckService,
                                              SpelToElasticTranslator spelToElasticTranslator,
-                                             ElasticsearchTemplate elasticsearchTemplate) {
-        super(permissionCheckService, spelToElasticTranslator, elasticsearchTemplate);
+                                             ElasticsearchTemplate elasticsearchTemplate,
+                                             TenantContextHolder tenantContextHolder,
+                                             ElasticsearchTemplateWrapper elasticsearchTemplateWrapper) {
+        super(permissionCheckService, spelToElasticTranslator, elasticsearchTemplate,
+            tenantContextHolder, elasticsearchTemplateWrapper);
+        this.tenantContextHolder = tenantContextHolder;
+        this.elasticsearchTemplateWrapper = elasticsearchTemplateWrapper;
     }
 
     /**
@@ -56,12 +67,15 @@ public class XmEntityPermittedSearchRepository extends PermittedSearchRepository
 
         log.debug("Executing DSL '{}'", esQuery);
 
+        String indexName = ElasticsearchTemplateWrapper.composeIndexName(tenantContextHolder.getTenantKey());
         NativeSearchQuery queryBuilder = new NativeSearchQueryBuilder()
+            .withIndices(indexName)
+            .withTypes(ElasticsearchTemplateWrapper.INDEX_QUERY_TYPE)
             .withQuery(esQuery)
             .withPageable(pageable == null ? DEFAULT_PAGE : pageable)
             .build();
 
-        return getElasticsearchTemplate().queryForPage(queryBuilder, XmEntity.class);
+        return elasticsearchTemplateWrapper.queryForPage(queryBuilder, XmEntity.class);
     }
 
     private BoolQueryBuilder typeKeyQuery(String typeKey) {
@@ -88,9 +102,11 @@ public class XmEntityPermittedSearchRepository extends PermittedSearchRepository
 
         NativeSearchQuery queryBuilder = new NativeSearchQueryBuilder()
             .withQuery(esQuery)
+            .withIndices(elasticsearchTemplateWrapper.getIndexName())
+            .withTypes(ElasticsearchTemplateWrapper.INDEX_QUERY_TYPE)
             .withPageable(pageable == null ? DEFAULT_PAGE : pageable)
             .build();
 
-        return getElasticsearchTemplate().queryForPage(queryBuilder, XmEntity.class);
+        return elasticsearchTemplateWrapper.queryForPage(queryBuilder, XmEntity.class);
     }
 }

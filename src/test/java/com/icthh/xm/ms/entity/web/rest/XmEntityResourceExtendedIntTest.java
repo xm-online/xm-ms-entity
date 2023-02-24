@@ -2232,6 +2232,8 @@ public class XmEntityResourceExtendedIntTest extends AbstractSpringBootTest {
 
         xmEntitySearchRepository.save(source);
 
+        xmEntitySearchRepository.refresh();
+
         assertNotNull(source.getId());
         Integer srcId = source.getId().intValue();
         String tgtStartDate = DEFAULT_START_DATE.toString();
