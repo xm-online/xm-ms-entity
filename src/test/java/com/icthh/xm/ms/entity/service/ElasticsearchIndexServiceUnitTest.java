@@ -33,8 +33,6 @@ import org.mockito.MockitoAnnotations;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.elasticsearch.core.DefaultResultMapper;
-import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
 import org.springframework.util.ReflectionUtils;
 
 import javax.persistence.EntityManager;
@@ -48,14 +46,12 @@ import java.util.concurrent.Executors;
 public class ElasticsearchIndexServiceUnitTest extends AbstractUnitTest {
 
     private ElasticsearchIndexService service;
+    @Mock
     private ElasticsearchTemplateWrapper elasticsearchTemplateWrapper;
     @Mock
     private XmEntityRepositoryInternal xmEntityRepository;
     @Mock
     private XmEntitySearchRepository xmEntitySearchRepository;
-
-    @Mock
-    private ElasticsearchTemplate elasticsearchTemplate;
 
     @Mock
     private EntityManager entityManager;
@@ -65,8 +61,6 @@ public class ElasticsearchIndexServiceUnitTest extends AbstractUnitTest {
     MappingConfiguration mappingConfiguration;
     @Mock
     IndexConfiguration indexConfiguration;
-    @Mock
-    private PermissionCheckService permissionCheckService;
 
     @Before
     public void before() {
@@ -94,9 +88,6 @@ public class ElasticsearchIndexServiceUnitTest extends AbstractUnitTest {
         when(xmEntityRepository.findAll(null, PageRequest.of(0, 100))).thenReturn(
             new PageImpl<>(Collections.singletonList(createObject(entityClass))));
 
-        elasticsearchTemplateWrapper = new ElasticsearchTemplateWrapper(tenantContextHolder, elasticsearchTemplate,
-            new ObjectMapper(), new DefaultResultMapper(), permissionCheckService, new SpelToElasticTranslator());
-
         service = new ElasticsearchIndexService(
             xmEntityRepository, xmEntitySearchRepository , elasticsearchTemplateWrapper, tenantContextHolder, mappingConfiguration,
             indexConfiguration, Executors.newSingleThreadExecutor(), entityManager);
@@ -118,9 +109,9 @@ public class ElasticsearchIndexServiceUnitTest extends AbstractUnitTest {
 
         Class<XmEntity> entityClass = XmEntity.class;
 
-        verify(elasticsearchTemplate).deleteIndex("xm_xmentity");
-        verify(elasticsearchTemplate).createIndex("xm_xmentity");
-        verify(elasticsearchTemplate).putMapping(eq("xm_xmentity"), eq("xmentity"), anyString());
+        verify(elasticsearchTemplateWrapper).deleteIndex("xm_xmentity");
+        verify(elasticsearchTemplateWrapper).createIndex("xm_xmentity");
+        verify(elasticsearchTemplateWrapper).putMapping(entityClass);
 
         verify(xmEntityRepository, times(4)).count(any());
 

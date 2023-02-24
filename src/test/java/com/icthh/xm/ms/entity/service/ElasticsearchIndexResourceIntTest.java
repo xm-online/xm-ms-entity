@@ -52,7 +52,6 @@ import static org.mockito.Mockito.when;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.elasticsearch.core.ResultsMapper;
 import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
@@ -123,12 +122,6 @@ public class ElasticsearchIndexResourceIntTest extends AbstractSpringBootTest {
 
     @Autowired
     private XmEntitySearchRepository xmEntitySearchRepository;
-
-    @Autowired
-    private ObjectMapper objectMapper;
-
-    @Autowired
-    private ResultsMapper resultsMapper;
 
     @Autowired
     private ElasticsearchTemplateWrapper elasticsearchTemplateWrapper;
