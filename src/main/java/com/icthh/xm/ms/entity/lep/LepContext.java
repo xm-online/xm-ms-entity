@@ -31,7 +31,7 @@ import com.icthh.xm.ms.entity.service.XmEntityService;
 import com.icthh.xm.ms.entity.service.mail.MailService;
 import com.icthh.xm.ms.entity.service.metrics.CustomMetricsContext;
 import com.icthh.xm.ms.entity.service.metrics.MetricsAdapter;
-import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
+import com.icthh.xm.ms.entity.service.search.ElasticsearchTemplateWrapper;
 import org.springframework.web.client.RestTemplate;
 
 public class LepContext {
@@ -85,7 +85,7 @@ public class LepContext {
         public RestTemplate plainRest;
         public RestTemplateConfiguration.PathTimeoutHttpComponentsClientHttpRequestFactory requestFactory;
         public AmazonS3Template s3;
-        public ElasticsearchTemplate elastic;
+        public ElasticsearchTemplateWrapper elastic;
         public KafkaTemplateService kafka;
     }
 

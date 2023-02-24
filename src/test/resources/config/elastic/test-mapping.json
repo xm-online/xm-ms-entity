@@ -1,0 +1,22 @@
+{
+  "_source": {
+    "excludes": []
+  },
+  "properties": {
+    "id": {
+      "type" : "long"
+    },
+    "description": {
+      "type": "text"
+    },
+    "typeKey": {
+      "type": "keyword"
+    },
+    "stateKey": {
+      "type": "keyword"
+    },
+    "key": {
+      "type": "keyword"
+    }
+  }
+}

@@ -33,7 +33,6 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.elasticsearch.core.query.FetchSourceFilter;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -252,7 +251,7 @@ public class XmEntityResource {
             .query(query)
             .pageable(pageable)
             .entityClass(XmEntity.class)
-            .fetchSourceFilter(new FetchSourceFilter(fetchSourceFilterDto.getIncludes(), fetchSourceFilterDto.getExcludes()))
+            .fetchSourceFilter(fetchSourceFilterDto)
             .build();
         Page<XmEntity> page = xmEntityService.searchV2(searchDto, null);
         HttpHeaders headers = PaginationUtil

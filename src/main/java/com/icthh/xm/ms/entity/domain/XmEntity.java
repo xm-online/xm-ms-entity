@@ -1,39 +1,35 @@
 package com.icthh.xm.ms.entity.domain;
 
-import static com.icthh.xm.ms.entity.config.Constants.REGEX_EOL;
-import static com.icthh.xm.ms.entity.validator.NotNullBySpecField.KEY;
-import static com.icthh.xm.ms.entity.validator.NotNullBySpecField.NAME;
-import static javax.persistence.CascadeType.ALL;
-import static javax.persistence.CascadeType.MERGE;
-import static javax.persistence.CascadeType.PERSIST;
-import static javax.persistence.CascadeType.REMOVE;
-import static org.apache.commons.lang3.StringUtils.removeAll;
-
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.deser.std.UntypedObjectDeserializer;
 import com.icthh.xm.commons.migration.db.jsonb.Jsonb;
+import static com.icthh.xm.ms.entity.config.Constants.REGEX_EOL;
 import com.icthh.xm.ms.entity.domain.converter.MapToStringConverter;
 import com.icthh.xm.ms.entity.domain.listener.AvatarUrlListener;
 import com.icthh.xm.ms.entity.domain.listener.XmEntityElasticSearchListener;
 import com.icthh.xm.ms.entity.validator.JsonData;
 import com.icthh.xm.ms.entity.validator.NotNull;
-import com.icthh.xm.ms.entity.validator.NotNullBySpecField;
+import static com.icthh.xm.ms.entity.validator.NotNullBySpecField.KEY;
+import static com.icthh.xm.ms.entity.validator.NotNullBySpecField.NAME;
 import com.icthh.xm.ms.entity.validator.StateKey;
 import com.icthh.xm.ms.entity.validator.TypeKey;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
-import java.io.Serializable;
-import java.time.Instant;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
-import java.util.UUID;
-import java.util.function.BiConsumer;
+import static javax.persistence.CascadeType.ALL;
+import static javax.persistence.CascadeType.MERGE;
+import static javax.persistence.CascadeType.PERSIST;
+import static javax.persistence.CascadeType.REMOVE;
+import lombok.Getter;
+import lombok.Setter;
+import org.apache.commons.collections4.CollectionUtils;
+import static org.apache.commons.lang3.StringUtils.removeAll;
+import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.hibernate.collection.spi.PersistentCollection;
+import org.springframework.data.domain.Persistable;
+
 import javax.persistence.Column;
 import javax.persistence.Convert;
 import javax.persistence.Entity;
@@ -49,16 +45,16 @@ import javax.persistence.Table;
 import javax.persistence.Transient;
 import javax.persistence.Version;
 import javax.validation.Valid;
-import lombok.Getter;
-import lombok.Setter;
-import org.apache.commons.collections4.CollectionUtils;
-import org.hibernate.annotations.Cache;
-import org.hibernate.annotations.CacheConcurrencyStrategy;
-import org.hibernate.collection.spi.PersistentCollection;
-import org.springframework.data.domain.Persistable;
-import org.springframework.data.elasticsearch.annotations.Document;
-import org.springframework.data.elasticsearch.annotations.Field;
-import org.springframework.data.elasticsearch.annotations.FieldType;
+import java.io.Serializable;
+import java.time.Instant;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.UUID;
+import java.util.function.BiConsumer;
 
 /**
  * Represents any XM entity like Account, Product Offering, Product, Order, Handling,
@@ -72,7 +68,7 @@ import org.springframework.data.elasticsearch.annotations.FieldType;
 @Entity
 @Table(name = "xm_entity")
 @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
-@Document(indexName = "#{@indexName.prefix}xmentity")
+//@Document(indexName = "#{@indexName.prefix}xmentity")
 // load tags and locations eagerly in repository queries hinted by @EntityGraph("xmEntityGraph")
 @NamedEntityGraph(name = "xmEntityGraph",
     attributeNodes = {
@@ -106,7 +102,6 @@ public class XmEntity implements Serializable, Persistable<Long> {
      */
     @ApiModelProperty(value = "Additional lateral identification for this entity could be defined by template Example: PO-1 for Product Offering, e-Mail or MSISDN for account, external Id for Order etc). Key is not full unique entity identification. Few entities could have one key, but only one entity could be addressable at one time, as other should be ended by endDate property.", required = true)
     @Column(name = "jhi_key", nullable = false)
-    @Field(type = FieldType.Keyword)
     private String key;
 
     /**
@@ -120,7 +115,6 @@ public class XmEntity implements Serializable, Persistable<Long> {
     @javax.validation.constraints.NotNull
     @ApiModelProperty(value = "Key reference to the configured Entity Type. Convention is capital letter with dash '-'. Example: ACCOUNT, PRODUCT-OFFERING, PRICE etc. Entity Sub Types could be separated by dot '.'. Convention is same as for Type. Example: ACCOUNT.ADMIN, ACCOUNT.USER, ACCOUNT.PARTNER for type ACCOUNT or PRODUCT-OFFERING.CAMPAIGN, PRODUCT-OFFERING.RATE-PLAN etc.", required = true)
     @Column(name = "type_key", nullable = false)
-    @Field(type = FieldType.Keyword)
     private String typeKey;
 
     /**
@@ -130,7 +124,6 @@ public class XmEntity implements Serializable, Persistable<Long> {
      */
     @ApiModelProperty(value = "Key reference to the configured Entity State. Entity State matrix related to the pair of Entity Type. Convention is same as for type (ACTIVE, ORDERED, PRODUCTION, CANCELED, CANCELED.MANUAL etc).")
     @Column(name = "state_key")
-    @Field(type = FieldType.Keyword)
     private String stateKey;
 
     /**

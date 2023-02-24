@@ -28,10 +28,10 @@ import com.icthh.xm.ms.entity.service.XmTenantLifecycleService;
 import com.icthh.xm.ms.entity.service.mail.MailService;
 import com.icthh.xm.ms.entity.service.metrics.CustomMetricsContext;
 import com.icthh.xm.ms.entity.service.metrics.MetricsAdapter;
+import com.icthh.xm.ms.entity.service.search.ElasticsearchTemplateWrapper;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
 import org.springframework.web.client.RestTemplate;
 
 /**
@@ -63,7 +63,7 @@ public class LepAppEventListenerConfiguration {
         PermissionCheckService permissionCheckService,
         TenantLepResource tenantLepResource,
         AmazonS3Template amazonS3Template,
-        ElasticsearchTemplate elasticsearchTemplate,
+        ElasticsearchTemplateWrapper elasticsearchTemplateWrapper,
         PermittedSearchRepository permittedSearchRepository,
         ElasticsearchIndexService elasticsearchIndexService,
         SeparateTransactionExecutor transactionExecutor,
@@ -79,7 +79,7 @@ public class LepAppEventListenerConfiguration {
             mailService, tenantConfigService, attachmentService, loadBalancedRestTemplateWithTimeout, plainRestTemplate,
             requestFactory, locationService, tagService, profileEventProducer, commentService,
             commonsService, permissionCheckService, eventService, calendarService, tenantLepResource,
-            amazonS3Template, elasticsearchTemplate, permittedSearchRepository, elasticsearchIndexService,
+            amazonS3Template, elasticsearchTemplateWrapper, permittedSearchRepository, elasticsearchIndexService,
             transactionExecutor, customMetricsContext, kafkaTemplateService, metricsAdapter,
             eventPublisher, domainEventFactory);
     }

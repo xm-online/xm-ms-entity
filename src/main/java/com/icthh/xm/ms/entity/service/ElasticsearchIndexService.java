@@ -1,5 +1,7 @@
 package com.icthh.xm.ms.entity.service;
 
+import com.icthh.xm.ms.entity.repository.search.XmEntitySearchRepository;
+import com.icthh.xm.ms.entity.service.search.ElasticsearchTemplateWrapper;
 import static org.apache.commons.lang3.ObjectUtils.defaultIfNull;
 
 import com.codahale.metrics.annotation.Timed;
@@ -12,7 +14,6 @@ import com.icthh.xm.ms.entity.config.IndexConfiguration;
 import com.icthh.xm.ms.entity.config.MappingConfiguration;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.repository.XmEntityRepositoryInternal;
-import com.icthh.xm.ms.entity.repository.search.XmEntitySearchRepository;
 import lombok.AccessLevel;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -23,7 +24,6 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -61,7 +61,7 @@ public class ElasticsearchIndexService {
 
     private final XmEntityRepositoryInternal xmEntityRepositoryInternal;
     private final XmEntitySearchRepository xmEntitySearchRepository;
-    private final ElasticsearchTemplate elasticsearchTemplate;
+    private final ElasticsearchTemplateWrapper elasticsearchTemplateWrapper;
     private final TenantContextHolder tenantContextHolder;
     private final MappingConfiguration mappingConfiguration;
     private final IndexConfiguration indexConfiguration;
@@ -77,7 +77,7 @@ public class ElasticsearchIndexService {
 
     public ElasticsearchIndexService(XmEntityRepositoryInternal xmEntityRepositoryInternal,
                                      XmEntitySearchRepository xmEntitySearchRepository,
-                                     ElasticsearchTemplate elasticsearchTemplate,
+                                     ElasticsearchTemplateWrapper elasticsearchTemplateWrapper,
                                      TenantContextHolder tenantContextHolder,
                                      MappingConfiguration mappingConfiguration,
                                      IndexConfiguration indexConfiguration,
@@ -85,7 +85,7 @@ public class ElasticsearchIndexService {
                                      EntityManager entityManager) {
         this.xmEntityRepositoryInternal = xmEntityRepositoryInternal;
         this.xmEntitySearchRepository = xmEntitySearchRepository;
-        this.elasticsearchTemplate = elasticsearchTemplate;
+        this.elasticsearchTemplateWrapper = elasticsearchTemplateWrapper;
         this.tenantContextHolder = tenantContextHolder;
         this.mappingConfiguration = mappingConfiguration;
         this.indexConfiguration = indexConfiguration;
@@ -269,21 +269,24 @@ public class ElasticsearchIndexService {
 
         StopWatch stopWatch = StopWatch.createStarted();
 
-        elasticsearchTemplate.deleteIndex(clazz);
+        TenantKey tenantKey = TenantContextUtils.getRequiredTenantKey(tenantContextHolder);
+        String idxKey = ElasticsearchTemplateWrapper.composeIndexName(tenantKey.getValue());
+
+        elasticsearchTemplateWrapper.deleteIndex(idxKey);
         try {
             if (indexConfiguration.isConfigExists()) {
-                elasticsearchTemplate.createIndex(clazz, indexConfiguration.getConfiguration());
+                elasticsearchTemplateWrapper.createIndex(idxKey, indexConfiguration.getConfiguration());
             } else {
-                elasticsearchTemplate.createIndex(clazz);
+                elasticsearchTemplateWrapper.createIndex(idxKey);
             }
         } catch (ResourceAlreadyExistsException e) {
             log.info("Do nothing. Index was already concurrently recreated by some other service");
         }
 
         if (mappingConfiguration.isMappingExists()) {
-            elasticsearchTemplate.putMapping(clazz, mappingConfiguration.getMapping());
+            elasticsearchTemplateWrapper.putMapping(clazz, mappingConfiguration.getMapping());
         } else {
-            elasticsearchTemplate.putMapping(clazz);
+            elasticsearchTemplateWrapper.putMapping(clazz);
         }
         log.info("elasticsearch index was recreated for {} in {} ms",
                  XmEntity.class.getSimpleName(), stopWatch.getTime());
