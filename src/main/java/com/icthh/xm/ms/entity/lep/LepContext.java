@@ -85,7 +85,6 @@ public class LepContext {
         public RestTemplate plainRest;
         public RestTemplateConfiguration.PathTimeoutHttpComponentsClientHttpRequestFactory requestFactory;
         public AmazonS3Template s3;
-        @Deprecated // switch it to elasticsearchTemplateWrapper
         public ElasticsearchTemplateWrapper elastic;
         public KafkaTemplateService kafka;
     }
