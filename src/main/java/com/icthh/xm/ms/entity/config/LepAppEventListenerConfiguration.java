@@ -28,6 +28,7 @@ import com.icthh.xm.ms.entity.service.XmTenantLifecycleService;
 import com.icthh.xm.ms.entity.service.mail.MailService;
 import com.icthh.xm.ms.entity.service.metrics.CustomMetricsContext;
 import com.icthh.xm.ms.entity.service.metrics.MetricsAdapter;
+import com.icthh.xm.ms.entity.service.search.ElasticsearchTemplateWrapper;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -63,7 +64,7 @@ public class LepAppEventListenerConfiguration {
         PermissionCheckService permissionCheckService,
         TenantLepResource tenantLepResource,
         AmazonS3Template amazonS3Template,
-        ElasticsearchTemplate elasticsearchTemplate,
+        ElasticsearchTemplate elasticsearchTemplate, // TODO switch it to ElasticsearchTemplateWrapper
         PermittedSearchRepository permittedSearchRepository,
         ElasticsearchIndexService elasticsearchIndexService,
         SeparateTransactionExecutor transactionExecutor,
@@ -71,7 +72,8 @@ public class LepAppEventListenerConfiguration {
         KafkaTemplateService kafkaTemplateService,
         MetricsAdapter metricsAdapter,
         EventPublisher eventPublisher,
-        DomainEventFactory domainEventFactory
+        DomainEventFactory domainEventFactory,
+        ElasticsearchTemplateWrapper elasticsearchTemplateWrapper
     ) {
 
         return new XmEntityMsLepProcessingApplicationListener(xmEntityService,
@@ -81,7 +83,7 @@ public class LepAppEventListenerConfiguration {
             commonsService, permissionCheckService, eventService, calendarService, tenantLepResource,
             amazonS3Template, elasticsearchTemplate, permittedSearchRepository, elasticsearchIndexService,
             transactionExecutor, customMetricsContext, kafkaTemplateService, metricsAdapter,
-            eventPublisher, domainEventFactory);
+            eventPublisher, domainEventFactory, elasticsearchTemplateWrapper);
     }
 
 }
