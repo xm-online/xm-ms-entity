@@ -106,6 +106,20 @@ public class FunctionResourceMvcIntTest extends AbstractWebMvcTest {
 
     @Test
     @SneakyThrows
+    public void testCallPatchFunction() {
+        when(functionService.execute("SOME-FUNCTION_KEY.TROLOLO", of("var1", "val1", "var2", "val2"), "PATCH"))
+            .thenReturn(new FunctionContext().data(of("test", "result")));
+        mockMvc.perform(patch("/api/functions/SOME-FUNCTION_KEY.TROLOLO")
+            .contentType(TestUtil.APPLICATION_JSON_UTF8)
+            .content("{\"var1\":\"val1\", \"var2\": \"val2\"}"))
+            .andDo(print())
+            .andExpect(jsonPath("$.data.test").value("result"))
+            .andExpect(status().isOk());
+        verify(functionService).execute(eq("SOME-FUNCTION_KEY.TROLOLO"), eq(of("var1", "val1", "var2", "val2")), eq("PATCH"));
+    }
+
+    @Test
+    @SneakyThrows
     public void testCallDeleteFunction() {
         when(functionService.execute("SOME-FUNCTION_KEY.TROLOLO", null, "DELETE"))
                 .thenReturn(new FunctionContext().data(of("test", "result")));
