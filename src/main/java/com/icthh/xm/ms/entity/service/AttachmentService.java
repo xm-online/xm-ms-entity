@@ -21,6 +21,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.unit.DataSize;
 
 import java.util.List;
 import java.util.Objects;
@@ -37,6 +38,7 @@ public class AttachmentService {
 
     public static final String ZERO_RESTRICTION = "error.attachment.zero";
     public static final String MAX_RESTRICTION = "error.attachment.max";
+    public static final String SIZE_RESTRICTION = "error.attachment.size";
 
     private final AttachmentRepository attachmentRepository;
     private final ContentService contentService;
@@ -74,6 +76,9 @@ public class AttachmentService {
 
 
         AttachmentSpec spec = getSpec(entity, attachment);
+
+        // check file size by spec
+        assertFileSize(spec, attachment.getContent());
 
         //check only for addingNew
         if (attachment.getId() == null && spec.getMax() != null) {
@@ -223,6 +228,18 @@ public class AttachmentService {
     protected void assertLimitRestriction(AttachmentSpec spec, XmEntity entity) {
         if (attachmentRepository.countByXmEntityIdAndTypeKey(entity.getId(), spec.getKey()) >= spec.getMax()) {
             throw new BusinessException(MAX_RESTRICTION, "Spec for " + spec.getKey() + " allows to add " + spec.getMax() + " elements");
+        }
+    }
+
+
+    protected void assertFileSize(AttachmentSpec spec, Content content) {
+        if (content == null || content.getValue() == null || content.getValue().length == 0) {
+            return;
+        }
+        DataSize dataSize = DataSize.parse(spec.getSize());
+
+        if (dataSize.toBytes() < content.getValue().length) {
+            throw new BusinessException(SIZE_RESTRICTION, "Spec for " + spec.getKey() + " allows to add file max size " + spec.getSize());
         }
     }
 
