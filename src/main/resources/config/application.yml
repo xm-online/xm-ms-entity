@@ -229,8 +229,6 @@ application:
     elasticSchemaSuffix: ""
     requestCacheIgnoredPathPatternList: /api/functions/*/upload
     periodicMetricPoolSize: 1
-    maxUploadFileSize: 1073741824
-    maxUploadSize: 1073741824
     kafkaMetric:
         enabled: true
         connectionTimeoutTopic: 1000
