@@ -1,0 +1,44 @@
+---
+types:
+    - key: XM
+      dataSpec: |
+          {
+              "type": "object",
+              "properties": {
+                  "uaa": {
+                      "$ref": "#/xmEntityDefinition/userDetails"
+                  },
+                  "entity": {
+                    "$ref": "#/xmEntityDefinition/userDetails/UserDetails"
+                }
+              },
+              "xmEntityDefinition": {
+                  "userDetails": {
+                      "UserDetails": {
+                          "type": "object",
+                          "unit": {
+                              "$ref": "#/xmEntityDefinition/create/User"
+                          }
+                      }
+                  },
+                  "create": {
+                      "User": {
+                          "type": "object",
+                          "success": {
+                              "type": "boolean"
+                          }
+                      }
+                  }
+              }
+          }
+definitions:
+    - key: create
+      ref: xmentityspec/definitions/specification-definitions.json
+    - key: userDetails
+      value: |
+          {
+              "UserDetails": {
+                "type": "object",
+                "unit": { "$ref": "#/xmEntityDefinition/create/User" }
+              }
+          }

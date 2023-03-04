@@ -3,12 +3,14 @@ package com.icthh.xm.ms.entity.service.privileges.custom;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator;
 import com.icthh.xm.commons.config.client.repository.CommonConfigRepository;
 import com.icthh.xm.commons.config.domain.Configuration;
 import com.icthh.xm.commons.logging.aop.IgnoreLogginAspect;
-import com.icthh.xm.commons.permission.config.PermissionProperties;
-import com.icthh.xm.commons.permission.service.RoleService;
+import com.icthh.xm.ms.entity.config.XmEntityTenantConfigService;
+import com.icthh.xm.ms.entity.config.XmEntityTenantConfigService.XmEntityTenantConfig;
 import com.icthh.xm.ms.entity.domain.spec.TypeSpec;
+import com.icthh.xm.ms.entity.service.XmEntitySpecService.EntitySpecUpdateListener;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -28,20 +30,31 @@ import static java.util.Optional.ofNullable;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class EntityCustomPrivilegeService {
+public class EntityCustomPrivilegeService implements EntitySpecUpdateListener {
 
     private static final String TENANT_NAME = "tenantName";
     private static final String CUSTOMER_PRIVILEGES_PATH = PATH_CONFIG_TENANT + "custom-privileges.yml";
 
-    private final ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+    private final YAMLFactory yamlFactory = new YAMLFactory()
+        .enable(YAMLGenerator.Feature.USE_PLATFORM_LINE_BREAKS);
+
+    private final ObjectMapper mapper = new ObjectMapper(yamlFactory);
 
     private final CommonConfigRepository commonConfigRepository;
-    private final PermissionProperties permissionProperties;
-    private final RoleService roleService;
+
     private final List<CustomPrivilegesExtractor> privilegesExtractors;
 
+    private final XmEntityTenantConfigService tenantConfigService;
+
     @IgnoreLogginAspect
-    public void updateCustomPermission(Map<String, TypeSpec> specs, String tenantKey) {
+    @Override
+    public void onEntitySpecUpdate(Map<String, TypeSpec> specs, String tenantKey) {
+        XmEntityTenantConfig xmEntityTenantConfig = tenantConfigService.getXmEntityTenantConfig(tenantKey);
+        Boolean disableDynamicPrivilegesGeneration = xmEntityTenantConfig.getDisableDynamicPrivilegesGeneration();
+        if (Boolean.TRUE.equals(disableDynamicPrivilegesGeneration)) {
+            log.warn("Dynamic privilege generation disabled.");
+            return;
+        }
 
         String privilegesPath = resolvePathWithTenant(tenantKey, CUSTOMER_PRIVILEGES_PATH);
 

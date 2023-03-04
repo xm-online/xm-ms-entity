@@ -13,7 +13,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.transaction.BeforeTransaction;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -73,7 +72,7 @@ public class LepContextCastIntTest extends AbstractSpringBootTest {
         String funcKey = functionPrefix + "Function$$LEP_CONTEXT_TEST$$tenant.groovy";
         String function = "import com.icthh.xm.ms.entity.lep.LepContext;\nLepContext context = lepContext\nreturn ['context':context]";
         leps.onRefresh(funcKey, function);
-        Map<String, Object> result = functionExecutorService.execute(functionKey, Map.of());
+        Map<String, Object> result = functionExecutorService.execute(functionKey, Map.of(), null);
         assertTrue(result.get("context") instanceof LepContext);
         leps.onRefresh(funcKey, null);
     }

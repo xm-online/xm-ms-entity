@@ -506,6 +506,9 @@ types:
             anonymous: false
           - key: FUNCTION_WITH_ANONYMOUS_SET_TO_TRUE
             anonymous: true
+          - key: package/FUNCTION_WITH_ANONYMOUS_SET_TO_TRUE.PATH-PACKAGE-TEST
+            path: another/urlpath/{id}/with/{param}/and/{another}
+            anonymous: true
     - key: TEST_FUNCTION_WITH_PACKAGE
       name: { en: "TEST_FUNCTION_WITH_PACKAGE" }
       isApp: false
@@ -514,8 +517,12 @@ types:
       isKeyRequired: false
       functions:
           - key: package/FUNCTION.PACKAGE-TEST
+          - key: package/FUNCTION.PACKAGE-TEST-CTX
+            saveFunctionContext: true
           - key: package/FUNCTION-WITH-ENTITY.PACKAGE-TEST
             withEntityId: true
+          - key: package/FUNCTION.PATH-PACKAGE-TEST
+            path: custom/urlpath/{id}/param/{param}/{another}
     - key: TEST_EXPORT_1
       name: {en: "TEST_EXPORT_1"}
       isApp: false

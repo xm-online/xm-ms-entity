@@ -1,0 +1,55 @@
+---
+types:
+    - key: XM
+      dataSpec: |
+          {
+              "type": "object",
+              "properties": {
+                  "uaa": {
+                      "$ref": "#/xmEntityDefinition/recursive/Recursion"
+                  }
+              },
+              "xmEntityDefinition": {
+                  "recursive": {
+                      "Recursion": {
+                          "type": "object",
+                          "allOf": [
+                              {
+                                  "$ref": "#/xmEntityDefinition/recursive/Recursion"
+                              },
+                              {
+                                  "properties": {
+                                      "perEvery": {
+                                          "type": "number"
+                                      },
+                                      "unit": {
+                                          "type": "string"
+                                      }
+                                  }
+                              }
+                          ]
+                      }
+                  }
+              }
+          }
+
+
+definitions:
+    - key: create
+      ref: xmentityspec/definitions/specification-definitions.json
+    - key: recursive
+      value: |
+          {
+              "Recursion": {
+                "type": "object",
+                "allOf": [
+                    { "$ref": "#/xmEntityDefinition/recursive/Recursion" },
+                    {
+                       "properties": {
+                       "perEvery": { "type": "number" },
+                       "unit": { "type": "string" }
+                         }
+                    }
+                ]
+              }
+          }

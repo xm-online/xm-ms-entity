@@ -33,6 +33,7 @@ public class ApplicationProperties {
     private boolean timelinesEnabled;
     private boolean kafkaEnabled;
     private boolean schedulerEnabled;
+    private List<String> tenantWithCreationAccessList;
     private List<String> tenantCreateServiceList;
     private Integer tenantClientConnectionTimeout;
     private Integer tenantClientReadTimeout;
@@ -55,8 +56,6 @@ public class ApplicationProperties {
 
     private Integer requestCacheLimit;
     private List<String> requestCacheIgnoredPathPatternList = Collections.emptyList();
-    private Integer maxUploadFileSize;
-    private Integer maxUploadSize;
 
     private Integer periodicMetricPoolSize;
 

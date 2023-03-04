@@ -25,6 +25,8 @@ public final class LepXmEntityMsConstants {
     public static final String BINDING_SUB_KEY_SERVICE_LEP_RESOURCE = "lepResource";
     public static final String BINDING_SUB_KEY_SERVICE_ELASTICSEARCH_INDEXS = "elasticsearchIndexService";
     public static final String BINDING_SUB_KEY_SERVICE_SEPARATE_TRANSACTION_EXECUTOR = "separateTransactionExecutor";
+    public static final String BINDING_SUB_KEY_SERVICE_EVENT_PUBLISHER = "eventPublisher";
+    public static final String BINDING_SUB_KEY_SERVICE_DOMAIN_EVENT_FACTORY = "domainEventFactory";
 
     public static final String BINDING_KEY_REPOSITORIES = "repositories";
     public static final String BINDING_SUB_KEY_REPOSITORY_XM_ENTITY = "xmEntity";
@@ -34,9 +36,10 @@ public final class LepXmEntityMsConstants {
     public static final String BINDING_SUB_KEY_TEMPLATE_REST = "rest";
     public static final String BINDING_SUB_KEY_TEMPLATE_PLAIN_REST = "plainRest";
     public static final String BINDING_SUB_KEY_REQUEST_FACTORY = "requestFactory";
-    public static final String BINDING_SUB_KEY_TEMPLATE_S3  = "s3";
-    public static final String BINDING_SUB_KEY_TEMPLATE_ELASTIC  = "elastic";
-    public static final String BINDING_SUB_KEY_TEMPLATE_KAFKA  = "kafka";
+    public static final String BINDING_SUB_KEY_TEMPLATE_S3 = "s3";
+    public static final String BINDING_SUB_KEY_TEMPLATE_ELASTIC = "elastic";
+    public static final String BINDING_SUB_KEY_TEMPLATE_KAFKA = "kafka";
+    public static final String BINDING_KEY_METRICS_ADAPTER = "metricsAdapter";
 
     private LepXmEntityMsConstants() {
         throw new UnsupportedOperationException("Prevent creation for constructor utils class");

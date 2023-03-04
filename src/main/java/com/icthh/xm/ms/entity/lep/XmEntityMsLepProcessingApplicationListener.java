@@ -13,7 +13,9 @@ import static com.icthh.xm.ms.entity.lep.LepXmEntityMsConstants.BINDING_SUB_KEY_
 import static com.icthh.xm.ms.entity.lep.LepXmEntityMsConstants.BINDING_SUB_KEY_REQUEST_FACTORY;
 import static com.icthh.xm.ms.entity.lep.LepXmEntityMsConstants.BINDING_SUB_KEY_SERVICE_ATTACHMENT;
 import static com.icthh.xm.ms.entity.lep.LepXmEntityMsConstants.BINDING_SUB_KEY_SERVICE_CALENDAR_SERVICE;
+import static com.icthh.xm.ms.entity.lep.LepXmEntityMsConstants.BINDING_SUB_KEY_SERVICE_DOMAIN_EVENT_FACTORY;
 import static com.icthh.xm.ms.entity.lep.LepXmEntityMsConstants.BINDING_SUB_KEY_SERVICE_ELASTICSEARCH_INDEXS;
+import static com.icthh.xm.ms.entity.lep.LepXmEntityMsConstants.BINDING_SUB_KEY_SERVICE_EVENT_PUBLISHER;
 import static com.icthh.xm.ms.entity.lep.LepXmEntityMsConstants.BINDING_SUB_KEY_SERVICE_EVENT_SERVICE;
 import static com.icthh.xm.ms.entity.lep.LepXmEntityMsConstants.BINDING_SUB_KEY_SERVICE_LEP_RESOURCE;
 import static com.icthh.xm.ms.entity.lep.LepXmEntityMsConstants.BINDING_SUB_KEY_SERVICE_LINK;
@@ -30,8 +32,11 @@ import static com.icthh.xm.ms.entity.lep.LepXmEntityMsConstants.BINDING_SUB_KEY_
 import static com.icthh.xm.ms.entity.lep.LepXmEntityMsConstants.BINDING_SUB_KEY_TEMPLATE_REST;
 import static com.icthh.xm.ms.entity.lep.LepXmEntityMsConstants.BINDING_SUB_KEY_TEMPLATE_PLAIN_REST;
 import static com.icthh.xm.ms.entity.lep.LepXmEntityMsConstants.BINDING_SUB_KEY_TEMPLATE_S3;
+import static com.icthh.xm.ms.entity.lep.LepXmEntityMsConstants.BINDING_KEY_METRICS_ADAPTER;
 
 import com.icthh.xm.commons.config.client.service.TenantConfigService;
+import com.icthh.xm.commons.domainevent.service.EventPublisher;
+import com.icthh.xm.commons.domainevent.service.builder.DomainEventFactory;
 import com.icthh.xm.commons.lep.commons.CommonsExecutor;
 import com.icthh.xm.commons.lep.commons.CommonsService;
 import com.icthh.xm.commons.lep.spring.SpringLepProcessingApplicationListener;
@@ -61,6 +66,7 @@ import com.icthh.xm.ms.entity.service.metrics.CustomMetricsContext;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.icthh.xm.ms.entity.service.metrics.MetricsAdapter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
 import org.springframework.web.client.RestTemplate;
@@ -98,6 +104,9 @@ public class XmEntityMsLepProcessingApplicationListener extends SpringLepProcess
     private final SeparateTransactionExecutor transactionExecutor;
     private final CustomMetricsContext customMetricsContext;
     private final KafkaTemplateService kafkaTemplateService;
+    private final MetricsAdapter metricsAdapter;
+    private final EventPublisher eventPublisher;
+    private final DomainEventFactory domainEventFactory;
 
     @Override
     protected void bindExecutionContext(ScopedContext executionContext) {
@@ -120,6 +129,9 @@ public class XmEntityMsLepProcessingApplicationListener extends SpringLepProcess
         services.put(BINDING_SUB_KEY_PERMISSION_SERVICE, permissionCheckService);
         services.put(BINDING_SUB_KEY_SERVICE_ELASTICSEARCH_INDEXS, elasticsearchIndexService);
         services.put(BINDING_SUB_KEY_SERVICE_SEPARATE_TRANSACTION_EXECUTOR, transactionExecutor);
+        services.put(BINDING_KEY_METRICS_ADAPTER, metricsAdapter);
+        services.put(BINDING_SUB_KEY_SERVICE_EVENT_PUBLISHER, eventPublisher);
+        services.put(BINDING_SUB_KEY_SERVICE_DOMAIN_EVENT_FACTORY, domainEventFactory);
 
         executionContext.setValue(BINDING_KEY_COMMONS, new CommonsExecutor(commonsService));
 

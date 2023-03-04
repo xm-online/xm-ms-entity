@@ -12,7 +12,7 @@ import com.icthh.xm.ms.entity.projection.XmEntityStateProjection;
 import com.icthh.xm.ms.entity.security.access.DynamicPermissionCheckService;
 import com.icthh.xm.ms.entity.service.FunctionContextService;
 import com.icthh.xm.ms.entity.service.FunctionExecutorService;
-import com.icthh.xm.ms.entity.service.JsonValidationService;
+import com.icthh.xm.ms.entity.service.json.JsonValidationService;
 import com.icthh.xm.ms.entity.service.XmEntityService;
 import com.icthh.xm.ms.entity.service.XmEntitySpecService;
 import org.assertj.core.util.Lists;
@@ -78,7 +78,7 @@ public class FunctionServiceImplUnitTest extends AbstractUnitTest {
     public void executeKeyNotNullCheck() {
         exception.expect(NullPointerException.class);
         exception.expectMessage("functionKey can't be null");
-        functionService.execute(null, Maps.newHashMap());
+        functionService.execute(null, Maps.newHashMap(), null);
     }
 
     @Test
@@ -87,7 +87,7 @@ public class FunctionServiceImplUnitTest extends AbstractUnitTest {
         exception.expectMessage("Function not found, function key: " + UNKNOWN_KEY);
         when(xmEntitySpecService.findFunction(UNKNOWN_KEY))
             .thenReturn(Optional.empty());
-        functionService.execute(UNKNOWN_KEY, Maps.newHashMap());
+        functionService.execute(UNKNOWN_KEY, Maps.newHashMap(), null);
     }
 
     @Test
@@ -103,12 +103,12 @@ public class FunctionServiceImplUnitTest extends AbstractUnitTest {
         when(xmEntitySpecService.findFunction(functionName))
             .thenReturn(Optional.of(spec));
 
-        when(functionExecutorService.execute(functionName, context))
+        when(functionExecutorService.execute(functionName, context, null))
             .thenReturn(data);
 
         when(functionContextService.save(any())).thenReturn(new FunctionContext());
 
-        FunctionContext fc = functionService.execute(functionName, context);
+        FunctionContext fc = functionService.execute(functionName, context, null);
         assertThat(fc.getTypeKey()).isEqualTo(functionName);
         assertThat(fc.getKey()).contains(functionName);
         assertThat(fc.getData().keySet()).containsSequence(data.keySet().toArray(new String[0]));
@@ -133,7 +133,7 @@ public class FunctionServiceImplUnitTest extends AbstractUnitTest {
         when(xmEntitySpecService.findFunction(functionName))
             .thenReturn(Optional.of(spec));
 
-        when(functionExecutorService.execute(functionName, context))
+        when(functionExecutorService.execute(functionName, context, null))
             .thenReturn(data);
 
         when(functionContextService.save(any())).thenAnswer((Answer<FunctionContext>) invocation -> {
@@ -141,7 +141,7 @@ public class FunctionServiceImplUnitTest extends AbstractUnitTest {
             return (FunctionContext) args[0];
         });
 
-        FunctionContext fc = functionService.execute(functionName, context);
+        FunctionContext fc = functionService.execute(functionName, context, null);
         assertThat(fc.getTypeKey()).isEqualTo(functionName);
         assertThat(fc.getKey()).contains(functionName);
         assertThat(fc.getData().keySet()).containsSequence(data.keySet().toArray(new String[0]));
@@ -350,6 +350,62 @@ public class FunctionServiceImplUnitTest extends AbstractUnitTest {
         Assert.assertArrayEquals("kind_of_pdf_content".getBytes(), (byte[]) result.functionResult());
     }
 
+    @Test
+    public void executeWithPathDefinedInFunctionSpec() {
+        FunctionSpec spec = new FunctionSpec();
+        spec.setKey("FUNCTION_WITH_PATH");
+        spec.setPath("my/api-path/with/{param1}/and/{param2}");
+
+        //GIVEN
+        when(xmEntitySpecService.findFunction("my/api-path/with/101/and/value2"))
+                .thenReturn(Optional.of(spec));
+
+        when(functionExecutorService.execute(eq("FUNCTION_WITH_PATH"), any(), eq("POST")))
+                .thenAnswer(invocation -> new HashMap<>(invocation.getArgument(1)));
+
+        //WHEN input null
+        FunctionContext result = functionService.execute("my/api-path/with/101/and/value2", null, "POST");
+
+        //THEN
+        Assert.assertEquals(2, result.getData().size());
+        Assert.assertEquals("101", result.getData().get("param1"));
+        Assert.assertEquals("value2", result.getData().get("param2"));
+
+        //WHEN input not null
+        HashMap<String, Object> input = new HashMap<>();
+        input.put("key", "value");
+        result = functionService.execute("my/api-path/with/101/and/value2", input, "POST");
+
+        //THEN
+        Assert.assertEquals(3, result.getData().size());
+        Assert.assertEquals("value", result.getData().get("key"));
+        Assert.assertEquals("101", result.getData().get("param1"));
+        Assert.assertEquals("value2", result.getData().get("param2"));
+    }
+
+    @Test
+    public void executeAnonymousWithPathDefinedInFunctionSpec() {
+        FunctionSpec spec = new FunctionSpec();
+        spec.setKey("FUNCTION_WITH_PATH");
+        spec.setPath("my/api-path/with/{param1}/and/{param2}");
+        spec.setAnonymous(true);
+
+        //GIVEN
+        when(xmEntitySpecService.findFunction("my/api-path/with/101/and/value2"))
+                .thenReturn(Optional.of(spec));
+
+        when(functionExecutorService.executeAnonymousFunction(eq("FUNCTION_WITH_PATH"), any(), eq("POST")))
+                .thenAnswer(invocation -> new HashMap<>(invocation.getArgument(1)));
+
+        //WHEN
+        FunctionContext result = functionService.executeAnonymous("my/api-path/with/101/and/value2", new HashMap<>(), "POST");
+
+        //THEN
+        Assert.assertEquals(2, result.getData().size());
+        Assert.assertEquals("101", result.getData().get("param1"));
+        Assert.assertEquals("value2", result.getData().get("param2"));
+    }
+
     private FunctionSpec getFunctionSpec(Boolean saveContext) {
         FunctionSpec spec = new FunctionSpec();
         spec.setKey(functionName);
@@ -406,7 +462,7 @@ public class FunctionServiceImplUnitTest extends AbstractUnitTest {
     public void noValidation(Boolean validateFunctionInput) {
         FunctionSpec spec = generateFunctionSpec(validateFunctionInput);
         when(xmEntitySpecService.findFunction(VALIDATION_FUNCTION)).thenReturn(Optional.of(spec));
-        functionService.execute(VALIDATION_FUNCTION, Map.of("numberArgument", "stringValue"));
+        functionService.execute(VALIDATION_FUNCTION, Map.of("numberArgument", "stringValue"), null);
         verifyNoMoreInteractions(jsonValidationService);
 
         spec.setWithEntityId(true);
@@ -420,7 +476,7 @@ public class FunctionServiceImplUnitTest extends AbstractUnitTest {
         FunctionSpec spec = generateFunctionSpec(validateFunctionInput);
         when(xmEntitySpecService.findFunction(VALIDATION_FUNCTION)).thenReturn(Optional.of(spec));
         Map<String, Object> functionInput = Map.of("numberArgument", 2);
-        functionService.execute(VALIDATION_FUNCTION, functionInput);
+        functionService.execute(VALIDATION_FUNCTION, functionInput, null);
 
         spec.setWithEntityId(true);
         when(xmEntitySpecService.findFunction(xmEntityTypeKey, VALIDATION_FUNCTION)).thenReturn(Optional.of(spec));
@@ -439,7 +495,7 @@ public class FunctionServiceImplUnitTest extends AbstractUnitTest {
         FunctionSpec spec = generateFunctionSpec(true);
         when(xmEntitySpecService.findFunction(VALIDATION_FUNCTION)).thenReturn(Optional.of(spec));
         Map<String, Object> functionInput = Map.of("numberArgument", "stringValue");
-        functionService.execute(VALIDATION_FUNCTION, functionInput);
+        functionService.execute(VALIDATION_FUNCTION, functionInput, null);
         verify(jsonValidationService).assertJson(eq(functionInput), eq(spec.getInputSpec()));
     }
 

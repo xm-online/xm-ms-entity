@@ -8,6 +8,8 @@ import org.hibernate.SessionFactory;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.data.jpa.repository.query.QueryUtils;
 import org.springframework.data.jpa.repository.support.JpaEntityInformation;
 import org.springframework.data.jpa.repository.support.SimpleJpaRepository;
 
@@ -16,12 +18,14 @@ import javax.persistence.EntityManager;
 import javax.persistence.FlushModeType;
 import javax.persistence.Query;
 import javax.persistence.Subgraph;
+import javax.persistence.Tuple;
 import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaDelete;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.CriteriaUpdate;
 import javax.persistence.criteria.Root;
+import javax.persistence.criteria.Selection;
 import java.io.Serializable;
 import java.math.BigInteger;
 import java.util.List;
@@ -96,6 +100,24 @@ public class EntityGraphRepositoryImpl<T, I extends Serializable>
             query.setMaxResults(pageable.getPageSize());
         }
         return query.getResultList();
+    }
+
+    @Override
+    public List<Tuple> findAll(Specification<T> spec, Function<Root<T>, List<Selection<?>>> fields, Pageable pageable) {
+        CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
+        CriteriaQuery<Tuple> query = criteriaBuilder.createTupleQuery();
+        Root<T> root = query.from(domainClass);
+        query.multiselect(fields.apply(root));
+        query.where(spec.toPredicate(root, query, criteriaBuilder));
+        query.orderBy(QueryUtils.toOrders(pageable.getSort(), root, criteriaBuilder));
+
+        TypedQuery<Tuple> typedQuery = entityManager.createQuery(query);
+        if (pageable.isPaged()) {
+            typedQuery.setFirstResult((int) pageable.getOffset());
+            typedQuery.setMaxResults(pageable.getPageSize());
+        }
+
+        return typedQuery.getResultList();
     }
 
     public Long getSequenceNextValString(String sequenceName) {

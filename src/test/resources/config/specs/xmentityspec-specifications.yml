@@ -1,0 +1,75 @@
+---
+types:
+    - key: DEMO.TEST
+      name: { en: "User",  ru: "Пользователь"}
+      dataSpec: |
+          {
+            "type": "object",
+            "properties": {
+              "tenantKey": {"$ref": "#/xmEntityDefinition/tenantKey/tenantKey"}},
+            "required": ["tenantKey"]
+          }
+      dataForm: |
+          {
+            "form": [
+              {"$ref": "#/xmEntityForm/tenantKeyFromFile"}]
+          }
+      functions:
+          - key: ORDER-RATE
+            name: { en: "Test", ru: "Тест" }
+            inputSpec: |
+                {
+                    "type": "object",
+                    "properties": {
+                        "tenantKey": {"$ref": "#/xmEntityDefinition/tenantKeyFromFile/tenantKey"}},
+                    "required": ["tenantKey"]
+                }
+            inputForm: |
+                {
+                    "form": [
+                        {"$ref": "#/xmEntityForm/tenantKey"}]
+                }
+            contextDataSpec: |
+                {
+                    "type": "object",
+                    "properties": {
+                        "tenantKey": {"$ref": "#/xmEntityDefinition/tenantKeyFromFile/tenantKey"}},
+                    "required": ["tenantKey"]
+                }
+            contextDataForm: |
+                {
+                    "form": [
+                        {"$ref": "#/xmEntityForm/tenantKey"}]
+                }
+
+      states:
+          - key: NEW
+            name: { en: "New", ru: "Новый" }
+            next:
+                - stateKey: ACTIVE
+                  name: { en: "Make active", ru: "Сделать активным" }
+                  inputSpec: |
+                      {
+                        "type": "object",
+                        "properties": {
+                          "tenantKey": {"$ref": "#/xmEntityDefinition/tenantKey/tenantKey"}},
+                        "required": ["tenantKey"]
+                      }
+                  inputForm: |
+                      {
+                        "form": [
+                          {"$ref": "#/xmEntityForm/tenantKeyFromFile"}]
+                      }
+definitions:
+    - key: tenantKey
+      value: |
+          {"tenantKey":{"type": "string"}}
+    - key: tenantKeyFromFile
+      ref: xmentityspec/definitions/definition-specification-int.json
+
+forms:
+    - key: tenantKey
+      value: |
+          {"key": "tenantKey", "title": {"en": "Tenant key"}, "type": "string"}
+    - key: tenantKeyFromFile
+      ref: xmentityspec/forms/form-specification-int.json

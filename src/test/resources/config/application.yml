@@ -48,7 +48,6 @@ spring:
             hibernate.cache.use_second_level_cache: false
             hibernate.cache.use_query_cache: false
             hibernate.generate_statistics: true
-            hibernate.hbm2ddl.auto: validate
             hibernate.jdbc.time_zone: UTC
     data:
         elasticsearch:
@@ -148,6 +147,4 @@ application:
     kafka-system-queue: system_queue
     lep:
         tenant-script-storage: XM_MS_CONFIG
-    maxUploadFileSize: 1073741824
-    maxUploadSize: 1073741824
     periodicMetricPoolSize: 1

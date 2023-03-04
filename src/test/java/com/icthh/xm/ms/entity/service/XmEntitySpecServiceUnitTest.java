@@ -2,9 +2,7 @@ package com.icthh.xm.ms.entity.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-import com.fasterxml.jackson.module.jsonSchema.JsonSchemaGenerator;
 import com.github.fge.jackson.JsonLoader;
 import com.github.fge.jsonschema.core.report.ProcessingReport;
 import com.github.fge.jsonschema.main.JsonSchema;
@@ -13,7 +11,6 @@ import com.icthh.xm.commons.config.client.config.XmConfigProperties;
 import com.icthh.xm.commons.config.client.repository.CommonConfigRepository;
 import com.icthh.xm.commons.config.client.repository.TenantConfigRepository;
 import com.icthh.xm.commons.config.domain.Configuration;
-import com.icthh.xm.commons.permission.config.PermissionProperties;
 import com.icthh.xm.commons.permission.domain.Role;
 import com.icthh.xm.commons.permission.service.RoleService;
 import com.icthh.xm.commons.tenant.TenantContext;
@@ -36,27 +33,27 @@ import com.icthh.xm.ms.entity.domain.spec.TypeSpec;
 import com.icthh.xm.ms.entity.domain.spec.UniqueFieldSpec;
 import com.icthh.xm.ms.entity.domain.spec.XmEntitySpec;
 import com.icthh.xm.ms.entity.security.access.DynamicPermissionCheckService;
+import com.icthh.xm.ms.entity.service.json.JsonListenerService;
 import com.icthh.xm.ms.entity.service.privileges.custom.ApplicationCustomPrivilegesExtractor;
 import com.icthh.xm.ms.entity.service.privileges.custom.EntityCustomPrivilegeService;
 import com.icthh.xm.ms.entity.service.privileges.custom.FunctionCustomPrivilegesExtractor;
 import com.icthh.xm.ms.entity.service.privileges.custom.FunctionWithXmEntityCustomPrivilegesExtractor;
+import com.icthh.xm.ms.entity.service.processor.DefinitionSpecProcessor;
+import com.icthh.xm.ms.entity.service.processor.FormSpecProcessor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
 import org.springframework.core.io.ClassPathResource;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.StringWriter;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -65,10 +62,10 @@ import java.util.stream.Collectors;
 
 import static com.google.common.collect.ImmutableMap.of;
 import static com.google.common.collect.Maps.newHashMap;
-import static com.icthh.xm.ms.entity.config.Constants.REGEX_EOL;
 import static com.icthh.xm.ms.entity.config.TenantConfigMockConfiguration.getXmEntitySpec;
 import static com.icthh.xm.ms.entity.security.access.DynamicPermissionCheckService.CONFIG_SECTION;
 import static com.icthh.xm.ms.entity.util.CustomCollectionUtils.nullSafe;
+import static com.icthh.xm.ms.entity.web.rest.XmEntitySaveIntTest.loadFile;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
 import static org.apache.commons.codec.digest.DigestUtils.sha1Hex;
@@ -82,6 +79,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.ArgumentMatchers.refEq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
@@ -111,7 +109,10 @@ public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
 
     private static final String KEY6 = "TYPE3";
     private static final String PRIVILEGES_PATH = "/config/tenants/TEST/custom-privileges.yml";
-    private static final Path SPEC_PATH = Paths.get("./src/test/resources/config/specs/xmentityspec-xm.yml");
+    private static final String RELATIVE_FORMS_PATH_TO_FILE = "xmentityspec/forms/form-specification-int.json";
+    private static final String RELATIVE_DEFINITIONS_PATH_TO_FILE = "xmentityspec/definitions/definition-specification-int.json";
+
+    private static final String MAX_FILE_SIZE = "1Mb";
 
     private XmEntitySpecService xmEntitySpecService;
 
@@ -119,11 +120,11 @@ public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
 
     @Mock
     private CommonConfigRepository commonConfigRepository;
-    private PermissionProperties permissionProperties = new PermissionProperties();
     @Mock
     private RoleService roleService;
     @Mock
     private TenantConfigRepository tenantConfigRepository;
+    private JsonListenerService jsonListenerService = new JsonListenerService();
     @InjectMocks
     @Spy
     private DynamicPermissionCheckService dynamicPermissionCheckService;
@@ -154,21 +155,22 @@ public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
     private XmEntitySpecService createXmEntitySpecService(ApplicationProperties applicationProperties,
                                                                 TenantContextHolder tenantContextHolder) {
 
-        return new LocalXmEntitySpecService(tenantConfigRepository,
+        return spy(new LocalXmEntitySpecService(tenantConfigRepository,
                                             applicationProperties,
                                             tenantContextHolder,
                                             new EntityCustomPrivilegeService(
                                                 commonConfigRepository,
-                                                permissionProperties,
-                                                roleService,
                                                 asList(
                                                     new ApplicationCustomPrivilegesExtractor(),
                                                     new FunctionCustomPrivilegesExtractor(tenantConfig),
                                                     new FunctionWithXmEntityCustomPrivilegesExtractor(tenantConfig)
-                                                )
+                                                ),
+                                                tenantConfig
                                             ),
                                             dynamicPermissionCheckService,
-                                            tenantConfig);
+                                            tenantConfig,
+                                            new DefinitionSpecProcessor(jsonListenerService),
+                                            new FormSpecProcessor(jsonListenerService), MAX_FILE_SIZE));
     }
 
     @Test
@@ -212,7 +214,7 @@ public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
 
         List<FunctionSpec> functions = flattenFunctions(types);
 
-        assertThat(functions.size()).isEqualTo(4);
+        assertThat(functions.size()).isEqualTo(6);
 
     }
 
@@ -267,7 +269,7 @@ public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
         assertThat(keys).containsExactlyInAnyOrder(KEY1, KEY2, KEY6);
 
         List<FunctionSpec> functions = flattenFunctions(types);
-        assertThat(functions.size()).isEqualTo(3);
+        assertThat(functions.size()).isEqualTo(4);
     }
 
     @Test
@@ -297,7 +299,7 @@ public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
         assertThat(keys).containsExactlyInAnyOrder(KEY2, KEY3, KEY5, KEY6);
 
         List<FunctionSpec> functions = flattenFunctions(types);
-        assertThat(functions.size()).isEqualTo(3);
+        assertThat(functions.size()).isEqualTo(5);
     }
 
     @Test
@@ -445,7 +447,6 @@ public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
         when(tenantContextHolder.getTenantKey()).thenReturn(resinttest);
     }
 
-
     private void enableDynamicPermissionCheck() {
         XmEntityTenantConfig config = new XmEntityTenantConfig();
         when(tenantConfig.getXmEntityTenantConfig("TEST")).thenReturn(config);
@@ -472,18 +473,39 @@ public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
         testUpdateCustomerPrivileges(customPrivileges, expectedCustomPrivileges);
     }
 
+    @Test
+    @SneakyThrows
+    public void testDisableCustomPrivilegesGeneration() {
+        disableDynamicPrivilegesGeneration();
+        when(roleService.getRoles("TEST")).thenReturn(of("TEST_ROLE", new Role()));
+        xmEntitySpecService.getTypeSpecs();
+        verify(xmEntitySpecService).refreshFinished(List.of("/config/tenants/TEST/entity/specs/xmentityspecs.yml"));
+        verifyNoMoreInteractions(commonConfigRepository);
+    }
+
+    private void disableDynamicPrivilegesGeneration() {
+        XmEntityTenantConfig config = new XmEntityTenantConfig();
+        config.setDisableDynamicPrivilegesGeneration(true);
+        when(tenantConfig.getXmEntityTenantConfig("TEST")).thenReturn(config);
+    }
+
     private void testUpdateCustomerPrivileges(String customPrivileges, String expectedCustomPrivileges) {
         String privilegesPath = PRIVILEGES_PATH;
         Map<String, Configuration> configs = of(
             privilegesPath, new Configuration(privilegesPath, customPrivileges)
                                                );
-        when(commonConfigRepository.getConfig(isNull(), eq(asList(privilegesPath)))).thenReturn(configs);
+        when(commonConfigRepository.getConfig(isNull(), eq(List.of(privilegesPath)))).thenReturn(configs);
         when(roleService.getRoles("TEST")).thenReturn(of("TEST_ROLE", new Role()));
 
         xmEntitySpecService.getTypeSpecs();
 
-        verify(commonConfigRepository).getConfig(isNull(), eq(asList(privilegesPath)));
-        verify(commonConfigRepository).updateConfigFullPath(refEq(new Configuration(privilegesPath, expectedCustomPrivileges)), eq(sha1Hex(customPrivileges)));
+        verify(commonConfigRepository).getConfig(isNull(), eq(List.of(privilegesPath)));
+
+        ArgumentCaptor<Configuration> captor = ArgumentCaptor.forClass(Configuration.class);
+        verify(commonConfigRepository).updateConfigFullPath(captor.capture(), eq(sha1Hex(customPrivileges)));
+        assertEquals(privilegesPath, captor.getValue().getPath());
+        assertEquals(expectedCustomPrivileges, captor.getValue().getContent());
+
         verifyNoMoreInteractions(commonConfigRepository);
     }
 
@@ -507,14 +529,18 @@ public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
 
     private void testCreateCustomPrivileges(String privileges) {
         String privilegesPath = PRIVILEGES_PATH;
-        when(commonConfigRepository.getConfig(isNull(), eq(asList(privilegesPath)))).thenReturn(null);
+        when(commonConfigRepository.getConfig(isNull(), eq(List.of(privilegesPath)))).thenReturn(null);
         when(roleService.getRoles("TEST")).thenReturn(of("ROLE_ADMIN", new Role(), "ROLE_AGENT", new Role()));
 
         xmEntitySpecService.getTypeSpecs();
 
-        verify(commonConfigRepository).getConfig(isNull(), eq(asList(privilegesPath)));
-        verify(commonConfigRepository)
-            .updateConfigFullPath(refEq(new Configuration(privilegesPath, privileges)), isNull());
+        verify(commonConfigRepository).getConfig(isNull(), eq(List.of(privilegesPath)));
+
+        ArgumentCaptor<Configuration> captor = ArgumentCaptor.forClass(Configuration.class);
+        verify(commonConfigRepository).updateConfigFullPath(captor.capture(), isNull());
+        assertEquals(privilegesPath, captor.getValue().getPath());
+        assertEquals(privileges, captor.getValue().getContent());
+
         verifyNoMoreInteractions(commonConfigRepository);
     }
 
@@ -536,26 +562,10 @@ public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
         testUpdateRealPermissionFile(privileges);
     }
 
-    @Test
-    @SneakyThrows
-    public void testXmEntitySpecSchemaGeneration() {
-        String jsonSchema = xmEntitySpecService.generateJsonSchema();
-        ObjectMapper objectMapper = new ObjectMapper(new YAMLFactory());
-        JsonNode xmentityspec = objectMapper.readTree(new File(SPEC_PATH.toString()));
-
-        JsonNode schemaNode = JsonLoader.fromString(jsonSchema);
-        JsonSchemaFactory factory = JsonSchemaFactory.byDefault();
-        JsonSchema schema = factory.getJsonSchema(schemaNode);
-        ProcessingReport report = schema.validate(xmentityspec);
-
-        boolean isSuccess = report.isSuccess();
-        assertTrue(report.toString(), isSuccess);
-    }
-
     public void testUpdateRealPermissionFile(String privileges) {
         String privilegesPath = PRIVILEGES_PATH;
         Map<String, Configuration> configs = of();
-        when(commonConfigRepository.getConfig(isNull(), eq(asList(privilegesPath)))).thenReturn(configs);
+        when(commonConfigRepository.getConfig(isNull(), eq(List.of(privilegesPath)))).thenReturn(configs);
         when(roleService.getRoles("TEST")).thenReturn(of(
             "ROLE_ADMIN", new Role(),
             "ROLE_AGENT", new Role()
@@ -563,7 +573,7 @@ public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
 
         xmEntitySpecService.getTypeSpecs();
 
-        verify(commonConfigRepository).getConfig(isNull(), eq(asList(privilegesPath)));
+        verify(commonConfigRepository).getConfig(isNull(), eq(List.of(privilegesPath)));
         verify(commonConfigRepository).updateConfigFullPath(refEq(new Configuration(privilegesPath, privileges)), isNull());
         verifyNoMoreInteractions(commonConfigRepository);
     }
@@ -706,6 +716,118 @@ public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
         TypeSpec extendedEntityWithExtends = typeSpecsWithExtends.get("BASE_ENTITY.EXTENDS");
         assertEqualsJson(baseDataFrom, baseEntityWithExtends.getDataForm());
         assertEqualsJson(bothDataFrom, extendedEntityWithExtends.getDataForm());
+    }
+
+    @Test
+    public void testFindFunctionByKey() {
+        // init typespecs
+        xmEntitySpecService.getTypeSpecs();
+        FunctionSpec functionSpec = xmEntitySpecService.findFunction("FUNCTION1").orElse(null);
+        assertNotNull(functionSpec);
+        assertEquals(functionSpec.getKey(), "FUNCTION1");
+        assertNull(functionSpec.getPath());
+
+        functionSpec = xmEntitySpecService.findFunction("FUNCTION3").orElse(null);
+        assertNotNull(functionSpec);
+        assertEquals(functionSpec.getKey(), "FUNCTION3");
+        assertEquals(functionSpec.getPath(), "call/function/by-path/{id}");
+
+        functionSpec = xmEntitySpecService.findFunction("in/package/FUNCTION4").orElse(null);
+        assertNotNull(functionSpec);
+        assertEquals(functionSpec.getKey(), "in/package/FUNCTION4");
+        assertEquals(functionSpec.getPath(), "call/function/by-path/{id}/and/param/{param}");
+
+        functionSpec = xmEntitySpecService.findFunction("FUNCTION_NOT_FOUND").orElse(null);
+        assertNull(functionSpec);
+    }
+
+    @Test
+    public void testFindFunctionByPath() {
+        // init typespecs
+        xmEntitySpecService.getTypeSpecs();
+        FunctionSpec functionSpec = xmEntitySpecService.findFunction("call/function/by-path/111").orElse(null);
+        assertNotNull(functionSpec);
+        assertEquals(functionSpec.getKey(), "FUNCTION3");
+        assertEquals(functionSpec.getPath(), "call/function/by-path/{id}");
+
+        functionSpec = xmEntitySpecService.findFunction("call/function/by-path/D42/and/param/my-param-value").orElse(null);
+        assertNotNull(functionSpec);
+        assertEquals(functionSpec.getKey(), "in/package/FUNCTION4");
+        assertEquals(functionSpec.getPath(), "call/function/by-path/{id}/and/param/{param}");
+    }
+
+    @Test
+    public void testUpdateTenantByStateWithDefinitionsAndForms() throws Exception {
+        ObjectMapper objectMapper = new ObjectMapper(new YAMLFactory());
+        String config = getXmEntitySpec("specifications");
+        String key = SPEC_FOLDER_URL.replace("{tenantName}", "RESINTTEST") + "/file.yml";
+        mockTenant("RESINTTEST");
+        jsonListenerService.processTenantSpecification("RESINTTEST", RELATIVE_FORMS_PATH_TO_FILE, loadFile("config/specs/form-specification-int.json"));
+        jsonListenerService.processTenantSpecification("RESINTTEST", RELATIVE_DEFINITIONS_PATH_TO_FILE, loadFile("config/specs/definition-specification-int.json"));
+        xmEntitySpecService.onRefresh(key, config);
+
+        TypeSpec actualTypeSpec = xmEntitySpecService.getTypeSpecs().get("DEMO.TEST");
+        FunctionSpec actualFunctionSpec = actualTypeSpec.getFunctions().get(0);
+        NextSpec actualNextSpec = actualTypeSpec.getStates().get(0).getNext().get(0);
+
+        XmEntitySpec expectedXmEntity = objectMapper.readValue(getXmEntitySpec("specifications-expected"), XmEntitySpec.class);
+        TypeSpec expectedTypeSpec = expectedXmEntity.getTypes().get(0);
+        FunctionSpec expectedFunctionSpec = expectedTypeSpec.getFunctions().get(0);
+        NextSpec expectedNextSpec = expectedTypeSpec.getStates().get(0).getNext().get(0);
+
+        assertEqualsTypeSpecFields(actualTypeSpec.getDataSpec(), expectedTypeSpec.getDataSpec());
+        assertEqualsTypeSpecFields(actualTypeSpec.getDataForm(), expectedTypeSpec.getDataForm());
+        assertEqualsTypeSpecFields(actualFunctionSpec.getInputSpec(), expectedFunctionSpec.getInputSpec());
+        assertEqualsTypeSpecFields(actualFunctionSpec.getInputForm(), expectedFunctionSpec.getInputForm());
+        assertEqualsTypeSpecFields(actualFunctionSpec.getContextDataSpec(), expectedFunctionSpec.getContextDataSpec());
+        assertEqualsTypeSpecFields(actualFunctionSpec.getContextDataForm(), expectedFunctionSpec.getContextDataForm());
+        assertEqualsTypeSpecFields(actualNextSpec.getInputSpec(), expectedNextSpec.getInputSpec());
+        assertEqualsTypeSpecFields(actualNextSpec.getInputForm(), expectedNextSpec.getInputForm());
+    }
+
+    @Test
+    public void testUpdateTenantByStateWithDefinitionsAndFormsAndUpdatedJsonFile() throws Exception {
+        ObjectMapper objectMapper = new ObjectMapper(new YAMLFactory());
+        String config = getXmEntitySpec("specifications");
+        String key = SPEC_FOLDER_URL.replace("{tenantName}", "RESINTTEST") + "/file.yml";
+        mockTenant("RESINTTEST");
+
+        jsonListenerService.processTenantSpecification("RESINTTEST", RELATIVE_FORMS_PATH_TO_FILE, loadFile("config/specs/form-specification-int.json"));
+        jsonListenerService.processTenantSpecification("RESINTTEST", RELATIVE_DEFINITIONS_PATH_TO_FILE, loadFile("config/specs/definition-specification-int.json"));
+
+        xmEntitySpecService.onRefresh(key, config);
+
+        jsonListenerService.processTenantSpecification("RESINTTEST", RELATIVE_FORMS_PATH_TO_FILE, loadFile("config/specs/updated-form-specification-int.json"));
+        jsonListenerService.processTenantSpecification("RESINTTEST", RELATIVE_DEFINITIONS_PATH_TO_FILE, loadFile("config/specs/updated-definition-specification-int.json"));
+
+        xmEntitySpecService.onRefresh(key, config);
+
+        TypeSpec actualTypeSpec = xmEntitySpecService.getTypeSpecs().get("DEMO.TEST");
+        FunctionSpec actualFunctionSpec = actualTypeSpec.getFunctions().get(0);
+        NextSpec actualNextSpec = actualTypeSpec.getStates().get(0).getNext().get(0);
+
+        XmEntitySpec expectedXmEntity = objectMapper.readValue(getXmEntitySpec("specifications-updated-expected"), XmEntitySpec.class);
+        TypeSpec expectedTypeSpec = expectedXmEntity.getTypes().get(0);
+        FunctionSpec expectedFunctionSpec = expectedTypeSpec.getFunctions().get(0);
+        NextSpec expectedNextSpec = expectedTypeSpec.getStates().get(0).getNext().get(0);
+
+        assertEqualsTypeSpecFields(actualTypeSpec.getDataSpec(), expectedTypeSpec.getDataSpec());
+        assertEqualsTypeSpecFields(actualTypeSpec.getDataForm(), expectedTypeSpec.getDataForm());
+        assertEqualsTypeSpecFields(actualFunctionSpec.getInputSpec(), expectedFunctionSpec.getInputSpec());
+        assertEqualsTypeSpecFields(actualFunctionSpec.getInputForm(), expectedFunctionSpec.getInputForm());
+        assertEqualsTypeSpecFields(actualFunctionSpec.getContextDataSpec(), expectedFunctionSpec.getContextDataSpec());
+        assertEqualsTypeSpecFields(actualFunctionSpec.getContextDataForm(), expectedFunctionSpec.getContextDataForm());
+        assertEqualsTypeSpecFields(actualNextSpec.getInputSpec(), expectedNextSpec.getInputSpec());
+        assertEqualsTypeSpecFields(actualNextSpec.getInputForm(), expectedNextSpec.getInputForm());
+    }
+
+    @SneakyThrows
+    private void assertEqualsTypeSpecFields(String expectedField, String actualField) {
+        ObjectMapper objectMapper = new ObjectMapper();
+        Map expected = objectMapper.readValue(expectedField, Map.class);
+        Map actual = objectMapper.readValue(actualField, Map.class);
+
+        assertEquals(actual, expected);
     }
 
     @SneakyThrows

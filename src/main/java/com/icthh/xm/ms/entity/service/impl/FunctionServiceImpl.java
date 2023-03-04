@@ -2,7 +2,6 @@ package com.icthh.xm.ms.entity.service.impl;
 
 import static java.util.Collections.emptyList;
 
-import com.icthh.xm.commons.exceptions.BusinessException;
 import com.icthh.xm.commons.exceptions.EntityNotFoundException;
 import com.icthh.xm.ms.entity.config.XmEntityTenantConfigService;
 import com.icthh.xm.ms.entity.domain.FunctionContext;
@@ -15,7 +14,7 @@ import com.icthh.xm.ms.entity.security.access.DynamicPermissionCheckService;
 import com.icthh.xm.ms.entity.service.FunctionContextService;
 import com.icthh.xm.ms.entity.service.FunctionExecutorService;
 import com.icthh.xm.ms.entity.service.FunctionService;
-import com.icthh.xm.ms.entity.service.JsonValidationService;
+import com.icthh.xm.ms.entity.service.json.JsonValidationService;
 import com.icthh.xm.ms.entity.service.XmEntityService;
 import com.icthh.xm.ms.entity.service.XmEntitySpecService;
 import com.icthh.xm.ms.entity.util.CustomCollectionUtils;
@@ -31,6 +30,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.AntPathMatcher;
 
 /**
  * The {@link FunctionServiceImpl} class.
@@ -55,11 +55,13 @@ public class FunctionServiceImpl implements FunctionService {
     private final JsonValidationService jsonValidationService;
     private final XmEntityTenantConfigService xmEntityTenantConfigService;
 
+    private final AntPathMatcher matcher = new AntPathMatcher();
+
     /**
      * {@inheritDoc}
      */
     @Override
-    public FunctionContext execute(final String functionKey, final Map<String, Object> functionInput) {
+    public FunctionContext execute(final String functionKey, final Map<String, Object> functionInput, String httpMethod) {
 
         Objects.requireNonNull(functionKey, "functionKey can't be null");
         Map<String, Object> vInput = CustomCollectionUtils.emptyIfNull(functionInput);
@@ -71,8 +73,10 @@ public class FunctionServiceImpl implements FunctionService {
 
         validateFunctionInput(functionSpec, functionInput);
 
+        enrichInputFromPathParams(functionKey, vInput, functionSpec);
+
         // execute function
-        Map<String, Object> data = functionExecutorService.execute(functionKey, vInput);
+        Map<String, Object> data = functionExecutorService.execute(functionSpec.getKey(), vInput, httpMethod);
         return processFunctionResult(functionKey, data, functionSpec);
     }
 
@@ -99,7 +103,7 @@ public class FunctionServiceImpl implements FunctionService {
         // validate that current XmEntity has function
         FunctionSpec functionSpec = findFunctionSpec(functionKey, projection);
 
-        //orElseThorw is replaced by war message
+        //orElseThrow is replaced by war message
         assertCallAllowedByState(functionSpec, projection);
 
         validateFunctionInput(functionSpec, functionInput);
@@ -124,7 +128,7 @@ public class FunctionServiceImpl implements FunctionService {
     }
 
     @Override
-    public FunctionContext executeAnonymous(String functionKey, Map<String, Object> functionInput) {
+    public FunctionContext executeAnonymous(String functionKey, Map<String, Object> functionInput, String httpMethod) {
         FunctionSpec functionSpec = findFunctionSpec(functionKey, null);
 
         if (!functionSpec.getAnonymous()) {
@@ -134,8 +138,10 @@ public class FunctionServiceImpl implements FunctionService {
         Objects.requireNonNull(functionKey, "functionKey can't be null");
         Map<String, Object> vInput = CustomCollectionUtils.emptyIfNull(functionInput);
 
+        enrichInputFromPathParams(functionKey, vInput, functionSpec);
+
         // execute function
-        Map<String, Object> data = functionExecutorService.executeAnonymousFunction(functionKey, vInput);
+        Map<String, Object> data = functionExecutorService.executeAnonymousFunction(functionSpec.getKey(), vInput, httpMethod);
         return processFunctionResult(functionKey, data, functionSpec);
     }
 
@@ -210,6 +216,13 @@ public class FunctionServiceImpl implements FunctionService {
         functionResult.setBinaryDataField(functionSpec.getBinaryDataField());
         functionResult.setBinaryDataType(functionSpec.getBinaryDataType());
         return functionResult;
+    }
+
+    private void enrichInputFromPathParams(String functionKey, Map<String, Object> functionInput, FunctionSpec functionSpec) {
+        if (functionSpec.getPath() != null && matcher.match(functionSpec.getPath(), functionKey)) {
+            Map<String, String> pathParams = matcher.extractUriTemplateVariables(functionSpec.getPath(), functionKey);
+            functionInput.putAll(pathParams);
+        }
     }
 
 }

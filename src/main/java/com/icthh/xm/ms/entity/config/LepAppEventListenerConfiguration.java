@@ -1,6 +1,8 @@
 package com.icthh.xm.ms.entity.config;
 
 import com.icthh.xm.commons.config.client.service.TenantConfigService;
+import com.icthh.xm.commons.domainevent.service.EventPublisher;
+import com.icthh.xm.commons.domainevent.service.builder.DomainEventFactory;
 import com.icthh.xm.commons.lep.commons.CommonsService;
 import com.icthh.xm.commons.permission.service.PermissionCheckService;
 import com.icthh.xm.commons.topic.service.KafkaTemplateService;
@@ -25,6 +27,7 @@ import com.icthh.xm.ms.entity.service.XmEntityService;
 import com.icthh.xm.ms.entity.service.XmTenantLifecycleService;
 import com.icthh.xm.ms.entity.service.mail.MailService;
 import com.icthh.xm.ms.entity.service.metrics.CustomMetricsContext;
+import com.icthh.xm.ms.entity.service.metrics.MetricsAdapter;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -65,15 +68,20 @@ public class LepAppEventListenerConfiguration {
         ElasticsearchIndexService elasticsearchIndexService,
         SeparateTransactionExecutor transactionExecutor,
         CustomMetricsContext customMetricsContext,
-        KafkaTemplateService kafkaTemplateService) {
+        KafkaTemplateService kafkaTemplateService,
+        MetricsAdapter metricsAdapter,
+        EventPublisher eventPublisher,
+        DomainEventFactory domainEventFactory
+    ) {
 
         return new XmEntityMsLepProcessingApplicationListener(xmEntityService,
-                        xmTenantLifecycleService, xmEntityRepository, profileService, linkService,
-                        mailService, tenantConfigService, attachmentService, loadBalancedRestTemplateWithTimeout, plainRestTemplate,
-                        requestFactory, locationService, tagService, profileEventProducer, commentService,
-                        commonsService, permissionCheckService, eventService, calendarService, tenantLepResource,
-                        amazonS3Template, elasticsearchTemplate, permittedSearchRepository, elasticsearchIndexService,
-                        transactionExecutor, customMetricsContext, kafkaTemplateService);
+            xmTenantLifecycleService, xmEntityRepository, profileService, linkService,
+            mailService, tenantConfigService, attachmentService, loadBalancedRestTemplateWithTimeout, plainRestTemplate,
+            requestFactory, locationService, tagService, profileEventProducer, commentService,
+            commonsService, permissionCheckService, eventService, calendarService, tenantLepResource,
+            amazonS3Template, elasticsearchTemplate, permittedSearchRepository, elasticsearchIndexService,
+            transactionExecutor, customMetricsContext, kafkaTemplateService, metricsAdapter,
+            eventPublisher, domainEventFactory);
     }
 
 }

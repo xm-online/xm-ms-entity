@@ -92,10 +92,11 @@ spring:
             enabled: false
     thymeleaf:
         mode: XHTML
-    http:
+    servlet:
         multipart:
-            max-file-size: 20MB
-            max-request-size: 20MB
+            enabled: true
+            max-file-size: ${application.maxUploadFileSize:20MB}
+            max-request-size: ${application.maxUploadSize:20MB}
     kafka:
         consumer:
             group-id: entity
@@ -184,6 +185,7 @@ application:
     tenant-ignored-path-list: /v2/api-docs, /api/profile-info, /swagger-resources/configuration/ui, /management/health
     timelines-enabled: true
     kafka-enabled: true
+    tenant-with-creation-access-list: XM, MANAGER
     tenant-create-service-list: uaa, gate, timeline, entity, dashboard, balance, scheduler
     tenant-client-connection-timeout: 2000
     tenant-client-read-timeout: 40000
@@ -226,14 +228,11 @@ application:
             bucket-prefix:
     elasticSchemaSuffix: ""
     requestCacheIgnoredPathPatternList: /api/functions/*/upload
-    maxUploadFileSize: 1073741824
-    maxUploadSize: 1073741824
     periodicMetricPoolSize: 1
     kafkaMetric:
         enabled: true
         connectionTimeoutTopic: 1000
         metricTopics: system_topic
-
 # ===================================================================
 # Timeline specific properties
 #

@@ -1,13 +1,32 @@
 package com.icthh.xm.ms.entity.web.rest;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.icthh.xm.commons.i18n.error.web.ExceptionTranslator;
+import com.icthh.xm.commons.security.XmAuthenticationContext;
+import com.icthh.xm.commons.security.XmAuthenticationContextHolder;
+import com.icthh.xm.commons.tenant.TenantContextHolder;
+import com.icthh.xm.lep.api.LepManager;
+import com.icthh.xm.ms.entity.AbstractSpringBootTest;
+import com.icthh.xm.ms.entity.service.json.JsonSchemaGenerationService;
+import com.icthh.xm.ms.entity.service.XmEntityGeneratorService;
+import com.icthh.xm.ms.entity.service.XmEntitySpecService;
+import com.icthh.xm.ms.entity.service.impl.XmEntityServiceImpl;
+import lombok.SneakyThrows;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+
 import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_AUTH_CONTEXT;
 import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_TENANT_CONTEXT;
 import static com.icthh.xm.commons.tenant.TenantContextUtils.setTenant;
 import static com.icthh.xm.ms.entity.config.TenantConfigMockConfiguration.getXmEntitySpec;
 import static com.icthh.xm.ms.entity.util.IsCollectionNotContaining.hasNotItem;
-import static org.assertj.core.api.Assertions.not;
-import static org.hamcrest.Matchers.allOf;
-import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.hasSize;
 import static org.junit.Assert.assertTrue;
@@ -18,28 +37,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.icthh.xm.commons.i18n.error.web.ExceptionTranslator;
-import com.icthh.xm.commons.security.XmAuthenticationContext;
-import com.icthh.xm.commons.security.XmAuthenticationContextHolder;
-import com.icthh.xm.commons.tenant.TenantContextHolder;
-import com.icthh.xm.lep.api.LepManager;
-import com.icthh.xm.ms.entity.AbstractSpringBootTest;
-import com.icthh.xm.ms.entity.service.XmEntityGeneratorService;
-import com.icthh.xm.ms.entity.service.XmEntitySpecService;
-import com.icthh.xm.ms.entity.service.impl.XmEntityServiceImpl;
-import lombok.SneakyThrows;
-import org.hamcrest.core.IsEqual;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 /**
  * Test class for the XmEntitySpecResource REST controller.
@@ -68,6 +65,8 @@ public class XmEntitySpecResourceIntTest extends AbstractSpringBootTest {
 
     @Autowired
     private TenantContextHolder tenantContextHolder;
+    @Autowired
+    private JsonSchemaGenerationService jsonSchemaGenerationService;
 
     @Mock
     private XmAuthenticationContextHolder authContextHolder;
@@ -105,7 +104,7 @@ public class XmEntitySpecResourceIntTest extends AbstractSpringBootTest {
             xmEntitySpecService, authContextHolder, objectMapper);
 
         XmEntitySpecResource xmEntitySpecResource = new XmEntitySpecResource(xmEntitySpecService,
-            xmEntityGeneratorService);
+            xmEntityGeneratorService, jsonSchemaGenerationService);
         this.restXmEntitySpecMockMvc = MockMvcBuilders.standaloneSetup(xmEntitySpecResource)
             .setControllerAdvice(exceptionTranslator).build();
     }

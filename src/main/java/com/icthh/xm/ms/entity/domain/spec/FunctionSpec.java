@@ -28,6 +28,14 @@ public class FunctionSpec {
     private String key;
 
     /**
+     * Unique in tenant HTTP path template.
+     * May contain placeholders for path parameters.
+     * Example: my/rest/entity/{id}
+     */
+    @JsonProperty("path")
+    private String path;
+
+    /**
      * Localized action name via map where key is ISO 639-1 code.
      */
     @JsonProperty("name")

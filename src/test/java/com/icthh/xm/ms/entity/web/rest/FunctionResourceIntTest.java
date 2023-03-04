@@ -1,17 +1,5 @@
 package com.icthh.xm.ms.entity.web.rest;
 
-import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_AUTH_CONTEXT;
-import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_TENANT_CONTEXT;
-import static com.icthh.xm.ms.entity.web.rest.XmEntityResourceIntTest.createEntity;
-import static java.nio.charset.StandardCharsets.UTF_8;
-import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-
 import com.icthh.xm.commons.i18n.error.web.ExceptionTranslator;
 import com.icthh.xm.commons.lep.XmLepScriptConfigServerResourceLoader;
 import com.icthh.xm.commons.security.XmAuthenticationContextHolder;
@@ -21,10 +9,6 @@ import com.icthh.xm.lep.api.LepManager;
 import com.icthh.xm.ms.entity.AbstractSpringBootTest;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.service.impl.XmEntityServiceImpl;
-import java.io.InputStream;
-import java.util.List;
-import java.util.UUID;
-
 import lombok.SneakyThrows;
 import org.apache.commons.io.IOUtils;
 import org.junit.After;
@@ -34,7 +18,6 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
-import org.springframework.http.MediaType;
 import org.springframework.http.converter.ByteArrayHttpMessageConverter;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.mock.web.MockMultipartFile;
@@ -44,7 +27,23 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
+
+import java.io.InputStream;
+import java.util.UUID;
+
+import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_AUTH_CONTEXT;
+import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_TENANT_CONTEXT;
+import static java.nio.charset.StandardCharsets.UTF_8;
+import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 
 @WithMockUser(authorities = {"SUPER-ADMIN"})
@@ -117,6 +116,7 @@ public class FunctionResourceIntTest extends AbstractSpringBootTest {
         leps.onRefresh(functionPrefix + "some/package/Function$$UPLOAD$$tenant.groovy", loadData ? body : null);
         String packageTestBody = "return lepContext.inArgs";
         leps.onRefresh(functionPrefix + "package/Function$$FUNCTION$PACKAGE_TEST$$tenant.groovy", loadData ? packageTestBody : null);
+        leps.onRefresh(functionPrefix + "package/Function$$FUNCTION$PACKAGE_TEST_CTX$$tenant.groovy", loadData ? packageTestBody : null);
         leps.onRefresh(functionPrefix + "package/FunctionWithXmEntity$$FUNCTION_WITH_ENTITY$PACKAGE_TEST$$tenant.groovy", loadData ? packageTestBody : null);
 
         String functionWithBinaryResult = "return [\"bytes\": \"test\".getBytes()]";
@@ -170,6 +170,18 @@ public class FunctionResourceIntTest extends AbstractSpringBootTest {
                 .andExpect(jsonPath("$.data.result").value("test no json content"))
                 .andExpect(status().isOk());
     }
+    @Test
+    @Transactional
+    @SneakyThrows
+    public void textFuncWithCtx() {
+        String functionApi = "/api/functions/";
+        String functionKey = "package/FUNCTION.PACKAGE-TEST-CTX";
+        mockMvc.perform(post(functionApi + functionKey))
+            .andDo(print())
+            .andExpect(jsonPath("$.data.functionKey").value(functionKey))
+            .andExpect(header().exists("location"))
+            .andExpect(status().is2xxSuccessful());
+    }
 
     @Test
     @Transactional
@@ -180,6 +192,7 @@ public class FunctionResourceIntTest extends AbstractSpringBootTest {
         mockMvc.perform(post(functionApi + functionKey))
             .andDo(print())
             .andExpect(jsonPath("$.data.functionKey").value(functionKey))
+            .andExpect(header().doesNotExist("location"))
             .andExpect(status().is2xxSuccessful());
         mockMvc.perform(get(functionApi + functionKey))
             .andDo(print())
@@ -196,6 +209,7 @@ public class FunctionResourceIntTest extends AbstractSpringBootTest {
         String functionWithEntityKey = "package/FUNCTION-WITH-ENTITY.PACKAGE-TEST";
         mockMvc.perform(post(functionWithEntityApi + functionWithEntityKey))
             .andDo(print())
+            .andExpect(header().doesNotExist("location"))
             .andExpect(jsonPath("$.data.functionKey").value(functionWithEntityKey))
             .andExpect(status().is2xxSuccessful());
         mockMvc.perform(get(functionWithEntityApi + functionWithEntityKey))
@@ -324,6 +338,78 @@ public class FunctionResourceIntTest extends AbstractSpringBootTest {
                .andExpect(jsonPath("$.data.result").isString())
                .andExpect(status().is2xxSuccessful());
         leps.onRefresh(funcKey, null);
+    }
+
+    @Test
+    @Transactional
+    @SneakyThrows
+    public void testFunctionExposedByCustomPath() {
+        String functionPrefix = "/config/tenants/RESINTTEST/entity/lep/function/";
+        String functionApi = "/api/functions/";
+        String functionKey = "package/FUNCTION.PATH-PACKAGE-TEST";
+        String functionLepKey = functionPrefix + "package/Function$$FUNCTION$PATH_PACKAGE_TEST$$tenant.groovy";
+
+        leps.onRefresh(functionLepKey, "[input: lepContext.inArgs.functionInput, method: lepContext.inArgs.httpMethod]");
+
+        // can resolve function by path
+        mockMvc.perform(post(functionApi + "custom/urlpath/157/param/29/code42")
+                                .content("{\"paramInBody\": 27.5}")
+                                .contentType(APPLICATION_JSON_VALUE))
+                .andDo(print())
+                .andExpect(jsonPath("$.data.input.paramInBody").value(27.5))
+                .andExpect(jsonPath("$.data.input.id").value("157"))
+                .andExpect(jsonPath("$.data.input.param").value("29"))
+                .andExpect(jsonPath("$.data.input.another").value("code42"))
+                .andExpect(status().is2xxSuccessful());
+
+        // can resolve function by key
+        mockMvc.perform(post(functionApi + functionKey)
+                                .content("{\"paramInBody\": 27.5}")
+                                .contentType(APPLICATION_JSON_VALUE))
+                .andDo(print())
+                .andExpect(jsonPath("$.data.input.paramInBody").value(27.5))
+                .andExpect(jsonPath("$.data.input.id").doesNotExist())
+                .andExpect(jsonPath("$.data.input.param").doesNotExist())
+                .andExpect(jsonPath("$.data.input.another").doesNotExist())
+                .andExpect(status().is2xxSuccessful());
+
+        leps.onRefresh(functionLepKey, null);
+    }
+
+    @Test
+    @Transactional
+    @SneakyThrows
+    public void testAnonymousFunctionExposedByCustomPath() {
+        String functionPrefix = "/config/tenants/RESINTTEST/entity/lep/function/";
+        String functionApi = "/api/functions/anonymous/";
+        String functionKey = "package/FUNCTION_WITH_ANONYMOUS_SET_TO_TRUE.PATH-PACKAGE-TEST";
+        String functionLepKey = functionPrefix + "package/AnonymousFunction$$FUNCTION_WITH_ANONYMOUS_SET_TO_TRUE$PATH_PACKAGE_TEST$$tenant.groovy";
+
+        leps.onRefresh(functionLepKey, "[input: lepContext.inArgs.functionInput, method: lepContext.inArgs.httpMethod]");
+
+        // can resolve function by path
+        mockMvc.perform(post(functionApi + "another/urlpath/220/with/37.4/and/tes27")
+                                .content("{\"paramInBody\": 29.77}")
+                                .contentType(APPLICATION_JSON_VALUE))
+                .andDo(print())
+                .andExpect(jsonPath("$.data.input.paramInBody").value(29.77))
+                .andExpect(jsonPath("$.data.input.id").value("220"))
+                .andExpect(jsonPath("$.data.input.param").value("37.4"))
+                .andExpect(jsonPath("$.data.input.another").value("tes27"))
+                .andExpect(status().is2xxSuccessful());
+
+        // can resolve function by key
+        mockMvc.perform(post(functionApi + functionKey)
+                                .content("{\"paramInBody\": 27.5}")
+                                .contentType(APPLICATION_JSON_VALUE))
+                .andDo(print())
+                .andExpect(jsonPath("$.data.input.paramInBody").value(27.5))
+                .andExpect(jsonPath("$.data.input.id").doesNotExist())
+                .andExpect(jsonPath("$.data.input.param").doesNotExist())
+                .andExpect(jsonPath("$.data.input.another").doesNotExist())
+                .andExpect(status().is2xxSuccessful());
+
+        leps.onRefresh(functionLepKey, null);
     }
 
 }

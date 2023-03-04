@@ -1,19 +1,5 @@
 package com.icthh.xm.ms.entity.service.impl;
 
-import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_AUTH_CONTEXT;
-import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_TENANT_CONTEXT;
-import static com.icthh.xm.commons.tenant.TenantContextUtils.getRequiredTenantKeyValue;
-import static com.icthh.xm.ms.entity.config.TenantConfigMockConfiguration.getXmEntityTemplatesSpec;
-import static java.time.Instant.now;
-import static java.util.Arrays.asList;
-import static java.util.UUID.randomUUID;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.fail;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableMap;
 import com.icthh.xm.commons.exceptions.BusinessException;
@@ -38,29 +24,21 @@ import com.icthh.xm.ms.entity.repository.EventRepository;
 import com.icthh.xm.ms.entity.repository.LinkRepository;
 import com.icthh.xm.ms.entity.repository.SpringXmEntityRepository;
 import com.icthh.xm.ms.entity.repository.UniqueFieldRepository;
+import com.icthh.xm.ms.entity.repository.XmEntityProjectionRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityRepositoryInternal;
 import com.icthh.xm.ms.entity.repository.search.XmEntityPermittedSearchRepository;
 import com.icthh.xm.ms.entity.repository.search.XmEntitySearchRepository;
 import com.icthh.xm.ms.entity.service.AttachmentService;
-import com.icthh.xm.ms.entity.service.JsonValidationService;
+import com.icthh.xm.ms.entity.service.json.JsonValidationService;
 import com.icthh.xm.ms.entity.service.LifecycleLepStrategyFactory;
 import com.icthh.xm.ms.entity.service.LinkService;
 import com.icthh.xm.ms.entity.service.ProfileService;
 import com.icthh.xm.ms.entity.service.SimpleTemplateProcessor;
 import com.icthh.xm.ms.entity.service.StorageService;
+import com.icthh.xm.ms.entity.service.XmEntityProjectionService;
 import com.icthh.xm.ms.entity.service.XmEntitySpecService;
 import com.icthh.xm.ms.entity.service.XmEntityTemplatesSpecService;
 import com.icthh.xm.ms.entity.util.XmHttpEntityUtils;
-import java.math.BigInteger;
-import java.net.URI;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.After;
@@ -83,6 +61,30 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.validation.ConstraintViolationException;
+import java.math.BigInteger;
+import java.net.URI;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
+
+import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_AUTH_CONTEXT;
+import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_TENANT_CONTEXT;
+import static com.icthh.xm.commons.tenant.TenantContextUtils.getRequiredTenantKeyValue;
+import static com.icthh.xm.ms.entity.config.TenantConfigMockConfiguration.getXmEntityTemplatesSpec;
+import static java.time.Instant.now;
+import static java.util.Arrays.asList;
+import static java.util.UUID.randomUUID;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.fail;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 @Slf4j
 public class EntityServiceImplIntTest extends AbstractSpringBootTest {
@@ -149,6 +151,9 @@ public class EntityServiceImplIntTest extends AbstractSpringBootTest {
     @Mock
     private XmAuthenticationContext context;
 
+    @Autowired
+    private XmEntityProjectionRepository xmEntityProjectionRepository;
+
     private Profile self;
 
     private static final String TEST_LINK_KEY = "TEST.LINK";
@@ -159,6 +164,8 @@ public class EntityServiceImplIntTest extends AbstractSpringBootTest {
 
     @Autowired
     private ObjectMapper objectMapper;
+
+    Locale locale;
 
     @BeforeTransaction
     public void beforeTransaction() {
@@ -180,6 +187,8 @@ public class EntityServiceImplIntTest extends AbstractSpringBootTest {
         String key = applicationProperties.getSpecificationTemplatesPathPattern().replace("{tenantName}", tenantName);
         xmEntityTemplatesSpecService.onRefresh(key, config);
 
+        XmEntityProjectionService xmEntityProjectionService = new XmEntityProjectionServiceImpl(xmEntityProjectionRepository, profileService);
+
         xmEntityService = new XmEntityServiceImpl(
             xmEntitySpecService,
             xmEntityTemplatesSpecService,
@@ -199,7 +208,8 @@ public class EntityServiceImplIntTest extends AbstractSpringBootTest {
             new TypeKeyWithExtends(tenantConfigService),
             new SimpleTemplateProcessor(objectMapper),
             eventRepository,
-            mock(JsonValidationService.class)
+            mock(JsonValidationService.class),
+            xmEntityProjectionService
         );
         xmEntityService.setSelf(xmEntityService);
 
@@ -215,11 +225,14 @@ public class EntityServiceImplIntTest extends AbstractSpringBootTest {
         self = new Profile();
         self.setXmentity(sourceEntity);
         when(profileService.getSelfProfile()).thenReturn(self);
+        locale = Locale.getDefault();
+        Locale.setDefault(Locale.US);
     }
 
     @After
     public void afterTest() {
         tenantContextHolder.getPrivilegedContext().destroyCurrentContext();
+        Locale.setDefault(locale);
     }
 
     @Test

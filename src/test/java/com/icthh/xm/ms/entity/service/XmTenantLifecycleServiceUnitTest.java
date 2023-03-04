@@ -8,6 +8,7 @@ import static org.mockito.Mockito.when;
 import com.icthh.xm.commons.gen.model.Tenant;
 import com.icthh.xm.commons.tenant.TenantContext;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
+import com.icthh.xm.commons.tenant.TenantKey;
 import com.icthh.xm.ms.entity.AbstractUnitTest;
 import com.icthh.xm.ms.entity.config.ApplicationProperties;
 import com.icthh.xm.ms.entity.domain.EntityState;
@@ -36,6 +37,7 @@ public class XmTenantLifecycleServiceUnitTest extends AbstractUnitTest {
     private static final String SERVICE_NAME = "test";
     private static final String EXEC_ERROR = "Service call failed";
     private static final String SUCCESS_NAME = "success";
+    private static final String TENANT_KEY = "XM";
 
     private XmTenantLifecycleService xmTenantLifecycleService;
     private List<TenantClient> tenantClients = new ArrayList<>();
@@ -50,14 +52,17 @@ public class XmTenantLifecycleServiceUnitTest extends AbstractUnitTest {
     @Mock
     private TenantContext tenantContext;
 
+    @Mock
+    TenantContextHolder tenantContextHolder;
+
     @Before
     public void before() {
         MockitoAnnotations.initMocks(this);
 
-        TenantContextHolder tenantContextHolder = mock(TenantContextHolder.class);
-
+        when(applicationProperties.getTenantWithCreationAccessList()).thenReturn(Collections.singletonList(TENANT_KEY));
         when(tenantContextHolder.getContext()).thenReturn(tenantContext);
         when(tenantContext.getTenant()).thenReturn(Optional.of(tenant));
+        when(tenantContextHolder.getTenantKey()).thenReturn(TENANT_KEY);
         when(tenant.isSuper()).thenReturn(true);
 
         xmTenantLifecycleService = new XmTenantLifecycleService(tenantClients,
@@ -65,8 +70,8 @@ public class XmTenantLifecycleServiceUnitTest extends AbstractUnitTest {
     }
 
     @Test
-    public void testNoTenant() throws Exception {
-        when(tenantContext.getTenant()).thenReturn(Optional.empty());
+    public void testTenantIsNotInTheCreationAccessList() throws Exception {
+        when(tenantContextHolder.getTenantKey()).thenReturn("XM2");
 
         IllegalArgumentException exception = null;
         try {
@@ -76,22 +81,7 @@ public class XmTenantLifecycleServiceUnitTest extends AbstractUnitTest {
         }
 
         assertNotNull(exception);
-        assertEquals("Tenant not supplied", exception.getMessage());
-    }
-
-    @Test
-    public void testNotSuperTenant() throws Exception {
-        when(tenant.isSuper()).thenReturn(false);
-
-        IllegalArgumentException exception = null;
-        try {
-            xmTenantLifecycleService.changeState(getEntity(), EntityState.ACTIVE.name(), context);
-        } catch (IllegalArgumentException e) {
-            exception = e;
-        }
-
-        assertNotNull(exception);
-        assertEquals("Creating new tenants allowed only from super tenant", exception.getMessage());
+        assertEquals("Error creating tenant with key XM2. Creating new tenants allowed only from super tenant", exception.getMessage());
     }
 
     @Test

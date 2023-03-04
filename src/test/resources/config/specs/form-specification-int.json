@@ -1,0 +1,7 @@
+{
+    "key": "tenantKey",
+    "title": {
+        "en": "Tenant key"
+    },
+    "type": "string"
+}

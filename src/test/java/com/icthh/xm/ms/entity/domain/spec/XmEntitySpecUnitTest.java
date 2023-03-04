@@ -1,5 +1,6 @@
 package com.icthh.xm.ms.entity.domain.spec;
 
+import static com.icthh.xm.ms.entity.web.rest.XmEntitySaveIntTest.loadFile;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -39,8 +40,6 @@ import org.springframework.core.io.ClassPathResource;
 @Slf4j
 public class XmEntitySpecUnitTest extends AbstractUnitTest {
 
-    private static final Path SPEC_PATH = Paths.get("./src/test/resources/config/specs/xmentityspec-test.yml");
-
     private static final Set<String> SPEC_MAIN_FILES = loadListSpecificationFiles();
 
     private MutableInt countFields = new MutableInt();
@@ -55,7 +54,7 @@ public class XmEntitySpecUnitTest extends AbstractUnitTest {
     @Test
     public void testParseXmEntitySpecFromYml() throws IOException {
         ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
-        XmEntitySpec xmEntitySpec = mapper.readValue(new File(SPEC_PATH.toString()), XmEntitySpec.class);
+        XmEntitySpec xmEntitySpec = mapper.readValue(loadFile("config/specs/xmentityspec-test.yml"), XmEntitySpec.class);
 
         assertNotNull(xmEntitySpec);
         assertNotNull(xmEntitySpec.getTypes());

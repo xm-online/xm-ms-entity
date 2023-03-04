@@ -4,7 +4,7 @@ name: XM^online
 theme: teal
 langs:
     - en
-    - ru
+    - uk
 sidebar:
     hideAdminConsole: true
     hideApplication: false

@@ -13,7 +13,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.deser.std.UntypedObjectDeserializer;
-import com.icthh.xm.ms.entity.config.jsonb.Jsonb;
+import com.icthh.xm.commons.migration.db.jsonb.Jsonb;
 import com.icthh.xm.ms.entity.domain.converter.MapToStringConverter;
 import com.icthh.xm.ms.entity.domain.listener.AvatarUrlListener;
 import com.icthh.xm.ms.entity.domain.listener.XmEntityElasticSearchListener;
@@ -213,6 +213,13 @@ public class XmEntity implements Serializable, Persistable<Long> {
     @ApiModelProperty(value = "Created by user key.")
     @Column(name = "created_by")
     private String createdBy;
+
+    /**
+     * Updated by user key.
+     */
+    @ApiModelProperty(value = "Updated by user key.")
+    @Column(name = "updated_by")
+    private String updatedBy;
 
     @Column(name = "version")
     @Version
@@ -461,6 +468,19 @@ public class XmEntity implements Serializable, Persistable<Long> {
 
     public void setCreatedBy(String createdBy) {
         this.createdBy = createdBy;
+    }
+
+    public String getUpdatedBy() {
+        return updatedBy;
+    }
+
+    public XmEntity updatedBy(String updatedBy) {
+        this.updatedBy = updatedBy;
+        return this;
+    }
+
+    public void setUpdatedBy(String updatedBy) {
+        this.updatedBy = updatedBy;
     }
 
     public Set<Attachment> getAttachments() {
@@ -790,6 +810,7 @@ public class XmEntity implements Serializable, Persistable<Long> {
             + ", data='" + getData() + "'"
             + ", removed='" + isRemoved() + "'"
             + ", createdBy='" + getCreatedBy() + "'"
+            + ", updatedBy='" + getUpdatedBy() + "'"
             + ", version='" + getVersion() + "'"
             + "}";
     }

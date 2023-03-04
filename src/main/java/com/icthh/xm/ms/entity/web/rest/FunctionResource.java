@@ -5,6 +5,7 @@ import static org.springframework.web.servlet.HandlerMapping.BEST_MATCHING_PATTE
 import static org.springframework.web.servlet.HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE;
 
 import com.codahale.metrics.annotation.Timed;
+import com.icthh.xm.commons.logging.aop.IgnoreLogginAspect;
 import com.icthh.xm.commons.permission.annotation.PrivilegeDescription;
 import com.icthh.xm.ms.entity.domain.FunctionContext;
 import com.icthh.xm.ms.entity.service.FunctionService;
@@ -12,17 +13,20 @@ import com.icthh.xm.ms.entity.web.rest.util.HeaderUtil;
 import java.net.URI;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
+import java.util.Optional;
 import javax.servlet.http.HttpServletRequest;
 import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.util.AntPathMatcher;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -41,6 +45,9 @@ import org.springframework.web.servlet.ModelAndView;
 public class FunctionResource {
 
     private static final String ENTITY_NAME_FUNCTION_CONTEXT = "functionContext";
+
+    private static final String ENTITY_NAME_FUNCTION_PATH = "/api/function-contexts/";
+
     private static final String UPLOAD = "/upload";
 
     private final FunctionService functionService;
@@ -62,7 +69,7 @@ public class FunctionResource {
     @PrivilegeDescription("Privilege to call get function")
     public ResponseEntity<Object> callGetFunction(@PathVariable("functionKey") String functionKey,
                                                            @RequestParam(required = false) Map<String, Object> functionInput) {
-        FunctionContext result = functionService.execute(functionKey, functionInput);
+        FunctionContext result = functionService.execute(functionKey, functionInput, "GET");
         return ResponseEntity.ok().body(result.functionResult());
     }
 
@@ -72,7 +79,17 @@ public class FunctionResource {
     @PrivilegeDescription("Privilege to call put function")
     public ResponseEntity<Object> callPutFunction(@PathVariable("functionKey") String functionKey,
                                                            @RequestBody(required = false) Map<String, Object> functionInput) {
-        FunctionContext result = functionService.execute(functionKey, functionInput);
+        FunctionContext result = functionService.execute(functionKey, functionInput, "PUT");
+        return ResponseEntity.ok().body(result.functionResult());
+    }
+
+    @Timed
+    @PatchMapping("/functions/{functionKey:.+}")
+    @PreAuthorize("hasPermission({'functionKey': #functionKey}, 'FUNCTION.PATCH.CALL')")
+    @PrivilegeDescription("Privilege to call patch function")
+    public ResponseEntity<Object> callPatchFunction(@PathVariable("functionKey") String functionKey,
+                                                    @RequestBody(required = false) Map<String, Object> functionInput) {
+        FunctionContext result = functionService.execute(functionKey, functionInput, "PATCH");
         return ResponseEntity.ok().body(result.functionResult());
     }
 
@@ -88,13 +105,30 @@ public class FunctionResource {
     @PostMapping("/functions/{functionKey:.+}")
     @PreAuthorize("hasPermission({'functionKey': #functionKey}, 'FUNCTION.CALL')")
     @PrivilegeDescription("Privilege to execute a function by key (key in entity specification)")
-    public ResponseEntity<Object> callFunction(@PathVariable("functionKey") String functionKey,
-                                               @RequestBody(required = false) Map<String, Object> functionInput) {
-        FunctionContext result = functionService.execute(functionKey, functionInput);
-        return ResponseEntity.created(URI.create("/api/function-contexts/" + Objects.toString(result.getId(), "")))
-            .headers(HeaderUtil.createEntityCreationAlert(ENTITY_NAME_FUNCTION_CONTEXT, String.valueOf(result.getId())))
-            .body(result.functionResult());
+    public ResponseEntity<Object> callPostFunction(@PathVariable("functionKey") String functionKey,
+                                                   @RequestBody(required = false) Map<String, Object> functionInput) {
+        FunctionContext result = functionService.execute(functionKey, functionInput, "POST");
+        return processCreatedResponse(result);
     }
+
+    /**
+     * DELETE  /functions/{functionKey} : Execute a function by key (key in entity specification).
+     *
+     * @param functionKey   the function key to execute
+     * @param functionInput function input data context
+     * @return the ResponseEntity with status 200 (Success) and with body the new FunctionContext,
+     * or with status 400 (Bad Request) if the FunctionContext has already an ID
+     */
+    @Timed
+    @DeleteMapping("/functions/{functionKey:.+}")
+    @PreAuthorize("hasPermission({'functionKey': #functionKey}, 'FUNCTION.DELETE.CALL')")
+    @PrivilegeDescription("Privilege to execute a function by key (key in entity specification)")
+    public ResponseEntity<Object> callDeleteFunction(@PathVariable("functionKey") String functionKey,
+                                                   @RequestBody(required = false) Map<String, Object> functionInput) {
+        FunctionContext result = functionService.execute(functionKey, functionInput, "DELETE");
+        return ResponseEntity.ok().body(result.functionResult());
+    }
+
 
     /**
      * POST  /functions/anonymous/{functionKey} : Execute an anonymous function by key (key in entity specification).
@@ -106,13 +140,26 @@ public class FunctionResource {
      */
     @Timed
     @PostMapping("/functions/anonymous/{functionKey:.+}")
-    @PrivilegeDescription("Privilege to execute a function by key (key in entity specification)")
-    public ResponseEntity<Object> callAnonymousFunction(@PathVariable("functionKey") String functionKey,
+    public ResponseEntity<Object> callPostAnonymousFunction(@PathVariable("functionKey") String functionKey,
                                                @RequestBody(required = false) Map<String, Object> functionInput) {
-        FunctionContext result = functionService.executeAnonymous(functionKey, functionInput);
-        return ResponseEntity.created(URI.create("/api/function-contexts/" + Objects.toString(result.getId(), "")))
-            .headers(HeaderUtil.createEntityCreationAlert(ENTITY_NAME_FUNCTION_CONTEXT, String.valueOf(result.getId())))
-            .body(result.functionResult());
+        FunctionContext result = functionService.executeAnonymous(functionKey, functionInput, "POST");
+        return processCreatedResponse(result);
+    }
+
+    /**
+     * GET  /functions/anonymous/{functionKey} : Execute an anonymous function by key (key in entity specification).
+     *
+     * @param functionKey   the function key to execute
+     * @param functionInput function input data context
+     * @return the ResponseEntity with status 200 (Success) and with body the new FunctionContext,
+     * or with status 400 (Bad Request) if the FunctionContext has already an ID
+     */
+    @Timed
+    @GetMapping("/functions/anonymous/{functionKey:.+}")
+    public ResponseEntity<Object> callGetAnonymousFunction(@PathVariable("functionKey") String functionKey,
+                                                            @RequestParam(required = false) Map<String, Object> functionInput) {
+        FunctionContext result = functionService.executeAnonymous(functionKey, functionInput, "GET");
+        return ResponseEntity.ok().body(result.functionResult());
     }
 
     /**
@@ -128,7 +175,7 @@ public class FunctionResource {
     @PrivilegeDescription("Privilege to execute a mvc function by key (key in entity specification)")
     public ModelAndView callMvcFunction(@PathVariable("functionKey") String functionKey,
                                         @RequestBody(required = false) Map<String, Object> functionInput) {
-        FunctionContext result = functionService.execute(functionKey, functionInput);
+        FunctionContext result = functionService.execute(functionKey, functionInput, "POST");
         Object data = result.getData().get("modelAndView");
         if (data instanceof ModelAndView) {
             return (ModelAndView) data;
@@ -136,6 +183,7 @@ public class FunctionResource {
         return null;
     }
 
+    @IgnoreLogginAspect
     @Timed
     @GetMapping("/functions/**")
     public ResponseEntity<Object> callGetFunction(HttpServletRequest request,
@@ -143,13 +191,15 @@ public class FunctionResource {
         return self.callGetFunction(getFunctionKey(request), functionInput);
     }
 
+    @IgnoreLogginAspect
     @Timed
     @PostMapping("/functions/**")
-    public ResponseEntity<Object> callFunction(HttpServletRequest request,
-                                               @RequestBody(required = false) Map<String, Object> functionInput) {
-        return self.callFunction(getFunctionKey(request), functionInput);
+    public ResponseEntity<Object> callPostFunction(HttpServletRequest request,
+                                                   @RequestBody(required = false) Map<String, Object> functionInput) {
+        return self.callPostFunction(getFunctionKey(request), functionInput);
     }
 
+    @IgnoreLogginAspect
     @Timed
     @PutMapping("/functions/**")
     public ResponseEntity<Object> callPutFunction(HttpServletRequest request,
@@ -157,11 +207,44 @@ public class FunctionResource {
         return self.callPutFunction(getFunctionKey(request), functionInput);
     }
 
+    @IgnoreLogginAspect
+    @Timed
+    @PatchMapping("/functions/**")
+    public ResponseEntity<Object> callPatchFunction(HttpServletRequest request,
+                                                    @RequestBody(required = false) Map<String, Object> functionInput) {
+        return self.callPatchFunction(getFunctionKey(request), functionInput);
+    }
+
+    @IgnoreLogginAspect
+    @Timed
+    @DeleteMapping("/functions/**")
+    public ResponseEntity<Object> callDeleteFunction(HttpServletRequest request,
+                                                  @RequestBody(required = false) Map<String, Object> functionInput) {
+        return self.callDeleteFunction(getFunctionKey(request), functionInput);
+    }
+
+    @IgnoreLogginAspect
     @Timed
     @PostMapping("/functions/mvc/**")
     public ModelAndView callMvcFunction(HttpServletRequest request,
                                         @RequestBody(required = false) Map<String, Object> functionInput) {
         return self.callMvcFunction(getFunctionKey(request), functionInput);
+    }
+
+    @IgnoreLogginAspect
+    @Timed
+    @GetMapping("/functions/anonymous/**")
+    public ResponseEntity<Object> callPostAnonymousFunction(HttpServletRequest request,
+                                                  @RequestParam(required = false) Map<String, Object> functionInput) {
+        return self.callGetAnonymousFunction(getFunctionKey(request), functionInput);
+    }
+
+    @IgnoreLogginAspect
+    @Timed
+    @PostMapping("/functions/anonymous/**")
+    public ResponseEntity<Object> callGetAnonymousFunction(HttpServletRequest request,
+                                                   @RequestBody(required = false) Map<String, Object> functionInput) {
+        return self.callPostAnonymousFunction(getFunctionKey(request), functionInput);
     }
 
     @Timed
@@ -175,7 +258,7 @@ public class FunctionResource {
         Map<String, Object> functionInput = of("httpServletRequest", httpServletRequest, "files", files);
         String functionKey = getFunctionKey(request);
         functionKey = functionKey.substring(0, functionKey.length() - UPLOAD.length());
-        FunctionContext result = functionService.execute(functionKey, functionInput);
+        FunctionContext result = functionService.execute(functionKey, functionInput, "POST");
         return ResponseEntity.ok().body(result.functionResult());
     }
 
@@ -184,4 +267,16 @@ public class FunctionResource {
         String bestMatchingPattern = request.getAttribute(BEST_MATCHING_PATTERN_ATTRIBUTE).toString();
         return new AntPathMatcher().extractPathWithinPattern(bestMatchingPattern, path);
     }
+
+    private ResponseEntity<Object> processCreatedResponse(FunctionContext result) {
+        return Optional.ofNullable(result.getId())
+            .map(id -> URI.create(ENTITY_NAME_FUNCTION_PATH + id))
+            .map(uri -> ResponseEntity.created(uri)
+                .headers(HeaderUtil.createEntityCreationAlert(ENTITY_NAME_FUNCTION_CONTEXT, String.valueOf(result.getId())))
+                .body(result.functionResult()))
+            .orElse(ResponseEntity
+                .status(HttpStatus.CREATED.value())
+                .body(result.functionResult()));
+    }
+
 }

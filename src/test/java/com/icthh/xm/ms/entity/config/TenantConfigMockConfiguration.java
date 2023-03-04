@@ -16,10 +16,13 @@ import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.web.spring.TenantVerifyInterceptor;
 import com.icthh.xm.ms.entity.config.tenant.LocalXmEntitySpecService;
 import com.icthh.xm.ms.entity.security.access.DynamicPermissionCheckService;
+import com.icthh.xm.ms.entity.service.processor.DefinitionSpecProcessor;
 import com.icthh.xm.ms.entity.service.privileges.custom.EntityCustomPrivilegeService;
 import com.icthh.xm.ms.entity.service.XmEntitySpecService;
+import com.icthh.xm.ms.entity.service.processor.FormSpecProcessor;
 import lombok.SneakyThrows;
 import org.apache.commons.io.IOUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -39,6 +42,7 @@ public class TenantConfigMockConfiguration {
         tenants.add("DEMO");
         tenants.add("TEST");
         tenants.add("RESINTTEST");
+        tenants.add("SPECIFICATIONS");
     }
 
     @Bean
@@ -46,13 +50,19 @@ public class TenantConfigMockConfiguration {
                                                    TenantContextHolder tenantContextHolder,
                                                    EntityCustomPrivilegeService entityCustomPrivilegeService,
                                                    DynamicPermissionCheckService dynamicPermissionCheckService,
-                                                   XmEntityTenantConfigService xmEntityTenantConfigService) {
+                                                   XmEntityTenantConfigService xmEntityTenantConfigService,
+                                                   DefinitionSpecProcessor definitionSpecProcessor,
+                                                   FormSpecProcessor formSpecProcessor,
+                                                   @Value("${spring.servlet.multipart.max-file-size:1MB}") String maxFileSize) {
         return new LocalXmEntitySpecService(tenantConfigRepository(),
                                             applicationProperties,
                                             tenantContextHolder,
                                             entityCustomPrivilegeService,
                                             dynamicPermissionCheckService,
-                                            xmEntityTenantConfigService);
+                                            xmEntityTenantConfigService,
+                                            definitionSpecProcessor,
+                                            formSpecProcessor,
+                                            maxFileSize);
     }
 
     @Bean
