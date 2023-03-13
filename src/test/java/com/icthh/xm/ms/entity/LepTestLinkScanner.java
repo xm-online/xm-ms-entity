@@ -28,8 +28,8 @@ public class LepTestLinkScanner {
 
     private static final String LEP_TEST_HOME = "src".concat(SEPARATOR).concat("test").concat(SEPARATOR).concat("lep");
     private static final String LEP_SCRIPT_HOME = "src".concat(SEPARATOR).concat("main").concat(SEPARATOR).concat("lep");
-    private static final String RESOURCE_HOME = "src".concat(SEPARATOR).concat("main").concat(SEPARATOR).concat("resources");
-    private static final String XM_CONFIG_RESOURCE_HOME = RESOURCE_HOME.concat(SEPARATOR).concat("config").concat(SEPARATOR).concat("tenants");
+    private static final String TEST_RESOURCE_HOME = "src".concat(SEPARATOR).concat("test").concat(SEPARATOR).concat("resources");
+    private static final String XM_CONFIG_TEST_RESOURCE_HOME = TEST_RESOURCE_HOME.concat(SEPARATOR).concat("config").concat(SEPARATOR).concat("tenants");
 
     private enum RegexpPatterns {
         WIN(".*tenants\\\\.*\\\\%s\\\\test", ".*\\\\tenants\\\\", "\\\\.*"),
@@ -101,7 +101,7 @@ public class LepTestLinkScanner {
         Path pathToAllConfigs = Paths.get(XM_REPOSITORY_HOME, XM_REPOSITORY_TENANTS);
         if (Files.exists(pathToAllConfigs)) {
             var symLink = new SymLink(
-                    Paths.get(PROJECT_ROOT, XM_CONFIG_RESOURCE_HOME),
+                    Paths.get(PROJECT_ROOT, XM_CONFIG_TEST_RESOURCE_HOME),
                     pathToAllConfigs
             );
             if (!Files.exists(symLink.from)) {
