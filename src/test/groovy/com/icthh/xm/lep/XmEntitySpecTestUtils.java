@@ -54,8 +54,6 @@ public class XmEntitySpecTestUtils {
             entitySpec.add(Pair.create(basePath + "specs/xmentityspecs.yml", readFile(resource.getFile())));
         }
 
-        System.out.println(entitySpec);
-
         entitySpec.forEach(f -> xmEntitySpecService.onRefresh(f.getKey(), f.getValue()));
         xmEntitySpecService.refreshFinished(entitySpec.stream().map(Pair::getKey).collect(toList()));
     }
