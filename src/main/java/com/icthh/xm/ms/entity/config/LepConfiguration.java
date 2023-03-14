@@ -47,11 +47,6 @@ public class LepConfiguration extends WebLepSpringConfiguration {
     }
 
     @Bean
-    public SystemQueueConsumerLepKeyResolver systemQueueConsumerLepKeyResolver() {
-        return new SystemQueueConsumerLepKeyResolver();
-    }
-
-    @Bean
     public ElasticIndexManagerService elasticIndexManagerService(ApplicationContext context) {
         return new ElasticIndexManagerService() {
             @Override
