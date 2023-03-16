@@ -3,7 +3,6 @@ package com.icthh.xm.ms.entity.listener;
 import com.icthh.xm.commons.logging.util.MdcUtils;
 import com.icthh.xm.commons.permission.inspector.PrivilegeInspector;
 import com.icthh.xm.ms.entity.config.ApplicationProperties;
-import com.icthh.xm.ms.entity.repository.kafka.SystemQueueConsumer;
 import com.icthh.xm.ms.entity.repository.kafka.SystemTopicConsumer;
 import java.util.Map;
 import java.util.UUID;
@@ -29,7 +28,6 @@ public class ApplicationStartup implements ApplicationListener<ApplicationReadyE
 
     private final ApplicationProperties applicationProperties;
     private final ConsumerFactory<String, String> consumerFactory;
-    private final SystemQueueConsumer systemQueueConsumer;
     private final SystemTopicConsumer systemTopicConsumer;
     private final KafkaProperties kafkaProperties;
     private final PrivilegeInspector privilegeInspector;
@@ -47,7 +45,6 @@ public class ApplicationStartup implements ApplicationListener<ApplicationReadyE
 
     private void createKafkaConsumers() {
         createSystemConsumer(applicationProperties.getKafkaSystemTopic(), systemTopicConsumer::consumeEvent);
-        createSystemConsumer(applicationProperties.getKafkaSystemQueue(), systemQueueConsumer::consumeEvent);
     }
 
     private void createSystemConsumer(String name, MessageListener<String, String> consumeEvent) {

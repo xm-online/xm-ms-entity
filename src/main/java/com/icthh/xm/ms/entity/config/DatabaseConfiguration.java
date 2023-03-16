@@ -3,6 +3,7 @@ package com.icthh.xm.ms.entity.config;
 import static com.icthh.xm.ms.entity.config.Constants.CHANGE_LOG_PATH;
 import static org.hibernate.cfg.AvailableSettings.JPA_VALIDATION_FACTORY;
 
+import com.icthh.xm.commons.domainevent.db.config.DatabaseSourceInterceptorCustomizer;
 import com.icthh.xm.commons.migration.db.XmMultiTenantSpringLiquibase;
 import com.icthh.xm.commons.migration.db.XmSpringLiquibase;
 import com.icthh.xm.commons.migration.db.tenant.SchemaResolver;
@@ -122,7 +123,8 @@ public class DatabaseConfiguration {
     public LocalContainerEntityManagerFactoryBean entityManagerFactory(DataSource dataSource,
                                                                        MultiTenantConnectionProvider multiTenantConnectionProviderImpl,
                                                                        CurrentTenantIdentifierResolver currentTenantIdentifierResolverImpl,
-                                                                       LocalValidatorFactoryBean localValidatorFactoryBean) {
+                                                                       LocalValidatorFactoryBean localValidatorFactoryBean,
+                                                                       DatabaseSourceInterceptorCustomizer databaseSourceInterceptorCustomizer) {
         Map<String, Object> properties = new HashMap<>(jpaProperties.getProperties());
         properties.put(org.hibernate.cfg.Environment.MULTI_TENANT, MultiTenancyStrategy.SCHEMA);
         properties.put(org.hibernate.cfg.Environment.MULTI_TENANT_CONNECTION_PROVIDER,
@@ -131,7 +133,7 @@ public class DatabaseConfiguration {
             currentTenantIdentifierResolverImpl);
 
         properties.put(JPA_VALIDATION_FACTORY, localValidatorFactoryBean);
-
+        databaseSourceInterceptorCustomizer.customize(properties);
         LocalContainerEntityManagerFactoryBean em = new LocalContainerEntityManagerFactoryBean();
         em.setDataSource(dataSource);
         em.setPackagesToScan(JPA_PACKAGES, OUTBOX_JPA_PACKAGES);
