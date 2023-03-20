@@ -354,6 +354,7 @@ dependencies {
     implementation "com.icthh.xm.commons:xm-commons-logging-configurable:${xm_commons_version}"
     implementation "com.icthh.xm.commons:xm-commons-logging-trace:${xm_commons_version}"
     implementation "com.icthh.xm.commons:xm-commons-domainevent:${xm_commons_version}"
+    implementation "com.icthh.xm.commons:xm-commons-domainevent-db:${xm_commons_version}"
     implementation "com.icthh.xm.commons:xm-commons-domainevent-outbox:${xm_commons_version}"
 
     implementation "org.freemarker:freemarker:${freemarker_version}"

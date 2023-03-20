@@ -199,6 +199,7 @@ application:
     specification-templates-path-pattern: /config/tenants/{tenantName}/entity/${application.specification-templates-name}
     kafka-system-topic: system_topic
     kafka-system-queue: system_queue
+    auto-system-queue-enabled: true
     kafka-metadata-max-age: 60000 #in milliseconds
     db-schema-suffix:
     retry:
@@ -229,8 +230,6 @@ application:
     elasticSchemaSuffix: ""
     requestCacheIgnoredPathPatternList: /api/functions/*/upload
     periodicMetricPoolSize: 1
-    maxUploadFileSize: 1073741824
-    maxUploadSize: 1073741824
     kafkaMetric:
         enabled: true
         connectionTimeoutTopic: 1000
