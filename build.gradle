@@ -242,6 +242,16 @@ repositories {
     mavenCentral()
     jcenter()
     //jhipster-needle-gradle-repositories - JHipster will add additional repositories
+    maven {
+        url itsf_artifactory_contextUrl
+        allowInsecureProtocol = true
+
+        credentials {
+            username = itsf_artifactory_user
+            password = itsf_artifactory_password
+        }
+    }
+
 }
 
 dependencies {
