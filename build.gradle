@@ -360,7 +360,7 @@ dependencies {
     implementation "com.icthh.xm.commons:xm-commons-scheduler:${xm_commons_version}"
     implementation "com.icthh.xm.commons:xm-commons-metric:${xm_commons_version}"
     implementation "com.icthh.xm.commons:xm-commons-mail:${xm_commons_version}"
-//    implementation "com.icthh.xm.commons:xm-commons-topic:${xm_commons_version}"
+    implementation "com.icthh.xm.commons:xm-commons-topic:${xm_commons_version}"
     implementation "com.icthh.xm.commons:xm-commons-logging-configurable:${xm_commons_version}"
     implementation "com.icthh.xm.commons:xm-commons-logging-trace:${xm_commons_version}"
     implementation "com.icthh.xm.commons:xm-commons-domainevent:${xm_commons_version}"
