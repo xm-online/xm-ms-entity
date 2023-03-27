@@ -4,6 +4,7 @@ import com.icthh.xm.commons.config.client.service.TenantConfigService;
 import com.icthh.xm.commons.domainevent.service.EventPublisher;
 import com.icthh.xm.commons.domainevent.service.builder.DomainEventFactory;
 import com.icthh.xm.commons.lep.commons.CommonsService;
+import com.icthh.xm.commons.messaging.communication.service.CommunicationService;
 import com.icthh.xm.commons.permission.service.PermissionCheckService;
 import com.icthh.xm.commons.topic.service.KafkaTemplateService;
 import com.icthh.xm.ms.entity.config.RestTemplateConfiguration.PathTimeoutHttpComponentsClientHttpRequestFactory;
@@ -71,7 +72,8 @@ public class LepAppEventListenerConfiguration {
         KafkaTemplateService kafkaTemplateService,
         MetricsAdapter metricsAdapter,
         EventPublisher eventPublisher,
-        DomainEventFactory domainEventFactory
+        DomainEventFactory domainEventFactory,
+        CommunicationService communicationService
     ) {
 
         return new XmEntityMsLepProcessingApplicationListener(xmEntityService,
@@ -81,7 +83,7 @@ public class LepAppEventListenerConfiguration {
             commonsService, permissionCheckService, eventService, calendarService, tenantLepResource,
             amazonS3Template, elasticsearchTemplate, permittedSearchRepository, elasticsearchIndexService,
             transactionExecutor, customMetricsContext, kafkaTemplateService, metricsAdapter,
-            eventPublisher, domainEventFactory);
+            eventPublisher, domainEventFactory, communicationService);
     }
 
 }
