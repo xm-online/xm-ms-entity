@@ -29,13 +29,16 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ClassPathResource;
 
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @Configuration
 public class TenantConfigMockConfiguration {
 
     private Set<String> tenants = new HashSet<>();
+    public static List<String> lepTestTenants = new ArrayList<>();
 
     {
         tenants.add("XM");
@@ -43,6 +46,7 @@ public class TenantConfigMockConfiguration {
         tenants.add("TEST");
         tenants.add("RESINTTEST");
         tenants.add("SPECIFICATIONS");
+        tenants.addAll(lepTestTenants);
     }
 
     @Bean
