@@ -11,5 +11,5 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @GroovyASTTransformationClass("com.icthh.xm.ms.entity.lep.helpers.LepContextTransformation")
 public @interface LepContextConstructor {
-
+    boolean useLepFactory() default false;
 }
