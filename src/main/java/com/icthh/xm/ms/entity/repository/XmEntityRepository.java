@@ -31,11 +31,7 @@ public interface XmEntityRepository extends XmEntityProjectionRepository {
 
     /**
      * For backward compatibility in LEPs.
-     * <p>
-     * Deprecated: use findById(Long aLong) instead.
-     * </p>
      */
-    @Deprecated
     XmEntity findOne(Long id);
 
     XmEntity findOne(Specification<XmEntity> spec);
@@ -48,6 +44,15 @@ public interface XmEntityRepository extends XmEntityProjectionRepository {
     @Deprecated
     <S extends XmEntity> S findOne(Example<S> example);
 
+    /**
+     * Returns entity by ID with using xmEntityGraph.
+     * <p>
+     * Deprecated: fetch all relations (like target, attachments, etc) use findById(Long aLong) instead.
+     * </p>
+     * @param id identifier of the entity
+     * @return xmEntity instance
+     */
+    @Deprecated
     XmEntity findOneById(Long id);
 
     XmEntity findOneByIdForUpdate(@Param("id") Long id);

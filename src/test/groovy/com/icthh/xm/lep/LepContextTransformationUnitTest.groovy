@@ -1,5 +1,6 @@
 package com.icthh.xm.lep
 
+import com.icthh.xm.commons.lep.spring.lepservice.LepServiceFactory
 import com.icthh.xm.commons.security.XmAuthenticationContext
 import com.icthh.xm.ms.entity.lep.LepContext
 import com.icthh.xm.ms.entity.lep.helpers.LepContextConstructor
@@ -9,8 +10,11 @@ import groovy.transform.ToString
 import org.junit.Test
 import org.springframework.web.client.RestTemplate
 
+import static org.mockito.ArgumentMatchers.eq
 import static org.mockito.Mockito.mock
 import static org.junit.Assert.*
+import static org.mockito.Mockito.verify
+import static org.mockito.Mockito.verifyNoMoreInteractions
 
 class LepContextTransformationUnitTest {
 
@@ -23,6 +27,7 @@ class LepContextTransformationUnitTest {
         mockLepContext.services = new LepContext.LepServices();
         mockLepContext.templates = new LepContext.LepTemplates();
         mockLepContext.repositories = new LepContext.LepRepositories();
+        mockLepContext.lepServices = mock(LepServiceFactory.class)
 
         mockLepContext.repositories.xmEntity = mock(XmEntityRepository.class);
         mockLepContext.services.xmEntity = mock(XmEntityService.class);
@@ -39,6 +44,9 @@ class LepContextTransformationUnitTest {
         assertSame(mockLepContext.services.xmEntity, t.anotherService.entityService)
         assertSame(mockLepContext.authContext, t.anotherService.auth)
         assertEquals(FINAL_STRING_VALUE, t.anotherService.valueInitedInConstructor)
+
+        verify(mockLepContext.lepServices).getInstance(eq(AnotherTestLepServiceCreateByFactory.class))
+        verifyNoMoreInteractions(mockLepContext.lepServices)
     }
 
     @ToString
@@ -52,15 +60,22 @@ class LepContextTransformationUnitTest {
     }
 
     @ToString
-    @LepContextConstructor
+    @LepContextConstructor(useLepFactory = true)
     public static class AnotherTestLepService {
         final XmEntityService entityService
         final XmAuthenticationContext auth
         final String valueInitedInConstructor
+        final AnotherTestLepServiceCreateByFactory anotherTestLepServiceCreateByFactory
 
         AnotherTestLepService(def lepContext) {
             valueInitedInConstructor = FINAL_STRING_VALUE
         }
+    }
+
+    @ToString
+    @LepContextConstructor
+    public static class AnotherTestLepServiceCreateByFactory {
+        final LepContext lepContext
     }
 
 }
