@@ -3,6 +3,7 @@ package com.icthh.xm.ms.entity.service.spec;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.github.fge.jsonschema.main.JsonSchema;
+import com.icthh.xm.commons.logging.aop.IgnoreLogginAspect;
 import com.icthh.xm.ms.entity.config.XmEntityTenantConfigService;
 import com.icthh.xm.ms.entity.domain.spec.FunctionSpec;
 import com.icthh.xm.ms.entity.domain.spec.TypeSpec;
@@ -56,10 +57,12 @@ public class XmEntitySpecContextService {
         this.maxFileSize = maxFileSize;
     }
 
+    @IgnoreLogginAspect
     public Map<String, TypeSpec> typesByTenant(String tenantKey) {
         return nullSafe(typesByTenant.get(tenantKey));
     }
 
+    @IgnoreLogginAspect
     public Map<String, TypeSpec> typesByTenantStrict(String tenantKey) {
         if (!typesByTenant.containsKey(tenantKey)) {
             log.error("Tenant configuration {} not found", tenantKey);
@@ -68,10 +71,12 @@ public class XmEntitySpecContextService {
         return nullSafe(typesByTenant.get(tenantKey));
     }
 
+    @IgnoreLogginAspect
     public Map<String, JsonSchema> dataSpecJsonSchemas(String tenantKey) {
         return dataSpecJsonSchemaService.dataSpecJsonSchemas(tenantKey);
     }
 
+    @IgnoreLogginAspect
     public Map<String, FunctionSpec> functionsByTenant(String tenantKey) {
         return functionByTenantService.functionsByTenant(tenantKey);
     }
@@ -87,6 +92,7 @@ public class XmEntitySpecContextService {
         byFiles.put(updatedKey, config);
     }
 
+    @IgnoreLogginAspect
     public Map<String, TypeSpec> updateByTenantState(String tenant) {
         var tenantEntitySpec = readEntitySpec(tenant);
 
@@ -109,7 +115,9 @@ public class XmEntitySpecContextService {
 
     private LinkedHashMap<String, TypeSpec> readEntitySpec(String tenant) {
         var tenantEntitySpec = new LinkedHashMap<String, TypeSpec>();
-        typesByTenantByFile.get(tenant).values().stream().map(this::toTypeSpecsMap).forEach(tenantEntitySpec::putAll);
+        typesByTenantByFile.get(tenant).values().stream()
+            .map(this::toTypeSpecsMap)
+            .forEach(tenantEntitySpec::putAll);
         return tenantEntitySpec;
     }
 

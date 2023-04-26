@@ -50,6 +50,8 @@ public class DefinitionSpecProcessor extends SpecProcessor {
             definitionsByTenant.remove(tenant);
         }
         definitionsByTenant.put(tenant, definitionEntitySpec);
+
+        log.info("definitionEntitySpec.size={}", definitionEntitySpec.size());
     }
 
     @SneakyThrows

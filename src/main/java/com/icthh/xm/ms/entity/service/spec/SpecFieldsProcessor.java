@@ -6,6 +6,8 @@ import com.google.common.collect.Sets;
 import com.icthh.xm.ms.entity.domain.spec.TypeSpec;
 import com.icthh.xm.ms.entity.domain.spec.UniqueFieldSpec;
 import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.Map;
@@ -14,6 +16,7 @@ import java.util.Set;
 import static com.github.fge.jackson.NodeType.OBJECT;
 import static com.github.fge.jackson.NodeType.getNodeType;
 
+@Slf4j
 public class SpecFieldsProcessor {
 
     @SneakyThrows
@@ -28,6 +31,7 @@ public class SpecFieldsProcessor {
             processNode(node, "$", uniqueFields);
             typeSpec.setUniqueFields(uniqueFields);
         }
+        log.info("types.size={}", CollectionUtils.size(types));
     }
 
     private void processNode(JsonNode node, String jsonPath, Set<UniqueFieldSpec> uniqueFields) {
