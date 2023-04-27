@@ -2,6 +2,7 @@ package com.icthh.xm.ms.entity.service.spec;
 
 import com.icthh.xm.ms.entity.domain.spec.FunctionSpec;
 import com.icthh.xm.ms.entity.domain.spec.TypeSpec;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.Collection;
 import java.util.LinkedHashMap;
@@ -12,6 +13,7 @@ import java.util.stream.Collectors;
 
 import static com.icthh.xm.ms.entity.util.CustomCollectionUtils.nullSafe;
 
+@Slf4j
 public class FunctionByTenantService {
 
     private final ConcurrentHashMap<String, Map<String, FunctionSpec>> functionsByTenant = new ConcurrentHashMap<>();
@@ -26,6 +28,7 @@ public class FunctionByTenantService {
             functionsByTenant.remove(tenantKey);
         }
         functionsByTenant.put(tenantKey, functionSpec);
+        log.info("functionSpec.size={}", functionSpec.size());
     }
 
     public Map<String, FunctionSpec> functionsByTenant(String tenantKey) {
