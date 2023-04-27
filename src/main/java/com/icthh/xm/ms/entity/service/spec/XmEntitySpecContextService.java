@@ -30,6 +30,7 @@ import static org.springframework.util.CollectionUtils.isEmpty;
 
 @Slf4j
 @Service
+@IgnoreLogginAspect
 public class XmEntitySpecContextService {
 
     private final String maxFileSize;
@@ -57,12 +58,10 @@ public class XmEntitySpecContextService {
         this.maxFileSize = maxFileSize;
     }
 
-    @IgnoreLogginAspect
     public Map<String, TypeSpec> typesByTenant(String tenantKey) {
         return nullSafe(typesByTenant.get(tenantKey));
     }
 
-    @IgnoreLogginAspect
     public Map<String, TypeSpec> typesByTenantStrict(String tenantKey) {
         if (!typesByTenant.containsKey(tenantKey)) {
             log.error("Tenant configuration {} not found", tenantKey);
@@ -71,12 +70,10 @@ public class XmEntitySpecContextService {
         return nullSafe(typesByTenant.get(tenantKey));
     }
 
-    @IgnoreLogginAspect
     public Map<String, JsonSchema> dataSpecJsonSchemas(String tenantKey) {
         return dataSpecJsonSchemaService.dataSpecJsonSchemas(tenantKey);
     }
 
-    @IgnoreLogginAspect
     public Map<String, FunctionSpec> functionsByTenant(String tenantKey) {
         return functionByTenantService.functionsByTenant(tenantKey);
     }
@@ -92,7 +89,6 @@ public class XmEntitySpecContextService {
         byFiles.put(updatedKey, config);
     }
 
-    @IgnoreLogginAspect
     public Map<String, TypeSpec> updateByTenantState(String tenant) {
         var tenantEntitySpec = readEntitySpec(tenant);
 
