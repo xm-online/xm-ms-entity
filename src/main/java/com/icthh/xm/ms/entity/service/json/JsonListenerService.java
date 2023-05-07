@@ -1,5 +1,6 @@
 package com.icthh.xm.ms.entity.service.json;
 
+import com.icthh.xm.commons.logging.aop.IgnoreLogginAspect;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -13,6 +14,7 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 
 @Slf4j
 @Service
+@IgnoreLogginAspect
 public class JsonListenerService {
 
     private final Map<String, Map<String, String>> tenantsSpecificationsByPath = new LinkedHashMap<>();
@@ -27,6 +29,7 @@ public class JsonListenerService {
         tenantsSpecificationsByPath.get(tenantName).put(relativePath, config);
     }
 
+    @IgnoreLogginAspect
     public String getSpecificationByTenantRelativePath(String tenant, String relativePath) {
         return ofNullable(getSpecificationByTenant(tenant))
             .map(xm -> xm.get(relativePath))
