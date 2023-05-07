@@ -29,7 +29,6 @@ public class JsonListenerService {
         tenantsSpecificationsByPath.get(tenantName).put(relativePath, config);
     }
 
-    @IgnoreLogginAspect
     public String getSpecificationByTenantRelativePath(String tenant, String relativePath) {
         return ofNullable(getSpecificationByTenant(tenant))
             .map(xm -> xm.get(relativePath))
