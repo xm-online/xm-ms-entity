@@ -148,3 +148,4 @@ application:
     lep:
         tenant-script-storage: XM_MS_CONFIG
     periodicMetricPoolSize: 1
+    elasticBatchSize: 100
