@@ -228,6 +228,7 @@ application:
             bucket:
             bucket-prefix:
     elasticSchemaSuffix: ""
+    elasticBatchSize: 100
     requestCacheIgnoredPathPatternList: /api/functions/*/upload
     periodicMetricPoolSize: 1
     kafkaMetric:

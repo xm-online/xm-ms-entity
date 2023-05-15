@@ -29,6 +29,7 @@ import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
 import com.icthh.xm.lep.api.LepManager;
 import com.icthh.xm.ms.entity.AbstractSpringBootTest;
+import com.icthh.xm.ms.entity.config.ApplicationProperties;
 import com.icthh.xm.ms.entity.config.IndexConfiguration;
 import com.icthh.xm.ms.entity.config.MappingConfiguration;
 import com.icthh.xm.ms.entity.domain.Attachment;
@@ -150,6 +151,9 @@ public class ElasticsearchIndexResourceIntTest extends AbstractSpringBootTest {
     @Autowired
     private SeparateTransactionExecutor transactionExecutor;
 
+    @Autowired
+    private ApplicationProperties applicationProperties;
+
     private ElasticsearchIndexService elasticsearchIndexService;
 
     @Mock
@@ -190,7 +194,8 @@ public class ElasticsearchIndexResourceIntTest extends AbstractSpringBootTest {
                                                                   tenantContextHolder,
                                                                   mappingConfiguration,
                                                                   indexConfiguration,
-                                                                  executor, entityManager);
+                                                                  executor, entityManager,
+                                                                  applicationProperties);
 
         elasticsearchIndexService.setSelfReference(elasticsearchIndexService);
 

@@ -407,6 +407,8 @@ dependencies {
     testImplementation "com.github.tomakehurst:wiremock-jre8:2.23.2"
     testImplementation "org.testcontainers:postgresql:1.16.2"
     testImplementation "org.testcontainers:elasticsearch:1.16.2"
+
+    compile fileTree(dir: 'lib', includes: ['*.jar'])
 }
 
 checkstyle {
