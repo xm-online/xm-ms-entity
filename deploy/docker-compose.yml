@@ -1,4 +1,4 @@
-version: '3.3'
+version: '3.8'
 services:
     entity-app:
         image: xmonline/xm-ms-entity:${IMAGE_XM_MS_ENTITY_TAG:-latest}
