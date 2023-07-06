@@ -1,7 +1,5 @@
 package com.icthh.xm.ms.entity.service.impl;
 
-import static java.util.Collections.emptyList;
-
 import com.icthh.xm.commons.exceptions.EntityNotFoundException;
 import com.icthh.xm.ms.entity.config.XmEntityTenantConfigService;
 import com.icthh.xm.ms.entity.domain.FunctionContext;
@@ -14,29 +12,29 @@ import com.icthh.xm.ms.entity.security.access.DynamicPermissionCheckService;
 import com.icthh.xm.ms.entity.service.FunctionContextService;
 import com.icthh.xm.ms.entity.service.FunctionExecutorService;
 import com.icthh.xm.ms.entity.service.FunctionService;
-import com.icthh.xm.ms.entity.service.json.JsonValidationService;
 import com.icthh.xm.ms.entity.service.XmEntityService;
 import com.icthh.xm.ms.entity.service.XmEntitySpecService;
+import com.icthh.xm.ms.entity.service.json.JsonValidationService;
 import com.icthh.xm.ms.entity.util.CustomCollectionUtils;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.stereotype.Service;
+import org.springframework.util.AntPathMatcher;
 
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
+import java.util.function.Supplier;
 
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.access.AccessDeniedException;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.AntPathMatcher;
+import static java.util.Collections.emptyList;
 
 /**
  * The {@link FunctionServiceImpl} class.
  */
 @Slf4j
-@Transactional
 @Service("functionService")
 @RequiredArgsConstructor
 public class FunctionServiceImpl implements FunctionService {
@@ -54,6 +52,7 @@ public class FunctionServiceImpl implements FunctionService {
     private final DynamicPermissionCheckService dynamicPermissionCheckService;
     private final JsonValidationService jsonValidationService;
     private final XmEntityTenantConfigService xmEntityTenantConfigService;
+    private final FunctionTxControl functionTxControl;
 
     private final AntPathMatcher matcher = new AntPathMatcher();
 
@@ -76,8 +75,11 @@ public class FunctionServiceImpl implements FunctionService {
         enrichInputFromPathParams(functionKey, vInput, functionSpec);
 
         // execute function
-        Map<String, Object> data = functionExecutorService.execute(functionSpec.getKey(), vInput, httpMethod);
-        return processFunctionResult(functionKey, data, functionSpec);
+        return callLepExecutor(functionSpec, () -> {
+            Map<String, Object> data = functionExecutorService.execute(functionSpec.getKey(), vInput, httpMethod);
+            return processFunctionResult(functionKey, data, functionSpec);
+        });
+
     }
 
     /**
@@ -109,8 +111,39 @@ public class FunctionServiceImpl implements FunctionService {
         validateFunctionInput(functionSpec, functionInput);
 
         // execute function
-        Map<String, Object> data = functionExecutorService.execute(functionKey, idOrKey, projection.getTypeKey(), vInput);
-        return processFunctionResult(functionKey, idOrKey, data, functionSpec);
+        return callLepExecutor(functionSpec, () -> {
+            Map<String, Object> data = functionExecutorService.execute(functionKey, idOrKey, projection.getTypeKey(), vInput);
+            return processFunctionResult(functionKey, idOrKey, data, functionSpec);
+        });
+
+    }
+
+    @Override
+    public FunctionContext executeAnonymous(String functionKey, Map<String, Object> functionInput, String httpMethod) {
+        FunctionSpec functionSpec = findFunctionSpec(functionKey, null);
+
+        if (!functionSpec.getAnonymous()) {
+            throw new AccessDeniedException("access denied");
+        }
+
+        Objects.requireNonNull(functionKey, "functionKey can't be null");
+        Map<String, Object> vInput = CustomCollectionUtils.emptyIfNull(functionInput);
+
+        enrichInputFromPathParams(functionKey, vInput, functionSpec);
+
+        return callLepExecutor(functionSpec, () -> {
+            Map<String, Object> data = functionExecutorService.executeAnonymousFunction(functionSpec.getKey(), vInput, httpMethod);
+            return processFunctionResult(functionKey, data, functionSpec);
+        });
+
+    }
+
+    protected FunctionContext callLepExecutor(FunctionSpec functionSpec, Supplier<FunctionContext> logic) {
+        switch (functionSpec.getTxType()) {
+            case READ_ONLY: return functionTxControl.executeInTransactionWithRoMode(logic);
+            case NO_TX: return functionTxControl.executeWithNoTx(logic);
+            default: return functionTxControl.executeInTransaction(logic);
+        }
     }
 
     private void validateFunctionInput(FunctionSpec functionSpec, Map<String, Object> functionInput) {
@@ -127,30 +160,12 @@ public class FunctionServiceImpl implements FunctionService {
         }
     }
 
-    @Override
-    public FunctionContext executeAnonymous(String functionKey, Map<String, Object> functionInput, String httpMethod) {
-        FunctionSpec functionSpec = findFunctionSpec(functionKey, null);
-
-        if (!functionSpec.getAnonymous()) {
-            throw new AccessDeniedException("access denied");
-        }
-
-        Objects.requireNonNull(functionKey, "functionKey can't be null");
-        Map<String, Object> vInput = CustomCollectionUtils.emptyIfNull(functionInput);
-
-        enrichInputFromPathParams(functionKey, vInput, functionSpec);
-
-        // execute function
-        Map<String, Object> data = functionExecutorService.executeAnonymousFunction(functionSpec.getKey(), vInput, httpMethod);
-        return processFunctionResult(functionKey, data, functionSpec);
-    }
-
     /**
      * Validates, if current entity state is one of allowed states
      * @param functionSpec - functionSpec
      * @param projection - entity projection
      */
-    void assertCallAllowedByState(FunctionSpec functionSpec, XmEntityStateProjection projection) {
+    protected void assertCallAllowedByState(FunctionSpec functionSpec, XmEntityStateProjection projection) {
         List<String> allowedStates = CustomCollectionUtils.nullSafe(functionSpec.getAllowedStateKeys());
         if (allowedStates.isEmpty()) {
             return;

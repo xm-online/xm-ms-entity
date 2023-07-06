@@ -21,6 +21,10 @@ import static com.icthh.xm.ms.entity.service.impl.FunctionServiceImpl.XM_ENITITY
 @Data
 public class FunctionSpec {
 
+    public enum FunctionTxTypes {
+        NO_TX, READ_ONLY, TX
+    }
+
     /**
      * Unique in tenant function key.
      */
@@ -103,6 +107,9 @@ public class FunctionSpec {
 
     @JsonProperty("anonymous")
     private Boolean anonymous;
+
+    @JsonProperty("txType")
+    private FunctionTxTypes txType = FunctionTxTypes.TX;
 
     public Boolean getSaveFunctionContext() {
         return saveFunctionContext == null ? false : saveFunctionContext;
