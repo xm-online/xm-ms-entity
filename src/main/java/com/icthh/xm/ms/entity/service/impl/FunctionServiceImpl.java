@@ -75,7 +75,7 @@ public class FunctionServiceImpl implements FunctionService {
         enrichInputFromPathParams(functionKey, vInput, functionSpec);
 
         // execute function
-        return callLepExecutor(functionSpec, () -> {
+        return callLepExecutor(functionSpec.getTxType(), () -> {
             Map<String, Object> data = functionExecutorService.execute(functionSpec.getKey(), vInput, httpMethod);
             return processFunctionResult(functionKey, data, functionSpec);
         });
@@ -111,7 +111,7 @@ public class FunctionServiceImpl implements FunctionService {
         validateFunctionInput(functionSpec, functionInput);
 
         // execute function
-        return callLepExecutor(functionSpec, () -> {
+        return callLepExecutor(functionSpec.getTxType(), () -> {
             Map<String, Object> data = functionExecutorService.execute(functionKey, idOrKey, projection.getTypeKey(), vInput);
             return processFunctionResult(functionKey, idOrKey, data, functionSpec);
         });
@@ -131,15 +131,21 @@ public class FunctionServiceImpl implements FunctionService {
 
         enrichInputFromPathParams(functionKey, vInput, functionSpec);
 
-        return callLepExecutor(functionSpec, () -> {
+        return callLepExecutor(functionSpec.getTxType(), () -> {
             Map<String, Object> data = functionExecutorService.executeAnonymousFunction(functionSpec.getKey(), vInput, httpMethod);
             return processFunctionResult(functionKey, data, functionSpec);
         });
 
     }
 
-    protected FunctionContext callLepExecutor(FunctionSpec functionSpec, Supplier<FunctionContext> logic) {
-        switch (functionSpec.getTxType()) {
+    /**
+     * Invoke functionExecutorService in one of available Transaction Contexts
+     * @param txType - FunctionSpec.FunctionTxTypes
+     * @param logic - functionExecutorService implementation for lep execution
+     * @return function call result
+     */
+    protected FunctionContext callLepExecutor(FunctionSpec.FunctionTxTypes txType, Supplier<FunctionContext> logic) {
+        switch (txType) {
             case READ_ONLY: return functionTxControl.executeInTransactionWithRoMode(logic);
             case NO_TX: return functionTxControl.executeWithNoTx(logic);
             default: return functionTxControl.executeInTransaction(logic);
