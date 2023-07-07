@@ -8,6 +8,7 @@ import com.icthh.xm.commons.logging.util.MdcUtils;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
 import com.icthh.xm.commons.tenant.TenantKey;
+import com.icthh.xm.ms.entity.config.ApplicationProperties;
 import com.icthh.xm.ms.entity.config.IndexConfiguration;
 import com.icthh.xm.ms.entity.config.MappingConfiguration;
 import com.icthh.xm.ms.entity.domain.XmEntity;
@@ -67,6 +68,8 @@ public class ElasticsearchIndexService {
     private final IndexConfiguration indexConfiguration;
     private final Executor executor;
 
+    private final Integer elasticBatchSize;
+
     @PersistenceContext
     private final EntityManager entityManager;
 
@@ -82,7 +85,8 @@ public class ElasticsearchIndexService {
                                      MappingConfiguration mappingConfiguration,
                                      IndexConfiguration indexConfiguration,
                                      @Qualifier("taskExecutor") Executor executor,
-                                     EntityManager entityManager) {
+                                     EntityManager entityManager,
+                                     ApplicationProperties applicationProperties) {
         this.xmEntityRepositoryInternal = xmEntityRepositoryInternal;
         this.xmEntitySearchRepository = xmEntitySearchRepository;
         this.elasticsearchTemplate = elasticsearchTemplate;
@@ -91,6 +95,7 @@ public class ElasticsearchIndexService {
         this.indexConfiguration = indexConfiguration;
         this.executor = executor;
         this.entityManager = entityManager;
+        this.elasticBatchSize = applicationProperties.getElasticBatchSize() != null ? applicationProperties.getElasticBatchSize() : PAGE_SIZE;
     }
 
     /**
@@ -247,9 +252,9 @@ public class ElasticsearchIndexService {
                                                      .filter(Objects::nonNull)
                                                      .collect(Collectors.toList());
 
-            for (int i = startFrom; i <= xmEntityRepositoryInternal.count(spec) / PAGE_SIZE ; i++) {
-                Pageable page = PageRequest.of(i, PAGE_SIZE);
-                log.info("Indexing page {} of {}, pageSize {}", i, xmEntityRepositoryInternal.count(spec) / PAGE_SIZE, PAGE_SIZE);
+            for (int i = startFrom; i <= xmEntityRepositoryInternal.count(spec) / elasticBatchSize ; i++) {
+                Pageable page = PageRequest.of(i, elasticBatchSize);
+                log.info("Indexing page {} of {}, pageSize {}", i, xmEntityRepositoryInternal.count(spec) / elasticBatchSize, elasticBatchSize);
                 Page<XmEntity> results = xmEntityRepositoryInternal.findAll(spec, page);
                 results.map(entity -> loadEntityRelationships(relationshipGetters, entity));
                 xmEntitySearchRepository.saveAll(results.getContent());

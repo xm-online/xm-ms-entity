@@ -68,7 +68,6 @@ public class XmEntitySpecService implements RefreshableConfiguration {
     private final List<EntitySpecUpdateListener> entitySpecUpdateListeners;
     private final DynamicPermissionCheckService dynamicPermissionCheckService;
 
-
     /**
      * Search of all entity Type specifications.
      * @return list of entity Types specifications
@@ -297,7 +296,7 @@ public class XmEntitySpecService implements RefreshableConfiguration {
 
         Map<String, FunctionSpec> functions = xmEntitySpecContextService.functionsByTenant(getTenantKeyValue());
         return Optional.of(functions)
-                .map(fs -> fs.get(functionKey))
+            .map(fs -> fs.get(functionKey))
                 .or(() -> functions.values().stream()
                         .filter(fs -> fs.getPath() != null)
                         .filter(fs -> matcher.match(fs.getPath(), functionKey))

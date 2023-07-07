@@ -33,6 +33,7 @@ import static com.icthh.xm.ms.entity.lep.LepXmEntityMsConstants.BINDING_SUB_KEY_
 import static com.icthh.xm.ms.entity.lep.LepXmEntityMsConstants.BINDING_SUB_KEY_TEMPLATE_PLAIN_REST;
 import static com.icthh.xm.ms.entity.lep.LepXmEntityMsConstants.BINDING_SUB_KEY_TEMPLATE_S3;
 import static com.icthh.xm.ms.entity.lep.LepXmEntityMsConstants.BINDING_KEY_METRICS_ADAPTER;
+import static com.icthh.xm.ms.entity.lep.LepXmEntityMsConstants.BINDING_SUB_KEY_SERVICE_COMMUNICATION_SERVICE;
 
 import com.icthh.xm.commons.config.client.service.TenantConfigService;
 import com.icthh.xm.commons.domainevent.service.EventPublisher;
@@ -40,6 +41,7 @@ import com.icthh.xm.commons.domainevent.service.builder.DomainEventFactory;
 import com.icthh.xm.commons.lep.commons.CommonsExecutor;
 import com.icthh.xm.commons.lep.commons.CommonsService;
 import com.icthh.xm.commons.lep.spring.SpringLepProcessingApplicationListener;
+import com.icthh.xm.commons.messaging.communication.service.CommunicationService;
 import com.icthh.xm.commons.permission.service.PermissionCheckService;
 import com.icthh.xm.commons.topic.service.KafkaTemplateService;
 import com.icthh.xm.lep.api.ScopedContext;
@@ -107,6 +109,7 @@ public class XmEntityMsLepProcessingApplicationListener extends SpringLepProcess
     private final MetricsAdapter metricsAdapter;
     private final EventPublisher eventPublisher;
     private final DomainEventFactory domainEventFactory;
+    private final CommunicationService communicationService;
 
     @Override
     protected void bindExecutionContext(ScopedContext executionContext) {
@@ -132,6 +135,7 @@ public class XmEntityMsLepProcessingApplicationListener extends SpringLepProcess
         services.put(BINDING_KEY_METRICS_ADAPTER, metricsAdapter);
         services.put(BINDING_SUB_KEY_SERVICE_EVENT_PUBLISHER, eventPublisher);
         services.put(BINDING_SUB_KEY_SERVICE_DOMAIN_EVENT_FACTORY, domainEventFactory);
+        services.put(BINDING_SUB_KEY_SERVICE_COMMUNICATION_SERVICE, communicationService);
 
         executionContext.setValue(BINDING_KEY_COMMONS, new CommonsExecutor(commonsService));
 

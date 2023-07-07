@@ -8,6 +8,7 @@ import static org.mockito.Mockito.when;
 
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.ms.entity.AbstractUnitTest;
+import com.icthh.xm.ms.entity.config.ApplicationProperties;
 import com.icthh.xm.ms.entity.config.IndexConfiguration;
 import com.icthh.xm.ms.entity.config.MappingConfiguration;
 import com.icthh.xm.ms.entity.domain.XmEntity;
@@ -20,7 +21,10 @@ import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.MockitoAnnotations;
 import org.mockito.junit.MockitoJUnitRunner;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
@@ -34,7 +38,6 @@ import java.util.List;
 @RunWith(MockitoJUnitRunner.class)
 public class ElasticsearchIndexServiceUnitTest extends AbstractUnitTest {
 
-    @InjectMocks
     private ElasticsearchIndexService service;
     @Mock
     private XmEntityRepositoryInternal xmEntityRepository;
@@ -45,6 +48,8 @@ public class ElasticsearchIndexServiceUnitTest extends AbstractUnitTest {
     @Mock
     private EntityManager entityManager;
     @Mock
+    private ApplicationProperties applicationProperties;
+    @Mock
     TenantContextHolder tenantContextHolder;
     @Mock
     MappingConfiguration mappingConfiguration;
@@ -53,6 +58,10 @@ public class ElasticsearchIndexServiceUnitTest extends AbstractUnitTest {
 
     @Before
     public void before() {
+        MockitoAnnotations.initMocks(this);
+        when(applicationProperties.getElasticBatchSize()).thenReturn(100);
+        service = new ElasticsearchIndexService(xmEntityRepository, xmEntitySearchRepository, elasticsearchTemplate,
+            tenantContextHolder, mappingConfiguration, indexConfiguration, null, entityManager, applicationProperties);
         service.setSelfReference(service);
     }
 

@@ -54,6 +54,7 @@ public class ApplicationProperties {
     private String webappName;
     private String dbSchemaSuffix;
     private String elasticSchemaSuffix;
+    private Integer elasticBatchSize;
 
     private Integer requestCacheLimit;
     private List<String> requestCacheIgnoredPathPatternList = Collections.emptyList();

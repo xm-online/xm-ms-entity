@@ -812,6 +812,7 @@ public class XmEntityServiceImpl implements XmEntityService {
         }
     }
 
+    @LogicExtensionPoint("GetByIdOrKey")
     @Transactional(readOnly = true)
     @Override
     public XmEntityIdKeyTypeKey getXmEntityIdKeyTypeKey(IdOrKey idOrKey) {

@@ -9,6 +9,11 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.icthh.xm.ms.entity.domain.spec.FormSpec;
 import com.icthh.xm.ms.entity.domain.spec.XmEntitySpec;
 import com.icthh.xm.ms.entity.service.json.JsonListenerService;
+import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang.StringUtils;
+import org.springframework.stereotype.Component;
+
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
@@ -21,14 +26,9 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
-import lombok.SneakyThrows;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang.StringUtils;
-import org.springframework.stereotype.Component;
 
 import static com.google.common.collect.Lists.newArrayList;
 import static java.util.Optional.ofNullable;
-import static org.apache.commons.lang.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.modelmapper.internal.util.Objects.firstNonNull;
 import static org.springframework.util.CollectionUtils.isEmpty;
@@ -58,6 +58,7 @@ public class FormSpecProcessor extends SpecProcessor {
             formsByTenant.remove(tenant);
         }
         formsByTenant.put(tenant, formEntitySpec);
+        log.info("formEntitySpec.size={}", formEntitySpec.size());
     }
 
     @SneakyThrows
