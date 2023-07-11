@@ -381,7 +381,7 @@ public class XmEntityResource {
 
     @Timed
     @GetMapping("/xm-entities/{entityTypeKey}/{idOrKey}/links/{linkTypeKey}/search")
-    @PreAuthorize("hasPermission({'query': #query}, 'XMENTITY.SEARCH.TO_LINK.QUERY')")
+    @PreAuthorize("hasPermission({'query': #query, 'entityTypeKey': #entityTypeKey, 'linkTypeKey': #linkTypeKey}, 'XMENTITY.SEARCH.TO_LINK.QUERY')")
     @PrivilegeDescription("Privilege to search candidates for link with specified XmEntity")
     public ResponseEntity<List<XmEntity>> searchXmEntitiesToLink(
         @PathVariable String idOrKey,
