@@ -47,6 +47,7 @@ public class DataSpecJsonSchemaService {
             addJsonSchema(dataSchemas, jsonSchemaFactory, typeSpec);
         }
         dataSpecJsonSchemas.put(tenantKey, dataSchemas);
+        log.info("dataSchemas.size={}", dataSchemas.size());
     }
 
     private void processTypeSpec(String tenant, TypeSpec typeSpec) {

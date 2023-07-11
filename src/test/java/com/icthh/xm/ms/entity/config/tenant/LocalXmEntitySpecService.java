@@ -12,6 +12,8 @@ import com.icthh.xm.ms.entity.service.privileges.custom.EntityCustomPrivilegeSer
 import com.icthh.xm.ms.entity.service.processor.DefinitionSpecProcessor;
 import com.icthh.xm.ms.entity.service.processor.FormSpecProcessor;
 import com.icthh.xm.ms.entity.service.spec.XmEntitySpecContextService;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Primary;
@@ -51,10 +53,15 @@ public class LocalXmEntitySpecService extends XmEntitySpecService {
     @Override
     protected Map<String, TypeSpec> getTypeSpecs() {
         String tenantName = tenantContextHolder.getTenantKey();
-        String config = getXmEntitySpec(tenantName);
-        String key = applicationProperties.getSpecificationPathPattern().replace("{tenantName}", tenantName);
-        this.onRefresh(key, config);
-        this.refreshFinished(List.of(key));
+        try {
+            String config = getXmEntitySpec(tenantName);
+            String key = applicationProperties.getSpecificationPathPattern().replace("{tenantName}", tenantName);
+            this.onRefresh(key, config);
+            this.refreshFinished(List.of(key));
+        } catch (Exception e) {
+            // For case when entity spec refreshed manually or using XmEntitySpecTestUtils
+            log.error("Error during read spec for tenant {} {}", tenantName, e);
+        }
         return super.getTypeSpecs();
     }
 

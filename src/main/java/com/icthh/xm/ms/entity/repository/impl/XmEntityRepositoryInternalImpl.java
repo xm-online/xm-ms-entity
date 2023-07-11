@@ -7,6 +7,7 @@ import com.icthh.xm.ms.entity.projection.XmEntityStateProjection;
 import com.icthh.xm.ms.entity.projection.XmEntityVersion;
 import com.icthh.xm.ms.entity.repository.SpringXmEntityRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityRepositoryInternal;
+
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -15,6 +16,7 @@ import java.util.function.Function;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -31,6 +33,8 @@ import javax.persistence.criteria.CriteriaUpdate;
 import javax.persistence.criteria.Root;
 import javax.persistence.criteria.Selection;
 
+import static java.util.Collections.emptyList;
+
 @Slf4j
 @Component
 @RequiredArgsConstructor
@@ -46,17 +50,23 @@ public class XmEntityRepositoryInternalImpl implements XmEntityRepositoryInterna
 
     /**
      * Returns entity by ID with using xmEntityGraph.
-     *
+     * <p>
+     * Deprecated: fetch all relations (like target, attachments, etc) use findById(Long aLong) instead.
+     * </p>
      * @param id identifier of the entity
      * @return xmEntity instance
      */
     @Override
+    @Deprecated
     public XmEntity findOneById(Long id) {
         return springXmEntityRepository.findOneById(id);
     }
 
     @Override
     public Page<XmEntity> findAllByTypeKeyIn(Pageable pageable, Set<String> typeKeys) {
+        if (CollectionUtils.isEmpty(typeKeys)) {
+            return Page.empty(pageable);
+        }
         return springXmEntityRepository.findAllByTypeKeyIn(pageable, typeKeys);
     }
 
@@ -148,6 +158,9 @@ public class XmEntityRepositoryInternalImpl implements XmEntityRepositoryInterna
 
     @Override
     public List<XmEntity> findAllById(Iterable<Long> longs) {
+        if (longs == null || !longs.iterator().hasNext()) {
+            return emptyList();
+        }
         return springXmEntityRepository.findAllById(longs);
     }
 
@@ -176,11 +189,7 @@ public class XmEntityRepositoryInternalImpl implements XmEntityRepositoryInterna
 
     /**
      * For backward compatibility in LEPs.
-     * <p>
-     * Deprecated: use findById(Long aLong) instead.
-     * </p>
      */
-    @Deprecated
     @Override
     public XmEntity findOne(Long id) {
         return findById(id).orElse(null);

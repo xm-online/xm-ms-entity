@@ -12,12 +12,16 @@ import com.icthh.xm.ms.entity.projection.XmEntityStateProjection;
 import com.icthh.xm.ms.entity.security.access.DynamicPermissionCheckService;
 import com.icthh.xm.ms.entity.service.FunctionContextService;
 import com.icthh.xm.ms.entity.service.FunctionExecutorService;
-import com.icthh.xm.ms.entity.service.json.JsonValidationService;
 import com.icthh.xm.ms.entity.service.XmEntityService;
 import com.icthh.xm.ms.entity.service.XmEntitySpecService;
+import com.icthh.xm.ms.entity.service.json.JsonValidationService;
 import org.assertj.core.util.Lists;
 import org.jetbrains.annotations.NotNull;
-import org.junit.*;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Ignore;
+import org.junit.Rule;
+import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.mockito.AdditionalAnswers;
 import org.mockito.Mockito;
@@ -30,7 +34,13 @@ import java.util.Optional;
 import static com.icthh.xm.ms.entity.domain.ext.IdOrKey.SELF;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.eq;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 
 public class FunctionServiceImplUnitTest extends AbstractUnitTest {
 
@@ -51,6 +61,8 @@ public class FunctionServiceImplUnitTest extends AbstractUnitTest {
     private XmEntityTenantConfigService xmEntityTenantConfigService;
     private XmEntityTenantConfig xmEntityTenantConfig;
 
+    private FunctionTxControl functionTxControl;
+
     private String functionName = "F_NAME";
 
     private IdOrKey key = SELF;
@@ -66,10 +78,11 @@ public class FunctionServiceImplUnitTest extends AbstractUnitTest {
         functionContextService = Mockito.mock(FunctionContextService.class);
         dynamicPermissionCheckService = Mockito.mock(DynamicPermissionCheckService.class);
         xmEntityTenantConfigService = Mockito.mock(XmEntityTenantConfigService.class);
+        functionTxControl = new FunctionTxControlImpl();
         jsonValidationService = spy(new JsonValidationService(new ObjectMapper()));
         functionService = new FunctionServiceImpl(xmEntitySpecService, xmEntityService,
             functionExecutorService, functionContextService, dynamicPermissionCheckService,
-                jsonValidationService, xmEntityTenantConfigService);
+                jsonValidationService, xmEntityTenantConfigService, functionTxControl);
         xmEntityTenantConfig = new XmEntityTenantConfig();
         when(xmEntityTenantConfigService.getXmEntityTenantConfig()).thenReturn(xmEntityTenantConfig);
     }
