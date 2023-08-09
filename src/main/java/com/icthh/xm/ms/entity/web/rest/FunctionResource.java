@@ -258,10 +258,7 @@ public class FunctionResource {
 
     @IgnoreLogginAspect
     @Timed
-    @PostMapping(value = "/functions/**", consumes = {
-        MediaType.APPLICATION_JSON_VALUE,
-        MediaType.APPLICATION_JSON_UTF8_VALUE,
-    })
+    @PostMapping(value = "/functions/**")
     public ResponseEntity<Object> callPostFunction(HttpServletRequest request,
                                                    @RequestBody(required = false) Map<String, Object> functionInput) {
         return self.callPostFunction(getFunctionKey(request), functionInput);
