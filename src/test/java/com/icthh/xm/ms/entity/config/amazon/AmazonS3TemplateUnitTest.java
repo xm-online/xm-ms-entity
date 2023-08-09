@@ -42,7 +42,7 @@ public class AmazonS3TemplateUnitTest extends AbstractUnitTest {
     private static final String KEY = "testkey";
 
     private final ApplicationProperties applicationProperties = new ApplicationProperties();
-    private final AmazonS3Template s3Template = new AmazonS3Template(applicationProperties, this::createS3Client);
+    private final AmazonS3Template s3Template = new AmazonS3Template(applicationProperties, this::createS3Client, new AmazonS3BucketNameFactory());
 
     @ClassRule
     public static GenericContainer mockS3 = new GenericContainer("adobe/s3mock")

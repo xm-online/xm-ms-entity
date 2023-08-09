@@ -14,6 +14,8 @@ import com.amazonaws.services.s3.transfer.TransferManager;
 import com.amazonaws.services.s3.transfer.TransferManagerBuilder;
 import com.amazonaws.services.s3.transfer.Upload;
 import com.amazonaws.services.s3.transfer.model.UploadResult;
+import com.icthh.xm.commons.lep.LogicExtensionPoint;
+import com.icthh.xm.commons.lep.spring.LepService;
 import com.icthh.xm.ms.entity.config.ApplicationProperties;
 import com.icthh.xm.ms.entity.domain.Attachment;
 import com.icthh.xm.ms.entity.domain.Content;
@@ -43,6 +45,7 @@ public class AmazonS3Template {
 
     private final ApplicationProperties applicationProperties;
     private final AmazonS3ClientFactory amazonS3ClientFactory;
+    private final AmazonS3BucketNameFactory bucketNameFactory;
 
     private TransferManager transferManager;
 
@@ -126,7 +129,7 @@ public class AmazonS3Template {
      * @return
      */
     public String createBucketIfNotExist(String bucketPrefix, String bucket) {
-        String formattedBucketName = prepareBucketName(bucketPrefix, bucket);
+        String formattedBucketName = bucketNameFactory.prepareBucketName(bucketPrefix, bucket);
         String region = applicationProperties.getAmazon().getAws().getRegion();
         if (getAmazonS3Client().doesBucketExist(formattedBucketName)) {
             log.info("Bucket: {} exist", formattedBucketName);
@@ -154,26 +157,25 @@ public class AmazonS3Template {
         return getAmazonS3Client().generatePresignedUrl(generatePresignedUrlRequest);
     }
 
+    @SneakyThrows
+    public URL createExpirableLink(String bucket, String key, Long expireTimeMillis) {
+
+        java.util.Date expiration = new java.util.Date();
+        long expTimeMillis = expiration.getTime();
+        expTimeMillis += expireTimeMillis;
+        expiration.setTime(expTimeMillis);
+
+        GeneratePresignedUrlRequest generatePresignedUrlRequest =  new GeneratePresignedUrlRequest(bucket, key)
+            .withMethod(HttpMethod.GET)
+            .withExpiration(expiration);
+        return getAmazonS3Client().generatePresignedUrl(generatePresignedUrlRequest);
+    }
+
     private ResponseHeaderOverrides createResponseHeaderOverrides(Attachment attachment) {
         ResponseHeaderOverrides responseHeaderOverrides = new ResponseHeaderOverrides();
         responseHeaderOverrides.setContentDisposition(FileUtils.getContentDisposition(attachment.getName()));
         responseHeaderOverrides.setContentType(attachment.getValueContentType());
         return responseHeaderOverrides;
-    }
-
-    private String prepareBucketName(String bucketPrefix, String bucket) {
-        String formatted;
-        if (StringUtils.isBlank(bucketPrefix)) {
-            formatted = prepareString(bucket);
-        } else {
-            formatted = prepareString(bucketPrefix)+ "-" + prepareString(bucket);
-        }
-        log.info("Formatted bucket name: {}", formatted);
-        return formatted;
-    }
-
-    private String prepareString(String str) {
-        return str.toLowerCase().replace("_", "-");
     }
 
     /**
