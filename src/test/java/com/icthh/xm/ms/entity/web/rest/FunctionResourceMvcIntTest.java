@@ -118,9 +118,9 @@ public class FunctionResourceMvcIntTest extends AbstractWebMvcTest {
     @Test
     @SneakyThrows
     public void testCallPostFunctionWithUrlEncodedParams() {
-        when(functionService.execute("SOME-ANONYMOUS-FUNCTION_KEY.TROLOLO", of("var1", "val1", "var2", "val2"), "POST"))
+        when(functionService.execute("SOME-FUNCTION_KEY.TROLOLO", of("var1", "val1", "var2", "val2"), "POST"))
             .thenReturn(new FunctionContext().data(of("test", "result")));
-        mockMvc.perform(post("/api/functions/SOME-ANONYMOUS-FUNCTION_KEY.TROLOLO")
+        mockMvc.perform(post("/api/functions/SOME-FUNCTION_KEY.TROLOLO")
                 .contentType(MediaType.APPLICATION_FORM_URLENCODED)
                 .param("var1", "val1")
                 .param("var2", "val2")
@@ -128,7 +128,7 @@ public class FunctionResourceMvcIntTest extends AbstractWebMvcTest {
             .andDo(print())
             .andExpect(jsonPath("$.data.test").value("result"))
             .andExpect(status().isCreated());
-        verify(functionService).execute(eq("SOME-ANONYMOUS-FUNCTION_KEY.TROLOLO"), eq(of("var1", "val1", "var2", "val2")), eq("POST"));
+        verify(functionService).execute(eq("SOME-FUNCTION_KEY.TROLOLO"), eq(of("var1", "val1", "var2", "val2")), eq("POST"));
     }
 
     @Test
