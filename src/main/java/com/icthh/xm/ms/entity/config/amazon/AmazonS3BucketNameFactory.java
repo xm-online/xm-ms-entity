@@ -12,7 +12,7 @@ import org.springframework.stereotype.Component;
 @LepService(group = "service.s3")
 public class AmazonS3BucketNameFactory {
 
-    @LogicExtensionPoint("CustomizeFilter")
+    @LogicExtensionPoint("PrepareBucketName")
     public String prepareBucketName(String bucketPrefix, String bucket) {
         String formatted;
         if (StringUtils.isBlank(bucketPrefix)) {
