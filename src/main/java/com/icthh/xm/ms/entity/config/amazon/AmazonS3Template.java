@@ -157,6 +157,20 @@ public class AmazonS3Template {
         return getAmazonS3Client().generatePresignedUrl(generatePresignedUrlRequest);
     }
 
+    @SneakyThrows
+    public URL createExpirableLink(String bucket, String key, Long expireTimeMillis) {
+
+        java.util.Date expiration = new java.util.Date();
+        long expTimeMillis = expiration.getTime();
+        expTimeMillis += expireTimeMillis;
+        expiration.setTime(expTimeMillis);
+
+        GeneratePresignedUrlRequest generatePresignedUrlRequest =  new GeneratePresignedUrlRequest(bucket, key)
+            .withMethod(HttpMethod.GET)
+            .withExpiration(expiration);
+        return getAmazonS3Client().generatePresignedUrl(generatePresignedUrlRequest);
+    }
+
     private ResponseHeaderOverrides createResponseHeaderOverrides(Attachment attachment) {
         ResponseHeaderOverrides responseHeaderOverrides = new ResponseHeaderOverrides();
         responseHeaderOverrides.setContentDisposition(FileUtils.getContentDisposition(attachment.getName()));
