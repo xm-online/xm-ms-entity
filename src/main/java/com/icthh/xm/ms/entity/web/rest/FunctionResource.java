@@ -102,10 +102,7 @@ public class FunctionResource {
      * or with status 400 (Bad Request) if the FunctionContext has already an ID
      */
     @Timed
-    @PostMapping(value = "/functions/{functionKey:.+}", consumes = {
-        MediaType.APPLICATION_JSON_VALUE,
-        MediaType.APPLICATION_JSON_UTF8_VALUE
-    })
+    @PostMapping("/functions/{functionKey:.+}")
     @PreAuthorize("hasPermission({'functionKey': #functionKey}, 'FUNCTION.CALL')")
     @PrivilegeDescription("Privilege to execute a function by key (key in entity specification)")
     public ResponseEntity<Object> callPostFunction(@PathVariable("functionKey") String functionKey,
@@ -153,10 +150,7 @@ public class FunctionResource {
      * or with status 400 (Bad Request) if the FunctionContext has already an ID
      */
     @Timed
-    @PostMapping(value = "/functions/anonymous/{functionKey:.+}", consumes = {
-        MediaType.APPLICATION_JSON_VALUE,
-        MediaType.APPLICATION_JSON_UTF8_VALUE,
-    })
+    @PostMapping("/functions/anonymous/{functionKey:.+}")
     public ResponseEntity<Object> callPostAnonymousFunction(@PathVariable("functionKey") String functionKey,
                                                             @RequestBody(required = false) Map<String, Object> functionInput) {
         FunctionContext result = functionService.executeAnonymous(functionKey, functionInput, "POST");
@@ -197,10 +191,7 @@ public class FunctionResource {
      * @return ModelAndView object
      */
     @Timed
-    @PostMapping(value = "/functions/mvc/{functionKey:.+}", consumes = {
-        MediaType.APPLICATION_JSON_VALUE,
-        MediaType.APPLICATION_JSON_UTF8_VALUE,
-    })
+    @PostMapping("/functions/mvc/{functionKey:.+}")
     @PreAuthorize("hasPermission({'functionKey': #functionKey}, 'FUNCTION.MVC.CALL')")
     @PrivilegeDescription("Privilege to execute a mvc function by key (key in entity specification)")
     public ModelAndView callMvcFunction(@PathVariable("functionKey") String functionKey,
@@ -225,10 +216,7 @@ public class FunctionResource {
     }
 
     @Timed
-    @PostMapping(value = "/functions/anonymous/mvc/{functionKey:.+}", consumes = {
-        MediaType.APPLICATION_JSON_VALUE,
-        MediaType.APPLICATION_JSON_UTF8_VALUE,
-    })
+    @PostMapping("/functions/anonymous/mvc/{functionKey:.+}")
     public ModelAndView callMvcAnonymousFunction(@PathVariable("functionKey") String functionKey,
                                                  @RequestBody(required = false) Map<String, Object> functionInput) {
         FunctionContext result = functionService.executeAnonymous(functionKey, functionInput, "POST");
@@ -300,10 +288,7 @@ public class FunctionResource {
 
     @IgnoreLogginAspect
     @Timed
-    @PostMapping(value = "/functions/mvc/**", consumes = {
-        MediaType.APPLICATION_JSON_VALUE,
-        MediaType.APPLICATION_JSON_UTF8_VALUE,
-    })
+    @PostMapping("/functions/mvc/**")
     public ModelAndView callMvcFunction(HttpServletRequest request,
                                         @RequestBody(required = false) Map<String, Object> functionInput) {
         return self.callMvcFunction(getFunctionKey(request), functionInput);
@@ -321,10 +306,7 @@ public class FunctionResource {
 
     @IgnoreLogginAspect
     @Timed
-    @PostMapping(value = "/functions/anonymous/mvc/**", consumes = {
-        MediaType.APPLICATION_JSON_VALUE,
-        MediaType.APPLICATION_JSON_UTF8_VALUE,
-    })
+    @PostMapping("/functions/anonymous/mvc/**")
     public ModelAndView callMvcAnonymousFunction(HttpServletRequest request,
                                                  @RequestBody(required = false) Map<String, Object> functionInput) {
         return self.callMvcAnonymousFunction(getFunctionKey(request), functionInput);
@@ -350,10 +332,7 @@ public class FunctionResource {
 
     @IgnoreLogginAspect
     @Timed
-    @PostMapping(value = "/functions/anonymous/**", consumes = {
-        MediaType.APPLICATION_JSON_VALUE,
-        MediaType.APPLICATION_JSON_UTF8_VALUE,
-    })
+    @PostMapping("/functions/anonymous/**")
     public ResponseEntity<Object> callPostAnonymousFunction(HttpServletRequest request,
                                                             @RequestBody(required = false) Map<String, Object> functionInput) {
         return self.callPostAnonymousFunction(getFunctionKey(request), functionInput);
