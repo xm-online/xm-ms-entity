@@ -19,12 +19,9 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.mockito.junit.MockitoJUnitRunner;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
@@ -56,12 +53,16 @@ public class ElasticsearchIndexServiceUnitTest extends AbstractUnitTest {
     @Mock
     IndexConfiguration indexConfiguration;
 
+    @Mock
+    XmEntitySpecService xmEntitySpecService;
+
     @Before
     public void before() {
         MockitoAnnotations.initMocks(this);
         when(applicationProperties.getElasticBatchSize()).thenReturn(100);
         service = new ElasticsearchIndexService(xmEntityRepository, xmEntitySearchRepository, elasticsearchTemplate,
-            tenantContextHolder, mappingConfiguration, indexConfiguration, null, entityManager, applicationProperties);
+            tenantContextHolder, mappingConfiguration, indexConfiguration, null, entityManager, applicationProperties,
+            xmEntitySpecService);
         service.setSelfReference(service);
     }
 
