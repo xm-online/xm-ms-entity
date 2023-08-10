@@ -238,12 +238,18 @@ public class ElasticsearchIndexService {
             .map(TypeSpec::getKey)
             .collect(Collectors.toSet());
 
-        Specification<XmEntity> spec = null;
+        //we should sort
+        Specification spec = (root, query, criteriaBuilder) -> {
+            query.orderBy(criteriaBuilder.desc(root.get("id")));
+            return null;
+        };
 
         if (!notAllowedTypes.isEmpty()) {
-            //exclude removed types from
-            spec = (Specification) (root, query, criteriaBuilder) -> criteriaBuilder.not(
-                root.get(XM_ENTITY_FIELD_TYPEKEY).in(notAllowedTypes));
+            log.debug("Types {} should be excluded from reindex", notAllowedTypes);
+            spec = (root, query, criteriaBuilder) -> {
+                query.orderBy(criteriaBuilder.desc(root.get("id")));
+                return criteriaBuilder.not(root.get(XM_ENTITY_FIELD_TYPEKEY).in(notAllowedTypes));
+            };
         }
 
         return reindexXmEntity(spec);
