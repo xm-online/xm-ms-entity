@@ -1,7 +1,8 @@
 package com.icthh.xm.ms.entity.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.notNull;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -78,8 +79,8 @@ public class ElasticsearchIndexServiceUnitTest extends AbstractUnitTest {
     @SneakyThrows
     private void prepareInternal() {
         Class<XmEntity> entityClass = XmEntity.class;
-        when(xmEntityRepository.count(null)).thenReturn(10L);
-        when(xmEntityRepository.findAll(null, PageRequest.of(0, 100))).thenReturn(
+        when(xmEntityRepository.count(notNull())).thenReturn(10L);
+        when(xmEntityRepository.findAll(notNull(), eq(PageRequest.of(0, 100)))).thenReturn(
             new PageImpl<>(Collections.singletonList(createObject(entityClass))));
     }
 
@@ -93,7 +94,7 @@ public class ElasticsearchIndexServiceUnitTest extends AbstractUnitTest {
         verify(elasticsearchTemplate).createIndex(entityClass);
         verify(elasticsearchTemplate).putMapping(entityClass);
 
-        verify(xmEntityRepository, times(4)).count(any());
+        verify(xmEntityRepository, times(4)).count(notNull());
 
         ArgumentCaptor<List> list = ArgumentCaptor.forClass(List.class);
         verify(xmEntitySearchRepository).saveAll(list.capture());
