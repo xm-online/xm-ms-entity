@@ -12,6 +12,7 @@ import com.icthh.xm.ms.entity.config.ApplicationProperties;
 import com.icthh.xm.ms.entity.config.IndexConfiguration;
 import com.icthh.xm.ms.entity.config.MappingConfiguration;
 import com.icthh.xm.ms.entity.domain.XmEntity;
+import com.icthh.xm.ms.entity.domain.spec.TypeSpec;
 import com.icthh.xm.ms.entity.repository.XmEntityRepositoryInternal;
 import com.icthh.xm.ms.entity.repository.search.XmEntitySearchRepository;
 import lombok.AccessLevel;
@@ -60,6 +61,8 @@ public class ElasticsearchIndexService {
     private static final String XM_ENTITY_FIELD_TYPEKEY = "typeKey";
     private static final String XM_ENTITY_FIELD_ID = "id";
 
+    private final XmEntitySpecService xmEntitySpecService;
+
     private final XmEntityRepositoryInternal xmEntityRepositoryInternal;
     private final XmEntitySearchRepository xmEntitySearchRepository;
     private final ElasticsearchTemplate elasticsearchTemplate;
@@ -86,7 +89,8 @@ public class ElasticsearchIndexService {
                                      IndexConfiguration indexConfiguration,
                                      @Qualifier("taskExecutor") Executor executor,
                                      EntityManager entityManager,
-                                     ApplicationProperties applicationProperties) {
+                                     ApplicationProperties applicationProperties,
+                                     XmEntitySpecService xmEntitySpecService) {
         this.xmEntityRepositoryInternal = xmEntityRepositoryInternal;
         this.xmEntitySearchRepository = xmEntitySearchRepository;
         this.elasticsearchTemplate = elasticsearchTemplate;
@@ -96,6 +100,7 @@ public class ElasticsearchIndexService {
         this.executor = executor;
         this.entityManager = entityManager;
         this.elasticBatchSize = applicationProperties.getElasticBatchSize() != null ? applicationProperties.getElasticBatchSize() : PAGE_SIZE;
+        this.xmEntitySpecService = xmEntitySpecService;
     }
 
     /**
@@ -227,7 +232,27 @@ public class ElasticsearchIndexService {
 
     private Long reindexXmEntity() {
 
-        return reindexXmEntity(null);
+        //get all types that not should be added to elastic
+        Set<String> notAllowedTypes = xmEntitySpecService.findAllTypes().stream()
+            .filter(spec -> Boolean.FALSE.equals(spec.getIndexAfterSaveEnabled()))
+            .map(TypeSpec::getKey)
+            .collect(Collectors.toSet());
+
+        //we should sort
+        Specification spec = (root, query, criteriaBuilder) -> {
+            query.orderBy(criteriaBuilder.desc(root.get("id")));
+            return null;
+        };
+
+        if (!notAllowedTypes.isEmpty()) {
+            log.debug("Types {} should be excluded from reindex", notAllowedTypes);
+            spec = (root, query, criteriaBuilder) -> {
+                query.orderBy(criteriaBuilder.desc(root.get("id")));
+                return criteriaBuilder.not(root.get(XM_ENTITY_FIELD_TYPEKEY).in(notAllowedTypes));
+            };
+        }
+
+        return reindexXmEntity(spec);
     }
 
     private long reindexXmEntity(@Nullable Specification<XmEntity> spec) {
