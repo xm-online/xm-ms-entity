@@ -1,13 +1,13 @@
 package com.icthh.xm.ms.entity.config;
 
 import com.icthh.xm.commons.lep.TenantScriptStorage;
-import java.util.List;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
 import java.util.Collections;
+import java.util.List;
 
 /**
  * Properties specific to JHipster.
@@ -62,6 +62,8 @@ public class ApplicationProperties {
     private Integer periodicMetricPoolSize;
 
     private KafkaMetric kafkaMetric;
+
+    private DomainEvent domainEvent;
 
     @Getter
     @Setter
@@ -121,4 +123,10 @@ public class ApplicationProperties {
        private int connectionTimeoutTopic;
        List<String> metricTopics;
     }
+    @Getter
+    @Setter
+    public static class DomainEvent {
+        private boolean enabled;
+    }
+
 }
