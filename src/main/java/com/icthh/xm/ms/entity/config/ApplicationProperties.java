@@ -63,7 +63,7 @@ public class ApplicationProperties {
 
     private KafkaMetric kafkaMetric;
 
-    private DomainEventConfiguration domainEvent;
+    private DomainEvent domainEvent;
 
     @Getter
     @Setter
@@ -122,6 +122,11 @@ public class ApplicationProperties {
        private boolean enabled;
        private int connectionTimeoutTopic;
        List<String> metricTopics;
+    }
+    @Getter
+    @Setter
+    public static class DomainEvent {
+        private boolean enabled;
     }
 
 }
