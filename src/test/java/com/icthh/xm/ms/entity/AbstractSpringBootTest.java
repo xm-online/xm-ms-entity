@@ -1,5 +1,6 @@
 package com.icthh.xm.ms.entity;
 
+import com.icthh.xm.ms.entity.config.DomainEventConfiguration;
 import com.icthh.xm.ms.entity.config.LepConfiguration;
 import com.icthh.xm.ms.entity.config.SecurityBeanOverrideConfiguration;
 import com.icthh.xm.ms.entity.config.elasticsearch.EmbeddedElasticsearchConfig;
@@ -28,7 +29,8 @@ import org.springframework.test.context.junit4.SpringRunner;
     SecurityBeanOverrideConfiguration.class,
     WebappTenantOverrideConfiguration.class,
     LepConfiguration.class,
-    EmbeddedElasticsearchConfig.class
+    EmbeddedElasticsearchConfig.class,
+    DomainEventConfiguration.class
 })
 @Category(AbstractSpringBootTest.class)
 @Slf4j

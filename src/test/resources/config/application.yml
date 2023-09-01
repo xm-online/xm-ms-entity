@@ -122,6 +122,8 @@ xm-config:
     enabled: false
 
 application:
+    domain-event:
+        enabled: true
     timeline-ignored-http-methods:
     scheduler-enabled: false
     kafka-enabled: false
