@@ -13,6 +13,7 @@ import org.apache.commons.lang3.StringUtils;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import static com.icthh.xm.ms.entity.domain.ext.TypeSpecParameter.ACCESS;
@@ -144,7 +145,9 @@ public class SpecInheritanceProcessor {
     private static <T> List<T> ignorableUnion(TypeSpecParameter typeSpecParam, TypeSpec type, TypeSpec parentType) {
         List<T> parameters = (List<T>) typeSpecParam.getParameterResolver().apply(type);
         List<T> parentParameters = (List<T>) typeSpecParam.getParameterResolver().apply(parentType);
-        return type.getIgnoreInheritanceFor().contains(typeSpecParam.getType()) ?
+        Set<String> ignoreInheritanceFor = type.getIgnoreInheritanceFor();
+        ignoreInheritanceFor = ignoreInheritanceFor != null ? ignoreInheritanceFor : Set.of();
+        return ignoreInheritanceFor.contains(typeSpecParam.getType()) ?
             parameters : union(parameters, parentParameters);
     }
 
