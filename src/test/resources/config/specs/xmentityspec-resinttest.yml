@@ -666,3 +666,8 @@ types:
         - key: TEST_NO_PROCESSING_REFS_LINK_KEY
           builderType: NEW
           typeKey: TEST_NO_PROCESSING_REFS
+    - key: ACCOUNT.NO_ELASTIC_SAVE
+      name: { en: "TEST_NO_ELASTIC_SAVE" }
+      isApp: false
+      isAbstract: false
+      indexAfterSaveEnabled: false
