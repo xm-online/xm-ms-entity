@@ -12,7 +12,7 @@ import java.util.Map;
  */
 @IgnoreLogginAspect
 @LepService(group = "function")
-public interface FunctionExecutorService {
+public class FunctionExecutorService {
 
     /**
      * Execute function with binding to XmEntity instance.
@@ -24,10 +24,12 @@ public interface FunctionExecutorService {
      * @return function result data
      */
     @LogicExtensionPoint(value = "FunctionWithXmEntity", resolver = FunctionLepKeyResolver.class)
-    Map<String, Object> execute(String functionKey,
+    public Map<String, Object> execute(String functionKey,
                                 IdOrKey idOrKey,
                                 String xmEntityTypeKey,
-                                Map<String, Object> functionInput);
+                                Map<String, Object> functionInput) {
+        throw new IllegalStateException("FunctionWithXmEntity " + functionKey + " not found");
+    }
 
     /**
      * Execute function without binding to any XmEntity instance.
@@ -37,7 +39,9 @@ public interface FunctionExecutorService {
      * @return function result data
      */
     @LogicExtensionPoint(value = "Function", resolver = FunctionLepKeyResolver.class)
-    Map<String, Object> execute(String functionKey, Map<String, Object> functionInput, String httpMethod);
+    public Map<String, Object> execute(String functionKey, Map<String, Object> functionInput, String httpMethod) {
+        throw new IllegalStateException("Function " + functionKey + " not found");
+    }
 
     /**
      * Execute anonymous function.
@@ -47,6 +51,8 @@ public interface FunctionExecutorService {
      * @return function result data
      */
     @LogicExtensionPoint(value = "AnonymousFunction", resolver = FunctionLepKeyResolver.class)
-    Map<String, Object> executeAnonymousFunction(String functionKey, Map<String, Object> functionInput, String httpMethod);
+    public Map<String, Object> executeAnonymousFunction(String functionKey, Map<String, Object> functionInput, String httpMethod) {
+        throw new IllegalStateException("AnonymousFunction " + functionKey + " not found");
+    }
 
 }

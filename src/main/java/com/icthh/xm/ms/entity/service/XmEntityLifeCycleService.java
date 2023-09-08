@@ -12,10 +12,12 @@ import java.util.Map;
  * The {@link XmEntityLifeCycleService} interface.
  */
 @LepService(group = "lifecycle")
-public interface XmEntityLifeCycleService {
+public class XmEntityLifeCycleService {
 
     @LoggingAspectConfig(resultDetails = false)
     @LogicExtensionPoint(value = "ChangeState")
-    XmEntity changeState(IdOrKey idOrKey, String nextStateKey, Map<String, Object> context);
+    public XmEntity changeState(IdOrKey idOrKey, String nextStateKey, Map<String, Object> context) {
+        throw new IllegalStateException("ChangeState lep not found.");
+    }
 
 }
