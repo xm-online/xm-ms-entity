@@ -145,9 +145,7 @@ public class SpecInheritanceProcessor {
     private static <T> List<T> ignorableUnion(TypeSpecParameter typeSpecParam, TypeSpec type, TypeSpec parentType) {
         List<T> parameters = (List<T>) typeSpecParam.getParameterResolver().apply(type);
         List<T> parentParameters = (List<T>) typeSpecParam.getParameterResolver().apply(parentType);
-        Set<String> ignoreInheritanceFor = type.getIgnoreInheritanceFor();
-        ignoreInheritanceFor = ignoreInheritanceFor != null ? ignoreInheritanceFor : Set.of();
-        return ignoreInheritanceFor.contains(typeSpecParam.getType()) ?
+        return type.getIgnoreInheritanceFor().contains(typeSpecParam.getType()) ?
             parameters : union(parameters, parentParameters);
     }
 

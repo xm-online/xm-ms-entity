@@ -70,6 +70,7 @@ public class XmEntitySaveIntTest extends AbstractSpringBootTest {
     public void destroy(){
         initLeps(false);
         lepManager.endThreadContext();
+        tenantContextHolder.getPrivilegedContext().destroyCurrentContext();
     }
 
     void initLeps(){
