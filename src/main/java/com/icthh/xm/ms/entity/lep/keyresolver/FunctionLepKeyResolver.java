@@ -17,8 +17,13 @@ public class FunctionLepKeyResolver implements LepKeyResolver {
 
     @Override
     public String group(LepMethod method) {
+        String baseGroup = LepKeyResolver.super.group(method);
         String functionKey = method.getParameter(PARAM_FUNCTION_KEY, String.class);
-        return functionKey.substring(0, functionKey.lastIndexOf('/'));
+        int groupIndex = functionKey.lastIndexOf('/');
+        if (groupIndex < 0) {
+            return baseGroup;
+        }
+        return baseGroup + "." + functionKey.substring(0, groupIndex);
     }
 
     @Override

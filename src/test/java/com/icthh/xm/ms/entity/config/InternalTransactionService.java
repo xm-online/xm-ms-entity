@@ -1,6 +1,8 @@
 package com.icthh.xm.ms.entity.config;
 
+import com.icthh.xm.commons.lep.api.LepManagementService;
 import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
@@ -8,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.concurrent.FutureTask;
 
+@Slf4j
 @Service
 public class InternalTransactionService {
 
@@ -18,8 +21,13 @@ public class InternalTransactionService {
     @SneakyThrows
     public <T> T inNestedTransaction(Task<T> task, Runnable setupMethod) {
         FutureTask<T> futureTask = new FutureTask<T>(() -> {
-            setupMethod.run();
-            return self.inTransaction(task);
+            try {
+                setupMethod.run();
+                return self.inTransaction(task);
+            } catch (Exception e) {
+                log.error("Error during nested transaction", e);
+                throw e;
+            }
         });
         Thread t = new Thread(futureTask);
         t.start();

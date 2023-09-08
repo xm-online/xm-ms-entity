@@ -91,6 +91,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -273,6 +274,7 @@ public class XmEntityResourceIntTest extends AbstractSpringBootTest {
         String config = getXmEntityTemplatesSpec(tenantName);
         String key = applicationProperties.getSpecificationTemplatesPathPattern().replace("{tenantName}", tenantName);
         xmEntityTemplatesSpecService.onRefresh(key, config);
+        xmEntityTemplatesSpecService.refreshFinished(List.of(key));
 
         XmEntityServiceImpl xmEntityServiceImpl = new XmEntityServiceImpl(xmEntitySpecService,
                                                       xmEntityTemplatesSpecService,
@@ -801,6 +803,7 @@ public class XmEntityResourceIntTest extends AbstractSpringBootTest {
         // Search the xmEntity
         restXmEntityMockMvc.perform(get("/api/_search/v2/xm-entities?query=id:" + xmEntity.getId()
             +"&excludes=id&excludes=key&excludes=typeKey"))
+            .andDo(print())
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
             .andExpect(jsonPath("$.[*].id").value(hasItem(nullValue())))
