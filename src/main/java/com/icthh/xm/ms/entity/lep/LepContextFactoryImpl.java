@@ -30,7 +30,6 @@ import com.icthh.xm.ms.entity.service.XmTenantLifecycleService;
 import com.icthh.xm.ms.entity.service.mail.MailService;
 import com.icthh.xm.ms.entity.service.metrics.CustomMetricsContext;
 import com.icthh.xm.ms.entity.service.metrics.MetricsAdapter;
-import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
 import org.springframework.stereotype.Component;
@@ -40,7 +39,6 @@ import org.springframework.web.client.RestTemplate;
  * The {@link LepContextFactoryImpl} class.
  */
 @Component
-@RequiredArgsConstructor
 public class LepContextFactoryImpl implements LepContextFactory {
 
     private final XmEntityService xmEntityService;
@@ -51,16 +49,13 @@ public class LepContextFactoryImpl implements LepContextFactory {
     private final MailService mailService;
     private final TenantConfigService tenantConfigService;
     private final AttachmentService attachmentService;
-    @Qualifier("loadBalancedRestTemplateWithTimeout")
     private final RestTemplate restTemplate;
-    @Qualifier("plainRestTemplate")
     private final RestTemplate plainRestTemplate;
     private final PathTimeoutHttpComponentsClientHttpRequestFactory requestFactory;
     private final LocationService locationService;
     private final TagService tagService;
     private final ProfileEventProducer profileEventProducer;
     private final CommentService commentService;
-    private final CommonsService commonsService;
     private final PermissionCheckService permissionCheckService;
     private final EventService eventService;
     private final CalendarService calendarService;
@@ -76,6 +71,69 @@ public class LepContextFactoryImpl implements LepContextFactory {
     private final EventPublisher eventPublisher;
     private final DomainEventFactory domainEventFactory;
     private final CommunicationService communicationService;
+
+    public LepContextFactoryImpl(XmEntityService xmEntityService,
+                                 XmTenantLifecycleService xmTenantLifecycleService,
+                                 XmEntityRepository xmEntityRepository, ProfileService profileService,
+                                 LinkService linkService,
+                                 MailService mailService,
+                                 TenantConfigService tenantConfigService,
+                                 AttachmentService attachmentService,
+                                 @Qualifier("loadBalancedRestTemplateWithTimeout")
+                                 RestTemplate restTemplate,
+                                 @Qualifier("plainRestTemplate")
+                                 RestTemplate plainRestTemplate,
+                                 PathTimeoutHttpComponentsClientHttpRequestFactory requestFactory,
+                                 LocationService locationService,
+                                 TagService tagService,
+                                 ProfileEventProducer profileEventProducer,
+                                 CommentService commentService,
+                                 PermissionCheckService permissionCheckService,
+                                 EventService eventService,
+                                 CalendarService calendarService,
+                                 TenantLepResource tenantLepResource,
+                                 AmazonS3Template s3Template,
+                                 ElasticsearchTemplate elasticsearchTemplate,
+                                 PermittedSearchRepository permittedSearchRepository,
+                                 ElasticsearchIndexService elasticsearchIndexService,
+                                 SeparateTransactionExecutor transactionExecutor,
+                                 CustomMetricsContext customMetricsContext,
+                                 KafkaTemplateService kafkaTemplateService,
+                                 MetricsAdapter metricsAdapter,
+                                 EventPublisher eventPublisher,
+                                 DomainEventFactory domainEventFactory,
+                                 CommunicationService communicationService) {
+        this.xmEntityService = xmEntityService;
+        this.xmTenantLifecycleService = xmTenantLifecycleService;
+        this.xmEntityRepository = xmEntityRepository;
+        this.profileService = profileService;
+        this.linkService = linkService;
+        this.mailService = mailService;
+        this.tenantConfigService = tenantConfigService;
+        this.attachmentService = attachmentService;
+        this.restTemplate = restTemplate;
+        this.plainRestTemplate = plainRestTemplate;
+        this.requestFactory = requestFactory;
+        this.locationService = locationService;
+        this.tagService = tagService;
+        this.profileEventProducer = profileEventProducer;
+        this.commentService = commentService;
+        this.permissionCheckService = permissionCheckService;
+        this.eventService = eventService;
+        this.calendarService = calendarService;
+        this.tenantLepResource = tenantLepResource;
+        this.s3Template = s3Template;
+        this.elasticsearchTemplate = elasticsearchTemplate;
+        this.permittedSearchRepository = permittedSearchRepository;
+        this.elasticsearchIndexService = elasticsearchIndexService;
+        this.transactionExecutor = transactionExecutor;
+        this.customMetricsContext = customMetricsContext;
+        this.kafkaTemplateService = kafkaTemplateService;
+        this.metricsAdapter = metricsAdapter;
+        this.eventPublisher = eventPublisher;
+        this.domainEventFactory = domainEventFactory;
+        this.communicationService = communicationService;
+    }
 
     @Override
     public BaseLepContext buildLepContext(LepMethod lepMethod) {
