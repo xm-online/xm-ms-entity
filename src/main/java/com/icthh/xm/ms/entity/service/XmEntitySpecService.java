@@ -294,10 +294,11 @@ public class XmEntitySpecService implements RefreshableConfiguration {
     @IgnoreLogginAspect
     public Optional<FunctionSpec> findFunction(String functionKey) {
 
-        Map<String, FunctionSpec> functions = xmEntitySpecContextService.functionsByTenant(getTenantKeyValue());
+        String tenantKey = getTenantKeyValue();
+        Map<String, FunctionSpec> functions = xmEntitySpecContextService.functionsByTenant(tenantKey);
         return Optional.of(functions)
             .map(fs -> fs.get(functionKey))
-                .or(() -> functions.values().stream()
+                .or(() -> xmEntitySpecContextService.functionsByTenantOrdered(tenantKey).stream()
                         .filter(fs -> fs.getPath() != null)
                         .filter(fs -> matcher.match(fs.getPath(), functionKey))
                         .findFirst());

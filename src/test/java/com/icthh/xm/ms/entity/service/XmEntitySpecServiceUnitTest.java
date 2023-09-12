@@ -214,7 +214,7 @@ public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
 
         List<FunctionSpec> functions = flattenFunctions(types);
 
-        assertThat(functions.size()).isEqualTo(6);
+        assertThat(functions.size()).isEqualTo(8);
 
     }
 
@@ -269,7 +269,7 @@ public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
         assertThat(keys).containsExactlyInAnyOrder(KEY1, KEY2, KEY6);
 
         List<FunctionSpec> functions = flattenFunctions(types);
-        assertThat(functions.size()).isEqualTo(4);
+        assertThat(functions.size()).isEqualTo(6);
     }
 
     @Test
@@ -299,7 +299,7 @@ public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
         assertThat(keys).containsExactlyInAnyOrder(KEY2, KEY3, KEY5, KEY6);
 
         List<FunctionSpec> functions = flattenFunctions(types);
-        assertThat(functions.size()).isEqualTo(5);
+        assertThat(functions.size()).isEqualTo(7);
     }
 
     @Test
@@ -754,6 +754,21 @@ public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
         assertNotNull(functionSpec);
         assertEquals(functionSpec.getKey(), "in/package/FUNCTION4");
         assertEquals(functionSpec.getPath(), "call/function/by-path/{id}/and/param/{param}");
+    }
+
+    @Test
+    public void testFindFunctionByMostSpecificPath() {
+        // init typespecs
+        xmEntitySpecService.getTypeSpecs();
+        FunctionSpec functionSpec = xmEntitySpecService.findFunction("v1/billing-cycles/123/action").orElse(null);
+        assertNotNull(functionSpec);
+        assertEquals(functionSpec.getKey(), "v1/billingcycles/manage");
+        assertEquals(functionSpec.getPath(), "v1/billing-cycles/{billingCycleId}/{actionKey}");
+
+        functionSpec = xmEntitySpecService.findFunction("v1/billing-cycles/325/products").orElse(null);
+        assertNotNull(functionSpec);
+        assertEquals(functionSpec.getKey(), "v1/billingcycles/products");
+        assertEquals(functionSpec.getPath(), "v1/billing-cycles/{billingCycleId}/products");
     }
 
     @Test
