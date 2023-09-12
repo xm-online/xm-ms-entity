@@ -65,28 +65,4 @@ public class FunctionExecutorIntTest extends AbstractSpringBootTest {
         tenantContextHolder.getPrivilegedContext().destroyCurrentContext();
     }
 
-    public static volatile long startTime;
-    public static volatile long endTime;
-
-    @Test
-    @Transactional
-    @SneakyThrows
-    public void testLepContextCast() {
-        String functionPrefix = "/config/tenants/RESINTTEST/entity/lep/function/";
-        String functionKey = "TEST_RUN_PERFORMANCE";
-        String funcKey = functionPrefix + "Function$$TEST_RUN_PERFORMANCE$$tenant.groovy";
-        String function = "return ['result':'OK']\n";
-        leps.onRefresh(funcKey, function);
-        Map<String, Object> result = functionExecutorService.execute(functionKey, Map.of(), null);
-        assertEquals("OK", result.get("result"));
-
-        startTime = System.nanoTime();
-        for(int i = 0; i < 50_000; i++) {
-            functionExecutorService.execute(functionKey, Map.of(), null);
-        }
-        endTime = System.nanoTime();
-        System.out.println(Duration.ofNanos(endTime - startTime).toMillis());
-
-        leps.onRefresh(funcKey, null);
-    }
 }
