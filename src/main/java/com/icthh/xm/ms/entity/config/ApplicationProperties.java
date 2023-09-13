@@ -114,6 +114,7 @@ public class ApplicationProperties {
         private TenantScriptStorage tenantScriptStorage;
         private String lepResourcePathPattern;
         private Boolean fullRecompileOnLepUpdate;
+        private Boolean warmupScripts;
     }
 
     @Getter
