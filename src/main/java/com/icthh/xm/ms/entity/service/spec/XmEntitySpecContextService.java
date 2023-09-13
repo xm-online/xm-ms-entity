@@ -78,6 +78,10 @@ public class XmEntitySpecContextService {
         return functionByTenantService.functionsByTenant(tenantKey);
     }
 
+    public List<FunctionSpec> functionsByTenantOrdered(String tenantKey) {
+        return functionByTenantService.functionsByTenantOrdered(tenantKey);
+    }
+
     @SneakyThrows
     public void updateByFileState(String updatedKey, String config, String tenant) {
         var byFiles = typesByTenantByFile.computeIfAbsent(tenant, key -> new LinkedHashMap<>());
