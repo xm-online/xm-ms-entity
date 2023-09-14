@@ -1,5 +1,6 @@
 package com.icthh.xm.ms.entity.config;
 
+import com.icthh.xm.commons.lep.spring.web.LepInterceptor;
 import com.icthh.xm.commons.web.spring.TenantInterceptor;
 import com.icthh.xm.commons.web.spring.TenantVerifyInterceptor;
 import com.icthh.xm.commons.web.spring.XmLoggingInterceptor;
@@ -35,6 +36,7 @@ public class WebMvcConfiguration extends XmWebMvcConfigurerAdapter {
         Collections.singletonList("/api/xm-entities/*/links/targets");
 
     private final ApplicationProperties applicationProperties;
+    private final LepInterceptor lepInterceptor;
     private final TenantVerifyInterceptor tenantVerifyInterceptor;
     private final XmSquigglyInterceptor xmSquigglyInterceptor;
     private final JacksonConfiguration.HttpMessageConverterCustomizer httpMessageConverterCustomizer;
@@ -42,12 +44,14 @@ public class WebMvcConfiguration extends XmWebMvcConfigurerAdapter {
     public WebMvcConfiguration(TenantInterceptor tenantInterceptor,
                                XmLoggingInterceptor xmLoggingInterceptor,
                                ApplicationProperties applicationProperties,
+                               LepInterceptor lepInterceptor,
                                TenantVerifyInterceptor tenantVerifyInterceptor,
                                final XmSquigglyInterceptor xmSquigglyInterceptor,
                                JacksonConfiguration.HttpMessageConverterCustomizer httpMessageConverterCustomizer) {
         super(tenantInterceptor, xmLoggingInterceptor);
 
         this.applicationProperties = applicationProperties;
+        this.lepInterceptor = lepInterceptor;
         this.tenantVerifyInterceptor = tenantVerifyInterceptor;
         this.xmSquigglyInterceptor = xmSquigglyInterceptor;
         this.httpMessageConverterCustomizer = httpMessageConverterCustomizer;
@@ -61,6 +65,7 @@ public class WebMvcConfiguration extends XmWebMvcConfigurerAdapter {
     protected void xmAddInterceptors(InterceptorRegistry registry) {
         registerTenantInterceptorWithIgnorePathPattern(registry, tenantVerifyInterceptor);
         registerJsonFilterInterceptor(registry);
+        registerTenantInterceptorWithIgnorePathPattern(registry, lepInterceptor);
     }
 
     private void registerJsonFilterInterceptor(InterceptorRegistry registry) {
