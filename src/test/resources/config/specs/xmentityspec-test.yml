@@ -139,6 +139,12 @@ types:
             name: { en: "Function 3" }
             saveFunctionContext: false
             withEntityId: false
+          - key: v1/billingcycles/manage
+            path: v1/billing-cycles/{billingCycleId}/{actionKey}
+            name: { en: "BC controller" }
+          - key: v1/billingcycles/products
+            path: v1/billing-cycles/{billingCycleId}/products
+            name: { en: "BC controller" }
 
     - key: TYPE1.SUBTYPE1
       name: { en: "Subtype 1", ru: "Подтип 1" }
