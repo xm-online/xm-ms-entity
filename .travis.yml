@@ -50,3 +50,4 @@ branches:
    only:
      - master
      - main
+     - feature/migration_to_new_lep
