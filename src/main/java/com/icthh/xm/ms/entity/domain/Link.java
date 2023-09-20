@@ -19,6 +19,9 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.NamedAttributeNode;
+import javax.persistence.NamedEntityGraph;
+import javax.persistence.NamedEntityGraphs;
 import javax.persistence.PrePersist;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
@@ -31,9 +34,15 @@ import javax.validation.constraints.NotNull;
 @Entity
 @Table(name = "link")
 @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
+@NamedEntityGraphs({
+    @NamedEntityGraph(name = Link.LINK_GRAPH,
+        attributeNodes = {@NamedAttributeNode("target"), @NamedAttributeNode("source")})
+})
 public class Link implements Serializable {
 
     private static final long serialVersionUID = 1L;
+
+    public static final String LINK_GRAPH = "Link[target, source]";
 
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "sequenceGenerator")

@@ -5,6 +5,10 @@ import com.icthh.xm.ms.entity.domain.Link;
 import java.util.List;
 
 import com.icthh.xm.ms.entity.projection.LinkProjection;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;
@@ -19,14 +23,26 @@ public interface LinkRepository extends JpaRepository<Link, Long>, JpaSpecificat
     @Override
     Link findResourceById(Object id);
 
+    @EntityGraph(attributePaths = {"target", "source"})
     List<Link> findBySourceIdAndTargetTypeKey(Long sourceId, String typeKey);
 
+    @EntityGraph(attributePaths = {"target", "source"})
     List<Link> findByTargetIdAndTypeKey(Long targetId, String typeKey);
 
+    @EntityGraph(attributePaths = {"target", "source"})
     List<Link> findBySourceTypeKeyAndTypeKeyIn(String sourceTypeKey, List<String> linksTypeKeys);
 
+    @EntityGraph(attributePaths = {"target", "source"})
     List<Link> findBySourceIdAndTypeKey(Long id, String typeKey);
 
     List<LinkProjection> findLinkProjectionsBySourceIdAndTypeKey(Long id, String typeKey);
+
+    @Override
+    @EntityGraph(attributePaths = {"target", "source"})
+    List<Link> findAll(Specification<Link> spec);
+
+    @Override
+    @EntityGraph(attributePaths = {"target", "source"})
+    Page<Link> findAll(Specification<Link> spec, Pageable pageable);
 
 }
