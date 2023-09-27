@@ -25,6 +25,7 @@ public final class LepXmEntityMsConstants {
     public static final String BINDING_SUB_KEY_SERVICE_LEP_RESOURCE = "lepResource";
     public static final String BINDING_SUB_KEY_SERVICE_ELASTICSEARCH_INDEXS = "elasticsearchIndexService";
     public static final String BINDING_SUB_KEY_SERVICE_SEPARATE_TRANSACTION_EXECUTOR = "separateTransactionExecutor";
+    public static final String BINDING_SUB_KEY_SERVICE_SEPARATE_FLUSH_MODE_EXECUTOR = "separateFlushModeExecutor";
     public static final String BINDING_SUB_KEY_SERVICE_EVENT_PUBLISHER = "eventPublisher";
     public static final String BINDING_SUB_KEY_SERVICE_DOMAIN_EVENT_FACTORY = "domainEventFactory";
     public static final String BINDING_SUB_KEY_SERVICE_COMMUNICATION_SERVICE = "communicationService";

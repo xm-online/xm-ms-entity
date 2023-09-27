@@ -22,6 +22,7 @@ import com.icthh.xm.ms.entity.service.EventService;
 import com.icthh.xm.ms.entity.service.LinkService;
 import com.icthh.xm.ms.entity.service.LocationService;
 import com.icthh.xm.ms.entity.service.ProfileService;
+import com.icthh.xm.ms.entity.service.SeparateFlushModeExecutor;
 import com.icthh.xm.ms.entity.service.SeparateTransactionExecutor;
 import com.icthh.xm.ms.entity.service.TagService;
 import com.icthh.xm.ms.entity.service.XmEntityService;
@@ -73,7 +74,8 @@ public class LepAppEventListenerConfiguration {
         MetricsAdapter metricsAdapter,
         EventPublisher eventPublisher,
         DomainEventFactory domainEventFactory,
-        CommunicationService communicationService
+        CommunicationService communicationService,
+        SeparateFlushModeExecutor separateFlushModeExecutor
     ) {
 
         return new XmEntityMsLepProcessingApplicationListener(xmEntityService,
@@ -83,7 +85,7 @@ public class LepAppEventListenerConfiguration {
             commonsService, permissionCheckService, eventService, calendarService, tenantLepResource,
             amazonS3Template, elasticsearchTemplate, permittedSearchRepository, elasticsearchIndexService,
             transactionExecutor, customMetricsContext, kafkaTemplateService, metricsAdapter,
-            eventPublisher, domainEventFactory, communicationService);
+            eventPublisher, domainEventFactory, communicationService, separateFlushModeExecutor);
     }
 
 }

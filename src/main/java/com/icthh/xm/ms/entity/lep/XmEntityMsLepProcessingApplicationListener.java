@@ -22,6 +22,7 @@ import static com.icthh.xm.ms.entity.lep.LepXmEntityMsConstants.BINDING_SUB_KEY_
 import static com.icthh.xm.ms.entity.lep.LepXmEntityMsConstants.BINDING_SUB_KEY_SERVICE_LOCATION_SERVICE;
 import static com.icthh.xm.ms.entity.lep.LepXmEntityMsConstants.BINDING_SUB_KEY_SERVICE_MAIL_SERVICE;
 import static com.icthh.xm.ms.entity.lep.LepXmEntityMsConstants.BINDING_SUB_KEY_SERVICE_PROFILE;
+import static com.icthh.xm.ms.entity.lep.LepXmEntityMsConstants.BINDING_SUB_KEY_SERVICE_SEPARATE_FLUSH_MODE_EXECUTOR;
 import static com.icthh.xm.ms.entity.lep.LepXmEntityMsConstants.BINDING_SUB_KEY_SERVICE_SEPARATE_TRANSACTION_EXECUTOR;
 import static com.icthh.xm.ms.entity.lep.LepXmEntityMsConstants.BINDING_SUB_KEY_SERVICE_TAG_SERVICE;
 import static com.icthh.xm.ms.entity.lep.LepXmEntityMsConstants.BINDING_SUB_KEY_SERVICE_TENANT_CONFIG_SERICE;
@@ -58,6 +59,7 @@ import com.icthh.xm.ms.entity.service.EventService;
 import com.icthh.xm.ms.entity.service.LinkService;
 import com.icthh.xm.ms.entity.service.LocationService;
 import com.icthh.xm.ms.entity.service.ProfileService;
+import com.icthh.xm.ms.entity.service.SeparateFlushModeExecutor;
 import com.icthh.xm.ms.entity.service.SeparateTransactionExecutor;
 import com.icthh.xm.ms.entity.service.TagService;
 import com.icthh.xm.ms.entity.service.XmEntityService;
@@ -110,6 +112,7 @@ public class XmEntityMsLepProcessingApplicationListener extends SpringLepProcess
     private final EventPublisher eventPublisher;
     private final DomainEventFactory domainEventFactory;
     private final CommunicationService communicationService;
+    private final SeparateFlushModeExecutor flushModeExecutor;
 
     @Override
     protected void bindExecutionContext(ScopedContext executionContext) {
@@ -132,6 +135,7 @@ public class XmEntityMsLepProcessingApplicationListener extends SpringLepProcess
         services.put(BINDING_SUB_KEY_PERMISSION_SERVICE, permissionCheckService);
         services.put(BINDING_SUB_KEY_SERVICE_ELASTICSEARCH_INDEXS, elasticsearchIndexService);
         services.put(BINDING_SUB_KEY_SERVICE_SEPARATE_TRANSACTION_EXECUTOR, transactionExecutor);
+        services.put(BINDING_SUB_KEY_SERVICE_SEPARATE_FLUSH_MODE_EXECUTOR, flushModeExecutor);
         services.put(BINDING_KEY_METRICS_ADAPTER, metricsAdapter);
         services.put(BINDING_SUB_KEY_SERVICE_EVENT_PUBLISHER, eventPublisher);
         services.put(BINDING_SUB_KEY_SERVICE_DOMAIN_EVENT_FACTORY, domainEventFactory);
