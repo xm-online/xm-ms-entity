@@ -26,6 +26,7 @@ import com.icthh.xm.ms.entity.service.EventService;
 import com.icthh.xm.ms.entity.service.LinkService;
 import com.icthh.xm.ms.entity.service.LocationService;
 import com.icthh.xm.ms.entity.service.ProfileService;
+import com.icthh.xm.ms.entity.service.SeparateFlushModeExecutor;
 import com.icthh.xm.ms.entity.service.SeparateTransactionExecutor;
 import com.icthh.xm.ms.entity.service.TagService;
 import com.icthh.xm.ms.entity.service.XmEntityService;
@@ -75,6 +76,7 @@ public class LepContext {
         public EventPublisher eventPublisher;
         public DomainEventFactory domainEventFactory;
         public CommunicationService communicationService;
+        public SeparateFlushModeExecutor separateFlushModeExecutor;
     }
 
     public static class LepRepositories {
