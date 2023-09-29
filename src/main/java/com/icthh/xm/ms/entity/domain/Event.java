@@ -42,8 +42,11 @@ import org.hibernate.annotations.CacheConcurrencyStrategy;
 @Setter
 @EventDataTypeKey
 @NamedEntityGraphs({
-    @NamedEntityGraph(name = Event.EVENT_GRAPH,
-        attributeNodes = @NamedAttributeNode("eventDataRef"))
+    @NamedEntityGraph(name = Event.EVENT_GRAPH, attributeNodes = {
+            @NamedAttributeNode("calendar"),
+            @NamedAttributeNode("assigned"),
+            @NamedAttributeNode("eventDataRef")
+    })
 })
 public class Event implements Serializable {
 

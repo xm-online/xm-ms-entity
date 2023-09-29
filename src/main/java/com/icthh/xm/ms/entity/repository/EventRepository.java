@@ -26,6 +26,6 @@ public interface EventRepository extends JpaRepository<Event, Long>, ResourceRep
     Optional<Event> findByEventDataRef(XmEntity eventDataRef);
 
     @Override
-    @EntityGraph(attributePaths = {"xmEntity"})
+    @EntityGraph(attributePaths = {"calendar", "assigned", "eventDataRef"})
     Page<Event> findAll(Specification<Event> spec, Pageable pageable);
 }
