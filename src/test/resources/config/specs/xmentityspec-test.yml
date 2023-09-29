@@ -204,8 +204,8 @@ types:
       calendars:
           - key: DEFAULT
             events:
-                - key: EVENT1
-                  name: { en: "Event 1", ru: "Событие 1" }
+                - key: EVENT2
+                  name: { en: "Event 2", ru: "Событие 2" }
       ratings:
           - key: RATING1
             name: { en: "Rating 1", ru: "Рейтинг 1" }

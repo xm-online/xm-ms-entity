@@ -19,6 +19,9 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.NamedAttributeNode;
+import javax.persistence.NamedEntityGraph;
+import javax.persistence.NamedEntityGraphs;
 import javax.persistence.OneToOne;
 import javax.persistence.PrePersist;
 import javax.persistence.SequenceGenerator;
@@ -38,9 +41,18 @@ import org.hibernate.annotations.CacheConcurrencyStrategy;
 @Getter
 @Setter
 @EventDataTypeKey
+@NamedEntityGraphs({
+    @NamedEntityGraph(name = Event.EVENT_GRAPH, attributeNodes = {
+            @NamedAttributeNode("calendar"),
+            @NamedAttributeNode("assigned"),
+            @NamedAttributeNode("eventDataRef")
+    })
+})
 public class Event implements Serializable {
 
     private static final long serialVersionUID = 1L;
+
+    public static final String EVENT_GRAPH = "Event[eventDataRef]";
 
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "sequenceGenerator")

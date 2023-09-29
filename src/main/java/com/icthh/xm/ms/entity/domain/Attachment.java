@@ -20,6 +20,9 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.NamedAttributeNode;
+import javax.persistence.NamedEntityGraph;
+import javax.persistence.NamedEntityGraphs;
 import javax.persistence.OneToOne;
 import javax.persistence.PrePersist;
 import javax.persistence.SequenceGenerator;
@@ -42,9 +45,15 @@ import org.hibernate.annotations.CacheConcurrencyStrategy;
 @Table(name = "attachment")
 @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
 @TypeKey
+@NamedEntityGraphs({
+    @NamedEntityGraph(name = Attachment.ATTACHMENT_GRAPH,
+        attributeNodes = @NamedAttributeNode("xmEntity"))
+})
 public class Attachment implements Serializable {
 
     private static final long serialVersionUID = 1L;
+
+    public static final String ATTACHMENT_GRAPH = "Attachment[xmEntity]";
 
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "sequenceGenerator")

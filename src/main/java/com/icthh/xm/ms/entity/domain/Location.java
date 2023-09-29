@@ -22,9 +22,15 @@ import java.util.Objects;
 @Table(name = "location")
 @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
 @TypeKey
+@NamedEntityGraphs({
+    @NamedEntityGraph(name = Location.LOCATION_GRAPH,
+        attributeNodes = @NamedAttributeNode("xmEntity"))
+})
 public class Location implements Serializable {
 
     private static final long serialVersionUID = 1L;
+
+    public static final String LOCATION_GRAPH = "Location[xmEntity]";
 
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "sequenceGenerator")
