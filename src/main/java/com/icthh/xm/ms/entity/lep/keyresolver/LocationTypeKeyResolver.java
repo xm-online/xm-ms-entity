@@ -1,20 +1,16 @@
 package com.icthh.xm.ms.entity.lep.keyresolver;
 
-import com.icthh.xm.lep.api.LepManagerService;
+import com.icthh.xm.lep.api.LepKeyResolver;
 import com.icthh.xm.lep.api.LepMethod;
-import com.icthh.xm.lep.api.commons.SeparatorSegmentedLepKey;
 import com.icthh.xm.ms.entity.domain.Location;
-import com.icthh.xm.ms.entity.domain.XmEntity;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
+
 @Component
-public class LocationTypeKeyResolver extends AppendLepKeyResolver {
+public class LocationTypeKeyResolver implements LepKeyResolver {
     @Override
-    protected String[] getAppendSegments(SeparatorSegmentedLepKey baseKey, LepMethod method, LepManagerService managerService) {
-        Location location = getRequiredParam(method, "location", Location.class);
-        String translatedLocationTypeKey = translateToLepConvention(location.getTypeKey());
-        return new String[] {
-            translatedLocationTypeKey
-        };
+    public List<String> segments(LepMethod method) {
+        return List.of(method.getParameter("location", Location.class).getTypeKey());
     }
 }

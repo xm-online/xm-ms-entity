@@ -2,12 +2,13 @@ package com.icthh.xm.ms.entity.lep;
 
 import com.icthh.xm.commons.config.client.service.TenantConfigService;
 import com.icthh.xm.commons.domainevent.outbox.service.OutboxTransportService;
+import com.icthh.xm.commons.domainevent.outbox.service.OutboxTransportService.OutboxTransportServiceField;
 import com.icthh.xm.commons.domainevent.service.EventPublisher;
 import com.icthh.xm.commons.domainevent.service.builder.DomainEventFactory;
-import com.icthh.xm.commons.lep.BaseProceedingLep;
-import com.icthh.xm.commons.lep.spring.LepThreadHelper;
+import com.icthh.xm.commons.lep.api.BaseLepContext;
 import com.icthh.xm.commons.lep.spring.lepservice.LepServiceFactory;
 import com.icthh.xm.commons.logging.trace.TraceService;
+import com.icthh.xm.commons.logging.trace.TraceService.TraceServiceField;
 import com.icthh.xm.commons.messaging.communication.service.CommunicationService;
 import com.icthh.xm.commons.permission.service.PermissionCheckService;
 import com.icthh.xm.commons.security.XmAuthenticationContext;
@@ -35,25 +36,14 @@ import com.icthh.xm.ms.entity.service.metrics.MetricsAdapter;
 import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
 import org.springframework.web.client.RestTemplate;
 
-public class LepContext {
+public class LepContext extends BaseLepContext implements TraceServiceField, OutboxTransportServiceField {
 
-    public Object commons;
-    public Object inArgs;
-    public BaseProceedingLep lep;
-    public LepThreadHelper thread;
-    public TraceService traceService;
-    public OutboxTransportService outboxTransportService;
-    public XmAuthenticationContext authContext;
-    public TenantContext tenantContext;
-    public Object methodResult;
-
-    public LepServiceFactory lepServices;
     public LepServices services;
     public LepRepositories repositories;
     public LepTemplates templates;
     public CustomMetricsContext metricsContext;
 
-    public static class LepServices {
+    public static class LepServices extends BaseLepContext {
         public Object xmTenantLifeCycle; // do not user this field
         public XmEntityService xmEntity;
         public ProfileService profileService;

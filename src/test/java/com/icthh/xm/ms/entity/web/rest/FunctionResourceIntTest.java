@@ -92,6 +92,7 @@ public class FunctionResourceIntTest extends AbstractSpringBootTest {
     public void setup() {
         MockitoAnnotations.initMocks(this);
 
+        TenantContextUtils.setTenant(tenantContextHolder, "RESINTTEST");
         lepManager.beginThreadContext(ctx -> {
             ctx.setValue(THREAD_CONTEXT_KEY_TENANT_CONTEXT, tenantContextHolder.getContext());
             ctx.setValue(THREAD_CONTEXT_KEY_AUTH_CONTEXT, authContextHolder.getContext());
@@ -108,6 +109,8 @@ public class FunctionResourceIntTest extends AbstractSpringBootTest {
     @After
     public void destroy(){
         initLeps(false);
+        lepManager.endThreadContext();
+        tenantContextHolder.getPrivilegedContext().destroyCurrentContext();
     }
 
     void initLeps(boolean loadData) {

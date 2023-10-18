@@ -1,9 +1,11 @@
 package com.icthh.xm.lep
 
 import com.icthh.xm.commons.lep.TenantScriptStorage
-import com.icthh.xm.commons.lep.spring.LepSpringConfiguration
+import com.icthh.xm.commons.lep.groovy.GroovyLepEngineConfiguration
+import com.icthh.xm.commons.lep.spring.LepUpdateMode
 import org.springframework.boot.test.context.TestConfiguration
 import org.springframework.context.ApplicationEventPublisher
+import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Profile
 import org.springframework.core.io.ResourceLoader
 
@@ -12,7 +14,7 @@ import org.springframework.core.io.ResourceLoader
  */
 @TestConfiguration
 @Profile('leptest')
-class LepTestConfiguration extends LepSpringConfiguration {
+class LepTestConfiguration extends GroovyLepEngineConfiguration {
 
     LepTestConfiguration(final ApplicationEventPublisher eventPublisher,
                          final ResourceLoader resourceLoader) {
@@ -24,4 +26,9 @@ class LepTestConfiguration extends LepSpringConfiguration {
         return TenantScriptStorage.CLASSPATH
     }
 
+    @Override
+    @Bean
+    LepUpdateMode lepUpdateMode() {
+        return LepUpdateMode.SYNCHRONOUS;
+    }
 }

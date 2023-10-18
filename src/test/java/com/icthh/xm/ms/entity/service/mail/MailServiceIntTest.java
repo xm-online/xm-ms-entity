@@ -6,8 +6,6 @@ import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
 import com.icthh.xm.commons.tenant.TenantKey;
 import com.icthh.xm.ms.entity.AbstractSpringBootTest;
-import com.icthh.xm.ms.entity.service.mail.MailService;
-import com.icthh.xm.ms.entity.service.mail.TenantEmailTemplateService;
 import lombok.SneakyThrows;
 import org.junit.Before;
 import org.junit.Test;

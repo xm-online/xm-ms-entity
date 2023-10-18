@@ -1,15 +1,16 @@
 package com.icthh.xm.ms.entity.lep.keyresolver;
 
-import com.icthh.xm.lep.api.LepManagerService;
+import com.icthh.xm.lep.api.LepKeyResolver;
 import com.icthh.xm.lep.api.LepMethod;
-import com.icthh.xm.lep.api.commons.SeparatorSegmentedLepKey;
 import org.springframework.stereotype.Component;
+
+import java.util.List;
 
 /**
  * The {@link ChangeStateTargetStateLepKeyResolver} class.
  */
 @Component
-public class ChangeStateTargetStateLepKeyResolver extends AppendLepKeyResolver {
+public class ChangeStateTargetStateLepKeyResolver implements LepKeyResolver {
 
     /**
      * Method parameter name for {@code stateKey}.
@@ -28,22 +29,14 @@ public class ChangeStateTargetStateLepKeyResolver extends AppendLepKeyResolver {
      * <p>
      * Add to method name {@code <xm-entity-type-key} and {@code <state-key>} to the end.
      *
-     * @param baseKey        base LEP key (prefix), can be {@code null}
      * @param method         method data on what LEP call occurs
-     * @param managerService LEP manager service
      * @return dynamic value of LEP base key
      */
     @Override
-    protected String[] getAppendSegments(SeparatorSegmentedLepKey baseKey,
-                                         LepMethod method,
-                                         LepManagerService managerService) {
-        String translatedXmEntityTypeKey = translateToLepConvention(getRequiredStrParam(method, PARAM_TYPE_KEY));
-        String translatedNextStateKey = translateToLepConvention(getRequiredStrParam(method, PARAM_NEXT_STATE_KEY));
-
-        return new String[] {
-            translatedXmEntityTypeKey,
-            translatedNextStateKey
-        };
+    public List<String> segments(LepMethod method) {
+        return List.of(
+            method.getParameter(PARAM_TYPE_KEY, String.class),
+            method.getParameter(PARAM_NEXT_STATE_KEY, String.class)
+        );
     }
-
 }

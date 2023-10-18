@@ -1,5 +1,6 @@
 package com.icthh.xm.ms.entity.lep.helpers;
 
+import com.icthh.xm.commons.lep.api.BaseLepContext;
 import com.icthh.xm.ms.entity.lep.LepContext;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -34,7 +35,9 @@ public class LepContextTransformation extends AbstractASTTransformation {
     public final static Map<String, List<String>> LEP_CONTEXT_FIELDS;
 
     static {
-        Map<String, List<String>> fields = getFields("", LepContext.class);
+        Map<String, List<String>> fields = new HashMap<>();
+        fields.putAll(getFields("", BaseLepContext.class));
+        fields.putAll(getFields("", LepContext.class));
         fields.put(LepContext.class.getCanonicalName(), List.of("with{it}"));
         LEP_CONTEXT_FIELDS = Map.copyOf(fields);
     }
