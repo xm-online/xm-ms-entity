@@ -5,8 +5,10 @@ import com.icthh.xm.commons.permission.annotation.PrivilegeDescription;
 import com.icthh.xm.commons.permission.repository.PermittedRepository;
 import com.icthh.xm.ms.entity.domain.Rating;
 import com.icthh.xm.ms.entity.repository.RatingRepository;
+import com.icthh.xm.ms.entity.repository.VoteRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
 import com.icthh.xm.ms.entity.service.impl.StartUpdateDateGenerationStrategy;
+import com.icthh.xm.ms.entity.web.rest.dto.RatingCountDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,6 +24,8 @@ import java.util.List;
 public class RatingService {
 
     private final RatingRepository ratingRepository;
+
+    private final VoteRepository voteRepository;
 
     private final PermittedRepository permittedRepository;
 
@@ -78,4 +82,9 @@ public class RatingService {
         ratingRepository.deleteById(id);
     }
 
+    public RatingCountDto getVotesCount(Long id) {
+        RatingCountDto ratingCountDto = new RatingCountDto();
+        ratingCountDto.setCount(voteRepository.countByRatingId(id));
+        return ratingCountDto;
+    }
 }

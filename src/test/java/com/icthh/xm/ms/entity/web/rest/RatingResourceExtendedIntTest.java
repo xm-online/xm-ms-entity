@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -13,7 +14,10 @@ import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
 import com.icthh.xm.ms.entity.AbstractSpringBootTest;
 import com.icthh.xm.ms.entity.domain.Rating;
+import com.icthh.xm.ms.entity.domain.Vote;
+import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.repository.RatingRepository;
+import com.icthh.xm.ms.entity.repository.VoteRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
 import com.icthh.xm.ms.entity.service.RatingService;
 import com.icthh.xm.ms.entity.service.impl.StartUpdateDateGenerationStrategy;
@@ -69,6 +73,9 @@ public class RatingResourceExtendedIntTest extends AbstractSpringBootTest {
     private RatingRepository ratingRepository;
 
     @Autowired
+    private VoteRepository voteRepository;
+
+    @Autowired
     private RatingResource ratingResource;
 
     @Autowired
@@ -99,6 +106,7 @@ public class RatingResourceExtendedIntTest extends AbstractSpringBootTest {
 
         ratingService = new RatingService(
             ratingRepository,
+            voteRepository,
             permittedRepository,
             startUpdateDateGenerationStrategy,
             xmEntityRepository);
@@ -181,6 +189,52 @@ public class RatingResourceExtendedIntTest extends AbstractSpringBootTest {
                 .containsIgnoringCase("NULL not allowed for column \"START_DATE\"");
         }
 
+    }
+
+    @Test
+    @Transactional
+    public void testCountByRatingId() throws Exception {
+        Vote vote1 = new Vote()
+            .userKey("uk1")
+            .value(5d)
+            .message("Cool!")
+            .entryDate(Instant.now());
+        Vote vote2 = new Vote()
+            .userKey("uk2")
+            .value(5d)
+            .message("Cool!")
+            .entryDate(Instant.now());
+        Vote vote3 = new Vote()
+            .userKey("uk3")
+            .value(5d)
+            .message("Cool!")
+            .entryDate(Instant.now());
+        // Add required entity
+        XmEntity xmEntity = XmEntityResourceIntTest.createEntity();
+        em.persist(xmEntity);
+        em.flush();
+        vote1.setXmEntity(xmEntity);
+        vote2.setXmEntity(xmEntity);
+        vote3.setXmEntity(xmEntity);
+
+        Rating rating1 = RatingResourceIntTest.createEntity(em);
+        Rating rating2 = RatingResourceIntTest.createEntity(em);
+        em.persist(rating1);
+        em.persist(rating2);
+        em.flush();
+        vote1.setRating(rating1);
+        vote2.setRating(rating1);
+        vote3.setRating(rating2);
+        voteRepository.save(vote1);
+        voteRepository.save(vote2);
+        voteRepository.save(vote3);
+
+        assertThat(voteRepository.countByRatingId(rating1.getId())).isEqualTo(2);
+
+        restRatingMockMvc.perform(get("/api/ratings/{id}/votes/count", rating1.getId()))
+            .andExpect(status().is2xxSuccessful())
+            .andExpect(jsonPath("$.count").value(2));
+        ;
     }
 
 }

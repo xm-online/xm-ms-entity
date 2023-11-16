@@ -20,6 +20,7 @@ import com.icthh.xm.ms.entity.AbstractSpringBootTest;
 import com.icthh.xm.ms.entity.domain.Rating;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.repository.RatingRepository;
+import com.icthh.xm.ms.entity.repository.VoteRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
 import com.icthh.xm.ms.entity.service.RatingService;
 import com.icthh.xm.ms.entity.service.impl.StartUpdateDateGenerationStrategy;
@@ -72,6 +73,9 @@ public class RatingResourceIntTest extends AbstractSpringBootTest {
     private RatingRepository ratingRepository;
 
     @Autowired
+    private VoteRepository voteRepository;
+
+    @Autowired
     private PermittedRepository permittedRepository;
 
     @Autowired
@@ -116,6 +120,7 @@ public class RatingResourceIntTest extends AbstractSpringBootTest {
         when(startUpdateDateGenerationStrategy.generateStartDate()).thenReturn(DEFAULT_START_DATE);
 
         ratingService = new RatingService(ratingRepository,
+                                          voteRepository,
                                           permittedRepository,
                                           startUpdateDateGenerationStrategy,
                                           xmEntityRepository);
