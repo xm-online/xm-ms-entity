@@ -20,8 +20,8 @@ import com.icthh.xm.ms.entity.AbstractSpringBootTest;
 import com.icthh.xm.ms.entity.domain.Rating;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.repository.RatingRepository;
+import com.icthh.xm.ms.entity.repository.VoteRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
-import com.icthh.xm.ms.entity.repository.search.PermittedSearchRepository;
 import com.icthh.xm.ms.entity.service.RatingService;
 import com.icthh.xm.ms.entity.service.impl.StartUpdateDateGenerationStrategy;
 import org.junit.After;
@@ -73,10 +73,10 @@ public class RatingResourceIntTest extends AbstractSpringBootTest {
     private RatingRepository ratingRepository;
 
     @Autowired
-    private PermittedRepository permittedRepository;
+    private VoteRepository voteRepository;
 
     @Autowired
-    private PermittedSearchRepository permittedSearchRepository;
+    private PermittedRepository permittedRepository;
 
     @Autowired
     private MappingJackson2HttpMessageConverter jacksonMessageConverter;
@@ -120,8 +120,8 @@ public class RatingResourceIntTest extends AbstractSpringBootTest {
         when(startUpdateDateGenerationStrategy.generateStartDate()).thenReturn(DEFAULT_START_DATE);
 
         ratingService = new RatingService(ratingRepository,
+                                          voteRepository,
                                           permittedRepository,
-                                          permittedSearchRepository,
                                           startUpdateDateGenerationStrategy,
                                           xmEntityRepository);
 

@@ -13,7 +13,6 @@ import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.domain.spec.AttachmentSpec;
 import com.icthh.xm.ms.entity.repository.AttachmentRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
-import com.icthh.xm.ms.entity.repository.search.PermittedSearchRepository;
 import com.icthh.xm.ms.entity.service.impl.StartUpdateDateGenerationStrategy;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -44,8 +43,6 @@ public class AttachmentService {
     private final ContentService contentService;
 
     private final PermittedRepository permittedRepository;
-
-    private final PermittedSearchRepository permittedSearchRepository;
 
     private final StartUpdateDateGenerationStrategy startUpdateDateGenerationStrategy;
 
@@ -185,20 +182,6 @@ public class AttachmentService {
 
     public Page<Attachment> findAll(Specification<Attachment> spec, Pageable pageable) {
         return attachmentRepository.findAll(spec, pageable);
-    }
-
-    /**
-     * Search for the attachment corresponding to the query.
-     *
-     *  @param query the query of the search
-     *  @return the list of entities
-     */
-    @Deprecated
-    @Transactional(readOnly = true)
-    @FindWithPermission("ATTACHMENT.SEARCH")
-    @PrivilegeDescription("Privilege to search for the attachment corresponding to the query")
-    public List<Attachment> search(String query, String privilegeKey) {
-        return permittedSearchRepository.search(query, Attachment.class, privilegeKey);
     }
 
     public List<Attachment> saveAll(List<Attachment> list) {

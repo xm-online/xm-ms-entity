@@ -12,7 +12,6 @@ import com.icthh.xm.ms.entity.domain.spec.AttachmentSpec;
 import com.icthh.xm.ms.entity.repository.AttachmentRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
 import com.icthh.xm.ms.entity.repository.backend.S3StorageRepository;
-import com.icthh.xm.ms.entity.repository.search.PermittedSearchRepository;
 import com.icthh.xm.ms.entity.service.impl.StartUpdateDateGenerationStrategy;
 import org.junit.Before;
 import org.junit.Rule;
@@ -37,7 +36,6 @@ public class AttachmentServiceImplUnitTest  extends AbstractUnitTest {
 
     private AttachmentRepository attachmentRepository;
     private PermittedRepository permittedRepository;
-    private PermittedSearchRepository permittedSearchRepository;
     private StartUpdateDateGenerationStrategy startUpdateDateGenerationStrategy;
     private XmEntityRepository xmEntityRepository;
     private XmEntitySpecService xmEntitySpecService;
@@ -50,13 +48,12 @@ public class AttachmentServiceImplUnitTest  extends AbstractUnitTest {
     public void setUp() {
         attachmentRepository = Mockito.mock(AttachmentRepository.class);
         permittedRepository = Mockito.mock(PermittedRepository.class);
-        permittedSearchRepository = Mockito.mock(PermittedSearchRepository.class);
         startUpdateDateGenerationStrategy = Mockito.mock(StartUpdateDateGenerationStrategy.class);
         xmEntityRepository = Mockito.mock(XmEntityRepository.class);
         xmEntitySpecService = Mockito.mock(XmEntitySpecService.class);
         contentService = Mockito.mock(ContentService.class);
         attachmentService = new AttachmentService(
-            attachmentRepository, contentService, permittedRepository, permittedSearchRepository,
+            attachmentRepository, contentService, permittedRepository,
             startUpdateDateGenerationStrategy, xmEntityRepository, xmEntitySpecService
         );
     }
@@ -277,13 +274,6 @@ public class AttachmentServiceImplUnitTest  extends AbstractUnitTest {
     }
 
     @Test
-    public void search() {
-        Attachment a = new Attachment();
-        when(permittedSearchRepository.search("Q", Attachment.class, "P")).thenReturn(Lists.newArrayList(a, a));
-        assertThat(attachmentService.search("Q", "P").size()).isEqualTo(2);
-    }
-
-    @Test
     public void getById() {
         Attachment a = new Attachment();
         a.setId(1L);
@@ -378,7 +368,7 @@ public class AttachmentServiceImplUnitTest  extends AbstractUnitTest {
         ContentService contentService = new ContentService(null, null, s3StorageRepository, xmEntitySpecService);
 
         attachmentService = new AttachmentService(
-            attachmentRepository, contentService, permittedRepository, permittedSearchRepository,
+            attachmentRepository, contentService, permittedRepository,
             startUpdateDateGenerationStrategy, xmEntityRepository, xmEntitySpecService
         );
 

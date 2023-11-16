@@ -6,6 +6,7 @@ import com.icthh.xm.commons.exceptions.ErrorConstants;
 import com.icthh.xm.commons.permission.annotation.PrivilegeDescription;
 import com.icthh.xm.ms.entity.domain.Rating;
 import com.icthh.xm.ms.entity.service.RatingService;
+import com.icthh.xm.ms.entity.web.rest.dto.RatingCountDto;
 import com.icthh.xm.ms.entity.web.rest.util.HeaderUtil;
 import com.icthh.xm.ms.entity.web.rest.util.RespContentUtil;
 import org.springframework.context.annotation.Lazy;
@@ -116,6 +117,15 @@ public class RatingResource {
     public ResponseEntity<Rating> getRating(@PathVariable Long id) {
         Rating rating = ratingService.findOne(id);
         return RespContentUtil.wrapOrNotFound(Optional.ofNullable(rating));
+    }
+
+    @GetMapping("/ratings/{id}/votes/count")
+    @Timed
+    @PostAuthorize("hasPermission({'returnObject': returnObject.body}, 'RATING.GET_LIST.ITEM.VOTES.COUNT')")
+    @PrivilegeDescription("Privilege to get the rating by id")
+    public ResponseEntity<RatingCountDto> getVotesCount(@PathVariable Long id) {
+        RatingCountDto ratingCountDto = ratingService.getVotesCount(id);
+        return RespContentUtil.wrapOrNotFound(Optional.ofNullable(ratingCountDto));
     }
 
     /**

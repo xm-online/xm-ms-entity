@@ -11,7 +11,6 @@ import com.icthh.xm.commons.security.XmAuthenticationContextHolder;
 import com.icthh.xm.ms.entity.domain.Comment;
 import com.icthh.xm.ms.entity.repository.CommentRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
-import com.icthh.xm.ms.entity.repository.search.PermittedSearchRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -32,8 +31,6 @@ public class CommentService {
     private final XmAuthenticationContextHolder authContextHolder;
 
     private final PermittedRepository permittedRepository;
-
-    private final PermittedSearchRepository permittedSearchRepository;
 
     private final XmEntityRepository xmEntityRepository;
 
@@ -89,22 +86,6 @@ public class CommentService {
     @LogicExtensionPoint("Delete")
     public void delete(Long id) {
         commentRepository.deleteById(id);
-    }
-
-    /**
-     * Search for the comment corresponding to the query.
-     *
-     * @param query    the query of the search
-     * @param pageable the pagination information
-     * @return the list of entities
-     */
-    @Deprecated
-    @Transactional(readOnly = true)
-    @FindWithPermission("COMMENT.SEARCH")
-    @LogicExtensionPoint("Search")
-    @PrivilegeDescription("Privilege to search for the comment corresponding to the query")
-    public Page<Comment> search(String query, Pageable pageable, String privilegeKey) {
-        return permittedSearchRepository.search(query, pageable, Comment.class, privilegeKey);
     }
 
     @Transactional(readOnly = true)

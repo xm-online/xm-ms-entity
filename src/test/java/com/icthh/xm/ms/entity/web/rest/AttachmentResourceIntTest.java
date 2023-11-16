@@ -26,7 +26,6 @@ import com.icthh.xm.ms.entity.domain.Content;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.repository.AttachmentRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
-import com.icthh.xm.ms.entity.repository.search.PermittedSearchRepository;
 import com.icthh.xm.ms.entity.service.AttachmentService;
 import com.icthh.xm.ms.entity.service.ContentService;
 import com.icthh.xm.ms.entity.service.XmEntitySpecService;
@@ -95,9 +94,6 @@ public class AttachmentResourceIntTest extends AbstractSpringBootTest {
     @Autowired
     private PermittedRepository permittedRepository;
 
-    @Autowired
-    private PermittedSearchRepository permittedSearchRepository;
-
     @Spy
     private StartUpdateDateGenerationStrategy startUpdateDateGenerationStrategy;
 
@@ -160,7 +156,6 @@ public class AttachmentResourceIntTest extends AbstractSpringBootTest {
         attachmentService = new AttachmentService(attachmentRepository,
                                                   contentService,
                                                   permittedRepository,
-                                                  permittedSearchRepository,
                                                   startUpdateDateGenerationStrategy,
                                                   xmEntityRepository,
                                                   xmEntitySpecService);

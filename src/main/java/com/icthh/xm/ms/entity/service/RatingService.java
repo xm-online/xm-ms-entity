@@ -5,9 +5,10 @@ import com.icthh.xm.commons.permission.annotation.PrivilegeDescription;
 import com.icthh.xm.commons.permission.repository.PermittedRepository;
 import com.icthh.xm.ms.entity.domain.Rating;
 import com.icthh.xm.ms.entity.repository.RatingRepository;
+import com.icthh.xm.ms.entity.repository.VoteRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
-import com.icthh.xm.ms.entity.repository.search.PermittedSearchRepository;
 import com.icthh.xm.ms.entity.service.impl.StartUpdateDateGenerationStrategy;
+import com.icthh.xm.ms.entity.web.rest.dto.RatingCountDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,9 +25,9 @@ public class RatingService {
 
     private final RatingRepository ratingRepository;
 
-    private final PermittedRepository permittedRepository;
+    private final VoteRepository voteRepository;
 
-    private final PermittedSearchRepository permittedSearchRepository;
+    private final PermittedRepository permittedRepository;
 
     private final StartUpdateDateGenerationStrategy startUpdateDateGenerationStrategy;
 
@@ -81,17 +82,9 @@ public class RatingService {
         ratingRepository.deleteById(id);
     }
 
-    /**
-     * Search for the rating corresponding to the query.
-     *
-     *  @param query the query of the search
-     *  @return the list of entities
-     */
-    @Deprecated
-    @Transactional(readOnly = true)
-    @FindWithPermission("RATING.SEARCH")
-    @PrivilegeDescription("Privilege to search for the rating corresponding to the query")
-    public List<Rating> search(String query, String privilegeKey) {
-        return permittedSearchRepository.search(query, Rating.class, privilegeKey);
+    public RatingCountDto getVotesCount(Long id) {
+        RatingCountDto ratingCountDto = new RatingCountDto();
+        ratingCountDto.setCount(voteRepository.countByRatingId(id));
+        return ratingCountDto;
     }
 }

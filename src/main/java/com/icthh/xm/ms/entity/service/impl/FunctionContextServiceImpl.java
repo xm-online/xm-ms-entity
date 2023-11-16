@@ -6,7 +6,6 @@ import com.icthh.xm.commons.permission.repository.PermittedRepository;
 import com.icthh.xm.ms.entity.domain.FunctionContext;
 import com.icthh.xm.ms.entity.repository.FunctionContextRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
-import com.icthh.xm.ms.entity.repository.search.PermittedSearchRepository;
 import com.icthh.xm.ms.entity.service.FunctionContextService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -25,8 +24,6 @@ public class FunctionContextServiceImpl implements FunctionContextService {
     private final FunctionContextRepository functionContextRepository;
 
     private final PermittedRepository permittedRepository;
-
-    private final PermittedSearchRepository permittedSearchRepository;
 
     private final StartUpdateDateGenerationStrategy startUpdateDateGenerationStrategy;
 
@@ -82,20 +79,6 @@ public class FunctionContextServiceImpl implements FunctionContextService {
      */
     public void delete(Long id) {
         functionContextRepository.deleteById(id);
-    }
-
-    /**
-     * Search for the functionContext corresponding to the query.
-     *
-     * @param query the query of the search
-     * @return the list of entities
-     */
-    @Deprecated
-    @Transactional(readOnly = true)
-    @FindWithPermission("FUNCTION_CONTEXT.SEARCH")
-    @PrivilegeDescription("Privilege to search for the functionContext corresponding to the query")
-    public List<FunctionContext> search(String query, String privilegeKey) {
-        return permittedSearchRepository.search(query, FunctionContext.class, privilegeKey);
     }
 
 }
