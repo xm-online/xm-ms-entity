@@ -28,7 +28,6 @@ import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.repository.LinkPermittedRepository;
 import com.icthh.xm.ms.entity.repository.LinkRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
-import com.icthh.xm.ms.entity.repository.search.PermittedSearchRepository;
 import com.icthh.xm.ms.entity.security.access.DynamicPermissionCheckService;
 import com.icthh.xm.ms.entity.service.LinkService;
 import com.icthh.xm.ms.entity.service.impl.StartUpdateDateGenerationStrategy;
@@ -86,9 +85,6 @@ public class LinkResourceIntTest extends AbstractSpringBootTest {
     private LinkPermittedRepository permittedRepository;
 
     @Autowired
-    private PermittedSearchRepository permittedSearchRepository;
-
-    @Autowired
     private MappingJackson2HttpMessageConverter jacksonMessageConverter;
 
     @Autowired
@@ -142,7 +138,6 @@ public class LinkResourceIntTest extends AbstractSpringBootTest {
 
         linkService = new LinkService(linkRepository,
                                       permittedRepository,
-                                      permittedSearchRepository,
                                       startUpdateDateGenerationStrategy,
                                       xmEntityRepository,
                                       dynamicPermissionCheckService);

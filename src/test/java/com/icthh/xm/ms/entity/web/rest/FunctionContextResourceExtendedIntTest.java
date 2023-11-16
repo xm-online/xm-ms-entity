@@ -78,9 +78,6 @@ public class FunctionContextResourceExtendedIntTest extends AbstractSpringBootTe
     private PermittedRepository permittedRepository;
 
     @Autowired
-    private PermittedSearchRepository permittedSearchRepository;
-
-    @Autowired
     private XmEntityRepository xmEntityRepository;
 
     @Spy
@@ -107,7 +104,6 @@ public class FunctionContextResourceExtendedIntTest extends AbstractSpringBootTe
         functionContextService = new FunctionContextServiceImpl(
             functionContextRepository,
             permittedRepository,
-            permittedSearchRepository,
             startUpdateDateGenerationStrategy,
             xmEntityRepository);
 

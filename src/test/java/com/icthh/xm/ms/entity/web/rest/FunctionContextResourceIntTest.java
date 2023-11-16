@@ -23,7 +23,6 @@ import com.icthh.xm.ms.entity.domain.FunctionContext;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.repository.FunctionContextRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
-import com.icthh.xm.ms.entity.repository.search.PermittedSearchRepository;
 import com.icthh.xm.ms.entity.service.FunctionContextService;
 import com.icthh.xm.ms.entity.service.impl.FunctionContextServiceImpl;
 import com.icthh.xm.ms.entity.service.impl.StartUpdateDateGenerationStrategy;
@@ -90,10 +89,6 @@ public class FunctionContextResourceIntTest extends AbstractSpringBootTest {
     private PermittedRepository permittedRepository;
 
     @Autowired
-    private PermittedSearchRepository permittedSearchRepository;
-
-
-    @Autowired
     private MappingJackson2HttpMessageConverter jacksonMessageConverter;
 
     @Autowired
@@ -140,7 +135,6 @@ public class FunctionContextResourceIntTest extends AbstractSpringBootTest {
 
         functionContextService = new FunctionContextServiceImpl(functionContextRepository,
                                                                 permittedRepository,
-                                                                permittedSearchRepository,
                                                                 startUpdateDateGenerationStrategy,
                                                                 xmEntityRepository);
 

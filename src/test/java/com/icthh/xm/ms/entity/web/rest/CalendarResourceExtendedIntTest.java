@@ -19,7 +19,6 @@ import com.icthh.xm.ms.entity.AbstractSpringBootTest;
 import com.icthh.xm.ms.entity.domain.Calendar;
 import com.icthh.xm.ms.entity.repository.CalendarRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
-import com.icthh.xm.ms.entity.repository.search.PermittedSearchRepository;
 import com.icthh.xm.ms.entity.service.CalendarService;
 import com.icthh.xm.ms.entity.service.XmEntitySpecService;
 import com.icthh.xm.ms.entity.service.impl.StartUpdateDateGenerationStrategy;
@@ -82,9 +81,6 @@ public class CalendarResourceExtendedIntTest extends AbstractSpringBootTest {
     private PermittedRepository permittedRepository;
 
     @Autowired
-    private PermittedSearchRepository permittedSearchRepository;
-
-    @Autowired
     private XmEntityRepository xmEntityRepository;
 
     @Autowired
@@ -122,7 +118,6 @@ public class CalendarResourceExtendedIntTest extends AbstractSpringBootTest {
         calendarService = new CalendarService(
             calendarRepository,
             permittedRepository,
-            permittedSearchRepository,
             startUpdateDateGenerationStrategy,
             xmEntityRepository,
             eventQueryService,

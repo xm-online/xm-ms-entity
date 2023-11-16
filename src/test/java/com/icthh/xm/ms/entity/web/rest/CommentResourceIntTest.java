@@ -30,7 +30,6 @@ import com.icthh.xm.ms.entity.domain.Comment;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.repository.CommentRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
-import com.icthh.xm.ms.entity.repository.search.PermittedSearchRepository;
 import com.icthh.xm.ms.entity.service.CommentService;
 import liquibase.util.StringUtils;
 import org.junit.After;
@@ -102,9 +101,6 @@ public class CommentResourceIntTest extends AbstractSpringBootTest {
     private PermittedRepository permittedRepository;
 
     @Autowired
-    private PermittedSearchRepository permittedSearchRepository;
-
-    @Autowired
     private XmEntityRepository xmEntityRepository;
 
     @Autowired
@@ -143,7 +139,6 @@ public class CommentResourceIntTest extends AbstractSpringBootTest {
         commentService = new CommentService(commentRepository,
                                             authContextHolder,
                                             permittedRepository,
-                                            permittedSearchRepository,
                                             xmEntityRepository);
 
         CommentResource self = new CommentResource(commentService, null);
