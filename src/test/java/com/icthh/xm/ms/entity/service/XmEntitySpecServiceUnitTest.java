@@ -190,11 +190,6 @@ public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
     }
 
     @Test
-    public void testNullIsAppIsAbstract() {
-
-    }
-
-    @Test
     public void testFindSpecByKey() {
         TypeSpec type = xmEntitySpecService.findTypeByKey(KEY1);
         assertNotNull(type);
