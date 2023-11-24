@@ -93,13 +93,12 @@ public class XmEntitySpecService implements RefreshableConfiguration {
     }
 
     public static Predicate<TypeSpec> isApp() {
-        return TypeSpec::getIsApp;
+        return t -> Boolean.TRUE.equals(t.getIsApp());
     }
 
     public static Predicate<TypeSpec> isNotAbstract() {
-        return t -> !t.getIsAbstract();
+        return t -> !Boolean.TRUE.equals(t.getIsAbstract());
     }
-
 
     @Override
     @SneakyThrows
