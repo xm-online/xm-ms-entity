@@ -58,7 +58,7 @@ public class XmEntitySpecUnitTest extends AbstractUnitTest {
 
         assertNotNull(xmEntitySpec);
         assertNotNull(xmEntitySpec.getTypes());
-        assertEquals(5, xmEntitySpec.getTypes().size());
+        assertEquals(6, xmEntitySpec.getTypes().size());
         assertEquals("TYPE1", xmEntitySpec.getTypes().get(0).getKey());
         assertEquals("TYPE2", xmEntitySpec.getTypes().get(1).getKey());
         assertEquals("TYPE1.SUBTYPE1", xmEntitySpec.getTypes().get(2).getKey());
