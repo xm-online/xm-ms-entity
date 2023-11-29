@@ -254,3 +254,6 @@ types:
                         "objectProperties"
                     ]
                 }
+    - key: TYPE_WITH_NULL_IS_APP_AND_IS_ABSTRACT
+      name: { ru: "Тип 2" }
+      pluralName: { ru: "Типы 2" }
