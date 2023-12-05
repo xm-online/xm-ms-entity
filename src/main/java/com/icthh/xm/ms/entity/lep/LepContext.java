@@ -43,7 +43,7 @@ public class LepContext extends BaseLepContext implements TraceServiceField, Out
     public LepTemplates templates;
     public CustomMetricsContext metricsContext;
 
-    public static class LepServices extends BaseLepContext {
+    public static class LepServices {
         public Object xmTenantLifeCycle; // do not user this field
         public XmEntityService xmEntity;
         public ProfileService profileService;

@@ -45,14 +45,14 @@ public class LepContextTransformation extends AbstractASTTransformation {
     private static Map<String, List<String>> getFields(String basePath, Class<?> type) {
         Set<Class<?>> memberClasses = new HashSet<>(List.of(type.getNestMembers()));
         Map<String, List<String>> fields = new HashMap<>();
-        stream(type.getDeclaredFields())
+        stream(type.getFields())
                 .filter(field -> !field.getType().isAssignableFrom(Object.class))
                 .filter(field -> !memberClasses.contains(field.getType()))
                 .forEach(field -> {
                     fields.putIfAbsent(field.getType().getCanonicalName(), new ArrayList<>());
                     fields.get(field.getType().getCanonicalName()).add(basePath + field.getName());
                 });
-        stream(type.getDeclaredFields())
+        stream(type.getFields())
                 .filter(field -> memberClasses.contains(field.getType()))
                 .forEach(field -> {
                     fields.putAll(getFields(field.getName() + ".", field.getType()));
