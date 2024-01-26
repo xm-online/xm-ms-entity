@@ -62,6 +62,9 @@ class LepContextTransformationUnitTest {
     @ToString
     @LepContextConstructor(useLepFactory = true)
     public static class AnotherTestLepService {
+
+        static final String CONSTANT = "some constant value";
+
         final XmEntityService entityService
         final XmAuthenticationContext auth
         final String valueInitedInConstructor
