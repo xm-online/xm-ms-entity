@@ -107,9 +107,9 @@ public class LepContextTransformation extends AbstractASTTransformation {
         StringBuilder body = new StringBuilder();
         MutableLong serviceIndex = new MutableLong(0);
         classNode.getFields().forEach(field -> {
-            if (field.isFinal() && isInLepContext(field)) {
+            if (!field.isStatic() && field.isFinal() && isInLepContext(field)) {
                 generateFieldFromLepContextAssigment(body, field);
-            } else if (field.isFinal() && isLepService(field)) {
+            } else if (!field.isStatic() && field.isFinal() && isLepService(field)) {
                 serviceIndex.increment();
                 generateLepServiceCreations(body, field, serviceIndex.intValue(), isLepServiceFactoryEnabled);
             }
