@@ -398,12 +398,14 @@ public class XmEntityServiceImpl implements XmEntityService {
 
     // need for lep post processing with split script by typeKey
     @IgnoreLogginAspect
+    @Transactional(readOnly = true)
     @LogicExtensionPoint(value = "FindOnePostProcessing", resolver = XmEntityTypeKeyResolver.class)
     public XmEntity getOneEntity(XmEntity xmEntity) {
         return getOneEntity(xmEntity, xmEntity.getTypeKey());
     }
 
     @IgnoreLogginAspect
+    @Transactional(readOnly = true)
     @LogicExtensionPoint(value = "FindOnePostProcessing", resolver = TypeKeyResolver.class)
     public XmEntity getOneEntity(XmEntity xmEntity, String typeKey) {
         if (typeKeyWithExtends.doInheritance(typeKey)) {
