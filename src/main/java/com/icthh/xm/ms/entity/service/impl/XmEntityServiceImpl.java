@@ -738,6 +738,7 @@ public class XmEntityServiceImpl implements XmEntityService {
     }
 
     @Override
+    @LogicExtensionPoint("UpdateState")
     public XmEntity updateState(IdOrKey idOrKey, String stateKey, Map<String, Object> context) {
         XmEntityStateProjection entity = findStateProjectionById(idOrKey)
             .orElseThrow(() -> new EntityNotFoundException("XmEntity with key [" + idOrKey.getKey() + "] not found"));
