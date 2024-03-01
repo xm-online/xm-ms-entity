@@ -302,17 +302,17 @@ public class XmEntityServiceImplUnitTest extends AbstractUnitTest {
         entity.setStateKey("TEST_S_K");
         entity.setData(of("a", of("b", of("c", of("d", "dvalue", "e", asList("e1", "e2"))))));
         entity.setCreatedBy("test");
-        entity.setUpdatedBy("test2");
+        entity.key("Entity created by ${createdBy}");
         entity.startDate(Instant.parse("2019-03-28T12:20:00.000Z"));
 
-        String namePattern = "Name generate from ${id:-} and ${key:-unknown} and ${ stateKey} and ${data.a.b.c.d.f } and ${ data.a.b.c } and ${data.a.b.c.k} and ${data.a.b.c.e[1]} and ${data.a.b.c.e[2]}";
-        TypeSpec typeSpec = TypeSpec.builder().namePattern(namePattern).descriptionPattern("Description ${startDate} ${date.lol:-kek} ${data.pop}").build();
+        String namePattern = "Name generate from ${id:-} and ${updatedBy:-unknown} and ${ stateKey} and ${data.a.b.c.d.f } and ${ data.a.b.c } and ${data.a.b.c.k} and ${data.a.b.c.e[1]} and ${data.a.b.c.e[2]}";
+        TypeSpec typeSpec = TypeSpec.builder().namePattern(namePattern).descriptionPattern("Description ${startDate} ${date.lol:-kek} ${data.pop} ${key}").build();
         when(xmEntitySpecService.getTypeSpecByKey("TEST_TYPE_KEY")).thenReturn(Optional.of(typeSpec));
 
         xmEntityService.save(entity);
         log.info(entity.getName());
         assertEquals("Name generate from 15 and unknown and TEST_S_K and  and {d=dvalue, e=[\"e1\",\"e2\"]} and  and e2 and ", entity.getName());
-        assertEquals("Description 2019-03-28T12:20:00Z kek ", entity.getDescription());
+        assertEquals("Description 2019-03-28T12:20:00Z kek  Entity created by ${createdBy}", entity.getDescription());
     }
 
     @Test
