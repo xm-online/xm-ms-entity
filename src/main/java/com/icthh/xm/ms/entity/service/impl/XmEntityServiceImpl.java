@@ -91,6 +91,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static com.icthh.xm.ms.entity.domain.spec.LinkSpec.NEW_BUILDER_TYPE;
@@ -101,7 +102,6 @@ import static com.jayway.jsonpath.Option.SUPPRESS_EXCEPTIONS;
 import static java.lang.Boolean.TRUE;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
-import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toMap;
 import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.collections.MapUtils.isEmpty;
@@ -202,7 +202,8 @@ public class XmEntityServiceImpl implements XmEntityService {
 
         self.processReferences(xmEntity);
         processUniqueField(xmEntity, oldEntity);
-        processName(xmEntity);
+        processFieldByPattern(xmEntity, xmEntity::setName, TypeSpec::getNamePattern);
+        processFieldByPattern(xmEntity, xmEntity::setDescription, TypeSpec::getDescriptionPattern);
 
         return xmEntityRepository.save(xmEntity);
     }
@@ -240,13 +241,14 @@ public class XmEntityServiceImpl implements XmEntityService {
         }
     }
 
-    private void processName(XmEntity xmEntity) {
+    private void processFieldByPattern(XmEntity xmEntity, Consumer<String> setter,
+                                       Function<TypeSpec, String> patternProvider) {
         xmEntitySpecService
             .getTypeSpecByKey(xmEntity.getTypeKey())
-            .map(TypeSpec::getNamePattern)
+            .map(patternProvider)
             .filter(StringUtils::isNotEmpty)
             .map(parentName -> simpleTemplateProcessors.processTemplate(parentName, xmEntity))
-            .ifPresent(xmEntity::setName);
+            .ifPresent(setter);
     }
 
     private void preventRenameTenant(XmEntity xmEntity, XmEntity oldEntity) {

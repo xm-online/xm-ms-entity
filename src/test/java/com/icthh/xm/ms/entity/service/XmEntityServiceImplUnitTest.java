@@ -1,6 +1,7 @@
 package com.icthh.xm.ms.entity.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.icthh.xm.commons.config.client.service.TenantConfigService;
 import com.icthh.xm.commons.exceptions.BusinessException;
@@ -36,6 +37,7 @@ import org.mockito.Spy;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -43,6 +45,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
+import static com.fasterxml.jackson.databind.SerializationFeature.WRITE_DATES_AS_TIMESTAMPS;
 import static com.google.common.collect.ImmutableMap.of;
 import static com.icthh.xm.ms.entity.util.EntityUtils.TEST_ID;
 import static com.icthh.xm.ms.entity.util.EntityUtils.TEST_KEY;
@@ -87,7 +90,7 @@ public class XmEntityServiceImplUnitTest extends AbstractUnitTest {
     XmAuthenticationContext authContext;
 
     @Spy
-    private ObjectMapper mapper = new ObjectMapper();
+    private ObjectMapper mapper = new ObjectMapper().configure(WRITE_DATES_AS_TIMESTAMPS, false).registerModule(new JavaTimeModule());
     @Spy
     private SimpleTemplateProcessor templateProcessor = new SimpleTemplateProcessor(mapper);
 
@@ -299,15 +302,17 @@ public class XmEntityServiceImplUnitTest extends AbstractUnitTest {
         entity.setStateKey("TEST_S_K");
         entity.setData(of("a", of("b", of("c", of("d", "dvalue", "e", asList("e1", "e2"))))));
         entity.setCreatedBy("test");
-        entity.setUpdatedBy("test2");
+        entity.key("Entity created by ${createdBy}");
+        entity.startDate(Instant.parse("2019-03-28T12:20:00.000Z"));
 
-        String namePattern = "Name generate from ${id} and ${key:unknown} and ${stateKey} and ${data.a.b.c.d.f} and ${data.a.b.c} and ${data.a.b.c.k} and ${data.a.b.c.e[1]} and ${data.a.b.c.e[2]}";
-        TypeSpec typeSpec = TypeSpec.builder().namePattern(namePattern).build();
+        String namePattern = "Name generate from ${id:-} and ${updatedBy:-unknown} and ${ stateKey} and ${data.a.b.c.d.f } and ${ data.a.b.c } and ${data.a.b.c.k} and ${data.a.b.c.e[1]} and ${data.a.b.c.e[2]}";
+        TypeSpec typeSpec = TypeSpec.builder().namePattern(namePattern).descriptionPattern("Description ${startDate} ${date.lol:-kek} ${data.pop} ${key}").build();
         when(xmEntitySpecService.getTypeSpecByKey("TEST_TYPE_KEY")).thenReturn(Optional.of(typeSpec));
 
         xmEntityService.save(entity);
         log.info(entity.getName());
         assertEquals("Name generate from 15 and unknown and TEST_S_K and  and {d=dvalue, e=[\"e1\",\"e2\"]} and  and e2 and ", entity.getName());
+        assertEquals("Description 2019-03-28T12:20:00Z kek  Entity created by ${createdBy}", entity.getDescription());
     }
 
     @Test
