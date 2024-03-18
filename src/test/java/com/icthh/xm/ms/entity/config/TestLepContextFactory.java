@@ -7,6 +7,8 @@ import com.icthh.xm.ms.entity.lep.LepContext;
 import com.icthh.xm.ms.entity.service.XmEntityService;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.util.HashMap;
+
 public class TestLepContextFactory implements LepContextFactory {
 
     @Autowired
@@ -15,6 +17,7 @@ public class TestLepContextFactory implements LepContextFactory {
     @Override
     public BaseLepContext buildLepContext(LepMethod lepMethod) {
         LepContext testLepContext = new LepContext();
+        testLepContext.services = new LepContext.LepServices();
         testLepContext.services.xmEntity = xmEntityService;
         return testLepContext;
     }
