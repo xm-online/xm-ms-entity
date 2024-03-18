@@ -385,6 +385,8 @@ dependencies {
     implementation 'commons-fileupload:commons-fileupload'
 
     // test dependencies
+    testCompileOnly "com.icthh.xm.commons:xm-commons-lep-annotation-processor:${xm_commons_version}"
+    testAnnotationProcessor "com.icthh.xm.commons:xm-commons-lep-annotation-processor:${xm_commons_version}"
     testCompileOnly "org.projectlombok:lombok:${lombok_version}"
     testAnnotationProcessor "org.projectlombok:lombok:${lombok_version}"
     testImplementation "com.jayway.jsonpath:json-path"

@@ -89,7 +89,7 @@ public class LepContextCastIntTest extends AbstractSpringBootTest {
         leps.onRefresh(funcKey, function);
         Map<String, Object> result = functionExecutorService.execute(functionKey, Map.of(), null);
         Object context = result.get("context");
-        assertEquals("", context.getClass().getSimpleName());
+        assertEquals("GroovyMapLepContextWrapper", context.getClass().getSimpleName());
         assertTrue(context instanceof Map);
         leps.onRefresh(funcKey, null);
     }
