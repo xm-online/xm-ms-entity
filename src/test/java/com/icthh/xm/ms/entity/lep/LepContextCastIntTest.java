@@ -20,6 +20,7 @@ import java.util.Map;
 
 import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_AUTH_CONTEXT;
 import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_TENANT_CONTEXT;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 
@@ -74,6 +75,22 @@ public class LepContextCastIntTest extends AbstractSpringBootTest {
         leps.onRefresh(funcKey, function);
         Map<String, Object> result = functionExecutorService.execute(functionKey, Map.of(), null);
         assertTrue(result.get("context") instanceof LepContext);
+        leps.onRefresh(funcKey, null);
+    }
+
+    @Test
+    @Transactional
+    @SneakyThrows
+    public void testLepContextCastToMap() {
+        String functionPrefix = "/config/tenants/RESINTTEST/entity/lep/function/";
+        String functionKey = "LEP-CONTEXT-TEST";
+        String funcKey = functionPrefix + "Function$$LEP_CONTEXT_TEST$$tenant.groovy";
+        String function = "Map<String, Object> context = lepContext\nreturn ['context':context]";
+        leps.onRefresh(funcKey, function);
+        Map<String, Object> result = functionExecutorService.execute(functionKey, Map.of(), null);
+        Object context = result.get("context");
+        assertEquals("", context.getClass().getSimpleName());
+        assertTrue(context instanceof Map);
         leps.onRefresh(funcKey, null);
     }
 
