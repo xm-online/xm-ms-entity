@@ -10,12 +10,14 @@ import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 import org.springframework.transaction.support.SimpleTransactionScope;
 
 /**
  * The {@link LepConfiguration} class.
  */
 @Configuration
+@Primary
 public class LepConfiguration extends GroovyLepEngineConfiguration {
 
     @Value("${application.lep.tenant-script-storage}")
