@@ -48,3 +48,4 @@ branches:
    only:
      - master
      - main
+     - feature/primary_config
