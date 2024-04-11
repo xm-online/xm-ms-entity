@@ -10,6 +10,7 @@ import com.icthh.xm.ms.entity.client.OAuth2InterceptedFeignConfiguration;
 import com.icthh.xm.ms.entity.config.ApplicationProperties;
 import com.icthh.xm.ms.entity.config.DefaultProfileUtil;
 
+import com.icthh.xm.ms.entity.config.LepConfiguration;
 import io.github.jhipster.config.JHipsterConstants;
 
 import javax.annotation.PreDestroy;
@@ -35,7 +36,7 @@ import java.util.Collection;
 @ComponentScan(
     value = "com.icthh.xm",
     excludeFilters = @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE,
-        classes = {OAuth2InterceptedFeignConfiguration.class, CommonMessageSourceConfiguration.class})
+        classes = {OAuth2InterceptedFeignConfiguration.class, CommonMessageSourceConfiguration.class, LepConfiguration.class})
 )
 @SpringBootApplication
 @EnableConfigurationProperties({LiquibaseProperties.class, ApplicationProperties.class})
