@@ -1,6 +1,8 @@
 package com.icthh.xm.ms.entity;
 
 import com.icthh.xm.commons.i18n.spring.config.CommonMessageSourceConfiguration;
+import com.icthh.xm.commons.lep.groovy.GroovyLepEngineConfiguration;
+import com.icthh.xm.commons.lep.spring.LepSpringConfiguration;
 import com.icthh.xm.commons.logging.util.MdcUtils;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
@@ -10,6 +12,7 @@ import com.icthh.xm.ms.entity.client.OAuth2InterceptedFeignConfiguration;
 import com.icthh.xm.ms.entity.config.ApplicationProperties;
 import com.icthh.xm.ms.entity.config.DefaultProfileUtil;
 
+import com.icthh.xm.ms.entity.config.LepConfiguration;
 import io.github.jhipster.config.JHipsterConstants;
 
 import javax.annotation.PreDestroy;
@@ -35,12 +38,13 @@ import java.util.Collection;
 @ComponentScan(
     value = "com.icthh.xm",
     excludeFilters = @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE,
-        classes = {OAuth2InterceptedFeignConfiguration.class, CommonMessageSourceConfiguration.class})
+        classes = {OAuth2InterceptedFeignConfiguration.class, CommonMessageSourceConfiguration.class,
+            GroovyLepEngineConfiguration.class, LepSpringConfiguration.class})
 )
 @SpringBootApplication
 @EnableConfigurationProperties({LiquibaseProperties.class, ApplicationProperties.class})
 @EnableDiscoveryClient
-@Import({TenantContextConfiguration.class})
+@Import({LepConfiguration.class, TenantContextConfiguration.class})
 public class EntityApp {
 
     private static final Logger log = LoggerFactory.getLogger(EntityApp.class);
