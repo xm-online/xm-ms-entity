@@ -45,7 +45,7 @@ class LepContextTransformationUnitTest {
         assertSame(mockLepContext.authContext, t.anotherService.auth)
         assertEquals(FINAL_STRING_VALUE, t.anotherService.valueInitedInConstructor)
 
-        verify(mockLepContext.lepServices).getInstance(eq(AnotherTestLepServiceCreateByFactory.class))
+        verify(mockLepContext.lepServices).getInstance((Class<AnotherTestLepServiceCreateByFactory>)eq(AnotherTestLepServiceCreateByFactory.class))
         verifyNoMoreInteractions(mockLepContext.lepServices)
     }
 
