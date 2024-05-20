@@ -55,6 +55,22 @@ public class DefinitionSpecProcessorUnitTest extends AbstractUnitTest {
     }
 
     @Test
+    public void shouldProcessTypeSpecRefInDefinition() throws Exception {
+        XmEntitySpec inputXmEntitySpec = loadXmEntitySpecByFileName("xmentityspec-sub-definitions-input");
+        XmEntitySpec expectedXmEntitySpec = loadXmEntitySpecByFileName("xmentityspec-sub-definitions-input-expected");
+        TypeSpec typeSpec = inputXmEntitySpec.getTypes().get(0);
+
+        subject.updateDefinitionStateByTenant(TENANT, Map.of(TENANT, Map.of(TENANT, objectMapper.writeValueAsString(inputXmEntitySpec))));
+        subject.processTypeSpec(TENANT, typeSpec::setDataSpec, typeSpec::getDataSpec);
+
+        XmEntitySpec actualXmEntitySpec = createXmEntitySpec(singletonList(typeSpec),
+            inputXmEntitySpec.getForms(),
+            inputXmEntitySpec.getDefinitions());
+
+        assertEqualsEntities(expectedXmEntitySpec, actualXmEntitySpec);
+    }
+
+    @Test
     public void shouldProcessTypeSpecIfRecursion() throws Exception {
         XmEntitySpec inputXmEntitySpec = loadXmEntitySpecByFileName("xmentityspec-definitions-recursive");
         XmEntitySpec expectedXmEntitySpec = loadXmEntitySpecByFileName("xmentityspec-definitions-recursive-expected");
