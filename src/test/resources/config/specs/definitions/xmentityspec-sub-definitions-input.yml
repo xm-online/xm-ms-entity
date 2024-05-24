@@ -1,64 +1,401 @@
----
 types:
-    - key: XM
-      #language=JSON
-      dataSpec: |
-          {
-            "type": "object",
-            "properties": {
-              "uaa": {
-                "$ref": "#/xmEntityDefinition/Order"
-              }
-            }
-          }
-
-definitions:
-- key: Order
-  # language=JSON
-  value: |
+  - key: REQUEST
+    name:
+      en: Request
+    isApp: true
+    isAbstract: false
+    dataSpecInheritance: false
+    dataFormInheritance: false
+    # language=JSON
+    dataSpec: |-
       {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "type": "object",
+        "properties": {}
+      }
+    links:
+      - key: REQUEST_OWNER
+        typeKey: PARTY.INDIVIDUAL
+        builderType: SEARCH
+  - key: REQUEST.TARIFF_CHANGE
+    name:
+      en: Tariff change
+    isApp: true
+    isAbstract: false
+    dataSpecInheritance: false
+    dataFormInheritance: false
+    # language=JSON
+    dataSpec: |-
+      {
+        "$schema": "http://json-schema.org/draft-07/schema#",
         "type": "object",
         "properties": {
-          "addresses": {
-            "type": "array",
-            "items": {
-              "$ref": "#/xmEntityDefinition/Address",
-              "label": {}
-            }
+          "accountNumber": {
+            "type": "number"
           },
-          "price": {
+          "newTariff": {
+            "type": "string"
+          }
+        }
+      }
+    links: []
+  - key: REQUEST.JOIN
+    name:
+      en: Join
+    isApp: true
+    isAbstract: false
+    dataSpecInheritance: false
+    dataFormInheritance: false
+    # language=JSON
+    dataSpec: |-
+      {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "type": "object",
+        "properties": {
+          "hasContent": {
+            "type": "boolean"
+          },
+          "tariff": {
+            "type": "string"
+          },
+          "realityOwner": {
+            "$ref": "#/xmEntityDefinition/PersonalInfo"
+          },
+          "reality": {
+            "$ref": "#/xmEntityDefinition/RealtyInfo"
+          },
+          "documents": {
+            "$ref": "#/xmEntityDefinition/Documents"
+          },
+          "accountNumber": {
+            "type": "number"
+          },
+          "verification": {
+            "$ref": "#/xmEntityDefinition/Verification"
+          },
+          "assignedTo": {
+            "$ref": "#/xmEntityDefinition/UUID"
+          },
+          "gdnOperator": {
+            "type": "number"
+          },
+          "joinRequestDate": {
+            "$ref": "#/xmEntityDefinition/Instant"
+          },
+          "requestNumber": {
             "type": "number"
           }
         }
       }
-- key: Address
-  # language=JSON
-  value: |
+    links:
+      - key: CREATED_CONSUMER
+        typeKey: PARTY.INDIVIDUAL
+        builderType: SEARCH
+  - key: BATCH.REQUEST_JOIN
+    name:
+      en: Request join
+    isApp: true
+    isAbstract: false
+    dataSpecInheritance: false
+    dataFormInheritance: false
+    # language=JSON
+    dataSpec: |-
       {
+        "$schema": "http://json-schema.org/draft-07/schema#",
         "type": "object",
         "properties": {
-          "city": {
+          "state": {
             "type": "string"
           },
-          "cityType": {
-            "$ref": "#/xmEntityDefinition/CityType"
+          "operatorChangeSendDate": {
+            "$ref": "#/xmEntityDefinition/LocalDate"
           },
-          "street": {
-            "type": "string"
+          "eicConfigrmationSentDate": {
+            "$ref": "#/xmEntityDefinition/LocalDate"
+          }
+        }
+      }
+    links:
+      - key: operatorChangeSent
+        typeKey: REQUEST.JOIN
+        builderType: SEARCH
+      - key: eicConfigrmationSent
+        typeKey: REQUEST.JOIN
+        builderType: SEARCH
+definitions:
+  - key: VerificationResult
+    # language=JSON
+    value: |-
+      {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "type": "object",
+        "properties": {
+          "userKey": {
+            "$ref": "#/xmEntityDefinition/UUID"
           },
-          "house": {
+          "updateDate": {
+            "$ref": "#/xmEntityDefinition/Instant"
+          },
+          "executor": {
+            "$ref": "#/xmEntityDefinition/ExecutorType"
+          },
+          "type": {
+            "$ref": "#/xmEntityDefinition/VerificationType"
+          },
+          "passed": {
+            "type": "boolean"
+          },
+          "reason_description": {
             "type": "string"
           }
         }
       }
-- key: CityType
-  # language=JSON
-  value: |-
+  - key: Verification
+    # language=JSON
+    value: |-
+      {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "type": "object",
+        "properties": {
+          "isValid": {
+            "type": "boolean"
+          },
+          "validations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/xmEntityDefinition/VerificationResult",
+              "label": {}
+            }
+          },
+          "verifiedBy": {
+            "$ref": "#/xmEntityDefinition/UUID"
+          },
+          "verifiedDate": {
+            "$ref": "#/xmEntityDefinition/Instant"
+          },
+          "reason": {
+            "type": "string"
+          }
+        }
+      }
+  - key: Documents
+    # language=JSON
+    value: |-
+      {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "type": "object",
+        "properties": {
+          "passportPage1": {
+            "$ref": "#/xmEntityDefinition/UUID"
+          },
+          "passportPage2": {
+            "$ref": "#/xmEntityDefinition/UUID"
+          },
+          "passportPage5": {
+            "$ref": "#/xmEntityDefinition/UUID"
+          },
+          "tin": {
+            "$ref": "#/xmEntityDefinition/UUID"
+          },
+          "ownershipDoc": {
+            "$ref": "#/xmEntityDefinition/UUID"
+          },
+          "lastInvoice": {
+            "$ref": "#/xmEntityDefinition/UUID"
+          },
+          "joinRequest": {
+            "$ref": "#/xmEntityDefinition/UUID"
+          }
+        }
+      }
+  - key: PersonalInfo
+    # language=JSON
+    value: |-
+      {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "type": "object",
+        "properties": {
+          "phone": {
+            "type": "string"
+          },
+          "firstName": {
+            "type": "string"
+          },
+          "middleName": {
+            "type": "string"
+          },
+          "lastName": {
+            "type": "string"
+          },
+          "tin": {
+            "type": "string"
+          },
+          "birthDate": {
+            "$ref": "#/xmEntityDefinition/LocalDate"
+          },
+          "email": {
+            "type": "string"
+          },
+          "hasSubsidy": {
+            "type": "boolean"
+          },
+          "docType": {
+            "$ref": "#/xmEntityDefinition/IndentityDocumentType"
+          },
+          "docNumber": {
+            "type": "string"
+          }
+        }
+      }
+  - key: GasConsumption
+    # language=JSON
+    value: |-
+      {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "type": "object",
+        "properties": {
+          "types": {
+            "type": "array",
+            "items": {
+              "$ref": "#/xmEntityDefinition/GasConsumptionType",
+              "label": {}
+            }
+          },
+          "square": {
+            "type": "number"
+          }
+        }
+      }
+  - key: RealtyInfo
+    # language=JSON
+    value: |-
+      {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "type": "object",
+        "properties": {
+          "eic": {
+            "type": "string"
+          },
+          "hasGasCounter": {
+            "type": "boolean"
+          },
+          "realtyType": {
+            "$ref": "#/xmEntityDefinition/RealtyType"
+          },
+          "gasForecasting": {
+            "$ref": "#/xmEntityDefinition/GasConsumptionType"
+          },
+          "address": {
+            "$ref": "#/xmEntityDefinition/Address"
+          }
+        }
+      }
+  - key: Address
+    # language=JSON
+    value: |-
+      {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "type": "object",
+        "properties": {
+          "street": {
+            "type": "number",
+            "entityRefKey": "DICT.LOCATION.STREET"
+          },
+          "zip": {
+            "type": "string"
+          },
+          "buildingNo": {
+            "type": "string"
+          },
+          "apartment": {
+            "type": "string"
+          }
+        }
+      }
+  - key: ExecutorType
+    # language=JSON
+    value: |-
       {
         "$schema": "http://json-schema.org/draft-07/schema#",
         "type": "string",
         "enum": [
-            "CITY",
-            "VILLAGE"
+          "SYSTEM",
+          "USER"
         ]
       }
+  - key: VerificationType
+    # language=JSON
+    value: |-
+      {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "type": "string",
+        "enum": [
+          "CHECK_EIC",
+          "CHECK_EIC_TO_GDN",
+          "CHECK_REALTY_BY_EIC",
+          "CHECK_OWNER_PASSPORT_CORRECT",
+          "CHECK_REALTY_NAIS",
+          "CHECK_ONWER_MATCH",
+          "CHECK_APPLICATION_CORRECT",
+          "CHECK_JOIN_REQUEST_BY_EIC"
+        ]
+      }
+  - key: RealtyType
+    # language=JSON
+    value: |-
+      {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "type": "string",
+        "enum": [
+          "APARTMENT",
+          "HOUSE"
+        ]
+      }
+  - key: GasConsumptionType
+    # language=JSON
+    value: |-
+      {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "type": "string",
+        "enum": [
+          "N1_food_and_water_heat",
+          "N2_individual_heating",
+          "N3_central_heating",
+          "N4_cottage",
+          "N5_use_only_winter",
+          "N6_user_full_year"
+        ]
+      }
+  - key: UUID
+    # language=JSON
+    value: |-
+        {
+          "type": "string",
+          "format": "uuid",
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        }
+  - key: Instant
+    # language=JSON
+    value: |-
+      {
+          "type": "string",
+          "format": "date-time",
+          "$schema": "http://json-schema.org/draft-07/schema#"
+      }
+  - key: LocalDate
+    # language=JSON
+    value: |-
+        {
+            "type" : "string",
+            "format" : "date",
+            "$schema" : "http://json-schema.org/draft-07/schema#"
+        }
+  - key: IndentityDocumentType
+      # language=JSON
+    value: |-
+        {
+            "$schema" : "http://json-schema.org/draft-07/schema#",
+            "type" : "string",
+            "enum" : [ "PASSPORT", "ID_CARD" ]
+        }
+

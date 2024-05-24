@@ -1,6 +1,7 @@
 package com.icthh.xm.ms.entity.service.processor;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.icthh.xm.ms.entity.AbstractUnitTest;
 import com.icthh.xm.ms.entity.domain.spec.DefinitionSpec;
@@ -57,8 +58,8 @@ public class DefinitionSpecProcessorUnitTest extends AbstractUnitTest {
     @Test
     public void shouldProcessTypeSpecRefInDefinition() throws Exception {
         XmEntitySpec inputXmEntitySpec = loadXmEntitySpecByFileName("xmentityspec-sub-definitions-input");
-        XmEntitySpec expectedXmEntitySpec = loadXmEntitySpecByFileName("xmentityspec-sub-definitions-input-expected");
-        TypeSpec typeSpec = inputXmEntitySpec.getTypes().get(0);
+        String expectedXmEntityDataSpec = loadFile("config/specs/definitions/xmentityspec-sub-definitions-input-expected.json");
+        TypeSpec typeSpec = inputXmEntitySpec.getTypes().stream().filter(it -> it.getKey().equals("REQUEST.JOIN")).findFirst().get();
 
         subject.updateDefinitionStateByTenant(TENANT, Map.of(TENANT, Map.of(TENANT, objectMapper.writeValueAsString(inputXmEntitySpec))));
         subject.processTypeSpec(TENANT, typeSpec::setDataSpec, typeSpec::getDataSpec);
@@ -67,7 +68,11 @@ public class DefinitionSpecProcessorUnitTest extends AbstractUnitTest {
             inputXmEntitySpec.getForms(),
             inputXmEntitySpec.getDefinitions());
 
-        assertEqualsEntities(expectedXmEntitySpec, actualXmEntitySpec);
+        objectMapper = objectMapper.enable(SerializationFeature.INDENT_OUTPUT);
+        Map actualMap = objectMapper.readValue(actualXmEntitySpec.getTypes().get(0).getDataSpec(), Map.class);
+        Map expectedMap = objectMapper.readValue(expectedXmEntityDataSpec, Map.class);
+
+        assertEquals(objectMapper.writeValueAsString(expectedMap), objectMapper.writeValueAsString(actualMap));
     }
 
     @Test
