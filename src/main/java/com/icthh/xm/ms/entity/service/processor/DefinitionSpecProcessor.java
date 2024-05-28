@@ -96,7 +96,7 @@ public class DefinitionSpecProcessor extends SpecProcessor {
             String definitionKey = matcher.extractUriTemplateVariables(KEY_DEFINITION_TEMPLATE, dataRef).get("definitionKey");
 
             if (entityDefinitions.containsKey(definitionKey)) {
-                return;
+                continue;
             }
             if (StringUtils.isNotBlank(definitionKey)) {
                 ofNullable(definitionsByTenant.get(tenant))
