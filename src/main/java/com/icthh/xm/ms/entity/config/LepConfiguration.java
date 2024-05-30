@@ -1,5 +1,8 @@
 package com.icthh.xm.ms.entity.config;
 
+import com.icthh.xm.commons.config.client.repository.CommonConfigRepository;
+import com.icthh.xm.commons.config.client.repository.TenantListRepository;
+import com.icthh.xm.commons.config.client.service.TenantAliasService;
 import com.icthh.xm.commons.lep.TenantScriptStorage;
 import com.icthh.xm.commons.lep.groovy.GroovyLepEngineConfiguration;
 import com.icthh.xm.ms.entity.lep.ElasticIndexManager;
