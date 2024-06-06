@@ -1,21 +1,13 @@
 package com.icthh.xm.ms.entity.web.rest;
 
-import static com.google.common.collect.ImmutableMap.of;
-import static org.springframework.web.servlet.HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE;
-import static org.springframework.web.servlet.HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE;
-
 import com.codahale.metrics.annotation.Timed;
 import com.icthh.xm.commons.logging.aop.IgnoreLogginAspect;
 import com.icthh.xm.commons.permission.annotation.PrivilegeDescription;
 import com.icthh.xm.ms.entity.domain.FunctionContext;
 import com.icthh.xm.ms.entity.service.FunctionService;
 import com.icthh.xm.ms.entity.web.rest.util.HeaderUtil;
-import java.net.URI;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import javax.servlet.http.HttpServletRequest;
 import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Lazy;
@@ -37,9 +29,21 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.ModelAndView;
 
+import javax.servlet.http.HttpServletRequest;
+import java.net.URI;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+
+import static com.google.common.collect.ImmutableMap.of;
+import static com.icthh.xm.ms.entity.config.Constants.MVC_FUNC_RESULT;
+import static org.springframework.web.servlet.HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE;
+import static org.springframework.web.servlet.HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE;
+
 /**
  * The {@link FunctionResource} class.
  */
+@Slf4j
 @RestController
 @RequestMapping("/api")
 public class FunctionResource {
@@ -197,11 +201,7 @@ public class FunctionResource {
     public ModelAndView callMvcFunction(@PathVariable("functionKey") String functionKey,
                                         @RequestBody(required = false) Map<String, Object> functionInput) {
         FunctionContext result = functionService.execute(functionKey, functionInput, "POST");
-        Object data = result.getData().get("modelAndView");
-        if (data instanceof ModelAndView) {
-            return (ModelAndView) data;
-        }
-        return null;
+        return getMvcResult(result);
     }
 
     @Timed
@@ -220,11 +220,15 @@ public class FunctionResource {
     public ModelAndView callMvcAnonymousFunction(@PathVariable("functionKey") String functionKey,
                                                  @RequestBody(required = false) Map<String, Object> functionInput) {
         FunctionContext result = functionService.executeAnonymous(functionKey, functionInput, "POST");
-        Object data = result.getData().get("modelAndView");
-        if (data instanceof ModelAndView) {
-            return (ModelAndView) data;
-        }
-        return null;
+        return getMvcResult(result);
+    }
+
+    @Timed
+    @GetMapping("/functions/anonymous/mvc/{functionKey:.+}")
+    public ModelAndView callMvcGetAnonymousFunction(@PathVariable("functionKey") String functionKey,
+                                                 @RequestParam(required = false) Map<String, Object> functionInput) {
+        FunctionContext result = functionService.executeAnonymous(functionKey, functionInput, "GET");
+        return getMvcResult(result);
     }
 
     @Timed
@@ -378,6 +382,21 @@ public class FunctionResource {
             .orElse(ResponseEntity
                 .status(HttpStatus.CREATED.value())
                 .body(result.functionResult()));
+    }
+
+    private ModelAndView getMvcResult(FunctionContext context) {
+        if (context == null || context.getData() == null) {
+            return null;
+        }
+
+        Object modelAndView = context.getData().get(MVC_FUNC_RESULT);
+        if (modelAndView instanceof ModelAndView) {
+            return (ModelAndView) modelAndView;
+        }
+
+        log.warn("Context did not contain {} or type (ModelAndView) mismatch, present keys {}", MVC_FUNC_RESULT, context.getData().keySet());
+
+        return null;
     }
 
 }
