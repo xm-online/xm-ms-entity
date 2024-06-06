@@ -1,19 +1,5 @@
 package com.icthh.xm.ms.entity.web.rest;
 
-import static com.google.common.collect.ImmutableMap.of;
-import static org.junit.Assert.assertArrayEquals;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.ArgumentMatchers.isNull;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
 import com.icthh.xm.commons.i18n.error.web.ExceptionTranslator;
 import com.icthh.xm.commons.i18n.spring.service.LocalizationMessageService;
 import com.icthh.xm.ms.entity.AbstractWebMvcTest;
@@ -33,7 +19,24 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.servlet.ModelAndView;
 
-import java.util.Map;
+import static com.google.common.collect.ImmutableMap.of;
+import static com.icthh.xm.ms.entity.config.Constants.MVC_FUNC_RESULT;
+import static org.junit.Assert.assertArrayEquals;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @Slf4j
 @WebMvcTest(controllers = FunctionResource.class)
@@ -135,7 +138,7 @@ public class FunctionResourceMvcIntTest extends AbstractWebMvcTest {
     @SneakyThrows
     public void testCallMvcAnonymousPostFunctionWithUrlEncodedParams() {
         when(functionService.executeAnonymous("SOME-ANONYMOUS-FUNCTION_KEY.TROLOLO", of("var1", "val1", "var2", "val2"), "POST"))
-            .thenReturn(new FunctionContext().data( of("modelAndView", new ModelAndView("redirect:https://google.com"))));
+            .thenReturn(new FunctionContext().data( of(MVC_FUNC_RESULT, new ModelAndView("redirect:https://google.com"))));
         mockMvc.perform(post("/api/functions/anonymous/mvc/SOME-ANONYMOUS-FUNCTION_KEY.TROLOLO")
                 .contentType(MediaType.APPLICATION_FORM_URLENCODED)
                 .param("var1", "val1")
@@ -145,6 +148,20 @@ public class FunctionResourceMvcIntTest extends AbstractWebMvcTest {
             .andExpect(header().string("Location", "https://google.com"))
             .andExpect(status().isFound());
         verify(functionService).executeAnonymous(eq("SOME-ANONYMOUS-FUNCTION_KEY.TROLOLO"), eq(of("var1", "val1", "var2", "val2")), eq("POST"));
+    }
+
+    @Test
+    @SneakyThrows
+    public void testCallMvcAnonymousGetFunctionWithUrlEncodedParams() {
+        when(functionService.executeAnonymous("SOME-ANONYMOUS-FUNCTION_KEY.TROLOLO", of("var1", "val1", "var2", "val2"), "GET"))
+            .thenReturn(new FunctionContext().data( of(MVC_FUNC_RESULT, new ModelAndView("redirect:https://google.com"))));
+        mockMvc.perform(get("/api/functions/anonymous/mvc/SOME-ANONYMOUS-FUNCTION_KEY.TROLOLO?var1=val1&var2=val2")
+                .contentType(MediaType.APPLICATION_JSON)
+            )
+            .andDo(print())
+            .andExpect(header().string("Location", "https://google.com"))
+            .andExpect(status().isFound());
+        verify(functionService).executeAnonymous(eq("SOME-ANONYMOUS-FUNCTION_KEY.TROLOLO"), eq(of("var1", "val1", "var2", "val2")), eq("GET"));
     }
 
     @Test

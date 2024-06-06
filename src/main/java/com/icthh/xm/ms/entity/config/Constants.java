@@ -50,6 +50,8 @@ public final class Constants {
 
     public static final String REGEX_EOL = "\n";
 
+    public static final String MVC_FUNC_RESULT = "modelAndView";
+
     private Constants() {
     }
 }
