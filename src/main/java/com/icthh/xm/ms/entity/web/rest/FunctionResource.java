@@ -312,7 +312,7 @@ public class FunctionResource {
     @Timed
     @GetMapping("/functions/anonymous/mvc/**")
     public ModelAndView callMvcAnonymousGetFunction(HttpServletRequest request,
-                                                 @RequestBody(required = false) Map<String, Object> functionInput) {
+                                                    @RequestParam(required = false) Map<String, Object> functionInput) {
         return self.callMvcGetAnonymousFunction(getFunctionKey(request), functionInput);
     }
 
