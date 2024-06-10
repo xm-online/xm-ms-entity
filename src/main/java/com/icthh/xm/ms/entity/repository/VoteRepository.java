@@ -14,4 +14,7 @@ public interface VoteRepository extends JpaRepository<Vote, Long>, ResourceRepos
 
     @Override
     Vote findResourceById(Object id);
+
+    Long countByRatingId(Long id);
+
 }

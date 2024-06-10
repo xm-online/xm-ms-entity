@@ -4,6 +4,7 @@ import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
 import com.icthh.xm.ms.entity.config.LepConfiguration;
 import com.icthh.xm.ms.entity.config.SecurityBeanOverrideConfiguration;
+import com.icthh.xm.ms.entity.config.TestLepUpdateModeConfiguration;
 import com.icthh.xm.ms.entity.config.elasticsearch.EmbeddedElasticsearchConfig;
 import com.icthh.xm.ms.entity.config.tenant.WebappTenantOverrideConfiguration;
 import com.icthh.xm.ms.entity.service.search.ElasticsearchTemplateWrapper;
@@ -28,10 +29,11 @@ import java.io.IOException;
  */
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = {
+    TestLepUpdateModeConfiguration.class,
+    LepConfiguration.class,
     EntityApp.class,
     SecurityBeanOverrideConfiguration.class,
     WebappTenantOverrideConfiguration.class,
-    LepConfiguration.class,
     EmbeddedElasticsearchConfig.class
 })
 @Category(AbstractSpringBootTest.class)

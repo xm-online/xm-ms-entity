@@ -4,6 +4,24 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.icthh.xm.commons.i18n.error.web.ExceptionTranslator;
 import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_AUTH_CONTEXT;
 import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_TENANT_CONTEXT;
+import static com.icthh.xm.ms.entity.web.rest.TestUtil.sameInstant;
+import static com.icthh.xm.ms.entity.web.rest.XmEntityResourceExtendedIntTest.createEntity;
+import static com.icthh.xm.ms.entity.web.rest.XmEntityResourceExtendedIntTest.createEntityComplexIncoming;
+import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.notNullValue;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.icthh.xm.commons.permission.service.PermissionCheckService;
 import com.icthh.xm.commons.security.XmAuthenticationContextHolder;
@@ -11,6 +29,7 @@ import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
 import com.icthh.xm.lep.api.LepManager;
 import com.icthh.xm.ms.entity.AbstractSpringBootTest;
+import com.icthh.xm.ms.entity.config.ApplicationProperties;
 import com.icthh.xm.ms.entity.config.IndexConfiguration;
 import com.icthh.xm.ms.entity.config.MappingConfiguration;
 import com.icthh.xm.ms.entity.domain.Attachment;
@@ -84,6 +103,7 @@ public class ElasticsearchIndexResourceIntTest extends AbstractSpringBootTest {
 
     private static final String DEFAULT_TYPE_KEY = "ACCOUNT.ADMIN";
     private static final String ANOTHER_TYPE_KEY = "ACCOUNT.OWNER";
+    private static final String NO_INDEX_TYPE_KEY = "ACCOUNT.NO_ELASTIC_SAVE";
     private static final String DEFAULT_NAME = "AAAAAAAAAA";
 
     private static boolean elasticInited = false;
@@ -150,6 +170,9 @@ public class ElasticsearchIndexResourceIntTest extends AbstractSpringBootTest {
     @Autowired
     private PermissionCheckService permissionCheckService;
 
+    @Autowired
+    private ApplicationProperties applicationProperties;
+
     private ElasticsearchIndexService elasticsearchIndexService;
 
     @Mock
@@ -189,7 +212,9 @@ public class ElasticsearchIndexResourceIntTest extends AbstractSpringBootTest {
                                                                   tenantContextHolder,
                                                                   mappingConfiguration,
                                                                   indexConfiguration,
-                                                                  executor, entityManager);
+                                                                  executor, entityManager,
+                                                                  applicationProperties,
+                                                                  xmEntitySpecService);
 
         elasticsearchTemplateWrapper.refresh(XmEntity.class);
 
@@ -426,10 +451,13 @@ public class ElasticsearchIndexResourceIntTest extends AbstractSpringBootTest {
 
         xmEntityRepositoryInternal.deleteAll();
 
-        Long id4 = xmEntityService.save(createEntity().typeKey(DEFAULT_TYPE_KEY)).getId();
-        Long id5 = xmEntityService.save(createEntity().typeKey(ANOTHER_TYPE_KEY)).getId();
-        assert id4 != null;
+        Long id5 = xmEntityService.save(createEntity().typeKey(DEFAULT_TYPE_KEY)).getId();
+        Long id6 = xmEntityService.save(createEntity().typeKey(ANOTHER_TYPE_KEY)).getId();
+        Long id7 = xmEntityService.save(createEntity().typeKey(NO_INDEX_TYPE_KEY)).getId();
+
         assert id5 != null;
+        assert id6 != null;
+        assert id7 != null;
 
         reindexed = elasticsearchIndexService.reindexAll();
         assertEquals(2L, reindexed);
@@ -439,7 +467,33 @@ public class ElasticsearchIndexResourceIntTest extends AbstractSpringBootTest {
                .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
                .andExpect(jsonPath("$").isArray())
                .andExpect(jsonPath("$").value(hasSize(2)))
-               .andExpect(jsonPath("$.[*].id").value(containsInAnyOrder(id4.intValue(), id5.intValue())))
+               .andExpect(jsonPath("$.[*].id").value(containsInAnyOrder(id5.intValue(), id6.intValue())))
+        ;
+    }
+
+
+    @Test
+    @SneakyThrows
+    @Transactional
+    public void testReindexNoneAfterReindex() {
+
+        autoIndexDisable();
+        assertIndexIsEmpty();
+
+        Long id1 = xmEntityService.save(createEntity().typeKey(NO_INDEX_TYPE_KEY)).getId();
+        Long id2 = xmEntityService.save(createEntity().typeKey(NO_INDEX_TYPE_KEY)).getId();
+
+        assert id1 != null;
+        assert id2 != null;
+
+        long reindexed = elasticsearchIndexService.reindexAll();
+        assertEquals(0L, reindexed);
+
+        mockMvc.perform(get("/api/_search/xm-entities?query=*:*"))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+            .andExpect(jsonPath("$").isArray())
+            .andExpect(jsonPath("$").value(hasSize(0)))
         ;
     }
 

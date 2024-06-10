@@ -10,9 +10,11 @@ import com.icthh.xm.commons.logging.util.MdcUtils;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
 import com.icthh.xm.commons.tenant.TenantKey;
+import com.icthh.xm.ms.entity.config.ApplicationProperties;
 import com.icthh.xm.ms.entity.config.IndexConfiguration;
 import com.icthh.xm.ms.entity.config.MappingConfiguration;
 import com.icthh.xm.ms.entity.domain.XmEntity;
+import com.icthh.xm.ms.entity.domain.spec.TypeSpec;
 import com.icthh.xm.ms.entity.repository.XmEntityRepositoryInternal;
 import lombok.AccessLevel;
 import lombok.Setter;
@@ -59,6 +61,8 @@ public class ElasticsearchIndexService {
     private static final String XM_ENTITY_FIELD_TYPEKEY = "typeKey";
     private static final String XM_ENTITY_FIELD_ID = "id";
 
+    private final XmEntitySpecService xmEntitySpecService;
+
     private final XmEntityRepositoryInternal xmEntityRepositoryInternal;
     private final XmEntitySearchRepository xmEntitySearchRepository;
     private final ElasticsearchTemplateWrapper elasticsearchTemplateWrapper;
@@ -66,6 +70,8 @@ public class ElasticsearchIndexService {
     private final MappingConfiguration mappingConfiguration;
     private final IndexConfiguration indexConfiguration;
     private final Executor executor;
+
+    private final Integer elasticBatchSize;
 
     @PersistenceContext
     private final EntityManager entityManager;
@@ -82,7 +88,9 @@ public class ElasticsearchIndexService {
                                      MappingConfiguration mappingConfiguration,
                                      IndexConfiguration indexConfiguration,
                                      @Qualifier("taskExecutor") Executor executor,
-                                     EntityManager entityManager) {
+                                     EntityManager entityManager,
+                                     ApplicationProperties applicationProperties,
+                                     XmEntitySpecService xmEntitySpecService) {
         this.xmEntityRepositoryInternal = xmEntityRepositoryInternal;
         this.xmEntitySearchRepository = xmEntitySearchRepository;
         this.elasticsearchTemplateWrapper = elasticsearchTemplateWrapper;
@@ -91,6 +99,8 @@ public class ElasticsearchIndexService {
         this.indexConfiguration = indexConfiguration;
         this.executor = executor;
         this.entityManager = entityManager;
+        this.elasticBatchSize = applicationProperties.getElasticBatchSize() != null ? applicationProperties.getElasticBatchSize() : PAGE_SIZE;
+        this.xmEntitySpecService = xmEntitySpecService;
     }
 
     /**
@@ -222,7 +232,27 @@ public class ElasticsearchIndexService {
 
     private Long reindexXmEntity() {
 
-        return reindexXmEntity(null);
+        //get all types that not should be added to elastic
+        Set<String> notAllowedTypes = xmEntitySpecService.findAllTypes().stream()
+            .filter(spec -> Boolean.FALSE.equals(spec.getIndexAfterSaveEnabled()))
+            .map(TypeSpec::getKey)
+            .collect(Collectors.toSet());
+
+        //we should sort
+        Specification spec = (root, query, criteriaBuilder) -> {
+            query.orderBy(criteriaBuilder.desc(root.get("id")));
+            return null;
+        };
+
+        if (!notAllowedTypes.isEmpty()) {
+            log.debug("Types {} should be excluded from reindex", notAllowedTypes);
+            spec = (root, query, criteriaBuilder) -> {
+                query.orderBy(criteriaBuilder.desc(root.get("id")));
+                return criteriaBuilder.not(root.get(XM_ENTITY_FIELD_TYPEKEY).in(notAllowedTypes));
+            };
+        }
+
+        return reindexXmEntity(spec);
     }
 
     private long reindexXmEntity(@Nullable Specification<XmEntity> spec) {
@@ -247,9 +277,9 @@ public class ElasticsearchIndexService {
                                                      .filter(Objects::nonNull)
                                                      .collect(Collectors.toList());
 
-            for (int i = startFrom; i <= xmEntityRepositoryInternal.count(spec) / PAGE_SIZE ; i++) {
-                Pageable page = PageRequest.of(i, PAGE_SIZE);
-                log.info("Indexing page {} of {}, pageSize {}", i, xmEntityRepositoryInternal.count(spec) / PAGE_SIZE, PAGE_SIZE);
+            for (int i = startFrom; i <= xmEntityRepositoryInternal.count(spec) / elasticBatchSize ; i++) {
+                Pageable page = PageRequest.of(i, elasticBatchSize);
+                log.info("Indexing page {} of {}, pageSize {}", i, xmEntityRepositoryInternal.count(spec) / elasticBatchSize, elasticBatchSize);
                 Page<XmEntity> results = xmEntityRepositoryInternal.findAll(spec, page);
                 results.map(entity -> loadEntityRelationships(relationshipGetters, entity));
                 xmEntitySearchRepository.saveAll(results.getContent());

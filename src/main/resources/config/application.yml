@@ -199,6 +199,7 @@ application:
     specification-templates-path-pattern: /config/tenants/{tenantName}/entity/${application.specification-templates-name}
     kafka-system-topic: system_topic
     kafka-system-queue: system_queue
+    auto-system-queue-enabled: true
     kafka-metadata-max-age: 60000 #in milliseconds
     db-schema-suffix:
     retry:
@@ -208,7 +209,7 @@ application:
     lep:
         tenant-script-storage: XM_MS_CONFIG
         lep-resource-path-pattern: /config/tenants/{tenantName}/entity/lep/resources/**/*
-        full-recompile-on-lep-update: false
+        tenants-with-lep-warmup: XM
     amazon:
         avatar:
             # XmEntity.avatarUrl should match this pattern to persist only last part into DB, otherwise set to null
@@ -227,14 +228,15 @@ application:
             bucket:
             bucket-prefix:
     elasticSchemaSuffix: ""
+    elasticBatchSize: 100
     requestCacheIgnoredPathPatternList: /api/functions/*/upload
     periodicMetricPoolSize: 1
-    maxUploadFileSize: 1073741824
-    maxUploadSize: 1073741824
     kafkaMetric:
         enabled: true
         connectionTimeoutTopic: 1000
         metricTopics: system_topic
+    domain-event:
+        enabled: false
 # ===================================================================
 # Timeline specific properties
 #

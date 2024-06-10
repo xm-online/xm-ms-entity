@@ -1,19 +1,12 @@
 package com.icthh.xm.ms.entity.service;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-
 import com.icthh.xm.commons.gen.model.Tenant;
 import com.icthh.xm.commons.tenant.TenantContext;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
-import com.icthh.xm.commons.tenant.TenantKey;
 import com.icthh.xm.ms.entity.AbstractUnitTest;
 import com.icthh.xm.ms.entity.config.ApplicationProperties;
 import com.icthh.xm.ms.entity.domain.EntityState;
 import com.icthh.xm.ms.entity.domain.XmEntity;
-import com.icthh.xm.ms.entity.lep.LepXmEntityMsConstants;
 import com.icthh.xm.ms.entity.service.XmTenantLifecycleService.ServiceInfo;
 import com.icthh.xm.ms.entity.web.client.tenant.TenantClient;
 import lombok.SneakyThrows;
@@ -31,6 +24,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.mockito.Mockito.when;
+
 public class XmTenantLifecycleServiceUnitTest extends AbstractUnitTest {
 
     private static final String ENTITY_TYPE_KEY = "RESOURCE.XM-TENANT";
@@ -38,6 +35,7 @@ public class XmTenantLifecycleServiceUnitTest extends AbstractUnitTest {
     private static final String EXEC_ERROR = "Service call failed";
     private static final String SUCCESS_NAME = "success";
     private static final String TENANT_KEY = "XM";
+    private static final String BINDING_KEY_SERVICES = "services";
 
     private XmTenantLifecycleService xmTenantLifecycleService;
     private List<TenantClient> tenantClients = new ArrayList<>();
@@ -96,7 +94,7 @@ public class XmTenantLifecycleServiceUnitTest extends AbstractUnitTest {
     @Test
     public void testNoService() {
         XmEntity xmEntity = getEntity();
-        context.put(LepXmEntityMsConstants.BINDING_KEY_SERVICES, Collections.singletonList(SERVICE_NAME));
+        context.put(BINDING_KEY_SERVICES, Collections.singletonList(SERVICE_NAME));
 
         xmTenantLifecycleService.changeState(xmEntity, EntityState.ACTIVE.name(), context);
 
@@ -109,7 +107,7 @@ public class XmTenantLifecycleServiceUnitTest extends AbstractUnitTest {
     @Test
     public void testServiceCallFail() {
         XmEntity xmEntity = getEntity();
-        context.put(LepXmEntityMsConstants.BINDING_KEY_SERVICES, Collections.singletonList(SERVICE_NAME));
+        context.put(BINDING_KEY_SERVICES, Collections.singletonList(SERVICE_NAME));
         TenantClient client = new FailClient();
         tenantClients.add(client);
 
@@ -128,7 +126,7 @@ public class XmTenantLifecycleServiceUnitTest extends AbstractUnitTest {
         serviceInfo.put("create", action);
         action.put(SUCCESS_NAME, true);
         xmEntity.getData().put(SERVICE_NAME, serviceInfo);
-        context.put(LepXmEntityMsConstants.BINDING_KEY_SERVICES, Collections.singletonList(SERVICE_NAME));
+        context.put(BINDING_KEY_SERVICES, Collections.singletonList(SERVICE_NAME));
         TenantClient client = new FailClient();
         tenantClients.add(client);
 
@@ -141,7 +139,7 @@ public class XmTenantLifecycleServiceUnitTest extends AbstractUnitTest {
     @Test
     public void testServiceCallSuccess() {
         XmEntity xmEntity = getEntity();
-        context.put(LepXmEntityMsConstants.BINDING_KEY_SERVICES, Collections.singletonList(SERVICE_NAME));
+        context.put(BINDING_KEY_SERVICES, Collections.singletonList(SERVICE_NAME));
         TenantClient client = new SuccessClient();
         tenantClients.add(client);
 

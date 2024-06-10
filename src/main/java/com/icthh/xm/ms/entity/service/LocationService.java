@@ -9,7 +9,6 @@ import com.icthh.xm.ms.entity.domain.Location;
 import com.icthh.xm.ms.entity.lep.keyresolver.LocationTypeKeyResolver;
 import com.icthh.xm.ms.entity.repository.LocationRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
-import com.icthh.xm.ms.entity.repository.search.PermittedSearchRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -26,8 +25,6 @@ import java.util.Optional;
 public class LocationService {
 
     private final PermittedRepository permittedRepository;
-
-    private final PermittedSearchRepository permittedSearchRepository;
 
     private final LocationRepository locationRepository;
 
@@ -46,21 +43,6 @@ public class LocationService {
     public List<Location> findAll(String privilegeKey) {
         return permittedRepository.findAll(Location.class, privilegeKey);
     }
-
-    /**
-     * Search for the location corresponding to the query.
-     *
-     * @param query the query of the search
-     * @return the list of entities
-     */
-    @Deprecated
-    @Transactional(readOnly = true)
-    @FindWithPermission("LOCATION.SEARCH")
-    @PrivilegeDescription("Privilege to search for the location corresponding to the query")
-    public List<Location> search(String query, String privilegeKey) {
-        return permittedSearchRepository.search(query, Location.class, privilegeKey);
-    }
-
 
     /**
      * Save a xmEntity.

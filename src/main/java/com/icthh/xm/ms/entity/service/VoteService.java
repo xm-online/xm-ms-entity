@@ -6,7 +6,6 @@ import com.icthh.xm.commons.permission.repository.PermittedRepository;
 import com.icthh.xm.ms.entity.domain.Vote;
 import com.icthh.xm.ms.entity.repository.VoteRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
-import com.icthh.xm.ms.entity.repository.search.PermittedSearchRepository;
 import com.icthh.xm.ms.entity.service.impl.StartUpdateDateGenerationStrategy;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -20,8 +19,6 @@ import org.springframework.transaction.annotation.Transactional;
 public class VoteService {
 
     private final PermittedRepository permittedRepository;
-
-    private final PermittedSearchRepository permittedSearchRepository;
 
     private final VoteRepository voteRepository;
 
@@ -62,20 +59,6 @@ public class VoteService {
     @PrivilegeDescription("Privilege to get all the votes")
     public Page<Vote> findAll(Pageable pageable, String privilegeKey) {
         return permittedRepository.findAll(pageable, Vote.class, privilegeKey);
-    }
-
-    /**
-     * Search for the votes corresponding to the query.
-     *
-     *  @param query the query of the search
-     *  @return the list of entities
-     */
-    @Deprecated
-    @Transactional(readOnly = true)
-    @FindWithPermission("VOTE.SEARCH")
-    @PrivilegeDescription("Privilege to search for the votes corresponding to the query")
-    public Page<Vote> search(String query, Pageable pageable, String privilegeKey) {
-        return permittedSearchRepository.search(query, pageable, Vote.class, privilegeKey);
     }
 
     /**

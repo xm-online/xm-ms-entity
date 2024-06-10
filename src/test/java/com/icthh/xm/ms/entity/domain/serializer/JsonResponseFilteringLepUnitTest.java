@@ -1,28 +1,11 @@
 package com.icthh.xm.ms.entity.domain.serializer;
 
-import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_AUTH_CONTEXT;
-import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_TENANT_CONTEXT;
-import static com.icthh.xm.ms.entity.domain.serializer.JsonResponseFilteringUnitTest.addTargetLink;
-import static com.icthh.xm.ms.entity.domain.serializer.JsonResponseFilteringUnitTest.assertLinkStructure;
-import static com.icthh.xm.ms.entity.domain.serializer.JsonResponseFilteringUnitTest.createMockResultEntity;
-import static java.nio.charset.StandardCharsets.UTF_8;
-import static org.hamcrest.Matchers.hasSize;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.isA;
-import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.icthh.xm.commons.i18n.error.web.ExceptionTranslator;
 import com.icthh.xm.commons.i18n.spring.service.LocalizationMessageService;
 import com.icthh.xm.commons.lep.XmLepScriptConfigServerResourceLoader;
-import com.icthh.xm.commons.lep.spring.AspectForLepInBeanDetection;
-import com.icthh.xm.commons.lep.spring.LepServiceHandler;
 import com.icthh.xm.commons.logging.config.LoggingConfigService;
 import com.icthh.xm.commons.security.XmAuthenticationContextHolder;
 import com.icthh.xm.commons.security.spring.config.XmAuthenticationContextConfiguration;
@@ -33,10 +16,13 @@ import com.icthh.xm.lep.api.LepManager;
 import com.icthh.xm.ms.entity.AbstractWebMvcTest;
 import com.icthh.xm.ms.entity.config.JacksonConfiguration;
 import com.icthh.xm.ms.entity.config.LepConfiguration;
+import com.icthh.xm.ms.entity.config.TestLepContextFactory;
+import com.icthh.xm.ms.entity.config.TestLepUpdateModeConfiguration;
 import com.icthh.xm.ms.entity.config.WebMvcConfiguration;
 import com.icthh.xm.ms.entity.domain.Link;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.domain.ext.IdOrKey;
+import com.icthh.xm.ms.entity.lep.LepContextFactoryImpl;
 import com.icthh.xm.ms.entity.repository.kafka.ProfileEventProducer;
 import com.icthh.xm.ms.entity.service.FunctionService;
 import com.icthh.xm.ms.entity.service.ProfileService;
@@ -77,17 +63,32 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_AUTH_CONTEXT;
+import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_TENANT_CONTEXT;
+import static com.icthh.xm.ms.entity.domain.serializer.JsonResponseFilteringUnitTest.addTargetLink;
+import static com.icthh.xm.ms.entity.domain.serializer.JsonResponseFilteringUnitTest.assertLinkStructure;
+import static com.icthh.xm.ms.entity.domain.serializer.JsonResponseFilteringUnitTest.createMockResultEntity;
+import static java.nio.charset.StandardCharsets.UTF_8;
+import static org.hamcrest.Matchers.hasSize;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.isA;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
 @Slf4j
 @WebMvcTest(controllers = XmEntityResource.class)
 @ContextConfiguration(classes = {
+    TestLepContextFactory.class,
+    TestLepUpdateModeConfiguration.class,
+    LepConfiguration.class,
     JacksonConfiguration.class,
     XmEntityResource.class,
     ExceptionTranslator.class,
     TenantContextConfiguration.class,
     XmAuthenticationContextConfiguration.class,
-    LepConfiguration.class,
-    LepServiceHandler.class,
-    AspectForLepInBeanDetection.class
 })
 @EnableAspectJAutoProxy
 @EnableSpringDataWebSupport

@@ -8,12 +8,10 @@ import com.icthh.xm.commons.permission.annotation.FindWithPermission;
 import com.icthh.xm.commons.permission.annotation.PrivilegeDescription;
 import com.icthh.xm.commons.permission.repository.PermittedRepository;
 import com.icthh.xm.ms.entity.domain.Event;
-import com.icthh.xm.ms.entity.domain.Link;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.lep.keyresolver.EventTypeKeyResolver;
 import com.icthh.xm.ms.entity.repository.EventRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
-import com.icthh.xm.ms.entity.repository.search.PermittedSearchRepository;
 import com.icthh.xm.ms.entity.service.query.EventQueryService;
 import com.icthh.xm.ms.entity.service.query.filter.EventFilter;
 import java.util.List;
@@ -39,7 +37,6 @@ public class EventService {
     private final EventQueryService eventQueryService;
     private final EventRepository eventRepository;
     private final PermittedRepository permittedRepository;
-    private final PermittedSearchRepository permittedSearchRepository;
     private final XmEntityRepository xmEntityRepository;
     private final CalendarService calendarService;
     @Setter(onMethod_ = {@Autowired})
@@ -148,18 +145,4 @@ public class EventService {
         eventRepository.deleteInBatch(list);
     }
 
-    /**
-     * Search for the event corresponding to the query.
-     *
-     *  @param query the query of the search
-     *  @return the list of entities
-     */
-    @Deprecated
-    @Transactional(readOnly = true)
-    @FindWithPermission("EVENT.SEARCH")
-    @LogicExtensionPoint("Search")
-    @PrivilegeDescription("Privilege to search for the event corresponding to the query")
-    public List<Event> search(String query, String privilegeKey) {
-        return permittedSearchRepository.search(query, Event.class, privilegeKey);
-    }
 }

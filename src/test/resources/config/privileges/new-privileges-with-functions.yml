@@ -3,6 +3,8 @@ entity-functions:
 - key: "FUNCTION.CALL.GET-OPENED-ORDERS"
 - key: "FUNCTION.CALL.FUNCTION1"
 - key: "FUNCTION.CALL.FUNCTION3"
+- key: "FUNCTION.CALL.v1/billingcycles/manage"
+- key: "FUNCTION.CALL.v1/billingcycles/products"
 - key: "FUNCTION.CALL.in/package/FUNCTION4"
 - key: "XMENTITY.FUNCTION.EXECUTE.FUNCTION2"
 applications:

@@ -6,12 +6,6 @@ import com.icthh.xm.commons.web.spring.TenantVerifyInterceptor;
 import com.icthh.xm.commons.web.spring.XmLoggingInterceptor;
 import com.icthh.xm.commons.web.spring.config.XmMsWebConfiguration;
 import com.icthh.xm.commons.web.spring.config.XmWebMvcConfigurerAdapter;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-
 import com.icthh.xm.ms.entity.domain.serializer.XmSquigglyInterceptor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,6 +17,12 @@ import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.PathMatchConfigurer;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 
 @Configuration
 @Import( {
@@ -63,9 +63,9 @@ public class WebMvcConfiguration extends XmWebMvcConfigurerAdapter {
 
     @Override
     protected void xmAddInterceptors(InterceptorRegistry registry) {
-        registerLepInterceptor(registry);
         registerTenantInterceptorWithIgnorePathPattern(registry, tenantVerifyInterceptor);
         registerJsonFilterInterceptor(registry);
+        registerTenantInterceptorWithIgnorePathPattern(registry, lepInterceptor);
     }
 
     private void registerJsonFilterInterceptor(InterceptorRegistry registry) {
@@ -73,12 +73,6 @@ public class WebMvcConfiguration extends XmWebMvcConfigurerAdapter {
         registry.addInterceptor(xmSquigglyInterceptor).addPathPatterns(getJsonFilterAllowedURIs());
         LOGGER.info("Added handler interceptor '{}' to urls: {}",
                     xmSquigglyInterceptor.getClass().getSimpleName(), JSON_FILTER_APPLIED_URI);
-    }
-
-    private void registerLepInterceptor(InterceptorRegistry registry) {
-        registry.addInterceptor(lepInterceptor).addPathPatterns("/**");
-
-        LOGGER.info("Added handler interceptor '{}' to all urls", lepInterceptor.getClass().getSimpleName());
     }
 
     @Override

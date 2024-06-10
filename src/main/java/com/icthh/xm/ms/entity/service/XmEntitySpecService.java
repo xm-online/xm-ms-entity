@@ -68,7 +68,6 @@ public class XmEntitySpecService implements RefreshableConfiguration {
     private final List<EntitySpecUpdateListener> entitySpecUpdateListeners;
     private final DynamicPermissionCheckService dynamicPermissionCheckService;
 
-
     /**
      * Search of all entity Type specifications.
      * @return list of entity Types specifications
@@ -94,13 +93,12 @@ public class XmEntitySpecService implements RefreshableConfiguration {
     }
 
     public static Predicate<TypeSpec> isApp() {
-        return TypeSpec::getIsApp;
+        return t -> Boolean.TRUE.equals(t.getIsApp());
     }
 
     public static Predicate<TypeSpec> isNotAbstract() {
-        return t -> !t.getIsAbstract();
+        return t -> !Boolean.TRUE.equals(t.getIsAbstract());
     }
-
 
     @Override
     @SneakyThrows
@@ -295,10 +293,11 @@ public class XmEntitySpecService implements RefreshableConfiguration {
     @IgnoreLogginAspect
     public Optional<FunctionSpec> findFunction(String functionKey) {
 
-        Map<String, FunctionSpec> functions = xmEntitySpecContextService.functionsByTenant(getTenantKeyValue());
+        String tenantKey = getTenantKeyValue();
+        Map<String, FunctionSpec> functions = xmEntitySpecContextService.functionsByTenant(tenantKey);
         return Optional.of(functions)
-                .map(fs -> fs.get(functionKey))
-                .or(() -> functions.values().stream()
+            .map(fs -> fs.get(functionKey))
+                .or(() -> xmEntitySpecContextService.functionsByTenantOrdered(tenantKey).stream()
                         .filter(fs -> fs.getPath() != null)
                         .filter(fs -> matcher.match(fs.getPath(), functionKey))
                         .findFirst());

@@ -108,6 +108,8 @@ public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
     private static final String KEY5 = "TYPE1-OTHER";
 
     private static final String KEY6 = "TYPE3";
+    private static final String KEY7 = "TYPE_WITH_NULL_IS_APP_AND_IS_ABSTRACT";
+
     private static final String PRIVILEGES_PATH = "/config/tenants/TEST/custom-privileges.yml";
     private static final String RELATIVE_FORMS_PATH_TO_FILE = "xmentityspec/forms/form-specification-int.json";
     private static final String RELATIVE_DEFINITIONS_PATH_TO_FILE = "xmentityspec/definitions/definition-specification-int.json";
@@ -207,14 +209,14 @@ public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
         prepareConfig(newHashMap());
         List<TypeSpec> types = xmEntitySpecService.findAllTypes();
         assertNotNull(types);
-        assertEquals(5, types.size());
+        assertEquals(6, types.size());
 
         List<String> keys = types.stream().map(TypeSpec::getKey).collect(Collectors.toList());
-        assertThat(keys).containsExactlyInAnyOrder(KEY1, KEY2, KEY3, KEY5, KEY6);
+        assertThat(keys).containsExactlyInAnyOrder(KEY1, KEY2, KEY3, KEY5, KEY6, KEY7);
 
         List<FunctionSpec> functions = flattenFunctions(types);
 
-        assertThat(functions.size()).isEqualTo(6);
+        assertThat(functions.size()).isEqualTo(8);
 
     }
 
@@ -248,10 +250,10 @@ public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
 
         List<TypeSpec> types = xmEntitySpecService.findAllTypes();
         assertNotNull(types);
-        assertEquals(5, types.size());
+        assertEquals(6, types.size());
 
         List<String> keys = types.stream().map(TypeSpec::getKey).collect(Collectors.toList());
-        assertThat(keys).containsExactlyInAnyOrder(KEY1, KEY2, KEY3, KEY5, KEY6);
+        assertThat(keys).containsExactlyInAnyOrder(KEY1, KEY2, KEY3, KEY5, KEY6, KEY7);
 
         List<FunctionSpec> functions = flattenFunctions(types);
 
@@ -269,7 +271,7 @@ public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
         assertThat(keys).containsExactlyInAnyOrder(KEY1, KEY2, KEY6);
 
         List<FunctionSpec> functions = flattenFunctions(types);
-        assertThat(functions.size()).isEqualTo(4);
+        assertThat(functions.size()).isEqualTo(6);
     }
 
     @Test
@@ -293,13 +295,13 @@ public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
         prepareConfig(newHashMap());
         List<TypeSpec> types = xmEntitySpecService.findAllNonAbstractTypes();
         assertNotNull(types);
-        assertEquals(4, types.size());
+        assertEquals(5, types.size());
 
         List<String> keys = types.stream().map(TypeSpec::getKey).collect(Collectors.toList());
-        assertThat(keys).containsExactlyInAnyOrder(KEY2, KEY3, KEY5, KEY6);
+        assertThat(keys).containsExactlyInAnyOrder(KEY2, KEY3, KEY5, KEY6, KEY7);
 
         List<FunctionSpec> functions = flattenFunctions(types);
-        assertThat(functions.size()).isEqualTo(5);
+        assertThat(functions.size()).isEqualTo(7);
     }
 
     @Test
@@ -309,10 +311,10 @@ public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
 
         List<TypeSpec> types = xmEntitySpecService.findAllNonAbstractTypes();
         assertNotNull(types);
-        assertEquals(4, types.size());
+        assertEquals(5, types.size());
 
         List<String> keys = types.stream().map(TypeSpec::getKey).collect(Collectors.toList());
-        assertThat(keys).containsExactlyInAnyOrder(KEY2, KEY3, KEY5, KEY6);
+        assertThat(keys).containsExactlyInAnyOrder(KEY2, KEY3, KEY5, KEY6, KEY7);
 
         List<FunctionSpec> functions = flattenFunctions(types);
         assertThat(functions.size()).isEqualTo(0);
@@ -332,10 +334,10 @@ public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
     public void testFindNonAbstractTypesByRootPrefix() {
         List<TypeSpec> types = xmEntitySpecService.findNonAbstractTypesByPrefix(ROOT_KEY);
         assertNotNull(types);
-        assertEquals(4, types.size());
+        assertEquals(5, types.size());
 
         List<String> keys = types.stream().map(TypeSpec::getKey).collect(Collectors.toList());
-        assertThat(keys).containsExactlyInAnyOrder(KEY2, KEY3, KEY5, KEY6);
+        assertThat(keys).containsExactlyInAnyOrder(KEY2, KEY3, KEY5, KEY6, KEY7);
     }
 
     @Test
@@ -412,7 +414,7 @@ public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
     public void testGetAllKeys() {
         Map<String, Map<String, Set<String>>> keys = xmEntitySpecService.getAllKeys();
         assertNotNull(keys);
-        assertEquals(5, keys.size());
+        assertEquals(6, keys.size());
         assertEquals(1, keys.get("TYPE1").get("LinkSpec").size());
         assertEquals(3, keys.get("TYPE1").get("StateSpec").size());
     }
@@ -754,6 +756,21 @@ public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
         assertNotNull(functionSpec);
         assertEquals(functionSpec.getKey(), "in/package/FUNCTION4");
         assertEquals(functionSpec.getPath(), "call/function/by-path/{id}/and/param/{param}");
+    }
+
+    @Test
+    public void testFindFunctionByMostSpecificPath() {
+        // init typespecs
+        xmEntitySpecService.getTypeSpecs();
+        FunctionSpec functionSpec = xmEntitySpecService.findFunction("v1/billing-cycles/123/action").orElse(null);
+        assertNotNull(functionSpec);
+        assertEquals(functionSpec.getKey(), "v1/billingcycles/manage");
+        assertEquals(functionSpec.getPath(), "v1/billing-cycles/{billingCycleId}/{actionKey}");
+
+        functionSpec = xmEntitySpecService.findFunction("v1/billing-cycles/325/products").orElse(null);
+        assertNotNull(functionSpec);
+        assertEquals(functionSpec.getKey(), "v1/billingcycles/products");
+        assertEquals(functionSpec.getPath(), "v1/billing-cycles/{billingCycleId}/products");
     }
 
     @Test

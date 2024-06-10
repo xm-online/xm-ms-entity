@@ -15,7 +15,6 @@ import com.icthh.xm.ms.entity.AbstractSpringBootTest;
 import com.icthh.xm.ms.entity.domain.Vote;
 import com.icthh.xm.ms.entity.repository.VoteRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
-import com.icthh.xm.ms.entity.repository.search.PermittedSearchRepository;
 import com.icthh.xm.ms.entity.service.VoteService;
 import com.icthh.xm.ms.entity.service.impl.StartUpdateDateGenerationStrategy;
 import org.junit.After;
@@ -69,9 +68,6 @@ public class VoteResourceExtendedIntTest extends AbstractSpringBootTest {
     private PermittedRepository permittedRepository;
 
     @Autowired
-    private PermittedSearchRepository permittedSearchRepository;
-
-    @Autowired
     private TenantContextHolder tenantContextHolder;
 
     @Autowired
@@ -98,7 +94,6 @@ public class VoteResourceExtendedIntTest extends AbstractSpringBootTest {
         when(startUpdateDateGenerationStrategy.generateStartDate()).thenReturn(MOCKED_ENTRY_DATE);
 
         voteService = new VoteService(permittedRepository,
-                                      permittedSearchRepository,
                                       voteRepository,
                                       startUpdateDateGenerationStrategy,
                                       xmEntityRepository);

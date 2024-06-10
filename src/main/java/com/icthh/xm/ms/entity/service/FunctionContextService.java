@@ -40,13 +40,4 @@ public interface FunctionContextService {
      */
     void delete(Long id);
 
-    /**
-     * Search for the functionContext corresponding to the query.
-     *
-     * @param query the query of the search
-     * @param privilegeKey the privilege key
-     * @return the list of entities
-     */
-    List<FunctionContext> search(String query, String privilegeKey);
-
 }

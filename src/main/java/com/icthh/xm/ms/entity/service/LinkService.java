@@ -5,8 +5,6 @@ import com.icthh.xm.commons.lep.LogicExtensionPoint;
 import com.icthh.xm.commons.lep.spring.LepService;
 import com.icthh.xm.commons.permission.annotation.FindWithPermission;
 import com.icthh.xm.commons.permission.annotation.PrivilegeDescription;
-import com.icthh.xm.ms.entity.config.XmEntityTenantConfigService;
-import com.icthh.xm.ms.entity.config.XmEntityTenantConfigService.XmEntityTenantConfig;
 import com.icthh.xm.ms.entity.domain.Link;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.lep.keyresolver.LinkTypeKeyResolver;
@@ -14,7 +12,6 @@ import com.icthh.xm.ms.entity.projection.LinkProjection;
 import com.icthh.xm.ms.entity.repository.LinkPermittedRepository;
 import com.icthh.xm.ms.entity.repository.LinkRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
-import com.icthh.xm.ms.entity.repository.search.PermittedSearchRepository;
 import com.icthh.xm.ms.entity.security.access.DynamicPermissionCheckService;
 import com.icthh.xm.ms.entity.service.impl.StartUpdateDateGenerationStrategy;
 import lombok.RequiredArgsConstructor;
@@ -45,8 +42,6 @@ public class LinkService {
     private final LinkRepository linkRepository;
 
     private final LinkPermittedRepository permittedRepository;
-
-    private final PermittedSearchRepository permittedSearchRepository;
 
     private final StartUpdateDateGenerationStrategy startUpdateDateGenerationStrategy;
 
@@ -190,21 +185,6 @@ public class LinkService {
     public void deleteByTypeKey(Long id, Link link) {
         permissionCheckService.checkContextPermission(LINK_DELETE, "LINK.DELETE", link.getTypeKey());
         linkRepository.delete(link);
-    }
-
-    /**
-     * Search for the link corresponding to the query.
-     *
-     *  @param query the query of the search
-     *  @param pageable the pagination information
-     *  @return the list of entities
-     */
-    @Deprecated
-    @Transactional(readOnly = true)
-    @FindWithPermission("LINK.SEARCH")
-    @PrivilegeDescription("Privilege to search for the link corresponding to the query")
-    public Page<Link> search(String query, Pageable pageable, String privilegeKey) {
-        return permittedSearchRepository.search(query, pageable, Link.class, privilegeKey);
     }
 
     @Transactional(readOnly = true)

@@ -11,7 +11,6 @@ import com.icthh.xm.ms.entity.domain.Event;
 import com.icthh.xm.ms.entity.domain.spec.CalendarSpec;
 import com.icthh.xm.ms.entity.repository.CalendarRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
-import com.icthh.xm.ms.entity.repository.search.PermittedSearchRepository;
 import com.icthh.xm.ms.entity.service.impl.StartUpdateDateGenerationStrategy;
 import com.icthh.xm.ms.entity.service.query.EventQueryService;
 import com.icthh.xm.ms.entity.service.query.filter.EventFilter;
@@ -33,7 +32,6 @@ public class CalendarService {
 
     private final CalendarRepository calendarRepository;
     private final PermittedRepository permittedRepository;
-    private final PermittedSearchRepository permittedSearchRepository;
     private final StartUpdateDateGenerationStrategy startUpdateDateGenerationStrategy;
     private final XmEntityRepository xmEntityRepository;
     private final EventQueryService eventQueryService;
@@ -105,21 +103,6 @@ public class CalendarService {
     @LogicExtensionPoint("Delete")
     public void delete(Long id) {
         calendarRepository.deleteById(id);
-    }
-
-    /**
-     * Search for the calendar corresponding to the query.
-     *
-     *  @param query the query of the search
-     *  @return the list of entities
-     */
-    @Deprecated
-    @Transactional(readOnly = true)
-    @FindWithPermission("CALENDAR.SEARCH")
-    @LogicExtensionPoint("Search")
-    @PrivilegeDescription("Privilege to search for the calendar corresponding to the query")
-    public List<Calendar> search(String query, String privilegeKey) {
-        return permittedSearchRepository.search(query, Calendar.class, privilegeKey);
     }
 
     @Transactional(readOnly = true)

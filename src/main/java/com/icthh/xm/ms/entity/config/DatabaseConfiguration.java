@@ -1,5 +1,6 @@
 package com.icthh.xm.ms.entity.config;
 
+import com.icthh.xm.commons.domainevent.db.config.DatabaseSourceInterceptorCustomizer;
 import com.icthh.xm.commons.migration.db.XmMultiTenantSpringLiquibase;
 import com.icthh.xm.commons.migration.db.XmSpringLiquibase;
 import com.icthh.xm.commons.migration.db.tenant.SchemaResolver;
@@ -26,6 +27,7 @@ import org.springframework.core.env.Environment;
 import org.springframework.core.env.Profiles;
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
+import org.springframework.lang.Nullable;
 import org.springframework.orm.jpa.JpaVendorAdapter;
 import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
 import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
@@ -37,6 +39,9 @@ import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import static com.icthh.xm.ms.entity.config.Constants.CHANGE_LOG_PATH;
+import static org.hibernate.cfg.AvailableSettings.JPA_VALIDATION_FACTORY;
 
 @Configuration
 @EnableJpaRepositories(value = "com.icthh.xm.ms.entity.repository",
@@ -119,7 +124,8 @@ public class DatabaseConfiguration {
     public LocalContainerEntityManagerFactoryBean entityManagerFactory(DataSource dataSource,
                                                                        MultiTenantConnectionProvider multiTenantConnectionProviderImpl,
                                                                        CurrentTenantIdentifierResolver currentTenantIdentifierResolverImpl,
-                                                                       LocalValidatorFactoryBean localValidatorFactoryBean) {
+                                                                       LocalValidatorFactoryBean localValidatorFactoryBean,
+                                                                       @Nullable DatabaseSourceInterceptorCustomizer databaseSourceInterceptorCustomizer) {
         Map<String, Object> properties = new HashMap<>(jpaProperties.getProperties());
         properties.put(org.hibernate.cfg.Environment.MULTI_TENANT, MultiTenancyStrategy.SCHEMA);
         properties.put(org.hibernate.cfg.Environment.MULTI_TENANT_CONNECTION_PROVIDER,
@@ -128,6 +134,10 @@ public class DatabaseConfiguration {
             currentTenantIdentifierResolverImpl);
 
         properties.put(JPA_VALIDATION_FACTORY, localValidatorFactoryBean);
+
+        if (databaseSourceInterceptorCustomizer != null) {
+            databaseSourceInterceptorCustomizer.customize(properties);
+        }
 
         LocalContainerEntityManagerFactoryBean em = new LocalContainerEntityManagerFactoryBean();
         em.setDataSource(dataSource);

@@ -16,6 +16,7 @@ import com.icthh.xm.commons.tenant.TenantContextUtils;
 import com.icthh.xm.lep.api.LepManager;
 import com.icthh.xm.ms.entity.AbstractSpringBootTest;
 import com.icthh.xm.ms.entity.config.ApplicationProperties;
+import com.icthh.xm.ms.entity.config.amazon.AmazonS3BucketNameFactory;
 import com.icthh.xm.ms.entity.config.amazon.AmazonS3Template;
 import com.icthh.xm.ms.entity.domain.Attachment;
 import com.icthh.xm.ms.entity.domain.Content;
@@ -57,6 +58,8 @@ public class S3StorageRepositoryIntTest extends AbstractSpringBootTest {
     private LepManager lepManager;
     @Autowired
     private XmAuthenticationContextHolder authContextHolder;
+    @Autowired
+    private AmazonS3BucketNameFactory amazonS3BucketNameFactory;
 
     private S3StorageRepository s3StorageRepository;
 
@@ -88,7 +91,7 @@ public class S3StorageRepositoryIntTest extends AbstractSpringBootTest {
 
         TenantContextUtils.setTenant(tenantContextHolder, "TEST_TENANT");
 
-        AmazonS3Template s3Template = new AmazonS3Template(applicationProperties, this::createS3Client);
+        AmazonS3Template s3Template = new AmazonS3Template(applicationProperties, this::createS3Client, amazonS3BucketNameFactory);
         s3StorageRepository = new S3StorageRepository(applicationProperties, s3Template, tenantContextHolder);
 
         lepManager.beginThreadContext(ctx -> {

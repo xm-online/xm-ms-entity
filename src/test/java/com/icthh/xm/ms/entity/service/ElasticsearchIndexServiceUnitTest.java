@@ -1,5 +1,12 @@
 package com.icthh.xm.ms.entity.service;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.notNull;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.icthh.xm.commons.permission.service.PermissionCheckService;
 import com.icthh.xm.commons.tenant.PlainTenant;
@@ -8,6 +15,7 @@ import com.icthh.xm.commons.tenant.TenantContext;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantKey;
 import com.icthh.xm.ms.entity.AbstractUnitTest;
+import com.icthh.xm.ms.entity.config.ApplicationProperties;
 import com.icthh.xm.ms.entity.config.IndexConfiguration;
 import com.icthh.xm.ms.entity.config.MappingConfiguration;
 import com.icthh.xm.ms.entity.domain.XmEntity;
@@ -23,6 +31,7 @@ import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import static org.mockito.ArgumentMatchers.any;
 import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -56,14 +65,24 @@ public class ElasticsearchIndexServiceUnitTest extends AbstractUnitTest {
     @Mock
     private EntityManager entityManager;
     @Mock
+    private ApplicationProperties applicationProperties;
+    @Mock
     TenantContextHolder tenantContextHolder;
     @Mock
     MappingConfiguration mappingConfiguration;
     @Mock
     IndexConfiguration indexConfiguration;
 
+    @Mock
+    XmEntitySpecService xmEntitySpecService;
+
     @Before
     public void before() {
+        MockitoAnnotations.initMocks(this);
+        when(applicationProperties.getElasticBatchSize()).thenReturn(100);
+        service = new ElasticsearchIndexService(xmEntityRepository, xmEntitySearchRepository, elasticsearchTemplate,
+            tenantContextHolder, mappingConfiguration, indexConfiguration, null, entityManager, applicationProperties,
+            xmEntitySpecService);
         MockitoAnnotations.initMocks(this);
 
         Class<XmEntity> entityClass = XmEntity.class;
@@ -113,7 +132,7 @@ public class ElasticsearchIndexServiceUnitTest extends AbstractUnitTest {
         verify(elasticsearchTemplateWrapper).createIndex("xm_xmentity");
         verify(elasticsearchTemplateWrapper).putMapping(entityClass);
 
-        verify(xmEntityRepository, times(4)).count(any());
+        verify(xmEntityRepository, times(4)).count(notNull());
 
         ArgumentCaptor<List> list = ArgumentCaptor.forClass(List.class);
         verify(xmEntitySearchRepository).saveAll(list.capture());

@@ -3,6 +3,7 @@ package com.icthh.xm.ms.entity.service.spec;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.github.fge.jsonschema.main.JsonSchema;
+import com.icthh.xm.commons.logging.aop.IgnoreLogginAspect;
 import com.icthh.xm.ms.entity.config.XmEntityTenantConfigService;
 import com.icthh.xm.ms.entity.domain.spec.FunctionSpec;
 import com.icthh.xm.ms.entity.domain.spec.TypeSpec;
@@ -29,6 +30,7 @@ import static org.springframework.util.CollectionUtils.isEmpty;
 
 @Slf4j
 @Service
+@IgnoreLogginAspect
 public class XmEntitySpecContextService {
 
     private final String maxFileSize;
@@ -76,6 +78,10 @@ public class XmEntitySpecContextService {
         return functionByTenantService.functionsByTenant(tenantKey);
     }
 
+    public List<FunctionSpec> functionsByTenantOrdered(String tenantKey) {
+        return functionByTenantService.functionsByTenantOrdered(tenantKey);
+    }
+
     @SneakyThrows
     public void updateByFileState(String updatedKey, String config, String tenant) {
         var byFiles = typesByTenantByFile.computeIfAbsent(tenant, key -> new LinkedHashMap<>());
@@ -109,7 +115,9 @@ public class XmEntitySpecContextService {
 
     private LinkedHashMap<String, TypeSpec> readEntitySpec(String tenant) {
         var tenantEntitySpec = new LinkedHashMap<String, TypeSpec>();
-        typesByTenantByFile.get(tenant).values().stream().map(this::toTypeSpecsMap).forEach(tenantEntitySpec::putAll);
+        typesByTenantByFile.get(tenant).values().stream()
+            .map(this::toTypeSpecsMap)
+            .forEach(tenantEntitySpec::putAll);
         return tenantEntitySpec;
     }
 

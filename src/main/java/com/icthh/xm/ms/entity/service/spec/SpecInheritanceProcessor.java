@@ -6,6 +6,8 @@ import com.icthh.xm.ms.entity.config.XmEntityTenantConfigService;
 import com.icthh.xm.ms.entity.domain.ext.TypeSpecParameter;
 import com.icthh.xm.ms.entity.domain.spec.TypeSpec;
 import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.Comparator;
@@ -26,6 +28,7 @@ import static com.icthh.xm.ms.entity.util.CustomCollectionUtils.union;
 import static java.lang.Boolean.FALSE;
 import static java.lang.Boolean.TRUE;
 
+@Slf4j
 public class SpecInheritanceProcessor {
 
     private static final String TYPE_SEPARATOR_REGEXP = "\\.";
@@ -56,6 +59,7 @@ public class SpecInheritanceProcessor {
                 }
             }
         }
+        log.info("processed {} types", CollectionUtils.size(types));
     }
 
     /**

@@ -1,13 +1,13 @@
 package com.icthh.xm.ms.entity.config;
 
 import com.icthh.xm.commons.lep.TenantScriptStorage;
-import java.util.List;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
 import java.util.Collections;
+import java.util.List;
 
 /**
  * Properties specific to JHipster.
@@ -39,6 +39,7 @@ public class ApplicationProperties {
     private Integer tenantClientReadTimeout;
     private String kafkaSystemTopic;
     private String kafkaSystemQueue;
+    private Boolean autoSystemQueueEnabled;
     private Integer kafkaMetadataMaxAge;
     private String emailPathPattern;
 
@@ -53,6 +54,7 @@ public class ApplicationProperties {
     private String webappName;
     private String dbSchemaSuffix;
     private String elasticSchemaSuffix;
+    private Integer elasticBatchSize;
 
     private Integer requestCacheLimit;
     private List<String> requestCacheIgnoredPathPatternList = Collections.emptyList();
@@ -60,6 +62,8 @@ public class ApplicationProperties {
     private Integer periodicMetricPoolSize;
 
     private KafkaMetric kafkaMetric;
+
+    private DomainEvent domainEvent;
 
     @Getter
     @Setter
@@ -109,7 +113,8 @@ public class ApplicationProperties {
     public static class Lep {
         private TenantScriptStorage tenantScriptStorage;
         private String lepResourcePathPattern;
-        private Boolean fullRecompileOnLepUpdate;
+        private Boolean warmupScripts;
+        private List<String> tenantsWithLepWarmup;
     }
 
     @Getter
@@ -119,4 +124,10 @@ public class ApplicationProperties {
        private int connectionTimeoutTopic;
        List<String> metricTopics;
     }
+    @Getter
+    @Setter
+    public static class DomainEvent {
+        private boolean enabled;
+    }
+
 }

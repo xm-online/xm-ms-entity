@@ -18,6 +18,7 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
+import org.springframework.http.MediaType;
 import org.springframework.http.converter.ByteArrayHttpMessageConverter;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.mock.web.MockMultipartFile;
@@ -91,6 +92,7 @@ public class FunctionResourceIntTest extends AbstractSpringBootTest {
     public void setup() {
         MockitoAnnotations.initMocks(this);
 
+        TenantContextUtils.setTenant(tenantContextHolder, "RESINTTEST");
         lepManager.beginThreadContext(ctx -> {
             ctx.setValue(THREAD_CONTEXT_KEY_TENANT_CONTEXT, tenantContextHolder.getContext());
             ctx.setValue(THREAD_CONTEXT_KEY_AUTH_CONTEXT, authContextHolder.getContext());
@@ -107,6 +109,8 @@ public class FunctionResourceIntTest extends AbstractSpringBootTest {
     @After
     public void destroy(){
         initLeps(false);
+        lepManager.endThreadContext();
+        tenantContextHolder.getPrivilegedContext().destroyCurrentContext();
     }
 
     void initLeps(boolean loadData) {
@@ -215,6 +219,31 @@ public class FunctionResourceIntTest extends AbstractSpringBootTest {
         mockMvc.perform(get(functionWithEntityApi + functionWithEntityKey))
             .andDo(print())
             .andExpect(jsonPath("$.data.functionKey").value(functionWithEntityKey))
+            .andExpect(status().is2xxSuccessful());
+    }
+
+    @Test
+    @Transactional
+    @SneakyThrows
+    public void testFunctionWithPackageAndContentTypeApplicationJson() {
+        testFunctionWithPackageAndContentType(MediaType.APPLICATION_JSON);
+        testFunctionWithPackageAndContentType(MediaType.APPLICATION_JSON_UTF8);
+    }
+
+    @Test
+    @Transactional
+    @SneakyThrows
+    public void testFunctionWithPackageAndContentTypePostForm() {
+        testFunctionWithPackageAndContentType(MediaType.APPLICATION_FORM_URLENCODED);
+    }
+
+    public void testFunctionWithPackageAndContentType(MediaType mediaType) throws Exception {
+        String functionApi = "/api/functions/";
+        String functionKey = "package/FUNCTION.PACKAGE-TEST";
+        mockMvc.perform(post(functionApi + functionKey).contentType(mediaType))
+            .andDo(print())
+            .andExpect(jsonPath("$.data.functionKey").value(functionKey))
+            .andExpect(header().doesNotExist("location"))
             .andExpect(status().is2xxSuccessful());
     }
 

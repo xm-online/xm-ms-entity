@@ -17,9 +17,13 @@ import static com.icthh.xm.ms.entity.service.impl.FunctionServiceImpl.XM_ENITITY
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({"key", "name", "actionName", "allowedStateKeys", "withEntityId", "isShowFormWithoutData", "inputSpec", "inputForm",
-    "contextDataSpec", "contextDataForm", "showResponse", "onlyData", "validateFunctionInput"})
+    "contextDataSpec", "contextDataForm", "showResponse", "onlyData", "validateFunctionInput", "txType"})
 @Data
 public class FunctionSpec {
+
+    public enum FunctionTxTypes {
+        NO_TX, READ_ONLY, TX
+    }
 
     /**
      * Unique in tenant function key.
@@ -103,6 +107,9 @@ public class FunctionSpec {
 
     @JsonProperty("anonymous")
     private Boolean anonymous;
+
+    @JsonProperty("txType")
+    private FunctionTxTypes txType = FunctionTxTypes.TX;
 
     public Boolean getSaveFunctionContext() {
         return saveFunctionContext == null ? false : saveFunctionContext;
