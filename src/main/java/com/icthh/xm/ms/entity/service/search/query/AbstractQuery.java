@@ -1,0 +1,64 @@
+/*
+ * Copyright 2013-2019 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package com.icthh.xm.ms.entity.service.search.query;
+
+import com.icthh.xm.ms.entity.service.search.filter.SourceFilter;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+
+import org.springframework.data.domain.Sort;
+import org.springframework.util.Assert;
+
+public abstract class AbstractQuery implements Query {
+
+    protected final int DEFAULT_PAGE_SIZE = 10;
+    protected Pageable pageable = PageRequest.of(0, DEFAULT_PAGE_SIZE);
+    protected Sort sort;
+    protected SourceFilter sourceFilter;
+
+    @Override
+    public Pageable getPageable() {
+        return this.pageable;
+    }
+
+    @Override
+    public final <T extends Query> T setPageable(Pageable pageable) {
+        Assert.notNull(pageable, "Pageable must not be null!");
+
+        this.pageable = pageable;
+
+        return (T) this.addSort(pageable.getSort());
+    }
+
+    @Override
+    public final <T extends Query> T addSort(Sort sort) {
+        if (sort == null) {
+            return (T) this;
+        }
+
+        if (this.sort == null) {
+            this.sort = sort;
+        } else {
+            this.sort = this.sort.and(sort);
+        }
+
+        return (T) this;
+    }
+
+    public void addSourceFilter(SourceFilter sourceFilter) {
+        this.sourceFilter = sourceFilter;
+    }
+}
