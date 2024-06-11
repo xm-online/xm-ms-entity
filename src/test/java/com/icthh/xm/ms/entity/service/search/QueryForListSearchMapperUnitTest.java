@@ -1,10 +1,10 @@
 package com.icthh.xm.ms.entity.service.search;
 
 import com.icthh.xm.ms.entity.domain.XmEntity;
+import com.icthh.xm.ms.entity.service.search.builder.NativeSearchQueryBuilder;
 import org.junit.jupiter.api.Test;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.elasticsearch.core.query.FetchSourceFilter;
-import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 
 public class QueryForListSearchMapperUnitTest {
 
