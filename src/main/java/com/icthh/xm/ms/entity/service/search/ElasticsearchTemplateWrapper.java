@@ -6,6 +6,7 @@ import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.repository.search.translator.SpelToElasticTranslator;
 import com.icthh.xm.ms.entity.service.dto.SearchDto;
+import com.icthh.xm.ms.entity.service.search.query.SearchQuery;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -42,7 +43,7 @@ import org.springframework.data.elasticsearch.core.query.IndexQuery;
 import org.springframework.data.elasticsearch.core.query.MoreLikeThisQuery;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQuery;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
-import org.springframework.data.elasticsearch.core.query.SearchQuery;
+//import org.springframework.data.elasticsearch.core.query.SearchQuery;
 import org.springframework.data.elasticsearch.core.query.StringQuery;
 import org.springframework.data.elasticsearch.core.query.UpdateQuery;
 import org.springframework.data.util.CloseableIterator;
@@ -329,6 +330,7 @@ public class ElasticsearchTemplateWrapper implements ElasticsearchOperations {
 
     @Override
     public <T> List<T> queryForList(SearchQuery query, Class<T> clazz) {
+        // TODO Add implementation
         return elasticsearchTemplate.queryForList(query, clazz);
     }
 

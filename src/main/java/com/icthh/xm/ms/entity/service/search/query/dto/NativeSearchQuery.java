@@ -17,12 +17,29 @@ package com.icthh.xm.ms.entity.service.search.query.dto;
 
 import com.icthh.xm.ms.entity.service.search.builder.QueryBuilder;
 import com.icthh.xm.ms.entity.service.search.query.AbstractQuery;
+import com.icthh.xm.ms.entity.service.search.query.SearchQuery;
 
-public class NativeSearchQuery extends AbstractQuery {
+public class NativeSearchQuery extends AbstractQuery implements SearchQuery {
 
     private QueryBuilder query;
+    private QueryBuilder filter;
 
     public NativeSearchQuery(QueryBuilder query) {
         this.query = query;
+    }
+
+    public NativeSearchQuery(QueryBuilder query, QueryBuilder filter) {
+        this.query = query;
+        this.filter = filter;
+    }
+
+    @Override
+    public QueryBuilder getQuery() {
+        return query;
+    }
+
+    @Override
+    public QueryBuilder getFilter() {
+        return filter;
     }
 }
