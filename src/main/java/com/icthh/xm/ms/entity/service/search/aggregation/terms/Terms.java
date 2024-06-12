@@ -16,17 +16,18 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package com.icthh.xm.ms.entity.service.search.builder.aggregation;
+package com.icthh.xm.ms.entity.service.search.aggregation.terms;
 
-import com.icthh.xm.ms.entity.service.search.builder.aggregation.support.ValuesSource;
-import com.icthh.xm.ms.entity.service.search.builder.aggregation.support.ValuesSourceType;
-import com.icthh.xm.ms.entity.service.search.builder.aggregation.support.ValueType;
+import java.util.List;
 
-public class StatsAggregationBuilder extends ValuesSourceAggregationBuilder<ValuesSource.Numeric, StatsAggregationBuilder> {
+public interface Terms {
 
-    public static final String NAME = "stats";
+    interface Bucket {
 
-    public StatsAggregationBuilder(String name) {
-        super(name, ValuesSourceType.NUMERIC, ValueType.NUMERIC);
+        Number getKeyAsNumber();
+        String getKeyAsString();
     }
+
+    List<? extends Bucket> getBuckets();
 }
+

@@ -16,17 +16,12 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package com.icthh.xm.ms.entity.service.search.builder.aggregation;
+package com.icthh.xm.ms.entity.service.search.builder.aggregation.support;
 
-import com.icthh.xm.ms.entity.service.search.builder.aggregation.support.ValuesSource;
-import com.icthh.xm.ms.entity.service.search.builder.aggregation.support.ValuesSourceType;
-import com.icthh.xm.ms.entity.service.search.builder.aggregation.support.ValueType;
+public abstract class ValuesSource {
 
-public class StatsAggregationBuilder extends ValuesSourceAggregationBuilder<ValuesSource.Numeric, StatsAggregationBuilder> {
+    public abstract static class Numeric extends ValuesSource {
 
-    public static final String NAME = "stats";
-
-    public StatsAggregationBuilder(String name) {
-        super(name, ValuesSourceType.NUMERIC, ValueType.NUMERIC);
     }
+
 }

@@ -15,9 +15,9 @@
  */
 package com.icthh.xm.ms.entity.service.search.builder;
 
+import com.icthh.xm.ms.entity.service.search.builder.aggregation.AbstractAggregationBuilder;
 import com.icthh.xm.ms.entity.service.search.query.dto.NativeSearchQuery;
 import com.icthh.xm.ms.entity.service.search.filter.SourceFilter;
-import org.elasticsearch.search.aggregations.AbstractAggregationBuilder;
 import org.springframework.data.domain.Pageable;
 
 import java.util.ArrayList;

@@ -1,10 +1,10 @@
 package com.icthh.xm.ms.entity.service.search.builder.aggregation;
 
 import com.icthh.xm.ms.entity.service.search.builder.aggregation.support.ValueType;
+import com.icthh.xm.ms.entity.service.search.builder.aggregation.support.ValuesSource;
 import com.icthh.xm.ms.entity.service.search.builder.aggregation.support.ValuesSourceType;
 
-
-public class TermsAggregationBuilder extends ValuesSourceAggregationBuilder<ValuesSourceType, TermsAggregationBuilder> {
+public class TermsAggregationBuilder extends ValuesSourceAggregationBuilder<ValuesSource, TermsAggregationBuilder> {
 
     protected static final TermsAggregator.BucketCountThresholds DEFAULT_BUCKET_COUNT_THRESHOLDS = new TermsAggregator.BucketCountThresholds(1L, 0L, 10, -1);
 

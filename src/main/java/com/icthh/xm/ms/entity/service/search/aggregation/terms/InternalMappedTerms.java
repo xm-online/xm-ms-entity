@@ -16,17 +16,20 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package com.icthh.xm.ms.entity.service.search.builder.aggregation;
+package com.icthh.xm.ms.entity.service.search.aggregation.terms;
 
-import com.icthh.xm.ms.entity.service.search.builder.aggregation.support.ValuesSource;
-import com.icthh.xm.ms.entity.service.search.builder.aggregation.support.ValuesSourceType;
-import com.icthh.xm.ms.entity.service.search.builder.aggregation.support.ValueType;
+import java.util.List;
 
-public class StatsAggregationBuilder extends ValuesSourceAggregationBuilder<ValuesSource.Numeric, StatsAggregationBuilder> {
+public abstract class InternalMappedTerms<A extends InternalTerms<A, B>, B extends InternalTerms.Bucket<B>> extends InternalTerms<A, B> {
 
-    public static final String NAME = "stats";
+    protected final List<B> buckets;
 
-    public StatsAggregationBuilder(String name) {
-        super(name, ValuesSourceType.NUMERIC, ValueType.NUMERIC);
+    protected InternalMappedTerms(List<B> buckets) {
+        this.buckets = buckets;
+    }
+
+    @Override
+    public List<B> getBuckets() {
+        return buckets;
     }
 }
