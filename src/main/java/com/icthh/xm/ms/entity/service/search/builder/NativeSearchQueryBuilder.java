@@ -17,13 +17,20 @@ package com.icthh.xm.ms.entity.service.search.builder;
 
 import com.icthh.xm.ms.entity.service.search.query.dto.NativeSearchQuery;
 import com.icthh.xm.ms.entity.service.search.filter.SourceFilter;
+import org.elasticsearch.search.aggregations.AbstractAggregationBuilder;
 import org.springframework.data.domain.Pageable;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import static org.springframework.util.CollectionUtils.isEmpty;
 
 public class NativeSearchQueryBuilder {
 
     private QueryBuilder queryBuilder;
     private Pageable pageable = Pageable.unpaged();
     private SourceFilter sourceFilter;
+    private List<AbstractAggregationBuilder> aggregationBuilders = new ArrayList<>();
 
     public NativeSearchQueryBuilder withQuery(QueryBuilder queryBuilder) {
         this.queryBuilder = queryBuilder;
@@ -40,12 +47,21 @@ public class NativeSearchQueryBuilder {
         return this;
     }
 
+    public NativeSearchQueryBuilder addAggregation(AbstractAggregationBuilder aggregationBuilder) {
+        this.aggregationBuilders.add(aggregationBuilder);
+        return this;
+    }
+
     public NativeSearchQuery build() {
         NativeSearchQuery nativeSearchQuery = new NativeSearchQuery(queryBuilder);
         nativeSearchQuery.setPageable(pageable);
 
         if (sourceFilter != null) {
             nativeSearchQuery.addSourceFilter(sourceFilter);
+        }
+
+        if (!isEmpty(aggregationBuilders)) {
+            nativeSearchQuery.setAggregations(aggregationBuilders);
         }
 
         return nativeSearchQuery;
