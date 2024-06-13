@@ -1,6 +1,6 @@
 /*
  * Original version of this file is located at:
- * https://github.com/elastic/elasticsearch/blob/v6.4.3/server/src/main/java/org/elasticsearch/index/query/CommonTermsQueryBuilder.java
+ * https://github.com/elastic/elasticsearch/blob/v6.4.3/server/src/main/java/org/elasticsearch/index/query/BaseTermQueryBuilder.java
  *
  * Licensed to Elasticsearch under one or more contributor
  * license agreements. See the NOTICE file distributed with
@@ -20,24 +20,27 @@
  * under the License.
  */
 
+
 package com.icthh.xm.ms.entity.service.search.builder;
 
 import com.icthh.xm.ms.entity.service.search.common.Strings;
 
-public class CommonTermsQueryBuilder extends AbstractQueryBuilder<CommonTermsQueryBuilder> {
+public abstract class BaseTermQueryBuilder<QB extends BaseTermQueryBuilder<QB>> extends AbstractQueryBuilder<QB> {
 
-    private final String fieldName;
+    /** Name of field to match against. */
+    protected final String fieldName;
 
-    private final Object text;
+    /** Value to find matches for. */
+    protected final Object value;
 
-    public CommonTermsQueryBuilder(String fieldName, Object text) {
+    public BaseTermQueryBuilder(String fieldName, Object value) {
         if (Strings.isEmpty(fieldName)) {
             throw new IllegalArgumentException("field name is null or empty");
         }
-        if (text == null) {
-            throw new IllegalArgumentException("text cannot be null");
+        if (value == null) {
+            throw new IllegalArgumentException("value cannot be null");
         }
         this.fieldName = fieldName;
-        this.text = text;
+        this.value = maybeConvertToBytesRef(value);
     }
 }

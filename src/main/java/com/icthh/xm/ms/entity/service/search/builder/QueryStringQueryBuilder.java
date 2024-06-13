@@ -1,4 +1,7 @@
 /*
+ * Original version of this file is located at:
+ * https://github.com/elastic/elasticsearch/blob/v6.4.3/server/src/main/java/org/elasticsearch/index/query/QueryStringQueryBuilder.java
+ *
  * Licensed to Elasticsearch under one or more contributor
  * license agreements. See the NOTICE file distributed with
  * this work for additional information regarding copyright
@@ -21,7 +24,7 @@
 
 package com.icthh.xm.ms.entity.service.search.builder;
 
-public class QueryStringQueryBuilder implements QueryBuilder {
+public class QueryStringQueryBuilder extends AbstractQueryBuilder<QueryStringQueryBuilder> {
 
     private final String queryString;
 

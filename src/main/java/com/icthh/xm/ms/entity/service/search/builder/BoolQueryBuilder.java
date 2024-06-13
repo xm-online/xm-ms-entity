@@ -1,6 +1,6 @@
 /*
  * Original version of this file is located at:
- * https://github.com/elastic/elasticsearch/blob/v6.4.3/server/src/main/java/org/elasticsearch/index/query/CommonTermsQueryBuilder.java
+ * https://github.com/elastic/elasticsearch/blob/v6.4.3/server/src/main/java/org/elasticsearch/index/query/BoolQueryBuilder.java
  *
  * Licensed to Elasticsearch under one or more contributor
  * license agreements. See the NOTICE file distributed with
@@ -22,22 +22,31 @@
 
 package com.icthh.xm.ms.entity.service.search.builder;
 
-import com.icthh.xm.ms.entity.service.search.common.Strings;
+import java.util.ArrayList;
+import java.util.List;
 
-public class CommonTermsQueryBuilder extends AbstractQueryBuilder<CommonTermsQueryBuilder> {
+public class BoolQueryBuilder extends AbstractQueryBuilder<BoolQueryBuilder> {
 
-    private final String fieldName;
+    private final List<QueryBuilder> mustClauses = new ArrayList<>();
 
-    private final Object text;
+    private final List<QueryBuilder> mustNotClauses = new ArrayList<>();
 
-    public CommonTermsQueryBuilder(String fieldName, Object text) {
-        if (Strings.isEmpty(fieldName)) {
-            throw new IllegalArgumentException("field name is null or empty");
+    private final List<QueryBuilder> filterClauses = new ArrayList<>();
+
+    private final List<QueryBuilder> shouldClauses = new ArrayList<>();
+
+    public BoolQueryBuilder() {
+    }
+
+    public BoolQueryBuilder must(QueryBuilder queryBuilder) {
+        if (queryBuilder == null) {
+            throw new IllegalArgumentException("inner bool query clause cannot be null");
         }
-        if (text == null) {
-            throw new IllegalArgumentException("text cannot be null");
-        }
-        this.fieldName = fieldName;
-        this.text = text;
+        mustClauses.add(queryBuilder);
+        return this;
+    }
+
+    public List<QueryBuilder> must() {
+        return this.mustClauses;
     }
 }
