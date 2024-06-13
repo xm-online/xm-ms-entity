@@ -1,4 +1,6 @@
 /*
+ * Original version of this file is located at: URL
+ *
  * Licensed to Elasticsearch under one or more contributor
  * license agreements. See the NOTICE file distributed with
  * this work for additional information regarding copyright
@@ -15,19 +17,31 @@
  * KIND, either express or implied.  See the License for the
  * specific language governing permissions and limitations
  * under the License.
- *
- * Original version of this file is located at: URL
  */
 package com.icthh.xm.ms.entity.service.search.builder;
 
-public abstract class AbstractQueryBuilder<QB extends AbstractQueryBuilder<QB>> implements QueryBuilder {
+import java.util.Objects;
 
-    protected String queryName;
+public final class InnerHitBuilder {
 
-    protected static <T> T requireValue(T value, String message) {
-        if (value == null) {
-            throw new IllegalArgumentException(message);
-        }
-        return value;
+    private String name;
+    private boolean ignoreUnmapped;
+
+    public InnerHitBuilder() {
+        this.name = null;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public InnerHitBuilder setName(String name) {
+        this.name = Objects.requireNonNull(name);
+        return this;
+    }
+
+    public InnerHitBuilder setIgnoreUnmapped(boolean value) {
+        this.ignoreUnmapped = value;
+        return this;
     }
 }

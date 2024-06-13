@@ -3,11 +3,13 @@ package com.icthh.xm.ms.entity.service.search;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.service.search.aggregation.Aggregations;
 import com.icthh.xm.ms.entity.service.search.aggregation.terms.StringTerms;
-import com.icthh.xm.ms.entity.service.search.aggregation.terms.Terms;
+import com.icthh.xm.ms.entity.service.search.builder.InnerHitBuilder;
 import com.icthh.xm.ms.entity.service.search.builder.NativeSearchQueryBuilder;
+import com.icthh.xm.ms.entity.service.search.builder.NestedQueryBuilder;
 import com.icthh.xm.ms.entity.service.search.builder.QueryBuilder;
 import com.icthh.xm.ms.entity.service.search.builder.QueryBuilders;
 import com.icthh.xm.ms.entity.service.search.builder.aggregation.AggregationBuilders;
+import com.icthh.xm.ms.entity.service.search.enums.ScoreMode;
 import com.icthh.xm.ms.entity.service.search.query.SearchQuery;
 import com.icthh.xm.ms.entity.service.search.query.dto.NativeSearchQuery;
 import org.junit.jupiter.api.Test;
@@ -44,5 +46,12 @@ public class AggregationSearchMapperUnitTest {
             searchQuery2.addAggregation(AggregationBuilders.stats("field").field("field"));
 //        }
         searchQuery2.setPageable(Pageable.unpaged());
+    }
+
+    @Test
+    void testSearchQuery() {
+        QueryBuilder queryBuilder = QueryBuilders.queryStringQuery("query");
+        NestedQueryBuilder nestedQueryBuilder = QueryBuilders.nestedQuery("nestedQuery.path", queryBuilder, ScoreMode.None);
+        nestedQueryBuilder.innerHit(new InnerHitBuilder());
     }
 }
