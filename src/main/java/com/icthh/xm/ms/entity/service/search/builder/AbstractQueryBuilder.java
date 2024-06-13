@@ -39,4 +39,11 @@ public abstract class AbstractQueryBuilder<QB extends AbstractQueryBuilder<QB>> 
         }
         return obj;
     }
+
+    protected static <T> T requireValue(T value, String message) {
+        if (value == null) {
+            throw new IllegalArgumentException(message);
+        }
+        return value;
+    }
 }

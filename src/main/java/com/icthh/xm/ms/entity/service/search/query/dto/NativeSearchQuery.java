@@ -20,13 +20,18 @@
 package com.icthh.xm.ms.entity.service.search.query.dto;
 
 import com.icthh.xm.ms.entity.service.search.builder.QueryBuilder;
+import com.icthh.xm.ms.entity.service.search.builder.aggregation.AbstractAggregationBuilder;
 import com.icthh.xm.ms.entity.service.search.query.AbstractQuery;
 import com.icthh.xm.ms.entity.service.search.query.SearchQuery;
-org.springframework.data.elasticsearch.core.query.NativeSearchQuery
+
+import java.util.ArrayList;
+import java.util.List;
+
 public class NativeSearchQuery extends AbstractQuery implements SearchQuery {
 
     private QueryBuilder query;
     private QueryBuilder filter;
+    private List<AbstractAggregationBuilder> aggregations;
 
     public NativeSearchQuery(QueryBuilder query) {
         this.query = query;
@@ -45,5 +50,21 @@ public class NativeSearchQuery extends AbstractQuery implements SearchQuery {
     @Override
     public QueryBuilder getFilter() {
         return filter;
+    }
+
+    @Override
+    public List<AbstractAggregationBuilder> getAggregations() {
+        return aggregations;
+    }
+
+    public void setAggregations(List<AbstractAggregationBuilder> aggregations) {
+        this.aggregations = aggregations;
+    }
+
+    public void addAggregation(AbstractAggregationBuilder aggregationBuilder) {
+        if (aggregations == null) {
+            aggregations = new ArrayList<>();
+        }
+        aggregations.add(aggregationBuilder);
     }
 }

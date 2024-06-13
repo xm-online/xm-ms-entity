@@ -6,6 +6,7 @@ import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.repository.search.translator.SpelToElasticTranslator;
 import com.icthh.xm.ms.entity.service.dto.SearchDto;
+import com.icthh.xm.ms.entity.service.search.page.aggregation.AggregatedPage;
 import com.icthh.xm.ms.entity.service.search.query.SearchQuery;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -279,7 +280,7 @@ public class ElasticsearchTemplateWrapper implements ElasticsearchOperations {
     }
 
     @Override
-    public <T> Page<T> queryForPage(SearchQuery query, Class<T> clazz) {
+    public <T> AggregatedPage<T> queryForPage(SearchQuery query, Class<T> clazz) {
         return elasticsearchTemplate.queryForPage(query, clazz);
     }
 

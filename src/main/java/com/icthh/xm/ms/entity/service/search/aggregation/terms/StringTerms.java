@@ -1,7 +1,4 @@
 /*
- * Original version of this file is located at:
- * https://github.com/elastic/elasticsearch/blob/v6.4.3/server/src/main/java/org/elasticsearch/index/query/QueryStringQueryBuilder.java
- *
  * Licensed to Elasticsearch under one or more contributor
  * license agreements. See the NOTICE file distributed with
  * this work for additional information regarding copyright
@@ -21,18 +18,37 @@
  *
  * Original version of this file is located at: URL
  */
+package com.icthh.xm.ms.entity.service.search.aggregation.terms;
 
-package com.icthh.xm.ms.entity.service.search.builder;
+import com.icthh.xm.ms.entity.service.search.aggregation.DocValueFormat;
+import org.apache.lucene.util.BytesRef;
 
-public class QueryStringQueryBuilder extends AbstractQueryBuilder<QueryStringQueryBuilder> {
+import java.util.List;
 
-    private final String queryString;
+public class StringTerms extends InternalMappedTerms<StringTerms, StringTerms.Bucket> {
 
-    public QueryStringQueryBuilder(String queryString) {
-        if (queryString == null) {
-            throw new IllegalArgumentException("query text missing");
-        } else {
-            this.queryString = queryString;
+    public static final String NAME = "sterms";
+
+    protected StringTerms(List<Bucket> buckets) {
+        super(buckets);
+    }
+
+    public static class Bucket extends InternalTerms.Bucket<StringTerms.Bucket> {
+
+        BytesRef termBytes;
+
+        public Bucket(DocValueFormat format) {
+            super(format);
+        }
+
+        @Override
+        public Number getKeyAsNumber() {
+            return null;
+        }
+
+        @Override
+        public String getKeyAsString() {
+            return format.format(termBytes).toString();
         }
     }
 }

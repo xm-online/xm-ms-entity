@@ -1,7 +1,4 @@
 /*
- * Original version of this file is located at:
- * https://github.com/elastic/elasticsearch/blob/v6.4.3/server/src/main/java/org/elasticsearch/index/query/QueryStringQueryBuilder.java
- *
  * Licensed to Elasticsearch under one or more contributor
  * license agreements. See the NOTICE file distributed with
  * this work for additional information regarding copyright
@@ -21,18 +18,23 @@
  *
  * Original version of this file is located at: URL
  */
+package com.icthh.xm.ms.entity.service.search.aggregation.terms;
 
-package com.icthh.xm.ms.entity.service.search.builder;
+import com.icthh.xm.ms.entity.service.search.aggregation.DocValueFormat;
 
-public class QueryStringQueryBuilder extends AbstractQueryBuilder<QueryStringQueryBuilder> {
+import java.util.List;
 
-    private final String queryString;
+public abstract class InternalTerms<A extends InternalTerms<A, B>, B extends InternalTerms.Bucket<B>> implements Terms {
 
-    public QueryStringQueryBuilder(String queryString) {
-        if (queryString == null) {
-            throw new IllegalArgumentException("query text missing");
-        } else {
-            this.queryString = queryString;
+    public abstract static class Bucket<B extends Bucket<B>> implements Terms.Bucket {
+
+        protected final DocValueFormat format;
+
+        protected Bucket(DocValueFormat format) {
+            this.format = format;
         }
     }
+
+    public abstract List<B> getBuckets();
+
 }

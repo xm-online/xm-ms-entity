@@ -1,6 +1,5 @@
 /*
- * Original version of this file is located at:
- * https://github.com/elastic/elasticsearch/blob/v6.4.3/server/src/main/java/org/elasticsearch/index/query/QueryStringQueryBuilder.java
+ * Original version of this file is located at: URL
  *
  * Licensed to Elasticsearch under one or more contributor
  * license agreements. See the NOTICE file distributed with
@@ -18,21 +17,31 @@
  * KIND, either express or implied.  See the License for the
  * specific language governing permissions and limitations
  * under the License.
- *
- * Original version of this file is located at: URL
  */
-
 package com.icthh.xm.ms.entity.service.search.builder;
 
-public class QueryStringQueryBuilder extends AbstractQueryBuilder<QueryStringQueryBuilder> {
+import java.util.Objects;
 
-    private final String queryString;
+public final class InnerHitBuilder {
 
-    public QueryStringQueryBuilder(String queryString) {
-        if (queryString == null) {
-            throw new IllegalArgumentException("query text missing");
-        } else {
-            this.queryString = queryString;
-        }
+    private String name;
+    private boolean ignoreUnmapped;
+
+    public InnerHitBuilder() {
+        this.name = null;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public InnerHitBuilder setName(String name) {
+        this.name = Objects.requireNonNull(name);
+        return this;
+    }
+
+    public InnerHitBuilder setIgnoreUnmapped(boolean value) {
+        this.ignoreUnmapped = value;
+        return this;
     }
 }

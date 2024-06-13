@@ -22,6 +22,9 @@
 
 package com.icthh.xm.ms.entity.service.search.builder;
 
+import com.icthh.xm.ms.entity.service.search.enums.ScoreMode;
+import org.elasticsearch.index.query.BoolQueryBuilder;
+
 public final class QueryBuilders {
     private QueryBuilders() {
     }
@@ -32,6 +35,10 @@ public final class QueryBuilders {
 
     public static CommonTermsQueryBuilder commonTermsQuery(String fieldName, Object text) {
         return new CommonTermsQueryBuilder(fieldName, text);
+    }
+
+    public static NestedQueryBuilder nestedQuery(String path, QueryBuilder query, ScoreMode scoreMode) {
+        return new NestedQueryBuilder(path, query, scoreMode);
     }
 
     public static BoolQueryBuilder boolQuery() {

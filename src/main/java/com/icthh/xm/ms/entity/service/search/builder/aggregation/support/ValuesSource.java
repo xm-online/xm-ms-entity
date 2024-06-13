@@ -1,7 +1,4 @@
 /*
- * Original version of this file is located at:
- * https://github.com/elastic/elasticsearch/blob/v6.4.3/server/src/main/java/org/elasticsearch/index/query/QueryStringQueryBuilder.java
- *
  * Licensed to Elasticsearch under one or more contributor
  * license agreements. See the NOTICE file distributed with
  * this work for additional information regarding copyright
@@ -21,18 +18,12 @@
  *
  * Original version of this file is located at: URL
  */
+package com.icthh.xm.ms.entity.service.search.builder.aggregation.support;
 
-package com.icthh.xm.ms.entity.service.search.builder;
+public abstract class ValuesSource {
 
-public class QueryStringQueryBuilder extends AbstractQueryBuilder<QueryStringQueryBuilder> {
+    public abstract static class Numeric extends ValuesSource {
 
-    private final String queryString;
-
-    public QueryStringQueryBuilder(String queryString) {
-        if (queryString == null) {
-            throw new IllegalArgumentException("query text missing");
-        } else {
-            this.queryString = queryString;
-        }
     }
+
 }

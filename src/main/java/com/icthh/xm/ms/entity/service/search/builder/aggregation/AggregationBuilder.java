@@ -1,10 +1,13 @@
 package com.icthh.xm.ms.entity.service.search.builder.aggregation;
 
+import com.icthh.xm.ms.entity.service.search.aggregation.factory.AggregatorFactories;
+
 import java.util.Map;
 
 public abstract class AggregationBuilder {
 
     protected final String name;
+    protected AggregatorFactories.Builder factoriesBuilder = AggregatorFactories.builder();
 
     protected AggregationBuilder(String name) {
         if (name == null) {
