@@ -4,7 +4,6 @@ import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.service.search.builder.NativeSearchQueryBuilder;
 import com.icthh.xm.ms.entity.service.search.builder.QueryBuilders;
 import com.icthh.xm.ms.entity.service.search.filter.FetchSourceFilter;
-import com.icthh.xm.ms.entity.service.search.query.SearchQuery;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.springframework.data.domain.PageRequest;
@@ -18,11 +17,6 @@ public class QueryForListSearchMapperUnitTest {
     void testQueryForList() {
         String query = "";
         String[] includes = {"id"};
-        SearchQuery searchQuery = new NativeSearchQueryBuilder()
-            .withQuery(QueryBuilders.queryStringQuery(query))
-            .withSourceFilter(new FetchSourceFilter(includes, null))
-            .withPageable(new PageRequest(0, 10))
-            .build();
 
         wrapper.queryForList(new NativeSearchQueryBuilder()
                 .withQuery(QueryBuilders.queryStringQuery(query))

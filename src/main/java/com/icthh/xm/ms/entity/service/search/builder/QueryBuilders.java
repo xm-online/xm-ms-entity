@@ -23,7 +23,6 @@
 package com.icthh.xm.ms.entity.service.search.builder;
 
 import com.icthh.xm.ms.entity.service.search.enums.ScoreMode;
-import org.elasticsearch.index.query.BoolQueryBuilder;
 
 public final class QueryBuilders {
     private QueryBuilders() {
@@ -45,7 +44,7 @@ public final class QueryBuilders {
         return new BoolQueryBuilder();
     }
 
-    public static TermQueryBuilder termQuery(String name, String value) {
+    public static QueryBuilder termQuery(String name, String value) {
         return new TermQueryBuilder(name, value);
     }
 
