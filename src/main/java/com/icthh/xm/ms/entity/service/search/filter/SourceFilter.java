@@ -1,4 +1,7 @@
 /*
+ * Original version of this file is located at:
+ * https://github.com/spring-projects/spring-data-elasticsearch/blob/3.1.12.RELEASE/src/main/java/org/springframework/data/elasticsearch/core/query/SourceFilter.java
+ *
  * Copyright 2016-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,8 +16,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.icthh.xm.ms.entity.service.search.filter;
 
+package com.icthh.xm.ms.entity.service.search.filter;
 
 public interface SourceFilter {
 

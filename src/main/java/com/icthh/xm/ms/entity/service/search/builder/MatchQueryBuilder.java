@@ -1,6 +1,6 @@
 /*
  * Original version of this file is located at:
- * https://github.com/elastic/elasticsearch/blob/v6.4.3/server/src/main/java/org/elasticsearch/index/query/CommonTermsQueryBuilder.java
+ * https://github.com/elastic/elasticsearch/blob/v6.4.3/server/src/main/java/org/elasticsearch/index/query/MatchQueryBuilder.java
  *
  * Licensed to Elasticsearch under one or more contributor
  * license agreements. See the NOTICE file distributed with
@@ -22,22 +22,22 @@
 
 package com.icthh.xm.ms.entity.service.search.builder;
 
-import com.icthh.xm.ms.entity.service.search.common.Strings;
+public class MatchQueryBuilder extends AbstractQueryBuilder<MatchQueryBuilder> {
 
-public class CommonTermsQueryBuilder extends AbstractQueryBuilder<CommonTermsQueryBuilder> {
+    public static final String NAME = "match";
 
     private final String fieldName;
 
-    private final Object text;
+    private final Object value;
 
-    public CommonTermsQueryBuilder(String fieldName, Object text) {
-        if (Strings.isEmpty(fieldName)) {
-            throw new IllegalArgumentException("field name is null or empty");
+    public MatchQueryBuilder(String fieldName, Object value) {
+        if (fieldName == null) {
+            throw new IllegalArgumentException("[" + NAME + "] requires fieldName");
         }
-        if (text == null) {
-            throw new IllegalArgumentException("text cannot be null");
+        if (value == null) {
+            throw new IllegalArgumentException("[" + NAME + "] requires query value");
         }
         this.fieldName = fieldName;
-        this.text = text;
+        this.value = value;
     }
 }

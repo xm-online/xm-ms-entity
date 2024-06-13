@@ -1,4 +1,7 @@
 /*
+ * Original version of this file is located at:
+ * https://github.com/elastic/elasticsearch/blob/v6.4.3/server/src/main/java/org/elasticsearch/index/query/QueryBuilders.java
+ *
  * Licensed to Elasticsearch under one or more contributor
  * license agreements. See the NOTICE file distributed with
  * this work for additional information regarding copyright
@@ -19,14 +22,12 @@
 
 package com.icthh.xm.ms.entity.service.search.builder;
 
-import org.elasticsearch.index.query.BoolQueryBuilder;
-
 public final class QueryBuilders {
     private QueryBuilders() {
     }
 
-    public static QueryStringQueryBuilder queryStringQuery(String queryString) {
-        return new QueryStringQueryBuilder(queryString);
+    public static MatchQueryBuilder matchQuery(String name, Object text) {
+        return new MatchQueryBuilder(name, text);
     }
 
     public static CommonTermsQueryBuilder commonTermsQuery(String fieldName, Object text) {
@@ -35,5 +36,37 @@ public final class QueryBuilders {
 
     public static BoolQueryBuilder boolQuery() {
         return new BoolQueryBuilder();
+    }
+
+    public static TermQueryBuilder termQuery(String name, String value) {
+        return new TermQueryBuilder(name, value);
+    }
+
+    public static TermQueryBuilder termQuery(String name, int value) {
+        return new TermQueryBuilder(name, value);
+    }
+
+    public static TermQueryBuilder termQuery(String name, long value) {
+        return new TermQueryBuilder(name, value);
+    }
+
+    public static TermQueryBuilder termQuery(String name, float value) {
+        return new TermQueryBuilder(name, value);
+    }
+
+    public static TermQueryBuilder termQuery(String name, double value) {
+        return new TermQueryBuilder(name, value);
+    }
+
+    public static TermQueryBuilder termQuery(String name, boolean value) {
+        return new TermQueryBuilder(name, value);
+    }
+
+    public static TermQueryBuilder termQuery(String name, Object value) {
+        return new TermQueryBuilder(name, value);
+    }
+
+    public static QueryStringQueryBuilder queryStringQuery(String queryString) {
+        return new QueryStringQueryBuilder(queryString);
     }
 }
