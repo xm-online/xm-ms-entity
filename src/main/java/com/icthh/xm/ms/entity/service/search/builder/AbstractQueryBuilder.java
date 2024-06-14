@@ -1,4 +1,7 @@
 /*
+ * Original version of this file is located at:
+ * https://github.com/elastic/elasticsearch/blob/v6.4.3/server/src/main/java/org/elasticsearch/index/query/AbstractQueryBuilder.java
+ *
  * Licensed to Elasticsearch under one or more contributor
  * license agreements. See the NOTICE file distributed with
  * this work for additional information regarding copyright
@@ -15,14 +18,27 @@
  * KIND, either express or implied.  See the License for the
  * specific language governing permissions and limitations
  * under the License.
- *
- * Original version of this file is located at: URL
  */
+
 package com.icthh.xm.ms.entity.service.search.builder;
+
+import com.icthh.xm.ms.entity.service.search.common.BytesRefs;
+import org.apache.lucene.util.BytesRef;
+
+import java.nio.CharBuffer;
 
 public abstract class AbstractQueryBuilder<QB extends AbstractQueryBuilder<QB>> implements QueryBuilder {
 
     protected String queryName;
+
+    static Object maybeConvertToBytesRef(Object obj) {
+        if (obj instanceof String) {
+            return BytesRefs.toBytesRef(obj);
+        } else if (obj instanceof CharBuffer) {
+            return new BytesRef((CharBuffer) obj);
+        }
+        return obj;
+    }
 
     protected static <T> T requireValue(T value, String message) {
         if (value == null) {

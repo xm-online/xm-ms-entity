@@ -1,6 +1,6 @@
 /*
  * Original version of this file is located at:
- * https://github.com/elastic/elasticsearch/blob/v6.4.3/server/src/main/java/org/elasticsearch/index/query/CommonTermsQueryBuilder.java
+ * https://github.com/elastic/elasticsearch/blob/v6.4.3/server/src/main/java/org/elasticsearch/common/Strings.java
  *
  * Licensed to Elasticsearch under one or more contributor
  * license agreements. See the NOTICE file distributed with
@@ -20,24 +20,15 @@
  * under the License.
  */
 
-package com.icthh.xm.ms.entity.service.search.builder;
+package com.icthh.xm.ms.entity.service.search.common;
 
-import com.icthh.xm.ms.entity.service.search.common.Strings;
+public class Strings {
 
-public class CommonTermsQueryBuilder extends AbstractQueryBuilder<CommonTermsQueryBuilder> {
+    public static boolean isEmpty(CharSequence str) {
+        return !hasLength(str);
+    }
 
-    private final String fieldName;
-
-    private final Object text;
-
-    public CommonTermsQueryBuilder(String fieldName, Object text) {
-        if (Strings.isEmpty(fieldName)) {
-            throw new IllegalArgumentException("field name is null or empty");
-        }
-        if (text == null) {
-            throw new IllegalArgumentException("text cannot be null");
-        }
-        this.fieldName = fieldName;
-        this.text = text;
+    public static boolean hasLength(CharSequence str) {
+        return (str != null && str.length() > 0);
     }
 }
