@@ -1,11 +1,15 @@
 package com.icthh.xm.ms.entity.service.search;
 
+import co.elastic.clients.elasticsearch.ElasticsearchClient;
+import co.elastic.clients.elasticsearch.core.SearchRequest;
+import co.elastic.clients.elasticsearch.core.SearchResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.icthh.xm.commons.permission.service.PermissionCheckService;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.repository.search.translator.SpelToElasticTranslator;
 import com.icthh.xm.ms.entity.service.dto.SearchDto;
+import com.icthh.xm.ms.entity.service.search.mapper.SearchResultMapper;
 import com.icthh.xm.ms.entity.service.search.page.aggregation.AggregatedPage;
 import com.icthh.xm.ms.entity.service.search.query.SearchQuery;
 import lombok.RequiredArgsConstructor;
@@ -31,7 +35,6 @@ import org.springframework.data.elasticsearch.core.MultiGetResultMapper;
 import org.springframework.data.elasticsearch.core.ResultsExtractor;
 import org.springframework.data.elasticsearch.core.ResultsMapper;
 import org.springframework.data.elasticsearch.core.ScrolledPage;
-import org.springframework.data.elasticsearch.core.SearchResultMapper;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.query.AliasQuery;
@@ -78,11 +81,12 @@ public class ElasticsearchTemplateWrapper implements ElasticsearchOperations {
     private static final String TYPE_KEY = "typeKey";
 
     private final TenantContextHolder tenantContextHolder;
-    private final ElasticsearchTemplate elasticsearchTemplate;
+    private final ElasticsearchClient elasticsearchClient;
     private final ObjectMapper objectMapper;
     private final ResultsMapper resultsMapper;
     private final PermissionCheckService permissionCheckService;
     private final SpelToElasticTranslator spelToElasticTranslator;
+    private final SearchResultMapper searchResultMapper;
 
     public static String composeIndexName(String tenantCode) {
         return tenantCode.toLowerCase() + "_" + INDEX_QUERY_TYPE;
@@ -193,8 +197,8 @@ public class ElasticsearchTemplateWrapper implements ElasticsearchOperations {
     }
 
     @Override
-    public Client getClient() {
-        return elasticsearchTemplate.getClient();
+    public ElasticsearchClient getClient() {
+        return elasticsearchClient;
     }
 
     @Override
@@ -279,7 +283,13 @@ public class ElasticsearchTemplateWrapper implements ElasticsearchOperations {
 
     @Override
     public <T> AggregatedPage<T> queryForPage(SearchQuery query, Class<T> clazz) {
-        return elasticsearchTemplate.queryForPage(query, clazz);
+        Pageable pageable = query.getPageable();
+
+        //TODO: map searchRequest
+        SearchRequest request = new SearchRequest.Builder().build();
+
+        SearchResponse<T> search = search(request ,clazz);
+        return searchResultMapper.mapSearchResults(search, pageable);
     }
 
     @Override
@@ -600,4 +610,17 @@ public class ElasticsearchTemplateWrapper implements ElasticsearchOperations {
             .should(prefixQuery(TYPE_KEY, prefix))
             .minimumShouldMatch(1);
     }
+
+    private <T> SearchResponse<T> search(SearchRequest searchRequest, Class<T> clazz) {
+        try {
+            SearchResponse<T> response = elasticsearchClient.search(searchRequest, clazz);
+            log.info("Sent elasticsearch request: {} with result size: {}", searchRequest.toString(), response.hits().hits().size());
+
+            return response;
+        } catch (Exception e) {
+            log.error("Error sending elasticsearch request: {}", e.getMessage(), e);
+            throw new IllegalStateException(e.getMessage(), e);
+        }
+    }
+
 }

@@ -18,6 +18,8 @@
  */
 package com.icthh.xm.ms.entity.service.search;
 
+import co.elastic.clients.elasticsearch.ElasticsearchClient;
+import com.icthh.xm.ms.entity.service.search.mapper.SearchResultMapper;
 import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.client.internal.Client;
 import org.springframework.data.domain.Page;
@@ -37,7 +39,7 @@ public interface ElasticsearchOperations {
     /**
      * @return elasticsearch client
      */
-    Client getClient();
+    ElasticsearchClient getClient();
 
     /**
      * Create an index for a class
