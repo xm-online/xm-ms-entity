@@ -20,7 +20,6 @@
  * under the License.
  */
 
-
 package com.icthh.xm.ms.entity.service.search.builder;
 
 import com.icthh.xm.ms.entity.service.search.common.Strings;

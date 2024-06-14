@@ -1,5 +1,8 @@
 /*
- * Licensed to Elasticsearch under one or more contributor
+ * Original version of this file is located at:
+ * https://github.com/elastic/elasticsearch/blob/v6.4.3/server/src/main/java/org/elasticsearch/search/aggregations/metrics/stats/StatsAggregationBuilder.java
+ *
+ *  Licensed to Elasticsearch under one or more contributor
  * license agreements. See the NOTICE file distributed with
  * this work for additional information regarding copyright
  * ownership. Elasticsearch licenses this file to you under
