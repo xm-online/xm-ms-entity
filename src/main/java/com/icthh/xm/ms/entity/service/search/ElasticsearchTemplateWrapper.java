@@ -10,6 +10,7 @@ import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.repository.search.translator.SpelToElasticTranslator;
 import com.icthh.xm.ms.entity.service.dto.SearchDto;
 import com.icthh.xm.ms.entity.service.search.mapper.SearchResultMapper;
+import com.icthh.xm.ms.entity.service.search.mapper.SearchRequestBuilder;
 import com.icthh.xm.ms.entity.service.search.page.aggregation.AggregatedPage;
 import com.icthh.xm.ms.entity.service.search.query.SearchQuery;
 import lombok.RequiredArgsConstructor;
@@ -46,7 +47,6 @@ import org.springframework.data.elasticsearch.core.query.IndexQuery;
 import org.springframework.data.elasticsearch.core.query.MoreLikeThisQuery;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQuery;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
-//import org.springframework.data.elasticsearch.core.query.SearchQuery;
 import org.springframework.data.elasticsearch.core.query.StringQuery;
 import org.springframework.data.elasticsearch.core.query.UpdateQuery;
 import org.springframework.data.util.CloseableIterator;
@@ -87,6 +87,7 @@ public class ElasticsearchTemplateWrapper implements ElasticsearchOperations {
     private final PermissionCheckService permissionCheckService;
     private final SpelToElasticTranslator spelToElasticTranslator;
     private final SearchResultMapper searchResultMapper;
+    private final SearchRequestBuilder searchRequestBuilder;
 
     public static String composeIndexName(String tenantCode) {
         return tenantCode.toLowerCase() + "_" + INDEX_QUERY_TYPE;
@@ -285,8 +286,7 @@ public class ElasticsearchTemplateWrapper implements ElasticsearchOperations {
     public <T> AggregatedPage<T> queryForPage(SearchQuery query, Class<T> clazz) {
         Pageable pageable = query.getPageable();
 
-        //TODO: map searchRequest
-        SearchRequest request = new SearchRequest.Builder().build();
+        SearchRequest request = searchRequestBuilder.buildSearchRequest(query);
 
         SearchResponse<T> search = search(request ,clazz);
         return searchResultMapper.mapSearchResults(search, pageable);

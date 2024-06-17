@@ -22,6 +22,8 @@ package com.icthh.xm.ms.entity.service.search.query;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 
+import java.util.List;
+
 public interface Query {
 
     <T extends Query> T setPageable(Pageable pageable);
@@ -29,4 +31,8 @@ public interface Query {
     Pageable getPageable();
 
     <T extends Query> T addSort(Sort sort);
+
+    Sort getSort();
+
+    List<String> getIndices();
 }
