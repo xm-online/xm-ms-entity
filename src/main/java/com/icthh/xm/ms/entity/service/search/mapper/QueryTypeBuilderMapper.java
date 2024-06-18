@@ -11,11 +11,11 @@ import org.mapstruct.Named;
 @Mapper(componentModel = "spring")
 public interface QueryTypeBuilderMapper {
 
-    @Mapping(source = "queryString", target = "query")
+    @Mapping(target = "query", source = "queryString")
     SimpleQueryStringQuery.Builder toSimpleQueryStringQueryBuilder(QueryStringQueryBuilder queryType);
 
 //    @Mapping(source = "text", target = "query", qualifiedByName = "convertObjectToString")
-    @Mapping(source = "fieldName", target = "field")
+    @Mapping(target = "field", source = "fieldName")
     CommonTermsQuery.Builder toCommonTermsQueryBuilder(CommonTermsQueryBuilder commonTermsQueryBuilder);
 
     @Named("convertObjectToString")
