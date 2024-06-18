@@ -26,12 +26,16 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.util.Assert;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public abstract class AbstractQuery implements Query {
 
     protected final int DEFAULT_PAGE_SIZE = 10;
     protected Pageable pageable = PageRequest.of(0, DEFAULT_PAGE_SIZE);
     protected Sort sort;
     protected SourceFilter sourceFilter;
+    protected List<String> indices = new ArrayList<>();
 
     @Override
     public Pageable getPageable() {
@@ -48,6 +52,11 @@ public abstract class AbstractQuery implements Query {
     }
 
     @Override
+    public List<String> getIndices() {
+        return this.indices;
+    }
+
+    @Override
     public final <T extends Query> T addSort(Sort sort) {
         if (sort == null) {
             return (T) this;
@@ -60,6 +69,11 @@ public abstract class AbstractQuery implements Query {
         }
 
         return (T) this;
+    }
+
+    @Override
+    public Sort getSort() {
+        return this.sort;
     }
 
     public void addSourceFilter(SourceFilter sourceFilter) {

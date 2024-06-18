@@ -40,4 +40,12 @@ public class CommonTermsQueryBuilder extends AbstractQueryBuilder<CommonTermsQue
         this.fieldName = fieldName;
         this.text = text;
     }
+
+    public String getFieldName() {
+        return this.fieldName;
+    }
+
+    public Object getText() {
+        return this.text;
+    }
 }

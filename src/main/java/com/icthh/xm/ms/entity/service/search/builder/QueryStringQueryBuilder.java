@@ -33,4 +33,8 @@ public class QueryStringQueryBuilder extends AbstractQueryBuilder<QueryStringQue
             this.queryString = queryString;
         }
     }
+
+    public String getQueryString() {
+        return this.queryString;
+    }
 }
