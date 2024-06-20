@@ -20,6 +20,7 @@ import com.icthh.xm.ms.entity.service.processor.DefinitionSpecProcessor;
 import com.icthh.xm.ms.entity.service.privileges.custom.EntityCustomPrivilegeService;
 import com.icthh.xm.ms.entity.service.XmEntitySpecService;
 import com.icthh.xm.ms.entity.service.processor.FormSpecProcessor;
+import com.icthh.xm.ms.entity.service.spec.XmEntitySpecCustomizer;
 import lombok.SneakyThrows;
 import org.apache.commons.io.IOUtils;
 import org.springframework.beans.factory.annotation.Value;
@@ -52,6 +53,7 @@ public class TenantConfigMockConfiguration {
     @Bean
     public XmEntitySpecService xmEntitySpecService(ApplicationProperties applicationProperties,
                                                    TenantContextHolder tenantContextHolder,
+                                                   XmEntitySpecCustomizer xmEntitySpecCustomizer,
                                                    EntityCustomPrivilegeService entityCustomPrivilegeService,
                                                    DynamicPermissionCheckService dynamicPermissionCheckService,
                                                    XmEntityTenantConfigService xmEntityTenantConfigService,
@@ -64,6 +66,7 @@ public class TenantConfigMockConfiguration {
                                             entityCustomPrivilegeService,
                                             dynamicPermissionCheckService,
                                             xmEntityTenantConfigService,
+                                            xmEntitySpecCustomizer,
                                             definitionSpecProcessor,
                                             formSpecProcessor,
                                             maxFileSize);

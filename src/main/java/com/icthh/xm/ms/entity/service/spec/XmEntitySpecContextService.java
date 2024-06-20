@@ -3,6 +3,7 @@ package com.icthh.xm.ms.entity.service.spec;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.github.fge.jsonschema.main.JsonSchema;
+import com.icthh.xm.commons.lep.spring.LepService;
 import com.icthh.xm.commons.logging.aop.IgnoreLogginAspect;
 import com.icthh.xm.ms.entity.config.XmEntityTenantConfigService;
 import com.icthh.xm.ms.entity.domain.spec.FunctionSpec;
@@ -30,6 +31,7 @@ import static org.springframework.util.CollectionUtils.isEmpty;
 
 @Slf4j
 @Service
+@LepService(group = "service.spec")
 @IgnoreLogginAspect
 public class XmEntitySpecContextService {
 
@@ -41,16 +43,19 @@ public class XmEntitySpecContextService {
     private final DataSpecJsonSchemaService dataSpecJsonSchemaService;
     private final FunctionByTenantService functionByTenantService;
     private final SpecFieldsProcessor specFieldsProcessor;
+    private final XmEntitySpecCustomizer xmEntitySpecCustomizer;
 
     private final ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
     private final ConcurrentHashMap<String, Map<String, TypeSpec>> typesByTenant = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, Map<String, String>> typesByTenantByFile = new ConcurrentHashMap<>();
 
     public XmEntitySpecContextService(DefinitionSpecProcessor definitionSpecProcessor, FormSpecProcessor formSpecProcessor,
+                                      XmEntitySpecCustomizer xmEntitySpecCustomizer,
                                       XmEntityTenantConfigService tenantConfigService,
                                       @Value("${spring.servlet.multipart.max-file-size:1MB}") String maxFileSize) {
         this.definitionSpecProcessor = definitionSpecProcessor;
         this.formSpecProcessor = formSpecProcessor;
+        this.xmEntitySpecCustomizer = xmEntitySpecCustomizer;
         this.specInheritanceProcessor = new SpecInheritanceProcessor(tenantConfigService);
         this.dataSpecJsonSchemaService = new DataSpecJsonSchemaService(definitionSpecProcessor, formSpecProcessor);
         this.specFieldsProcessor = new SpecFieldsProcessor();
@@ -95,6 +100,7 @@ public class XmEntitySpecContextService {
 
     public Map<String, TypeSpec> updateByTenantState(String tenant) {
         var tenantEntitySpec = readEntitySpec(tenant);
+        xmEntitySpecCustomizer.customize(tenant, tenantEntitySpec);
 
         definitionSpecProcessor.updateDefinitionStateByTenant(tenant, typesByTenantByFile);
         formSpecProcessor.updateFormStateByTenant(tenant, typesByTenantByFile);

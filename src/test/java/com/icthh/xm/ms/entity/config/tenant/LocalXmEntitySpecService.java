@@ -12,8 +12,8 @@ import com.icthh.xm.ms.entity.service.privileges.custom.EntityCustomPrivilegeSer
 import com.icthh.xm.ms.entity.service.processor.DefinitionSpecProcessor;
 import com.icthh.xm.ms.entity.service.processor.FormSpecProcessor;
 import com.icthh.xm.ms.entity.service.spec.XmEntitySpecContextService;
-import java.io.FileNotFoundException;
-import java.io.IOException;
+
+import com.icthh.xm.ms.entity.service.spec.XmEntitySpecCustomizer;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Primary;
@@ -24,6 +24,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import static com.icthh.xm.ms.entity.config.TenantConfigMockConfiguration.getXmEntitySpec;
+import static org.mockito.Mockito.mock;
 
 @Slf4j
 @Service
@@ -39,11 +40,12 @@ public class LocalXmEntitySpecService extends XmEntitySpecService {
                                     EntityCustomPrivilegeService entityCustomPrivilegeService,
                                     DynamicPermissionCheckService dynamicPermissionCheckService,
                                     XmEntityTenantConfigService tenantConfigService,
+                                    XmEntitySpecCustomizer xmEntitySpecCustomizer,
                                     DefinitionSpecProcessor definitionSpecProcessor,
                                     FormSpecProcessor formSpecProcessor,
                                     @Value("${spring.servlet.multipart.max-file-size:1MB}") String maxFileSize) {
         super(tenantConfigRepository, applicationProperties, tenantContextHolder,
-            new XmEntitySpecContextService(definitionSpecProcessor, formSpecProcessor, tenantConfigService, maxFileSize),
+            new XmEntitySpecContextService(definitionSpecProcessor, formSpecProcessor, xmEntitySpecCustomizer, tenantConfigService, maxFileSize),
             List.of(entityCustomPrivilegeService), dynamicPermissionCheckService);
 
         this.applicationProperties = applicationProperties;
