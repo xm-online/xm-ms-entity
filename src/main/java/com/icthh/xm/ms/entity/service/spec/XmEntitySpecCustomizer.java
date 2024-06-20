@@ -29,11 +29,15 @@ public class XmEntitySpecCustomizer {
     }
 
     public void customize(String tenant, Map<String, TypeSpec> entitySpec) {
-        tenantContextHolder.getPrivilegedContext().execute(buildTenant(tenant), () -> {
-            try(var context = lepManagementService.beginThreadContext()) {
-                self.customize(entitySpec);
-            }
-        });
+        if (lepManagementService.getCurrentLepExecutorResolver() == null) {
+            tenantContextHolder.getPrivilegedContext().execute(buildTenant(tenant), () -> {
+                try(var context = lepManagementService.beginThreadContext()) {
+                    self.customize(entitySpec);
+                }
+            });
+        } else {
+            self.customize(entitySpec);
+        }
     }
 
     @LogicExtensionPoint("CustomizeEntitySpec")
