@@ -40,6 +40,7 @@ import com.icthh.xm.ms.entity.service.privileges.custom.FunctionCustomPrivileges
 import com.icthh.xm.ms.entity.service.privileges.custom.FunctionWithXmEntityCustomPrivilegesExtractor;
 import com.icthh.xm.ms.entity.service.processor.DefinitionSpecProcessor;
 import com.icthh.xm.ms.entity.service.processor.FormSpecProcessor;
+import com.icthh.xm.ms.entity.service.spec.XmEntitySpecCustomizer;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
@@ -125,6 +126,8 @@ public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
     @Mock
     private RoleService roleService;
     @Mock
+    private XmEntitySpecCustomizer xmEntitySpecCustomizer;
+    @Mock
     private TenantConfigRepository tenantConfigRepository;
     private JsonListenerService jsonListenerService = new JsonListenerService();
     @InjectMocks
@@ -171,6 +174,7 @@ public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
                                             ),
                                             dynamicPermissionCheckService,
                                             tenantConfig,
+                                            xmEntitySpecCustomizer,
                                             new DefinitionSpecProcessor(jsonListenerService),
                                             new FormSpecProcessor(jsonListenerService), MAX_FILE_SIZE));
     }

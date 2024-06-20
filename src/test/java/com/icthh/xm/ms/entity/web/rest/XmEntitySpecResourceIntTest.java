@@ -2,10 +2,11 @@ package com.icthh.xm.ms.entity.web.rest;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.icthh.xm.commons.i18n.error.web.ExceptionTranslator;
+import com.icthh.xm.commons.lep.XmLepScriptConfigServerResourceLoader;
+import com.icthh.xm.commons.lep.api.LepManagementService;
 import com.icthh.xm.commons.security.XmAuthenticationContext;
 import com.icthh.xm.commons.security.XmAuthenticationContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
-import com.icthh.xm.lep.api.LepManager;
 import com.icthh.xm.ms.entity.AbstractSpringBootTest;
 import com.icthh.xm.ms.entity.service.json.JsonSchemaGenerationService;
 import com.icthh.xm.ms.entity.service.XmEntityGeneratorService;
@@ -22,10 +23,9 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
-import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_AUTH_CONTEXT;
-import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_TENANT_CONTEXT;
 import static com.icthh.xm.commons.tenant.TenantContextUtils.setTenant;
 import static com.icthh.xm.ms.entity.config.TenantConfigMockConfiguration.getXmEntitySpec;
+import static com.icthh.xm.ms.entity.service.impl.XmEntityCommonsIntTest.loadFile;
 import static com.icthh.xm.ms.entity.util.IsCollectionNotContaining.hasNotItem;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.hasSize;
@@ -55,6 +55,8 @@ public class XmEntitySpecResourceIntTest extends AbstractSpringBootTest {
 
     private static final String KEY5 = "ACCOUNT.CUSTOMER";
 
+    private static final String KEY_FROM_LEP = "ENTITY.FROM.LEP";
+
     private static final String XM_ENTITY_SPEC = "urn:jsonschema:com:icthh:xm:ms:entity:domain:spec:XmEntitySpec";
 
     @Autowired
@@ -75,13 +77,16 @@ public class XmEntitySpecResourceIntTest extends AbstractSpringBootTest {
     private XmAuthenticationContext context;
 
     @Autowired
-    private LepManager lepManager;
+    private LepManagementService lepManager;
 
     @Autowired
     private ObjectMapper objectMapper;
 
     @Autowired
     private ExceptionTranslator exceptionTranslator;
+
+    @Autowired
+    private XmLepScriptConfigServerResourceLoader lepResourceLoader;
 
     private XmEntityGeneratorService xmEntityGeneratorService;
 
@@ -95,10 +100,7 @@ public class XmEntitySpecResourceIntTest extends AbstractSpringBootTest {
         when(context.getRequiredUserKey()).thenReturn("userKey");
 
         setTenant(tenantContextHolder, "DEMO");
-        lepManager.beginThreadContext(ctx -> {
-            ctx.setValue(THREAD_CONTEXT_KEY_TENANT_CONTEXT, tenantContextHolder.getContext());
-            ctx.setValue(THREAD_CONTEXT_KEY_AUTH_CONTEXT, authContextHolder.getContext());
-        });
+        lepManager.beginThreadContext();
 
         xmEntityGeneratorService = new XmEntityGeneratorService(xmEntityService,
             xmEntitySpecService, authContextHolder, objectMapper);
@@ -123,6 +125,36 @@ public class XmEntitySpecResourceIntTest extends AbstractSpringBootTest {
             .andExpect(jsonPath("$.[*].key").value(hasItem(KEY1)))
             .andExpect(jsonPath("$.[*].key").value(hasItem(KEY2)))
             .andExpect(jsonPath("$.[*].key").value(hasItem(KEY3)));
+    }
+
+    @Test
+    public void testLepOnXmEntityTypeSpecs() throws Exception {
+        String configPath = "/config/tenants/DEMO/entity/xmentityspec/additional.yml";
+        xmEntitySpecService.onRefresh(configPath, getXmEntitySpec("additional"));
+        restXmEntitySpecMockMvc.perform(get("/api/xm-entity-specs"))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+            .andExpect(jsonPath("$.[*].key").value(hasItem(KEY1)))
+            .andExpect(jsonPath("$.[*].key").value(hasItem(KEY2)))
+            .andExpect(jsonPath("$.[*].key").value(hasItem(KEY3)))
+            .andExpect(jsonPath("$.[*].key").value(hasItem(KEY5)))
+            .andExpect(jsonPath("$.[*].key").value(hasNotItem(KEY_FROM_LEP)));
+
+        lepResourceLoader.onRefresh("/config/tenants/DEMO/entity/lep/service/spec/CustomizeEntitySpec.groovy",
+            loadFile("config/testlep/CustomizeEntitySpec.groovy"));
+
+        xmEntitySpecService.onRefresh(configPath, getXmEntitySpec("additional"));
+        restXmEntitySpecMockMvc.perform(get("/api/xm-entity-specs"))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+            .andExpect(jsonPath("$.[*].key").value(hasItem(KEY1)))
+            .andExpect(jsonPath("$.[*].key").value(hasItem(KEY2)))
+            .andExpect(jsonPath("$.[*].key").value(hasItem(KEY3)))
+            .andExpect(jsonPath("$.[*].key").value(hasItem(KEY5)))
+            .andExpect(jsonPath("$.[*].key").value(hasItem(KEY_FROM_LEP)));
+
+        lepResourceLoader.onRefresh("/config/tenants/DEMO/entity/lep/service/spec/CustomizeEntitySpec.groovy",
+            "lepContext.lep.proceed(lepContext.lep.getMethodArgValues())");
     }
 
     @Test
