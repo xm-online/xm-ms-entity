@@ -1,7 +1,4 @@
 /*
- * Original version of this file is located at:
- * https://github.com/elastic/elasticsearch/blob/v6.4.3/server/src/main/java/org/elasticsearch/search/aggregations/AggregationBuilders.java
- *
  * Licensed to Elasticsearch under one or more contributor
  * license agreements. See the NOTICE file distributed with
  * this work for additional information regarding copyright
@@ -19,19 +16,21 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package com.icthh.xm.ms.entity.service.search.builder.aggregation;
+package com.icthh.xm.ms.entity.service.search.aggregation.internal;
 
-public abstract class AggregationBuilders {
+import com.icthh.xm.ms.entity.service.search.aggregation.Aggregation;
 
-    public static TermsAggregationBuilder terms(String name) {
-        return new TermsAggregationBuilder(name, null);
+public abstract class InternalAggregation implements Aggregation {
+
+    protected final String name;
+
+    protected InternalAggregation(String name) {
+        this.name = name;
     }
 
-    public static StatsAggregationBuilder stats(String name) {
-        return new StatsAggregationBuilder(name);
+    @Override
+    public String getName() {
+        return name;
     }
 
-    public static MaxAggregationBuilder max(String name) {
-        return new MaxAggregationBuilder(name);
-    }
 }

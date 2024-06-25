@@ -51,4 +51,20 @@ public class TermsAggregationBuilder extends ValuesSourceAggregationBuilder<Valu
         return this.bucketCountThresholds.getRequiredSize();
     }
 
+    public boolean showTermDocCountError() {
+        return showTermDocCountError;
+    }
+
+    public TermsAggregationBuilder showTermDocCountError(boolean showTermDocCountError) {
+        this.showTermDocCountError = showTermDocCountError;
+        return this;
+    }
+
+    public long minDocCount() {
+        return bucketCountThresholds.getMinDocCount();
+    }
+
+    public int shardSize() {
+        return bucketCountThresholds.getShardSize();
+    }
 }

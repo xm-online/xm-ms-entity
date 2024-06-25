@@ -21,30 +21,36 @@
  */
 package com.icthh.xm.ms.entity.service.search.aggregation.terms;
 
-import com.icthh.xm.ms.entity.service.search.aggregation.DocValueFormat;
+import com.icthh.xm.ms.entity.service.search.aggregation.internal.InternalAggregations;
 import org.apache.lucene.util.BytesRef;
+import org.elasticsearch.search.DocValueFormat;
 
 import java.util.List;
 
 public class StringTerms extends InternalMappedTerms<StringTerms, StringTerms.Bucket> {
 
-    public static final String NAME = "sterms";
-
-    protected StringTerms(List<Bucket> buckets) {
-        super(buckets);
+    public StringTerms(String name, List<Bucket> buckets) {
+        super(name, buckets);
     }
 
-    public static class Bucket extends InternalTerms.Bucket<StringTerms.Bucket> {
+    public static class Bucket extends InternalTerms.Bucket<Bucket> {
 
         BytesRef termBytes;
 
-        public Bucket(DocValueFormat format) {
-            super(format);
+        public Bucket(BytesRef term, long docCount, InternalAggregations aggregations, boolean showDocCountError, long docCountError,
+                      DocValueFormat format) {
+            super(docCount, aggregations, showDocCountError, docCountError, format);
+            this.termBytes = term;
         }
 
         @Override
         public Number getKeyAsNumber() {
             return null;
+        }
+
+        @Override
+        public Object getKey() {
+            return getKeyAsString();
         }
 
         @Override

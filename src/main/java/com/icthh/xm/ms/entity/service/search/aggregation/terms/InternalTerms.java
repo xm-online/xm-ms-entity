@@ -21,21 +21,48 @@
  */
 package com.icthh.xm.ms.entity.service.search.aggregation.terms;
 
-import com.icthh.xm.ms.entity.service.search.aggregation.DocValueFormat;
+import com.icthh.xm.ms.entity.service.search.aggregation.Aggregations;
+import com.icthh.xm.ms.entity.service.search.aggregation.internal.InternalAggregations;
+import com.icthh.xm.ms.entity.service.search.aggregation.internal.InternalMultiBucketAggregation;
+import org.elasticsearch.search.DocValueFormat;
 
 import java.util.List;
 
-public abstract class InternalTerms<A extends InternalTerms<A, B>, B extends InternalTerms.Bucket<B>> implements Terms {
+public abstract class InternalTerms<A extends InternalTerms<A, B>, B extends InternalTerms.Bucket<B>>
+    extends InternalMultiBucketAggregation<A, B> implements Terms {
 
-    public abstract static class Bucket<B extends Bucket<B>> implements Terms.Bucket {
+    protected InternalTerms(String name) {
+        super(name);
+    }
 
+    public abstract static class Bucket<B extends Bucket<B>> extends InternalMultiBucketAggregation.InternalBucket
+        implements Terms.Bucket {
+
+        protected long docCount;
+        protected long docCountError;
+        protected InternalAggregations aggregations;
+        protected final boolean showDocCountError;
         protected final DocValueFormat format;
 
-        protected Bucket(DocValueFormat format) {
-            this.format = format;
+        protected Bucket(long docCount, InternalAggregations aggregations, boolean showDocCountError, long docCountError,
+                         DocValueFormat formatter) {
+            this.showDocCountError = showDocCountError;
+            this.format = formatter;
+            this.docCount = docCount;
+            this.aggregations = aggregations;
+            this.docCountError = docCountError;
+        }
+
+        @Override
+        public long getDocCount() {
+            return docCount;
+        }
+
+        @Override
+        public Aggregations getAggregations() {
+            return aggregations;
         }
     }
 
     public abstract List<B> getBuckets();
-
 }

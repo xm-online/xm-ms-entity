@@ -1,24 +1,24 @@
 package com.icthh.xm.ms.entity.service.search.mapper;
 
-import co.elastic.clients.elasticsearch._types.aggregations.Aggregate;
 import co.elastic.clients.elasticsearch.core.SearchResponse;
 import co.elastic.clients.elasticsearch.core.search.Hit;
+import com.icthh.xm.ms.entity.service.search.aggregation.Aggregations;
 import com.icthh.xm.ms.entity.service.search.page.aggregation.AggregatedPage;
 import com.icthh.xm.ms.entity.service.search.page.aggregation.impl.AggregatedPageImpl;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 @Component
+@RequiredArgsConstructor
 public class SearchResultMapper {
 
-    public <T> AggregatedPage<T> mapSearchResults(SearchResponse<T> response, Pageable pageable) {
-        // TODO: map aggregate
-        Map<String, Aggregate> aggregations = response.aggregations();
+    private final AggregationSearchResultMapper aggregationSearchResultMapper;
 
+    public <T> AggregatedPage<T> mapSearchResults(SearchResponse<T> response, Pageable pageable) {
         String scrollId = response.scrollId();
         float maxScore = response.maxScore() != null ? response.maxScore().floatValue() : 0;
         long totalValues = response.hits().total() != null ? response.hits().total().value() : 0;
@@ -28,6 +28,8 @@ public class SearchResultMapper {
             .map(Hit::source)
             .collect(Collectors.toList());
 
-        return new AggregatedPageImpl<T>(results, pageable, totalValues, null, scrollId, maxScore);
+        Aggregations aggregations = aggregationSearchResultMapper.mapInternalAggregations(response.aggregations());
+
+        return new AggregatedPageImpl<T>(results, pageable, totalValues, aggregations, scrollId, maxScore);
     }
 }

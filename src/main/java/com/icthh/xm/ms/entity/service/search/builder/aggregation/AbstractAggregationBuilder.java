@@ -22,6 +22,7 @@
 package com.icthh.xm.ms.entity.service.search.builder.aggregation;
 
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
 public abstract class AbstractAggregationBuilder<AB extends AbstractAggregationBuilder<AB>> extends AggregationBuilder {
@@ -53,5 +54,10 @@ public abstract class AbstractAggregationBuilder<AB extends AbstractAggregationB
     public Map<String, Object> getMetaData() {
         return this.metaData == null ? Collections.emptyMap() : Collections.unmodifiableMap(this.metaData);
     }
+
+    public List<AggregationBuilder> getSubAggregations() {
+        return factoriesBuilder.getAggregatorFactories();
+    }
+
 }
 

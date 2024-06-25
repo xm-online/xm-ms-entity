@@ -24,6 +24,7 @@ package com.icthh.xm.ms.entity.service.search.aggregation.factory;
 import com.icthh.xm.ms.entity.service.search.builder.aggregation.AggregationBuilder;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -47,6 +48,10 @@ public class AggregatorFactories {
             }
             aggregationBuilders.add(factory);
             return this;
+        }
+
+        public List<AggregationBuilder> getAggregatorFactories() {
+            return Collections.unmodifiableList(aggregationBuilders);
         }
     }
 }

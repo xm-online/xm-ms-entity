@@ -21,8 +21,13 @@
  */
 package com.icthh.xm.ms.entity.service.search.builder.aggregation;
 
+import lombok.Getter;
+import lombok.Setter;
+
 public abstract class TermsAggregator {
 
+    @Getter
+    @Setter
     public static class BucketCountThresholds {
         private long minDocCount;
         private long shardMinDocCount;
@@ -33,21 +38,12 @@ public abstract class TermsAggregator {
             this.minDocCount = minDocCount;
             this.shardMinDocCount = shardMinDocCount;
             this.requiredSize = requiredSize;
-            this.shardSize = shardSize;
+            this.shardSize = shardSize; // TODO: ask about shard size
         }
 
         public BucketCountThresholds(TermsAggregator.BucketCountThresholds bucketCountThresholds) {
             this(bucketCountThresholds.minDocCount, bucketCountThresholds.shardMinDocCount, bucketCountThresholds.requiredSize, bucketCountThresholds.shardSize);
         }
-
-        public int getRequiredSize() {
-            return this.requiredSize;
-        }
-
-        public void setRequiredSize(int requiredSize) {
-            this.requiredSize = requiredSize;
-        }
-
     }
 }
 

@@ -27,7 +27,10 @@ public abstract class InternalMappedTerms<A extends InternalTerms<A, B>, B exten
 
     protected final List<B> buckets;
 
-    protected InternalMappedTerms(List<B> buckets) {
+    protected long docCountError;
+
+    protected InternalMappedTerms(String name, List<B> buckets) {
+        super(name);
         this.buckets = buckets;
     }
 
