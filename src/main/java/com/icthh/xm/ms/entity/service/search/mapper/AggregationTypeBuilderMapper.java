@@ -1,7 +1,9 @@
 package com.icthh.xm.ms.entity.service.search.mapper;
 
+import co.elastic.clients.elasticsearch._types.aggregations.MaxAggregation;
 import co.elastic.clients.elasticsearch._types.aggregations.StatsAggregation;
 import co.elastic.clients.elasticsearch._types.aggregations.TermsAggregation;
+import com.icthh.xm.ms.entity.service.search.builder.aggregation.MaxAggregationBuilder;
 import com.icthh.xm.ms.entity.service.search.builder.aggregation.StatsAggregationBuilder;
 import com.icthh.xm.ms.entity.service.search.builder.aggregation.TermsAggregationBuilder;
 import org.mapstruct.Mapper;
@@ -33,4 +35,10 @@ public interface AggregationTypeBuilderMapper {
     @Mapping(target = "script", ignore = true)
     @Mapping(target = "missing", ignore = true)
     StatsAggregation.Builder toStatsAggregationBuilder(StatsAggregationBuilder builder);
+
+    @Mapping(target = "field", expression = "java(builder.field())")
+    @Mapping(target = "format", ignore = true)
+    @Mapping(target = "script", ignore = true)
+    @Mapping(target = "missing", ignore = true)
+    MaxAggregation.Builder toMaxAggregationBuilder(MaxAggregationBuilder builder);
 }

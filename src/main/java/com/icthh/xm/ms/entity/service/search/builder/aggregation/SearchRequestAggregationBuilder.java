@@ -1,6 +1,7 @@
 package com.icthh.xm.ms.entity.service.search.builder.aggregation;
 
 import co.elastic.clients.elasticsearch._types.aggregations.Aggregation;
+import co.elastic.clients.elasticsearch._types.aggregations.MaxAggregation;
 import co.elastic.clients.elasticsearch._types.aggregations.StatsAggregation;
 import co.elastic.clients.elasticsearch._types.aggregations.TermsAggregation;
 import com.icthh.xm.ms.entity.service.search.mapper.AggregationTypeBuilderMapper;
@@ -34,6 +35,10 @@ public class SearchRequestAggregationBuilder {
             StatsAggregationBuilder statsAggregationBuilder = (StatsAggregationBuilder) aggregationBuilder;
             StatsAggregation statsAggregation = aggregationTypeBuilderMapper.toStatsAggregationBuilder(statsAggregationBuilder).build();
             newAggregationBuilder.stats(statsAggregation);
+        } else if (aggregationBuilder instanceof MaxAggregationBuilder) {
+            MaxAggregationBuilder statsAggregationBuilder = (MaxAggregationBuilder) aggregationBuilder;
+            MaxAggregation maxAggregation = aggregationTypeBuilderMapper.toMaxAggregationBuilder(statsAggregationBuilder).build();
+            newAggregationBuilder.max(maxAggregation);
         }
 
         addSubAggregations(newAggregationBuilder, aggregationBuilder.getSubAggregations());
