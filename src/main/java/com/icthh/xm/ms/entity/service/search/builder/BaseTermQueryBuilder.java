@@ -42,4 +42,12 @@ public abstract class BaseTermQueryBuilder<QB extends BaseTermQueryBuilder<QB>> 
         this.fieldName = fieldName;
         this.value = maybeConvertToBytesRef(value);
     }
+
+    public String getFieldName() {
+        return this.fieldName;
+    }
+
+    public Object getValue() {
+        return maybeConvertToString(this.value);
+    }
 }

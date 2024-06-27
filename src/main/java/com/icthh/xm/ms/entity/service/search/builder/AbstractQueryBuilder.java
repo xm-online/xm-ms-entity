@@ -40,6 +40,15 @@ public abstract class AbstractQueryBuilder<QB extends AbstractQueryBuilder<QB>> 
         return obj;
     }
 
+    static Object maybeConvertToString(Object obj) {
+        if (obj instanceof BytesRef) {
+            return ((BytesRef) obj).utf8ToString();
+        } else if (obj instanceof CharBuffer) {
+            return new BytesRef((CharBuffer) obj).utf8ToString();
+        }
+        return obj;
+    }
+
     protected static <T> T requireValue(T value, String message) {
         if (value == null) {
             throw new IllegalArgumentException(message);
