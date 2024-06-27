@@ -1,6 +1,6 @@
 /*
  * Original version of this file is located at:
- * https://github.com/elastic/elasticsearch/blob/v6.4.3/server/src/main/java/org/elasticsearch/search/aggregations/Aggregation.java
+ * https://github.com/elastic/elasticsearch/blob/v6.4.3/server/src/main/java/org/elasticsearch/search/aggregations/InternalAggregations.java
  *
  * Licensed to Elasticsearch under one or more contributor
  * license agreements. See the NOTICE file distributed with
