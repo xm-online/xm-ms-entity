@@ -20,7 +20,15 @@ package com.icthh.xm.ms.entity.service.search.aggregation.stats;
 
 public interface Stats extends NumericMetricsAggregation.MultiValue {
 
+    long getCount();
+
+    double getMin();
+
+    double getMax();
+
     double getAvg();
+
+    double getSum();
 
     String getMinAsString();
 

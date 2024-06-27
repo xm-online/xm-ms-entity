@@ -24,7 +24,7 @@ package com.icthh.xm.ms.entity.service.search.aggregation.terms;
 import com.icthh.xm.ms.entity.service.search.aggregation.Aggregations;
 import com.icthh.xm.ms.entity.service.search.aggregation.internal.InternalAggregations;
 import com.icthh.xm.ms.entity.service.search.aggregation.internal.InternalMultiBucketAggregation;
-import org.elasticsearch.search.DocValueFormat;
+import com.icthh.xm.ms.entity.service.search.builder.aggregation.support.DocValueFormat;
 
 import java.util.List;
 

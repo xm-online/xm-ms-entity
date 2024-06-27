@@ -16,7 +16,7 @@ public interface AggregationTypeBuilderMapper {
     @Mapping(target = "field", expression = "java(builder.field())")
     @Mapping(target = "minDocCount", expression = "java(Long.valueOf(builder.minDocCount()).intValue())")
     @Mapping(target = "size", expression = "java(builder.size())")
-    @Mapping(target = "shardSize", ignore = true) // TODO: default is -1
+    @Mapping(target = "shardSize", ignore = true)
     @Mapping(target = "valueType", ignore = true)
     @Mapping(target = "order", ignore = true)
     @Mapping(target = "format", ignore = true)

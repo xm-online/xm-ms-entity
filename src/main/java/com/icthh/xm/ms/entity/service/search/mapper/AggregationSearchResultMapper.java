@@ -9,8 +9,8 @@ import com.icthh.xm.ms.entity.service.search.aggregation.internal.InternalAggreg
 import com.icthh.xm.ms.entity.service.search.aggregation.internal.InternalMax;
 import com.icthh.xm.ms.entity.service.search.aggregation.internal.InternalStats;
 import com.icthh.xm.ms.entity.service.search.aggregation.terms.StringTerms;
+import com.icthh.xm.ms.entity.service.search.builder.aggregation.support.DocValueFormat;
 import org.apache.lucene.util.BytesRef;
-import org.elasticsearch.search.DocValueFormat;
 import org.springframework.stereotype.Component;
 
 import java.util.Collections;

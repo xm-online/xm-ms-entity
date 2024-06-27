@@ -3,25 +3,29 @@ package com.icthh.xm.ms.entity.service.search;
 import co.elastic.clients.elasticsearch._types.query_dsl.MatchQuery;
 import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 import co.elastic.clients.elasticsearch._types.query_dsl.TermQuery;
+import com.icthh.xm.ms.entity.AbstractUnitTest;
 import com.icthh.xm.ms.entity.service.search.builder.NativeSearchQueryBuilder;
 import com.icthh.xm.ms.entity.service.search.builder.QueryBuilders;
 import com.icthh.xm.ms.entity.service.search.builder.SearchRequestQueryBuilder;
 import com.icthh.xm.ms.entity.service.search.mapper.QueryTypeBuilderMapper;
 import com.icthh.xm.ms.entity.service.search.query.dto.NativeSearchQuery;
-import org.junit.jupiter.api.Test;
+import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.mapstruct.factory.Mappers;
+import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.data.domain.PageRequest;
 
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 
-public class QueryForListSearchMapperUnitTest {
+@RunWith(MockitoJUnitRunner.class)
+public class QueryForListSearchMapperUnitTest extends AbstractUnitTest {
 
     private final SearchRequestQueryBuilder searchRequestQueryBuilder = new SearchRequestQueryBuilder(Mappers.getMapper(QueryTypeBuilderMapper.class));
 
     @Test
-    void testQueryForList() {
+    public void testQueryForList() {
         String query = "typeKey:ACCOUNT";
         NativeSearchQuery nativeSearchQuery = new NativeSearchQueryBuilder()
             .withQuery(QueryBuilders.queryStringQuery(query))
@@ -34,7 +38,7 @@ public class QueryForListSearchMapperUnitTest {
     }
 
     @Test
-    void testCommonTermsQuery() {
+    public void testCommonTermsQuery() {
         String fieldName = "stateKey";
         String text = "ACTIVE";
         NativeSearchQuery nativeSearchQuery = new NativeSearchQueryBuilder()
@@ -51,7 +55,7 @@ public class QueryForListSearchMapperUnitTest {
     }
 
     @Test
-    void testBoolQuery() {
+    public void testBoolQuery() {
         NativeSearchQuery searchQuery = new NativeSearchQueryBuilder()
                 .withQuery(QueryBuilders.boolQuery()
                     .must(QueryBuilders.termQuery("typeKey", "ACCOUNT"))
@@ -99,7 +103,7 @@ public class QueryForListSearchMapperUnitTest {
     }
 
     @Test
-    void testTermQuery() {
+    public void testTermQuery() {
         NativeSearchQuery nativeSearchQuery = new NativeSearchQueryBuilder()
             .withQuery(QueryBuilders.termQuery("data.size", 1.25)).build();
 
@@ -114,7 +118,7 @@ public class QueryForListSearchMapperUnitTest {
     }
 
     @Test
-    void testMatchQuery() {
+    public void testMatchQuery() {
         NativeSearchQuery nativeSearchQuery = new NativeSearchQueryBuilder()
             .withQuery(QueryBuilders.matchQuery("name", "Artemis")).build();
 

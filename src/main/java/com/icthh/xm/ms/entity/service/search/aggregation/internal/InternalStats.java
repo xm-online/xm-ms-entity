@@ -19,10 +19,8 @@
 package com.icthh.xm.ms.entity.service.search.aggregation.internal;
 
 import com.icthh.xm.ms.entity.service.search.aggregation.stats.Stats;
-import lombok.Getter;
-import org.elasticsearch.search.DocValueFormat;
+import com.icthh.xm.ms.entity.service.search.builder.aggregation.support.DocValueFormat;
 
-@Getter
 public class InternalStats extends InternalNumericMetricsAggregation.MultiValue implements Stats {
     enum Metrics {
 
@@ -48,8 +46,28 @@ public class InternalStats extends InternalNumericMetricsAggregation.MultiValue 
     }
 
     @Override
+    public long getCount() {
+        return count;
+    }
+
+    @Override
+    public double getMin() {
+        return min;
+    }
+
+    @Override
+    public double getMax() {
+        return max;
+    }
+
+    @Override
     public double getAvg() {
         return sum / count;
+    }
+
+    @Override
+    public double getSum() {
+        return sum;
     }
 
     @Override

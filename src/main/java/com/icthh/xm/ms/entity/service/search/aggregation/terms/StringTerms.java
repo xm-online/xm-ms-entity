@@ -23,7 +23,7 @@ package com.icthh.xm.ms.entity.service.search.aggregation.terms;
 
 import com.icthh.xm.ms.entity.service.search.aggregation.internal.InternalAggregations;
 import org.apache.lucene.util.BytesRef;
-import org.elasticsearch.search.DocValueFormat;
+import com.icthh.xm.ms.entity.service.search.builder.aggregation.support.DocValueFormat;
 
 import java.util.List;
 

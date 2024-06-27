@@ -19,7 +19,7 @@
 package com.icthh.xm.ms.entity.service.search.aggregation.internal;
 
 import com.icthh.xm.ms.entity.service.search.aggregation.stats.Max;
-import org.elasticsearch.search.DocValueFormat;
+import com.icthh.xm.ms.entity.service.search.builder.aggregation.support.DocValueFormat;
 
 public class InternalMax extends InternalNumericMetricsAggregation.SingleValue implements Max {
     private final double max;

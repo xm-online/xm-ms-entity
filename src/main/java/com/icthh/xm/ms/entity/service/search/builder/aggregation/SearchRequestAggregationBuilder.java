@@ -7,7 +7,6 @@ import co.elastic.clients.elasticsearch._types.aggregations.TermsAggregation;
 import com.icthh.xm.ms.entity.service.search.mapper.AggregationTypeBuilderMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
-import org.springframework.util.CollectionUtils;
 
 import java.util.List;
 import java.util.Map;
