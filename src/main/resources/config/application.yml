@@ -237,6 +237,13 @@ application:
         metricTopics: system_topic
     domain-event:
         enabled: false
+    elastic:
+        scheme: "http"
+        userName: ""
+        password: ""
+        host: ""
+        port: 9200
+
 # ===================================================================
 # Timeline specific properties
 #

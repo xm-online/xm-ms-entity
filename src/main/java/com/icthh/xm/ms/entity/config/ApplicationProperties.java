@@ -65,6 +65,8 @@ public class ApplicationProperties {
 
     private DomainEvent domainEvent;
 
+    private Elastic elastic;
+
     @Getter
     @Setter
     public static class Amazon {
@@ -124,10 +126,20 @@ public class ApplicationProperties {
        private int connectionTimeoutTopic;
        List<String> metricTopics;
     }
+
     @Getter
     @Setter
     public static class DomainEvent {
         private boolean enabled;
     }
 
+    @Getter
+    @Setter
+    public static class Elastic {
+        private String scheme;
+        private String userName;
+        private String password;
+        private String host;
+        private Integer port;
+    }
 }
