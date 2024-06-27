@@ -49,4 +49,42 @@ public class BoolQueryBuilder extends AbstractQueryBuilder<BoolQueryBuilder> {
     public List<QueryBuilder> must() {
         return this.mustClauses;
     }
+
+    public BoolQueryBuilder filter(QueryBuilder queryBuilder) {
+        if (queryBuilder == null) {
+            throw new IllegalArgumentException("inner bool query clause cannot be null");
+        }
+        filterClauses.add(queryBuilder);
+        return this;
+    }
+
+    public List<QueryBuilder> filter() {
+        return this.filterClauses;
+    }
+
+    public BoolQueryBuilder mustNot(QueryBuilder queryBuilder) {
+        if (queryBuilder == null) {
+            throw new IllegalArgumentException("inner bool query clause cannot be null");
+        }
+        mustNotClauses.add(queryBuilder);
+        return this;
+    }
+
+    public List<QueryBuilder> mustNot() {
+        return this.mustNotClauses;
+    }
+
+    public BoolQueryBuilder should(QueryBuilder queryBuilder) {
+        if (queryBuilder == null) {
+            throw new IllegalArgumentException("inner bool query clause cannot be null");
+        }
+        shouldClauses.add(queryBuilder);
+        return this;
+    }
+
+    public List<QueryBuilder> should() {
+        return this.shouldClauses;
+    }
+
+
 }

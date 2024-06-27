@@ -40,4 +40,12 @@ public class MatchQueryBuilder extends AbstractQueryBuilder<MatchQueryBuilder> {
         this.fieldName = fieldName;
         this.value = value;
     }
+
+    public String getFieldName() {
+        return this.fieldName;
+    }
+
+    public Object getValue() {
+        return this.value;
+    }
 }

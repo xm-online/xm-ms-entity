@@ -23,11 +23,15 @@ public class SearchResultMapper {
         float maxScore = response.maxScore() != null ? response.maxScore().floatValue() : 0;
         long totalValues = response.hits().total() != null ? response.hits().total().value() : 0;
 
-        List<T> results = response.hits().hits().stream()
+        List<T> results = mapListSearchResults(response);
+
+        return new AggregatedPageImpl<T>(results, pageable, totalValues, null, scrollId, maxScore);
+    }
+
+    public <T> List<T> mapListSearchResults(SearchResponse<T> response) {
+        return response.hits().hits().stream()
             .filter(it -> it.source() != null)
             .map(Hit::source)
             .collect(Collectors.toList());
-
-        return new AggregatedPageImpl<T>(results, pageable, totalValues, null, scrollId, maxScore);
     }
 }
