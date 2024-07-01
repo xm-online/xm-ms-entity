@@ -1,12 +1,14 @@
 package com.icthh.xm.ms.entity.service.search;
 
 import co.elastic.clients.elasticsearch._types.query_dsl.MatchQuery;
+import co.elastic.clients.elasticsearch._types.query_dsl.NestedQuery;
 import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 import co.elastic.clients.elasticsearch._types.query_dsl.TermQuery;
 import com.icthh.xm.ms.entity.AbstractUnitTest;
 import com.icthh.xm.ms.entity.service.search.builder.NativeSearchQueryBuilder;
 import com.icthh.xm.ms.entity.service.search.builder.QueryBuilders;
 import com.icthh.xm.ms.entity.service.search.builder.SearchRequestQueryBuilder;
+import com.icthh.xm.ms.entity.service.search.enums.ScoreMode;
 import com.icthh.xm.ms.entity.service.search.mapper.QueryTypeBuilderMapper;
 import com.icthh.xm.ms.entity.service.search.query.dto.NativeSearchQuery;
 import org.junit.Test;
@@ -29,7 +31,7 @@ public class QueryForListSearchMapperUnitTest extends AbstractUnitTest {
         String query = "typeKey:ACCOUNT";
         NativeSearchQuery nativeSearchQuery = new NativeSearchQueryBuilder()
             .withQuery(QueryBuilders.queryStringQuery(query))
-            .withPageable(new PageRequest(0, 10))
+            .withPageable(PageRequest.of(0, 10))
             .build();
 
         String actualQuery = searchRequestQueryBuilder.buildQuery(nativeSearchQuery.getQuery()).simpleQueryString().query();
@@ -130,5 +132,20 @@ public class QueryForListSearchMapperUnitTest extends AbstractUnitTest {
         assertEquals("name", matchQueryFiled);
         assertEquals("Artemis", matchQueryValue);
         assertEquals("String", matchQueryKind);
+    }
+
+    @Test
+    public void testNestedQuery() {
+        String path = "data.contactInfo";
+        String queryString = "name:Hecate";
+        NativeSearchQuery nativeSearchQuery = new NativeSearchQueryBuilder()
+            .withQuery(QueryBuilders.nestedQuery(path, QueryBuilders.queryStringQuery(queryString), ScoreMode.None)).build();
+
+        NestedQuery nestedQuery = searchRequestQueryBuilder.buildQuery(nativeSearchQuery.getQuery()).nested();
+        String nestedQueryPath = nestedQuery.path();
+        String nestedQueryStringQuery = nestedQuery.query().simpleQueryString().query();
+
+        assertEquals(path, nestedQueryPath);
+        assertEquals(queryString, nestedQueryStringQuery);
     }
 }

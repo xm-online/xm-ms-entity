@@ -32,7 +32,8 @@ public interface QueryTypeBuilderMapper {
     @Mapping(target = "value", ignore = true)
     TermQuery.Builder toTermQueryBuilder(TermQueryBuilder termQueryBuilder);
 
-
+    @Mapping(target = "path", source = "path")
+    @Mapping(target = "query", ignore = true)
     NestedQuery.Builder toNestedQueryBuilder(NestedQueryBuilder nestedQueryBuilder);
 
     @Named("convertObjectToString")

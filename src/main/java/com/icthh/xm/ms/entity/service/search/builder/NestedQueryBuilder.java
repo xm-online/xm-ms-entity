@@ -55,4 +55,12 @@ public class NestedQueryBuilder extends AbstractQueryBuilder<NestedQueryBuilder>
         return this;
     }
 
+    public String getPath() {
+        return path;
+    }
+
+    public QueryBuilder getQuery() {
+        return query;
+    }
+
 }
