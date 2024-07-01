@@ -25,8 +25,7 @@ public class SearchRequestQueryBuilder {
             return new Query(queryTypeBuilderMapper.toCommonTermsQueryBuilder(commonTermsQueryBuilder).build());
         } else if (queryBuilder instanceof NestedQueryBuilder) {
             NestedQueryBuilder nestedQueryBuilder = (NestedQueryBuilder) queryBuilder;
-            NestedQuery nestedQuery = queryTypeBuilderMapper.toNestedQueryBuilder(nestedQueryBuilder).build();
-            return new Query(nestedQuery);
+            return toNestedQuery(nestedQueryBuilder);
         } else if (queryBuilder instanceof MatchQueryBuilder) {
             MatchQueryBuilder matchQueryBuilder = (MatchQueryBuilder) queryBuilder;
             FieldValue fieldValue = toFieldValue(matchQueryBuilder.getValue());
@@ -42,6 +41,13 @@ public class SearchRequestQueryBuilder {
             return toBoolQuery(boolQueryBuilder);
         }
         return null;
+    }
+
+    private Query toNestedQuery(NestedQueryBuilder nestedQueryBuilder) {
+        NestedQuery.Builder nestedQuery = queryTypeBuilderMapper.toNestedQueryBuilder(nestedQueryBuilder);
+        nestedQuery.query(buildQuery(nestedQueryBuilder.getQuery()));
+
+        return Query.of(query -> query.nested(nestedQuery.build()));
     }
 
     private Query toBoolQuery(BoolQueryBuilder boolQueryBuilder) {
