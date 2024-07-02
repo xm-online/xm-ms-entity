@@ -21,19 +21,23 @@
  */
 package com.icthh.xm.ms.entity.service.search.builder;
 
+import lombok.Getter;
+
 import java.util.Objects;
 
+@Getter
 public final class InnerHitBuilder {
 
     private String name;
     private boolean ignoreUnmapped;
+    private int from = 0;
+    private int size = 3;
+    private boolean explain = false;
+    private boolean version = false;
+    private boolean trackScores = false;
 
     public InnerHitBuilder() {
         this.name = null;
-    }
-
-    public String getName() {
-        return name;
     }
 
     public InnerHitBuilder setName(String name) {

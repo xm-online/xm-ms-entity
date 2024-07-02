@@ -6,6 +6,7 @@ import co.elastic.clients.elasticsearch._types.query_dsl.MatchQuery;
 import co.elastic.clients.elasticsearch._types.query_dsl.NestedQuery;
 import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 import co.elastic.clients.elasticsearch._types.query_dsl.TermQuery;
+import co.elastic.clients.elasticsearch.core.search.InnerHits;
 import com.icthh.xm.ms.entity.service.search.mapper.QueryTypeBuilderMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -46,6 +47,7 @@ public class SearchRequestQueryBuilder {
     private Query toNestedQuery(NestedQueryBuilder nestedQueryBuilder) {
         NestedQuery.Builder nestedQuery = queryTypeBuilderMapper.toNestedQueryBuilder(nestedQueryBuilder);
         nestedQuery.query(buildQuery(nestedQueryBuilder.getQuery()));
+        nestedQuery.innerHits(toInnerHits(nestedQueryBuilder.innerHit()));
 
         return Query.of(query -> query.nested(nestedQuery.build()));
     }
@@ -74,6 +76,13 @@ public class SearchRequestQueryBuilder {
         } else {
             return FieldValue.of(value);
         }
+    }
+
+    private InnerHits toInnerHits(InnerHitBuilder innerHitBuilder) {
+        if (innerHitBuilder == null) {
+            return null;
+        }
+        return queryTypeBuilderMapper.toInnerHitBuilder(innerHitBuilder).build();
     }
 
 }
