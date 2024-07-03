@@ -1,6 +1,6 @@
 /*
  * Original version of this file is located at:
- * https://github.com/elastic/elasticsearch/blob/v6.4.3/server/src/main/java/org/elasticsearch/index/query/InnerHitBuilder.java
+ * https://github.com/elastic/elasticsearch/blob/v6.4.3/server/src/main/java/org/elasticsearch/search/SearchHit.java
  *
  * Licensed to Elasticsearch under one or more contributor
  * license agreements. See the NOTICE file distributed with
@@ -19,34 +19,19 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package com.icthh.xm.ms.entity.service.search.builder;
 
-import lombok.Getter;
+package com.icthh.xm.ms.entity.service.search.dto.response;
 
-import java.util.Objects;
+import lombok.AllArgsConstructor;
+import lombok.Data;
 
-@Getter
-public final class InnerHitBuilder {
+import java.util.Map;
 
-    private String name;
-    private boolean ignoreUnmapped;
-    private int from = 0;
-    private int size = 3;
-    private boolean explain = false;
-    private boolean version = false;
-    private boolean trackScores = false;
+@Data
+@AllArgsConstructor
+public class SearchHit {
 
-    public InnerHitBuilder() {
-        this.name = null;
-    }
+    private String sourceAsString;
 
-    public InnerHitBuilder setName(String name) {
-        this.name = Objects.requireNonNull(name);
-        return this;
-    }
-
-    public InnerHitBuilder setIgnoreUnmapped(boolean value) {
-        this.ignoreUnmapped = value;
-        return this;
-    }
+    private Map<String, SearchHits> innerHits;
 }

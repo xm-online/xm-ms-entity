@@ -37,5 +37,7 @@ public interface Query {
 
     List<String> getIndices();
 
+    void addIndices(String... indices);
+
     SourceFilter getSourceFilter();
 }

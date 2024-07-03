@@ -63,4 +63,11 @@ public class NestedQueryBuilder extends AbstractQueryBuilder<NestedQueryBuilder>
         return query;
     }
 
+    public ScoreMode scoreMode() {
+        return scoreMode;
+    }
+
+    public boolean ignoreUnmapped() {
+        return ignoreUnmapped;
+    }
 }

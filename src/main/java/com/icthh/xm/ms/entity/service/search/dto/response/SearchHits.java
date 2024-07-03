@@ -1,6 +1,6 @@
 /*
  * Original version of this file is located at:
- * https://github.com/elastic/elasticsearch/blob/v6.4.3/server/src/main/java/org/elasticsearch/index/query/InnerHitBuilder.java
+ * https://github.com/elastic/elasticsearch/blob/v6.4.3/server/src/main/java/org/elasticsearch/search/SearchHits.java
  *
  * Licensed to Elasticsearch under one or more contributor
  * license agreements. See the NOTICE file distributed with
@@ -19,34 +19,31 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package com.icthh.xm.ms.entity.service.search.builder;
+
+package com.icthh.xm.ms.entity.service.search.dto.response;
 
 import lombok.Getter;
 
-import java.util.Objects;
+import java.util.Arrays;
+import java.util.Iterator;
 
 @Getter
-public final class InnerHitBuilder {
+public class SearchHits implements Iterable<SearchHit> {
 
-    private String name;
-    private boolean ignoreUnmapped;
-    private int from = 0;
-    private int size = 3;
-    private boolean explain = false;
-    private boolean version = false;
-    private boolean trackScores = false;
-
-    public InnerHitBuilder() {
-        this.name = null;
+    public static SearchHits empty() {
+        return new SearchHits(EMPTY);
     }
 
-    public InnerHitBuilder setName(String name) {
-        this.name = Objects.requireNonNull(name);
-        return this;
+    public static final SearchHit[] EMPTY = new SearchHit[0];
+
+    private final SearchHit[] hits;
+
+    public SearchHits(SearchHit[] hits) {
+        this.hits = hits;
     }
 
-    public InnerHitBuilder setIgnoreUnmapped(boolean value) {
-        this.ignoreUnmapped = value;
-        return this;
+    @Override
+    public Iterator<SearchHit> iterator() {
+        return Arrays.stream(getHits()).iterator();
     }
 }

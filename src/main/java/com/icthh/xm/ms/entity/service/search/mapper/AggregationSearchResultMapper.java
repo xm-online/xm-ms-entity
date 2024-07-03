@@ -38,6 +38,7 @@ public class AggregationSearchResultMapper {
         return new InternalAggregations(convertedAggregations);
     }
 
+    //FIXME VK: let's avoid if else, in this case switch could be used
     public InternalAggregation convertAggregate(String name, Aggregate aggregate) {
         if (aggregate._kind() == Aggregate.Kind.Sterms) {
             return convertStringTermsAggregate(name, aggregate.sterms());
@@ -62,6 +63,7 @@ public class AggregationSearchResultMapper {
                     subAggregations,
                     false,
                     0, // todo: check mapping fields
+                    // FIXME VK: resolve this todo, also magic number should be removed
                     DEFAULT_DOC_FORMAT
                 );
             })

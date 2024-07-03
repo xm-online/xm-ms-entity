@@ -6,9 +6,12 @@ import co.elastic.clients.elasticsearch._types.query_dsl.MatchQuery;
 import co.elastic.clients.elasticsearch._types.query_dsl.NestedQuery;
 import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 import co.elastic.clients.elasticsearch._types.query_dsl.TermQuery;
+import co.elastic.clients.elasticsearch.core.search.InnerHits;
 import com.icthh.xm.ms.entity.service.search.mapper.QueryTypeBuilderMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
+
+import java.util.HashMap;
 
 @Component
 @RequiredArgsConstructor
@@ -16,6 +19,7 @@ public class SearchRequestQueryBuilder {
 
     private final QueryTypeBuilderMapper queryTypeBuilderMapper;
 
+    //FIXME VK: let's avoid if else if else pattern, for example re-write, see example on methods toFieldValue above
     public Query buildQuery(QueryBuilder queryBuilder) {
         if (queryBuilder instanceof QueryStringQueryBuilder) {
             QueryStringQueryBuilder queryStringQueryBuilder = (QueryStringQueryBuilder) queryBuilder;
@@ -46,6 +50,7 @@ public class SearchRequestQueryBuilder {
     private Query toNestedQuery(NestedQueryBuilder nestedQueryBuilder) {
         NestedQuery.Builder nestedQuery = queryTypeBuilderMapper.toNestedQueryBuilder(nestedQueryBuilder);
         nestedQuery.query(buildQuery(nestedQueryBuilder.getQuery()));
+        nestedQuery.innerHits(toInnerHits(nestedQueryBuilder.innerHit()));
 
         return Query.of(query -> query.nested(nestedQuery.build()));
     }
@@ -61,6 +66,12 @@ public class SearchRequestQueryBuilder {
         return Query.of(query -> query.bool(boolQuery.build()));
     }
 
+    //FIXME VK: let's avoid if else if else pattern, for example re-write to something like this:
+    //FIXME VK:  private final Map<Class<?>, Function<Object, FieldValue>> converters = new HashMap<>();
+    //FIXME VK:  private FieldValue toFieldValue(Object value) {
+    //FIXME VK:    return converters.getOrDefault(value.getClass(), v -> FieldValue.of(v)).apply(value);
+    //FIXME VK: }
+    //FIXME VK:converter.toFieldValue(123)
     private FieldValue toFieldValue(Object value) {
         if (value instanceof Long || value instanceof Integer) {
             long fieldValue = Long.parseLong(String.valueOf(value));
@@ -74,6 +85,13 @@ public class SearchRequestQueryBuilder {
         } else {
             return FieldValue.of(value);
         }
+    }
+
+    private InnerHits toInnerHits(InnerHitBuilder innerHitBuilder) {
+        if (innerHitBuilder == null) {
+            return null;
+        }
+        return queryTypeBuilderMapper.toInnerHitBuilder(innerHitBuilder).build();
     }
 
 }
