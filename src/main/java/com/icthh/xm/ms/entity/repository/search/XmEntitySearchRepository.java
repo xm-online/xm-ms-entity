@@ -1,11 +1,11 @@
 package com.icthh.xm.ms.entity.repository.search;
 
 import com.icthh.xm.ms.entity.domain.XmEntity;
-import org.elasticsearch.index.query.QueryBuilder;
+import com.icthh.xm.ms.entity.service.search.builder.QueryBuilder;
+import com.icthh.xm.ms.entity.service.search.query.SearchQuery;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.elasticsearch.core.query.SearchQuery;
 
 import java.util.Optional;
 

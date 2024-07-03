@@ -20,7 +20,6 @@ import lombok.AccessLevel;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.time.StopWatch;
-import org.elasticsearch.ResourceAlreadyExistsException;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Page;
@@ -303,15 +302,16 @@ public class ElasticsearchIndexService {
         String idxKey = ElasticsearchTemplateWrapper.composeIndexName(tenantKey.getValue());
 
         elasticsearchTemplateWrapper.deleteIndex(idxKey);
-        try {
-            if (indexConfiguration.isConfigExists()) {
-                elasticsearchTemplateWrapper.createIndex(idxKey, indexConfiguration.getConfiguration());
-            } else {
-                elasticsearchTemplateWrapper.createIndex(idxKey);
-            }
-        } catch (ResourceAlreadyExistsException e) {
-            log.info("Do nothing. Index was already concurrently recreated by some other service");
-        }
+        // TODO-IMPL: ResourceAlreadyExistsException handle exception
+//        try {
+//            if (indexConfiguration.isConfigExists()) {
+//                elasticsearchTemplateWrapper.createIndex(idxKey, indexConfiguration.getConfiguration());
+//            } else {
+//                elasticsearchTemplateWrapper.createIndex(idxKey);
+//            }
+//        } catch (ResourceAlreadyExistsException e) {
+//            log.info("Do nothing. Index was already concurrently recreated by some other service");
+//        }
 
         if (mappingConfiguration.isMappingExists()) {
             elasticsearchTemplateWrapper.putMapping(clazz, mappingConfiguration.getMapping());

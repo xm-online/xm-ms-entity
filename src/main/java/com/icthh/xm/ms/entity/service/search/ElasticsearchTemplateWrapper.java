@@ -3,74 +3,52 @@ package com.icthh.xm.ms.entity.service.search;
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch.core.SearchRequest;
 import co.elastic.clients.elasticsearch.core.SearchResponse;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.icthh.xm.commons.permission.service.PermissionCheckService;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.repository.search.translator.SpelToElasticTranslator;
 import com.icthh.xm.ms.entity.service.dto.SearchDto;
-import com.icthh.xm.ms.entity.service.search.mapper.SearchResultMapper;
+import com.icthh.xm.ms.entity.service.search.builder.BoolQueryBuilder;
+import com.icthh.xm.ms.entity.service.search.builder.NativeSearchQueryBuilder;
+import com.icthh.xm.ms.entity.service.search.filter.FetchSourceFilter;
+import com.icthh.xm.ms.entity.service.search.mapper.GetResultMapper;
 import com.icthh.xm.ms.entity.service.search.mapper.SearchRequestBuilder;
+import com.icthh.xm.ms.entity.service.search.mapper.SearchResultMapper;
 import com.icthh.xm.ms.entity.service.search.mapper.extractor.ResultsExtractor;
+import com.icthh.xm.ms.entity.service.search.page.ScrolledPage;
 import com.icthh.xm.ms.entity.service.search.page.aggregation.AggregatedPage;
+import com.icthh.xm.ms.entity.service.search.query.CriteriaQuery;
 import com.icthh.xm.ms.entity.service.search.query.SearchQuery;
+import com.icthh.xm.ms.entity.service.search.query.StringQuery;
+import com.icthh.xm.ms.entity.service.search.query.dto.DeleteQuery;
+import com.icthh.xm.ms.entity.service.search.query.dto.GetQuery;
+import com.icthh.xm.ms.entity.service.search.query.dto.IndexQuery;
+import com.icthh.xm.ms.entity.service.search.query.dto.NativeSearchQuery;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.elasticsearch.action.get.GetResponse;
-import org.elasticsearch.action.index.IndexRequestBuilder;
-import org.elasticsearch.action.update.UpdateResponse;
-import org.elasticsearch.client.Client;
-import org.elasticsearch.client.Requests;
-import org.elasticsearch.cluster.metadata.AliasMetaData;
-import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.elasticsearch.ElasticsearchException;
-import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
-import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
-import org.springframework.data.elasticsearch.core.GetResultMapper;
-import org.springframework.data.elasticsearch.core.MultiGetResultMapper;
-import org.springframework.data.elasticsearch.core.ResultsMapper;
-import org.springframework.data.elasticsearch.core.ScrolledPage;
-import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
-import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
-import org.springframework.data.elasticsearch.core.query.AliasQuery;
-import org.springframework.data.elasticsearch.core.query.CriteriaQuery;
-import org.springframework.data.elasticsearch.core.query.DeleteQuery;
-import org.springframework.data.elasticsearch.core.query.FetchSourceFilter;
-import org.springframework.data.elasticsearch.core.query.GetQuery;
-import org.springframework.data.elasticsearch.core.query.IndexQuery;
-import org.springframework.data.elasticsearch.core.query.MoreLikeThisQuery;
-import org.springframework.data.elasticsearch.core.query.NativeSearchQuery;
-import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
-import org.springframework.data.elasticsearch.core.query.StringQuery;
-import org.springframework.data.elasticsearch.core.query.UpdateQuery;
-import org.springframework.data.util.CloseableIterator;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import static com.icthh.xm.ms.entity.service.search.builder.QueryBuilders.boolQuery;
+import static com.icthh.xm.ms.entity.service.search.builder.QueryBuilders.matchQuery;
+import static com.icthh.xm.ms.entity.service.search.builder.QueryBuilders.queryStringQuery;
+import static com.icthh.xm.ms.entity.service.search.query.AbstractQuery.DEFAULT_PAGE;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Objects.nonNull;
 import static org.apache.commons.lang.StringUtils.isEmpty;
-import static org.elasticsearch.index.query.QueryBuilders.boolQuery;
-import static org.elasticsearch.index.query.QueryBuilders.matchQuery;
-import static org.elasticsearch.index.query.QueryBuilders.prefixQuery;
-import static org.elasticsearch.index.query.QueryBuilders.queryStringQuery;
-import static org.elasticsearch.index.query.QueryBuilders.simpleQueryStringQuery;
-import static org.elasticsearch.index.query.QueryBuilders.termsQuery;
-import static org.springframework.data.elasticsearch.core.query.Query.DEFAULT_PAGE;
 
 @Slf4j
 @Service
@@ -84,8 +62,6 @@ public class ElasticsearchTemplateWrapper implements ElasticsearchOperations {
 
     private final TenantContextHolder tenantContextHolder;
     private final ElasticsearchClient elasticsearchClient;
-    private final ObjectMapper objectMapper;
-    private final ResultsMapper resultsMapper;
     private final PermissionCheckService permissionCheckService;
     private final SpelToElasticTranslator spelToElasticTranslator;
     private final SearchResultMapper searchResultMapper;
@@ -98,10 +74,6 @@ public class ElasticsearchTemplateWrapper implements ElasticsearchOperations {
     public String getIndexName() {
         String tenantKey = tenantContextHolder.getTenantKey();
         return composeIndexName(tenantKey);
-    }
-
-    public ElasticsearchTemplate getElasticsearchTemplate() {
-        return elasticsearchTemplate;
     }
 
     public <T> List<T> search(String query, Class<T> entityClass, String privilegeKey) {
@@ -155,14 +127,17 @@ public class ElasticsearchTemplateWrapper implements ElasticsearchOperations {
 
         val esQuery = isEmpty(permittedQuery)
             ? boolQuery().must(typeKeyQuery)
-            : typeKeyQuery.must(simpleQueryStringQuery(permittedQuery));
+            : typeKeyQuery.must(queryStringQuery(permittedQuery)); // TEMP-FIX
+//            : typeKeyQuery.must(simpleQueryStringQuery(permittedQuery));
+//            TODO-IMPL: The same method with queryStringQuery but not throws an syntax error.
+//                       Does queryStringQuery throws error in implementation? Can we replace this method to queryStringQuery?
 
         log.debug("Executing DSL '{}'", esQuery);
 
         String indexName = ElasticsearchTemplateWrapper.composeIndexName(tenantContextHolder.getTenantKey());
         NativeSearchQuery queryBuilder = new NativeSearchQueryBuilder()
             .withIndices(indexName)
-            .withTypes(ElasticsearchTemplateWrapper.INDEX_QUERY_TYPE)
+//            .withTypes(ElasticsearchTemplateWrapper.INDEX_QUERY_TYPE) TODO-IMPL: Removed in 8.14v
             .withQuery(esQuery)
             .withPageable(pageable == null ? DEFAULT_PAGE : pageable)
             .build();
@@ -177,32 +152,38 @@ public class ElasticsearchTemplateWrapper implements ElasticsearchOperations {
 
         BoolQueryBuilder typeKeyQuery = typeKeyQuery(targetEntityTypeKey);
 
-        BoolQueryBuilder idNotIn = boolQuery().mustNot(termsQuery("id", ids));
+        BoolQueryBuilder idNotIn = boolQuery();
+//            .mustNot(termsQuery("id", ids)); TODO-IMPL:
         var esQuery = isEmpty(permittedQuery)
             ? idNotIn.must(typeKeyQuery)
-            : idNotIn.must(simpleQueryStringQuery(permittedQuery)).must(typeKeyQuery);
+            : idNotIn.must(queryStringQuery(permittedQuery)).must(typeKeyQuery); // TEMP-FIX
+//            : idNotIn.must(simpleQueryStringQuery(permittedQuery)).must(typeKeyQuery);
+//            TODO-IMPL: The same method with queryStringQuery but not throws an syntax error.
+//                       Does queryStringQuery throws error in implementation? Can we replace this method to queryStringQuery?
 
         log.info("Executing DSL '{}'", esQuery);
 
         NativeSearchQuery queryBuilder = new NativeSearchQueryBuilder()
             .withQuery(esQuery)
             .withIndices(getIndexName())
-            .withTypes(ElasticsearchTemplateWrapper.INDEX_QUERY_TYPE)
+//            .withTypes(ElasticsearchTemplateWrapper.INDEX_QUERY_TYPE) TODO-IMPL: Removed in 8.14v
             .withPageable(pageable == null ? DEFAULT_PAGE : pageable)
             .build();
 
         return queryForPage(queryBuilder, XmEntity.class);
     }
 
-    @Override
-    public ElasticsearchConverter getElasticsearchConverter() {
-        return elasticsearchTemplate.getElasticsearchConverter();
-    }
+    // TODO-REMOVED: Unused method
+//    @Override
+//    public ElasticsearchConverter getElasticsearchConverter() {
+//        return elasticsearchTemplate.getElasticsearchConverter();
+//    }
 
-    @Override
-    public ElasticsearchClient getClient() {
-        return elasticsearchClient;
-    }
+    // TODO-REMOVED: Unused method (check leps for usage otherwise remove)
+//    @Override
+//    public ElasticsearchClient getClient() {
+//        return elasticsearchClient;
+//    }
 
     @Override
     public <T> boolean createIndex(Class<T> clazz) {
@@ -211,77 +192,93 @@ public class ElasticsearchTemplateWrapper implements ElasticsearchOperations {
 
     @Override
     public boolean createIndex(String indexName) {
-        return elasticsearchTemplate.createIndex(indexName);
+//        return elasticsearchTemplate.createIndex(indexName);
+        return false;
     }
 
     @Override
     public boolean createIndex(String indexName, Object settings) {
-        return elasticsearchTemplate.createIndex(indexName, settings);
+//        return elasticsearchTemplate.createIndex(indexName, settings);
+        return false;
     }
 
-    @Override
-    public <T> boolean createIndex(Class<T> clazz, Object settings) {
-        throw new UnsupportedOperationException("Not implemented");
-    }
+    // TODO-REMOVE: Unused methods
+//    @Override
+//    public <T> boolean createIndex(Class<T> clazz, Object settings) {
+//        throw new UnsupportedOperationException("Not implemented");
+//    }
 
     @Override
     public <T> boolean putMapping(Class<T> clazz) {
-        return elasticsearchTemplate.putMapping(getIndexName(), ElasticsearchTemplateWrapper.INDEX_QUERY_TYPE, getDefaultMapping());
+//        return elasticsearchTemplate.putMapping(getIndexName(), ElasticsearchTemplateWrapper.INDEX_QUERY_TYPE, getDefaultMapping());
+        return false;
     }
 
     @Override
     public boolean putMapping(String indexName, String type, Object mappings) {
-        return elasticsearchTemplate.putMapping(indexName, type, mappings);
+//        return elasticsearchTemplate.putMapping(indexName, type, mappings);
+        return false;
     }
 
     @Override
     public <T> boolean putMapping(Class<T> clazz, Object mappings) {
-        return elasticsearchTemplate.putMapping(getIndexName(), ElasticsearchTemplateWrapper.INDEX_QUERY_TYPE, mappings);
+//        return elasticsearchTemplate.putMapping(getIndexName(), ElasticsearchTemplateWrapper.INDEX_QUERY_TYPE, mappings);
+        return false;
     }
 
-    @Override
-    public <T> Map getMapping(Class<T> clazz) {
-        throw new UnsupportedOperationException("Not implemented");
-    }
-
-    @Override
-    public Map getMapping(String indexName, String type) {
-        throw new UnsupportedOperationException("Not implemented");
-    }
-
-    @Override
-    public Map getSetting(String indexName) {
-        throw new UnsupportedOperationException("Not implemented");
-    }
-
-    @Override
-    public <T> Map getSetting(Class<T> clazz) {
-        throw new UnsupportedOperationException("Not implemented");
-    }
+    // TODO-REMOVE: Check usage otherwise remove unused methods
+//    @Override
+//    public <T> Map getMapping(Class<T> clazz) {
+//        throw new UnsupportedOperationException("Not implemented");
+//    }
+//
+//    @Override
+//    public Map getMapping(String indexName, String type) {
+//        throw new UnsupportedOperationException("Not implemented");
+//    }
+//
+//    @Override
+//    public Map getSetting(String indexName) {
+//        throw new UnsupportedOperationException("Not implemented");
+//    }
+//
+//    @Override
+//    public <T> Map getSetting(Class<T> clazz) {
+//        throw new UnsupportedOperationException("Not implemented");
+//    }
 
     @Override
     public <T> T queryForObject(GetQuery query, Class<T> clazz) {
-        return queryForObject(query, clazz, resultsMapper);
+//        TODO-IMPL
+//        return queryForObject(query, clazz, resultsMapper);
+        return null;
     }
 
     @Override
     public <T> T queryForObject(GetQuery query, Class<T> clazz, GetResultMapper mapper) {
-        GetResponse response = elasticsearchTemplate.getClient()
-            .prepareGet(getIndexName(), ElasticsearchTemplateWrapper.INDEX_QUERY_TYPE, query.getId()).execute()
-            .actionGet();
-
-        T entity = mapper.mapResult(response, clazz);
-        return entity;
+//        TODO-IMPL
+//
+//        GetResponse response = elasticsearchTemplate.getClient()
+//            .prepareGet(getIndexName(), ElasticsearchTemplateWrapper.INDEX_QUERY_TYPE, query.getId()).execute()
+//            .actionGet();
+//
+//        T entity = mapper.mapResult(response, clazz);
+//        return entity;
+        return null;
     }
 
     @Override
     public <T> T queryForObject(CriteriaQuery query, Class<T> clazz) {
-        return elasticsearchTemplate.queryForObject(query, clazz);
+//        TODO-IMPL
+//        return elasticsearchTemplate.queryForObject(query, clazz);
+        return null;
     }
 
     @Override
     public <T> T queryForObject(StringQuery query, Class<T> clazz) {
-        return elasticsearchTemplate.queryForObject(query, clazz);
+//        TODO-IMPL
+//        return elasticsearchTemplate.queryForObject(query, clazz);
+        return null;
     }
 
     @Override
@@ -290,146 +287,177 @@ public class ElasticsearchTemplateWrapper implements ElasticsearchOperations {
 
         SearchRequest request = searchRequestBuilder.buildSearchRequest(query);
 
-        SearchResponse<T> search = search(request ,clazz);
+        SearchResponse<T> search = search(request, clazz);
         return searchResultMapper.mapSearchResults(search, pageable);
     }
 
     @Override
     public <T> Page<T> queryForPage(SearchQuery query, Class<T> clazz, SearchResultMapper mapper) {
-        return elasticsearchTemplate.queryForPage(query, clazz, mapper);
+//        TODO-IMPL
+//        return elasticsearchTemplate.queryForPage(query, clazz, mapper);
+        return null;
     }
 
     @Override
     public <T> Page<T> queryForPage(CriteriaQuery query, Class<T> clazz) {
-        return elasticsearchTemplate.queryForPage(query, clazz);
+//        TODO-IMPL
+//        return elasticsearchTemplate.queryForPage(query, clazz);
+        return null;
     }
 
     @Override
     public <T> Page<T> queryForPage(StringQuery query, Class<T> clazz) {
-        return elasticsearchTemplate.queryForPage(query, clazz);
+//        TODO-IMPL
+//        return elasticsearchTemplate.queryForPage(query, clazz);
+        return null;
     }
 
     @Override
     public <T> Page<T> queryForPage(StringQuery query, Class<T> clazz, SearchResultMapper mapper) {
-        return elasticsearchTemplate.queryForPage(query, clazz, mapper);
+//        TODO-IMPL
+//        return elasticsearchTemplate.queryForPage(query, clazz, mapper);
+        return null;
     }
 
-    @Override
-    public <T> CloseableIterator<T> stream(CriteriaQuery query, Class<T> clazz) {
-        throw new UnsupportedOperationException("Not implemented");
-    }
-
-    @Override
-    public <T> CloseableIterator<T> stream(SearchQuery query, Class<T> clazz) {
-        throw new UnsupportedOperationException("Not implemented");
-    }
-
-    @Override
-    public <T> CloseableIterator<T> stream(SearchQuery query, Class<T> clazz, SearchResultMapper mapper) {
-        throw new UnsupportedOperationException("Not implemented");
-    }
+    // TODO-REMOVE: Unused methods
+//    @Override
+//    public <T> CloseableIterator<T> stream(CriteriaQuery query, Class<T> clazz) {
+//        throw new UnsupportedOperationException("Not implemented");
+//    }
+//
+//    @Override
+//    public <T> CloseableIterator<T> stream(SearchQuery query, Class<T> clazz) {
+//        throw new UnsupportedOperationException("Not implemented");
+//    }
+//
+//    @Override
+//    public <T> CloseableIterator<T> stream(SearchQuery query, Class<T> clazz, SearchResultMapper mapper) {
+//        throw new UnsupportedOperationException("Not implemented");
+//    }
 
     @Override
     public <T> List<T> queryForList(CriteriaQuery query, Class<T> clazz) {
-        return elasticsearchTemplate.queryForList(query, clazz);
+//        TODO-IMPL
+//        return elasticsearchTemplate.queryForList(query, clazz);
+        return null;
     }
 
     @Override
     public <T> List<T> queryForList(StringQuery query, Class<T> clazz) {
-        return elasticsearchTemplate.queryForList(query, clazz);
+//        TODO-IMPL
+//        return elasticsearchTemplate.queryForList(query, clazz);
+        return null;
     }
 
     @Override
     public <T> List<T> queryForList(SearchQuery query, Class<T> clazz) {
-        // TODO Add implementation
-        return elasticsearchTemplate.queryForList(query, clazz);
-    }
-
-    public <T> List<T> queryForList(SearchQuery query, Class<T> clazz) {
         SearchRequest request = searchRequestBuilder.buildSearchRequest(query);
-        SearchResponse<T> searchResponse = search(request ,clazz);
+        SearchResponse<T> searchResponse = search(request, clazz);
 
         return searchResultMapper.mapListSearchResults(searchResponse);
     }
 
     @Override
     public <T> List<String> queryForIds(SearchQuery query) {
-        return elasticsearchTemplate.queryForIds(query);
+//        TODO-IMPL
+//        return elasticsearchTemplate.queryForIds(query);
+        return null;
     }
 
     @Override
     public <T> long count(CriteriaQuery query, Class<T> clazz) {
-        return elasticsearchTemplate.count(query, clazz);
+//        TODO-IMPL
+//        return elasticsearchTemplate.count(query, clazz);
+        return 0;
     }
 
     @Override
     public <T> long count(CriteriaQuery query) {
-        return elasticsearchTemplate.count(query);
+//        TODO-IMPL
+//        return elasticsearchTemplate.count(query);
+        return 0;
     }
 
     @Override
     public <T> long count(SearchQuery query, Class<T> clazz) {
-        return elasticsearchTemplate.count(query, clazz);
+//        TODO-IMPL
+//        return elasticsearchTemplate.count(query, clazz);
+        return 0;
     }
 
     @Override
     public <T> long count(SearchQuery query) {
-        return elasticsearchTemplate.count(query);
+//        TODO-IMPL
+//        return elasticsearchTemplate.count(query);
+        return 0;
     }
 
-    @Override
-    public <T> LinkedList<T> multiGet(SearchQuery searchQuery, Class<T> clazz) {
-        throw new UnsupportedOperationException("Not implemented");
-    }
-
-    @Override
-    public <T> LinkedList<T> multiGet(SearchQuery searchQuery, Class<T> clazz, MultiGetResultMapper multiGetResultMapper) {
-        throw new UnsupportedOperationException("Not implemented");
-    }
+    // TODO-REMOVE: Unused methods
+//    @Override
+//    public <T> LinkedList<T> multiGet(SearchQuery searchQuery, Class<T> clazz) {
+//        throw new UnsupportedOperationException("Not implemented");
+//    }
+//
+//    @Override
+//    public <T> LinkedList<T> multiGet(SearchQuery searchQuery, Class<T> clazz, MultiGetResultMapper multiGetResultMapper) {
+//        throw new UnsupportedOperationException("Not implemented");
+//    }
 
     @Override
     public String index(IndexQuery query) {
-        return prepareIndex(query).execute().actionGet().getId();
+//        TODO-IMPL
+//        return prepareIndex(query).execute().actionGet().getId();
+        return null;
     }
 
-    @Override
-    public UpdateResponse update(UpdateQuery updateQuery) {
-        throw new UnsupportedOperationException("Not implemented");
-    }
+    // TODO-REMOVE: Unused methods
+//    @Override
+//    public UpdateResponse update(UpdateQuery updateQuery) {
+//        throw new UnsupportedOperationException("Not implemented");
+//    }
 
     @Override
     public void bulkIndex(List<IndexQuery> queries) {
-        elasticsearchTemplate.bulkIndex(queries);
+//        TODO-IMPL
+//        elasticsearchTemplate.bulkIndex(queries);
     }
 
-    @Override
-    public void bulkUpdate(List<UpdateQuery> queries) {
-        throw new UnsupportedOperationException("Not implemented");
-    }
+    // TODO-REMOVE: Unused methods
+    //    @Override
+//    public void bulkUpdate(List<UpdateQuery> queries) {
+//        throw new UnsupportedOperationException("Not implemented");
+//    }
 
     @Override
     public String delete(String indexName, String type, String id) {
-        return elasticsearchTemplate.delete(indexName, type, id);
+//        TODO-IMPL
+//        return elasticsearchTemplate.delete(indexName, type, id);
+        return null;
     }
 
     @Override
     public <T> void delete(CriteriaQuery criteriaQuery, Class<T> clazz) {
-        elasticsearchTemplate.delete(criteriaQuery, clazz);
+//        TODO-IMPL
+//        elasticsearchTemplate.delete(criteriaQuery, clazz);
     }
 
     @Override
     public <T> String delete(Class<T> clazz, String id) {
-        return elasticsearchTemplate.delete(clazz, id);
+//        TODO-IMPL
+//        return elasticsearchTemplate.delete(clazz, id);
+        return null;
     }
 
     @Override
     public <T> void delete(DeleteQuery query, Class<T> clazz) {
-        elasticsearchTemplate.delete(query, clazz);
+//        TODO-IMPL
+//        elasticsearchTemplate.delete(query, clazz);
     }
 
     @Override
     public void delete(DeleteQuery query) {
-        elasticsearchTemplate.delete(query);
+//        TODO-IMPL
+//        elasticsearchTemplate.delete(query);
     }
 
     @Override
@@ -439,27 +467,36 @@ public class ElasticsearchTemplateWrapper implements ElasticsearchOperations {
 
     @Override
     public boolean deleteIndex(String indexName) {
-        return elasticsearchTemplate.deleteIndex(indexName);
+//        TODO-IMPL
+//        return elasticsearchTemplate.deleteIndex(indexName);
+        return false;
     }
 
     @Override
     public <T> boolean indexExists(Class<T> clazz) {
-        return indexExists(getIndexName());
+//        TODO-IMPL
+//        return indexExists(getIndexName());
+        return false;
     }
 
     @Override
     public boolean indexExists(String indexName) {
-        return elasticsearchTemplate.indexExists(indexName);
+//        TODO-IMPL
+//        return elasticsearchTemplate.indexExists(indexName);
+        return false;
     }
 
     @Override
     public boolean typeExists(String index, String type) {
-        return elasticsearchTemplate.typeExists(index, type);
+//        TODO-IMPL
+//        return elasticsearchTemplate.typeExists(index, type);
+        return false;
     }
 
     @Override
     public void refresh(String indexName) {
-        elasticsearchTemplate.refresh(indexName);
+//        TODO-IMPL
+//        elasticsearchTemplate.refresh(indexName);
     }
 
     @Override
@@ -469,107 +506,123 @@ public class ElasticsearchTemplateWrapper implements ElasticsearchOperations {
 
     @Override
     public <T> Page<T> startScroll(long scrollTimeInMillis, SearchQuery query, Class<T> clazz) {
-        return elasticsearchTemplate.startScroll(scrollTimeInMillis, query, clazz);
+//        TODO-IMPL
+//        return elasticsearchTemplate.startScroll(scrollTimeInMillis, query, clazz);
+        return null;
     }
 
     @Override
     public <T> Page<T> startScroll(long scrollTimeInMillis, SearchQuery query, Class<T> clazz, SearchResultMapper mapper) {
-        return elasticsearchTemplate.startScroll(scrollTimeInMillis, query, clazz, mapper);
+//        TODO-IMPL
+//        return elasticsearchTemplate.startScroll(scrollTimeInMillis, query, clazz, mapper);
+        return null;
     }
 
     @Override
     public <T> Page<T> startScroll(long scrollTimeInMillis, CriteriaQuery criteriaQuery, Class<T> clazz) {
-        return elasticsearchTemplate.startScroll(scrollTimeInMillis, criteriaQuery, clazz);
+//        TODO-IMPL
+//        return elasticsearchTemplate.startScroll(scrollTimeInMillis, criteriaQuery, clazz);
+        return null;
     }
 
     @Override
     public <T> Page<T> startScroll(long scrollTimeInMillis, CriteriaQuery criteriaQuery, Class<T> clazz, SearchResultMapper mapper) {
-        return elasticsearchTemplate.startScroll(scrollTimeInMillis, criteriaQuery, clazz, mapper);
+//        TODO-IMPL
+//        return elasticsearchTemplate.startScroll(scrollTimeInMillis, criteriaQuery, clazz, mapper);
+        return null;
     }
 
     @Override
     public <T> Page<T> continueScroll(String scrollId, long scrollTimeInMillis, Class<T> clazz) {
-        return elasticsearchTemplate.continueScroll(scrollId, scrollTimeInMillis, clazz);
+//        TODO-IMPL
+//        return elasticsearchTemplate.continueScroll(scrollId, scrollTimeInMillis, clazz);
+        return null;
     }
 
     @Override
     public <T> Page<T> continueScroll(String scrollId, long scrollTimeInMillis, Class<T> clazz, SearchResultMapper mapper) {
-        return elasticsearchTemplate.continueScroll(scrollId, scrollTimeInMillis, clazz, mapper);
+//        TODO-IMPL
+//        return elasticsearchTemplate.continueScroll(scrollId, scrollTimeInMillis, clazz, mapper);
+        return null;
     }
 
     @Override
     public <T> void clearScroll(String scrollId) {
-        elasticsearchTemplate.clearScroll(scrollId);
+//        TODO-IMPL
+//        elasticsearchTemplate.clearScroll(scrollId);
     }
 
-    @Override
-    public <T> Page<T> moreLikeThis(MoreLikeThisQuery query, Class<T> clazz) {
-        throw new UnsupportedOperationException("Not implemented");
-    }
-
-    @Override
-    public Boolean addAlias(AliasQuery query) {
-        throw new UnsupportedOperationException("Not implemented");
-    }
-
-    @Override
-    public Boolean removeAlias(AliasQuery query) {
-        throw new UnsupportedOperationException("Not implemented");
-    }
-
-    @Override
-    public List<AliasMetaData> queryForAlias(String indexName) {
-        throw new UnsupportedOperationException("Not implemented");
-    }
+    // TODO-REMOVE: Unused methods
+//    @Override
+//    public <T> Page<T> moreLikeThis(MoreLikeThisQuery query, Class<T> clazz) {
+//        throw new UnsupportedOperationException("Not implemented");
+//    }
+//
+//    @Override
+//    public Boolean addAlias(AliasQuery query) {
+//        throw new UnsupportedOperationException("Not implemented");
+//    }
+//
+//    @Override
+//    public Boolean removeAlias(AliasQuery query) {
+//        throw new UnsupportedOperationException("Not implemented");
+//    }
+//
+//    @Override
+//    public List<AliasMetaData> queryForAlias(String indexName) {
+//        throw new UnsupportedOperationException("Not implemented");
+//    }
 
     @Override
     public <T> T query(SearchQuery query, ResultsExtractor<T> resultsExtractor) {
         SearchRequest request = searchRequestBuilder.buildSearchRequest(query);
 
-        SearchResponse<Map> response = search(request , Map.class);
+        SearchResponse<Map> response = search(request, Map.class);
 
         var searchResponse = searchResultMapper.mapSearchResponse(response);
         return resultsExtractor.extract(searchResponse);
     }
 
-    @Override
-    public ElasticsearchPersistentEntity getPersistentEntityFor(Class clazz) {
-        throw new UnsupportedOperationException("Not implemented");
-    }
+    // TODO-REMOVE: Unused method
+//    @Override
+//    public ElasticsearchPersistentEntity getPersistentEntityFor(Class clazz) {
+//        throw new UnsupportedOperationException("Not implemented");
+//    }
 
-    private IndexRequestBuilder prepareIndex(IndexQuery query) {
-        String indexName = query.getIndexName();
-        String type = query.getType();
-
-        IndexRequestBuilder indexRequestBuilder = null;
-        try {
-            Client client = getClient();
-            if (query.getObject() != null) {
-                String id = query.getId();
-                if (id != null) {
-                    indexRequestBuilder = client.prepareIndex(indexName, type, id);
-                } else {
-                    indexRequestBuilder = client.prepareIndex(indexName, type);
-                }
-                indexRequestBuilder.setSource(objectMapper.writeValueAsString(query.getObject()),
-                    Requests.INDEX_CONTENT_TYPE);
-            } else if (query.getSource() != null) {
-                indexRequestBuilder = client.prepareIndex(indexName, type, query.getId()).setSource(query.getSource(),
-                    Requests.INDEX_CONTENT_TYPE);
-            } else {
-                throw new ElasticsearchException(
-                    "object or source is null, failed to index the document [id: " + query.getId() + "]");
-            }
-
-            if (query.getParentId() != null) {
-                indexRequestBuilder.setParent(query.getParentId());
-            }
-
-            return indexRequestBuilder;
-        } catch (IOException e) {
-            throw new ElasticsearchException("failed to index the document [id: " + query.getId() + "]", e);
-        }
-    }
+//    TODO-IMPL
+//    private IndexRequestBuilder prepareIndex(IndexQuery query) {
+//        String indexName = query.getIndexName();
+//        String type = query.getType();
+//
+//        IndexRequestBuilder indexRequestBuilder = null;
+//        try {
+//            Client client = getClient();
+//            if (query.getObject() != null) {
+//                String id = query.getId();
+//                if (id != null) {
+//                    indexRequestBuilder = client.prepareIndex(indexName, type, id);
+//                } else {
+//                    indexRequestBuilder = client.prepareIndex(indexName, type);
+//                }
+//                indexRequestBuilder.setSource(objectMapper.writeValueAsString(query.getObject()),
+//                    Requests.INDEX_CONTENT_TYPE);
+//            } else if (query.getSource() != null) {
+//                indexRequestBuilder = client.prepareIndex(indexName, type, query.getId()).setSource(query.getSource(),
+//                    Requests.INDEX_CONTENT_TYPE);
+//            } else {
+//                throw new ElasticsearchException(
+//                    "object or source is null, failed to index the document [id: " + query.getId() + "]");
+//            }
+//
+//            if (query.getParentId() != null) {
+//                indexRequestBuilder.setParent(query.getParentId());
+//            }
+//
+//            return indexRequestBuilder;
+//        } catch (IOException e) {
+//            throw new ElasticsearchException("failed to index the document [id: " + query.getId() + "]", e);
+//        }
+//    }
 
     private String getDefaultMapping() {
         String location = "/config/elastic/default-mapping.json";
@@ -588,7 +641,7 @@ public class ElasticsearchTemplateWrapper implements ElasticsearchOperations {
         String indexName = ElasticsearchTemplateWrapper.composeIndexName(tenantContextHolder.getTenantKey());
         return new NativeSearchQueryBuilder()
             .withIndices(indexName)
-            .withTypes(ElasticsearchTemplateWrapper.INDEX_QUERY_TYPE)
+//            .withTypes(ElasticsearchTemplateWrapper.INDEX_QUERY_TYPE) TODO-IMPL: Removed in 8.0
             .withQuery(queryStringQuery(permittedQuery))
             .withSourceFilter(fetchSourceFilter)
             .withPageable(pageable == null ? DEFAULT_PAGE : pageable)
@@ -620,9 +673,9 @@ public class ElasticsearchTemplateWrapper implements ElasticsearchOperations {
     private BoolQueryBuilder typeKeyQuery(String typeKey) {
         val prefix = typeKey + ".";
         return boolQuery()
-            .should(matchQuery(TYPE_KEY, typeKey))
-            .should(prefixQuery(TYPE_KEY, prefix))
-            .minimumShouldMatch(1);
+            .should(matchQuery(TYPE_KEY, typeKey));
+//            .should(prefixQuery(TYPE_KEY, prefix)) TODO-IMPL
+//            .minimumShouldMatch(1);
     }
 
     private <T> SearchResponse<T> search(SearchRequest searchRequest, Class<T> clazz) {
@@ -636,5 +689,4 @@ public class ElasticsearchTemplateWrapper implements ElasticsearchOperations {
             throw new IllegalStateException(e.getMessage(), e);
         }
     }
-
 }

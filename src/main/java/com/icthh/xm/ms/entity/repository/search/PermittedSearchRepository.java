@@ -6,7 +6,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -67,8 +66,8 @@ public class PermittedSearchRepository {
     }
 
     // do not renamed! called from lep for not simple string query
-    public ElasticsearchTemplate getElasticsearchTemplate() {
-        return elasticsearchTemplateWrapper.getElasticsearchTemplate();
+    public ElasticsearchTemplateWrapper getElasticsearchTemplate() {
+        return elasticsearchTemplateWrapper;
     }
 
     public <T> Page<T> searchForPage(SearchDto searchDto, String privilegeKey) {

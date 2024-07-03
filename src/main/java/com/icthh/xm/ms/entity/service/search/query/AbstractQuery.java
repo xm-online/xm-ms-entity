@@ -32,8 +32,10 @@ import java.util.List;
 
 public abstract class AbstractQuery implements Query {
 
-    protected final int DEFAULT_PAGE_SIZE = 10;
-    protected Pageable pageable = PageRequest.of(0, DEFAULT_PAGE_SIZE);
+    public static final int DEFAULT_PAGE_SIZE = 10;
+    public static final Pageable DEFAULT_PAGE = PageRequest.of(0, DEFAULT_PAGE_SIZE);
+
+    protected Pageable pageable = DEFAULT_PAGE;
     protected Sort sort;
     protected SourceFilter sourceFilter;
     protected List<String> indices = new ArrayList<>();

@@ -3,19 +3,19 @@ package com.icthh.xm.ms.entity.repository.search;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.service.search.ElasticsearchTemplateWrapper;
+import com.icthh.xm.ms.entity.service.search.builder.NativeSearchQueryBuilder;
+import com.icthh.xm.ms.entity.service.search.builder.QueryBuilder;
+import com.icthh.xm.ms.entity.service.search.query.SearchQuery;
+import com.icthh.xm.ms.entity.service.search.query.dto.DeleteQuery;
+import com.icthh.xm.ms.entity.service.search.query.dto.GetQuery;
+import com.icthh.xm.ms.entity.service.search.query.dto.IndexQuery;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.elasticsearch.index.query.QueryBuilder;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.elasticsearch.core.query.DeleteQuery;
-import org.springframework.data.elasticsearch.core.query.GetQuery;
-import org.springframework.data.elasticsearch.core.query.IndexQuery;
-import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
-import org.springframework.data.elasticsearch.core.query.SearchQuery;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 
@@ -23,8 +23,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-
-import static org.elasticsearch.index.query.QueryBuilders.matchAllQuery;
 
 @Slf4j
 @Service
@@ -76,7 +74,8 @@ public class XmEntitySearchRepositoryImpl implements XmEntitySearchRepository {
         if (itemCount == 0) {
             return new PageImpl<>(Collections.<XmEntity> emptyList());
         }
-        SearchQuery query = new NativeSearchQueryBuilder().withQuery(matchAllQuery())
+        SearchQuery query = new NativeSearchQueryBuilder()
+//            .withQuery(QueryBuilders.matchAllQuery()) TODO-IMPL
             .withPageable(PageRequest.of(0, itemCount, sort)).build();
         return elasticsearchTemplateWrapper.queryForPage(query, getEntityClass());
     }
@@ -84,9 +83,9 @@ public class XmEntitySearchRepositoryImpl implements XmEntitySearchRepository {
     @Override
     public Page<XmEntity> findAll(Pageable pageable) {
         SearchQuery query = new NativeSearchQueryBuilder()
-            .withQuery(matchAllQuery())
+//            .withQuery(matchAllQuery()) TODO-IMPL
             .withIndices(elasticsearchTemplateWrapper.getIndexName())
-            .withTypes(ElasticsearchTemplateWrapper.INDEX_QUERY_TYPE)
+//            .withTypes(ElasticsearchTemplateWrapper.INDEX_QUERY_TYPE) TODO-IMPL: Removed in 8.14v
             .withPageable(pageable)
             .build();
         return elasticsearchTemplateWrapper.queryForPage(query, getEntityClass());
@@ -115,10 +114,12 @@ public class XmEntitySearchRepositoryImpl implements XmEntitySearchRepository {
 
     private <S extends XmEntity> IndexQuery createIndexQuery(String indexName, S entity) {
         IndexQuery query = new IndexQuery();
-        query.setObject(entity);
-        query.setId(String.valueOf(entity.getId()));
-        query.setType(ElasticsearchTemplateWrapper.INDEX_QUERY_TYPE);
-        query.setIndexName(indexName);
+    // TODO-IMPL
+//        query.setObject(entity);
+//        query.setId(String.valueOf(entity.getId()));
+//        query.setType(ElasticsearchTemplateWrapper.INDEX_QUERY_TYPE);
+//        query.setIndexName(indexName);
+
 //        query.setVersion(extractVersionFromBean(entity)); // TODO
 //        query.setParentId(extractParentIdFromBean(entity)); // TODO
         return query;
@@ -153,9 +154,9 @@ public class XmEntitySearchRepositoryImpl implements XmEntitySearchRepository {
     @Override
     public long count() {
         SearchQuery query = new NativeSearchQueryBuilder()
-            .withQuery(matchAllQuery())
+//            .withQuery(matchAllQuery()) TODO-IMPL
             .withIndices(elasticsearchTemplateWrapper.getIndexName())
-            .withTypes(ElasticsearchTemplateWrapper.INDEX_QUERY_TYPE)
+//            .withTypes(ElasticsearchTemplateWrapper.INDEX_QUERY_TYPE)
             .build();
         return elasticsearchTemplateWrapper.count(query, getEntityClass());
     }
@@ -186,9 +187,10 @@ public class XmEntitySearchRepositoryImpl implements XmEntitySearchRepository {
     @Override
     public void deleteAll() {
         DeleteQuery deleteQuery = new DeleteQuery();
-        deleteQuery.setQuery(matchAllQuery());
-        deleteQuery.setIndex(elasticsearchTemplateWrapper.getIndexName());
-        deleteQuery.setType(ElasticsearchTemplateWrapper.INDEX_QUERY_TYPE);
+    // TODO-IMPL
+//        deleteQuery.setQuery(matchAllQuery());
+//        deleteQuery.setIndex(elasticsearchTemplateWrapper.getIndexName());
+//        deleteQuery.setType(ElasticsearchTemplateWrapper.INDEX_QUERY_TYPE);
         elasticsearchTemplateWrapper.delete(deleteQuery, getEntityClass());
         refresh();
     }

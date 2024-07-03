@@ -18,35 +18,27 @@
  */
 package com.icthh.xm.ms.entity.service.search;
 
-import co.elastic.clients.elasticsearch.ElasticsearchClient;
+import com.icthh.xm.ms.entity.service.search.mapper.GetResultMapper;
 import com.icthh.xm.ms.entity.service.search.mapper.SearchResultMapper;
-import org.elasticsearch.action.update.UpdateResponse;
-import org.elasticsearch.client.internal.Client;
+import com.icthh.xm.ms.entity.service.search.mapper.extractor.ResultsExtractor;
+import com.icthh.xm.ms.entity.service.search.query.CriteriaQuery;
+import com.icthh.xm.ms.entity.service.search.query.SearchQuery;
+import com.icthh.xm.ms.entity.service.search.query.StringQuery;
+import com.icthh.xm.ms.entity.service.search.query.dto.DeleteQuery;
+import com.icthh.xm.ms.entity.service.search.query.dto.GetQuery;
+import com.icthh.xm.ms.entity.service.search.query.dto.IndexQuery;
 import org.springframework.data.domain.Page;
-import org.springframework.data.util.CloseableIterator;
 
-import java.util.LinkedList;
+import javax.annotation.Nullable;
 import java.util.List;
-import java.util.Map;
 
 public interface ElasticsearchOperations {
 
-    /**
-     * @return Converter in use
-     */
-    ElasticsearchConverter getElasticsearchConverter();
+    //  TODO-REMOVE
+//    ElasticsearchConverter getElasticsearchConverter();
+//
+//    ElasticsearchClient getClient();
 
-    /**
-     * @return elasticsearch client
-     */
-    ElasticsearchClient getClient();
-
-    /**
-     * Create an index for a class
-     *
-     * @param clazz
-     * @param <T>
-     */
     <T> boolean createIndex(Class<T> clazz);
 
     /**
@@ -64,13 +56,14 @@ public interface ElasticsearchOperations {
      */
     boolean createIndex(String indexName, Object settings);
 
-    /**
-     * Create an index for given class and Settings
-     *
-     * @param clazz
-     * @param settings
-     */
-    <T> boolean createIndex(Class<T> clazz, Object settings);
+    // TODO-REMOVE: Unused methods
+//    /**
+//     * Create an index for given class and Settings
+//     *
+//     * @param clazz
+//     * @param settings
+//     */
+//    <T> boolean createIndex(Class<T> clazz, Object settings);
 
     /**
      * Create mapping for a class
@@ -97,36 +90,36 @@ public interface ElasticsearchOperations {
      */
     <T> boolean putMapping(Class<T> clazz, Object mappings);
 
-
-    /**
-     * Get mapping for a class
-     *
-     * @param clazz
-     * @param <T>
-     */
-    <T> Map getMapping(Class<T> clazz);
-
-    /**
-     * Get mapping for a given indexName and type
-     *
-     * @param indexName
-     * @param type
-     */
-    Map getMapping(String indexName, String type);
-
-    /**
-     * Get settings for a given indexName
-     *
-     * @param indexName
-     */
-    Map getSetting(String indexName);
-
-    /**
-     * Get settings for a given class
-     *
-     * @param clazz
-     */
-    <T> Map getSetting(Class<T> clazz);
+    // TODO-REMOVE: Unused methods
+//    /**
+//     * Get mapping for a class
+//     *
+//     * @param clazz
+//     * @param <T>
+//     */
+//    <T> Map getMapping(Class<T> clazz);
+//
+//    /**
+//     * Get mapping for a given indexName and type
+//     *
+//     * @param indexName
+//     * @param type
+//     */
+//    Map getMapping(String indexName, String type);
+//
+//    /**
+//     * Get settings for a given indexName
+//     *
+//     * @param indexName
+//     */
+//    Map getSetting(String indexName);
+//
+//    /**
+//     * Get settings for a given class
+//     *
+//     * @param clazz
+//     */
+//    <T> Map getSetting(Class<T> clazz);
 
 
     /**
@@ -211,45 +204,46 @@ public interface ElasticsearchOperations {
      */
     <T> Page<T> queryForPage(StringQuery query, Class<T> clazz, SearchResultMapper mapper);
 
-    /**
-     * Executes the given {@link CriteriaQuery} against elasticsearch and return result as {@link CloseableIterator}.
-     * <p>
-     * Returns a {@link CloseableIterator} that wraps an Elasticsearch scroll context that needs to be closed in case of error.
-     *
-     * @param <T> element return type
-     * @param query
-     * @param clazz
-     * @return
-     * @since 1.3
-     */
-    <T> CloseableIterator<T> stream(CriteriaQuery query, Class<T> clazz);
-
-    /**
-     * Executes the given {@link SearchQuery} against elasticsearch and return result as {@link CloseableIterator}.
-     * <p>
-     * Returns a {@link CloseableIterator} that wraps an Elasticsearch scroll context that needs to be closed in case of error.
-     *
-     * @param <T> element return type
-     * @param query
-     * @param clazz
-     * @return
-     * @since 1.3
-     */
-    <T> CloseableIterator<T> stream(SearchQuery query, Class<T> clazz);
-
-    /**
-     * Executes the given {@link SearchQuery} against elasticsearch and return result as {@link CloseableIterator} using custom mapper.
-     * <p>
-     * Returns a {@link CloseableIterator} that wraps an Elasticsearch scroll context that needs to be closed in case of error.
-     *
-     * @param <T> element return type
-     * @param query
-     * @param clazz
-     * @param mapper
-     * @return
-     * @since 1.3
-     */
-    <T> CloseableIterator<T> stream(SearchQuery query, Class<T> clazz, SearchResultMapper mapper);
+    // TODO-REMOVE: Unused methods
+//    /**
+//     * Executes the given {@link CriteriaQuery} against elasticsearch and return result as {@link CloseableIterator}.
+//     * <p>
+//     * Returns a {@link CloseableIterator} that wraps an Elasticsearch scroll context that needs to be closed in case of error.
+//     *
+//     * @param <T> element return type
+//     * @param query
+//     * @param clazz
+//     * @return
+//     * @since 1.3
+//     */
+//    <T> CloseableIterator<T> stream(CriteriaQuery query, Class<T> clazz);
+//
+//    /**
+//     * Executes the given {@link SearchQuery} against elasticsearch and return result as {@link CloseableIterator}.
+//     * <p>
+//     * Returns a {@link CloseableIterator} that wraps an Elasticsearch scroll context that needs to be closed in case of error.
+//     *
+//     * @param <T> element return type
+//     * @param query
+//     * @param clazz
+//     * @return
+//     * @since 1.3
+//     */
+//    <T> CloseableIterator<T> stream(SearchQuery query, Class<T> clazz);
+//
+//    /**
+//     * Executes the given {@link SearchQuery} against elasticsearch and return result as {@link CloseableIterator} using custom mapper.
+//     * <p>
+//     * Returns a {@link CloseableIterator} that wraps an Elasticsearch scroll context that needs to be closed in case of error.
+//     *
+//     * @param <T> element return type
+//     * @param query
+//     * @param clazz
+//     * @param mapper
+//     * @return
+//     * @since 1.3
+//     */
+//    <T> CloseableIterator<T> stream(SearchQuery query, Class<T> clazz, SearchResultMapper mapper);
 
     /**
      * Execute the criteria query against elasticsearch and return result as {@link List}
@@ -323,24 +317,25 @@ public interface ElasticsearchOperations {
      */
     <T> long count(SearchQuery query);
 
-    /**
-     * Execute a multiGet against elasticsearch for the given ids
-     *
-     * @param searchQuery
-     * @param clazz
-     * @return
-     */
-    <T> LinkedList<T> multiGet(SearchQuery searchQuery, Class<T> clazz);
-
-    /**
-     * Execute a multiGet against elasticsearch for the given ids with MultiGetResultMapper
-     *
-     * @param searchQuery
-     * @param clazz
-     * @param multiGetResultMapper
-     * @return
-     */
-    <T> LinkedList<T> multiGet(SearchQuery searchQuery, Class<T> clazz, MultiGetResultMapper multiGetResultMapper);
+    // TODO-REMOVE: Unused methods
+//    /**
+//     * Execute a multiGet against elasticsearch for the given ids
+//     *
+//     * @param searchQuery
+//     * @param clazz
+//     * @return
+//     */
+//    <T> LinkedList<T> multiGet(SearchQuery searchQuery, Class<T> clazz);
+//
+//    /**
+//     * Execute a multiGet against elasticsearch for the given ids with MultiGetResultMapper
+//     *
+//     * @param searchQuery
+//     * @param clazz
+//     * @param multiGetResultMapper
+//     * @return
+//     */
+//    <T> LinkedList<T> multiGet(SearchQuery searchQuery, Class<T> clazz, MultiGetResultMapper multiGetResultMapper);
 
     /**
      * Index an object. Will do save or update
@@ -350,13 +345,14 @@ public interface ElasticsearchOperations {
      */
     String index(IndexQuery query);
 
-    /**
-     * Partial update of the document
-     *
-     * @param updateQuery
-     * @return
-     */
-    UpdateResponse update(UpdateQuery updateQuery);
+    // TODO-REMOVE: Unused methods
+//    /**
+//     * Partial update of the document
+//     *
+//     * @param updateQuery
+//     * @return
+//     */
+//    UpdateResponse update(UpdateQuery updateQuery);
 
     /**
      * Bulk index all objects. Will do save or update
@@ -365,12 +361,13 @@ public interface ElasticsearchOperations {
      */
     void bulkIndex(List<IndexQuery> queries);
 
-    /**
-     * Bulk update all objects. Will do update
-     *
-     * @param queries
-     */
-    void bulkUpdate(List<UpdateQuery> queries);
+    // TODO-REMOVE: Unused methods
+//    /**
+//     * Bulk update all objects. Will do update
+//     *
+//     * @param queries
+//     */
+//    void bulkUpdate(List<UpdateQuery> queries);
 
     /**
      * Delete the one object with provided id
@@ -528,43 +525,44 @@ public interface ElasticsearchOperations {
      */
     <T> void clearScroll(String scrollId);
 
-    /**
-     * more like this query to search for documents that are "like" a specific document.
-     *
-     * @param query
-     * @param clazz
-     * @param <T>
-     * @return
-     */
-    <T> Page<T> moreLikeThis(MoreLikeThisQuery query, Class<T> clazz);
+    // TODO-REMOVE: Unused methods
+//    /**
+//     * more like this query to search for documents that are "like" a specific document.
+//     *
+//     * @param query
+//     * @param clazz
+//     * @param <T>
+//     * @return
+//     */
+//    <T> Page<T> moreLikeThis(MoreLikeThisQuery query, Class<T> clazz);
+//
+//    /**
+//     * adding new alias
+//     *
+//     * @param query
+//     * @return
+//     */
+//    Boolean addAlias(AliasQuery query);
+//
+//    /**
+//     * removing previously created alias
+//     *
+//     * @param query
+//     * @return
+//     */
+//    Boolean removeAlias(AliasQuery query);
 
-    /**
-     * adding new alias
-     *
-     * @param query
-     * @return
-     */
-    Boolean addAlias(AliasQuery query);
-
-    /**
-     * removing previously created alias
-     *
-     * @param query
-     * @return
-     */
-    Boolean removeAlias(AliasQuery query);
-
-    /**
-     * get all the alias pointing to specified index
-     *
-     * @param indexName
-     * @return
-     */
-    List<AliasMetaData> queryForAlias(String indexName);
+//    /**
+//     * get all the alias pointing to specified index
+//     *
+//     * @param indexName
+//     * @return
+//     */
+//    List<AliasMetaData> queryForAlias(String indexName);
 
 
     <T> T query(SearchQuery query, ResultsExtractor<T> resultsExtractor);
 
 
-    ElasticsearchPersistentEntity getPersistentEntityFor(Class clazz);
+//    ElasticsearchPersistentEntity getPersistentEntityFor(Class clazz);
 }
