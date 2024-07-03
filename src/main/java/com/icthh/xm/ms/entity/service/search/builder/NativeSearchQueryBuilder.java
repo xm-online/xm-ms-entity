@@ -34,6 +34,7 @@ public class NativeSearchQueryBuilder {
     private Pageable pageable = Pageable.unpaged();
     private SourceFilter sourceFilter;
     private List<AbstractAggregationBuilder> aggregationBuilders = new ArrayList<>();
+    private String[] indices;
 
     public NativeSearchQueryBuilder withQuery(QueryBuilder queryBuilder) {
         this.queryBuilder = queryBuilder;
@@ -50,6 +51,11 @@ public class NativeSearchQueryBuilder {
         return this;
     }
 
+    public NativeSearchQueryBuilder withIndices(String... indices) {
+        this.indices = indices;
+        return this;
+    }
+
     public NativeSearchQueryBuilder addAggregation(AbstractAggregationBuilder aggregationBuilder) {
         this.aggregationBuilders.add(aggregationBuilder);
         return this;
@@ -58,6 +64,10 @@ public class NativeSearchQueryBuilder {
     public NativeSearchQuery build() {
         NativeSearchQuery nativeSearchQuery = new NativeSearchQuery(queryBuilder);
         nativeSearchQuery.setPageable(pageable);
+
+        if (indices != null) {
+            nativeSearchQuery.addIndices(indices);
+        }
 
         if (sourceFilter != null) {
             nativeSearchQuery.addSourceFilter(sourceFilter);

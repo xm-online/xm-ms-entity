@@ -1,6 +1,6 @@
 /*
  * Original version of this file is located at:
- * https://github.com/spring-projects/spring-data-elasticsearch/blob/3.1.12.RELEASE/src/main/java/org/springframework/data/elasticsearch/core/query/Query.java
+ * https://github.com/spring-projects/spring-data-elasticsearch/blob/3.1.12.RELEASE/src/main/java/org/springframework/data/elasticsearch/core/ResultsExtractor.java
  *
  * Copyright 2013-2019 the original author or authors.
  *
@@ -17,24 +17,11 @@
  * limitations under the License.
  */
 
-package com.icthh.xm.ms.entity.service.search.query;
+package com.icthh.xm.ms.entity.service.search.mapper.extractor;
 
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
+import com.icthh.xm.ms.entity.service.search.dto.response.SearchResponse;
 
-import java.util.List;
+public interface ResultsExtractor<T> {
 
-public interface Query {
-
-    <T extends Query> T setPageable(Pageable pageable);
-
-    Pageable getPageable();
-
-    <T extends Query> T addSort(Sort sort);
-
-    Sort getSort();
-
-    List<String> getIndices();
-
-    void addIndices(String... indices);
+	T extract(SearchResponse response);
 }

@@ -27,6 +27,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.util.Assert;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public abstract class AbstractQuery implements Query {
@@ -74,6 +75,11 @@ public abstract class AbstractQuery implements Query {
     @Override
     public Sort getSort() {
         return this.sort;
+    }
+
+    @Override
+    public void addIndices(String ... indices) {
+        Collections.addAll(this.indices, indices);
     }
 
     public void addSourceFilter(SourceFilter sourceFilter) {

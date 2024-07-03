@@ -11,6 +11,7 @@ import com.icthh.xm.ms.entity.repository.search.translator.SpelToElasticTranslat
 import com.icthh.xm.ms.entity.service.dto.SearchDto;
 import com.icthh.xm.ms.entity.service.search.mapper.SearchResultMapper;
 import com.icthh.xm.ms.entity.service.search.mapper.SearchRequestBuilder;
+import com.icthh.xm.ms.entity.service.search.mapper.extractor.ResultsExtractor;
 import com.icthh.xm.ms.entity.service.search.page.aggregation.AggregatedPage;
 import com.icthh.xm.ms.entity.service.search.query.SearchQuery;
 import lombok.RequiredArgsConstructor;
@@ -34,7 +35,6 @@ import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
 import org.springframework.data.elasticsearch.core.GetResultMapper;
 import org.springframework.data.elasticsearch.core.MultiGetResultMapper;
-import org.springframework.data.elasticsearch.core.ResultsExtractor;
 import org.springframework.data.elasticsearch.core.ResultsMapper;
 import org.springframework.data.elasticsearch.core.ScrolledPage;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
@@ -524,7 +524,12 @@ public class ElasticsearchTemplateWrapper implements ElasticsearchOperations {
 
     @Override
     public <T> T query(SearchQuery query, ResultsExtractor<T> resultsExtractor) {
-        throw new UnsupportedOperationException("Not implemented");
+        SearchRequest request = searchRequestBuilder.buildSearchRequest(query);
+
+        SearchResponse<Map> response = search(request , Map.class);
+
+        var searchResponse = searchResultMapper.mapSearchResponse(response);
+        return resultsExtractor.extract(searchResponse);
     }
 
     @Override
