@@ -4,17 +4,25 @@ import co.elastic.clients.elasticsearch._types.query_dsl.MatchQuery;
 import co.elastic.clients.elasticsearch._types.query_dsl.NestedQuery;
 import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 import co.elastic.clients.elasticsearch._types.query_dsl.TermQuery;
+import co.elastic.clients.elasticsearch.core.SearchRequest;
+import co.elastic.clients.elasticsearch.core.search.SourceFilter;
 import com.icthh.xm.ms.entity.AbstractUnitTest;
 import com.icthh.xm.ms.entity.service.search.builder.NativeSearchQueryBuilder;
 import com.icthh.xm.ms.entity.service.search.builder.QueryBuilders;
 import com.icthh.xm.ms.entity.service.search.builder.SearchRequestQueryBuilder;
+import com.icthh.xm.ms.entity.service.search.builder.aggregation.SearchRequestAggregationBuilder;
 import com.icthh.xm.ms.entity.service.search.enums.ScoreMode;
+import com.icthh.xm.ms.entity.service.search.filter.FetchSourceFilter;
+import com.icthh.xm.ms.entity.service.search.mapper.AggregationTypeBuilderMapper;
 import com.icthh.xm.ms.entity.service.search.mapper.QueryTypeBuilderMapper;
+import com.icthh.xm.ms.entity.service.search.mapper.SearchRequestBuilder;
 import com.icthh.xm.ms.entity.service.search.query.dto.NativeSearchQuery;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mapstruct.factory.Mappers;
 import org.mockito.junit.MockitoJUnitRunner;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 
 import java.util.List;
@@ -25,6 +33,14 @@ import static org.junit.Assert.assertEquals;
 public class QueryForListSearchMapperUnitTest extends AbstractUnitTest {
 
     private final SearchRequestQueryBuilder searchRequestQueryBuilder = new SearchRequestQueryBuilder(Mappers.getMapper(QueryTypeBuilderMapper.class));
+
+    private SearchRequestBuilder searchRequestBuilder;
+
+    @Before
+    public void setUp() {
+        SearchRequestAggregationBuilder searchRequestAggregationBuilder = new SearchRequestAggregationBuilder(Mappers.getMapper(AggregationTypeBuilderMapper.class));
+        searchRequestBuilder = new SearchRequestBuilder(searchRequestQueryBuilder, searchRequestAggregationBuilder);
+    }
 
     @Test
     public void testQueryForList() {
@@ -147,5 +163,41 @@ public class QueryForListSearchMapperUnitTest extends AbstractUnitTest {
 
         assertEquals(path, nestedQueryPath);
         assertEquals(queryString, nestedQueryStringQuery);
+    }
+
+    @Test
+    public void testWithPageable() {
+        int pageNumber = 2;
+        int pageSize = 15;
+        NativeSearchQuery nativeSearchQuery = new NativeSearchQueryBuilder()
+            .withQuery(QueryBuilders.matchQuery("typeKey", "ACCOUNT"))
+            .withPageable(PageRequest.of(pageNumber, pageSize))
+            .build();
+
+        SearchRequest searchRequest = searchRequestBuilder.buildSearchRequest(nativeSearchQuery);
+        int actualPageNumber = searchRequest.from() / searchRequest.size();
+        int actualPageSize = searchRequest.size();
+
+        assertEquals(pageNumber, actualPageNumber);
+        assertEquals(pageSize, actualPageSize);
+    }
+
+    @Test
+    public void testWithSourceFilter() {
+        String[] includes = new String[]{"id", "typeKey", "stateKey"};
+        String[] excludes = new String[]{"key"};
+        NativeSearchQuery nativeSearchQuery = new NativeSearchQueryBuilder()
+            .withQuery(QueryBuilders.matchQuery("typeKey", "ACCOUNT"))
+            .withPageable(PageRequest.of(0, 10))
+            .withSourceFilter(new FetchSourceFilter(includes, excludes))
+            .build();
+
+        SearchRequest searchRequest = searchRequestBuilder.buildSearchRequest(nativeSearchQuery);
+        SourceFilter sourceFilter = (SourceFilter) searchRequest.source()._get();
+        List<String> actualIncludes = sourceFilter.includes();
+        List<String> actualExcludes = sourceFilter.excludes();
+
+        assertEquals(List.of(includes), actualIncludes);
+        assertEquals(List.of(excludes), actualExcludes);
     }
 }
