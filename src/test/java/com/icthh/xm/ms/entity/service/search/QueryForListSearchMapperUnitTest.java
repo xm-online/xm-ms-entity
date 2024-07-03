@@ -45,6 +45,7 @@ public class QueryForListSearchMapperUnitTest extends AbstractUnitTest {
         String text = "ACTIVE";
         NativeSearchQuery nativeSearchQuery = new NativeSearchQueryBuilder()
             .withQuery(QueryBuilders.commonTermsQuery(fieldName, text))
+            //FIXME VK: let's do not use deprecated methods:suggestion PageRequest.of
             .withPageable(new PageRequest(0, 10))
             .build();
 
@@ -96,6 +97,7 @@ public class QueryForListSearchMapperUnitTest extends AbstractUnitTest {
 
         TermQuery templateIdTermQuery = queryList.get(2).term();
         String templateIdField = templateIdTermQuery.field();
+        //FIXME VK: let's use parseLong
         long templateIdValue = Long.valueOf(templateIdTermQuery.value()._get().toString());
         String templateIdValueKind = templateIdTermQuery.value()._kind().toString();
 
