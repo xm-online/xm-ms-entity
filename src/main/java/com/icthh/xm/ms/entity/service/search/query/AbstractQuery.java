@@ -85,4 +85,9 @@ public abstract class AbstractQuery implements Query {
     public void addSourceFilter(SourceFilter sourceFilter) {
         this.sourceFilter = sourceFilter;
     }
+
+    @Override
+    public SourceFilter getSourceFilter() {
+        return sourceFilter;
+    }
 }

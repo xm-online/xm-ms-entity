@@ -19,6 +19,7 @@
 
 package com.icthh.xm.ms.entity.service.search.query;
 
+import com.icthh.xm.ms.entity.service.search.filter.SourceFilter;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 
@@ -37,4 +38,6 @@ public interface Query {
     List<String> getIndices();
 
     void addIndices(String... indices);
+
+    SourceFilter getSourceFilter();
 }
