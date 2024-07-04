@@ -12,6 +12,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.util.HashMap;
+import java.util.Map;
+import java.util.function.Function;
 
 @Component
 @RequiredArgsConstructor
@@ -19,32 +21,76 @@ public class SearchRequestQueryBuilder {
 
     private final QueryTypeBuilderMapper queryTypeBuilderMapper;
 
-    //FIXME VK: let's avoid if else if else pattern, for example re-write, see example on methods toFieldValue above
+    private final Map<Class<?>, Function<Object, FieldValue>> typeConverter = initTypeConverter();
+
+    private final Map<Class<?>, Function<QueryBuilder, Query>> queryConverter = initQueryConverter();
+
+    private Map<Class<?>, Function<Object, FieldValue>> initTypeConverter() {
+        Map<Class<?>, Function<Object, FieldValue>> typeConverter = new HashMap<>();
+
+        typeConverter.put(Long.class, value -> FieldValue.of(Long.parseLong(String.valueOf(value))));
+        typeConverter.put(Integer.class, value -> FieldValue.of(Long.parseLong(String.valueOf(value))));
+        typeConverter.put(Double.class, value -> FieldValue.of((double) value));
+        typeConverter.put(Boolean.class, value -> FieldValue.of((boolean) value));
+        typeConverter.put(String.class, value -> FieldValue.of((String) value));
+
+        return typeConverter;
+    }
+
+    private Map<Class<?>, Function<QueryBuilder, Query>> initQueryConverter() {
+        Map<Class<?>, Function<QueryBuilder, Query>> queryConverter = new HashMap<>();
+
+        queryConverter.put(QueryStringQueryBuilder.class, this::buildQueryStringQuery);
+        queryConverter.put(CommonTermsQueryBuilder.class, this::buildCommonTermsQuery);
+        queryConverter.put(NestedQueryBuilder.class, this::buildNestedQuery);
+        queryConverter.put(MatchQueryBuilder.class, this::buildMatchQuery);
+        queryConverter.put(TermQueryBuilder.class, this::buildTermQuery);
+        queryConverter.put(BoolQueryBuilder.class, this::buildBoolQuery);
+
+        return queryConverter;
+    }
+
     public Query buildQuery(QueryBuilder queryBuilder) {
-        if (queryBuilder instanceof QueryStringQueryBuilder) {
-            QueryStringQueryBuilder queryStringQueryBuilder = (QueryStringQueryBuilder) queryBuilder;
-            return new Query(queryTypeBuilderMapper.toSimpleQueryStringQueryBuilder(queryStringQueryBuilder).build());
-        } else if (queryBuilder instanceof CommonTermsQueryBuilder) {
-            CommonTermsQueryBuilder commonTermsQueryBuilder = (CommonTermsQueryBuilder) queryBuilder;
-            return new Query(queryTypeBuilderMapper.toCommonTermsQueryBuilder(commonTermsQueryBuilder).build());
-        } else if (queryBuilder instanceof NestedQueryBuilder) {
-            NestedQueryBuilder nestedQueryBuilder = (NestedQueryBuilder) queryBuilder;
-            return toNestedQuery(nestedQueryBuilder);
-        } else if (queryBuilder instanceof MatchQueryBuilder) {
-            MatchQueryBuilder matchQueryBuilder = (MatchQueryBuilder) queryBuilder;
-            FieldValue fieldValue = toFieldValue(matchQueryBuilder.getValue());
-            MatchQuery matchQuery = queryTypeBuilderMapper.toMatchQueryBuilder(matchQueryBuilder).query(fieldValue).build();
-            return new Query(matchQuery);
-        } else if (queryBuilder instanceof TermQueryBuilder) {
-            TermQueryBuilder termQueryBuilder = (TermQueryBuilder) queryBuilder;
-            FieldValue fieldValue = toFieldValue(termQueryBuilder.getValue());
-            TermQuery termQuery = queryTypeBuilderMapper.toTermQueryBuilder(termQueryBuilder).value(fieldValue).build();
-            return new Query(termQuery);
-        } else if (queryBuilder instanceof BoolQueryBuilder) {
-            BoolQueryBuilder boolQueryBuilder = (BoolQueryBuilder) queryBuilder;
-            return toBoolQuery(boolQueryBuilder);
+        Function<QueryBuilder, Query> function = queryConverter.get(queryBuilder.getClass());
+        if (function != null) {
+            return function.apply(queryBuilder);
+        } else {
+            return null;
         }
-        return null;
+    }
+
+    private Query buildQueryStringQuery(QueryBuilder queryBuilder) {
+        QueryStringQueryBuilder queryStringQueryBuilder = (QueryStringQueryBuilder) queryBuilder;
+        return new Query(queryTypeBuilderMapper.toSimpleQueryStringQueryBuilder(queryStringQueryBuilder).build());
+    }
+
+    private Query buildCommonTermsQuery(QueryBuilder queryBuilder) {
+        CommonTermsQueryBuilder commonTermsQueryBuilder = (CommonTermsQueryBuilder) queryBuilder;
+        return new Query(queryTypeBuilderMapper.toCommonTermsQueryBuilder(commonTermsQueryBuilder).build());
+    }
+
+    private Query buildNestedQuery(QueryBuilder queryBuilder) {
+        NestedQueryBuilder nestedQueryBuilder = (NestedQueryBuilder) queryBuilder;
+        return toNestedQuery(nestedQueryBuilder);
+    }
+
+    private Query buildMatchQuery(QueryBuilder queryBuilder) {
+        MatchQueryBuilder matchQueryBuilder = (MatchQueryBuilder) queryBuilder;
+        FieldValue fieldValue = toFieldValue(matchQueryBuilder.getValue());
+        MatchQuery matchQuery = queryTypeBuilderMapper.toMatchQueryBuilder(matchQueryBuilder).query(fieldValue).build();
+        return new Query(matchQuery);
+    }
+
+    private Query buildTermQuery(QueryBuilder queryBuilder) {
+        TermQueryBuilder termQueryBuilder = (TermQueryBuilder) queryBuilder;
+        FieldValue fieldValue = toFieldValue(termQueryBuilder.getValue());
+        TermQuery termQuery = queryTypeBuilderMapper.toTermQueryBuilder(termQueryBuilder).value(fieldValue).build();
+        return new Query(termQuery);
+    }
+
+    private Query buildBoolQuery(QueryBuilder queryBuilder) {
+        BoolQueryBuilder boolQueryBuilder = (BoolQueryBuilder) queryBuilder;
+        return toBoolQuery(boolQueryBuilder);
     }
 
     private Query toNestedQuery(NestedQueryBuilder nestedQueryBuilder) {
@@ -66,25 +112,8 @@ public class SearchRequestQueryBuilder {
         return Query.of(query -> query.bool(boolQuery.build()));
     }
 
-    //FIXME VK: let's avoid if else if else pattern, for example re-write to something like this:
-    //FIXME VK:  private final Map<Class<?>, Function<Object, FieldValue>> converters = new HashMap<>();
-    //FIXME VK:  private FieldValue toFieldValue(Object value) {
-    //FIXME VK:    return converters.getOrDefault(value.getClass(), v -> FieldValue.of(v)).apply(value);
-    //FIXME VK: }
-    //FIXME VK:converter.toFieldValue(123)
     private FieldValue toFieldValue(Object value) {
-        if (value instanceof Long || value instanceof Integer) {
-            long fieldValue = Long.parseLong(String.valueOf(value));
-            return FieldValue.of(fieldValue);
-        } else if (value instanceof Double) {
-            return FieldValue.of((double) value);
-        } else if (value instanceof Boolean) {
-            return FieldValue.of((boolean) value);
-        } else if (value instanceof String) {
-            return FieldValue.of((String) value);
-        } else {
-            return FieldValue.of(value);
-        }
+        return typeConverter.getOrDefault(value.getClass(), FieldValue::of).apply(value);
     }
 
     private InnerHits toInnerHits(InnerHitBuilder innerHitBuilder) {
