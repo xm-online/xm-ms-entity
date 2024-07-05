@@ -5,6 +5,7 @@ import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.service.search.ElasticsearchTemplateWrapper;
 import com.icthh.xm.ms.entity.service.search.builder.NativeSearchQueryBuilder;
 import com.icthh.xm.ms.entity.service.search.builder.QueryBuilder;
+import com.icthh.xm.ms.entity.service.search.builder.QueryBuilders;
 import com.icthh.xm.ms.entity.service.search.query.SearchQuery;
 import com.icthh.xm.ms.entity.service.search.query.dto.DeleteQuery;
 import com.icthh.xm.ms.entity.service.search.query.dto.GetQuery;
@@ -23,6 +24,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+
+import static com.icthh.xm.ms.entity.service.search.builder.QueryBuilders.matchAllQuery;
 
 @Slf4j
 @Service
@@ -75,7 +78,7 @@ public class XmEntitySearchRepositoryImpl implements XmEntitySearchRepository {
             return new PageImpl<>(Collections.<XmEntity> emptyList());
         }
         SearchQuery query = new NativeSearchQueryBuilder()
-//            .withQuery(QueryBuilders.matchAllQuery()) TODO-IMPL
+            .withQuery(matchAllQuery())
             .withPageable(PageRequest.of(0, itemCount, sort)).build();
         return elasticsearchTemplateWrapper.queryForPage(query, getEntityClass());
     }
@@ -83,7 +86,7 @@ public class XmEntitySearchRepositoryImpl implements XmEntitySearchRepository {
     @Override
     public Page<XmEntity> findAll(Pageable pageable) {
         SearchQuery query = new NativeSearchQueryBuilder()
-//            .withQuery(matchAllQuery()) TODO-IMPL
+            .withQuery(matchAllQuery())
             .withIndices(elasticsearchTemplateWrapper.getIndexName())
 //            .withTypes(ElasticsearchTemplateWrapper.INDEX_QUERY_TYPE) TODO-IMPL: Removed in 8.14v
             .withPageable(pageable)
@@ -154,7 +157,7 @@ public class XmEntitySearchRepositoryImpl implements XmEntitySearchRepository {
     @Override
     public long count() {
         SearchQuery query = new NativeSearchQueryBuilder()
-//            .withQuery(matchAllQuery()) TODO-IMPL
+            .withQuery(matchAllQuery())
             .withIndices(elasticsearchTemplateWrapper.getIndexName())
 //            .withTypes(ElasticsearchTemplateWrapper.INDEX_QUERY_TYPE)
             .build();

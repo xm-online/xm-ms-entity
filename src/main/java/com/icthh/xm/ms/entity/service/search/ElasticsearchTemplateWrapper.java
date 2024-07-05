@@ -44,7 +44,10 @@ import java.util.Set;
 
 import static com.icthh.xm.ms.entity.service.search.builder.QueryBuilders.boolQuery;
 import static com.icthh.xm.ms.entity.service.search.builder.QueryBuilders.matchQuery;
+import static com.icthh.xm.ms.entity.service.search.builder.QueryBuilders.prefixQuery;
 import static com.icthh.xm.ms.entity.service.search.builder.QueryBuilders.queryStringQuery;
+import static com.icthh.xm.ms.entity.service.search.builder.QueryBuilders.simpleQueryStringQuery;
+import static com.icthh.xm.ms.entity.service.search.builder.QueryBuilders.termsQuery;
 import static com.icthh.xm.ms.entity.service.search.query.AbstractQuery.DEFAULT_PAGE;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Objects.nonNull;
@@ -127,10 +130,7 @@ public class ElasticsearchTemplateWrapper implements ElasticsearchOperations {
 
         val esQuery = isEmpty(permittedQuery)
             ? boolQuery().must(typeKeyQuery)
-            : typeKeyQuery.must(queryStringQuery(permittedQuery)); // TEMP-FIX
-//            : typeKeyQuery.must(simpleQueryStringQuery(permittedQuery));
-//            TODO-IMPL: The same method with queryStringQuery but not throws an syntax error.
-//                       Does queryStringQuery throws error in implementation? Can we replace this method to queryStringQuery?
+            : typeKeyQuery.must(simpleQueryStringQuery(permittedQuery));
 
         log.debug("Executing DSL '{}'", esQuery);
 
@@ -152,14 +152,11 @@ public class ElasticsearchTemplateWrapper implements ElasticsearchOperations {
 
         BoolQueryBuilder typeKeyQuery = typeKeyQuery(targetEntityTypeKey);
 
-        BoolQueryBuilder idNotIn = boolQuery();
-//            .mustNot(termsQuery("id", ids)); TODO-IMPL:
+        BoolQueryBuilder idNotIn = boolQuery()
+            .mustNot(termsQuery("id", ids));
         var esQuery = isEmpty(permittedQuery)
             ? idNotIn.must(typeKeyQuery)
-            : idNotIn.must(queryStringQuery(permittedQuery)).must(typeKeyQuery); // TEMP-FIX
-//            : idNotIn.must(simpleQueryStringQuery(permittedQuery)).must(typeKeyQuery);
-//            TODO-IMPL: The same method with queryStringQuery but not throws an syntax error.
-//                       Does queryStringQuery throws error in implementation? Can we replace this method to queryStringQuery?
+            : idNotIn.must(simpleQueryStringQuery(permittedQuery)).must(typeKeyQuery);
 
         log.info("Executing DSL '{}'", esQuery);
 
@@ -673,9 +670,9 @@ public class ElasticsearchTemplateWrapper implements ElasticsearchOperations {
     private BoolQueryBuilder typeKeyQuery(String typeKey) {
         val prefix = typeKey + ".";
         return boolQuery()
-            .should(matchQuery(TYPE_KEY, typeKey));
-//            .should(prefixQuery(TYPE_KEY, prefix)) TODO-IMPL
-//            .minimumShouldMatch(1);
+            .should(matchQuery(TYPE_KEY, typeKey))
+            .should(prefixQuery(TYPE_KEY, prefix))
+            .minimumShouldMatch(1);
     }
 
     private <T> SearchResponse<T> search(SearchRequest searchRequest, Class<T> clazz) {

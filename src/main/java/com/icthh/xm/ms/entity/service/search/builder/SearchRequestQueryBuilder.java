@@ -2,18 +2,27 @@ package com.icthh.xm.ms.entity.service.search.builder;
 
 import co.elastic.clients.elasticsearch._types.FieldValue;
 import co.elastic.clients.elasticsearch._types.query_dsl.BoolQuery;
+import co.elastic.clients.elasticsearch._types.query_dsl.MatchAllQuery;
 import co.elastic.clients.elasticsearch._types.query_dsl.MatchQuery;
 import co.elastic.clients.elasticsearch._types.query_dsl.NestedQuery;
+import co.elastic.clients.elasticsearch._types.query_dsl.PrefixQuery;
 import co.elastic.clients.elasticsearch._types.query_dsl.Query;
+import co.elastic.clients.elasticsearch._types.query_dsl.SimpleQueryStringQuery;
 import co.elastic.clients.elasticsearch._types.query_dsl.TermQuery;
+import co.elastic.clients.elasticsearch._types.query_dsl.TermsQuery;
+import co.elastic.clients.elasticsearch._types.query_dsl.TermsQueryField;
 import co.elastic.clients.elasticsearch.core.search.InnerHits;
 import com.icthh.xm.ms.entity.service.search.mapper.QueryTypeBuilderMapper;
 import lombok.RequiredArgsConstructor;
+import org.apache.commons.collections.CollectionUtils;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
@@ -46,6 +55,10 @@ public class SearchRequestQueryBuilder {
         queryConverter.put(MatchQueryBuilder.class, this::buildMatchQuery);
         queryConverter.put(TermQueryBuilder.class, this::buildTermQuery);
         queryConverter.put(BoolQueryBuilder.class, this::buildBoolQuery);
+        queryConverter.put(SimpleQueryStringBuilder.class, this::buildSimpleQueryStringQuery);
+        queryConverter.put(MatchAllQueryBuilder.class, this::buildMatchAllQuery);
+        queryConverter.put(PrefixQueryBuilder.class, this::buildPrefixQuery);
+        queryConverter.put(TermsQueryBuilder.class, this::buildTermsQuery);
 
         return queryConverter;
     }
@@ -61,7 +74,7 @@ public class SearchRequestQueryBuilder {
 
     private Query buildQueryStringQuery(QueryBuilder queryBuilder) {
         QueryStringQueryBuilder queryStringQueryBuilder = (QueryStringQueryBuilder) queryBuilder;
-        return new Query(queryTypeBuilderMapper.toSimpleQueryStringQueryBuilder(queryStringQueryBuilder).build());
+        return new Query(queryTypeBuilderMapper.toQueryStringQueryBuilder(queryStringQueryBuilder).build());
     }
 
     private Query buildCommonTermsQuery(QueryBuilder queryBuilder) {
@@ -93,6 +106,42 @@ public class SearchRequestQueryBuilder {
         return toBoolQuery(boolQueryBuilder);
     }
 
+    private Query buildSimpleQueryStringQuery(QueryBuilder queryBuilder) {
+        SimpleQueryStringBuilder simpleQueryStringBuilder = (SimpleQueryStringBuilder) queryBuilder;
+        List<String> fields = new ArrayList<>(simpleQueryStringBuilder.fields().keySet());
+
+        SimpleQueryStringQuery.Builder simpleQueryStringQueryBuilder = queryTypeBuilderMapper.toSimpleQueryStringQueryBuilder(simpleQueryStringBuilder);
+
+        if (CollectionUtils.isNotEmpty(fields)) {
+            simpleQueryStringQueryBuilder.fields(fields);
+        }
+
+        return new Query(simpleQueryStringQueryBuilder.build());
+    }
+
+    private Query buildMatchAllQuery(QueryBuilder queryBuilder) {
+        return new Query(new MatchAllQuery.Builder().build());
+    }
+
+    private Query buildPrefixQuery(QueryBuilder queryBuilder) {
+        PrefixQueryBuilder prefixQueryBuilder = (PrefixQueryBuilder) queryBuilder;
+        PrefixQuery prefixQuery = queryTypeBuilderMapper.toPrefixQueryBuilder(prefixQueryBuilder).build();
+        return new Query(prefixQuery);
+    }
+
+    private Query buildTermsQuery(QueryBuilder queryBuilder) {
+        TermsQueryBuilder termsQueryBuilder = (TermsQueryBuilder) queryBuilder;
+        List<FieldValue> fieldValueList = termsQueryBuilder.values()
+            .stream()
+            .map(this::toFieldValue)
+            .collect(Collectors.toList());
+
+        TermsQuery.Builder termsQuery = queryTypeBuilderMapper.toTermsQueryBuilder(termsQueryBuilder);
+        TermsQueryField termsQueryField = new TermsQueryField.Builder().value(fieldValueList).build();
+        termsQuery.terms(termsQueryField);
+        return new Query(termsQuery.build());
+    }
+
     private Query toNestedQuery(NestedQueryBuilder nestedQueryBuilder) {
         NestedQuery.Builder nestedQuery = queryTypeBuilderMapper.toNestedQueryBuilder(nestedQueryBuilder);
         nestedQuery.query(buildQuery(nestedQueryBuilder.getQuery()));
@@ -108,6 +157,7 @@ public class SearchRequestQueryBuilder {
         boolQueryBuilder.should().forEach(queryBuilder -> boolQuery.should(buildQuery(queryBuilder)));
         boolQueryBuilder.mustNot().forEach(queryBuilder -> boolQuery.mustNot(buildQuery(queryBuilder)));
         boolQueryBuilder.filter().forEach(queryBuilder -> boolQuery.filter(buildQuery(queryBuilder)));
+        boolQuery.minimumShouldMatch(boolQueryBuilder.minimumShouldMatch());
 
         return Query.of(query -> query.bool(boolQuery.build()));
     }

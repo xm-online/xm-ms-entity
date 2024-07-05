@@ -35,6 +35,8 @@ public class BoolQueryBuilder extends AbstractQueryBuilder<BoolQueryBuilder> {
 
     private final List<QueryBuilder> shouldClauses = new ArrayList<>();
 
+    private String minimumShouldMatch;
+
     public BoolQueryBuilder() {
     }
 
@@ -86,5 +88,17 @@ public class BoolQueryBuilder extends AbstractQueryBuilder<BoolQueryBuilder> {
         return this.shouldClauses;
     }
 
+    public String minimumShouldMatch() {
+        return this.minimumShouldMatch;
+    }
 
+    public BoolQueryBuilder minimumShouldMatch(String minimumShouldMatch) {
+        this.minimumShouldMatch = minimumShouldMatch;
+        return this;
+    }
+
+    public BoolQueryBuilder minimumShouldMatch(int minimumShouldMatch) {
+        this.minimumShouldMatch = Integer.toString(minimumShouldMatch);
+        return this;
+    }
 }

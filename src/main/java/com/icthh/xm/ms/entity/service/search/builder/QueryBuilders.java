@@ -23,9 +23,15 @@
 package com.icthh.xm.ms.entity.service.search.builder;
 
 import com.icthh.xm.ms.entity.service.search.enums.ScoreMode;
+import java.util.Collection;
 
 public final class QueryBuilders {
+
     private QueryBuilders() {
+    }
+
+    public static MatchAllQueryBuilder matchAllQuery() {
+        return new MatchAllQueryBuilder();
     }
 
     public static MatchQueryBuilder matchQuery(String name, Object text) {
@@ -72,7 +78,43 @@ public final class QueryBuilders {
         return new TermQueryBuilder(name, value);
     }
 
+    public static TermsQueryBuilder termsQuery(String name, String... values) {
+        return new TermsQueryBuilder(name, values);
+    }
+
+    public static TermsQueryBuilder termsQuery(String name, int... values) {
+        return new TermsQueryBuilder(name, values);
+    }
+
+    public static TermsQueryBuilder termsQuery(String name, long... values) {
+        return new TermsQueryBuilder(name, values);
+    }
+
+    public static TermsQueryBuilder termsQuery(String name, float... values) {
+        return new TermsQueryBuilder(name, values);
+    }
+
+    public static TermsQueryBuilder termsQuery(String name, double... values) {
+        return new TermsQueryBuilder(name, values);
+    }
+
+    public static TermsQueryBuilder termsQuery(String name, Object... values) {
+        return new TermsQueryBuilder(name, values);
+    }
+
+    public static TermsQueryBuilder termsQuery(String name, Collection<?> values) {
+        return new TermsQueryBuilder(name, values);
+    }
+
     public static QueryStringQueryBuilder queryStringQuery(String queryString) {
         return new QueryStringQueryBuilder(queryString);
+    }
+
+    public static SimpleQueryStringBuilder simpleQueryStringQuery(String queryString) {
+        return new SimpleQueryStringBuilder(queryString);
+    }
+
+    public static PrefixQueryBuilder prefixQuery(String name, String prefix) {
+        return new PrefixQueryBuilder(name, prefix);
     }
 }
