@@ -1,6 +1,7 @@
 package com.icthh.xm.ms.entity.service.spec;
 
 import com.icthh.xm.commons.lep.LogicExtensionPoint;
+import com.icthh.xm.commons.lep.XmLepScriptConfigServerResourceLoader;
 import com.icthh.xm.commons.lep.api.LepManagementService;
 import com.icthh.xm.commons.lep.spring.LepService;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
@@ -19,12 +20,15 @@ public class XmEntitySpecCustomizer {
     private final TenantContextHolder tenantContextHolder;
     private final LepManagementService lepManagementService;
     private final XmEntitySpecCustomizer self;
+    private final XmLepScriptConfigServerResourceLoader dependsOn; // to start after LEP
 
     public XmEntitySpecCustomizer(TenantContextHolder tenantContextHolder,
                                   LepManagementService lepManagementService,
+                                  XmLepScriptConfigServerResourceLoader xmLepScriptConfigServerResourceLoader,
                                   @Lazy XmEntitySpecCustomizer self) {
         this.tenantContextHolder = tenantContextHolder;
         this.lepManagementService = lepManagementService;
+        this.dependsOn = xmLepScriptConfigServerResourceLoader;
         this.self = self;
     }
 
