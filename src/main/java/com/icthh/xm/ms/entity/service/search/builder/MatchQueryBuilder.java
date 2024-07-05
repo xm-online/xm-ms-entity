@@ -22,13 +22,33 @@
 
 package com.icthh.xm.ms.entity.service.search.builder;
 
+import com.icthh.xm.ms.entity.service.search.query.MatchQuery;
+import com.icthh.xm.ms.entity.service.search.query.Operator;
+import org.apache.lucene.search.FuzzyQuery;
+
 public class MatchQueryBuilder extends AbstractQueryBuilder<MatchQueryBuilder> {
 
     public static final String NAME = "match";
 
+    public static final Operator DEFAULT_OPERATOR = Operator.OR;
+
     private final String fieldName;
 
     private final Object value;
+
+    private Operator operator = DEFAULT_OPERATOR;
+
+    private int prefixLength = FuzzyQuery.defaultPrefixLength;
+
+    private int  maxExpansions = FuzzyQuery.defaultMaxExpansions;
+
+    private boolean fuzzyTranspositions = FuzzyQuery.defaultTranspositions;
+
+    private boolean lenient = MatchQuery.DEFAULT_LENIENCY;
+
+    private MatchQuery.ZeroTermsQuery zeroTermsQuery = MatchQuery.DEFAULT_ZERO_TERMS_QUERY;
+
+    private boolean autoGenerateSynonymsPhraseQuery = true;
 
     public MatchQueryBuilder(String fieldName, Object value) {
         if (fieldName == null) {
@@ -47,5 +67,37 @@ public class MatchQueryBuilder extends AbstractQueryBuilder<MatchQueryBuilder> {
 
     public Object getValue() {
         return this.value;
+    }
+
+    public Operator getOperator() {
+        return this.operator;
+    }
+
+    public int getPrefixLength() {
+        return prefixLength;
+    }
+
+    public int getMaxExpansions() {
+        return maxExpansions;
+    }
+
+    public boolean isFuzzyTranspositions() {
+        return fuzzyTranspositions;
+    }
+
+    public boolean isLenient() {
+        return lenient;
+    }
+
+    public MatchQuery.ZeroTermsQuery getZeroTermsQuery() {
+        return zeroTermsQuery;
+    }
+
+    public boolean isAutoGenerateSynonymsPhraseQuery() {
+        return autoGenerateSynonymsPhraseQuery;
+    }
+
+    public String getWriteableName() {
+        return NAME;
     }
 }

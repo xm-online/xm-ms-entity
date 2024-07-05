@@ -23,12 +23,25 @@
 package com.icthh.xm.ms.entity.service.search.builder;
 
 import com.icthh.xm.ms.entity.service.search.common.Strings;
+import com.icthh.xm.ms.entity.service.search.query.Operator;
 
 public class CommonTermsQueryBuilder extends AbstractQueryBuilder<CommonTermsQueryBuilder> {
+
+    public static final String NAME = "common";
+
+    public static final float DEFAULT_CUTOFF_FREQ = 0.01f;
+    public static final Operator DEFAULT_HIGH_FREQ_OCCUR = Operator.OR;
+    public static final Operator DEFAULT_LOW_FREQ_OCCUR = Operator.OR;
 
     private final String fieldName;
 
     private final Object text;
+
+    private Operator highFreqOperator = DEFAULT_HIGH_FREQ_OCCUR;
+
+    private Operator lowFreqOperator = DEFAULT_LOW_FREQ_OCCUR;
+
+    private float cutoffFrequency = DEFAULT_CUTOFF_FREQ;
 
     public CommonTermsQueryBuilder(String fieldName, Object text) {
         if (Strings.isEmpty(fieldName)) {
@@ -47,5 +60,21 @@ public class CommonTermsQueryBuilder extends AbstractQueryBuilder<CommonTermsQue
 
     public Object getText() {
         return this.text;
+    }
+
+    public Operator getHighFreqOperator() {
+        return highFreqOperator;
+    }
+
+    public Operator getLowFreqOperator() {
+        return lowFreqOperator;
+    }
+
+    public float getCutoffFrequency() {
+        return cutoffFrequency;
+    }
+
+    public String getWriteableName() {
+        return NAME;
     }
 }

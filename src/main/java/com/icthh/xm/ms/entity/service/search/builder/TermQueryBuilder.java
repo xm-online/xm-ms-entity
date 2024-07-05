@@ -24,6 +24,8 @@ package com.icthh.xm.ms.entity.service.search.builder;
 
 public class TermQueryBuilder extends BaseTermQueryBuilder<TermQueryBuilder> {
 
+    public static final String NAME = "term";
+
     public TermQueryBuilder(String fieldName, String value) {
         super(fieldName, (Object) value);
     }
@@ -50,5 +52,9 @@ public class TermQueryBuilder extends BaseTermQueryBuilder<TermQueryBuilder> {
 
     public TermQueryBuilder(String fieldName, Object value) {
         super(fieldName, value);
+    }
+
+    public String getWriteableName() {
+        return NAME;
     }
 }

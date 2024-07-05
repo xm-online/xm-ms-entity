@@ -29,7 +29,15 @@ import java.nio.CharBuffer;
 
 public abstract class AbstractQueryBuilder<QB extends AbstractQueryBuilder<QB>> implements QueryBuilder {
 
+    public static final float DEFAULT_BOOST = 1.0f;
+
     protected String queryName;
+    protected float boost = DEFAULT_BOOST;
+
+    @Override
+    public final float boost() {
+        return this.boost;
+    }
 
     static Object maybeConvertToBytesRef(Object obj) {
         if (obj instanceof String) {

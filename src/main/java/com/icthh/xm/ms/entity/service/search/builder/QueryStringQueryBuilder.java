@@ -22,9 +22,30 @@
 
 package com.icthh.xm.ms.entity.service.search.builder;
 
+
+import com.icthh.xm.ms.entity.service.search.query.Operator;
+import org.apache.lucene.search.FuzzyQuery;
+
 public class QueryStringQueryBuilder extends AbstractQueryBuilder<QueryStringQueryBuilder> {
 
+    public static final String NAME = "query_string";
+
+    public static final Operator DEFAULT_OPERATOR = Operator.OR;
+    public static final int DEFAULT_FUZZY_PREFIX_LENGTH = FuzzyQuery.defaultPrefixLength;
+    public static final int DEFAULT_FUZZY_MAX_EXPANSIONS = FuzzyQuery.defaultMaxExpansions;
+    public static final boolean DEFAULT_FUZZY_TRANSPOSITIONS = FuzzyQuery.defaultTranspositions;
+
     private final String queryString;
+
+    private int fuzzyPrefixLength = DEFAULT_FUZZY_PREFIX_LENGTH;
+
+    private int fuzzyMaxExpansions = DEFAULT_FUZZY_MAX_EXPANSIONS;
+
+    private boolean fuzzyTranspositions = DEFAULT_FUZZY_TRANSPOSITIONS;
+
+    private Operator defaultOperator = DEFAULT_OPERATOR;
+
+    private boolean autoGenerateSynonymsPhraseQuery = true;
 
     public QueryStringQueryBuilder(String queryString) {
         if (queryString == null) {
@@ -36,5 +57,29 @@ public class QueryStringQueryBuilder extends AbstractQueryBuilder<QueryStringQue
 
     public String getQueryString() {
         return this.queryString;
+    }
+
+    public int getFuzzyPrefixLength() {
+        return fuzzyPrefixLength;
+    }
+
+    public int getFuzzyMaxExpansions() {
+        return fuzzyMaxExpansions;
+    }
+
+    public boolean isFuzzyTranspositions() {
+        return fuzzyTranspositions;
+    }
+
+    public Operator getDefaultOperator() {
+        return defaultOperator;
+    }
+
+    public boolean isAutoGenerateSynonymsPhraseQuery() {
+        return autoGenerateSynonymsPhraseQuery;
+    }
+
+    public String getWriteableName() {
+        return NAME;
     }
 }

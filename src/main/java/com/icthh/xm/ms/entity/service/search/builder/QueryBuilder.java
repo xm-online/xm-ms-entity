@@ -20,4 +20,6 @@ package com.icthh.xm.ms.entity.service.search.builder;
 
 public interface QueryBuilder {
 
+    float boost();
+
 }

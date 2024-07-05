@@ -70,4 +70,8 @@ public class NestedQueryBuilder extends AbstractQueryBuilder<NestedQueryBuilder>
     public boolean ignoreUnmapped() {
         return ignoreUnmapped;
     }
+
+    public final String getWriteableName() {
+        return NAME;
+    }
 }
