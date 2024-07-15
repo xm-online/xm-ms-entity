@@ -17,6 +17,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityManager;
 import javax.persistence.FlushModeType;
@@ -52,6 +53,7 @@ public class XmEntityRepositoryInternalImpl implements XmEntityRepositoryInterna
     private EntityManager entityManager;
 
     @Override
+    @Transactional
     public XmEntity findOneByIdForUpdate(Long id) {
         CriteriaBuilder builder = entityManager.getCriteriaBuilder();
         CriteriaQuery<XmEntity> criteriaQuery = builder.createQuery(XmEntity.class);

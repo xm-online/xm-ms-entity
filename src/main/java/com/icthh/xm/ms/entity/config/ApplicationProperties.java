@@ -133,7 +133,7 @@ public class ApplicationProperties {
     @Getter
     @Setter
     public static class Jpa {
-        private Integer findOneByIdForUpdateTimeout;
+        private Integer findOneByIdForUpdateTimeout = 10000;
     }
 
 }

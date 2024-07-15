@@ -15,6 +15,7 @@ import com.icthh.xm.ms.entity.service.spec.XmEntitySpecContextService;
 
 import com.icthh.xm.ms.entity.service.spec.XmEntitySpecCustomizer;
 import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
@@ -45,11 +46,21 @@ public class LocalXmEntitySpecService extends XmEntitySpecService {
                                     FormSpecProcessor formSpecProcessor,
                                     @Value("${spring.servlet.multipart.max-file-size:1MB}") String maxFileSize) {
         super(tenantConfigRepository, applicationProperties, tenantContextHolder,
-            new XmEntitySpecContextService(definitionSpecProcessor, formSpecProcessor, xmEntitySpecCustomizer, tenantConfigService, maxFileSize),
+            buildSpecService(tenantConfigService, xmEntitySpecCustomizer, definitionSpecProcessor, formSpecProcessor, maxFileSize),
             List.of(entityCustomPrivilegeService), dynamicPermissionCheckService);
 
         this.applicationProperties = applicationProperties;
         this.tenantContextHolder = tenantContextHolder;
+    }
+
+    private static XmEntitySpecContextService buildSpecService(XmEntityTenantConfigService tenantConfigService,
+                                                               XmEntitySpecCustomizer xmEntitySpecCustomizer,
+                                                               DefinitionSpecProcessor definitionSpecProcessor,
+                                                               FormSpecProcessor formSpecProcessor, String maxFileSize) {
+        XmEntitySpecContextService xmEntitySpecContextService = new XmEntitySpecContextService(definitionSpecProcessor,
+            formSpecProcessor, xmEntitySpecCustomizer, tenantConfigService, maxFileSize);
+        xmEntitySpecContextService.onApplicationEvent(null);
+        return xmEntitySpecContextService;
     }
 
     @Override
