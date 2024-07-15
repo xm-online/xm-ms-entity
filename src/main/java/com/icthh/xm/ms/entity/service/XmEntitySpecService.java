@@ -54,7 +54,6 @@ import static org.springframework.util.CollectionUtils.isEmpty;
  * manipulate with pure model.
  */
 @Slf4j
-@Lazy
 @Service
 @RequiredArgsConstructor
 public class XmEntitySpecService implements RefreshableConfiguration {

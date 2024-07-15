@@ -51,7 +51,7 @@ public class XmEntitySpecContextService {
     private final ConcurrentHashMap<String, Map<String, String>> typesByTenantByFile = new ConcurrentHashMap<>();
 
     public XmEntitySpecContextService(DefinitionSpecProcessor definitionSpecProcessor, FormSpecProcessor formSpecProcessor,
-                                      @Lazy XmEntitySpecCustomizer xmEntitySpecCustomizer,
+                                      XmEntitySpecCustomizer xmEntitySpecCustomizer,
                                       XmEntityTenantConfigService tenantConfigService,
                                       @Value("${spring.servlet.multipart.max-file-size:1MB}") String maxFileSize) {
         this.definitionSpecProcessor = definitionSpecProcessor;

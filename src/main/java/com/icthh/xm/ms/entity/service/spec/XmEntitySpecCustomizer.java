@@ -7,7 +7,7 @@ import com.icthh.xm.commons.lep.spring.LepService;
 import com.icthh.xm.commons.logging.aop.IgnoreLogginAspect;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.ms.entity.domain.spec.TypeSpec;
-import org.springframework.context.annotation.Lazy;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.Map;
@@ -20,17 +20,15 @@ public class XmEntitySpecCustomizer {
 
     private final TenantContextHolder tenantContextHolder;
     private final LepManagementService lepManagementService;
-    private final XmEntitySpecCustomizer self;
     private final XmLepScriptConfigServerResourceLoader dependsOn; // to start after LEP
+    private XmEntitySpecCustomizer self;
 
     public XmEntitySpecCustomizer(TenantContextHolder tenantContextHolder,
                                   LepManagementService lepManagementService,
-                                  XmLepScriptConfigServerResourceLoader xmLepScriptConfigServerResourceLoader,
-                                  @Lazy XmEntitySpecCustomizer self) {
+                                  XmLepScriptConfigServerResourceLoader xmLepScriptConfigServerResourceLoader) {
         this.tenantContextHolder = tenantContextHolder;
         this.lepManagementService = lepManagementService;
         this.dependsOn = xmLepScriptConfigServerResourceLoader;
-        this.self = self;
     }
 
     @IgnoreLogginAspect
@@ -50,6 +48,11 @@ public class XmEntitySpecCustomizer {
     @LogicExtensionPoint("CustomizeEntitySpec")
     public void customize(Map<String, TypeSpec> entitySpec) {
         // do nothing
+    }
+
+    @Autowired
+    public void setXmEntitySpecCustomizer(XmEntitySpecCustomizer xmEntitySpecCustomizer) {
+        this.self = xmEntitySpecCustomizer;
     }
 
 }
