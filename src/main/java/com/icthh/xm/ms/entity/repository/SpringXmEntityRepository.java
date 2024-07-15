@@ -30,11 +30,6 @@ import java.util.Set;
 public interface SpringXmEntityRepository extends
     JpaRepository<XmEntity, Long>, JpaSpecificationExecutor<XmEntity>, EntityGraphRepository<XmEntity, Long> {
 
-    @Lock(LockModeType.PESSIMISTIC_WRITE)
-    @Query("SELECT e FROM XmEntity e WHERE e.id = :id")
-    @QueryHints({@QueryHint(name = "javax.persistence.query.timeout", value = "${application.jpa.findOneByIdForUpdateTimeout}")})
-    XmEntity findOneByIdForUpdate(@Param("id") Long id);
-
     @EntityGraph(value = "xmEntityGraph", type = EntityGraph.EntityGraphType.LOAD)
     XmEntity findOneById(Long id);
 

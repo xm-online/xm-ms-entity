@@ -5,6 +5,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.repository.NoRepositoryBean;
+import org.springframework.data.repository.query.Param;
 
 import javax.persistence.FlushModeType;
 import javax.persistence.Tuple;
@@ -21,6 +22,9 @@ import java.util.function.Function;
 
 @NoRepositoryBean
 public interface EntityGraphRepository<T, ID extends Serializable> extends JpaRepository<T, ID> {
+
+    // PESSIMISTIC_WRITE locked query
+    T findOneByIdForUpdate(@Param("id") ID id);
 
     T findOne(ID id, List<String> embed);
 
