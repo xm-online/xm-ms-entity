@@ -5,12 +5,6 @@ import com.icthh.xm.ms.entity.projection.XmEntityIdKeyTypeKey;
 import com.icthh.xm.ms.entity.projection.XmEntityStateProjection;
 import com.icthh.xm.ms.entity.projection.XmEntityVersion;
 import com.icthh.xm.ms.entity.repository.entitygraph.EntityGraphRepository;
-
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
-import javax.persistence.LockModeType;
-
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
@@ -18,8 +12,15 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.jpa.repository.QueryHints;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+
+import javax.persistence.LockModeType;
+import javax.persistence.QueryHint;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 
 /**
  * Spring Data JPA repository for the XmEntity entity.
@@ -31,6 +32,7 @@ public interface SpringXmEntityRepository extends
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT e FROM XmEntity e WHERE e.id = :id")
+    @QueryHints({@QueryHint(name = "javax.persistence.query.timeout", value = "${application.jpa.findOneByIdForUpdateTimeout}")})
     XmEntity findOneByIdForUpdate(@Param("id") Long id);
 
     @EntityGraph(value = "xmEntityGraph", type = EntityGraph.EntityGraphType.LOAD)

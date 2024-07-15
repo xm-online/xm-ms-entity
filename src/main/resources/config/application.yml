@@ -80,8 +80,6 @@ spring:
         open-in-view: false
         properties:
             hibernate.jdbc.time_zone: UTC
-            javax.persistence.lock.timeout: 1000
-            javax.persistence.query.timeout: 30000
         hibernate:
             ddl-auto: none
             naming:
@@ -182,6 +180,8 @@ xm-config:
     kafka-config-topic: config_topic
 
 application:
+    jpa:
+        findOneByIdForUpdateTimeout: 10000
     timeline-ignored-http-methods:
     scheduler-enabled: false
     tenant-ignored-path-list: /v2/api-docs, /api/profile-info, /swagger-resources/configuration/ui, /management/health
