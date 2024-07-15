@@ -16,6 +16,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 import java.util.Collections;
@@ -50,7 +51,7 @@ public class XmEntitySpecContextService {
     private final ConcurrentHashMap<String, Map<String, String>> typesByTenantByFile = new ConcurrentHashMap<>();
 
     public XmEntitySpecContextService(DefinitionSpecProcessor definitionSpecProcessor, FormSpecProcessor formSpecProcessor,
-                                      XmEntitySpecCustomizer xmEntitySpecCustomizer,
+                                      @Lazy XmEntitySpecCustomizer xmEntitySpecCustomizer,
                                       XmEntityTenantConfigService tenantConfigService,
                                       @Value("${spring.servlet.multipart.max-file-size:1MB}") String maxFileSize) {
         this.definitionSpecProcessor = definitionSpecProcessor;
