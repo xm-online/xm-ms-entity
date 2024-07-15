@@ -90,7 +90,7 @@ public class ElasticsearchIndexService {
                                      @Qualifier("taskExecutor") Executor executor,
                                      EntityManager entityManager,
                                      ApplicationProperties applicationProperties,
-                                     XmEntitySpecService xmEntitySpecService) {
+                                     @Lazy XmEntitySpecService xmEntitySpecService) {
         this.xmEntityRepositoryInternal = xmEntityRepositoryInternal;
         this.xmEntitySearchRepository = xmEntitySearchRepository;
         this.elasticsearchTemplate = elasticsearchTemplate;
