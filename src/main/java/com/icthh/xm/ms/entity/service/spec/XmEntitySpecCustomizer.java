@@ -4,6 +4,7 @@ import com.icthh.xm.commons.lep.LogicExtensionPoint;
 import com.icthh.xm.commons.lep.XmLepScriptConfigServerResourceLoader;
 import com.icthh.xm.commons.lep.api.LepManagementService;
 import com.icthh.xm.commons.lep.spring.LepService;
+import com.icthh.xm.commons.logging.aop.IgnoreLogginAspect;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.ms.entity.domain.spec.TypeSpec;
 import org.springframework.context.annotation.Lazy;
@@ -32,6 +33,7 @@ public class XmEntitySpecCustomizer {
         this.self = self;
     }
 
+    @IgnoreLogginAspect
     public void customize(String tenant, Map<String, TypeSpec> entitySpec) {
         if (lepManagementService.getCurrentLepExecutorResolver() == null) {
             tenantContextHolder.getPrivilegedContext().execute(buildTenant(tenant), () -> {
@@ -44,6 +46,7 @@ public class XmEntitySpecCustomizer {
         }
     }
 
+    @IgnoreLogginAspect
     @LogicExtensionPoint("CustomizeEntitySpec")
     public void customize(Map<String, TypeSpec> entitySpec) {
         // do nothing
