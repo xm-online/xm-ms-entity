@@ -15,7 +15,6 @@ import com.icthh.xm.ms.entity.service.spec.XmEntitySpecContextService;
 
 import com.icthh.xm.ms.entity.service.spec.XmEntitySpecCustomizer;
 import lombok.extern.slf4j.Slf4j;
-import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
@@ -25,7 +24,6 @@ import java.util.Map;
 import java.util.Optional;
 
 import static com.icthh.xm.ms.entity.config.TenantConfigMockConfiguration.getXmEntitySpec;
-import static org.mockito.Mockito.mock;
 
 @Slf4j
 @Service
