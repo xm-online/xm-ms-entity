@@ -1,13 +1,13 @@
 package com.icthh.xm.ms.entity.service.spec;
 
 import com.icthh.xm.commons.lep.LogicExtensionPoint;
-import com.icthh.xm.commons.lep.XmLepScriptConfigServerResourceLoader;
 import com.icthh.xm.commons.lep.api.LepManagementService;
 import com.icthh.xm.commons.lep.spring.LepService;
 import com.icthh.xm.commons.logging.aop.IgnoreLogginAspect;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.ms.entity.domain.spec.TypeSpec;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
 import java.util.Map;
@@ -15,7 +15,7 @@ import java.util.Map;
 import static com.icthh.xm.commons.tenant.TenantContextUtils.buildTenant;
 
 @Component
-//@LepService(group = "service.spec")
+@LepService(group = "service.spec")
 public class XmEntitySpecCustomizer {
 
     private final TenantContextHolder tenantContextHolder;
@@ -42,14 +42,13 @@ public class XmEntitySpecCustomizer {
     }
 
     @IgnoreLogginAspect
-    //@LogicExtensionPoint("CustomizeEntitySpec")
+    @LogicExtensionPoint("CustomizeEntitySpec")
     public void customize(Map<String, TypeSpec> entitySpec) {
         // do nothing
     }
 
     @Autowired
-    public void setXmEntitySpecCustomizer(XmEntitySpecCustomizer xmEntitySpecCustomizer) {
+    public void setXmEntitySpecCustomizer(@Lazy XmEntitySpecCustomizer xmEntitySpecCustomizer) {
         this.self = xmEntitySpecCustomizer;
     }
-
 }

@@ -16,6 +16,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationListener;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.context.event.ContextRefreshedEvent;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -24,6 +28,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -45,6 +50,9 @@ public class XmEntitySpecContextService {
     private final FunctionByTenantService functionByTenantService;
     private final SpecFieldsProcessor specFieldsProcessor;
     private final XmEntitySpecCustomizer xmEntitySpecCustomizer;
+    // workaround we need redesign how RefreshableConfiguration inited, and remove BeanPostProcessor
+    // now we have cycle entitySpecService -> EntityService -> LepContextFactory -> <lep-s related> -> entitySpecCustomizer -> entitySpecService
+    private final AtomicBoolean initialized = new AtomicBoolean(false);
 
     private final ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
     private final ConcurrentHashMap<String, Map<String, TypeSpec>> typesByTenant = new ConcurrentHashMap<>();
@@ -105,7 +113,9 @@ public class XmEntitySpecContextService {
 
     public Map<String, TypeSpec> updateByTenantState(String tenant) {
         var tenantEntitySpec = readEntitySpec(tenant);
-        xmEntitySpecCustomizer.customize(tenant, tenantEntitySpec);
+        if (initialized.get()) {
+            xmEntitySpecCustomizer.customize(tenant, tenantEntitySpec);
+        }
 
         definitionSpecProcessor.updateDefinitionStateByTenant(tenant, typesByTenantByFile);
         formSpecProcessor.updateFormStateByTenant(tenant, typesByTenantByFile);
@@ -162,4 +172,10 @@ public class XmEntitySpecContextService {
         return typeSpec;
     }
 
+    @EventListener
+    public void onApplicationEvent(ContextRefreshedEvent contextRefreshedEvent) {
+        if(initialized.compareAndSet(false, true)) {
+            tenants().forEach(this::updateByTenantState);
+        }
+    }
 }

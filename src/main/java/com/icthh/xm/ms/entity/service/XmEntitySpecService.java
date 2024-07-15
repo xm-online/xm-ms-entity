@@ -29,8 +29,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.context.ApplicationListener;
-import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.stereotype.Service;
 import org.springframework.util.AntPathMatcher;
 
@@ -57,7 +55,7 @@ import static org.springframework.util.CollectionUtils.isEmpty;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class XmEntitySpecService implements RefreshableConfiguration, ApplicationListener<ContextRefreshedEvent> {
+public class XmEntitySpecService implements RefreshableConfiguration {
 
     private static final String TYPE_SEPARATOR = ".";
     private static final String TENANT_NAME = "tenantName";
@@ -150,26 +148,10 @@ public class XmEntitySpecService implements RefreshableConfiguration, Applicatio
 
     @Override
     @LoggingAspectConfig(inputExcludeParams = "config")
-    public void onInit(String updatedKey, String config) {
-        try {
-            String tenant = extractTenantName(updatedKey);
-            xmEntitySpecContextService.updateByFileState(updatedKey, config, tenant);
-            log.info("Specification yml for tenant {} was inited from file {}", tenant, updatedKey);
-        } catch (Exception e) {
-            log.error("Error read xm specification from path " + updatedKey, e);
+    public void onInit(String key, String config) {
+        if (isListeningConfiguration(key)) {
+            onRefresh(key, config);
         }
-    }
-
-    @Override
-    public void onApplicationEvent(ContextRefreshedEvent contextRefreshedEvent) {
-        xmEntitySpecContextService.tenants().forEach(tenant -> {
-            try {
-                xmEntitySpecContextService.updateByTenantState(tenant);
-                log.info("Specification was inited for tenant {}", tenant);
-            } catch (Exception e) {
-                log.error("Error init xm specification for tenant " + tenant, e);
-            }
-        });
     }
 
     @SneakyThrows
