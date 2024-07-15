@@ -23,7 +23,7 @@ public class XmEntitySpecCustomizer {
     //private final XmLepScriptConfigServerResourceLoader dependsOn; // to start after LEP
     private XmEntitySpecCustomizer self;
 
-    public XmEntitySpecCustomizer(TenantContextHolder tenantContextHolder,
+    public XmEntitySpecCustomizer(TenantContextHolder tenantContextHolder
                                   //LepManagementService lepManagementService
                                   //XmLepScriptConfigServerResourceLoader xmLepScriptConfigServerResourceLoader
     ) {
