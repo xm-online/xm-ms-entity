@@ -1,5 +1,6 @@
 package com.icthh.xm.ms.entity.repository.impl;
 
+import com.icthh.xm.ms.entity.config.ApplicationProperties;
 import com.icthh.xm.ms.entity.config.XmEntityTenantConfigService;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.projection.XmEntityIdKeyTypeKey;
@@ -7,13 +8,6 @@ import com.icthh.xm.ms.entity.projection.XmEntityStateProjection;
 import com.icthh.xm.ms.entity.projection.XmEntityVersion;
 import com.icthh.xm.ms.entity.repository.SpringXmEntityRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityRepositoryInternal;
-
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.function.Function;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
@@ -22,18 +16,29 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
-import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Component;
 
+import javax.persistence.EntityManager;
 import javax.persistence.FlushModeType;
+import javax.persistence.LockModeType;
+import javax.persistence.PersistenceContext;
 import javax.persistence.Tuple;
+import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaDelete;
+import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.CriteriaUpdate;
 import javax.persistence.criteria.Root;
 import javax.persistence.criteria.Selection;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.function.Function;
 
 import static java.util.Collections.emptyList;
+import static org.apache.commons.collections.CollectionUtils.isEmpty;
+import static org.hibernate.jpa.QueryHints.SPEC_HINT_TIMEOUT;
 
 @Slf4j
 @Component
@@ -42,10 +47,27 @@ public class XmEntityRepositoryInternalImpl implements XmEntityRepositoryInterna
 
     private final SpringXmEntityRepository springXmEntityRepository;
     private final XmEntityTenantConfigService tenantConfigService;
+    private final ApplicationProperties applicationProperties;
+    @PersistenceContext
+    private EntityManager entityManager;
 
     @Override
-    public XmEntity findOneByIdForUpdate(@Param("id") Long id) {
-        return springXmEntityRepository.findOneByIdForUpdate(id);
+    public XmEntity findOneByIdForUpdate(Long id) {
+        CriteriaBuilder builder = entityManager.getCriteriaBuilder();
+        CriteriaQuery<XmEntity> criteriaQuery = builder.createQuery(XmEntity.class);
+        Root<XmEntity> root = criteriaQuery.from(XmEntity.class);
+        criteriaQuery.where(builder.equal(root.get("id"), id));
+
+        TypedQuery<XmEntity> query = entityManager
+            .createQuery(criteriaQuery)
+            .setLockMode(LockModeType.PESSIMISTIC_WRITE)
+            .setHint(SPEC_HINT_TIMEOUT, applicationProperties.getJpa().getFindOneByIdForUpdateTimeout());
+
+        List<XmEntity> resultList = query.getResultList();
+        if (isEmpty(resultList)) {
+            return null;
+        }
+        return resultList.get(0);
     }
 
     /**
