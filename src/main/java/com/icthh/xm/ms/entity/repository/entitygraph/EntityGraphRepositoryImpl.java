@@ -1,6 +1,5 @@
 package com.icthh.xm.ms.entity.repository.entitygraph;
 
-import com.icthh.xm.ms.entity.config.ApplicationProperties;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
@@ -9,14 +8,11 @@ import org.hibernate.SessionFactory;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
-import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.query.QueryUtils;
 import org.springframework.data.jpa.repository.support.JpaEntityInformation;
 import org.springframework.data.jpa.repository.support.SimpleJpaRepository;
-import org.springframework.data.repository.query.Param;
 
 import javax.persistence.EntityGraph;
 import javax.persistence.EntityManager;
@@ -49,8 +45,6 @@ public class EntityGraphRepositoryImpl<T, I extends Serializable>
     private final EntityManager entityManager;
 
     private final Class<T> domainClass;
-    @Autowired
-    private ApplicationProperties applicationProperties;
 
     public EntityGraphRepositoryImpl(JpaEntityInformation<T, I> entityInformation,
                                      EntityManager entityManager) {
@@ -59,32 +53,11 @@ public class EntityGraphRepositoryImpl<T, I extends Serializable>
         this.domainClass = entityInformation.getJavaType();
     }
 
-    public EntityGraphRepositoryImpl(ApplicationProperties applicationProperties,
-                                     Class<T> domainClass,
+    public EntityGraphRepositoryImpl(Class<T> domainClass,
                                      EntityManager entityManager) {
         super(domainClass, entityManager);
-        this.applicationProperties = applicationProperties;
         this.entityManager = entityManager;
         this.domainClass = domainClass;
-    }
-
-    @Override
-    public T findOneByIdForUpdate(I id) {
-        CriteriaBuilder builder = entityManager.getCriteriaBuilder();
-        CriteriaQuery<T> criteriaQuery = builder.createQuery(domainClass);
-        Root<T> root = criteriaQuery.from(domainClass);
-        criteriaQuery.where(builder.equal(root.get("id"), id));
-
-        TypedQuery<T> query = entityManager
-            .createQuery(criteriaQuery)
-            .setLockMode(LockModeType.PESSIMISTIC_WRITE)
-            .setHint(SPEC_HINT_TIMEOUT, applicationProperties.getJpa().getFindOneByIdForUpdateTimeout());
-
-        List<T> resultList = query.getResultList();
-        if (CollectionUtils.isEmpty(resultList)) {
-            return null;
-        }
-        return resultList.get(0);
     }
 
     @Override
