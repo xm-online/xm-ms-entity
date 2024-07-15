@@ -29,6 +29,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.util.AntPathMatcher;
 
@@ -53,6 +54,7 @@ import static org.springframework.util.CollectionUtils.isEmpty;
  * manipulate with pure model.
  */
 @Slf4j
+@Lazy
 @Service
 @RequiredArgsConstructor
 public class XmEntitySpecService implements RefreshableConfiguration {
