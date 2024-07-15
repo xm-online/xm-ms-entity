@@ -18,6 +18,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -96,6 +97,10 @@ public class XmEntitySpecContextService {
         }
 
         byFiles.put(updatedKey, config);
+    }
+
+    public List<String> tenants() {
+        return new ArrayList<>(typesByTenantByFile.keySet());
     }
 
     public Map<String, TypeSpec> updateByTenantState(String tenant) {

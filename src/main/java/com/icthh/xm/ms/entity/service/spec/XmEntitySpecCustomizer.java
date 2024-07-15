@@ -19,30 +19,26 @@ import static com.icthh.xm.commons.tenant.TenantContextUtils.buildTenant;
 public class XmEntitySpecCustomizer {
 
     private final TenantContextHolder tenantContextHolder;
-    //private final LepManagementService lepManagementService;
-    //private final XmLepScriptConfigServerResourceLoader dependsOn; // to start after LEP
+    private final LepManagementService lepManagementService;
     private XmEntitySpecCustomizer self;
 
-    public XmEntitySpecCustomizer(TenantContextHolder tenantContextHolder
-                                  //LepManagementService lepManagementService
-                                  //XmLepScriptConfigServerResourceLoader xmLepScriptConfigServerResourceLoader
-    ) {
+    public XmEntitySpecCustomizer(TenantContextHolder tenantContextHolder,
+                                  LepManagementService lepManagementService) {
         this.tenantContextHolder = tenantContextHolder;
-        //this.lepManagementService = lepManagementService;
-        //this.dependsOn = xmLepScriptConfigServerResourceLoader;
+        this.lepManagementService = lepManagementService;
     }
 
     @IgnoreLogginAspect
     public void customize(String tenant, Map<String, TypeSpec> entitySpec) {
-        //if (lepManagementService.getCurrentLepExecutorResolver() == null) {
+        if (lepManagementService.getCurrentLepExecutorResolver() == null) {
             tenantContextHolder.getPrivilegedContext().execute(buildTenant(tenant), () -> {
-                //try(var context = lepManagementService.beginThreadContext()) {
+                try(var context = lepManagementService.beginThreadContext()) {
                     self.customize(entitySpec);
-                //}
+                }
             });
-//        } else {
-//            self.customize(entitySpec);
-//        }
+        } else {
+            self.customize(entitySpec);
+        }
     }
 
     @IgnoreLogginAspect
