@@ -15,20 +15,21 @@ import java.util.Map;
 import static com.icthh.xm.commons.tenant.TenantContextUtils.buildTenant;
 
 @Component
-@LepService(group = "service.spec")
+//@LepService(group = "service.spec")
 public class XmEntitySpecCustomizer {
 
     private final TenantContextHolder tenantContextHolder;
     private final LepManagementService lepManagementService;
-    private final XmLepScriptConfigServerResourceLoader dependsOn; // to start after LEP
+    //private final XmLepScriptConfigServerResourceLoader dependsOn; // to start after LEP
     private XmEntitySpecCustomizer self;
 
     public XmEntitySpecCustomizer(TenantContextHolder tenantContextHolder,
-                                  LepManagementService lepManagementService,
-                                  XmLepScriptConfigServerResourceLoader xmLepScriptConfigServerResourceLoader) {
+                                  LepManagementService lepManagementService
+                                  //XmLepScriptConfigServerResourceLoader xmLepScriptConfigServerResourceLoader
+    ) {
         this.tenantContextHolder = tenantContextHolder;
         this.lepManagementService = lepManagementService;
-        this.dependsOn = xmLepScriptConfigServerResourceLoader;
+        //this.dependsOn = xmLepScriptConfigServerResourceLoader;
     }
 
     @IgnoreLogginAspect
@@ -45,7 +46,7 @@ public class XmEntitySpecCustomizer {
     }
 
     @IgnoreLogginAspect
-    @LogicExtensionPoint("CustomizeEntitySpec")
+    //@LogicExtensionPoint("CustomizeEntitySpec")
     public void customize(Map<String, TypeSpec> entitySpec) {
         // do nothing
     }
