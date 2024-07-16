@@ -23,6 +23,7 @@ public class ApplicationProperties {
     private final Amazon amazon = new Amazon();
     private final Retry retry = new Retry();
     private final Lep lep = new Lep();
+    private final Jpa jpa = new Jpa();
 
     private List<String> tenantIgnoredPathList = Collections.emptyList();
     private List<String> timelineIgnoredHttpMethods = Collections.emptyList();
@@ -128,6 +129,11 @@ public class ApplicationProperties {
     @Setter
     public static class DomainEvent {
         private boolean enabled;
+    }
+    @Getter
+    @Setter
+    public static class Jpa {
+        private Integer findOneByIdForUpdateTimeout = 10000;
     }
 
 }

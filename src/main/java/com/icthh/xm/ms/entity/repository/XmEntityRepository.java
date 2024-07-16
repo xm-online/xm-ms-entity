@@ -55,7 +55,9 @@ public interface XmEntityRepository extends XmEntityProjectionRepository {
     @Deprecated
     XmEntity findOneById(Long id);
 
-    XmEntity findOneByIdForUpdate(@Param("id") Long id);
+
+    // PESSIMISTIC_WRITE locked query
+    XmEntity findOneByIdForUpdate(Long id);
 
     List<XmEntity> findAllById(Iterable<Long> longs);
 
