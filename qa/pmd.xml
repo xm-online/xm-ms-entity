@@ -179,11 +179,6 @@
         <exclude name="JUnitSpelling"/>
     </rule>
 
-    <rule ref="rulesets/java/logging-jakarta-commons.xml">
-        <!-- explicit if (log.isDebugEnabled) is too verbose in most of the cases for simple string param reference -->
-        <exclude name="GuardLogStatement"/>
-        <exclude name="GuardDebugLogging"/>
-    </rule>
     <rule ref="rulesets/java/logging-java.xml">
         <exclude name="GuardLogStatementJavaUtil"/>
     </rule>

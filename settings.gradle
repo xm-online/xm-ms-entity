@@ -1,9 +1,15 @@
 
 pluginManagement {
+    repositories {
+        maven { url 'https://plugins.gradle.org/m2/' }
+        gradlePluginPortal()
+        mavenCentral()
+        //jhipster-needle-gradle-plugin-management-repositories - JHipster will add additional entries here
+    }
      plugins {
           id 'org.springframework.boot' version "${spring_boot_version}"
           id 'com.google.cloud.tools.jib' version "${jib_plugin_version}"
-          id 'com.gorylenko.gradle-git-properties' version "${git_properties_plugin_version}"
+          id 'com.gorylenko.gradle-git-properties' version "${gitPropertiesPluginVersion}"
           id 'org.liquibase.gradle' version "${liquibase_plugin_version}"
           id 'org.sonarqube' version "${sonarqube_plugin_version}"
           id 'net.ltgt.apt-eclipse' version "${apt_plugin_version}"
