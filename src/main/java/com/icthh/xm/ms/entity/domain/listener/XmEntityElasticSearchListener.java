@@ -10,6 +10,7 @@ import com.icthh.xm.ms.entity.repository.search.XmEntitySearchRepository;
 import com.icthh.xm.ms.entity.service.XmEntitySpecService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
 import java.util.function.Function;
@@ -32,7 +33,7 @@ public class XmEntityElasticSearchListener {
     }
 
     @Autowired
-    public void setXmEntitySpecService(XmEntitySpecService xmEntitySpecService) {
+    public void setXmEntitySpecService(@Lazy XmEntitySpecService xmEntitySpecService) {
         this.xmEntitySpecService = xmEntitySpecService;
     }
 
