@@ -5,6 +5,7 @@ import com.icthh.xm.commons.domainevent.outbox.service.OutboxTransportService;
 import com.icthh.xm.commons.domainevent.outbox.service.OutboxTransportService.OutboxTransportServiceField;
 import com.icthh.xm.commons.domainevent.service.EventPublisher;
 import com.icthh.xm.commons.domainevent.service.builder.DomainEventFactory;
+import com.icthh.xm.commons.flow.api.FlowLepContextFields;
 import com.icthh.xm.commons.lep.api.BaseLepContext;
 import com.icthh.xm.commons.lep.processor.GroovyMap;
 import com.icthh.xm.commons.lep.spring.lepservice.LepServiceFactory;
@@ -38,7 +39,7 @@ import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
 import org.springframework.web.client.RestTemplate;
 
 @GroovyMap
-public class LepContext extends BaseLepContext implements TraceServiceField, OutboxTransportServiceField {
+public class LepContext extends BaseLepContext implements TraceServiceField, OutboxTransportServiceField, FlowLepContextFields {
 
     public LepServices services;
     public LepRepositories repositories;
