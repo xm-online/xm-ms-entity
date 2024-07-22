@@ -21,7 +21,7 @@ spring:
             #- tls
     devtools:
         restart:
-            enabled: true
+            enabled: false
         livereload:
             enabled: false # we use Webpack dev server + BrowserSync for livereload
     jackson:
