@@ -12,7 +12,6 @@ import java.util.Optional;
 /**
  * Spring Data Elasticsearch repository for the XmEntity entity.
  *
- * @Deprecation - repository methods should be rewritten to avoid usage of org.springframework.data.elasticsearch
  */
 public interface XmEntitySearchRepository {
 

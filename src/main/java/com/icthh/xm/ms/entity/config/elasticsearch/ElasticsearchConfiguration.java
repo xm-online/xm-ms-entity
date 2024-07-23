@@ -58,7 +58,9 @@ public class ElasticsearchConfiguration {
 
     @Bean
     public RestClient restClient() {
-        RestClientBuilder builder = RestClient.builder(new HttpHost(elastic.getHost(), elastic.getPort(), elastic.getScheme()))
+        HttpHost httpHost = new HttpHost(elastic.getHost(), elastic.getPort(), elastic.getScheme());
+
+        RestClientBuilder builder = RestClient.builder(httpHost)
             .setHttpClientConfigCallback(httpClientBuilder -> {
                 CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
                 credentialsProvider.setCredentials(AuthScope.ANY,
@@ -71,9 +73,9 @@ public class ElasticsearchConfiguration {
 
         builder.setRequestConfigCallback(requestConfigBuilder ->
             requestConfigBuilder
-                .setConnectTimeout(5000)
-                .setSocketTimeout(30000)
-                .setConnectionRequestTimeout(30000)
+                .setConnectTimeout(elastic.getConnectTimeout())
+                .setSocketTimeout(elastic.getSocketTimeout())
+                .setConnectionRequestTimeout(elastic.getConnectRequestTimeout())
         );
         return builder.build();
     }
