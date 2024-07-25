@@ -34,11 +34,6 @@ import java.util.List;
 
 public interface ElasticsearchOperations {
 
-    //  TODO-REMOVE
-//    ElasticsearchConverter getElasticsearchConverter();
-//
-//    ElasticsearchClient getClient();
-
     <T> boolean createIndex(Class<T> clazz);
 
     /**
@@ -55,15 +50,6 @@ public interface ElasticsearchOperations {
      * @param settings
      */
     boolean createIndex(String indexName, Object settings);
-
-    // TODO-REMOVE: Unused methods
-//    /**
-//     * Create an index for given class and Settings
-//     *
-//     * @param clazz
-//     * @param settings
-//     */
-//    <T> boolean createIndex(Class<T> clazz, Object settings);
 
     /**
      * Create mapping for a class
@@ -427,32 +413,6 @@ public interface ElasticsearchOperations {
      * @return
      */
     boolean deleteIndex(String indexName);
-
-    /**
-     * check if index is exists
-     *
-     * @param clazz
-     * @param <T>
-     * @return
-     */
-    <T> boolean indexExists(Class<T> clazz);
-
-    /**
-     * check if index is exists for given IndexName
-     *
-     * @param indexName
-     * @return
-     */
-    boolean indexExists(String indexName);
-
-    /**
-     * check if type is exists in an index
-     *
-     * @param index
-     * @param type
-     * @return
-     */
-    boolean typeExists(String index, String type);
 
     /**
      * refresh the index
