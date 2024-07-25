@@ -1,12 +1,9 @@
 package com.icthh.xm.ms.entity.domain.listener;
 
-import static com.icthh.xm.ms.entity.util.DatabaseUtil.runAfterTransaction;
 
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.domain.spec.TypeSpec;
-import com.icthh.xm.ms.entity.lep.ElasticIndexManager;
 import com.icthh.xm.ms.entity.lep.ElasticIndexManagerService;
-import com.icthh.xm.ms.entity.repository.search.XmEntitySearchRepository;
 import com.icthh.xm.ms.entity.service.XmEntitySpecService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;

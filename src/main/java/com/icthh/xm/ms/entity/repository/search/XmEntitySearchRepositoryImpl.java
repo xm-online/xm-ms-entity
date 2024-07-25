@@ -12,6 +12,7 @@ import com.icthh.xm.ms.entity.service.search.query.dto.GetQuery;
 import com.icthh.xm.ms.entity.service.search.query.dto.IndexQuery;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.poi.ss.formula.functions.T;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -127,6 +128,16 @@ public class XmEntitySearchRepositoryImpl implements XmEntitySearchRepository {
 //        query.setParentId(extractParentIdFromBean(entity)); // TODO
         return query;
     }
+//
+//    private org.springframework.data.elasticsearch.core.query.IndexQuery createIndexQuery(T entity) {
+//        org.springframework.data.elasticsearch.core.query.IndexQuery query = new org.springframework.data.elasticsearch.core.query.IndexQuery();
+//        query.setObject(entity);
+//        query.setId(this.stringIdRepresentation(this.extractIdFromBean(entity)));
+//        query.setVersion(this.extractVersionFromBean(entity));
+//        query.setParentId(this.extractParentIdFromBean(entity));
+//        return query;
+//    }
+
 
     @Override
     public Optional<XmEntity> findById(Long id) {

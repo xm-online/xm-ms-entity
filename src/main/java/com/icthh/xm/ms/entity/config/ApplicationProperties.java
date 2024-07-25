@@ -147,5 +147,8 @@ public class ApplicationProperties {
         private String password;
         private String host;
         private Integer port;
+        private Integer connectTimeout;
+        private Integer socketTimeout;
+        private Integer connectRequestTimeout;
     }
 }

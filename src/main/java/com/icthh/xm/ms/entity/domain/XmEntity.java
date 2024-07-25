@@ -68,7 +68,6 @@ import java.util.function.BiConsumer;
 @Entity
 @Table(name = "xm_entity")
 @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
-//@Document(indexName = "#{@indexName.prefix}xmentity")
 // load tags and locations eagerly in repository queries hinted by @EntityGraph("xmEntityGraph")
 @NamedEntityGraph(name = "xmEntityGraph",
     attributeNodes = {
