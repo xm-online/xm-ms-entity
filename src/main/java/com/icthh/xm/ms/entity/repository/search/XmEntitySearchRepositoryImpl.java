@@ -118,25 +118,14 @@ public class XmEntitySearchRepositoryImpl implements XmEntitySearchRepository {
 
     private <S extends XmEntity> IndexQuery createIndexQuery(String indexName, S entity) {
         IndexQuery query = new IndexQuery();
-    // TODO-IMPL
-//        query.setObject(entity);
-//        query.setId(String.valueOf(entity.getId()));
-//        query.setType(ElasticsearchTemplateWrapper.INDEX_QUERY_TYPE);
-//        query.setIndexName(indexName);
-
+        query.setObject(entity);
+        query.setId(String.valueOf(entity.getId()));
+        query.setType(ElasticsearchTemplateWrapper.INDEX_QUERY_TYPE);
+        query.setIndexName(indexName);
 //        query.setVersion(extractVersionFromBean(entity)); // TODO
 //        query.setParentId(extractParentIdFromBean(entity)); // TODO
         return query;
     }
-//
-//    private org.springframework.data.elasticsearch.core.query.IndexQuery createIndexQuery(T entity) {
-//        org.springframework.data.elasticsearch.core.query.IndexQuery query = new org.springframework.data.elasticsearch.core.query.IndexQuery();
-//        query.setObject(entity);
-//        query.setId(this.stringIdRepresentation(this.extractIdFromBean(entity)));
-//        query.setVersion(this.extractVersionFromBean(entity));
-//        query.setParentId(this.extractParentIdFromBean(entity));
-//        return query;
-//    }
 
 
     @Override
@@ -201,10 +190,10 @@ public class XmEntitySearchRepositoryImpl implements XmEntitySearchRepository {
     @Override
     public void deleteAll() {
         DeleteQuery deleteQuery = new DeleteQuery();
-    // TODO-IMPL
-//        deleteQuery.setQuery(matchAllQuery());
-//        deleteQuery.setIndex(elasticsearchTemplateWrapper.getIndexName());
-//        deleteQuery.setType(ElasticsearchTemplateWrapper.INDEX_QUERY_TYPE);
+
+        deleteQuery.setQuery(matchAllQuery());
+        deleteQuery.setIndex(elasticsearchTemplateWrapper.getIndexName());
+        deleteQuery.setType(ElasticsearchTemplateWrapper.INDEX_QUERY_TYPE);
         elasticsearchTemplateWrapper.delete(deleteQuery, getEntityClass());
         refresh();
     }

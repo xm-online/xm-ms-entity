@@ -1,8 +1,11 @@
 package com.icthh.xm.ms.entity.service.search;
 
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
+import co.elastic.clients.elasticsearch._types.mapping.TypeMapping;
 import co.elastic.clients.elasticsearch.core.SearchRequest;
 import co.elastic.clients.elasticsearch.core.SearchResponse;
+import co.elastic.clients.elasticsearch.indices.PutMappingRequest;
+import co.elastic.clients.elasticsearch.indices.PutMappingResponse;
 import com.icthh.xm.commons.permission.service.PermissionCheckService;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.ms.entity.domain.XmEntity;
@@ -69,6 +72,7 @@ public class ElasticsearchTemplateWrapper implements ElasticsearchOperations {
     private final SpelToElasticTranslator spelToElasticTranslator;
     private final SearchResultMapper searchResultMapper;
     private final SearchRequestBuilder searchRequestBuilder;
+    private final IndexRequestService indexRequestService;
 
     public static String composeIndexName(String tenantCode) {
         return tenantCode.toLowerCase() + "_" + INDEX_QUERY_TYPE;
@@ -170,18 +174,6 @@ public class ElasticsearchTemplateWrapper implements ElasticsearchOperations {
         return queryForPage(queryBuilder, XmEntity.class);
     }
 
-    // TODO-REMOVED: Unused method
-//    @Override
-//    public ElasticsearchConverter getElasticsearchConverter() {
-//        return elasticsearchTemplate.getElasticsearchConverter();
-//    }
-
-    // TODO-REMOVED: Unused method (check leps for usage otherwise remove)
-//    @Override
-//    public ElasticsearchClient getClient() {
-//        return elasticsearchClient;
-//    }
-
     @Override
     public <T> boolean createIndex(Class<T> clazz) {
         return createIndex(getIndexName());
@@ -189,60 +181,28 @@ public class ElasticsearchTemplateWrapper implements ElasticsearchOperations {
 
     @Override
     public boolean createIndex(String indexName) {
-//        return elasticsearchTemplate.createIndex(indexName);
-        return false;
+        return indexRequestService.createIndex(indexName);
     }
 
     @Override
     public boolean createIndex(String indexName, Object settings) {
-//        return elasticsearchTemplate.createIndex(indexName, settings);
-        return false;
+        return indexRequestService.createIndex(indexName, settings);
     }
-
-    // TODO-REMOVE: Unused methods
-//    @Override
-//    public <T> boolean createIndex(Class<T> clazz, Object settings) {
-//        throw new UnsupportedOperationException("Not implemented");
-//    }
 
     @Override
     public <T> boolean putMapping(Class<T> clazz) {
-//        return elasticsearchTemplate.putMapping(getIndexName(), ElasticsearchTemplateWrapper.INDEX_QUERY_TYPE, getDefaultMapping());
-        return false;
+        return putMapping(getIndexName(), getDefaultMapping());
     }
 
     @Override
     public boolean putMapping(String indexName, String type, Object mappings) {
-//        return elasticsearchTemplate.putMapping(indexName, type, mappings);
-        return false;
+        return putMapping(indexName, mappings);
     }
 
     @Override
     public <T> boolean putMapping(Class<T> clazz, Object mappings) {
-//        return elasticsearchTemplate.putMapping(getIndexName(), ElasticsearchTemplateWrapper.INDEX_QUERY_TYPE, mappings);
-        return false;
+        return putMapping(getIndexName(), mappings);
     }
-
-    // TODO-REMOVE: Check usage otherwise remove unused methods
-//    @Override
-//    public <T> Map getMapping(Class<T> clazz) {
-//        throw new UnsupportedOperationException("Not implemented");
-//    }
-//
-//    @Override
-//    public Map getMapping(String indexName, String type) {
-//        throw new UnsupportedOperationException("Not implemented");
-//    }
-//
-//    @Override
-//    public Map getSetting(String indexName) {
-//        throw new UnsupportedOperationException("Not implemented");
-//    }
-//
-//    @Override
-//    public <T> Map getSetting(Class<T> clazz) {
-//        throw new UnsupportedOperationException("Not implemented");
-//    }
 
     @Override
     public <T> T queryForObject(GetQuery query, Class<T> clazz) {
@@ -316,22 +276,6 @@ public class ElasticsearchTemplateWrapper implements ElasticsearchOperations {
         return null;
     }
 
-    // TODO-REMOVE: Unused methods
-//    @Override
-//    public <T> CloseableIterator<T> stream(CriteriaQuery query, Class<T> clazz) {
-//        throw new UnsupportedOperationException("Not implemented");
-//    }
-//
-//    @Override
-//    public <T> CloseableIterator<T> stream(SearchQuery query, Class<T> clazz) {
-//        throw new UnsupportedOperationException("Not implemented");
-//    }
-//
-//    @Override
-//    public <T> CloseableIterator<T> stream(SearchQuery query, Class<T> clazz, SearchResultMapper mapper) {
-//        throw new UnsupportedOperationException("Not implemented");
-//    }
-
     @Override
     public <T> List<T> queryForList(CriteriaQuery query, Class<T> clazz) {
 //        TODO-IMPL
@@ -389,41 +333,15 @@ public class ElasticsearchTemplateWrapper implements ElasticsearchOperations {
         return 0;
     }
 
-    // TODO-REMOVE: Unused methods
-//    @Override
-//    public <T> LinkedList<T> multiGet(SearchQuery searchQuery, Class<T> clazz) {
-//        throw new UnsupportedOperationException("Not implemented");
-//    }
-//
-//    @Override
-//    public <T> LinkedList<T> multiGet(SearchQuery searchQuery, Class<T> clazz, MultiGetResultMapper multiGetResultMapper) {
-//        throw new UnsupportedOperationException("Not implemented");
-//    }
-
     @Override
     public String index(IndexQuery query) {
-//        TODO-IMPL
-//        return prepareIndex(query).execute().actionGet().getId();
-        return null;
+        return indexRequestService.index(query);
     }
-
-    // TODO-REMOVE: Unused methods
-//    @Override
-//    public UpdateResponse update(UpdateQuery updateQuery) {
-//        throw new UnsupportedOperationException("Not implemented");
-//    }
 
     @Override
     public void bulkIndex(List<IndexQuery> queries) {
-//        TODO-IMPL
-//        elasticsearchTemplate.bulkIndex(queries);
+        indexRequestService.bulkIndex(queries);
     }
-
-    // TODO-REMOVE: Unused methods
-    //    @Override
-//    public void bulkUpdate(List<UpdateQuery> queries) {
-//        throw new UnsupportedOperationException("Not implemented");
-//    }
 
     @Override
     public String delete(String indexName, String type, String id) {
@@ -464,36 +382,12 @@ public class ElasticsearchTemplateWrapper implements ElasticsearchOperations {
 
     @Override
     public boolean deleteIndex(String indexName) {
-//        TODO-IMPL
-//        return elasticsearchTemplate.deleteIndex(indexName);
-        return false;
-    }
-
-    @Override
-    public <T> boolean indexExists(Class<T> clazz) {
-//        TODO-IMPL
-//        return indexExists(getIndexName());
-        return false;
-    }
-
-    @Override
-    public boolean indexExists(String indexName) {
-//        TODO-IMPL
-//        return elasticsearchTemplate.indexExists(indexName);
-        return false;
-    }
-
-    @Override
-    public boolean typeExists(String index, String type) {
-//        TODO-IMPL
-//        return elasticsearchTemplate.typeExists(index, type);
-        return false;
+        return indexRequestService.deleteIndex(indexName);
     }
 
     @Override
     public void refresh(String indexName) {
-//        TODO-IMPL
-//        elasticsearchTemplate.refresh(indexName);
+        indexRequestService.refresh(indexName);
     }
 
     @Override
@@ -549,27 +443,6 @@ public class ElasticsearchTemplateWrapper implements ElasticsearchOperations {
 //        elasticsearchTemplate.clearScroll(scrollId);
     }
 
-    // TODO-REMOVE: Unused methods
-//    @Override
-//    public <T> Page<T> moreLikeThis(MoreLikeThisQuery query, Class<T> clazz) {
-//        throw new UnsupportedOperationException("Not implemented");
-//    }
-//
-//    @Override
-//    public Boolean addAlias(AliasQuery query) {
-//        throw new UnsupportedOperationException("Not implemented");
-//    }
-//
-//    @Override
-//    public Boolean removeAlias(AliasQuery query) {
-//        throw new UnsupportedOperationException("Not implemented");
-//    }
-//
-//    @Override
-//    public List<AliasMetaData> queryForAlias(String indexName) {
-//        throw new UnsupportedOperationException("Not implemented");
-//    }
-
     @Override
     public <T> T query(SearchQuery query, ResultsExtractor<T> resultsExtractor) {
         SearchRequest request = searchRequestBuilder.buildSearchRequest(query);
@@ -579,12 +452,6 @@ public class ElasticsearchTemplateWrapper implements ElasticsearchOperations {
         var searchResponse = searchResultMapper.mapSearchResponse(response);
         return resultsExtractor.extract(searchResponse);
     }
-
-    // TODO-REMOVE: Unused method
-//    @Override
-//    public ElasticsearchPersistentEntity getPersistentEntityFor(Class clazz) {
-//        throw new UnsupportedOperationException("Not implemented");
-//    }
 
 //    TODO-IMPL
 //    private IndexRequestBuilder prepareIndex(IndexQuery query) {
@@ -685,5 +552,24 @@ public class ElasticsearchTemplateWrapper implements ElasticsearchOperations {
             log.error("Error sending elasticsearch request: {}", e.getMessage(), e);
             throw new IllegalStateException(e.getMessage(), e);
         }
+    }
+
+    private boolean putMapping(String indexName, Object properties) {
+        return false;
+//        try {
+//            TypeMapping mapping = TypeMapping.of(b -> b.properties(properties));
+//
+//            PutMappingRequest request = PutMappingRequest.of(b -> b.index(indexName).properties(properties));
+//
+//            // Send the request
+//            PutMappingResponse response = elasticsearchClient.indices().putMapping(request);
+//
+//            // Return the response status
+//            return response.acknowledged();
+//        } catch (IOException e) {
+//            // Handle exception
+//            e.printStackTrace();
+//            return false;
+//        }
     }
 }
