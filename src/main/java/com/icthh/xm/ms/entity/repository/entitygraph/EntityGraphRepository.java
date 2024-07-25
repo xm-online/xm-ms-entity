@@ -13,7 +13,6 @@ import javax.persistence.criteria.CriteriaDelete;
 import javax.persistence.criteria.CriteriaUpdate;
 import javax.persistence.criteria.Root;
 import javax.persistence.criteria.Selection;
-import javax.persistence.metamodel.Attribute;
 import java.io.Serializable;
 import java.util.List;
 import java.util.Map;

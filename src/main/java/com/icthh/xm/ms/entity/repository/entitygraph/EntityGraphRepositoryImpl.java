@@ -7,6 +7,7 @@ import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.query.QueryUtils;
@@ -16,6 +17,7 @@ import org.springframework.data.jpa.repository.support.SimpleJpaRepository;
 import javax.persistence.EntityGraph;
 import javax.persistence.EntityManager;
 import javax.persistence.FlushModeType;
+import javax.persistence.LockModeType;
 import javax.persistence.Query;
 import javax.persistence.Subgraph;
 import javax.persistence.Tuple;
@@ -33,6 +35,7 @@ import java.util.Map;
 import java.util.function.Function;
 
 import static org.hibernate.jpa.QueryHints.HINT_LOADGRAPH;
+import static org.hibernate.jpa.QueryHints.SPEC_HINT_TIMEOUT;
 
 @Slf4j
 public class EntityGraphRepositoryImpl<T, I extends Serializable>
@@ -46,14 +49,13 @@ public class EntityGraphRepositoryImpl<T, I extends Serializable>
     public EntityGraphRepositoryImpl(JpaEntityInformation<T, I> entityInformation,
                                      EntityManager entityManager) {
         super(entityInformation, entityManager);
-
         this.entityManager = entityManager;
         this.domainClass = entityInformation.getJavaType();
     }
 
-    public EntityGraphRepositoryImpl(Class<T> domainClass, EntityManager entityManager) {
+    public EntityGraphRepositoryImpl(Class<T> domainClass,
+                                     EntityManager entityManager) {
         super(domainClass, entityManager);
-
         this.entityManager = entityManager;
         this.domainClass = domainClass;
     }

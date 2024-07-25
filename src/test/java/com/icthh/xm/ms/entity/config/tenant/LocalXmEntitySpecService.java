@@ -12,8 +12,8 @@ import com.icthh.xm.ms.entity.service.privileges.custom.EntityCustomPrivilegeSer
 import com.icthh.xm.ms.entity.service.processor.DefinitionSpecProcessor;
 import com.icthh.xm.ms.entity.service.processor.FormSpecProcessor;
 import com.icthh.xm.ms.entity.service.spec.XmEntitySpecContextService;
-import java.io.FileNotFoundException;
-import java.io.IOException;
+
+import com.icthh.xm.ms.entity.service.spec.XmEntitySpecCustomizer;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Primary;
@@ -39,15 +39,26 @@ public class LocalXmEntitySpecService extends XmEntitySpecService {
                                     EntityCustomPrivilegeService entityCustomPrivilegeService,
                                     DynamicPermissionCheckService dynamicPermissionCheckService,
                                     XmEntityTenantConfigService tenantConfigService,
+                                    XmEntitySpecCustomizer xmEntitySpecCustomizer,
                                     DefinitionSpecProcessor definitionSpecProcessor,
                                     FormSpecProcessor formSpecProcessor,
                                     @Value("${spring.servlet.multipart.max-file-size:1MB}") String maxFileSize) {
         super(tenantConfigRepository, applicationProperties, tenantContextHolder,
-            new XmEntitySpecContextService(definitionSpecProcessor, formSpecProcessor, tenantConfigService, maxFileSize),
+            buildSpecService(tenantConfigService, xmEntitySpecCustomizer, definitionSpecProcessor, formSpecProcessor, maxFileSize),
             List.of(entityCustomPrivilegeService), dynamicPermissionCheckService);
 
         this.applicationProperties = applicationProperties;
         this.tenantContextHolder = tenantContextHolder;
+    }
+
+    private static XmEntitySpecContextService buildSpecService(XmEntityTenantConfigService tenantConfigService,
+                                                               XmEntitySpecCustomizer xmEntitySpecCustomizer,
+                                                               DefinitionSpecProcessor definitionSpecProcessor,
+                                                               FormSpecProcessor formSpecProcessor, String maxFileSize) {
+        XmEntitySpecContextService xmEntitySpecContextService = new XmEntitySpecContextService(definitionSpecProcessor,
+            formSpecProcessor, xmEntitySpecCustomizer, tenantConfigService, maxFileSize);
+        xmEntitySpecContextService.onApplicationEvent(null);
+        return xmEntitySpecContextService;
     }
 
     @Override
