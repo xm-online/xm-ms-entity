@@ -39,5 +39,9 @@ public interface Query {
 
     void addIndices(String... indices);
 
+    void addTypes(String... types);
+
+    List<String> getTypes();
+
     SourceFilter getSourceFilter();
 }

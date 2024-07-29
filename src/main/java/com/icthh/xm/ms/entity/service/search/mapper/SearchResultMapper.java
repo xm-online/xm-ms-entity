@@ -1,7 +1,10 @@
 package com.icthh.xm.ms.entity.service.search.mapper;
 
+import co.elastic.clients.elasticsearch._types.aggregations.Aggregate;
+import co.elastic.clients.elasticsearch.core.ScrollResponse;
 import co.elastic.clients.elasticsearch.core.SearchResponse;
 import co.elastic.clients.elasticsearch.core.search.Hit;
+import co.elastic.clients.elasticsearch.core.search.HitsMetadata;
 import co.elastic.clients.elasticsearch.core.search.InnerHitsResult;
 import co.elastic.clients.json.JsonData;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -28,27 +31,42 @@ public class SearchResultMapper {
     private final ObjectMapper objectMapper;
 
     public <T> AggregatedPage<T> mapSearchResults(SearchResponse<T> response, Pageable pageable) {
-        String scrollId = response.scrollId();
-        float maxScore = response.maxScore() != null ? response.maxScore().floatValue() : 0;
-        long totalValues = response.hits().total() != null ? response.hits().total().value() : 0;
-
-        List<T> results = mapListSearchResults(response);
-
-        Aggregations aggregations = aggregationSearchResultMapper.mapInternalAggregations(response.aggregations());
-
-        return new AggregatedPageImpl<T>(results, pageable, totalValues, aggregations, scrollId, maxScore);
+        return mapResults(response.scrollId(), response.maxScore(), response.hits(), response.aggregations(), pageable);
     }
 
-    public <T> List<T> mapListSearchResults(SearchResponse<T> response) {
-        return response.hits().hits().stream()
+    public <T> AggregatedPage<T> mapScrollSearchResults(ScrollResponse<T> response, Pageable pageable) {
+        return mapResults(response.scrollId(), response.maxScore(), response.hits(), response.aggregations(), pageable);
+    }
+
+    public <T> List<T> mapListSearchResults(HitsMetadata<T> hitsMetadata) {
+        return hitsMetadata.hits().stream()
             .filter(it -> it.source() != null)
             .map(Hit::source)
+            .collect(Collectors.toList());
+    }
+
+    public <T> List<String> mapIdsSearchResults(SearchResponse<T> response) {
+        return response.hits().hits().stream()
+            .filter(it -> it.source() != null)
+            .map(Hit::id)
             .collect(Collectors.toList());
     }
 
     public <T> com.icthh.xm.ms.entity.service.search.dto.response.SearchResponse mapSearchResponse(SearchResponse<T> response) {
         SearchHits hits = mapSearchHits(response.hits().hits());
         return new com.icthh.xm.ms.entity.service.search.dto.response.SearchResponse(hits);
+    }
+
+    private <T> AggregatedPage<T> mapResults(String scrollId, Double score, HitsMetadata<T> hitsMetadata,
+                                             Map<String, Aggregate> aggregationMap, Pageable pageable) {
+        float maxScore = score != null ? score.floatValue() : 0;
+        long totalValues = hitsMetadata.total() != null ? hitsMetadata.total().value() : 0;
+
+        List<T> results = mapListSearchResults(hitsMetadata);
+
+        Aggregations aggregations = aggregationSearchResultMapper.mapInternalAggregations(aggregationMap);
+
+        return new AggregatedPageImpl<T>(results, pageable, totalValues, aggregations, scrollId, maxScore);
     }
 
     private <T> SearchHits mapSearchHits(List<Hit<T>> hits) {
