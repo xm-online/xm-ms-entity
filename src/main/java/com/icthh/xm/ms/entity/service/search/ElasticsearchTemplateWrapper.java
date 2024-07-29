@@ -1,11 +1,5 @@
 package com.icthh.xm.ms.entity.service.search;
 
-import co.elastic.clients.elasticsearch.ElasticsearchClient;
-import co.elastic.clients.elasticsearch._types.mapping.TypeMapping;
-import co.elastic.clients.elasticsearch.core.SearchRequest;
-import co.elastic.clients.elasticsearch.core.SearchResponse;
-import co.elastic.clients.elasticsearch.indices.PutMappingRequest;
-import co.elastic.clients.elasticsearch.indices.PutMappingResponse;
 import com.icthh.xm.commons.permission.service.PermissionCheckService;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.ms.entity.domain.XmEntity;
@@ -14,15 +8,10 @@ import com.icthh.xm.ms.entity.service.dto.SearchDto;
 import com.icthh.xm.ms.entity.service.search.builder.BoolQueryBuilder;
 import com.icthh.xm.ms.entity.service.search.builder.NativeSearchQueryBuilder;
 import com.icthh.xm.ms.entity.service.search.filter.FetchSourceFilter;
-import com.icthh.xm.ms.entity.service.search.mapper.GetResultMapper;
-import com.icthh.xm.ms.entity.service.search.mapper.SearchRequestBuilder;
-import com.icthh.xm.ms.entity.service.search.mapper.SearchResultMapper;
 import com.icthh.xm.ms.entity.service.search.mapper.extractor.ResultsExtractor;
 import com.icthh.xm.ms.entity.service.search.page.ScrolledPage;
 import com.icthh.xm.ms.entity.service.search.page.aggregation.AggregatedPage;
-import com.icthh.xm.ms.entity.service.search.query.CriteriaQuery;
 import com.icthh.xm.ms.entity.service.search.query.SearchQuery;
-import com.icthh.xm.ms.entity.service.search.query.StringQuery;
 import com.icthh.xm.ms.entity.service.search.query.dto.DeleteQuery;
 import com.icthh.xm.ms.entity.service.search.query.dto.GetQuery;
 import com.icthh.xm.ms.entity.service.search.query.dto.IndexQuery;
@@ -42,7 +31,6 @@ import org.springframework.stereotype.Service;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import static com.icthh.xm.ms.entity.service.search.builder.QueryBuilders.boolQuery;
@@ -67,12 +55,10 @@ public class ElasticsearchTemplateWrapper implements ElasticsearchOperations {
     private static final String TYPE_KEY = "typeKey";
 
     private final TenantContextHolder tenantContextHolder;
-    private final ElasticsearchClient elasticsearchClient;
     private final PermissionCheckService permissionCheckService;
     private final SpelToElasticTranslator spelToElasticTranslator;
-    private final SearchResultMapper searchResultMapper;
-    private final SearchRequestBuilder searchRequestBuilder;
     private final IndexRequestService indexRequestService;
+    private final SearchRequestService searchRequestService;
 
     public static String composeIndexName(String tenantCode) {
         return tenantCode.toLowerCase() + "_" + INDEX_QUERY_TYPE;
@@ -141,7 +127,7 @@ public class ElasticsearchTemplateWrapper implements ElasticsearchOperations {
         String indexName = ElasticsearchTemplateWrapper.composeIndexName(tenantContextHolder.getTenantKey());
         NativeSearchQuery queryBuilder = new NativeSearchQueryBuilder()
             .withIndices(indexName)
-//            .withTypes(ElasticsearchTemplateWrapper.INDEX_QUERY_TYPE) TODO-IMPL: Removed in 8.14v
+            .withTypes(ElasticsearchTemplateWrapper.INDEX_QUERY_TYPE)
             .withQuery(esQuery)
             .withPageable(pageable == null ? DEFAULT_PAGE : pageable)
             .build();
@@ -167,7 +153,7 @@ public class ElasticsearchTemplateWrapper implements ElasticsearchOperations {
         NativeSearchQuery queryBuilder = new NativeSearchQueryBuilder()
             .withQuery(esQuery)
             .withIndices(getIndexName())
-//            .withTypes(ElasticsearchTemplateWrapper.INDEX_QUERY_TYPE) TODO-IMPL: Removed in 8.14v
+            .withTypes(ElasticsearchTemplateWrapper.INDEX_QUERY_TYPE)
             .withPageable(pageable == null ? DEFAULT_PAGE : pageable)
             .build();
 
@@ -191,146 +177,47 @@ public class ElasticsearchTemplateWrapper implements ElasticsearchOperations {
 
     @Override
     public <T> boolean putMapping(Class<T> clazz) {
-        return putMapping(getIndexName(), getDefaultMapping());
+        return searchRequestService.putMapping(getIndexName(), getDefaultMapping());
     }
 
     @Override
     public boolean putMapping(String indexName, String type, Object mappings) {
-        return putMapping(indexName, mappings);
+        return searchRequestService.putMapping(indexName, mappings);
     }
 
     @Override
     public <T> boolean putMapping(Class<T> clazz, Object mappings) {
-        return putMapping(getIndexName(), mappings);
+        return searchRequestService.putMapping(getIndexName(), mappings);
     }
 
     @Override
     public <T> T queryForObject(GetQuery query, Class<T> clazz) {
-//        TODO-IMPL
-//        return queryForObject(query, clazz, resultsMapper);
-        return null;
-    }
-
-    @Override
-    public <T> T queryForObject(GetQuery query, Class<T> clazz, GetResultMapper mapper) {
-//        TODO-IMPL
-//
-//        GetResponse response = elasticsearchTemplate.getClient()
-//            .prepareGet(getIndexName(), ElasticsearchTemplateWrapper.INDEX_QUERY_TYPE, query.getId()).execute()
-//            .actionGet();
-//
-//        T entity = mapper.mapResult(response, clazz);
-//        return entity;
-        return null;
-    }
-
-    @Override
-    public <T> T queryForObject(CriteriaQuery query, Class<T> clazz) {
-//        TODO-IMPL
-//        return elasticsearchTemplate.queryForObject(query, clazz);
-        return null;
-    }
-
-    @Override
-    public <T> T queryForObject(StringQuery query, Class<T> clazz) {
-//        TODO-IMPL
-//        return elasticsearchTemplate.queryForObject(query, clazz);
-        return null;
+        return searchRequestService.queryForObject(query, clazz, getIndexName());
     }
 
     @Override
     public <T> AggregatedPage<T> queryForPage(SearchQuery query, Class<T> clazz) {
-        Pageable pageable = query.getPageable();
-
-        SearchRequest request = searchRequestBuilder.buildSearchRequest(query);
-
-        SearchResponse<T> search = search(request, clazz);
-        return searchResultMapper.mapSearchResults(search, pageable);
-    }
-
-    @Override
-    public <T> Page<T> queryForPage(SearchQuery query, Class<T> clazz, SearchResultMapper mapper) {
-//        TODO-IMPL
-//        return elasticsearchTemplate.queryForPage(query, clazz, mapper);
-        return null;
-    }
-
-    @Override
-    public <T> Page<T> queryForPage(CriteriaQuery query, Class<T> clazz) {
-//        TODO-IMPL
-//        return elasticsearchTemplate.queryForPage(query, clazz);
-        return null;
-    }
-
-    @Override
-    public <T> Page<T> queryForPage(StringQuery query, Class<T> clazz) {
-//        TODO-IMPL
-//        return elasticsearchTemplate.queryForPage(query, clazz);
-        return null;
-    }
-
-    @Override
-    public <T> Page<T> queryForPage(StringQuery query, Class<T> clazz, SearchResultMapper mapper) {
-//        TODO-IMPL
-//        return elasticsearchTemplate.queryForPage(query, clazz, mapper);
-        return null;
-    }
-
-    @Override
-    public <T> List<T> queryForList(CriteriaQuery query, Class<T> clazz) {
-//        TODO-IMPL
-//        return elasticsearchTemplate.queryForList(query, clazz);
-        return null;
-    }
-
-    @Override
-    public <T> List<T> queryForList(StringQuery query, Class<T> clazz) {
-//        TODO-IMPL
-//        return elasticsearchTemplate.queryForList(query, clazz);
-        return null;
+        return searchRequestService.queryForPage(query, clazz);
     }
 
     @Override
     public <T> List<T> queryForList(SearchQuery query, Class<T> clazz) {
-        SearchRequest request = searchRequestBuilder.buildSearchRequest(query);
-        SearchResponse<T> searchResponse = search(request, clazz);
-
-        return searchResultMapper.mapListSearchResults(searchResponse);
+        return searchRequestService.queryForList(query, clazz);
     }
 
     @Override
     public <T> List<String> queryForIds(SearchQuery query) {
-//        TODO-IMPL
-//        return elasticsearchTemplate.queryForIds(query);
-        return null;
-    }
-
-    @Override
-    public <T> long count(CriteriaQuery query, Class<T> clazz) {
-//        TODO-IMPL
-//        return elasticsearchTemplate.count(query, clazz);
-        return 0;
-    }
-
-    @Override
-    public <T> long count(CriteriaQuery query) {
-//        TODO-IMPL
-//        return elasticsearchTemplate.count(query);
-        return 0;
+        return searchRequestService.queryForIds(query);
     }
 
     @Override
     public <T> long count(SearchQuery query, Class<T> clazz) {
-//        TODO-IMPL
-//        return elasticsearchTemplate.count(query, clazz);
-        return 0;
+        return searchRequestService.count(query, getIndexName());
     }
 
     @Override
     public <T> long count(SearchQuery query) {
-//        TODO-IMPL
-//        return elasticsearchTemplate.count(query);
-        return 0;
+        return count(query, null);
     }
 
     @Override
@@ -345,34 +232,22 @@ public class ElasticsearchTemplateWrapper implements ElasticsearchOperations {
 
     @Override
     public String delete(String indexName, String type, String id) {
-//        TODO-IMPL
-//        return elasticsearchTemplate.delete(indexName, type, id);
-        return null;
-    }
-
-    @Override
-    public <T> void delete(CriteriaQuery criteriaQuery, Class<T> clazz) {
-//        TODO-IMPL
-//        elasticsearchTemplate.delete(criteriaQuery, clazz);
+        return searchRequestService.delete(id, indexName);
     }
 
     @Override
     public <T> String delete(Class<T> clazz, String id) {
-//        TODO-IMPL
-//        return elasticsearchTemplate.delete(clazz, id);
-        return null;
+        return searchRequestService.delete(id, getIndexName());
     }
 
     @Override
     public <T> void delete(DeleteQuery query, Class<T> clazz) {
-//        TODO-IMPL
-//        elasticsearchTemplate.delete(query, clazz);
+        searchRequestService.deleteByQuery(query, getIndexName());
     }
 
     @Override
     public void delete(DeleteQuery query) {
-//        TODO-IMPL
-//        elasticsearchTemplate.delete(query);
+        searchRequestService.deleteByQuery(query, getIndexName());
     }
 
     @Override
@@ -397,96 +272,23 @@ public class ElasticsearchTemplateWrapper implements ElasticsearchOperations {
 
     @Override
     public <T> Page<T> startScroll(long scrollTimeInMillis, SearchQuery query, Class<T> clazz) {
-//        TODO-IMPL
-//        return elasticsearchTemplate.startScroll(scrollTimeInMillis, query, clazz);
-        return null;
-    }
-
-    @Override
-    public <T> Page<T> startScroll(long scrollTimeInMillis, SearchQuery query, Class<T> clazz, SearchResultMapper mapper) {
-//        TODO-IMPL
-//        return elasticsearchTemplate.startScroll(scrollTimeInMillis, query, clazz, mapper);
-        return null;
-    }
-
-    @Override
-    public <T> Page<T> startScroll(long scrollTimeInMillis, CriteriaQuery criteriaQuery, Class<T> clazz) {
-//        TODO-IMPL
-//        return elasticsearchTemplate.startScroll(scrollTimeInMillis, criteriaQuery, clazz);
-        return null;
-    }
-
-    @Override
-    public <T> Page<T> startScroll(long scrollTimeInMillis, CriteriaQuery criteriaQuery, Class<T> clazz, SearchResultMapper mapper) {
-//        TODO-IMPL
-//        return elasticsearchTemplate.startScroll(scrollTimeInMillis, criteriaQuery, clazz, mapper);
-        return null;
+        return searchRequestService.startScroll(scrollTimeInMillis, query, clazz);
     }
 
     @Override
     public <T> Page<T> continueScroll(String scrollId, long scrollTimeInMillis, Class<T> clazz) {
-//        TODO-IMPL
-//        return elasticsearchTemplate.continueScroll(scrollId, scrollTimeInMillis, clazz);
-        return null;
-    }
-
-    @Override
-    public <T> Page<T> continueScroll(String scrollId, long scrollTimeInMillis, Class<T> clazz, SearchResultMapper mapper) {
-//        TODO-IMPL
-//        return elasticsearchTemplate.continueScroll(scrollId, scrollTimeInMillis, clazz, mapper);
-        return null;
+        return searchRequestService.continueScroll(scrollId, scrollTimeInMillis, clazz);
     }
 
     @Override
     public <T> void clearScroll(String scrollId) {
-//        TODO-IMPL
-//        elasticsearchTemplate.clearScroll(scrollId);
+        searchRequestService.clearScroll(scrollId);
     }
 
     @Override
     public <T> T query(SearchQuery query, ResultsExtractor<T> resultsExtractor) {
-        SearchRequest request = searchRequestBuilder.buildSearchRequest(query);
-
-        SearchResponse<Map> response = search(request, Map.class);
-
-        var searchResponse = searchResultMapper.mapSearchResponse(response);
-        return resultsExtractor.extract(searchResponse);
+        return searchRequestService.query(query, resultsExtractor);
     }
-
-//    TODO-IMPL
-//    private IndexRequestBuilder prepareIndex(IndexQuery query) {
-//        String indexName = query.getIndexName();
-//        String type = query.getType();
-//
-//        IndexRequestBuilder indexRequestBuilder = null;
-//        try {
-//            Client client = getClient();
-//            if (query.getObject() != null) {
-//                String id = query.getId();
-//                if (id != null) {
-//                    indexRequestBuilder = client.prepareIndex(indexName, type, id);
-//                } else {
-//                    indexRequestBuilder = client.prepareIndex(indexName, type);
-//                }
-//                indexRequestBuilder.setSource(objectMapper.writeValueAsString(query.getObject()),
-//                    Requests.INDEX_CONTENT_TYPE);
-//            } else if (query.getSource() != null) {
-//                indexRequestBuilder = client.prepareIndex(indexName, type, query.getId()).setSource(query.getSource(),
-//                    Requests.INDEX_CONTENT_TYPE);
-//            } else {
-//                throw new ElasticsearchException(
-//                    "object or source is null, failed to index the document [id: " + query.getId() + "]");
-//            }
-//
-//            if (query.getParentId() != null) {
-//                indexRequestBuilder.setParent(query.getParentId());
-//            }
-//
-//            return indexRequestBuilder;
-//        } catch (IOException e) {
-//            throw new ElasticsearchException("failed to index the document [id: " + query.getId() + "]", e);
-//        }
-//    }
 
     private String getDefaultMapping() {
         String location = "/config/elastic/default-mapping.json";
@@ -505,7 +307,7 @@ public class ElasticsearchTemplateWrapper implements ElasticsearchOperations {
         String indexName = ElasticsearchTemplateWrapper.composeIndexName(tenantContextHolder.getTenantKey());
         return new NativeSearchQueryBuilder()
             .withIndices(indexName)
-//            .withTypes(ElasticsearchTemplateWrapper.INDEX_QUERY_TYPE) TODO-IMPL: Removed in 8.0
+            .withTypes(ElasticsearchTemplateWrapper.INDEX_QUERY_TYPE)
             .withQuery(queryStringQuery(permittedQuery))
             .withSourceFilter(fetchSourceFilter)
             .withPageable(pageable == null ? DEFAULT_PAGE : pageable)
@@ -542,34 +344,4 @@ public class ElasticsearchTemplateWrapper implements ElasticsearchOperations {
             .minimumShouldMatch(1);
     }
 
-    private <T> SearchResponse<T> search(SearchRequest searchRequest, Class<T> clazz) {
-        try {
-            SearchResponse<T> response = elasticsearchClient.search(searchRequest, clazz);
-            log.info("Sent elasticsearch request: {} with result size: {}", searchRequest.toString(), response.hits().hits().size());
-
-            return response;
-        } catch (Exception e) {
-            log.error("Error sending elasticsearch request: {}", e.getMessage(), e);
-            throw new IllegalStateException(e.getMessage(), e);
-        }
-    }
-
-    private boolean putMapping(String indexName, Object properties) {
-        return false;
-//        try {
-//            TypeMapping mapping = TypeMapping.of(b -> b.properties(properties));
-//
-//            PutMappingRequest request = PutMappingRequest.of(b -> b.index(indexName).properties(properties));
-//
-//            // Send the request
-//            PutMappingResponse response = elasticsearchClient.indices().putMapping(request);
-//
-//            // Return the response status
-//            return response.acknowledged();
-//        } catch (IOException e) {
-//            // Handle exception
-//            e.printStackTrace();
-//            return false;
-//        }
-    }
 }
