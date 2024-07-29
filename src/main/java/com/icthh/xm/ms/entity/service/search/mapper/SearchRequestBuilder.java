@@ -1,11 +1,9 @@
 package com.icthh.xm.ms.entity.service.search.mapper;
 
-import co.elastic.clients.elasticsearch._types.Time;
 import co.elastic.clients.elasticsearch._types.aggregations.Aggregation;
 import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 import co.elastic.clients.elasticsearch.core.SearchRequest;
 import co.elastic.clients.elasticsearch.core.search.SourceConfig;
-import com.icthh.xm.ms.entity.service.search.builder.QueryBuilder;
 import com.icthh.xm.ms.entity.service.search.builder.SearchRequestQueryBuilder;
 import com.icthh.xm.ms.entity.service.search.builder.aggregation.SearchRequestAggregationBuilder;
 import com.icthh.xm.ms.entity.service.search.filter.SourceFilter;
@@ -49,28 +47,8 @@ public class SearchRequestBuilder {
         Map<String, Aggregation> aggregationMap = searchRequestAggregationBuilder.buildAggregationMap(searchQuery.getAggregations());
         builder.aggregations(aggregationMap);
 
-        return builder.build();
-    }
-
-    public SearchRequest buildScrollSearchRequest(SearchQuery searchQuery, long scrollTimeInMillis) {
-        SearchRequest.Builder builder = new SearchRequest.Builder()
-            .index(searchQuery.getIndices())
-            .from(0)
-            .scroll(Time.of(time->time.time(scrollTimeInMillis + "ms")))
-            .version(true);
-
-        if (searchQuery.getPageable().isPaged()) {
-            builder.size(searchQuery.getPageable().getPageSize());
-        }
-
-        Query query = searchRequestQueryBuilder.buildQuery(searchQuery.getQuery());
-        builder.query(query);
-
-        return builder.build();
-    }
-
-    public Query buildSearchQuery(QueryBuilder queryBuilder) {
-        return searchRequestQueryBuilder.buildQuery(queryBuilder);
+        SearchRequest searchRequest = builder.build();
+        return searchRequest;
     }
 
     private static co.elastic.clients.elasticsearch.core.search.SourceFilter.Builder getBuilder(

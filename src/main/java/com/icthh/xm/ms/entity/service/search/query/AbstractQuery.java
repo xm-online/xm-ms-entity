@@ -30,8 +30,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import static java.util.Collections.addAll;
-
 public abstract class AbstractQuery implements Query {
 
     public static final int DEFAULT_PAGE_SIZE = 10;
@@ -41,7 +39,6 @@ public abstract class AbstractQuery implements Query {
     protected Sort sort;
     protected SourceFilter sourceFilter;
     protected List<String> indices = new ArrayList<>();
-    protected List<String> types = new ArrayList<>();
 
     @Override
     public Pageable getPageable() {
@@ -89,16 +86,6 @@ public abstract class AbstractQuery implements Query {
 
     public void addSourceFilter(SourceFilter sourceFilter) {
         this.sourceFilter = sourceFilter;
-    }
-
-    @Override
-    public void addTypes(String... types) {
-        addAll(this.types, types);
-    }
-
-    @Override
-    public List<String> getTypes() {
-        return types;
     }
 
     @Override

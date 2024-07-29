@@ -5,12 +5,14 @@ import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.service.search.ElasticsearchTemplateWrapper;
 import com.icthh.xm.ms.entity.service.search.builder.NativeSearchQueryBuilder;
 import com.icthh.xm.ms.entity.service.search.builder.QueryBuilder;
+import com.icthh.xm.ms.entity.service.search.builder.QueryBuilders;
 import com.icthh.xm.ms.entity.service.search.query.SearchQuery;
 import com.icthh.xm.ms.entity.service.search.query.dto.DeleteQuery;
 import com.icthh.xm.ms.entity.service.search.query.dto.GetQuery;
 import com.icthh.xm.ms.entity.service.search.query.dto.IndexQuery;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.poi.ss.formula.functions.T;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -87,7 +89,7 @@ public class XmEntitySearchRepositoryImpl implements XmEntitySearchRepository {
         SearchQuery query = new NativeSearchQueryBuilder()
             .withQuery(matchAllQuery())
             .withIndices(elasticsearchTemplateWrapper.getIndexName())
-            .withTypes(ElasticsearchTemplateWrapper.INDEX_QUERY_TYPE)
+//            .withTypes(ElasticsearchTemplateWrapper.INDEX_QUERY_TYPE) TODO-IMPL: Removed in 8.14v
             .withPageable(pageable)
             .build();
         return elasticsearchTemplateWrapper.queryForPage(query, getEntityClass());
@@ -157,7 +159,7 @@ public class XmEntitySearchRepositoryImpl implements XmEntitySearchRepository {
         SearchQuery query = new NativeSearchQueryBuilder()
             .withQuery(matchAllQuery())
             .withIndices(elasticsearchTemplateWrapper.getIndexName())
-            .withTypes(ElasticsearchTemplateWrapper.INDEX_QUERY_TYPE)
+//            .withTypes(ElasticsearchTemplateWrapper.INDEX_QUERY_TYPE)
             .build();
         return elasticsearchTemplateWrapper.count(query, getEntityClass());
     }

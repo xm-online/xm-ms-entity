@@ -35,15 +35,9 @@ public class NativeSearchQueryBuilder {
     private SourceFilter sourceFilter;
     private List<AbstractAggregationBuilder> aggregationBuilders = new ArrayList<>();
     private String[] indices;
-    private String[] types;
 
     public NativeSearchQueryBuilder withQuery(QueryBuilder queryBuilder) {
         this.queryBuilder = queryBuilder;
-        return this;
-    }
-
-    public NativeSearchQueryBuilder withTypes(String... types) {
-        this.types = types;
         return this;
     }
 
@@ -81,10 +75,6 @@ public class NativeSearchQueryBuilder {
 
         if (!isEmpty(aggregationBuilders)) {
             nativeSearchQuery.setAggregations(aggregationBuilders);
-        }
-
-        if (types != null) {
-            nativeSearchQuery.addTypes(types);
         }
 
         return nativeSearchQuery;
