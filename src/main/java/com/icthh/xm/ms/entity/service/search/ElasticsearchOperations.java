@@ -27,9 +27,9 @@ import com.icthh.xm.ms.entity.service.search.query.StringQuery;
 import com.icthh.xm.ms.entity.service.search.query.dto.DeleteQuery;
 import com.icthh.xm.ms.entity.service.search.query.dto.GetQuery;
 import com.icthh.xm.ms.entity.service.search.query.dto.IndexQuery;
+import jakarta.annotation.Nullable;
 import org.springframework.data.domain.Page;
 
-import javax.annotation.Nullable;
 import java.util.List;
 
 public interface ElasticsearchOperations {

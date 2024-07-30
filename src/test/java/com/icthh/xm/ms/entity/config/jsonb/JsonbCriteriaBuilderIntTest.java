@@ -6,6 +6,7 @@ import static java.time.Instant.now;
 import static java.util.UUID.randomUUID;
 import static org.junit.Assert.assertEquals;
 
+import com.icthh.xm.commons.migration.db.jsonb.JsonbExpression;
 import com.icthh.xm.commons.security.XmAuthenticationContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
@@ -16,8 +17,9 @@ import com.icthh.xm.ms.entity.domain.XmEntity_;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
 import java.util.List;
 import java.util.Map;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Root;
+
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Root;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.After;
 import org.junit.Before;
@@ -46,7 +48,7 @@ public class JsonbCriteriaBuilderIntTest extends AbstractSpringBootTest {
     public static final String SECOND_DATA_VALUE = "secondDataValue";
 
     @ClassRule
-    public static PostgreSQLContainer postgreSQLContainer = new PostgreSQLContainer("postgres:12.7")
+    public static PostgreSQLContainer postgreSQLContainer = new PostgreSQLContainer("postgres:16.3")
         .withDatabaseName("entity")
         .withUsername("sa")
         .withPassword("sa");
@@ -74,6 +76,9 @@ public class JsonbCriteriaBuilderIntTest extends AbstractSpringBootTest {
 
     @Autowired
     private XmEntityRepository entityRepository;
+
+    @Autowired
+    private JsonbExpression jsonbExpression;
 
     @Before
     @BeforeTransaction
@@ -120,8 +125,8 @@ public class JsonbCriteriaBuilderIntTest extends AbstractSpringBootTest {
         entityRepository.saveAll(List.of(firstEntity, secondEntity, thirdEntity));
 
         List<XmEntity> entities = entityRepository.findAll(Specification.where((root, query, cb) -> {
-            JsonbCriteriaBuilder jsonbCriteriaBuilder = new JsonbCriteriaBuilder(cb);
-            return jsonbCriteriaBuilder.equal(root, "$.firstDataKey", SECOND_DATA_VALUE);
+            JsonbCriteriaBuilder jsonbCriteriaBuilder = new JsonbCriteriaBuilder(cb, jsonbExpression);
+            return jsonbCriteriaBuilder.equalText(root, "$.firstDataKey", SECOND_DATA_VALUE);
         }));
 
         assertEquals(entities.size(), 1);
@@ -141,7 +146,7 @@ public class JsonbCriteriaBuilderIntTest extends AbstractSpringBootTest {
         fourthEntity = entityRepository.save(fourthEntity);
 
         List<XmEntity> entities = entityRepository.findAll(Specification.where((root, query, cb) -> {
-            JsonbCriteriaBuilder jsonbCriteriaBuilder = new JsonbCriteriaBuilder(cb);
+            JsonbCriteriaBuilder jsonbCriteriaBuilder = new JsonbCriteriaBuilder(cb, jsonbExpression);
             return jsonbCriteriaBuilder.equal(root, "$.firstDataKey", root, "$.secondDataKey");
         }));
 
@@ -160,7 +165,7 @@ public class JsonbCriteriaBuilderIntTest extends AbstractSpringBootTest {
         secondEntity = entityRepository.save(secondEntity);
 
         List<XmEntity> entities = entityRepository.findAll(Specification.where((root, query, cb) -> {
-            JsonbCriteriaBuilder jsonbCriteriaBuilder = new JsonbCriteriaBuilder(cb);
+            JsonbCriteriaBuilder jsonbCriteriaBuilder = new JsonbCriteriaBuilder(cb, jsonbExpression);
             return jsonbCriteriaBuilder.equal(root, "$.secondDataKey", root.get(XmEntity_.id));
         }));
 
@@ -169,7 +174,7 @@ public class JsonbCriteriaBuilderIntTest extends AbstractSpringBootTest {
 
         //select * cross join where a.jsonb = b.id
         entities = entityRepository.findAll(Specification.where((root, query, cb) -> {
-            JsonbCriteriaBuilder jsonbCriteriaBuilder = new JsonbCriteriaBuilder(cb);
+            JsonbCriteriaBuilder jsonbCriteriaBuilder = new JsonbCriteriaBuilder(cb, jsonbExpression);
             Root<XmEntity> second = query.from(XmEntity.class);
             CriteriaQuery<?> where = query.where(
                 jsonbCriteriaBuilder.equal(root, "$.firstDataKey", second.get(XmEntity_.id)));
@@ -188,8 +193,8 @@ public class JsonbCriteriaBuilderIntTest extends AbstractSpringBootTest {
         entityRepository.saveAll(List.of(firstEntity, secondEntity, thirdEntity));
 
         List<XmEntity> entities = entityRepository.findAll(Specification.where((root, query, cb) -> {
-            JsonbCriteriaBuilder jsonbCriteriaBuilder = new JsonbCriteriaBuilder(cb);
-            return jsonbCriteriaBuilder.notEqual(root, "$.firstDataKey", SECOND_DATA_VALUE);
+            JsonbCriteriaBuilder jsonbCriteriaBuilder = new JsonbCriteriaBuilder(cb, jsonbExpression);
+            return jsonbCriteriaBuilder.notEqualText(root, "$.firstDataKey", SECOND_DATA_VALUE);
         }));
 
         assertEquals(entities.size(), 1);
@@ -207,7 +212,7 @@ public class JsonbCriteriaBuilderIntTest extends AbstractSpringBootTest {
         entityRepository.save(fourthEntity);
 
         List<XmEntity> entities = entityRepository.findAll(Specification.where((root, query, cb) -> {
-            JsonbCriteriaBuilder jsonbCriteriaBuilder = new JsonbCriteriaBuilder(cb);
+            JsonbCriteriaBuilder jsonbCriteriaBuilder = new JsonbCriteriaBuilder(cb, jsonbExpression);
             return jsonbCriteriaBuilder.notEqual(root, "$.firstDataKey", root, "$.secondDataKey");
         }));
 
@@ -226,7 +231,7 @@ public class JsonbCriteriaBuilderIntTest extends AbstractSpringBootTest {
         secondEntity = entityRepository.save(secondEntity);
 
         List<XmEntity> entities = entityRepository.findAll(Specification.where((root, query, cb) -> {
-            JsonbCriteriaBuilder jsonbCriteriaBuilder = new JsonbCriteriaBuilder(cb);
+            JsonbCriteriaBuilder jsonbCriteriaBuilder = new JsonbCriteriaBuilder(cb, jsonbExpression);
             return jsonbCriteriaBuilder.notEqual(root, "$.secondDataKey", root.get(XmEntity_.id));
         }));
 
@@ -243,7 +248,7 @@ public class JsonbCriteriaBuilderIntTest extends AbstractSpringBootTest {
         secondEntity = entityRepository.save(secondEntity);
 
         List<XmEntity> entities = entityRepository.findAll(Specification.where((root, query, cb) -> {
-            JsonbCriteriaBuilder jsonbCriteriaBuilder = new JsonbCriteriaBuilder(cb);
+            JsonbCriteriaBuilder jsonbCriteriaBuilder = new JsonbCriteriaBuilder(cb, jsonbExpression);
             return jsonbCriteriaBuilder.greaterThan(root, "$.firstDataKey", 2);
         }));
 
@@ -255,8 +260,8 @@ public class JsonbCriteriaBuilderIntTest extends AbstractSpringBootTest {
         entityRepository.saveAll(List.of(firstEntity, secondEntity));
 
         entities = entityRepository.findAll(Specification.where((root, query, cb) -> {
-            JsonbCriteriaBuilder jsonbCriteriaBuilder = new JsonbCriteriaBuilder(cb);
-            return jsonbCriteriaBuilder.greaterThan(root, "$.firstDataKey", "AA");
+            JsonbCriteriaBuilder jsonbCriteriaBuilder = new JsonbCriteriaBuilder(cb, jsonbExpression);
+            return jsonbCriteriaBuilder.greaterThanText(root, "$.firstDataKey", "AA");
         }));
 
         assertEquals(entities.size(), 1);
@@ -274,7 +279,7 @@ public class JsonbCriteriaBuilderIntTest extends AbstractSpringBootTest {
         entityRepository.save(secondEntity);
 
         List<XmEntity> entities = entityRepository.findAll(Specification.where((root, query, cb) -> {
-            JsonbCriteriaBuilder jsonbCriteriaBuilder = new JsonbCriteriaBuilder(cb);
+            JsonbCriteriaBuilder jsonbCriteriaBuilder = new JsonbCriteriaBuilder(cb, jsonbExpression);
             return jsonbCriteriaBuilder.greaterThan(root, "$.firstDataKey", root, "$.secondDataKey");
         }));
 
@@ -286,7 +291,7 @@ public class JsonbCriteriaBuilderIntTest extends AbstractSpringBootTest {
         entityRepository.saveAll(List.of(firstEntity, secondEntity));
 
         entities = entityRepository.findAll(Specification.where((root, query, cb) -> {
-            JsonbCriteriaBuilder jsonbCriteriaBuilder = new JsonbCriteriaBuilder(cb);
+            JsonbCriteriaBuilder jsonbCriteriaBuilder = new JsonbCriteriaBuilder(cb, jsonbExpression);
             return jsonbCriteriaBuilder.greaterThan(root, "$.firstDataKey", root, "$.secondDataKey");
         }));
 
@@ -307,7 +312,7 @@ public class JsonbCriteriaBuilderIntTest extends AbstractSpringBootTest {
         secondEntity = entityRepository.save(secondEntity);
 
         List<XmEntity> entities = entityRepository.findAll(Specification.where((root, query, cb) -> {
-            JsonbCriteriaBuilder jsonbCriteriaBuilder = new JsonbCriteriaBuilder(cb);
+            JsonbCriteriaBuilder jsonbCriteriaBuilder = new JsonbCriteriaBuilder(cb, jsonbExpression);
             return jsonbCriteriaBuilder.greaterThan(root, "$.firstDataKey", root.get(XmEntity_.id));
         }));
 
@@ -323,7 +328,7 @@ public class JsonbCriteriaBuilderIntTest extends AbstractSpringBootTest {
         secondEntity = entityRepository.save(secondEntity);
 
         List<XmEntity> entities = entityRepository.findAll(Specification.where((root, query, cb) -> {
-            JsonbCriteriaBuilder jsonbCriteriaBuilder = new JsonbCriteriaBuilder(cb);
+            JsonbCriteriaBuilder jsonbCriteriaBuilder = new JsonbCriteriaBuilder(cb, jsonbExpression);
             return jsonbCriteriaBuilder.greaterThanOrEqualTo(root, "$.firstDataKey", 3);
         }));
 
@@ -335,8 +340,8 @@ public class JsonbCriteriaBuilderIntTest extends AbstractSpringBootTest {
         entityRepository.saveAll(List.of(firstEntity, secondEntity));
 
         entities = entityRepository.findAll(Specification.where((root, query, cb) -> {
-            JsonbCriteriaBuilder jsonbCriteriaBuilder = new JsonbCriteriaBuilder(cb);
-            return jsonbCriteriaBuilder.greaterThanOrEqualTo(root, "$.firstDataKey", "AAA");
+            JsonbCriteriaBuilder jsonbCriteriaBuilder = new JsonbCriteriaBuilder(cb, jsonbExpression);
+            return jsonbCriteriaBuilder.greaterThanOrEqualToText(root, "$.firstDataKey", "AAA");
         }));
 
         assertEquals(entities.size(), 1);
@@ -354,7 +359,7 @@ public class JsonbCriteriaBuilderIntTest extends AbstractSpringBootTest {
         entityRepository.save(secondEntity);
 
         List<XmEntity> entities = entityRepository.findAll(Specification.where((root, query, cb) -> {
-            JsonbCriteriaBuilder jsonbCriteriaBuilder = new JsonbCriteriaBuilder(cb);
+            JsonbCriteriaBuilder jsonbCriteriaBuilder = new JsonbCriteriaBuilder(cb, jsonbExpression);
             return jsonbCriteriaBuilder.greaterThanOrEqualTo(root, "$.firstDataKey", root, "$.secondDataKey");
         }));
 
@@ -366,7 +371,7 @@ public class JsonbCriteriaBuilderIntTest extends AbstractSpringBootTest {
         entityRepository.saveAll(List.of(firstEntity, secondEntity));
 
         entities = entityRepository.findAll(Specification.where((root, query, cb) -> {
-            JsonbCriteriaBuilder jsonbCriteriaBuilder = new JsonbCriteriaBuilder(cb);
+            JsonbCriteriaBuilder jsonbCriteriaBuilder = new JsonbCriteriaBuilder(cb, jsonbExpression);
             return jsonbCriteriaBuilder.greaterThanOrEqualTo(root, "$.firstDataKey", root, "$.secondDataKey");
         }));
 
@@ -387,7 +392,7 @@ public class JsonbCriteriaBuilderIntTest extends AbstractSpringBootTest {
         secondEntity = entityRepository.save(secondEntity);
 
         List<XmEntity> entities = entityRepository.findAll(Specification.where((root, query, cb) -> {
-            JsonbCriteriaBuilder jsonbCriteriaBuilder = new JsonbCriteriaBuilder(cb);
+            JsonbCriteriaBuilder jsonbCriteriaBuilder = new JsonbCriteriaBuilder(cb, jsonbExpression);
             return jsonbCriteriaBuilder.greaterThanOrEqualTo(root, "$.firstDataKey", root.get(XmEntity_.id));
         }));
 
@@ -403,7 +408,7 @@ public class JsonbCriteriaBuilderIntTest extends AbstractSpringBootTest {
         secondEntity = entityRepository.save(secondEntity);
 
         List<XmEntity> entities = entityRepository.findAll(Specification.where((root, query, cb) -> {
-            JsonbCriteriaBuilder jsonbCriteriaBuilder = new JsonbCriteriaBuilder(cb);
+            JsonbCriteriaBuilder jsonbCriteriaBuilder = new JsonbCriteriaBuilder(cb, jsonbExpression);
             return jsonbCriteriaBuilder.lessThan(root, "$.firstDataKey", 2);
         }));
 
@@ -415,8 +420,8 @@ public class JsonbCriteriaBuilderIntTest extends AbstractSpringBootTest {
         entityRepository.saveAll(List.of(firstEntity, secondEntity));
 
         entities = entityRepository.findAll(Specification.where((root, query, cb) -> {
-            JsonbCriteriaBuilder jsonbCriteriaBuilder = new JsonbCriteriaBuilder(cb);
-            return jsonbCriteriaBuilder.lessThan(root, "$.firstDataKey", "AA");
+            JsonbCriteriaBuilder jsonbCriteriaBuilder = new JsonbCriteriaBuilder(cb, jsonbExpression);
+            return jsonbCriteriaBuilder.lessThanText(root, "$.firstDataKey", "AA");
         }));
 
         assertEquals(entities.size(), 1);
@@ -434,7 +439,7 @@ public class JsonbCriteriaBuilderIntTest extends AbstractSpringBootTest {
         entityRepository.save(secondEntity);
 
         List<XmEntity> entities = entityRepository.findAll(Specification.where((root, query, cb) -> {
-            JsonbCriteriaBuilder jsonbCriteriaBuilder = new JsonbCriteriaBuilder(cb);
+            JsonbCriteriaBuilder jsonbCriteriaBuilder = new JsonbCriteriaBuilder(cb, jsonbExpression);
             return jsonbCriteriaBuilder.lessThan(root, "$.firstDataKey", root, "$.secondDataKey");
         }));
 
@@ -446,7 +451,7 @@ public class JsonbCriteriaBuilderIntTest extends AbstractSpringBootTest {
         entityRepository.saveAll(List.of(firstEntity, secondEntity));
 
         entities = entityRepository.findAll(Specification.where((root, query, cb) -> {
-            JsonbCriteriaBuilder jsonbCriteriaBuilder = new JsonbCriteriaBuilder(cb);
+            JsonbCriteriaBuilder jsonbCriteriaBuilder = new JsonbCriteriaBuilder(cb, jsonbExpression);
             return jsonbCriteriaBuilder.lessThan(root, "$.firstDataKey", root, "$.secondDataKey");
         }));
 
@@ -467,7 +472,7 @@ public class JsonbCriteriaBuilderIntTest extends AbstractSpringBootTest {
         secondEntity = entityRepository.save(secondEntity);
 
         List<XmEntity> entities = entityRepository.findAll(Specification.where((root, query, cb) -> {
-            JsonbCriteriaBuilder jsonbCriteriaBuilder = new JsonbCriteriaBuilder(cb);
+            JsonbCriteriaBuilder jsonbCriteriaBuilder = new JsonbCriteriaBuilder(cb, jsonbExpression);
             return jsonbCriteriaBuilder.lessThan(root, "$.firstDataKey", root.get(XmEntity_.id));
         }));
 
@@ -483,7 +488,7 @@ public class JsonbCriteriaBuilderIntTest extends AbstractSpringBootTest {
         secondEntity = entityRepository.save(secondEntity);
 
         List<XmEntity> entities = entityRepository.findAll(Specification.where((root, query, cb) -> {
-            JsonbCriteriaBuilder jsonbCriteriaBuilder = new JsonbCriteriaBuilder(cb);
+            JsonbCriteriaBuilder jsonbCriteriaBuilder = new JsonbCriteriaBuilder(cb, jsonbExpression);
             return jsonbCriteriaBuilder.lessThanOrEqualTo(root, "$.firstDataKey", 1);
         }));
 
@@ -495,8 +500,8 @@ public class JsonbCriteriaBuilderIntTest extends AbstractSpringBootTest {
         entityRepository.saveAll(List.of(firstEntity, secondEntity));
 
         entities = entityRepository.findAll(Specification.where((root, query, cb) -> {
-            JsonbCriteriaBuilder jsonbCriteriaBuilder = new JsonbCriteriaBuilder(cb);
-            return jsonbCriteriaBuilder.lessThanOrEqualTo(root, "$.firstDataKey", "A");
+            JsonbCriteriaBuilder jsonbCriteriaBuilder = new JsonbCriteriaBuilder(cb, jsonbExpression);
+            return jsonbCriteriaBuilder.lessThanOrEqualToText(root, "$.firstDataKey", "A");
         }));
 
         assertEquals(entities.size(), 1);
@@ -514,7 +519,7 @@ public class JsonbCriteriaBuilderIntTest extends AbstractSpringBootTest {
         entityRepository.save(secondEntity);
 
         List<XmEntity> entities = entityRepository.findAll(Specification.where((root, query, cb) -> {
-            JsonbCriteriaBuilder jsonbCriteriaBuilder = new JsonbCriteriaBuilder(cb);
+            JsonbCriteriaBuilder jsonbCriteriaBuilder = new JsonbCriteriaBuilder(cb, jsonbExpression);
             return jsonbCriteriaBuilder.lessThanOrEqualTo(root, "$.firstDataKey", root, "$.secondDataKey");
         }));
 
@@ -526,7 +531,7 @@ public class JsonbCriteriaBuilderIntTest extends AbstractSpringBootTest {
         entityRepository.saveAll(List.of(firstEntity, secondEntity));
 
         entities = entityRepository.findAll(Specification.where((root, query, cb) -> {
-            JsonbCriteriaBuilder jsonbCriteriaBuilder = new JsonbCriteriaBuilder(cb);
+            JsonbCriteriaBuilder jsonbCriteriaBuilder = new JsonbCriteriaBuilder(cb, jsonbExpression);
             return jsonbCriteriaBuilder.lessThanOrEqualTo(root, "$.firstDataKey", root, "$.secondDataKey");
         }));
 
@@ -547,7 +552,7 @@ public class JsonbCriteriaBuilderIntTest extends AbstractSpringBootTest {
         secondEntity = entityRepository.save(secondEntity);
 
         List<XmEntity> entities = entityRepository.findAll(Specification.where((root, query, cb) -> {
-            JsonbCriteriaBuilder jsonbCriteriaBuilder = new JsonbCriteriaBuilder(cb);
+            JsonbCriteriaBuilder jsonbCriteriaBuilder = new JsonbCriteriaBuilder(cb, jsonbExpression);
             return jsonbCriteriaBuilder.lessThanOrEqualTo(root, "$.firstDataKey", root.get(XmEntity_.id));
         }));
 
@@ -562,7 +567,7 @@ public class JsonbCriteriaBuilderIntTest extends AbstractSpringBootTest {
 
         String jpql = "SELECT jsonb_to_string(e.data, :firstDataKey) FROM XmEntity e";
 
-        Map<String, Object> queryParams = Map.of(FIRST_DATA_KEY, FIRST_DATA_KEY);
+        Map<String, Object> queryParams = Map.of(FIRST_DATA_KEY, new String[]{FIRST_DATA_KEY});
 
         List<?> firstDataKeys = entityRepository.findAll(jpql, queryParams);
 
@@ -575,9 +580,9 @@ public class JsonbCriteriaBuilderIntTest extends AbstractSpringBootTest {
         XmEntity firstEntity = createEntity(Map.of(FIRST_DATA_KEY, Map.of(SECOND_DATA_KEY, "AAA")));
         firstEntity = entityRepository.save(firstEntity);
 
-        String jpql = "SELECT jsonb_to_string(e.data, :firstDataKey, :secondDataKey) FROM XmEntity e";
+        String jpql = "SELECT jsonb_to_string(e.data, :firstDataKey) FROM XmEntity e";
 
-        Map<String, Object> queryParams = Map.of(FIRST_DATA_KEY, FIRST_DATA_KEY, SECOND_DATA_KEY, SECOND_DATA_KEY);
+        Map<String, Object> queryParams = Map.of(FIRST_DATA_KEY, new String[]{FIRST_DATA_KEY, SECOND_DATA_KEY});
 
         List<?> firstDataKeys = entityRepository.findAll(jpql, queryParams);
 

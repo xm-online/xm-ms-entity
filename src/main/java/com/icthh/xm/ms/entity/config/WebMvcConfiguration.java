@@ -6,7 +6,6 @@ import com.icthh.xm.commons.web.spring.TenantVerifyInterceptor;
 import com.icthh.xm.commons.web.spring.XmLoggingInterceptor;
 import com.icthh.xm.commons.web.spring.config.XmMsWebConfiguration;
 import com.icthh.xm.commons.web.spring.config.XmWebMvcConfigurerAdapter;
-import com.icthh.xm.ms.entity.domain.serializer.XmSquigglyInterceptor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Configuration;
@@ -38,23 +37,18 @@ public class WebMvcConfiguration extends XmWebMvcConfigurerAdapter {
     private final ApplicationProperties applicationProperties;
     private final LepInterceptor lepInterceptor;
     private final TenantVerifyInterceptor tenantVerifyInterceptor;
-    private final XmSquigglyInterceptor xmSquigglyInterceptor;
-    private final JacksonConfiguration.HttpMessageConverterCustomizer httpMessageConverterCustomizer;
 
     public WebMvcConfiguration(TenantInterceptor tenantInterceptor,
                                XmLoggingInterceptor xmLoggingInterceptor,
                                ApplicationProperties applicationProperties,
                                LepInterceptor lepInterceptor,
-                               TenantVerifyInterceptor tenantVerifyInterceptor,
-                               final XmSquigglyInterceptor xmSquigglyInterceptor,
-                               JacksonConfiguration.HttpMessageConverterCustomizer httpMessageConverterCustomizer) {
+                               TenantVerifyInterceptor tenantVerifyInterceptor
+    ) {
         super(tenantInterceptor, xmLoggingInterceptor);
 
         this.applicationProperties = applicationProperties;
         this.lepInterceptor = lepInterceptor;
         this.tenantVerifyInterceptor = tenantVerifyInterceptor;
-        this.xmSquigglyInterceptor = xmSquigglyInterceptor;
-        this.httpMessageConverterCustomizer = httpMessageConverterCustomizer;
     }
 
     public static String[] getJsonFilterAllowedURIs() {
@@ -64,15 +58,7 @@ public class WebMvcConfiguration extends XmWebMvcConfigurerAdapter {
     @Override
     protected void xmAddInterceptors(InterceptorRegistry registry) {
         registerTenantInterceptorWithIgnorePathPattern(registry, tenantVerifyInterceptor);
-        registerJsonFilterInterceptor(registry);
         registerTenantInterceptorWithIgnorePathPattern(registry, lepInterceptor);
-    }
-
-    private void registerJsonFilterInterceptor(InterceptorRegistry registry) {
-
-        registry.addInterceptor(xmSquigglyInterceptor).addPathPatterns(getJsonFilterAllowedURIs());
-        LOGGER.info("Added handler interceptor '{}' to urls: {}",
-                    xmSquigglyInterceptor.getClass().getSimpleName(), JSON_FILTER_APPLIED_URI);
     }
 
     @Override
@@ -91,8 +77,6 @@ public class WebMvcConfiguration extends XmWebMvcConfigurerAdapter {
         addSupportedMediaTypesTo(converters, MappingJackson2HttpMessageConverter.class,
             MediaType.parseMediaType("text/csv"),
             MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"));
-
-        httpMessageConverterCustomizer.customize(converters);
 
         super.configureMessageConverters(converters);
     }

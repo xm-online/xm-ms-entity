@@ -63,6 +63,7 @@ import com.icthh.xm.ms.entity.service.dto.LinkSourceDto;
 import com.icthh.xm.ms.entity.service.dto.SearchDto;
 import com.jayway.jsonpath.DocumentContext;
 import com.jayway.jsonpath.JsonPath;
+import jakarta.annotation.Nullable;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -71,6 +72,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -80,7 +82,6 @@ import org.springframework.http.HttpEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.annotation.Nullable;
 import java.net.URI;
 import java.time.Instant;
 import java.util.Collections;
@@ -113,7 +114,7 @@ import static org.springframework.beans.BeanUtils.isSimpleValueType;
  * Service Implementation for managing XmEntity.
  */
 @Slf4j
-@LepService(group = "service.entity", name = "default")
+@LepService(group = "service.entity")
 @Transactional
 @RequiredArgsConstructor
 public class XmEntityServiceImpl implements XmEntityService {
@@ -783,7 +784,7 @@ public class XmEntityServiceImpl implements XmEntityService {
     }
 
     @Override
-    public Object findResourceById(Object id) {
+    public XmEntity findResourceById(Long id) {
         return findOne(IdOrKey.of(String.valueOf(id)));
     }
 
@@ -836,7 +837,7 @@ public class XmEntityServiceImpl implements XmEntityService {
      * @param self link for the same service instance
      */
     @Autowired
-    public void setSelf(XmEntityServiceImpl self) {
+    public void setSelf(@Lazy XmEntityServiceImpl self) {
         if (this.self == null) {
             this.self = self;
         }

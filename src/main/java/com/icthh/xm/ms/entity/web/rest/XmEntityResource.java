@@ -29,6 +29,8 @@ import com.icthh.xm.ms.entity.web.rest.util.HeaderUtil;
 import com.icthh.xm.ms.entity.web.rest.util.PaginationUtil;
 import com.icthh.xm.ms.entity.web.rest.util.RespContentUtil;
 import io.swagger.annotations.ApiParam;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Page;
@@ -36,6 +38,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PostAuthorize;
 import org.springframework.security.access.prepost.PostFilter;
@@ -60,8 +63,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import javax.servlet.http.HttpServletRequest;
-import javax.validation.Valid;
 
 /**
  * REST controller for managing XmEntity.
@@ -225,7 +226,7 @@ public class XmEntityResource {
      * @param pageable the pagination information
      * @return the result of the search
      */
-    @GetMapping("/_search/xm-entities")
+    @GetMapping(value = "/_search/xm-entities", produces = MediaType.APPLICATION_JSON_VALUE)
     @Timed
     @PreAuthorize("hasPermission({'query': #query}, 'XMENTITY.SEARCH.QUERY')")
     @PrivilegeDescription("Privilege to search for the xmEntity corresponding to the query")

@@ -29,12 +29,12 @@ import org.mapstruct.Named;
 @Mapper(componentModel = "spring")
 public interface QueryTypeBuilderMapper {
 
-    @Mapping(target = "allowLeadingWildcard", source = "")
     @Mapping(target = "query", source = "queryString")
     @Mapping(target = "boost", expression = "java(queryType.boost())")
     @Mapping(target = "queryName", expression = "java(queryType.getWriteableName())")
     @Mapping(target = "autoGenerateSynonymsPhraseQuery", source = "autoGenerateSynonymsPhraseQuery")
     @Mapping(target = "defaultOperator", source = "defaultOperator", qualifiedByName = "convertOperator")
+    @Mapping(target = "allowLeadingWildcard", ignore = true)
     @Mapping(target = "analyzer", ignore = true)
     @Mapping(target = "analyzeWildcard", ignore = true)
     @Mapping(target = "fields", ignore = true)

@@ -17,27 +17,32 @@ plugins {
     id "idea"
     id "jacoco"
     id "checkstyle"
+    id "eclipse"
     id "org.springframework.boot"
     id "com.google.cloud.tools.jib"
     id "com.gorylenko.gradle-git-properties"
-    id "net.ltgt.apt-eclipse"
-    id "net.ltgt.apt-idea"
-    id "net.ltgt.apt"
     id "org.liquibase.gradle"
     id "org.sonarqube"
     id "io.spring.nohttp"
     id "war"
     id "pmd"
+    id 'io.spring.dependency-management' version '1.1.4'
     //jhipster-needle-gradle-plugins - JHipster will add additional gradle plugins here
+}
+
+dependencyManagement {
+    imports {
+        mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
+    }
 }
 
 group = "com.icthh.xm.ms.entity"
 
 description = ""
 
-sourceCompatibility = 11
-targetCompatibility = 11
-assert System.properties["java.specification.version"] == "11" || "12" || "13"
+sourceCompatibility = 21
+targetCompatibility = 21
+assert System.properties["java.specification.version"] == "21"
 
 apply from: "gradle/docker.gradle"
 apply from: "gradle/sonar.gradle"
@@ -110,7 +115,7 @@ if (OperatingSystem.current().isWindows()) {
 defaultTasks "bootRun"
 
 bootWar {
-    mainClassName = 'com.icthh.xm.ms.entity.EntityApp'
+    mainClass = 'com.icthh.xm.ms.entity.EntityApp'
     manifest {
         attributes(
             "Implementation-Version": archiveVersion
@@ -119,7 +124,7 @@ bootWar {
 }
 
 springBoot {
-    mainClassName = 'com.icthh.xm.ms.entity.EntityApp'
+    mainClass = 'com.icthh.xm.ms.entity.EntityApp'
 }
 
 String[] testCategories = ['com.icthh.xm.ms.entity.AbstractSpringBootTest',
@@ -153,7 +158,7 @@ test {
     // uncomment if the tests reports are not generated
     // see https://github.com/jhipster/generator-jhipster/pull/2771 and https://github.com/jhipster/generator-jhipster/pull/4484
     // ignoreFailures true
-    reports.html.enabled = true
+    reports.html.required = true
     testLogging testLoggingConf
 
     doLast {
@@ -163,8 +168,8 @@ test {
 }
 
 task runCategorizedTests(type: Test) {
-    useJUnit {
-        includeCategories(testCategories)
+    useJUnitPlatform {
+        includeTags(testCategories)
     }
     testLogging testLoggingConf
 }
@@ -177,7 +182,7 @@ task cucumberTest(type: Test) {
     // uncomment if the tests reports are not generated
     // see https://github.com/jhipster/generator-jhipster/pull/2771 and https://github.com/jhipster/generator-jhipster/pull/4484
     // ignoreFailures true
-    reports.html.enabled = false
+    reports.html.required = false
 }
 
 check.dependsOn cucumberTest
@@ -233,22 +238,30 @@ nohttp {
 configurations {
     providedRuntime
     implementation.exclude module: "spring-boot-starter-tomcat"
+    all {
+        resolutionStrategy {
+            // Inherited version from Spring Boot can't be used because of regressions:
+            // To be removed as soon as spring-boot use the same version
+            force 'org.liquibase:liquibase-core:4.24.0' //todo remove
+        }
+    }
 }
 
 repositories {
     mavenLocal()
     mavenCentral()
-    jcenter()
     //jhipster-needle-gradle-repositories - JHipster will add additional repositories
 }
 
 dependencies {
     // import JHipster dependencies BOM
-    implementation platform("io.github.jhipster:jhipster-dependencies:${jhipster_dependencies_version}")
+//    implementation platform("io.github.jhipster:jhipster-dependencies:${githubJhipsterDependenciesVersion}")
 
-    // Use ", version: jhipster_dependencies_version, changing: true" if you want
-    // to use a SNAPSHOT release instead of a stable release
-    implementation "io.github.jhipster:jhipster-framework"
+    implementation platform("tech.jhipster:jhipster-dependencies:${jhipsterDependenciesVersion}")
+    implementation "tech.jhipster:jhipster-dependencies:${jhipsterDependenciesVersion}"
+
+    implementation group: "tech.jhipster", name: "jhipster-framework"
+
     implementation "io.dropwizard.metrics:metrics-core"
     implementation "io.dropwizard.metrics:metrics-json"
     implementation "io.dropwizard.metrics:metrics-jvm"
@@ -258,21 +271,25 @@ dependencies {
     implementation "net.logstash.logback:logstash-logback-encoder"
     implementation "com.fasterxml.jackson.datatype:jackson-datatype-hppc"
     implementation "com.fasterxml.jackson.datatype:jackson-datatype-jsr310"
-    implementation "com.fasterxml.jackson.datatype:jackson-datatype-hibernate5"
+    implementation "com.fasterxml.jackson.datatype:jackson-datatype-hibernate6"
     implementation "com.fasterxml.jackson.core:jackson-annotations"
     implementation "com.fasterxml.jackson.core:jackson-databind"
-    implementation "com.fasterxml.jackson.module:jackson-module-afterburner"
-    implementation "org.hibernate:hibernate-core:${hibernate_version}"
+    implementation "org.hibernate.orm:hibernate-core:${hibernateVersion}"
+    implementation 'javax.persistence:javax.persistence-api:2.2'
+//    implementation 'org.antlr:antlr4-runtime:4.10'
+//    implementation 'org.antlr:antlr4-runtime:4.9.3'
+
     implementation "com.zaxxer:HikariCP"
     implementation "org.apache.commons:commons-lang3"
     implementation "commons-io:commons-io"
-    implementation "javax.transaction:javax.transaction-api"
-    implementation "org.hibernate:hibernate-entitymanager:${hibernate_version}"
+//    implementation "javax.transaction:javax.transaction-api"
+//    implementation "org.hibernate:hibernate-entitymanager:${hibernateEntityManager}" todo
+//    implementation "org.openapitools:jackson-databind-nullable:${jacksonDatabindNullableVersion}"
     implementation "org.hibernate.validator:hibernate-validator"
     implementation "org.liquibase:liquibase-core"
     liquibaseRuntime "org.liquibase:liquibase-core"
-    liquibaseRuntime "org.liquibase.ext:liquibase-hibernate5:${liquibase_hibernate5_version}"
-    liquibaseRuntime sourceSets.main.compileClasspath
+    liquibaseRuntime "org.liquibase.ext:liquibase-hibernate6:${liquibaseHibernate6Version}"
+//    liquibaseRuntime sourceSets.main.compileClasspath
     implementation "org.springframework.boot:spring-boot-loader-tools"
     implementation "org.springframework.boot:spring-boot-starter-mail"
     implementation "org.springframework.boot:spring-boot-starter-logging"
@@ -290,56 +307,65 @@ dependencies {
     }
     implementation "org.springframework.boot:spring-boot-starter-undertow"
     implementation "org.springframework.boot:spring-boot-starter-thymeleaf"
-    implementation "org.zalando:problem-spring-web"
+    implementation "org.zalando:problem-spring-web:${zalandoVersion}"
     implementation "org.springframework.cloud:spring-cloud-starter"
-    implementation "org.springframework.cloud:spring-cloud-starter-netflix-ribbon"
-    implementation "org.springframework.cloud:spring-cloud-starter-netflix-hystrix"
+    implementation "org.springframework.cloud:spring-cloud-starter-bootstrap"
+    implementation "org.springframework.cloud:spring-cloud-starter-netflix-ribbon:${netflixVersion}"
+    implementation "org.springframework.cloud:spring-cloud-starter-netflix-hystrix:${netflixVersion}"
     implementation "org.springframework.retry:spring-retry"
     implementation "org.springframework.cloud:spring-cloud-starter-consul-discovery"
     implementation "org.springframework.cloud:spring-cloud-starter-consul-config"
-    implementation "org.springframework.cloud:spring-cloud-security"
+    implementation "org.springframework.cloud:spring-cloud-security:${cloudVersion}"
     implementation "org.springframework.cloud:spring-cloud-starter-openfeign"
-    implementation "org.springframework.boot:spring-boot-starter-cloud-connectors"
+    implementation "org.springframework.boot:spring-boot-starter-cloud-connectors:${cloudConnectorsVersion}"
     implementation "org.springframework.security:spring-security-config"
     implementation "org.springframework.security:spring-security-data"
     implementation "org.springframework.security:spring-security-web"
-    implementation "org.springframework.security.oauth:spring-security-oauth2"
-    implementation "org.springframework.security:spring-security-jwt"
+//    implementation "org.springframework.security.oauth:spring-security-oauth2:${oauth2Version}"
+    implementation "org.springframework.security:spring-security-jwt:${securityJwtVersion}"
     implementation "org.glassfish.jaxb:jaxb-runtime:${jaxb_runtime_version}"
-    implementation("io.springfox:springfox-swagger2") {
+    implementation "io.swagger:swagger-annotations:${swaggerVersion}"
+    implementation("io.springfox:springfox-swagger2:${springfoxVersion}") {
         exclude module: "mapstruct"
     }
-    implementation "io.springfox:springfox-bean-validators"
+//    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.3.0'
+    implementation 'io.micrometer:micrometer-tracing'
+    implementation 'io.micrometer:micrometer-core'
+    implementation 'io.micrometer:micrometer-observation'
+    implementation "io.micrometer:micrometer-tracing-bridge-brave"
+    implementation "io.springfox:springfox-bean-validators:${springfoxVersion}"
     implementation "com.h2database:h2"
     implementation "org.postgresql:postgresql"
     liquibaseRuntime "org.postgresql:postgresql"
-    implementation "org.mapstruct:mapstruct:${mapstruct_version}"
+    implementation "org.mapstruct:mapstruct:${mapstructVersion}"
     compileOnly "org.projectlombok:lombok:${lombok_version}"
     annotationProcessor "org.projectlombok:lombok:${lombok_version}"
-    annotationProcessor "org.hibernate:hibernate-jpamodelgen:${hibernate_version}"
-    annotationProcessor "org.mapstruct:mapstruct-processor:${mapstruct_version}"
+    annotationProcessor "org.hibernate:hibernate-jpamodelgen:${hibernateVersion}"
+    annotationProcessor "org.mapstruct:mapstruct-processor:${mapstructVersion}"
     annotationProcessor "org.glassfish.jaxb:jaxb-runtime:${jaxb_runtime_version}"
-    annotationProcessor("org.springframework.boot:spring-boot-configuration-processor:${spring_boot_version}") {
+    annotationProcessor("org.springframework.boot:spring-boot-configuration-processor:${springBootVersion}") {
         exclude group: "com.vaadin.external.google", module: "android-json"
     }
     // XM custom dependencies
-    implementation("com.github.java-json-tools:json-schema-validator:2.2.8") {
+    implementation("com.github.java-json-tools:json-schema-validator:${jsonSchemaValidatorVersion}") {
         exclude group: 'javax.mail', module: 'mailapi'
     }
-    implementation "com.amazonaws:aws-java-sdk-s3:1.11.158"
-    implementation "com.amazonaws:aws-java-sdk-core:1.11.158"
+    implementation "com.amazonaws:aws-java-sdk-s3:${amazonawsVersion}"
+    implementation "com.amazonaws:aws-java-sdk-core:${amazonawsVersion}"
     // "org.json:json" already present in org.apache.geronimo.bundles:json:20090211_1 dependency for jackson-datatype-json-org
     //compile "org.json:json:20160212" // for LinkedIn LEP
-    implementation "org.jsoup:jsoup:1.10.2" // for LinkedIn LEP
+    implementation "org.jsoup:jsoup:1.18.1" // for LinkedIn LEP
     implementation "com.jayway.jsonpath:json-path"
     implementation "com.mortennobel:java-image-scaling:0.8.6"
-    implementation 'org.codehaus.groovy.modules.http-builder:http-builder:0.7.1'
+    implementation 'org.codehaus.groovy.modules.http-builder:http-builder:0.7'
     implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-csv'
-    implementation "com.fasterxml.jackson.module:jackson-module-jsonSchema:2.11.0"
+    implementation 'com.fasterxml.jackson.module:jackson-module-jsonSchema'
+    implementation 'com.fasterxml.jackson.module:jackson-module-afterburner'
 
     implementation("com.icthh.xm.commons:xm-commons-ms-web:${xm_commons_version}") {
         exclude group: "io.github.jhipster", module: "jhipster-framework"
     }
+    implementation "com.icthh.xm.commons:xm-commons-client-feign:${xm_commons_version}"
     implementation "com.icthh.xm.commons:xm-commons-lep:${xm_commons_version}"
     implementation "com.icthh.xm.commons:xm-commons-lep-groovy:${xm_commons_version}"
     implementation "com.icthh.xm.commons:xm-commons-lep-js:${xm_commons_version}"
@@ -358,13 +384,17 @@ dependencies {
     implementation "com.icthh.xm.commons:xm-commons-domainevent-db:${xm_commons_version}"
     implementation "com.icthh.xm.commons:xm-commons-domainevent-outbox:${xm_commons_version}"
     implementation "com.icthh.xm.commons:xm-commons-lep-annotation-processor:${xm_commons_version}"
+    implementation "com.icthh.xm.commons:xm-commons-lep-annotation-processor:${xm_commons_version}"
     annotationProcessor "com.icthh.xm.commons:xm-commons-lep-annotation-processor:${xm_commons_version}"
 
     implementation "org.freemarker:freemarker:${freemarker_version}"
     implementation "org.apache.poi:poi-ooxml:${apache_poi_version}"
     implementation "org.modelmapper:modelmapper:${modelmapper_version}"
-    implementation "com.github.bohnman:squiggly-filter-jackson:${squiggly_filter_version}"
-    implementation 'com.vladmihalcea:hibernate-types-52:2.4.3'
+    implementation "com.github.bohnman:squiggly-filter-jackson:${squiggly_filter_version}" // todo: delete
+    implementation "javax.servlet:javax.servlet-api:${javaxServletVersion}"
+    implementation "org.apache.httpcomponents.client5:httpclient5:${httpClient5Version}"
+//    implementation "com.vladmihalcea:hibernate-types-60:${hibernateTypes60}"
+    implementation 'io.hypersistence:hypersistence-utils-hibernate-63:3.8.1'
 
     // security fixes
     implementation "io.netty:netty-buffer:${netty_version}"
@@ -389,8 +419,8 @@ dependencies {
     testCompileOnly "org.projectlombok:lombok:${lombok_version}"
     testAnnotationProcessor "org.projectlombok:lombok:${lombok_version}"
     testImplementation "com.jayway.jsonpath:json-path"
-    testImplementation "io.cucumber:cucumber-junit"
-    testImplementation "io.cucumber:cucumber-spring"
+    testImplementation 'io.cucumber:cucumber-junit:7.18.1'
+    testImplementation 'io.cucumber:cucumber-spring:7.18.1'
     testImplementation("org.springframework.boot:spring-boot-starter-test") {
         exclude module: "junit"
         exclude group: "com.vaadin.external.google", module: "android-json"
@@ -399,32 +429,47 @@ dependencies {
     testImplementation "org.springframework.boot:spring-boot-test"
     testImplementation "org.junit.jupiter:junit-jupiter-engine"
     testImplementation "org.junit.vintage:junit-vintage-engine"
-    testImplementation "com.tngtech.archunit:archunit-junit5-api:${archunit_junit5_version}"
-    testRuntimeOnly "com.tngtech.archunit:archunit-junit5-engine:${archunit_junit5_version}"
+//    testImplementation 'org.springframework.cloud:spring-cloud-stream-test-support'
+    testImplementation "com.tngtech.archunit:archunit-junit5-api:${archunitJunit5Version}"
+    testRuntimeOnly "com.tngtech.archunit:archunit-junit5-engine:${archunitJunit5Version}"
     testImplementation "org.assertj:assertj-core"
     testImplementation "junit:junit"
     testImplementation "org.mockito:mockito-core"
     testImplementation "org.hamcrest:hamcrest-library"
     testImplementation "com.h2database:h2"
     liquibaseRuntime "com.h2database:h2"
+//    developmentOnly "org.springframework.boot:spring-boot-devtools:${springBootVersion}"
     //jhipster-needle-gradle-dependency - JHipster will add additional dependencies here
-    testImplementation "com.adobe.testing:s3mock-junit4:2.0.11"
-    testImplementation "org.testcontainers:testcontainers:1.10.1"
-    testImplementation "org.awaitility:awaitility:3.1.5"
-    testImplementation "com.github.tomakehurst:wiremock-jre8:2.23.2"
-    testImplementation "org.testcontainers:postgresql:1.16.2"
-    testImplementation "org.testcontainers:elasticsearch:1.16.2"
+    testImplementation 'com.adobe.testing:s3mock-junit4:3.7.3'
+    testImplementation 'org.awaitility:awaitility:4.2.1'
+    testImplementation "org.wiremock:wiremock-jetty12:3.9.0"
+//    testImplementation 'com.github.tomakehurst:wiremock-jre8:3.0.1'
+    testImplementation "org.testcontainers:testcontainers:${testcontainersVersion}"
+    testImplementation "org.testcontainers:junit-jupiter:${testcontainersVersion}"
+    testImplementation "org.testcontainers:postgresql:${testcontainersVersion}"
+    testImplementation "org.testcontainers:elasticsearch:${testcontainersVersion}"
+
+}
+
+gitProperties {
+    failOnNoGitDirectory = false
+    keys = ["git.branch", "git.commit.id.abbrev", "git.commit.id.describe"]
 }
 
 checkstyle {
-    toolVersion = "7.6.1"
+    toolVersion = "${checkstyleToolVersion}"
     ignoreFailures = true
-    configFile = rootProject.file('./qa/checkstyle.xml')
+    configFile file("qa/checkstyle.xml")
+    checkstyleTest.enabled = false
 }
 
+//spotbugs {
+//    toolVersion = "${spotbugsToolVersion}"
+//    ignoreFailures = true
+//}
+
 pmd {
-    rulePriority = 3
-    toolVersion = '6.55.0'
+    toolVersion "${pmdToolVersion}"
     ignoreFailures = true
     ruleSetFiles = files("./qa/pmd.xml")
 }
@@ -434,7 +479,7 @@ task cleanResources(type: Delete) {
 }
 
 wrapper {
-    gradleVersion = "6.0.1"
+    gradleVersion = "8.8"
 }
 
 task stage(dependsOn: 'bootWar') {

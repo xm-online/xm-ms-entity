@@ -91,7 +91,7 @@ public class XmEntitySpecResource {
                        .collect(Collectors.toList());
     }
 
-    @GetMapping(value = "/xm-entity-specs/schema", produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+    @GetMapping(value = "/xm-entity-specs/schema", produces = MediaType.APPLICATION_JSON_VALUE)
     @Timed
     @PostFilter("hasPermission({'log': false}, 'XMENTITY_SPEC.SCHEMA.GET')")
     @PrivilegeDescription("Privilege to get the xmEntity specification json schema")

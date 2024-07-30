@@ -29,6 +29,7 @@ import com.icthh.xm.ms.entity.service.AttachmentService;
 import com.icthh.xm.ms.entity.service.ContentService;
 import com.icthh.xm.ms.entity.service.XmEntitySpecService;
 import com.icthh.xm.ms.entity.service.impl.StartUpdateDateGenerationStrategy;
+import jakarta.persistence.EntityManager;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.junit.After;
 import org.junit.Before;
@@ -48,7 +49,6 @@ import org.springframework.validation.Validator;
 
 import java.time.Instant;
 import java.util.List;
-import javax.persistence.EntityManager;
 
 /**
  * Extended Test class for the AttachmentResource REST controller.

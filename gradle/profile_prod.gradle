@@ -1,18 +1,24 @@
+
+configurations {
+  all {
+    resolutionStrategy {
+      // TODO drop forced version. Refer to https://github.com/jhipster/generator-jhipster/issues/22579
+      force "org.hibernate.orm:hibernate-core:${hibernateVersion}"
+    }
+  }
+}
+
 dependencies {
-    testImplementation "com.h2database:h2"
+    implementation "org.postgresql:postgresql"
+    testImplementation "org.testcontainers:postgresql"
 }
 
 ext {
-    logbackLoglevel = "INFO"
-}
+    springProfiles = "prod" + springProfiles
 
-def profiles = "prod"
-if (project.hasProperty("no-liquibase")) {
-    profiles += ",no-liquibase"
-}
-
-if (project.hasProperty("swagger")) {
-    profiles += ",swagger"
+    if (project.hasProperty("api-docs")) {
+        springProfiles += ",api-docs"
+    }
 }
 
 springBoot {
@@ -20,34 +26,21 @@ springBoot {
 }
 
 bootRun {
-    args = []
+    args = ["--spring.profiles.active=${springProfiles}"]
 }
 
 
 processResources {
     inputs.property('version', version)
-    inputs.property('springProfiles', profiles)
-    filesMatching('**/application.yml') {
-        filter {
-            it.replace('#spring.profiles.active#', profiles)
-        }
-        filter {
-            it.replace('#project.version#', version)
-        }
-    }
+    inputs.property('springProfiles', springProfiles)
     filesMatching("**/application.yml") {
         filter {
-            it.replace("#project.version#", version)
+            it.replace("@project.version@", version)
         }
     }
     filesMatching("**/bootstrap.yml") {
         filter {
-            it.replace("#spring.profiles.active#", profiles)
-        }
-    }
-    filesMatching('**/logback-spring.xml') {
-        filter {
-            it.replace('#logback.loglevel#', logbackLoglevel)
+            it.replace("@spring.profiles.active@", springProfiles)
         }
     }
 }

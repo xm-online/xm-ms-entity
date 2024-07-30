@@ -5,7 +5,6 @@ import com.icthh.xm.commons.tenant.TenantContextUtils;
 import com.icthh.xm.ms.entity.config.LepConfiguration;
 import com.icthh.xm.ms.entity.config.SecurityBeanOverrideConfiguration;
 import com.icthh.xm.ms.entity.config.TestLepUpdateModeConfiguration;
-import com.icthh.xm.ms.entity.config.elasticsearch.EmbeddedElasticsearchConfig;
 import com.icthh.xm.ms.entity.config.tenant.WebappTenantOverrideConfiguration;
 import com.icthh.xm.ms.entity.service.search.ElasticsearchTemplateWrapper;
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -33,8 +32,7 @@ import java.io.IOException;
     LepConfiguration.class,
     EntityApp.class,
     SecurityBeanOverrideConfiguration.class,
-    WebappTenantOverrideConfiguration.class,
-    EmbeddedElasticsearchConfig.class
+    WebappTenantOverrideConfiguration.class
 })
 @Category(AbstractSpringBootTest.class)
 @Slf4j

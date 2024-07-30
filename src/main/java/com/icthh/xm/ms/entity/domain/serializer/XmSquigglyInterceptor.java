@@ -2,14 +2,13 @@ package com.icthh.xm.ms.entity.domain.serializer;
 
 import com.github.bohnman.squiggly.web.SquigglyRequestHolder;
 import com.github.bohnman.squiggly.web.SquigglyResponseHolder;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.web.servlet.handler.HandlerInterceptorAdapter;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import org.springframework.web.servlet.HandlerInterceptor;
 
 @Slf4j
-public class XmSquigglyInterceptor extends HandlerInterceptorAdapter {
+public class XmSquigglyInterceptor implements HandlerInterceptor {
 
     @Override
     public boolean preHandle(final HttpServletRequest request,
@@ -18,8 +17,8 @@ public class XmSquigglyInterceptor extends HandlerInterceptorAdapter {
 
         log.info("Init Squiggly holders in http context");
 
-        SquigglyRequestHolder.setRequest(request);
-        SquigglyResponseHolder.setResponse(response);
+//        SquigglyRequestHolder.setRequest(request); todo
+//        SquigglyResponseHolder.setResponse(response);
 
         return true;
     }

@@ -18,6 +18,7 @@ import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.repository.XmEntityRepositoryInternal;
 import com.icthh.xm.ms.entity.repository.search.XmEntitySearchRepository;
 import com.icthh.xm.ms.entity.service.search.ElasticsearchTemplateWrapper;
+import jakarta.persistence.EntityManager;
 import lombok.SneakyThrows;
 import org.junit.Before;
 import org.junit.Test;
@@ -31,7 +32,6 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.util.ReflectionUtils;
 
-import javax.persistence.EntityManager;
 import java.lang.reflect.Field;
 import java.util.Collections;
 import java.util.List;

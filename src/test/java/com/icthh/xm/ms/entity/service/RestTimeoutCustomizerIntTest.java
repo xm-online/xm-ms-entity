@@ -8,11 +8,12 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching;
 import static com.github.tomakehurst.wiremock.client.WireMock.verify;
 
+import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import com.icthh.xm.ms.entity.AbstractSpringBootTest;
 import com.icthh.xm.ms.entity.config.RestTemplateConfiguration.PathTimeoutHttpComponentsClientHttpRequestFactory;
 import com.icthh.xm.ms.entity.config.RestTemplateConfiguration.PathTimeoutHttpComponentsClientHttpRequestFactory.PathTimeoutConfig;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -30,9 +31,8 @@ public class RestTimeoutCustomizerIntTest extends AbstractSpringBootTest {
     @Autowired
     PathTimeoutHttpComponentsClientHttpRequestFactory requestFactory;
 
-    @Before
-    public void setUp() {
-    }
+    @Rule
+    public WireMockRule wireMockRule = new WireMockRule(8081);
 
     @Test(expected = ResourceAccessException.class)
     public void testCallWithTimeout() throws Exception {

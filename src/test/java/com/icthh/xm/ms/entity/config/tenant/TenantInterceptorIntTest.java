@@ -10,6 +10,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.google.common.collect.ImmutableMap;
 import com.icthh.xm.commons.i18n.error.web.ExceptionTranslator;
 import com.icthh.xm.commons.security.XmAuthenticationContext;
+import com.icthh.xm.commons.security.internal.XmAuthentication;
+import com.icthh.xm.commons.security.internal.XmAuthenticationDetails;
 import com.icthh.xm.commons.tenant.TenantContext;
 import com.icthh.xm.commons.tenant.TenantKey;
 import com.icthh.xm.commons.web.spring.TenantInterceptor;
@@ -25,12 +27,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.oauth2.provider.OAuth2Authentication;
-import org.springframework.security.oauth2.provider.authentication.OAuth2AuthenticationDetails;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.util.Collections;
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -59,10 +60,10 @@ public class TenantInterceptorIntTest extends AbstractSpringBootTest {
     private LepManager lepManager;
 
     @Mock
-    private OAuth2Authentication auth;
+    private XmAuthentication auth;
 
     @Mock
-    private OAuth2AuthenticationDetails details;
+    private XmAuthenticationDetails details;
 
     private MockMvc restXmEntityMockMvc;
 
@@ -105,7 +106,7 @@ public class TenantInterceptorIntTest extends AbstractSpringBootTest {
     @Ignore //TODO fix when security test will be implemented
     public void testSuccess() throws Exception {
         when(auth.getDetails()).thenReturn(details);
-        when(details.getDecodedDetails()).thenReturn(ImmutableMap.builder().put("tenant", "xm").build());
+        when(details.getDecodedDetails()).thenReturn(Map.of("tenant", "xm"));
 
         lepManager.beginThreadContext(threadContext -> {
             TenantContext tenantContext = mock(TenantContext.class);

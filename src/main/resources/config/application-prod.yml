@@ -41,7 +41,7 @@ spring:
           poolName: Hikari
           auto-commit: false
     jpa:
-        database-platform: com.icthh.xm.commons.migration.db.jsonb.CustomPostgreSQL95Dialect
+        database-platform: com.icthh.xm.commons.migration.db.jsonb.CustomPostgreSQLDialect
         database: POSTGRESQL
         show-sql: false
         properties:
@@ -57,7 +57,7 @@ spring:
             #hibernate.cache.hazelcast.use_lite_member: true
             hibernate.show_sql: false
             hibernate.format_sql: false
-            hibernate.dialect: com.icthh.xm.commons.migration.db.jsonb.CustomPostgreSQL95Dialect
+            hibernate.dialect: com.icthh.xm.commons.migration.db.jsonb.CustomPostgreSQLDialect
     data:
         elasticsearch:
             cluster-name:
@@ -135,7 +135,7 @@ jhipster:
             enabled: false
             host: localhost
             port: 5000
-            queue-size: 512
+            ring-buffer-size: 512
 
 # ===================================================================
 # Application specific properties

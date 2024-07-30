@@ -6,7 +6,6 @@ import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.Assert.assertFalse;
-import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -27,6 +26,7 @@ import com.icthh.xm.ms.entity.repository.XmEntityRepository;
 import com.icthh.xm.ms.entity.security.access.DynamicPermissionCheckService;
 import com.icthh.xm.ms.entity.service.LinkService;
 import com.icthh.xm.ms.entity.service.impl.StartUpdateDateGenerationStrategy;
+import jakarta.persistence.EntityManager;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.After;
@@ -49,7 +49,6 @@ import org.springframework.validation.Validator;
 
 import java.time.Instant;
 import java.util.List;
-import javax.persistence.EntityManager;
 
 /**
  * Extended Test class for the LinkResource REST controller.
@@ -219,7 +218,7 @@ public class LinkResourceExtendedIntTest extends AbstractSpringBootTest {
         restLinkMockMvc.perform(get("/api/links?sort=id,desc"))
                        .andExpect(status().isOk())
                        .andDo(this::printMvcResult)
-                       .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+                       .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                        .andExpect(jsonPath("$", hasSize(1)))
                        .andExpect(jsonPath("$.[*].id", containsInAnyOrder(link.getId().intValue())))
                        .andExpect(jsonPath("$.[*].typeKey", containsInAnyOrder(LinkResourceIntTest.DEFAULT_TYPE_KEY)))
@@ -243,21 +242,21 @@ public class LinkResourceExtendedIntTest extends AbstractSpringBootTest {
                        .andExpect(jsonPath("$.[*].target.data").exists())
                        .andExpect(jsonPath("$.[*].target.data.AAAAAAAAAA", hasSize(1)))
 
+                       .andExpect(jsonPath("$.[*].target.version", hasSize(1)))
+                       .andExpect(jsonPath("$.[*].target.targets", hasSize(1)))
+                       .andExpect(jsonPath("$.[*].target.sources").doesNotExist())
+                       .andExpect(jsonPath("$.[*].target.attachments", hasSize(1)))
+                       .andExpect(jsonPath("$.[*].target.locations", hasSize(1)))
+                       .andExpect(jsonPath("$.[*].target.tags", hasSize(1)))
+                       .andExpect(jsonPath("$.[*].target.calendars", hasSize(1)))
+                       .andExpect(jsonPath("$.[*].target.ratings", hasSize(1)))
+                       .andExpect(jsonPath("$.[*].target.comments", hasSize(1)))
+                       .andExpect(jsonPath("$.[*].target.functionContexts", hasSize(1)))
                        .andExpect(jsonPath("$.[*].target.avatarUrlRelative").doesNotExist())
                        .andExpect(jsonPath("$.[*].target.avatarUrlFull").doesNotExist())
-                       .andExpect(jsonPath("$.[*].target.version").doesNotExist())
-                       .andExpect(jsonPath("$.[*].target.targets").doesNotExist())
-                       .andExpect(jsonPath("$.[*].target.sources").doesNotExist())
-                       .andExpect(jsonPath("$.[*].target.attachments").doesNotExist())
-                       .andExpect(jsonPath("$.[*].target.locations").doesNotExist())
-                       .andExpect(jsonPath("$.[*].target.tags").doesNotExist())
-                       .andExpect(jsonPath("$.[*].target.calendars").doesNotExist())
-                       .andExpect(jsonPath("$.[*].target.ratings").doesNotExist())
-                       .andExpect(jsonPath("$.[*].target.comments").doesNotExist())
-                       .andExpect(jsonPath("$.[*].target.votes").doesNotExist())
-                       .andExpect(jsonPath("$.[*].target.functionContexts").doesNotExist())
                        .andExpect(jsonPath("$.[*].target.events").doesNotExist())
                        .andExpect(jsonPath("$.[*].target.uniqueFields").doesNotExist())
+                       .andExpect(jsonPath("$.[*].target.votes").doesNotExist())
         ;
     }
 
@@ -274,7 +273,7 @@ public class LinkResourceExtendedIntTest extends AbstractSpringBootTest {
         restLinkMockMvc.perform(get("/api/links/{id}", link.getId()))
                        .andExpect(status().isOk())
                        .andDo(this::printMvcResult)
-                       .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+                       .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                        .andExpect(jsonPath("$.id").value(link.getId().intValue()))
                        .andExpect(jsonPath("$.typeKey").value(LinkResourceIntTest.DEFAULT_TYPE_KEY))
                        .andExpect(jsonPath("$.name").value(LinkResourceIntTest.DEFAULT_NAME))
@@ -298,17 +297,17 @@ public class LinkResourceExtendedIntTest extends AbstractSpringBootTest {
 
                        .andExpect(jsonPath("$.target.avatarUrlRelative").doesNotExist())
                        .andExpect(jsonPath("$.target.avatarUrlFull").doesNotExist())
-                       .andExpect(jsonPath("$.target.version").doesNotExist())
-                       .andExpect(jsonPath("$.target.targets").doesNotExist())
+                       .andExpect(jsonPath("$.target.version").value(notNullValue()))
+                       .andExpect(jsonPath("$.target.targets").value(notNullValue()))
+                       .andExpect(jsonPath("$.target.attachments").value(notNullValue()))
+                       .andExpect(jsonPath("$.target.locations").value(notNullValue()))
+                       .andExpect(jsonPath("$.target.tags").value(notNullValue()))
+                       .andExpect(jsonPath("$.target.calendars").value(notNullValue()))
+                       .andExpect(jsonPath("$.target.ratings").value(notNullValue()))
+                       .andExpect(jsonPath("$.target.comments").value(notNullValue()))
+                       .andExpect(jsonPath("$.target.functionContexts").value(notNullValue()))
                        .andExpect(jsonPath("$.target.sources").doesNotExist())
-                       .andExpect(jsonPath("$.target.attachments").doesNotExist())
-                       .andExpect(jsonPath("$.target.locations").doesNotExist())
-                       .andExpect(jsonPath("$.target.tags").doesNotExist())
-                       .andExpect(jsonPath("$.target.calendars").doesNotExist())
-                       .andExpect(jsonPath("$.target.ratings").doesNotExist())
-                       .andExpect(jsonPath("$.target.comments").doesNotExist())
                        .andExpect(jsonPath("$.target.votes").doesNotExist())
-                       .andExpect(jsonPath("$.target.functionContexts").doesNotExist())
                        .andExpect(jsonPath("$.target.events").doesNotExist())
                        .andExpect(jsonPath("$.target.uniqueFields").doesNotExist())
         ;

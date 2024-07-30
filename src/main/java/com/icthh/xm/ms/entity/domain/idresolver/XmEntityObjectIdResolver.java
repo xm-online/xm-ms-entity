@@ -66,7 +66,7 @@ public class XmEntityObjectIdResolver implements ObjectIdResolver {
      */
     @Override
     public ObjectIdResolver newForDeserialization(final Object context) {
-        return new XmEntityObjectIdResolver(repository);
+        return this;
     }
 
     @Override

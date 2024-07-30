@@ -1,10 +1,11 @@
 spring:
-    profiles:
-        active: pg-test
     datasource:
-        driver-class-name: org.postgresql.Driver
+        type: com.zaxxer.hikari.HikariDataSource
+        url: jdbc:postgresql://localhost:5432/postgres
+        username: postgres
+        password: postgres
     jpa:
-        database-platform: com.icthh.xm.commons.migration.db.jsonb.CustomPostgreSQL95Dialect
+        database-platform: com.icthh.xm.commons.migration.db.jsonb.CustomPostgreSQLDialect
         database: POSTGRESQL
         show-sql: true
         hibernate:
@@ -15,7 +16,7 @@ spring:
             hibernate.cache.use_query_cache: false
             hibernate.generate_statistics: true
             hibernate.hbm2ddl.auto: none
-            hibernate.dialect: com.icthh.xm.commons.migration.db.jsonb.CustomPostgreSQL95Dialect
+            hibernate.dialect: com.icthh.xm.commons.migration.db.jsonb.CustomPostgreSQLDialect
     liquibase:
         change-log: config/liquibase/master.xml
 

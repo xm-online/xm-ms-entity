@@ -1,6 +1,12 @@
 jib {
     from {
-        image = "adoptopenjdk:11-jre-hotspot"
+        image = "eclipse-temurin:17-jre-focal"
+        platforms {
+            platform {
+                architecture = "${findProperty('jibArchitecture') ?: 'amd64'}"
+                os = "linux"
+            }
+        }
     }
     to {
         image = "entity:latest"
@@ -13,6 +19,11 @@ jib {
             JHIPSTER_SLEEP: "0"
         ]
         creationTime = "USE_CURRENT_TIMESTAMP"
+        user = 1000
+    }
+    extraDirectories {
+      paths = file("src/main/docker/jib")
+      permissions = ["/entrypoint.sh": "755"]
     }
 }
 

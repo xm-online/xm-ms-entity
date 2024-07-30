@@ -10,13 +10,13 @@ import com.icthh.xm.ms.entity.lep.keyresolver.ChangeStateTargetStateLepKeyResolv
 import com.icthh.xm.ms.entity.lep.keyresolver.ChangeStateTransitionLepKeyResolver;
 import com.icthh.xm.ms.entity.lep.keyresolver.TargetEntityTypeLepKeyResolver;
 import com.icthh.xm.ms.entity.lep.keyresolver.TypeKeyWithExtends;
+import jakarta.annotation.Resource;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.annotation.Resource;
 import java.util.Map;
 
 

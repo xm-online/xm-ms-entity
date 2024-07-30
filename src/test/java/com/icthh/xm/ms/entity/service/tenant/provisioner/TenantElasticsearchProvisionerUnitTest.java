@@ -2,7 +2,6 @@ package com.icthh.xm.ms.entity.service.tenant.provisioner;
 
 import com.icthh.xm.ms.entity.service.search.ElasticsearchTemplateWrapper;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.verifyZeroInteractions;
 
 import com.icthh.xm.commons.gen.model.Tenant;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
@@ -52,8 +51,10 @@ public class TenantElasticsearchProvisionerUnitTest extends AbstractUnitTest {
     public void manageTenant() {
 
         provisioner.manageTenant(TENANT_NAME, "ACTIVE");
-        verifyZeroInteractions(elasticsearchTemplateWrapper);
-        verifyZeroInteractions(tenantContextHolder);
+
+        Mockito.inOrder(elasticsearchTemplateWrapper, tenantContextHolder).verifyNoMoreInteractions();
+//        verifyZeroInteractions(elasticsearchTemplateWrapper);
+//        verifyZeroInteractions(tenantContextHolder);
 
     }
 

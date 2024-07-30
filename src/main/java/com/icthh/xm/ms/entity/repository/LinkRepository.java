@@ -14,10 +14,11 @@ import org.springframework.stereotype.Repository;
  */
 @SuppressWarnings("unused")
 @Repository
-public interface LinkRepository extends JpaRepository<Link, Long>, JpaSpecificationExecutor<Link>, ResourceRepository {
+public interface LinkRepository extends JpaRepository<Link, Long>, JpaSpecificationExecutor<Link>,
+    ResourceRepository<Link, Long> {
 
     @Override
-    Link findResourceById(Object id);
+    Link findResourceById(Long id);
 
     List<Link> findBySourceIdAndTargetTypeKey(Long sourceId, String typeKey);
 

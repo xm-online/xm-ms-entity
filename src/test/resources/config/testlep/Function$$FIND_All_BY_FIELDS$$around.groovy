@@ -3,8 +3,8 @@ package com.icthh.xm.ms.entity.domain;
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.jpa.domain.Specification
 
-import javax.persistence.Tuple
-import javax.persistence.criteria.Root
+import jakarta.persistence.Tuple
+import jakarta.persistence.criteria.Root
 
 import static java.time.Instant.now
 import static java.util.UUID.randomUUID

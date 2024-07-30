@@ -382,6 +382,10 @@ public class ElasticsearchTemplateWrapper implements ElasticsearchOperations {
 
     @Override
     public boolean deleteIndex(String indexName) {
+        if (!indexRequestService.existIndex(indexName)) {
+            log.info("Index by name '{}' does not exist", indexName);
+            return false;
+        }
         return indexRequestService.deleteIndex(indexName);
     }
 

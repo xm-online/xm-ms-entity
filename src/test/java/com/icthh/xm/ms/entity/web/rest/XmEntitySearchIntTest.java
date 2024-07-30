@@ -14,7 +14,7 @@ import com.icthh.xm.commons.security.XmAuthenticationContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import static com.icthh.xm.commons.tenant.TenantContextUtils.setTenant;
 import com.icthh.xm.lep.api.LepManager;
-import com.icthh.xm.ms.entity.AbstractSpringBootTest;
+import com.icthh.xm.ms.entity.AbstractElasticSpringBootTest;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.repository.XmEntityRepositoryInternal;
 import com.icthh.xm.ms.entity.service.SeparateTransactionExecutor;
@@ -24,11 +24,12 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.apache.commons.io.IOUtils;
-import org.junit.After;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import org.junit.Before;
-import org.junit.Test;
+
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import static org.mockito.Mockito.when;
 import org.mockito.MockitoAnnotations;
@@ -55,7 +56,7 @@ import java.util.UUID;
  * @see XmEntitySpecResource
  */
 @Slf4j
-public class XmEntitySearchIntTest extends AbstractSpringBootTest {
+public class XmEntitySearchIntTest extends AbstractElasticSpringBootTest {
 
     private static final String KEY1 = "ACCOUNT";
 
@@ -108,7 +109,7 @@ public class XmEntitySearchIntTest extends AbstractSpringBootTest {
     @Autowired
     private XmEntityRepositoryInternal repository;
 
-    @Before
+    @BeforeEach
     @SneakyThrows
     public void setup() {
         MockitoAnnotations.initMocks(this);
@@ -165,7 +166,7 @@ public class XmEntitySearchIntTest extends AbstractSpringBootTest {
         return createEntity(typeKey, null, null);
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         lepManager.endThreadContext();
         tenantContextHolder.getPrivilegedContext().destroyCurrentContext();
@@ -253,6 +254,8 @@ public class XmEntitySearchIntTest extends AbstractSpringBootTest {
     @SneakyThrows
     @WithMockUser(authorities = "SUPER-ADMIN")
     public void testSearchByStateKeyInElastic() throws Exception {
+        cleanElasticsearch(tenantContextHolder);
+
         int databaseSizeBeforeCreate = xmEntityRepository.findAll().size();
 
         XmEntity account = createEntity("ACCOUNT", KEY2, STATE_KEY2);

@@ -6,6 +6,7 @@ import co.elastic.clients.elasticsearch.core.IndexRequest;
 import co.elastic.clients.elasticsearch.core.bulk.BulkOperation;
 import co.elastic.clients.elasticsearch.core.bulk.IndexOperation;
 import co.elastic.clients.elasticsearch.indices.CreateIndexRequest;
+import co.elastic.clients.elasticsearch.indices.ExistsRequest;
 import co.elastic.clients.elasticsearch.indices.IndexSettings;
 import co.elastic.clients.elasticsearch.indices.RefreshRequest;
 import co.elastic.clients.json.JsonData;
@@ -18,6 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -90,6 +92,15 @@ public class IndexRequestService {
         return elasticsearchClient.indices()
             .delete(request -> request.index(indexName))
             .acknowledged();
+    }
+
+    public boolean existIndex(String indexName) {
+        try {
+            return elasticsearchClient.indices().exists(ExistsRequest.of(e -> e.index(indexName))).value();
+
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private IndexRequest<Object> buildIndexRequest(IndexQuery indexQuery) {

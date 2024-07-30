@@ -10,6 +10,8 @@ import com.icthh.xm.ms.entity.web.rest.util.HeaderUtil;
 import com.icthh.xm.ms.entity.web.rest.util.PaginationUtil;
 import com.icthh.xm.ms.entity.web.rest.util.RespContentUtil;
 import io.swagger.annotations.ApiParam;
+import jakarta.validation.Valid;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -31,11 +33,11 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Optional;
-import javax.validation.Valid;
 
 /**
  * REST controller for managing Link.
  */
+@Slf4j
 @RestController
 @RequestMapping("/api")
 public class LinkResource {
@@ -64,11 +66,13 @@ public class LinkResource {
     @PreAuthorize("hasPermission({'link': #link}, 'LINK.CREATE')")
     @PrivilegeDescription("Privilege to create a new link")
     public ResponseEntity<Link> createLink(@Valid @RequestBody Link link) throws URISyntaxException {
+        log.info(">> start /api/links: request {}", link.toString());
         if (link.getId() != null) {
             throw new BusinessException(ErrorConstants.ERR_BUSINESS_IDEXISTS,
                                         "A new link cannot already have an ID");
         }
         Link result = linkService.save(link);
+        log.info(">> end /api/links: request {}", link.toString());
         return ResponseEntity.created(new URI("/api/links/" + result.getId()))
             .headers(HeaderUtil.createEntityCreationAlert(ENTITY_NAME, result.getId().toString()))
             .body(result);
