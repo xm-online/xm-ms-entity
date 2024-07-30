@@ -15,10 +15,15 @@ import co.elastic.clients.elasticsearch.core.ScrollRequest;
 import co.elastic.clients.elasticsearch.core.ScrollResponse;
 import co.elastic.clients.elasticsearch.core.SearchRequest;
 import co.elastic.clients.elasticsearch.core.SearchResponse;
+import co.elastic.clients.elasticsearch.indices.GetIndexRequest;
+import co.elastic.clients.elasticsearch.indices.GetIndexResponse;
 import co.elastic.clients.elasticsearch.indices.PutMappingRequest;
 import co.elastic.clients.elasticsearch.indices.PutMappingResponse;
-import com.fasterxml.jackson.core.type.TypeReference;
+import co.elastic.clients.json.JsonpDeserializer;
+import co.elastic.clients.json.jackson.JacksonJsonpMapper;
+import co.elastic.clients.json.jackson.JacksonJsonpParser;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.icthh.xm.ms.entity.service.search.deserializer.PutMappingRequestDeserializer;
 import com.icthh.xm.ms.entity.service.search.mapper.SearchRequestBuilder;
 import com.icthh.xm.ms.entity.service.search.mapper.SearchResultMapper;
 import com.icthh.xm.ms.entity.service.search.mapper.extractor.ResultsExtractor;
@@ -36,10 +41,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 
-import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -146,10 +150,13 @@ public class SearchRequestService {
     public boolean putMapping(String indexName, Object properties) {
         Assert.notNull(indexName, "Index name is required");
 
-        Map<String, Property> mappingProperties = createMappingProperties(properties);
-        PutMappingRequest request = PutMappingRequest.of(b -> b.index(indexName).properties(mappingProperties));
+        PutMappingRequest.Builder builder = new PutMappingRequest.Builder();
+        builder.index(indexName);
 
-        PutMappingResponse response = elasticsearchClient.indices().putMapping(request);
+        JsonpDeserializer<PutMappingRequest> builderDeserializer = PutMappingRequestDeserializer.getBuilderDeserializer(builder);
+        PutMappingRequest deserializedRequest = deserializeMappingSettings(builderDeserializer, properties);
+
+        PutMappingResponse response = elasticsearchClient.indices().putMapping(deserializedRequest);
 
         return response.acknowledged();
     }
@@ -192,48 +199,26 @@ public class SearchRequestService {
         }
     }
 
-    private Map<String, Property> createMappingProperties(Object properties) {
-        Map<String, Object> settingsMap = objectMapper.convertValue(properties, new TypeReference<Map<String, Object>>() {});
-        Map<String, Object> propertiesMap = (Map<String, Object>) settingsMap.getOrDefault("properties", new HashMap<String, Object>());
-
-        return propertiesMap.entrySet()
-            .stream()
-            .collect(Collectors.toMap(Map.Entry::getKey, this::toProperty));
+    @SneakyThrows
+    public List<String> getAllIndexes() {
+        GetIndexRequest getIndexRequest = GetIndexRequest.of(request -> request.index("*"));
+        GetIndexResponse getIndexResponse = elasticsearchClient.indices().get(getIndexRequest);
+        return new ArrayList<>(getIndexResponse.result().keySet());
     }
 
-    private Property toProperty(Object properties) {
-        Map<String, Object> fieldMapping = (Map<String, Object>) properties;
-        String type = (String) fieldMapping.get("type");
-        PropertyVariant propertyVariant = resolvePropertyVariantByType(type);
-        return new Property(propertyVariant);
-    }
-
-    private PropertyVariant resolvePropertyVariantByType(String type) {
-        Property.Kind kind = Property.Kind.valueOf(type);
-
-        switch (kind) {
-            case Text:
-                return new TextProperty.Builder().build();
-            case Keyword:
-                return new KeywordProperty.Builder().build();
-            case Long:
-                return new LongNumberProperty.Builder().build();
-            case Integer:
-                return new IntegerNumberProperty.Builder().build();
-            case Double:
-                return new DoubleNumberProperty.Builder().build();
-            case Float:
-                return new FloatNumberProperty.Builder().build();
-            case Date:
-                return new DateProperty.Builder().build();
-            case Boolean:
-                return new BooleanProperty.Builder().build();
-            case Object:
-                return new ObjectProperty.Builder().build();
-            case Nested:
-                return new NestedProperty.Builder().build();
-            default:
-                throw new IllegalArgumentException("Unsupported property type: " + type);
+    @SneakyThrows
+    private PutMappingRequest deserializeMappingSettings(JsonpDeserializer<PutMappingRequest> mappingRequestDeserializer, Object settings) {
+        String json = "";
+        if (settings instanceof String) {
+            json = (String) settings;
+        } else if (settings instanceof Map) {
+            json = objectMapper.writeValueAsString(settings);
         }
+
+        JacksonJsonpMapper jacksonJsonpMapper = new JacksonJsonpMapper(objectMapper);
+        com.fasterxml.jackson.core.JsonParser parser = objectMapper.getFactory().createParser(json);
+        JacksonJsonpParser jacksonJsonpParser = new JacksonJsonpParser(parser, jacksonJsonpMapper);
+
+        return mappingRequestDeserializer.deserialize(jacksonJsonpParser, jacksonJsonpMapper);
     }
 }

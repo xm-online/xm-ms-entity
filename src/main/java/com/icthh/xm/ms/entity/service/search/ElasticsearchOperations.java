@@ -56,6 +56,10 @@ public interface ElasticsearchOperations {
 
     String index(IndexQuery query);
 
+    <T> boolean indexExists(Class<T> clazz);
+
+    <T> boolean indexExists(String indexName);
+
     void bulkIndex(List<IndexQuery> queries);
 
     String delete(String indexName, String type, String id);

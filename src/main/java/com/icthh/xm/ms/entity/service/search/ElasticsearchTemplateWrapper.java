@@ -226,6 +226,16 @@ public class ElasticsearchTemplateWrapper implements ElasticsearchOperations {
     }
 
     @Override
+    public <T> boolean indexExists(Class<T> clazz) {
+        return indexExists(getIndexName());
+    }
+
+    @Override
+    public boolean indexExists(String indexName) {
+        return indexRequestService.indexExists(indexName);
+    }
+
+    @Override
     public void bulkIndex(List<IndexQuery> queries) {
         indexRequestService.bulkIndex(queries);
     }
@@ -344,4 +354,8 @@ public class ElasticsearchTemplateWrapper implements ElasticsearchOperations {
             .minimumShouldMatch(1);
     }
 
+    public void deleteAllIndexes() {
+        List<String> allIndexes = searchRequestService.getAllIndexes();
+        indexRequestService.deleteIndex(allIndexes);
+    }
 }

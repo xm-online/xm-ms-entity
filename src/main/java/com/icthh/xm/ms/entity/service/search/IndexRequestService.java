@@ -15,8 +15,10 @@ import com.icthh.xm.ms.entity.service.search.query.dto.IndexQuery;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.stereotype.Service;
+import org.springframework.util.Assert;
 
 import java.util.List;
 import java.util.Map;
@@ -37,7 +39,7 @@ public class IndexRequestService {
 
     @SneakyThrows
     public boolean createIndex(String indexName, Object settings) {
-        assertIndexNameNotBlank(indexName);
+        Assert.notNull(indexName, "No index name defined for create operation");
 
         CreateIndexRequest.Builder createIndexRequestBuilder = new CreateIndexRequest.Builder()
             .index(indexName);
@@ -63,7 +65,7 @@ public class IndexRequestService {
 
     @SneakyThrows
     public void refresh(String indexName) {
-        assertIndexNameNotBlank(indexName);
+        Assert.notNull(indexName, "No index defined for refresh operation");
         RefreshRequest request = RefreshRequest.of(refreshRequest -> refreshRequest.index(indexName));
         elasticsearchClient.indices().refresh(request);
     }
@@ -86,9 +88,24 @@ public class IndexRequestService {
 
     @SneakyThrows
     public boolean deleteIndex(String indexName) {
-        assertIndexNameNotBlank(indexName);
+        Assert.notNull(indexName, "No index defined for delete operation");
+        if (indexExists(indexName)) {
+            return elasticsearchClient.indices()
+                .delete(request -> request.index(indexName))
+                .acknowledged();
+        }
+        return false;
+    }
+
+    @SneakyThrows
+    public boolean deleteIndex(List<String> indexes) {
+        if (CollectionUtils.isEmpty(indexes)) {
+            log.info("No indexes available to delete");
+            return false;
+        }
+
         return elasticsearchClient.indices()
-            .delete(request -> request.index(indexName))
+            .delete(request -> request.index(indexes))
             .acknowledged();
     }
 
@@ -120,9 +137,10 @@ public class IndexRequestService {
         return JsonData.of(value);
     }
 
-    private void assertIndexNameNotBlank(String indexName) {
-        if (StringUtils.isBlank(indexName)) {
-            throw new IllegalArgumentException("Index name cannot be empty");
-        }
+    @SneakyThrows
+    public boolean indexExists(String indexName) {
+        return elasticsearchClient.indices()
+            .exists(request -> request.index(indexName))
+            .value();
     }
 }
