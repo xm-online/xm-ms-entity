@@ -24,6 +24,7 @@ package com.icthh.xm.ms.entity.service.search.builder;
 import com.icthh.xm.ms.entity.service.search.common.Strings;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -55,7 +56,11 @@ public class TermsQueryBuilder extends AbstractQueryBuilder<TermsQueryBuilder> {
     }
 
     public TermsQueryBuilder(String fieldName, Object... values) {
-        this(fieldName, values != null ? Arrays.asList(values) : null);
+        this(fieldName, values != null ? Arrays.stream(values).collect(Collectors.toList()) : null);
+    }
+
+    public TermsQueryBuilder(String fieldName, Collection<?> values) {
+        this(fieldName, values != null ? convertCollection(values) : null);
     }
 
     public TermsQueryBuilder(String fieldName, List<Object> values) {
@@ -76,4 +81,11 @@ public class TermsQueryBuilder extends AbstractQueryBuilder<TermsQueryBuilder> {
     public List<Object> values() {
         return this.values;
     }
+
+    private static <T> List<Object> convertCollection(Collection<T> inputCollection) {
+        return inputCollection.stream()
+            .map(item -> (Object) item)
+            .collect(Collectors.toList());
+    }
+
 }

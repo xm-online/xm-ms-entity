@@ -2,7 +2,6 @@ package com.icthh.xm.ms.entity.service.search;
 
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch._types.Time;
-import co.elastic.clients.elasticsearch._types.mapping.*;
 import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 import co.elastic.clients.elasticsearch.core.ClearScrollRequest;
 import co.elastic.clients.elasticsearch.core.CountRequest;
@@ -20,10 +19,8 @@ import co.elastic.clients.elasticsearch.indices.GetIndexResponse;
 import co.elastic.clients.elasticsearch.indices.PutMappingRequest;
 import co.elastic.clients.elasticsearch.indices.PutMappingResponse;
 import co.elastic.clients.json.JsonpDeserializer;
-import co.elastic.clients.json.jackson.JacksonJsonpMapper;
-import co.elastic.clients.json.jackson.JacksonJsonpParser;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.icthh.xm.ms.entity.service.search.deserializer.PutMappingRequestDeserializer;
+import com.icthh.xm.ms.entity.service.search.deserializer.RequestDeserializer;
 import com.icthh.xm.ms.entity.service.search.mapper.SearchRequestBuilder;
 import com.icthh.xm.ms.entity.service.search.mapper.SearchResultMapper;
 import com.icthh.xm.ms.entity.service.search.mapper.extractor.ResultsExtractor;
@@ -153,8 +150,8 @@ public class SearchRequestService {
         PutMappingRequest.Builder builder = new PutMappingRequest.Builder();
         builder.index(indexName);
 
-        JsonpDeserializer<PutMappingRequest> builderDeserializer = PutMappingRequestDeserializer.getBuilderDeserializer(builder);
-        PutMappingRequest deserializedRequest = deserializeMappingSettings(builderDeserializer, properties);
+        JsonpDeserializer<PutMappingRequest> builderDeserializer = RequestDeserializer.getPutMappingBuilderDeserializer(builder);
+        PutMappingRequest deserializedRequest = RequestDeserializer.deserializeSettings(builderDeserializer, properties, objectMapper);
 
         PutMappingResponse response = elasticsearchClient.indices().putMapping(deserializedRequest);
 
@@ -204,21 +201,5 @@ public class SearchRequestService {
         GetIndexRequest getIndexRequest = GetIndexRequest.of(request -> request.index("*"));
         GetIndexResponse getIndexResponse = elasticsearchClient.indices().get(getIndexRequest);
         return new ArrayList<>(getIndexResponse.result().keySet());
-    }
-
-    @SneakyThrows
-    private PutMappingRequest deserializeMappingSettings(JsonpDeserializer<PutMappingRequest> mappingRequestDeserializer, Object settings) {
-        String json = "";
-        if (settings instanceof String) {
-            json = (String) settings;
-        } else if (settings instanceof Map) {
-            json = objectMapper.writeValueAsString(settings);
-        }
-
-        JacksonJsonpMapper jacksonJsonpMapper = new JacksonJsonpMapper(objectMapper);
-        com.fasterxml.jackson.core.JsonParser parser = objectMapper.getFactory().createParser(json);
-        JacksonJsonpParser jacksonJsonpParser = new JacksonJsonpParser(parser, jacksonJsonpMapper);
-
-        return mappingRequestDeserializer.deserialize(jacksonJsonpParser, jacksonJsonpMapper);
     }
 }

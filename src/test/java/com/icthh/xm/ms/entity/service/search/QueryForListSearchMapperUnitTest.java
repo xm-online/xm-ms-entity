@@ -49,7 +49,7 @@ public class QueryForListSearchMapperUnitTest extends AbstractUnitTest {
             .withPageable(PageRequest.of(0, 10))
             .build();
 
-        String actualQuery = searchRequestQueryBuilder.buildQuery(nativeSearchQuery.getQuery()).simpleQueryString().query();
+        String actualQuery = searchRequestQueryBuilder.buildQuery(nativeSearchQuery.getQuery()).queryString().query();
 
         assertEquals(query, actualQuery);
     }
@@ -158,7 +158,7 @@ public class QueryForListSearchMapperUnitTest extends AbstractUnitTest {
 
         NestedQuery nestedQuery = searchRequestQueryBuilder.buildQuery(nativeSearchQuery.getQuery()).nested();
         String nestedQueryPath = nestedQuery.path();
-        String nestedQueryStringQuery = nestedQuery.query().simpleQueryString().query();
+        String nestedQueryStringQuery = nestedQuery.query().queryString().query();
 
         assertEquals(path, nestedQueryPath);
         assertEquals(queryString, nestedQueryStringQuery);

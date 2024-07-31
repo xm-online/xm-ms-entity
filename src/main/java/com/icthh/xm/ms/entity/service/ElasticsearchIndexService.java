@@ -1,5 +1,6 @@
 package com.icthh.xm.ms.entity.service;
 
+import co.elastic.clients.elasticsearch._types.ElasticsearchException;
 import com.icthh.xm.ms.entity.repository.search.XmEntitySearchRepository;
 import com.icthh.xm.ms.entity.service.search.ElasticsearchTemplateWrapper;
 import static org.apache.commons.lang3.ObjectUtils.defaultIfNull;
@@ -302,16 +303,15 @@ public class ElasticsearchIndexService {
         String idxKey = ElasticsearchTemplateWrapper.composeIndexName(tenantKey.getValue());
 
         elasticsearchTemplateWrapper.deleteIndex(idxKey);
-        // TODO-IMPL: ResourceAlreadyExistsException handle exception
-//        try {
-//            if (indexConfiguration.isConfigExists()) {
-//                elasticsearchTemplateWrapper.createIndex(idxKey, indexConfiguration.getConfiguration());
-//            } else {
-//                elasticsearchTemplateWrapper.createIndex(idxKey);
-//            }
-//        } catch (ResourceAlreadyExistsException e) {
-//            log.info("Do nothing. Index was already concurrently recreated by some other service");
-//        }
+        try {
+            if (indexConfiguration.isConfigExists()) {
+                elasticsearchTemplateWrapper.createIndex(idxKey, indexConfiguration.getConfiguration());
+            } else {
+                elasticsearchTemplateWrapper.createIndex(idxKey);
+            }
+        } catch (ElasticsearchException e) {
+            log.info("Do nothing. Index was already concurrently recreated by some other service");
+        }
 
         if (mappingConfiguration.isMappingExists()) {
             elasticsearchTemplateWrapper.putMapping(clazz, mappingConfiguration.getMapping());

@@ -56,6 +56,7 @@ import javax.persistence.criteria.CriteriaUpdate;
 import javax.persistence.criteria.Root;
 import javax.validation.ConstraintViolationException;
 
+import com.icthh.xm.ms.entity.service.search.ElasticsearchException;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
@@ -529,12 +530,12 @@ public class XmEntityServiceIntTest extends AbstractSpringBootTest {
         entity = xmEntityService.save(entity);
 
         Map<String, String> elasticFailedDocument = null;
-//    TODO-IMPL
-//        try {
-//            elasticsearchIndexService.reindexAll();
-//        } catch (ElasticsearchException e) {
-//            elasticFailedDocument = e.getFailedDocuments();
-//        }
+
+        try {
+            elasticsearchIndexService.reindexAll();
+        } catch (ElasticsearchException e) {
+            elasticFailedDocument = e.getFailedDocuments();
+        }
 
         assertNotNull(elasticFailedDocument);
         assertEquals(entity.getId().toString(), elasticFailedDocument.entrySet().iterator().next().getKey());

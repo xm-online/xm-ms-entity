@@ -6,11 +6,33 @@ import co.elastic.clients.json.JsonData;
 import co.elastic.clients.json.JsonpDeserializer;
 import co.elastic.clients.json.ObjectBuilderDeserializer;
 import co.elastic.clients.json.ObjectDeserializer;
+import co.elastic.clients.json.jackson.JacksonJsonpMapper;
+import co.elastic.clients.json.jackson.JacksonJsonpParser;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.SneakyThrows;
 
-public class PutMappingRequestDeserializer {
+import java.util.Map;
 
-    public static JsonpDeserializer<PutMappingRequest> getBuilderDeserializer(PutMappingRequest.Builder builder) {
-        return ObjectBuilderDeserializer.lazy(() -> builder, PutMappingRequestDeserializer::setupPutMappingRequestDeserializer);
+public class RequestDeserializer {
+
+    public static JsonpDeserializer<PutMappingRequest> getPutMappingBuilderDeserializer(PutMappingRequest.Builder builder) {
+        return ObjectBuilderDeserializer.lazy(() -> builder, RequestDeserializer::setupPutMappingRequestDeserializer);
+    }
+
+    @SneakyThrows
+    public static <T> T deserializeSettings(JsonpDeserializer<T> mappingRequestDeserializer, Object settings, ObjectMapper objectMapper) {
+        String json = "";
+        if (settings instanceof String) {
+            json = (String) settings;
+        } else if (settings instanceof Map) {
+            json = objectMapper.writeValueAsString(settings);
+        }
+
+        JacksonJsonpMapper jacksonJsonpMapper = new JacksonJsonpMapper(objectMapper);
+        com.fasterxml.jackson.core.JsonParser parser = objectMapper.getFactory().createParser(json);
+        JacksonJsonpParser jacksonJsonpParser = new JacksonJsonpParser(parser, jacksonJsonpMapper);
+
+        return mappingRequestDeserializer.deserialize(jacksonJsonpParser, jacksonJsonpMapper);
     }
 
     private static void setupPutMappingRequestDeserializer(ObjectDeserializer<PutMappingRequest.Builder> op) {

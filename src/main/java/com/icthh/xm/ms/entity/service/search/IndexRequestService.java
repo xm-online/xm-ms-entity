@@ -2,15 +2,17 @@ package com.icthh.xm.ms.entity.service.search;
 
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch.core.BulkRequest;
+import co.elastic.clients.elasticsearch.core.BulkResponse;
 import co.elastic.clients.elasticsearch.core.IndexRequest;
 import co.elastic.clients.elasticsearch.core.bulk.BulkOperation;
+import co.elastic.clients.elasticsearch.core.bulk.BulkResponseItem;
 import co.elastic.clients.elasticsearch.core.bulk.IndexOperation;
 import co.elastic.clients.elasticsearch.indices.CreateIndexRequest;
 import co.elastic.clients.elasticsearch.indices.IndexSettings;
 import co.elastic.clients.elasticsearch.indices.RefreshRequest;
 import co.elastic.clients.json.JsonData;
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.icthh.xm.ms.entity.service.search.deserializer.RequestDeserializer;
 import com.icthh.xm.ms.entity.service.search.query.dto.IndexQuery;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
@@ -20,6 +22,7 @@ import org.apache.commons.lang.StringUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -45,10 +48,8 @@ public class IndexRequestService {
             .index(indexName);
 
         if (settings != null) {
-            if (settings instanceof String || settings instanceof Map) {
-                Map<String, Object> settingsMap = objectMapper.convertValue(settings, new TypeReference<Map<String, Object>>() {});
-                createIndexRequestBuilder.settings(IndexSettings.of(b -> b.otherSettings(createOtherSettingsMap(settingsMap))));
-            }
+            IndexSettings indexSettings = RequestDeserializer.deserializeSettings(IndexSettings._DESERIALIZER, settings, objectMapper);
+            createIndexRequestBuilder.settings(indexSettings);
         }
 
         CreateIndexRequest request = createIndexRequestBuilder.build();
@@ -83,7 +84,8 @@ public class IndexRequestService {
             bulkRequestBuilder.operations(BulkOperation.of(op -> op.index(indexOperation)));
         }
 
-        elasticsearchClient.bulk(bulkRequestBuilder.build());
+        BulkResponse bulkResponse = elasticsearchClient.bulk(bulkRequestBuilder.build());
+        checkForBulkUpdateFailure(bulkResponse);
     }
 
     @SneakyThrows
@@ -107,6 +109,13 @@ public class IndexRequestService {
         return elasticsearchClient.indices()
             .delete(request -> request.index(indexes))
             .acknowledged();
+    }
+
+    @SneakyThrows
+    public boolean indexExists(String indexName) {
+        return elasticsearchClient.indices()
+            .exists(request -> request.index(indexName))
+            .value();
     }
 
     private IndexRequest<Object> buildIndexRequest(IndexQuery indexQuery) {
@@ -137,10 +146,18 @@ public class IndexRequestService {
         return JsonData.of(value);
     }
 
-    @SneakyThrows
-    public boolean indexExists(String indexName) {
-        return elasticsearchClient.indices()
-            .exists(request -> request.index(indexName))
-            .value();
+    private void checkForBulkUpdateFailure(BulkResponse bulkResponse) {
+        if (bulkResponse.errors()) {
+            Map<String, String> failedDocuments = new HashMap<>();
+            for (BulkResponseItem item : bulkResponse.items()) {
+                if (item.error() != null) {
+                    failedDocuments.put(item.id(), item.error().reason());
+                }
+            }
+            throw new ElasticsearchException(
+                "Bulk indexing has failures. Use ElasticsearchException.getFailedDocuments() for detailed messages ["
+                    + failedDocuments + "]",
+                failedDocuments);
+        }
     }
 }
