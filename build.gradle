@@ -290,11 +290,12 @@ dependencies {
     liquibaseRuntime "org.liquibase:liquibase-core"
     liquibaseRuntime "org.liquibase.ext:liquibase-hibernate6:${liquibaseHibernate6Version}"
 //    liquibaseRuntime sourceSets.main.compileClasspath
+    implementation "org.springframework:spring-aop"
     implementation "org.springframework.boot:spring-boot-loader-tools"
     implementation "org.springframework.boot:spring-boot-starter-mail"
     implementation "org.springframework.boot:spring-boot-starter-logging"
     implementation "org.springframework.boot:spring-boot-starter-actuator"
-    implementation "org.springframework.boot:spring-boot-starter-aop"
+//    implementation "org.springframework.boot:spring-boot-starter-aop"
     implementation "org.springframework.boot:spring-boot-starter-data-jpa"
     implementation "co.elastic.clients:elasticsearch-java:${elastic_client_version}"
     implementation "org.apache.lucene:lucene-core:${apache_lucene_version}"
@@ -343,7 +344,8 @@ dependencies {
     annotationProcessor "org.hibernate:hibernate-jpamodelgen:${hibernateVersion}"
     annotationProcessor "org.mapstruct:mapstruct-processor:${mapstructVersion}"
     annotationProcessor "org.glassfish.jaxb:jaxb-runtime:${jaxb_runtime_version}"
-    annotationProcessor("org.springframework.boot:spring-boot-configuration-processor:${springBootVersion}") {
+    annotationProcessor("org.springframework.boot:spring-boot-configuration-processor") {
+//    annotationProcessor("org.springframework.boot:spring-boot-configuration-processor:${springBootVersion}") {
         exclude group: "com.vaadin.external.google", module: "android-json"
     }
     // XM custom dependencies
@@ -368,7 +370,7 @@ dependencies {
     implementation "com.icthh.xm.commons:xm-commons-client-feign:${xm_commons_version}"
     implementation "com.icthh.xm.commons:xm-commons-lep:${xm_commons_version}"
     implementation "com.icthh.xm.commons:xm-commons-lep-groovy:${xm_commons_version}"
-    implementation "com.icthh.xm.commons:xm-commons-lep-js:${xm_commons_version}"
+    implementation "com.icthh.xm.commons:xm-commons-lep-js:${xm_commons_version}" // optional
     implementation "com.icthh.xm.commons:xm-commons-tenant-endpoint:${xm_commons_version}"
     implementation "com.icthh.xm.commons:xm-commons-i18n:${xm_commons_version}"
     implementation "com.icthh.xm.commons:xm-commons-timeline:${xm_commons_version}"

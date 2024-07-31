@@ -39,8 +39,6 @@ public class EventService extends TransactionPropagationService<EventService> {
     private final PermittedRepository permittedRepository;
     private final XmEntityRepository xmEntityRepository;
     private final CalendarService calendarService;
-//    @Setter(onMethod_ = {@Autowired})
-//    private EventService self;
 
     /**
      * Save an event.
