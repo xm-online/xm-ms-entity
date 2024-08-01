@@ -387,9 +387,7 @@ dependencies {
     implementation "com.icthh.xm.commons:xm-commons-lep-annotation-processor:${xm_commons_version}"
     implementation "com.icthh.xm.commons:xm-commons-search:${xm_commons_version}"
 
-    //FIXME VK: should not be in master for testing only
-    //TODO move all test in separate profile
-    implementation "com.icthh.xm.commons:xm-ee-commons-search-wrapper:1.0.1"
+
 
     annotationProcessor "com.icthh.xm.commons:xm-commons-lep-annotation-processor:${xm_commons_version}"
 
