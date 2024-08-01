@@ -2,14 +2,16 @@ package com.icthh.xm.ms.entity.config;
 
 import com.icthh.xm.commons.web.spring.TenantInterceptor;
 import com.icthh.xm.commons.web.spring.XmLoggingInterceptor;
-import com.icthh.xm.commons.web.spring.config.WebMvcConfig;
-import org.springframework.beans.factory.annotation.Value;
+import com.icthh.xm.commons.web.spring.config.XmMsWebConfiguration;
+import com.icthh.xm.commons.web.spring.config.XmWebMvcConfigurerAdapter;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.AbstractHttpMessageConverter;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
-import org.springframework.web.servlet.AsyncHandlerInterceptor;
+import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
+import org.springframework.web.servlet.config.annotation.PathMatchConfigurer;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -18,26 +20,36 @@ import java.util.Collections;
 import java.util.List;
 
 @Configuration
-public class WebMvcConfiguration extends WebMvcConfig {
+@Import({
+    XmMsWebConfiguration.class
+})
+public class WebMvcConfiguration extends XmWebMvcConfigurerAdapter {
 
     private static final Collection<String> JSON_FILTER_APPLIED_URI =
         Collections.singletonList("/api/xm-entities/*/links/targets");
 
     private final ApplicationProperties applicationProperties;
 
-    public WebMvcConfiguration(@Value("${application.tenant-ignored-path-list}")
-                               List<String> tenantIgnoredPathList,
-                               TenantInterceptor tenantInterceptor,
+    public WebMvcConfiguration(TenantInterceptor tenantInterceptor,
                                XmLoggingInterceptor xmLoggingInterceptor,
-                               List<AsyncHandlerInterceptor> interceptors,
                                ApplicationProperties applicationProperties
     ) {
-        super(tenantIgnoredPathList, tenantInterceptor, xmLoggingInterceptor, interceptors);
+        super(tenantInterceptor, xmLoggingInterceptor);
         this.applicationProperties = applicationProperties;
     }
 
     public static String[] getJsonFilterAllowedURIs() {
         return JSON_FILTER_APPLIED_URI.toArray(new String[]{});
+    }
+
+    @Override
+    protected void xmAddInterceptors(InterceptorRegistry registry) {
+        // no custom configuration
+    }
+
+    @Override
+    protected void xmConfigurePathMatch(PathMatchConfigurer configurer) {
+        // no custom configuration
     }
 
     @Override
