@@ -1,11 +1,11 @@
 package com.icthh.xm.ms.entity.service.tenant.provisioner;
 
 import com.icthh.xm.commons.gen.model.Tenant;
+import com.icthh.xm.commons.search.ElasticsearchOperations;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
 import com.icthh.xm.commons.tenantendpoint.provisioner.TenantProvisioner;
 import com.icthh.xm.ms.entity.domain.XmEntity;
-import com.icthh.xm.ms.entity.service.search.ElasticsearchTemplateWrapper;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -15,7 +15,7 @@ import org.springframework.stereotype.Service;
 @AllArgsConstructor
 public class TenantElasticsearchProvisioner implements TenantProvisioner {
 
-    private final ElasticsearchTemplateWrapper elasticsearchTemplateWrapper;
+    private final ElasticsearchOperations elasticsearchOperations;
     private final TenantContextHolder tenantContextHolder;
 
     /**
@@ -45,21 +45,19 @@ public class TenantElasticsearchProvisioner implements TenantProvisioner {
 
     private void executeInTenantContext(String tenantKey, Runnable runnable) {
         tenantContextHolder.getPrivilegedContext().execute(TenantContextUtils.buildTenant(tenantKey), runnable);
-
     }
 
     private void createTenantDocuments(Tenant tenant) {
-        String idxKey = ElasticsearchTemplateWrapper.composeIndexName(tenant.getTenantKey());
-        elasticsearchTemplateWrapper.createIndex(idxKey);
-        elasticsearchTemplateWrapper.putMapping(XmEntity.class);
+        String idxKey = elasticsearchOperations.composeIndexName(tenant.getTenantKey());
+        elasticsearchOperations.createIndex(idxKey);
+        elasticsearchOperations.putMapping(XmEntity.class);
         log.info("created elasticsearch index for class: {}", XmEntity.class);
     }
 
     private void deleteTenantDocuments(String tenantKey) {
-        String idxKey = ElasticsearchTemplateWrapper.composeIndexName(tenantKey);
-        elasticsearchTemplateWrapper.deleteIndex(idxKey);
+        String idxKey = elasticsearchOperations.composeIndexName(tenantKey);
+        elasticsearchOperations.deleteIndex(idxKey);
     }
-
 }
 
 

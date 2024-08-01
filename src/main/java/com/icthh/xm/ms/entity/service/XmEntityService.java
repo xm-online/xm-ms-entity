@@ -2,6 +2,7 @@ package com.icthh.xm.ms.entity.service;
 
 import com.icthh.xm.commons.logging.LoggingAspectConfig;
 import com.icthh.xm.commons.permission.access.repository.ResourceRepository;
+import com.icthh.xm.commons.search.dto.SearchDto;
 import com.icthh.xm.ms.entity.domain.Link;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.domain.ext.IdOrKey;
@@ -10,7 +11,6 @@ import com.icthh.xm.ms.entity.projection.XmEntityIdKeyTypeKey;
 import com.icthh.xm.ms.entity.projection.XmEntityStateProjection;
 import com.icthh.xm.ms.entity.service.dto.LinkSourceDto;
 
-import com.icthh.xm.ms.entity.service.dto.SearchDto;
 import java.net.URI;
 import java.util.List;
 import java.util.Map;

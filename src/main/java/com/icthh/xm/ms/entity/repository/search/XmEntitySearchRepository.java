@@ -1,8 +1,8 @@
 package com.icthh.xm.ms.entity.repository.search;
 
+import com.icthh.xm.commons.search.builder.QueryBuilder;
+import com.icthh.xm.commons.search.query.SearchQuery;
 import com.icthh.xm.ms.entity.domain.XmEntity;
-import com.icthh.xm.ms.entity.service.search.builder.QueryBuilder;
-import com.icthh.xm.ms.entity.service.search.query.SearchQuery;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -11,64 +11,47 @@ import java.util.Optional;
 
 /**
  * Spring Data Elasticsearch repository for the XmEntity entity.
- *
  */
 public interface XmEntitySearchRepository {
 
-    public <S extends XmEntity> S index(S entity) ;
+    <S extends XmEntity> S index(S entity);
+
+    Iterable<XmEntity> search(QueryBuilder query);
+
+    Page<XmEntity> search(QueryBuilder query, Pageable pageable);
+
+    Page<XmEntity> search(SearchQuery searchQuery);
 
 
-    public Iterable<XmEntity> search(QueryBuilder query) ;
+    Page<XmEntity> searchSimilar(XmEntity entity, String[] fields, Pageable pageable);
 
+    void refresh();
 
-    public Page<XmEntity> search(QueryBuilder query, Pageable pageable) ;
+    Class<XmEntity> getEntityClass();
 
+    Iterable<XmEntity> findAll(Sort sort);
 
-    public Page<XmEntity> search(SearchQuery searchQuery) ;
+    Page<XmEntity> findAll(Pageable pageable);
 
+    <S extends XmEntity> S save(S entity);
 
-    public Page<XmEntity> searchSimilar(XmEntity entity, String[] fields, Pageable pageable) ;
+    <S extends XmEntity> Iterable<S> saveAll(Iterable<S> entities);
 
+    Optional<XmEntity> findById(Long aLong);
 
-    public void refresh() ;
+    boolean existsById(Long aLong);
 
+    Iterable<XmEntity> findAll();
 
-    public Class<XmEntity> getEntityClass() ;
+    Iterable<XmEntity> findAllById(Iterable<Long> longs);
 
+    long count();
 
-    public Iterable<XmEntity> findAll(Sort sort) ;
+    void deleteById(Long aLong);
 
+    void delete(XmEntity entity);
 
-    public Page<XmEntity> findAll(Pageable pageable) ;
+    void deleteAll(Iterable<? extends XmEntity> entities);
 
-
-    public <S extends XmEntity> S save(S entity) ;
-
-
-    public <S extends XmEntity> Iterable<S> saveAll(Iterable<S> entities);
-
-
-    public Optional<XmEntity> findById(Long aLong) ;
-
-
-    public boolean existsById(Long aLong) ;
-
-
-    public Iterable<XmEntity> findAll() ;
-
-
-    public Iterable<XmEntity> findAllById(Iterable<Long> longs) ;
-
-
-    public long count() ;
-
-
-    public void deleteById(Long aLong) ;
-
-
-    public void delete(XmEntity entity) ;
-
-    public void deleteAll(Iterable<? extends XmEntity> entities);
-
-    public void deleteAll();
+    void deleteAll();
 }

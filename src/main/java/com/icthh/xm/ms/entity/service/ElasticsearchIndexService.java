@@ -1,7 +1,7 @@
 package com.icthh.xm.ms.entity.service;
 
+import com.icthh.xm.commons.search.ElasticsearchOperations;
 import com.icthh.xm.ms.entity.repository.search.XmEntitySearchRepository;
-import com.icthh.xm.ms.entity.service.search.ElasticsearchTemplateWrapper;
 import static org.apache.commons.lang3.ObjectUtils.defaultIfNull;
 
 import com.codahale.metrics.annotation.Timed;
@@ -64,7 +64,7 @@ public class ElasticsearchIndexService {
 
     private final XmEntityRepositoryInternal xmEntityRepositoryInternal;
     private final XmEntitySearchRepository xmEntitySearchRepository;
-    private final ElasticsearchTemplateWrapper elasticsearchTemplateWrapper;
+    private final ElasticsearchOperations elasticsearchOperations;
     private final TenantContextHolder tenantContextHolder;
     private final MappingConfiguration mappingConfiguration;
     private final IndexConfiguration indexConfiguration;
@@ -82,7 +82,7 @@ public class ElasticsearchIndexService {
 
     public ElasticsearchIndexService(XmEntityRepositoryInternal xmEntityRepositoryInternal,
                                      XmEntitySearchRepository xmEntitySearchRepository,
-                                     ElasticsearchTemplateWrapper elasticsearchTemplateWrapper,
+                                     ElasticsearchOperations elasticsearchOperations,
                                      TenantContextHolder tenantContextHolder,
                                      MappingConfiguration mappingConfiguration,
                                      IndexConfiguration indexConfiguration,
@@ -92,7 +92,7 @@ public class ElasticsearchIndexService {
                                      XmEntitySpecService xmEntitySpecService) {
         this.xmEntityRepositoryInternal = xmEntityRepositoryInternal;
         this.xmEntitySearchRepository = xmEntitySearchRepository;
-        this.elasticsearchTemplateWrapper = elasticsearchTemplateWrapper;
+        this.elasticsearchOperations = elasticsearchOperations;
         this.tenantContextHolder = tenantContextHolder;
         this.mappingConfiguration = mappingConfiguration;
         this.indexConfiguration = indexConfiguration;
@@ -299,9 +299,9 @@ public class ElasticsearchIndexService {
         StopWatch stopWatch = StopWatch.createStarted();
 
         TenantKey tenantKey = TenantContextUtils.getRequiredTenantKey(tenantContextHolder);
-        String idxKey = ElasticsearchTemplateWrapper.composeIndexName(tenantKey.getValue());
+        String idxKey = elasticsearchOperations.composeIndexName(tenantKey.getValue());
 
-        elasticsearchTemplateWrapper.deleteIndex(idxKey);
+        elasticsearchOperations.deleteIndex(idxKey);
         // TODO-IMPL: ResourceAlreadyExistsException handle exception
 //        try {
 //            if (indexConfiguration.isConfigExists()) {
@@ -314,9 +314,9 @@ public class ElasticsearchIndexService {
 //        }
 
         if (mappingConfiguration.isMappingExists()) {
-            elasticsearchTemplateWrapper.putMapping(clazz, mappingConfiguration.getMapping());
+            elasticsearchOperations.putMapping(clazz, mappingConfiguration.getMapping());
         } else {
-            elasticsearchTemplateWrapper.putMapping(clazz);
+            elasticsearchOperations.putMapping(clazz);
         }
         log.info("elasticsearch index was recreated for {} in {} ms",
                  XmEntity.class.getSimpleName(), stopWatch.getTime());
