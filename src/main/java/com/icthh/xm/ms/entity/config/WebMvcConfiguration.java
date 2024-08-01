@@ -1,21 +1,15 @@
 package com.icthh.xm.ms.entity.config;
 
-import com.icthh.xm.commons.lep.spring.web.LepInterceptor;
 import com.icthh.xm.commons.web.spring.TenantInterceptor;
-import com.icthh.xm.commons.web.spring.TenantVerifyInterceptor;
 import com.icthh.xm.commons.web.spring.XmLoggingInterceptor;
-import com.icthh.xm.commons.web.spring.config.XmMsWebConfiguration;
-import com.icthh.xm.commons.web.spring.config.XmWebMvcConfigurerAdapter;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.icthh.xm.commons.web.spring.config.WebMvcConfig;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.AbstractHttpMessageConverter;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
-import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
-import org.springframework.web.servlet.config.annotation.PathMatchConfigurer;
+import org.springframework.web.servlet.AsyncHandlerInterceptor;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -24,46 +18,26 @@ import java.util.Collections;
 import java.util.List;
 
 @Configuration
-@Import( {
-    XmMsWebConfiguration.class
-})
-public class WebMvcConfiguration extends XmWebMvcConfigurerAdapter {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(WebMvcConfiguration.class);
+public class WebMvcConfiguration extends WebMvcConfig {
 
     private static final Collection<String> JSON_FILTER_APPLIED_URI =
         Collections.singletonList("/api/xm-entities/*/links/targets");
 
     private final ApplicationProperties applicationProperties;
-    private final LepInterceptor lepInterceptor;
-    private final TenantVerifyInterceptor tenantVerifyInterceptor;
 
-    public WebMvcConfiguration(TenantInterceptor tenantInterceptor,
+    public WebMvcConfiguration(@Value("${application.tenant-ignored-path-list}")
+                               List<String> tenantIgnoredPathList,
+                               TenantInterceptor tenantInterceptor,
                                XmLoggingInterceptor xmLoggingInterceptor,
-                               ApplicationProperties applicationProperties,
-                               LepInterceptor lepInterceptor,
-                               TenantVerifyInterceptor tenantVerifyInterceptor
+                               List<AsyncHandlerInterceptor> interceptors,
+                               ApplicationProperties applicationProperties
     ) {
-        super(tenantInterceptor, xmLoggingInterceptor);
-
+        super(tenantIgnoredPathList, tenantInterceptor, xmLoggingInterceptor, interceptors);
         this.applicationProperties = applicationProperties;
-        this.lepInterceptor = lepInterceptor;
-        this.tenantVerifyInterceptor = tenantVerifyInterceptor;
     }
 
     public static String[] getJsonFilterAllowedURIs() {
         return JSON_FILTER_APPLIED_URI.toArray(new String[]{});
-    }
-
-    @Override
-    protected void xmAddInterceptors(InterceptorRegistry registry) {
-        registerTenantInterceptorWithIgnorePathPattern(registry, tenantVerifyInterceptor);
-        registerTenantInterceptorWithIgnorePathPattern(registry, lepInterceptor);
-    }
-
-    @Override
-    protected void xmConfigurePathMatch(PathMatchConfigurer configurer) {
-
     }
 
     @Override

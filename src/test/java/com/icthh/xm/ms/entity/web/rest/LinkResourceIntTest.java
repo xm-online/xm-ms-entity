@@ -77,9 +77,6 @@ public class LinkResourceIntTest extends AbstractSpringBootTest {
     private static final Instant UPDATED_END_DATE = Instant.now().truncatedTo(ChronoUnit.MILLIS);
 
     @Autowired
-    private LinkResource linkResource;
-
-    @Autowired
     private LinkRepository linkRepository;
 
     @Autowired
@@ -142,12 +139,15 @@ public class LinkResourceIntTest extends AbstractSpringBootTest {
                                       startUpdateDateGenerationStrategy,
                                       xmEntityRepository,
                                       dynamicPermissionCheckService);
+        linkService.setSelf(linkService);
 
-        LinkResource linkResourceMock = new LinkResource(linkService, linkResource);
+        LinkResource linkResourceMock = new LinkResource(linkService);
         this.restLinkMockMvc = MockMvcBuilders.standaloneSetup(linkResourceMock)
             .setCustomArgumentResolvers(pageableArgumentResolver)
             .setControllerAdvice(exceptionTranslator)
             .setMessageConverters(jacksonMessageConverter).build();
+
+        linkResourceMock.setSelf(linkResourceMock);
 
         link = createEntity(em);
 

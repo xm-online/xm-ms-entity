@@ -79,7 +79,7 @@ public class Link implements Serializable {
     @ManyToOne(optional = false)
     @NotNull
     @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id", resolver =
-        XmEntityObjectIdResolver.class, scope = Link.class)
+        XmEntityObjectIdResolver.class)
     @JoinColumn(name = "target_id", nullable = false)
     private XmEntity target;
 

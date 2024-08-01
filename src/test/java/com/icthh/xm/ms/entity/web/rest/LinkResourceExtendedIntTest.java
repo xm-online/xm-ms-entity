@@ -83,9 +83,6 @@ public class LinkResourceExtendedIntTest extends AbstractSpringBootTest {
     private LinkRepository linkRepository;
 
     @Autowired
-    private LinkResource linkResource;
-
-    @Autowired
     private LinkPermittedRepository permittedRepository;
 
     @Autowired
@@ -124,7 +121,7 @@ public class LinkResourceExtendedIntTest extends AbstractSpringBootTest {
             xmEntityRepository,
             dynamicPermissionCheckService);
 
-        LinkResource linkResourceMock = new LinkResource(linkService, linkResource);
+        LinkResource linkResourceMock = new LinkResource(linkService);
         this.restLinkMockMvc = MockMvcBuilders.standaloneSetup(linkResourceMock)
                                               .setCustomArgumentResolvers(pageableArgumentResolver)
                                               .setControllerAdvice(exceptionTranslator)

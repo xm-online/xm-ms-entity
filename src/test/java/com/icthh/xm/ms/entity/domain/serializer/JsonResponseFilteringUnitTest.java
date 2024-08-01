@@ -104,9 +104,6 @@ public class JsonResponseFilteringUnitTest extends AbstractWebMvcTest {
     @Autowired
     private ObjectMapper objectMapper;
 
-    @Autowired
-    private XmSquigglyInterceptor xmSquigglyInterceptor;
-
     @Before
     @SneakyThrows
     public void setup() {
