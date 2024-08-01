@@ -114,7 +114,6 @@ public interface QueryTypeBuilderMapper {
     @Mapping(target = "quoteFieldSuffix", expression = "java(builder.quoteFieldSuffix())")
     @Mapping(target = "query", expression = "java(builder.value())")
     @Mapping(target = "minimumShouldMatch", expression = "java(builder.minimumShouldMatch())")
-    @Mapping(target = "lenient", expression = "java(builder.lenient())")
     @Mapping(target = "fuzzyTranspositions", expression = "java(builder.fuzzyTranspositions())")
     @Mapping(target = "fuzzyPrefixLength", expression = "java(builder.fuzzyPrefixLength())")
     @Mapping(target = "fuzzyMaxExpansions", expression = "java(builder.fuzzyMaxExpansions())")
@@ -124,6 +123,7 @@ public interface QueryTypeBuilderMapper {
     @Mapping(target = "analyzer", ignore = true)
     @Mapping(target = "flags", ignore = true)
     @Mapping(target = "fields", ignore = true)
+    @Mapping(target = "lenient", ignore = true)
     SimpleQueryStringQuery.Builder toSimpleQueryStringQueryBuilder(SimpleQueryStringBuilder builder);
 
     @Mapping(target = "value", expression = "java(builder.value())")

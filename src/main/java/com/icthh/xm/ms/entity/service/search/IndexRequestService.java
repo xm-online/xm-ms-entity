@@ -10,7 +10,6 @@ import co.elastic.clients.elasticsearch.core.bulk.IndexOperation;
 import co.elastic.clients.elasticsearch.indices.CreateIndexRequest;
 import co.elastic.clients.elasticsearch.indices.IndexSettings;
 import co.elastic.clients.elasticsearch.indices.RefreshRequest;
-import co.elastic.clients.json.JsonData;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.icthh.xm.ms.entity.service.search.deserializer.RequestDeserializer;
 import com.icthh.xm.ms.entity.service.search.query.dto.IndexQuery;
@@ -60,7 +59,7 @@ public class IndexRequestService {
 
     @SneakyThrows
     public String index(IndexQuery indexQuery) {
-        IndexRequest<Object> indexRequest = buildIndexRequest(indexQuery);
+        IndexRequest<Object> indexRequest = prepareIndex(indexQuery);
         return elasticsearchClient.index(indexRequest).id();
     }
 
@@ -136,16 +135,6 @@ public class IndexRequestService {
         });
     }
 
-    private Map<String, JsonData> createOtherSettingsMap(Map<String, Object> settingsMap) {
-        return settingsMap.entrySet()
-            .stream()
-            .collect(Collectors.toMap(Map.Entry::getKey, this::toJsonData));
-    }
-
-    private JsonData toJsonData(Object value) {
-        return JsonData.of(value);
-    }
-
     private void checkForBulkUpdateFailure(BulkResponse bulkResponse) {
         if (bulkResponse.errors()) {
             Map<String, String> failedDocuments = new HashMap<>();
@@ -159,5 +148,28 @@ public class IndexRequestService {
                     + failedDocuments + "]",
                 failedDocuments);
         }
+    }
+
+    @SneakyThrows
+    private IndexRequest<Object> prepareIndex(IndexQuery query) {
+        String indexName = query.getIndexName();
+
+        IndexRequest.Builder<Object> indexRequestBuilder = new IndexRequest.Builder<Object>()
+            .index(indexName);
+
+        if (query.getObject() != null) {
+            if (StringUtils.isNotBlank(query.getId())) {
+                indexRequestBuilder.id(query.getId());
+            }
+
+            indexRequestBuilder.document(query.getObject());
+        } else if (query.getSource() != null) {
+            indexRequestBuilder.document(query.getSource());
+        } else {
+            throw new ElasticsearchException(
+                "object or source is null, failed to index the document [id: " + query.getId() + "]");
+        }
+
+        return indexRequestBuilder.build();
     }
 }

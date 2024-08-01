@@ -19,8 +19,7 @@ import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestClientBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-
-import static com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES;
+import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
 
 @Configuration
 public class ElasticsearchConfiguration {
@@ -32,28 +31,18 @@ public class ElasticsearchConfiguration {
     }
 
     @Bean
-    public ElasticsearchClient elasticsearchClient() {
-        return new ElasticsearchClient(elasticsearchTransport());
+    public ElasticsearchClient elasticsearchClient(ElasticsearchTransport elasticsearchTransport) {
+        return new ElasticsearchClient(elasticsearchTransport);
     }
 
     @Bean
-    public ElasticsearchTransport elasticsearchTransport() {
-        return new RestClientTransport(restClient(), jacksonJsonpMapper());
+    public ElasticsearchTransport elasticsearchTransport(JacksonJsonpMapper jacksonJsonpMapper) {
+        return new RestClientTransport(restClient(), jacksonJsonpMapper);
     }
 
     @Bean
-    public JacksonJsonpMapper jacksonJsonpMapper() {
-        ObjectMapper objectMapper = new ObjectMapper();
-
-        objectMapper.registerModule(new JavaTimeModule());
-
-        objectMapper.configure(SerializationFeature.WRITE_DATE_TIMESTAMPS_AS_NANOSECONDS, false);
-        objectMapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, true);
-        objectMapper.configure(DeserializationFeature.READ_DATE_TIMESTAMPS_AS_NANOSECONDS, false);
-
-        objectMapper.configure(FAIL_ON_UNKNOWN_PROPERTIES, false);
-
-        return new JacksonJsonpMapper(objectMapper);
+    public JacksonJsonpMapper jacksonJsonpMapper(Jackson2ObjectMapperBuilder jackson2ObjectMapperBuilder) {
+        return new JacksonJsonpMapper(jackson2ObjectMapperBuilder.build());
     }
 
     @Bean

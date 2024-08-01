@@ -222,6 +222,11 @@ public class ElasticsearchTemplateWrapper implements ElasticsearchOperations {
 
     @Override
     public String index(IndexQuery query) {
+        String indexName = StringUtils.isEmpty(query.getIndexName())
+            ? getIndexName()
+            : query.getIndexName();
+        query.setIndexName(indexName);
+
         return indexRequestService.index(query);
     }
 
