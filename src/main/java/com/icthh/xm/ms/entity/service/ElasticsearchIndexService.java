@@ -1,8 +1,8 @@
 package com.icthh.xm.ms.entity.service;
 
-import co.elastic.clients.elasticsearch._types.ElasticsearchException;
+import com.icthh.xm.commons.search.ElasticsearchException;
+import com.icthh.xm.commons.search.ElasticsearchOperations;
 import com.icthh.xm.ms.entity.repository.search.XmEntitySearchRepository;
-import com.icthh.xm.ms.entity.service.search.ElasticsearchTemplateWrapper;
 import static org.apache.commons.lang3.ObjectUtils.defaultIfNull;
 
 import com.codahale.metrics.annotation.Timed;
@@ -17,6 +17,11 @@ import com.icthh.xm.ms.entity.config.MappingConfiguration;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.domain.spec.TypeSpec;
 import com.icthh.xm.ms.entity.repository.XmEntityRepositoryInternal;
+import jakarta.annotation.Resource;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.PersistenceContext;
+import jakarta.persistence.criteria.CriteriaBuilder;
 import lombok.AccessLevel;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -46,11 +51,7 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import javax.annotation.Resource;
-import javax.persistence.EntityManager;
-import javax.persistence.OneToMany;
-import javax.persistence.PersistenceContext;
-import javax.persistence.criteria.CriteriaBuilder;
+
 
 @Slf4j
 @Service
@@ -65,7 +66,7 @@ public class ElasticsearchIndexService {
 
     private final XmEntityRepositoryInternal xmEntityRepositoryInternal;
     private final XmEntitySearchRepository xmEntitySearchRepository;
-    private final ElasticsearchTemplateWrapper elasticsearchTemplateWrapper;
+    private final ElasticsearchOperations elasticsearchOperations;
     private final TenantContextHolder tenantContextHolder;
     private final MappingConfiguration mappingConfiguration;
     private final IndexConfiguration indexConfiguration;
@@ -83,7 +84,7 @@ public class ElasticsearchIndexService {
 
     public ElasticsearchIndexService(XmEntityRepositoryInternal xmEntityRepositoryInternal,
                                      XmEntitySearchRepository xmEntitySearchRepository,
-                                     ElasticsearchTemplateWrapper elasticsearchTemplateWrapper,
+                                     ElasticsearchOperations elasticsearchOperations,
                                      TenantContextHolder tenantContextHolder,
                                      MappingConfiguration mappingConfiguration,
                                      IndexConfiguration indexConfiguration,
@@ -93,7 +94,7 @@ public class ElasticsearchIndexService {
                                      XmEntitySpecService xmEntitySpecService) {
         this.xmEntityRepositoryInternal = xmEntityRepositoryInternal;
         this.xmEntitySearchRepository = xmEntitySearchRepository;
-        this.elasticsearchTemplateWrapper = elasticsearchTemplateWrapper;
+        this.elasticsearchOperations = elasticsearchOperations;
         this.tenantContextHolder = tenantContextHolder;
         this.mappingConfiguration = mappingConfiguration;
         this.indexConfiguration = indexConfiguration;
@@ -300,23 +301,23 @@ public class ElasticsearchIndexService {
         StopWatch stopWatch = StopWatch.createStarted();
 
         TenantKey tenantKey = TenantContextUtils.getRequiredTenantKey(tenantContextHolder);
-        String idxKey = ElasticsearchTemplateWrapper.composeIndexName(tenantKey.getValue());
+        String idxKey = elasticsearchOperations.composeIndexName(tenantKey.getValue());
 
-        elasticsearchTemplateWrapper.deleteIndex(idxKey);
+        elasticsearchOperations.deleteIndex(idxKey);
         try {
             if (indexConfiguration.isConfigExists()) {
-                elasticsearchTemplateWrapper.createIndex(idxKey, indexConfiguration.getConfiguration());
+                elasticsearchOperations.createIndex(idxKey, indexConfiguration.getConfiguration());
             } else {
-                elasticsearchTemplateWrapper.createIndex(idxKey);
+                elasticsearchOperations.createIndex(idxKey);
             }
         } catch (ElasticsearchException e) {
             log.info("Do nothing. Index was already concurrently recreated by some other service");
         }
 
         if (mappingConfiguration.isMappingExists()) {
-            elasticsearchTemplateWrapper.putMapping(clazz, mappingConfiguration.getMapping());
+            elasticsearchOperations.putMapping(clazz, mappingConfiguration.getMapping());
         } else {
-            elasticsearchTemplateWrapper.putMapping(clazz);
+            elasticsearchOperations.putMapping(clazz);
         }
         log.info("elasticsearch index was recreated for {} in {} ms",
                  XmEntity.class.getSimpleName(), stopWatch.getTime());
