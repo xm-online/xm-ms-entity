@@ -48,6 +48,7 @@ public class QueryForListSearchMapperUnitTest extends AbstractUnitTest {
             .withQuery(QueryBuilders.queryStringQuery(query))
             .withPageable(PageRequest.of(0, 10))
             .build();
+
         String actualQuery = searchRequestQueryBuilder.buildQuery(nativeSearchQuery.getQuery()).queryString().query();
 
         assertEquals(query, actualQuery);

@@ -20,7 +20,7 @@ public class IndexReinitializer {
     @PostConstruct
     public void resetIndex() {
         long t = currentTimeMillis();
-        elasticsearchTemplateWrapper.deleteIndex("_all");
+        elasticsearchTemplateWrapper.deleteAllIndexes();
         t = currentTimeMillis() - t;
         logger.info("All elasticsearch indexes reset in {} ms", t);
     }
