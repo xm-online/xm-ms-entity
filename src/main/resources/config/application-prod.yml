@@ -14,9 +14,6 @@
 # ===================================================================
 
 spring:
-    profiles:
-        active: prod
-        include: swagger
     devtools:
         restart:
             enabled: false
@@ -126,10 +123,6 @@ jhipster:
     mail: # specific JHipster mail property, for standard properties see MailProperties
         from: <tenantname>@xm-online.com
         base-url: http://my-server-url-to-change # Modify according to your server's URL
-    metrics:
-      logs: # Reports metrics in the logs
-        enabled: false
-        report-frequency: 60 # in seconds
     logging:
         logstash: # Forward logs to logstash over a socket, used by LoggingConfiguration
             enabled: false

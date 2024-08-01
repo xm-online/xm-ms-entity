@@ -1,7 +1,7 @@
 package com.icthh.xm.ms.entity.repository.search;
 
-import com.icthh.xm.ms.entity.service.dto.SearchDto;
-import com.icthh.xm.ms.entity.service.search.ElasticsearchTemplateWrapper;
+import com.icthh.xm.commons.search.ElasticsearchOperations;
+import com.icthh.xm.commons.search.dto.SearchDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -15,7 +15,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class PermittedSearchRepository {
 
-    private final ElasticsearchTemplateWrapper elasticsearchTemplateWrapper;
+    private final ElasticsearchOperations elasticsearchOperations;
 
     /**
      * Search permitted entities.
@@ -26,7 +26,7 @@ public class PermittedSearchRepository {
      * @return permitted entities
      */
     public <T> List<T> search(String query, Class<T> entityClass, String privilegeKey) {
-        return elasticsearchTemplateWrapper.search(query, entityClass, privilegeKey);
+        return elasticsearchOperations.search(query, entityClass, privilegeKey);
     }
 
     /**
@@ -62,15 +62,15 @@ public class PermittedSearchRepository {
                               Pageable pageable,
                               Class<T> entityClass,
                               String privilegeKey) {
-        return elasticsearchTemplateWrapper.search(scrollTimeInMillis, query, pageable, entityClass, privilegeKey);
+        return elasticsearchOperations.search(scrollTimeInMillis, query, pageable, entityClass, privilegeKey);
     }
 
     // do not renamed! called from lep for not simple string query
-    public ElasticsearchTemplateWrapper getElasticsearchTemplate() {
-        return elasticsearchTemplateWrapper;
+    public ElasticsearchOperations getElasticsearchTemplate() {
+        return elasticsearchOperations;
     }
 
     public <T> Page<T> searchForPage(SearchDto searchDto, String privilegeKey) {
-        return elasticsearchTemplateWrapper.searchForPage(searchDto, privilegeKey);
+        return elasticsearchOperations.searchForPage(searchDto, privilegeKey);
     }
 }

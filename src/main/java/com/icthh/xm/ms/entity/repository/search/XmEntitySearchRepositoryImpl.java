@@ -1,18 +1,16 @@
 package com.icthh.xm.ms.entity.repository.search;
 
+import com.icthh.xm.commons.search.ElasticsearchOperations;
+import com.icthh.xm.commons.search.builder.NativeSearchQueryBuilder;
+import com.icthh.xm.commons.search.builder.QueryBuilder;
+import com.icthh.xm.commons.search.query.SearchQuery;
+import com.icthh.xm.commons.search.query.dto.DeleteQuery;
+import com.icthh.xm.commons.search.query.dto.GetQuery;
+import com.icthh.xm.commons.search.query.dto.IndexQuery;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.ms.entity.domain.XmEntity;
-import com.icthh.xm.ms.entity.service.search.ElasticsearchTemplateWrapper;
-import com.icthh.xm.ms.entity.service.search.builder.NativeSearchQueryBuilder;
-import com.icthh.xm.ms.entity.service.search.builder.QueryBuilder;
-import com.icthh.xm.ms.entity.service.search.builder.QueryBuilders;
-import com.icthh.xm.ms.entity.service.search.query.SearchQuery;
-import com.icthh.xm.ms.entity.service.search.query.dto.DeleteQuery;
-import com.icthh.xm.ms.entity.service.search.query.dto.GetQuery;
-import com.icthh.xm.ms.entity.service.search.query.dto.IndexQuery;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.poi.ss.formula.functions.T;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -26,7 +24,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-import static com.icthh.xm.ms.entity.service.search.builder.QueryBuilders.matchAllQuery;
+import static com.icthh.xm.commons.search.builder.QueryBuilders.matchAllQuery;
 
 @Slf4j
 @Service
@@ -34,7 +32,7 @@ import static com.icthh.xm.ms.entity.service.search.builder.QueryBuilders.matchA
 public class XmEntitySearchRepositoryImpl implements XmEntitySearchRepository {
 
     private final TenantContextHolder tenantContextHolder;
-    private final ElasticsearchTemplateWrapper elasticsearchTemplateWrapper;
+    private final ElasticsearchOperations elasticsearchOperations;
 
     @Override
     public <S extends XmEntity> S index(S entity) {
@@ -63,8 +61,8 @@ public class XmEntitySearchRepositoryImpl implements XmEntitySearchRepository {
 
     @Override
     public void refresh() {
-        String indexName = ElasticsearchTemplateWrapper.composeIndexName(tenantContextHolder.getTenantKey());
-        elasticsearchTemplateWrapper.refresh(indexName);
+        String indexName = elasticsearchOperations.composeIndexName(tenantContextHolder.getTenantKey());
+        elasticsearchOperations.refresh(indexName);
     }
 
     @Override
@@ -81,38 +79,38 @@ public class XmEntitySearchRepositoryImpl implements XmEntitySearchRepository {
         SearchQuery query = new NativeSearchQueryBuilder()
             .withQuery(matchAllQuery())
             .withPageable(PageRequest.of(0, itemCount, sort)).build();
-        return elasticsearchTemplateWrapper.queryForPage(query, getEntityClass());
+        return elasticsearchOperations.queryForPage(query, getEntityClass());
     }
 
     @Override
     public Page<XmEntity> findAll(Pageable pageable) {
         SearchQuery query = new NativeSearchQueryBuilder()
             .withQuery(matchAllQuery())
-            .withIndices(elasticsearchTemplateWrapper.getIndexName())
+            .withIndices(elasticsearchOperations.getIndexName())
 //            .withTypes(ElasticsearchTemplateWrapper.INDEX_QUERY_TYPE) TODO-IMPL: Removed in 8.14v
             .withPageable(pageable)
             .build();
-        return elasticsearchTemplateWrapper.queryForPage(query, getEntityClass());
+        return elasticsearchOperations.queryForPage(query, getEntityClass());
     }
 
     @Override
     public <S extends XmEntity> S save(S entity) {
-        String indexName = ElasticsearchTemplateWrapper.composeIndexName(tenantContextHolder.getTenantKey());
-        elasticsearchTemplateWrapper.index(createIndexQuery(indexName, entity));
+        String indexName = elasticsearchOperations.composeIndexName(tenantContextHolder.getTenantKey());
+        elasticsearchOperations.index(createIndexQuery(indexName, entity));
         return entity;
     }
 
     @Override
     public <S extends XmEntity> Iterable<S> saveAll(Iterable<S> entities) {
-        String indexName = ElasticsearchTemplateWrapper.composeIndexName(tenantContextHolder.getTenantKey());
+        String indexName = elasticsearchOperations.composeIndexName(tenantContextHolder.getTenantKey());
 
         List<IndexQuery> queries = new ArrayList<>();
         for (S s : entities) {
             queries.add(createIndexQuery(indexName, s));
         }
 
-        elasticsearchTemplateWrapper.bulkIndex(queries);
-        elasticsearchTemplateWrapper.refresh(indexName);
+        elasticsearchOperations.bulkIndex(queries);
+        elasticsearchOperations.refresh(indexName);
         return entities;
     }
 
@@ -120,7 +118,7 @@ public class XmEntitySearchRepositoryImpl implements XmEntitySearchRepository {
         IndexQuery query = new IndexQuery();
         query.setObject(entity);
         query.setId(String.valueOf(entity.getId()));
-        query.setType(ElasticsearchTemplateWrapper.INDEX_QUERY_TYPE);
+        query.setType(ElasticsearchOperations.INDEX_QUERY_TYPE);
         query.setIndexName(indexName);
 //        query.setVersion(extractVersionFromBean(entity)); // TODO
 //        query.setParentId(extractParentIdFromBean(entity)); // TODO
@@ -132,7 +130,7 @@ public class XmEntitySearchRepositoryImpl implements XmEntitySearchRepository {
     public Optional<XmEntity> findById(Long id) {
         GetQuery query = new GetQuery();
         query.setId(String.valueOf(id));
-        return Optional.ofNullable(elasticsearchTemplateWrapper.queryForObject(query, getEntityClass()));
+        return Optional.ofNullable(elasticsearchOperations.queryForObject(query, getEntityClass()));
     }
 
     @Override
@@ -158,16 +156,17 @@ public class XmEntitySearchRepositoryImpl implements XmEntitySearchRepository {
     public long count() {
         SearchQuery query = new NativeSearchQueryBuilder()
             .withQuery(matchAllQuery())
-            .withIndices(elasticsearchTemplateWrapper.getIndexName())
+            .withIndices(elasticsearchOperations.getIndexName())
 //            .withTypes(ElasticsearchTemplateWrapper.INDEX_QUERY_TYPE)
             .build();
-        return elasticsearchTemplateWrapper.count(query, getEntityClass());
+        return elasticsearchOperations.count(query, getEntityClass());
     }
 
     @Override
     public void deleteById(Long id) {
         Assert.notNull(id, "Cannot delete entity with id 'null'.");
-        elasticsearchTemplateWrapper.delete(elasticsearchTemplateWrapper.getIndexName(), ElasticsearchTemplateWrapper.INDEX_QUERY_TYPE,
+        elasticsearchOperations.delete(elasticsearchOperations.getIndexName(),
+            ElasticsearchOperations.INDEX_QUERY_TYPE,
             String.valueOf(id));
         refresh();
     }
@@ -192,9 +191,9 @@ public class XmEntitySearchRepositoryImpl implements XmEntitySearchRepository {
         DeleteQuery deleteQuery = new DeleteQuery();
 
         deleteQuery.setQuery(matchAllQuery());
-        deleteQuery.setIndex(elasticsearchTemplateWrapper.getIndexName());
-        deleteQuery.setType(ElasticsearchTemplateWrapper.INDEX_QUERY_TYPE);
-        elasticsearchTemplateWrapper.delete(deleteQuery, getEntityClass());
+        deleteQuery.setIndex(elasticsearchOperations.getIndexName());
+        deleteQuery.setType(ElasticsearchOperations.INDEX_QUERY_TYPE);
+        elasticsearchOperations.delete(deleteQuery, getEntityClass());
         refresh();
     }
 }

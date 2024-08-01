@@ -1,7 +1,7 @@
 package com.icthh.xm.ms.entity.repository.search;
 
+import com.icthh.xm.commons.search.ElasticsearchOperations;
 import com.icthh.xm.ms.entity.domain.XmEntity;
-import com.icthh.xm.ms.entity.service.search.ElasticsearchTemplateWrapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -13,11 +13,11 @@ import java.util.Set;
 @Repository
 public class XmEntityPermittedSearchRepository extends PermittedSearchRepository {
 
-    private final ElasticsearchTemplateWrapper elasticsearchTemplateWrapper;
+    private final ElasticsearchOperations elasticsearchOperations;
 
-    public XmEntityPermittedSearchRepository(ElasticsearchTemplateWrapper elasticsearchTemplateWrapper) {
-        super(elasticsearchTemplateWrapper);
-        this.elasticsearchTemplateWrapper = elasticsearchTemplateWrapper;
+    public XmEntityPermittedSearchRepository(ElasticsearchOperations elasticsearchOperations) {
+        super(elasticsearchOperations);
+        this.elasticsearchOperations = elasticsearchOperations;
     }
 
     /**
@@ -33,12 +33,12 @@ public class XmEntityPermittedSearchRepository extends PermittedSearchRepository
                                                   String typeKey,
                                                   Pageable pageable,
                                                   String privilegeKey) {
-        return elasticsearchTemplateWrapper.searchByQueryAndTypeKey(query, typeKey, pageable, privilegeKey);
+        return elasticsearchOperations.searchByQueryAndTypeKey(query, typeKey, pageable, XmEntity.class, privilegeKey);
     }
 
     public Page<XmEntity> searchWithIdNotIn(String query, Set<Long> ids,
                                             String targetEntityTypeKey,
                                             Pageable pageable, String privilegeKey) {
-        return elasticsearchTemplateWrapper.searchWithIdNotIn(query, ids, targetEntityTypeKey, pageable, privilegeKey);
+        return elasticsearchOperations.searchWithIdNotIn(query, ids, targetEntityTypeKey, pageable, XmEntity.class, privilegeKey);
     }
 }

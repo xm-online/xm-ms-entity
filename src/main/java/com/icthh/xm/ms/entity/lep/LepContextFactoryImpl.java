@@ -7,6 +7,7 @@ import com.icthh.xm.commons.lep.api.BaseLepContext;
 import com.icthh.xm.commons.lep.api.LepContextFactory;
 import com.icthh.xm.commons.messaging.communication.service.CommunicationService;
 import com.icthh.xm.commons.permission.service.PermissionCheckService;
+import com.icthh.xm.commons.search.ElasticsearchOperations;
 import com.icthh.xm.commons.topic.service.KafkaTemplateService;
 import com.icthh.xm.lep.api.LepMethod;
 import com.icthh.xm.ms.entity.config.RestTemplateConfiguration.PathTimeoutHttpComponentsClientHttpRequestFactory;
@@ -29,7 +30,6 @@ import com.icthh.xm.ms.entity.service.XmTenantLifecycleService;
 import com.icthh.xm.ms.entity.service.mail.MailService;
 import com.icthh.xm.ms.entity.service.metrics.CustomMetricsContext;
 import com.icthh.xm.ms.entity.service.metrics.MetricsAdapter;
-import com.icthh.xm.ms.entity.service.search.ElasticsearchTemplateWrapper;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
@@ -60,7 +60,7 @@ public class LepContextFactoryImpl implements LepContextFactory {
     private final CalendarService calendarService;
     private final TenantLepResource tenantLepResource;
     private final AmazonS3Template s3Template;
-    private final ElasticsearchTemplateWrapper elasticsearchTemplateWrapper;
+    private final ElasticsearchOperations elasticsearchOperations;
     private final PermittedSearchRepository permittedSearchRepository;
     private final ElasticsearchIndexService elasticsearchIndexService;
     private final SeparateTransactionExecutor transactionExecutor;
@@ -92,7 +92,7 @@ public class LepContextFactoryImpl implements LepContextFactory {
                                  CalendarService calendarService,
                                  TenantLepResource tenantLepResource,
                                  AmazonS3Template s3Template,
-                                 ElasticsearchTemplateWrapper elasticsearchTemplateWrapper,
+                                 ElasticsearchOperations elasticsearchOperations,
                                  PermittedSearchRepository permittedSearchRepository,
                                  ElasticsearchIndexService elasticsearchIndexService,
                                  SeparateTransactionExecutor transactionExecutor,
@@ -122,7 +122,7 @@ public class LepContextFactoryImpl implements LepContextFactory {
         this.calendarService = calendarService;
         this.tenantLepResource = tenantLepResource;
         this.s3Template = s3Template;
-        this.elasticsearchTemplateWrapper = elasticsearchTemplateWrapper;
+        this.elasticsearchOperations = elasticsearchOperations;
         this.permittedSearchRepository = permittedSearchRepository;
         this.elasticsearchIndexService = elasticsearchIndexService;
         this.transactionExecutor = transactionExecutor;
@@ -171,7 +171,7 @@ public class LepContextFactoryImpl implements LepContextFactory {
         lepContext.templates.plainRest = plainRestTemplate;
         lepContext.templates.requestFactory = requestFactory;
         lepContext.templates.s3 = s3Template;
-        lepContext.templates.elastic = elasticsearchTemplateWrapper;
+        lepContext.templates.elastic = elasticsearchOperations;
         lepContext.templates.kafka = kafkaTemplateService;
 
         return lepContext;
