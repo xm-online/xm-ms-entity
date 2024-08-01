@@ -6,19 +6,22 @@ import com.icthh.xm.commons.topic.service.DynamicConsumerConfiguration;
 import com.icthh.xm.commons.topic.service.DynamicConsumerConfigurationService;
 import com.icthh.xm.commons.topic.service.TopicConfigurationService;
 import com.icthh.xm.commons.topic.service.TopicManagerService;
-import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Lazy;
 
 import java.util.ArrayList;
 import java.util.List;
 
 @Configuration
-@RequiredArgsConstructor
 public class TopicManagerConfiguration {
 
     private final LepMessageHandler messageHandler;
+
+    public TopicManagerConfiguration(@Lazy LepMessageHandler messageHandler) {
+        this.messageHandler = messageHandler;
+    }
 
     @Bean
     public TopicConfigurationService topicConfigurationService(@Value("${spring.application.name}") String appName,

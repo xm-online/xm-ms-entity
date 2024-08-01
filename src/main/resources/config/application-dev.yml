@@ -20,7 +20,7 @@ logging:
 spring:
     devtools:
         restart:
-            enabled: true
+            enabled: false
         livereload:
             enabled: false # we use Webpack dev server + BrowserSync for livereload
     jackson:
@@ -85,7 +85,7 @@ spring:
                 enabled: true
     liquibase:
         contexts: dev
-        enabled: false
+        enabled: true
 
 server:
     port: 8081

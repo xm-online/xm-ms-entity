@@ -291,7 +291,7 @@ dependencies {
     liquibaseRuntime "org.liquibase.ext:liquibase-hibernate6:${liquibaseHibernate6Version}"
 //    liquibaseRuntime sourceSets.main.compileClasspath
     implementation "org.springframework:spring-aop"
-    implementation "org.springframework.boot:spring-boot-loader-tools"
+//    implementation "org.springframework.boot:spring-boot-loader-tools"
     implementation "org.springframework.boot:spring-boot-starter-mail"
     implementation "org.springframework.boot:spring-boot-starter-logging"
     implementation "org.springframework.boot:spring-boot-starter-actuator"
@@ -396,7 +396,7 @@ dependencies {
     implementation "javax.servlet:javax.servlet-api:${javaxServletVersion}"
     implementation "org.apache.httpcomponents.client5:httpclient5:${httpClient5Version}"
 //    implementation "com.vladmihalcea:hibernate-types-60:${hibernateTypes60}"
-    implementation 'io.hypersistence:hypersistence-utils-hibernate-63:3.8.1'
+    implementation 'io.hypersistence:hypersistence-utils-hibernate-63:3.8.2'
 
     // security fixes
     implementation "io.netty:netty-buffer:${netty_version}"
