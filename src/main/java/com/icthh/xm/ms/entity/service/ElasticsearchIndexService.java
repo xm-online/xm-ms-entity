@@ -1,5 +1,6 @@
 package com.icthh.xm.ms.entity.service;
 
+import com.icthh.xm.commons.search.ElasticsearchException;
 import com.icthh.xm.commons.search.ElasticsearchOperations;
 import com.icthh.xm.ms.entity.repository.search.XmEntitySearchRepository;
 import static org.apache.commons.lang3.ObjectUtils.defaultIfNull;
@@ -16,8 +17,6 @@ import com.icthh.xm.ms.entity.config.MappingConfiguration;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.domain.spec.TypeSpec;
 import com.icthh.xm.ms.entity.repository.XmEntityRepositoryInternal;
-import jakarta.annotation.Nonnull;
-import jakarta.annotation.Nullable;
 import jakarta.annotation.Resource;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.OneToMany;
@@ -50,6 +49,9 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+
 
 @Slf4j
 @Service
@@ -258,7 +260,7 @@ public class ElasticsearchIndexService {
         return reindexXmEntity(spec, null);
     }
 
-    private long reindexXmEntity(@Nullable Specification<XmEntity> spec, Integer startFrom) {
+    private long reindexXmEntity(@Nullable Specification<XmEntity> spec,  Integer startFrom) {
 
         StopWatch stopWatch = StopWatch.createStarted();
         startFrom = defaultIfNull(startFrom, 0);
@@ -302,16 +304,15 @@ public class ElasticsearchIndexService {
         String idxKey = elasticsearchOperations.composeIndexName(tenantKey.getValue());
 
         elasticsearchOperations.deleteIndex(idxKey);
-        // TODO-IMPL: ResourceAlreadyExistsException handle exception
-//        try {
-//            if (indexConfiguration.isConfigExists()) {
-//                elasticsearchTemplateWrapper.createIndex(idxKey, indexConfiguration.getConfiguration());
-//            } else {
-//                elasticsearchTemplateWrapper.createIndex(idxKey);
-//            }
-//        } catch (ResourceAlreadyExistsException e) {
-//            log.info("Do nothing. Index was already concurrently recreated by some other service");
-//        }
+        try {
+            if (indexConfiguration.isConfigExists()) {
+                elasticsearchOperations.createIndex(idxKey, indexConfiguration.getConfiguration());
+            } else {
+                elasticsearchOperations.createIndex(idxKey);
+            }
+        } catch (ElasticsearchException e) {
+            log.info("Do nothing. Index was already concurrently recreated by some other service");
+        }
 
         if (mappingConfiguration.isMappingExists()) {
             elasticsearchOperations.putMapping(clazz, mappingConfiguration.getMapping());
