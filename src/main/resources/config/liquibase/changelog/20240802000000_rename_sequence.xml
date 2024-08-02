@@ -14,13 +14,4 @@
                         oldSequenceName="hibernate_sequence"/>
     </changeSet>
 
-    <changeSet id="1722592901173-1" author="vosiievska">
-        <preConditions>
-            <and>
-                <dbms type="oracle"/>
-                <sequenceExists sequenceName="hibernate_sequence"
-            </and>
-        </preConditions>
-    </changeSet>
-
 </databaseChangeLog>
