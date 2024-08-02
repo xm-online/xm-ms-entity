@@ -9,7 +9,7 @@ spring:
     database: POSTGRESQL
     show-sql: false
     hibernate:
-      ddl-auto: create-drop
+      ddl-auto: none
     properties:
       hibernate.model.generator_name_as_sequence_name: false
       hibernate.id.new_generator_mappings: true
