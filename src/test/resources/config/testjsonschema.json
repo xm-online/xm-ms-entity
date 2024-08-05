@@ -1,0 +1,27 @@
+{
+    "type": "object",
+    "properties": {
+        "key": { "type": "string", "unique": true },
+        "treatAs": { "$ref": "#/definitions/UnitType" },
+        "displayName": {
+            "type": "array",
+            "items": {
+                "$ref": "#/definitions/LocalizedName"
+            }
+        }
+    },
+    "definitions": {
+        "UnitType": {
+            "type": "string",
+            "enum": ["Volume", "Power"]
+        },
+        "LocalizedName": {
+            "type": "object",
+            "properties": {
+                "langCode": { "type": ["string", null] },
+                "shortName": { "type": ["string", "number"] },
+                "fullName": { "type": "string" }
+            }
+        }
+    }
+}
