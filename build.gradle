@@ -5,6 +5,10 @@ buildscript {
         mavenLocal()
         mavenCentral()
         gradlePluginPortal()
+        //VK FIXME: remove before merge
+        maven {
+            url "https://reposilite.jevera.software/releases"
+        }
     }
     dependencies {
     }
@@ -250,6 +254,10 @@ configurations {
 repositories {
     mavenLocal()
     mavenCentral()
+    //VK FIXME: remove before merge
+    maven {
+        url "https://reposilite.jevera.software/releases"
+    }
     //jhipster-needle-gradle-repositories - JHipster will add additional repositories
 }
 
@@ -416,6 +424,9 @@ dependencies {
     implementation 'com.intellij:annotations:12.0'
 
     implementation 'commons-fileupload:commons-fileupload'
+
+    //FIXME VK: should not be in master for testing only
+    implementation "com.icthh.xm.commons:xm-ee-commons-search-wrapper:1.0.1"
 
     // test dependencies
     testCompileOnly "com.icthh.xm.commons:xm-commons-lep-annotation-processor:${xm_commons_version}"
