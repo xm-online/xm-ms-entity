@@ -13,9 +13,16 @@ dependencies {
     testImplementation "org.testcontainers:postgresql"
 }
 
-ext {
-    springProfiles = "prod" + springProfiles
+def springProfiles = "prod"
+if (project.hasProperty("no-liquibase")) {
+    springProfiles += ",no-liquibase"
+}
 
+if (project.hasProperty("swagger")) {
+    springProfiles += ",swagger"
+}
+
+ext {
     if (project.hasProperty("api-docs")) {
         springProfiles += ",api-docs"
     }
