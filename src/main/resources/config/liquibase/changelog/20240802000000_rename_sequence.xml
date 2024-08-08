@@ -6,9 +6,12 @@
         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd
         http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd">
 
-    <changeSet id="20240802000000" author="vosiievska">
-        <preConditions>
-            <sequenceExists sequenceName="hibernate_sequence"/>
+    <changeSet id="20240802000000" author="vosiievska" context="!test">
+        <preConditions onFail="CONTINUE">
+            <and>
+                <sequenceExists sequenceName="hibernate_sequence"/>
+                <not><dbms type="h2"/></not>
+            </and>
         </preConditions>
         <renameSequence newSequenceName="sequencegenerator"
                         oldSequenceName="hibernate_sequence"/>

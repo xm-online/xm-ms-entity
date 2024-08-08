@@ -2,13 +2,13 @@ package com.icthh.xm.ms.entity;
 
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
+import com.icthh.xm.ee.commons.search.ElasticsearchTemplateWrapper;
 import com.icthh.xm.ms.entity.config.LepConfiguration;
 import com.icthh.xm.ms.entity.config.SecurityBeanOverrideConfiguration;
 import com.icthh.xm.ms.entity.config.TestLepUpdateModeConfiguration;
 import com.icthh.xm.ms.entity.config.elasticsearch.ElasticsearchTestContainer;
 import com.icthh.xm.ms.entity.config.elasticsearch.ElasticsearchTestContainerConfiguration;
 import com.icthh.xm.ms.entity.config.tenant.WebappTenantOverrideConfiguration;
-import com.icthh.xm.ms.entity.service.search.ElasticsearchTemplateWrapper;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.time.StopWatch;
@@ -66,7 +66,7 @@ public class AbstractElasticSpringBootTest {
         StopWatch stopWatch = StopWatch.createStarted();
 
         String tenantName = TenantContextUtils.getRequiredTenantKeyValue(tenantContextHolder).toLowerCase();
-        String indexName = ElasticsearchTemplateWrapper.composeIndexName(tenantName);
+        String indexName = elasticsearchTemplateWrapper.composeIndexName(tenantName);
         elasticsearchTemplateWrapper.deleteIndex(indexName);
         elasticsearchTemplateWrapper.createIndex(indexName);
 
@@ -88,7 +88,7 @@ public class AbstractElasticSpringBootTest {
         StopWatch stopWatch = StopWatch.createStarted();
 
         String tenantName = TenantContextUtils.getRequiredTenantKeyValue(tenantContextHolder).toLowerCase();
-        String indexName = ElasticsearchTemplateWrapper.composeIndexName(tenantName);
+        String indexName = elasticsearchTemplateWrapper.composeIndexName(tenantName);
         elasticsearchTemplateWrapper.deleteIndex(indexName);
         elasticsearchTemplateWrapper.createIndex(indexName);
 

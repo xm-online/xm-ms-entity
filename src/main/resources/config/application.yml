@@ -242,7 +242,7 @@ application:
         connectionTimeoutTopic: 1000
         metricTopics: system_topic
     domain-event:
-        enabled: false
+        enabled: true
     elastic:
         scheme: "http"
         userName: ""

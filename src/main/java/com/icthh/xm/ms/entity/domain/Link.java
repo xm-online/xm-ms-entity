@@ -3,7 +3,9 @@ package com.icthh.xm.ms.entity.domain;
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.JsonIdentityReference;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.icthh.xm.ms.entity.domain.idresolver.XmEntityObjectIdResolver;
+import com.icthh.xm.ms.entity.domain.serializer.SimpleLinkSerializer;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import jakarta.persistence.Column;
@@ -31,6 +33,7 @@ import java.util.Objects;
 @Entity
 @Table(name = "link")
 @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
+@JsonSerialize(using = SimpleLinkSerializer.class)
 public class Link implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -78,8 +81,6 @@ public class Link implements Serializable {
 
     @ManyToOne(optional = false)
     @NotNull
-    @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id", resolver =
-        XmEntityObjectIdResolver.class)
     @JoinColumn(name = "target_id", nullable = false)
     private XmEntity target;
 

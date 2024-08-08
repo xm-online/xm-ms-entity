@@ -242,7 +242,6 @@ configurations {
         resolutionStrategy {
             // Inherited version from Spring Boot can't be used because of regressions:
             // To be removed as soon as spring-boot use the same version
-            force 'org.liquibase:liquibase-core:4.24.0' //todo remove
         }
     }
 }
@@ -456,6 +455,7 @@ dependencies {
     testImplementation "org.testcontainers:junit-jupiter:${testcontainersVersion}"
     testImplementation "org.testcontainers:postgresql:${testcontainersVersion}"
     testImplementation "org.testcontainers:elasticsearch:${testcontainersVersion}"
+    testImplementation "co.elastic.clients:elasticsearch-java:${elastic_client_version}"
 
 }
 

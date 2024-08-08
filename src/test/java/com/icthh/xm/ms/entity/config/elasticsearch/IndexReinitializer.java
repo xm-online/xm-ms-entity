@@ -2,14 +2,12 @@ package com.icthh.xm.ms.entity.config.elasticsearch;
 
 import static java.lang.System.currentTimeMillis;
 
-import com.icthh.xm.ms.entity.service.search.ElasticsearchTemplateWrapper;
+import com.icthh.xm.ee.commons.search.ElasticsearchTemplateWrapper;
 import jakarta.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 
-//@Component
 public class IndexReinitializer {
 
     private Logger logger = LoggerFactory.getLogger(getClass());

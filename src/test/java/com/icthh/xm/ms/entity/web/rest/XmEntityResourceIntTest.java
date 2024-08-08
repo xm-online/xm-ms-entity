@@ -359,7 +359,6 @@ public class XmEntityResourceIntTest extends AbstractElasticSpringBootTest {
 
     @Test
     @Transactional
-    @Disabled("XM-MIG Throws NullPointerException because elasticsearchTemplateWrapper.queryForObject is not implemented")
     public void createXmEntity() throws Exception {
 
         XmEntity dbXmEntity = transactionService.inNestedTransaction(() -> {
@@ -661,7 +660,6 @@ public class XmEntityResourceIntTest extends AbstractElasticSpringBootTest {
 
     @Test
     @Transactional
-    @Disabled("XM-MIG Throws NullPointerException because elasticsearchTemplateWrapper.queryForObject is not implemented")
     public void updateXmEntity() throws Exception {
         XmEntity dbXmEntity = transactionService.inNestedTransaction(() -> {
 

@@ -43,17 +43,13 @@ spring:
                 implicit-strategy: org.springframework.boot.orm.jpa.hibernate.SpringImplicitNamingStrategy
         properties:
             hibernate.model.generator_name_as_sequence_name: false # see org.hibernate.cfg.AvailableSettings.PREFER_GENERATOR_NAME_AS_DEFAULT_SEQUENCE_NAME
-            hibernate.id.new_generator_mappings: true
+            hibernate.id.use_new_generator_mappings: false
+            hibernate.id.db_structure_naming_strategy: single # use legacy hibernate_sequence
             hibernate.connection.provider_disables_autocommit: true
             hibernate.cache.use_second_level_cache: false
             hibernate.cache.use_query_cache: false
             hibernate.generate_statistics: true
             hibernate.jdbc.time_zone: UTC
-#    data: todo: deprecated
-#        elasticsearch:
-#            properties:
-#                path:
-#                  home: build/elasticsearch
     security:
         oauth2:
             client:

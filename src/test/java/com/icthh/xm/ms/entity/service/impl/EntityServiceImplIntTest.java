@@ -243,8 +243,8 @@ public class EntityServiceImplIntTest extends AbstractElasticSpringBootTest {
     public void testGetSequenceNextValString() {
         int incrementValue = 50;
 
-        long seq = xmEntityRepository.getSequenceNextValString("sequenceGenerator");
-        long seq2 = xmEntityRepository.getSequenceNextValString("sequenceGenerator");
+        long seq = xmEntityRepository.getSequenceNextValString("hibernate_sequence");
+        long seq2 = xmEntityRepository.getSequenceNextValString("hibernate_sequence");
 
         assertEquals(seq + incrementValue, seq2);
     }

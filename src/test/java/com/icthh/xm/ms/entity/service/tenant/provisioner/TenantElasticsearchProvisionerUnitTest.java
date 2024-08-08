@@ -1,11 +1,11 @@
 package com.icthh.xm.ms.entity.service.tenant.provisioner;
 
-import com.icthh.xm.ms.entity.service.search.ElasticsearchTemplateWrapper;
 import static org.mockito.ArgumentMatchers.eq;
 
 import com.icthh.xm.commons.gen.model.Tenant;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.internal.DefaultTenantContextHolder;
+import com.icthh.xm.ee.commons.search.ElasticsearchTemplateWrapper;
 import com.icthh.xm.ms.entity.AbstractUnitTest;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import org.junit.Before;
