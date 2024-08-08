@@ -1,14 +1,25 @@
 {
+    "$schema": "http://json-schema.org/draft-07/schema#",
     "type": "object",
     "properties": {
         "key": { "type": "string", "unique": true },
-        "treatAs": { "$ref": "#/definitions/UnitType" },
+        "type": { "type":  "string"},
         "displayName": {
             "type": "array",
             "items": {
                 "$ref": "#/definitions/LocalizedName"
             }
-        }
+        },
+        "value1": { "type": ["string", null] },
+        "value2": { "type": ["string", "number"] },
+        "value3": { "type": "string" },
+        "value4": { "type": "string", "enum": ["Volume", "Power"] },
+        "value5": { "type": null },
+        "value6": { "type": [null] },
+        "value7": {
+            "const": "Volume"
+        },
+        "value8": { "type": "array" }
     },
     "definitions": {
         "UnitType": {
@@ -18,6 +29,7 @@
         "LocalizedName": {
             "type": "object",
             "properties": {
+                "type": { "$ref": "#/definitions/UnitType" },
                 "langCode": { "type": ["string", null] },
                 "shortName": { "type": ["string", "number"] },
                 "fullName": { "type": "string" }
