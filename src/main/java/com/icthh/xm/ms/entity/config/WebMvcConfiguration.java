@@ -1,5 +1,6 @@
 package com.icthh.xm.ms.entity.config;
 
+import com.icthh.xm.commons.tenant.XmRelatedComponent;
 import com.icthh.xm.commons.web.spring.TenantInterceptor;
 import com.icthh.xm.commons.web.spring.XmLoggingInterceptor;
 import com.icthh.xm.commons.web.spring.config.XmMsWebConfiguration;
@@ -10,6 +11,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.converter.AbstractHttpMessageConverter;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
+import org.springframework.web.servlet.AsyncHandlerInterceptor;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.PathMatchConfigurer;
 
@@ -29,13 +31,16 @@ public class WebMvcConfiguration extends XmWebMvcConfigurerAdapter {
         Collections.singletonList("/api/xm-entities/*/links/targets");
 
     private final ApplicationProperties applicationProperties;
+    private final List<AsyncHandlerInterceptor> asyncHandlerInterceptors;
 
     public WebMvcConfiguration(TenantInterceptor tenantInterceptor,
                                XmLoggingInterceptor xmLoggingInterceptor,
-                               ApplicationProperties applicationProperties
+                               ApplicationProperties applicationProperties,
+                               List<AsyncHandlerInterceptor> asyncHandlerInterceptors
     ) {
         super(tenantInterceptor, xmLoggingInterceptor);
         this.applicationProperties = applicationProperties;
+        this.asyncHandlerInterceptors = asyncHandlerInterceptors;
     }
 
     public static String[] getJsonFilterAllowedURIs() {
@@ -44,7 +49,9 @@ public class WebMvcConfiguration extends XmWebMvcConfigurerAdapter {
 
     @Override
     protected void xmAddInterceptors(InterceptorRegistry registry) {
-        // no custom configuration
+        asyncHandlerInterceptors.stream()
+            .filter(it -> it.getClass().isAnnotationPresent(XmRelatedComponent.class))
+            .forEach(it -> registerTenantInterceptorWithIgnorePathPattern(registry, it));
     }
 
     @Override
