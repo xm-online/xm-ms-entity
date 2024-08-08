@@ -1,11 +1,12 @@
 package com.icthh.xm.ms.entity.service.tenant.provisioner;
 
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.when;
 
 import com.icthh.xm.commons.gen.model.Tenant;
+import com.icthh.xm.commons.search.ElasticsearchOperations;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.internal.DefaultTenantContextHolder;
-import com.icthh.xm.ee.commons.search.ElasticsearchTemplateWrapper;
 import com.icthh.xm.ms.entity.AbstractUnitTest;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import org.junit.Before;
@@ -19,9 +20,10 @@ import org.mockito.Spy;
 public class TenantElasticsearchProvisionerUnitTest extends AbstractUnitTest {
 
     public static final String TENANT_NAME = "NEWTENANT";
+    public static final String INDEX_NAME = TENANT_NAME.toLowerCase() + "_xmentity";
 
     @Mock
-    private ElasticsearchTemplateWrapper elasticsearchTemplateWrapper;
+    private ElasticsearchOperations elasticsearchOperations;
     @Spy
     private TenantContextHolder tenantContextHolder = new DefaultTenantContextHolder();
 
@@ -31,7 +33,9 @@ public class TenantElasticsearchProvisionerUnitTest extends AbstractUnitTest {
     public void setUp() {
         MockitoAnnotations.initMocks(this);
 
-        provisioner = new TenantElasticsearchProvisioner(elasticsearchTemplateWrapper, tenantContextHolder);
+        provisioner = new TenantElasticsearchProvisioner(elasticsearchOperations, tenantContextHolder);
+
+        when(elasticsearchOperations.composeIndexName(TENANT_NAME)).thenReturn(INDEX_NAME);
     }
 
     @Test
@@ -39,11 +43,12 @@ public class TenantElasticsearchProvisionerUnitTest extends AbstractUnitTest {
 
         provisioner.createTenant(new Tenant().tenantKey(TENANT_NAME));
 
-        InOrder inOrder = Mockito.inOrder(elasticsearchTemplateWrapper, tenantContextHolder);
+        InOrder inOrder = Mockito.inOrder(elasticsearchOperations, tenantContextHolder);
 
         inOrder.verify(tenantContextHolder).getPrivilegedContext();
-        inOrder.verify(elasticsearchTemplateWrapper).createIndex(eq(TENANT_NAME.toLowerCase()+"_xmentity"));
-        inOrder.verify(elasticsearchTemplateWrapper).putMapping(XmEntity.class);
+        inOrder.verify(elasticsearchOperations).composeIndexName(eq(TENANT_NAME));
+        inOrder.verify(elasticsearchOperations).createIndex(eq(TENANT_NAME.toLowerCase()+"_xmentity"));
+        inOrder.verify(elasticsearchOperations).putMapping(XmEntity.class);
         inOrder.verifyNoMoreInteractions();
     }
 
@@ -52,10 +57,7 @@ public class TenantElasticsearchProvisionerUnitTest extends AbstractUnitTest {
 
         provisioner.manageTenant(TENANT_NAME, "ACTIVE");
 
-        Mockito.inOrder(elasticsearchTemplateWrapper, tenantContextHolder).verifyNoMoreInteractions();
-//        verifyZeroInteractions(elasticsearchTemplateWrapper);
-//        verifyZeroInteractions(tenantContextHolder);
-
+        Mockito.inOrder(elasticsearchOperations, tenantContextHolder).verifyNoMoreInteractions();
     }
 
     @Test
@@ -63,10 +65,11 @@ public class TenantElasticsearchProvisionerUnitTest extends AbstractUnitTest {
 
         provisioner.deleteTenant(TENANT_NAME);
 
-        InOrder inOrder = Mockito.inOrder(elasticsearchTemplateWrapper, tenantContextHolder);
+        InOrder inOrder = Mockito.inOrder(elasticsearchOperations, tenantContextHolder);
 
         inOrder.verify(tenantContextHolder).getPrivilegedContext();
-        inOrder.verify(elasticsearchTemplateWrapper).deleteIndex(eq(TENANT_NAME.toLowerCase()+"_xmentity"));
+        inOrder.verify(elasticsearchOperations).composeIndexName(eq(TENANT_NAME));
+        inOrder.verify(elasticsearchOperations).deleteIndex(eq(TENANT_NAME.toLowerCase()+"_xmentity"));
         inOrder.verifyNoMoreInteractions();
     }
 }
