@@ -8,6 +8,7 @@ import org.springframework.context.annotation.Bean;
 import org.testcontainers.elasticsearch.ElasticsearchContainer;
 
 import static com.icthh.xm.ms.entity.config.elasticsearch.ElasticsearchTestContainer.ELASTICSEARCH_PORT;
+import static com.icthh.xm.ms.entity.config.elasticsearch.ElasticsearchTestContainer.ELASTICSEARCH_SCHEME;
 
 @Slf4j
 public class ElasticsearchTestContainerConfiguration {
@@ -27,7 +28,7 @@ public class ElasticsearchTestContainerConfiguration {
 
     @Bean
     public RestClient restClient(ElasticsearchContainer elasticTestContainer) {
-        HttpHost httpHost = new HttpHost(elasticTestContainer.getHost(), ELASTICSEARCH_PORT, "http");
+        HttpHost httpHost = new HttpHost(elasticTestContainer.getHost(), ELASTICSEARCH_PORT, ELASTICSEARCH_SCHEME);
         RestClientBuilder builder = RestClient.builder(httpHost);
         return builder.build();
     }

@@ -5,23 +5,16 @@ import org.testcontainers.utility.DockerImageName;
 
 public class ElasticsearchTestContainer extends ElasticsearchContainer {
 
-//    private static final String DOCKER_ELASTIC = "docker.elastic.co/elasticsearch/elasticsearch:7.17.6";
-//    private static final String CLUSTER_NAME = "sample-cluster";
-//    private static final String ELASTIC_SEARCH = "elasticsearch";
-
     private static final String ELASTIC_SEARCH_DOCKER = "elasticsearch:8.7.0";
-    private static final String CLUSTER_NAME = "cluster.name";
-    private static final String ELASTIC_SEARCH = "elasticsearch";
     private static final String DISCOVERY_TYPE = "discovery.type";
     private static final String DISCOVERY_TYPE_SINGLE_NODE = "single-node";
     private static final String XPACK_SECURITY_ENABLED = "xpack.security.enabled";
+    private static final String ACTION_DESTRUCTIVE_REQUIRES_NAME = "action.destructive_requires_name";
 
     public static final int ELASTICSEARCH_PORT = 9200;
+    public static final String ELASTICSEARCH_SCHEME = "http";
 
     public ElasticsearchTestContainer() {
-//        super(DOCKER_ELASTIC);
-//        this.addFixedExposedPort(9200, 9200);
-//        this.addEnv(CLUSTER_NAME, ELASTIC_SEARCH);
         super(DockerImageName.parse(ELASTIC_SEARCH_DOCKER)
             .asCompatibleSubstituteFor("docker.elastic.co/elasticsearch/elasticsearch"));
         addFixedExposedPort(ELASTICSEARCH_PORT, ELASTICSEARCH_PORT);
@@ -29,7 +22,6 @@ public class ElasticsearchTestContainer extends ElasticsearchContainer {
         addEnv(XPACK_SECURITY_ENABLED, Boolean.FALSE.toString());
 
         // see: https://www.elastic.co/guide/en/elasticsearch/reference/7.17/index-management-settings.html#action-destructive-requires-name
-        addEnv("action.destructive_requires_name", Boolean.FALSE.toString());
-//        addEnv(CLUSTER_NAME, ELASTIC_SEARCH);
+        addEnv(ACTION_DESTRUCTIVE_REQUIRES_NAME, Boolean.FALSE.toString());
     }
 }

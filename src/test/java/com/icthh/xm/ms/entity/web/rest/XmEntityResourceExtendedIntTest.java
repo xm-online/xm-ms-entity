@@ -313,6 +313,8 @@ public class XmEntityResourceExtendedIntTest extends AbstractElasticSpringBootTe
 
     private MockMvc restXmEntityMockMvc;
 
+    private MockMvc restXmEntitySearchMockMvc;
+
     private XmEntity xmEntityIncoming;
 
     @BeforeTransaction
@@ -387,6 +389,14 @@ public class XmEntityResourceExtendedIntTest extends AbstractElasticSpringBootTe
         );
         this.restXmEntityMockMvc = MockMvcBuilders.standaloneSetup(
             xmEntityResourceMock, new CalendarResource(calendarService, calendarResource), eventResourceMock)
+                                                  .setCustomArgumentResolvers(pageableArgumentResolver)
+                                                  .setControllerAdvice(exceptionTranslator)
+                                                  .setValidator(validator)
+                                                  .setMessageConverters(jacksonMessageConverter)
+                                                  .addMappedInterceptors(WebMvcConfiguration.getJsonFilterAllowedURIs())
+                                                  .build();
+
+        this.restXmEntitySearchMockMvc = MockMvcBuilders.standaloneSetup(new XmEntitySearchResource(xmEntityService))
                                                   .setCustomArgumentResolvers(pageableArgumentResolver)
                                                   .setControllerAdvice(exceptionTranslator)
                                                   .setValidator(validator)
@@ -496,6 +506,11 @@ public class XmEntityResourceExtendedIntTest extends AbstractElasticSpringBootTe
     private ResultActions performGet(String url, Object... params) throws Exception {
         return restXmEntityMockMvc.perform(get(url, params))
                                   .andDo(this::printMvcResult);
+    }
+
+    private ResultActions performSearchGet(String url, Object... params) throws Exception {
+        return restXmEntitySearchMockMvc.perform(get(url, params))
+            .andDo(this::printMvcResult);
     }
 
     /**
@@ -1200,18 +1215,18 @@ public class XmEntityResourceExtendedIntTest extends AbstractElasticSpringBootTe
 
         String urlTemplate = "/api/_search-with-typekey/xm-entities?typeKey=ACCOUNT&size=5";
 
-        performGet(urlTemplate)
+        performSearchGet(urlTemplate)
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.length()").value(2))
             .andExpect(jsonPath("$.[0].tags[0].name").value(DEFAULT_TAG_NAME))
             .andExpect(jsonPath("$.[1].tags[0].name").value(DEFAULT_TAG_NAME));
 
-        performGet(urlTemplate + "&query=" + UNIQ_DESCRIPTION)
+        performSearchGet(urlTemplate + "&query=" + UNIQ_DESCRIPTION)
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.length()").value(1))
             .andExpect(jsonPath("$.[0].tags[0].name").value(DEFAULT_TAG_NAME));
 
-        performGet(urlTemplate + "&query=" + NOT_PRESENT_UNIQ_DESCRIPTION)
+        performSearchGet(urlTemplate + "&query=" + NOT_PRESENT_UNIQ_DESCRIPTION)
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.length()").value(0));
 
@@ -1226,18 +1241,18 @@ public class XmEntityResourceExtendedIntTest extends AbstractElasticSpringBootTe
 
         String urlTemplate = "/api/_search-with-typekey-and-template/xm-entities?typeKey=ACCOUNT&size=5";
 
-        performGet(urlTemplate)
+        performSearchGet(urlTemplate)
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.length()").value(2))
             .andExpect(jsonPath("$.[0].tags[0].name").value(DEFAULT_TAG_NAME))
             .andExpect(jsonPath("$.[1].tags[0].name").value(DEFAULT_TAG_NAME));
 
-        performGet(urlTemplate + "&template=UNIQ_DESCRIPTION&templateParams[description]=" + UNIQ_DESCRIPTION)
+        performSearchGet(urlTemplate + "&template=UNIQ_DESCRIPTION&templateParams[description]=" + UNIQ_DESCRIPTION)
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.length()").value(1))
             .andExpect(jsonPath("$.[0].tags[0].name").value(DEFAULT_TAG_NAME));
 
-        performGet(
+        performSearchGet(
             urlTemplate + "&template=UNIQ_DESCRIPTION&templateParams[description]=" + NOT_PRESENT_UNIQ_DESCRIPTION)
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.length()").value(0));
@@ -2239,7 +2254,7 @@ public class XmEntityResourceExtendedIntTest extends AbstractElasticSpringBootTe
         String tgtUpdateDate = DEFAULT_UPDATE_DATE.toString();
         String tgtEndDate = DEFAULT_END_DATE.toString();
 
-        performGet("/api/_search/xm-entities?query=id:{id}", source.getId())
+        performSearchGet("/api/_search/xm-entities?query=id:{id}", source.getId())
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON))
             .andExpect(jsonPath("$", hasSize(1)))

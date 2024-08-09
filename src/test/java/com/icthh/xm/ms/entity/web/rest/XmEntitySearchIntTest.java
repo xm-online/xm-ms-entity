@@ -96,6 +96,7 @@ public class XmEntitySearchIntTest extends AbstractElasticSpringBootTest {
     private XmEntityRepositoryInternal xmEntityRepository;
 
     private MockMvc restXmEntityMockMvc;
+    private MockMvc restXmEntitySearchMockMvc;
 
     @Autowired
     private XmLepScriptConfigServerResourceLoader leps;
@@ -132,6 +133,12 @@ public class XmEntitySearchIntTest extends AbstractElasticSpringBootTest {
 
         this.restXmEntityMockMvc = MockMvcBuilders.standaloneSetup(new XmEntityResource(xmEntityService, null, null, null, null, null))
             .setValidator(validator).setControllerAdvice(exceptionTranslator).setCustomArgumentResolvers(pageableArgumentResolver).build();
+
+        this.restXmEntitySearchMockMvc = MockMvcBuilders.standaloneSetup(new XmEntitySearchResource(xmEntityService))
+            .setValidator(validator)
+            .setControllerAdvice(exceptionTranslator)
+            .setCustomArgumentResolvers(pageableArgumentResolver)
+            .build();
 
     }
 
@@ -187,7 +194,7 @@ public class XmEntitySearchIntTest extends AbstractElasticSpringBootTest {
             .andExpect(status().isBadRequest())
         ;
 
-        String contentAsString = restXmEntityMockMvc
+        String contentAsString = restXmEntitySearchMockMvc
             .perform(get("/api/_search/xm-entities?query=DEFAULT_NAME&page=0&size=10")
                 .contentType(TestUtil.APPLICATION_JSON_UTF8))
             .andDo(print())
@@ -218,7 +225,7 @@ public class XmEntitySearchIntTest extends AbstractElasticSpringBootTest {
             // it's expected business exception, but not for assertion
         }
 
-        String contentAsString = restXmEntityMockMvc
+        String contentAsString = restXmEntitySearchMockMvc
             .perform(get("/api/_search/xm-entities?query=DEFAULT_NAME&page=0&size=10")
                          .contentType(TestUtil.APPLICATION_JSON_UTF8))
             .andDo(print())
@@ -276,7 +283,7 @@ public class XmEntitySearchIntTest extends AbstractElasticSpringBootTest {
 
     @SneakyThrows
     private List<XmEntity> searchEntityByKey(String key) {
-        String contentAsString = restXmEntityMockMvc
+        String contentAsString = restXmEntitySearchMockMvc
             .perform(get("/api/_search/xm-entities?query=key:" + key)
                 .contentType(TestUtil.APPLICATION_JSON_UTF8))
             .andDo(print())
@@ -289,7 +296,7 @@ public class XmEntitySearchIntTest extends AbstractElasticSpringBootTest {
 
     @SneakyThrows
     private List<XmEntity> searchEntityByStateKey(String stateKey) {
-        String contentAsString = restXmEntityMockMvc
+        String contentAsString = restXmEntitySearchMockMvc
             .perform(get("/api/_search/xm-entities?query=stateKey:" + stateKey)
                 .contentType(TestUtil.APPLICATION_JSON_UTF8))
             .andDo(print())

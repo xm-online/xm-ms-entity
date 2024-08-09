@@ -232,6 +232,7 @@ public class XmEntityResourceIntTest extends AbstractElasticSpringBootTest {
     private LepManager lepManager;
 
     private MockMvc restXmEntityMockMvc;
+    private MockMvc restXmEntitySearchMockMvc;
 
     private XmEntity xmEntity;
 
@@ -317,6 +318,12 @@ public class XmEntityResourceIntTest extends AbstractElasticSpringBootTest {
             resourceMock
         );
         this.restXmEntityMockMvc = MockMvcBuilders.standaloneSetup(xmEntityResourceMock)
+            .setCustomArgumentResolvers(pageableArgumentResolver)
+            .setControllerAdvice(exceptionTranslator)
+            .setValidator(validator)
+            .setMessageConverters(jacksonMessageConverter).build();
+
+        this.restXmEntitySearchMockMvc = MockMvcBuilders.standaloneSetup(new XmEntitySearchResource(xmEntityServiceImpl))
             .setCustomArgumentResolvers(pageableArgumentResolver)
             .setControllerAdvice(exceptionTranslator)
             .setValidator(validator)
@@ -776,7 +783,7 @@ public class XmEntityResourceIntTest extends AbstractElasticSpringBootTest {
         xmEntitySearchRepository.refresh();
 
         // Search the xmEntity
-        restXmEntityMockMvc.perform(get("/api/_search/xm-entities?query=id:" + xmEntity.getId()))
+        restXmEntitySearchMockMvc.perform(get("/api/_search/xm-entities?query=id:" + xmEntity.getId()))
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON))
             .andExpect(jsonPath("$.[*].id").value(hasItem(xmEntity.getId().intValue())))
@@ -803,7 +810,7 @@ public class XmEntityResourceIntTest extends AbstractElasticSpringBootTest {
         xmEntitySearchRepository.refresh();
 
         // Search the xmEntity
-        restXmEntityMockMvc.perform(get("/api/_search/v2/xm-entities?query=id:" + xmEntity.getId()
+        restXmEntitySearchMockMvc.perform(get("/api/_search/v2/xm-entities?query=id:" + xmEntity.getId()
             +"&excludes=id&excludes=key&excludes=typeKey"))
             .andDo(print())
             .andExpect(status().isOk())
@@ -832,7 +839,7 @@ public class XmEntityResourceIntTest extends AbstractElasticSpringBootTest {
         xmEntitySearchRepository.refresh();
 
         // Search the xmEntity
-        restXmEntityMockMvc.perform(get("/api/_search/v2/xm-entities?query=id:" + xmEntity.getId()
+        restXmEntitySearchMockMvc.perform(get("/api/_search/v2/xm-entities?query=id:" + xmEntity.getId()
             +"&includes=id&includes=key&includes=typeKey"))
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON))
@@ -860,7 +867,7 @@ public class XmEntityResourceIntTest extends AbstractElasticSpringBootTest {
         }, this::setup);
         xmEntitySearchRepository.refresh();
         // Search the xmEntity
-        restXmEntityMockMvc.perform(get("/api/_search-with-template/xm-entities?template=BY_TYPEKEY_AND_ID&templateParams[typeKey]=" + xmEntity.getTypeKey() + "&templateParams[id]=" + xmEntity.getId()))
+        restXmEntitySearchMockMvc.perform(get("/api/_search-with-template/xm-entities?template=BY_TYPEKEY_AND_ID&templateParams[typeKey]=" + xmEntity.getTypeKey() + "&templateParams[id]=" + xmEntity.getId()))
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON))
             .andExpect(jsonPath("$.[*].id").value(hasItem(xmEntity.getId().intValue())))
@@ -883,7 +890,7 @@ public class XmEntityResourceIntTest extends AbstractElasticSpringBootTest {
         // Initialize the database
         xmEntityServiceImpl.save(xmEntity);
         // Search the xmEntity
-        restXmEntityMockMvc.perform(get("/api/_search-with-template/xm-entities"))
+        restXmEntitySearchMockMvc.perform(get("/api/_search-with-template/xm-entities"))
             .andExpect(status().is4xxClientError());
     }
 
