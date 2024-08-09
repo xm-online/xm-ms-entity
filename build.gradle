@@ -249,10 +249,6 @@ configurations {
 repositories {
     mavenLocal()
     mavenCentral()
-    //VK FIXME: remove before merge
-    maven {
-        url "https://reposilite.jevera.software/releases"
-    }
     //jhipster-needle-gradle-repositories - JHipster will add additional repositories
 }
 
