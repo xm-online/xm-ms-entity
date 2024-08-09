@@ -1,10 +1,9 @@
 package com.icthh.xm.ms.entity.config;
 
-import com.icthh.xm.commons.tenant.XmRelatedComponent;
 import com.icthh.xm.commons.web.spring.TenantInterceptor;
 import com.icthh.xm.commons.web.spring.XmLoggingInterceptor;
+import com.icthh.xm.commons.web.spring.config.WebMvcConfig;
 import com.icthh.xm.commons.web.spring.config.XmMsWebConfiguration;
-import com.icthh.xm.commons.web.spring.config.XmWebMvcConfigurerAdapter;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
@@ -12,8 +11,6 @@ import org.springframework.http.converter.AbstractHttpMessageConverter;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.web.servlet.AsyncHandlerInterceptor;
-import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
-import org.springframework.web.servlet.config.annotation.PathMatchConfigurer;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -25,43 +22,22 @@ import java.util.List;
 @Import({
     XmMsWebConfiguration.class
 })
-public class WebMvcConfiguration extends XmWebMvcConfigurerAdapter {
+public class WebMvcConfiguration extends WebMvcConfig {
 
     private static final Collection<String> JSON_FILTER_APPLIED_URI =
         Collections.singletonList("/api/xm-entities/*/links/targets");
-
-    private final ApplicationProperties applicationProperties;
-    private final List<AsyncHandlerInterceptor> asyncHandlerInterceptors;
 
     public WebMvcConfiguration(TenantInterceptor tenantInterceptor,
                                XmLoggingInterceptor xmLoggingInterceptor,
                                ApplicationProperties applicationProperties,
                                List<AsyncHandlerInterceptor> asyncHandlerInterceptors
     ) {
-        super(tenantInterceptor, xmLoggingInterceptor);
-        this.applicationProperties = applicationProperties;
-        this.asyncHandlerInterceptors = asyncHandlerInterceptors;
+        super(applicationProperties.getTenantIgnoredPathList(), tenantInterceptor, xmLoggingInterceptor,
+            asyncHandlerInterceptors);
     }
 
     public static String[] getJsonFilterAllowedURIs() {
         return JSON_FILTER_APPLIED_URI.toArray(new String[]{});
-    }
-
-    @Override
-    protected void xmAddInterceptors(InterceptorRegistry registry) {
-        asyncHandlerInterceptors.stream()
-            .filter(it -> it.getClass().isAnnotationPresent(XmRelatedComponent.class))
-            .forEach(it -> registerTenantInterceptorWithIgnorePathPattern(registry, it));
-    }
-
-    @Override
-    protected void xmConfigurePathMatch(PathMatchConfigurer configurer) {
-        // no custom configuration
-    }
-
-    @Override
-    protected List<String> getTenantIgnorePathPatterns() {
-        return applicationProperties.getTenantIgnoredPathList();
     }
 
     @Override
