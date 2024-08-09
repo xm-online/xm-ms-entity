@@ -11,10 +11,10 @@ import org.springframework.stereotype.Repository;
  */
 @SuppressWarnings("unused")
 @Repository
-public interface TagRepository extends JpaRepository<Tag, Long>, ResourceRepository {
+public interface TagRepository extends JpaRepository<Tag, Long>, ResourceRepository<Tag, Long> {
 
     @Override
-    Tag findResourceById(Object id);
+    Tag findResourceById(Long id);
 
     List<Tag> findByXmEntityTypeKeyAndTypeKeyIn(String entityTypeKey, List<String> typeKeys);
 }

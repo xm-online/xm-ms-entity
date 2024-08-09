@@ -38,7 +38,7 @@ public class SimpleTemplateProcessor {
                     defaultValue = parts[1];
                 }
             }
-            Object value = document.read(key);
+            Object value = document.read(key.trim());
             return value != null ? value.toString() : defaultValue;
         });
         String result = sub.replace(template);

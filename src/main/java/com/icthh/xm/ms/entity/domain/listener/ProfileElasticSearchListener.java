@@ -4,14 +4,13 @@ import static com.icthh.xm.ms.entity.util.DatabaseUtil.runAfterTransaction;
 
 import com.icthh.xm.ms.entity.domain.Profile;
 import com.icthh.xm.ms.entity.repository.search.XmEntitySearchRepository;
+import jakarta.annotation.PostConstruct;
+import jakarta.persistence.PostPersist;
+import jakarta.persistence.PostRemove;
+import jakarta.persistence.PostUpdate;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
-import javax.annotation.PostConstruct;
-import javax.persistence.PostPersist;
-import javax.persistence.PostRemove;
-import javax.persistence.PostUpdate;
 
 @Slf4j
 @Component

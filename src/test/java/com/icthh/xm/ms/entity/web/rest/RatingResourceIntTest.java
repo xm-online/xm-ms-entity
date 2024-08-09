@@ -24,6 +24,7 @@ import com.icthh.xm.ms.entity.repository.VoteRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
 import com.icthh.xm.ms.entity.service.RatingService;
 import com.icthh.xm.ms.entity.service.impl.StartUpdateDateGenerationStrategy;
+import jakarta.persistence.EntityManager;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -44,7 +45,6 @@ import org.springframework.validation.Validator;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
-import javax.persistence.EntityManager;
 
 /**
  * Test class for the RatingResource REST controller.
@@ -268,7 +268,7 @@ public class RatingResourceIntTest extends AbstractSpringBootTest {
         // Get all the ratingList
         restRatingMockMvc.perform(get("/api/ratings?sort=id,desc"))
             .andExpect(status().isOk())
-            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
             .andExpect(jsonPath("$.[*].id").value(hasItem(rating.getId().intValue())))
             .andExpect(jsonPath("$.[*].typeKey").value(hasItem(DEFAULT_TYPE_KEY.toString())))
             .andExpect(jsonPath("$.[*].value").value(hasItem(DEFAULT_VALUE.doubleValue())))
@@ -285,7 +285,7 @@ public class RatingResourceIntTest extends AbstractSpringBootTest {
         // Get the rating
         restRatingMockMvc.perform(get("/api/ratings/{id}", rating.getId()))
             .andExpect(status().isOk())
-            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
             .andExpect(jsonPath("$.id").value(rating.getId().intValue()))
             .andExpect(jsonPath("$.typeKey").value(DEFAULT_TYPE_KEY.toString()))
             .andExpect(jsonPath("$.value").value(DEFAULT_VALUE.doubleValue()))

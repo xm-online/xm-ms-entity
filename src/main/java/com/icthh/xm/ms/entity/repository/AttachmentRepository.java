@@ -15,10 +15,10 @@ import org.springframework.stereotype.Repository;
 @SuppressWarnings("unused")
 @Repository
 public interface AttachmentRepository extends
-        JpaRepository<Attachment, Long>, ResourceRepository, JpaSpecificationExecutor<Attachment> {
+        JpaRepository<Attachment, Long>, ResourceRepository<Attachment, Long>, JpaSpecificationExecutor<Attachment> {
 
     @Override
-    Attachment findResourceById(Object id);
+    Attachment findResourceById(Long id);
 
     int countByXmEntityIdAndTypeKey(long xmEntityId, String typeKey);
 

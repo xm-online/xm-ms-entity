@@ -36,7 +36,8 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
-import javax.persistence.EntityManager;
+
+import jakarta.persistence.EntityManager;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -365,7 +366,7 @@ public class CalendarResourceIntTest extends AbstractSpringBootTest {
         // Get all the calendarList
         restCalendarMockMvc.perform(get("/api/calendars?sort=id,desc"))
             .andExpect(status().isOk())
-            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
             .andExpect(jsonPath("$.[*].id").value(hasItem(calendar.getId().intValue())))
             .andExpect(jsonPath("$.[*].typeKey").value(hasItem(DEFAULT_TYPE_KEY)))
             .andExpect(jsonPath("$.[*].name").value(hasItem(DEFAULT_NAME)))
@@ -384,7 +385,7 @@ public class CalendarResourceIntTest extends AbstractSpringBootTest {
         // Get the calendar
         restCalendarMockMvc.perform(get("/api/calendars/{id}", calendar.getId()))
             .andExpect(status().isOk())
-            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
             .andExpect(jsonPath("$.id").value(calendar.getId().intValue()))
             .andExpect(jsonPath("$.typeKey").value(DEFAULT_TYPE_KEY))
             .andExpect(jsonPath("$.name").value(DEFAULT_NAME))
@@ -802,6 +803,6 @@ public class CalendarResourceIntTest extends AbstractSpringBootTest {
         Long calendarId = event.getCalendar().getId();
         return restCalendarMockMvc.perform(get("/api/calendars/{id}/events?sort=id,desc&" + filter, calendarId))
             .andExpect(status().isOk())
-            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8));
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON));
     }
 }

@@ -11,10 +11,10 @@ import org.springframework.stereotype.Repository;
  */
 @SuppressWarnings("unused")
 @Repository
-public interface CommentRepository extends JpaRepository<Comment, Long>, ResourceRepository {
+public interface CommentRepository extends JpaRepository<Comment, Long>, ResourceRepository<Comment, Long> {
 
     @Override
-    Comment findResourceById(Object id);
+    Comment findResourceById(Long id);
 
     List<Comment> findAllByXmEntityTypeKeyIn(List<String> typeKeys);
 }

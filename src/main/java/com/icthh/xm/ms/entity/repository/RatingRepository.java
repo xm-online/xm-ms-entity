@@ -11,10 +11,10 @@ import org.springframework.stereotype.Repository;
  */
 @SuppressWarnings("unused")
 @Repository
-public interface RatingRepository extends JpaRepository<Rating, Long>, ResourceRepository {
+public interface RatingRepository extends JpaRepository<Rating, Long>, ResourceRepository<Rating, Long> {
 
     @Override
-    Rating findResourceById(Object id);
+    Rating findResourceById(Long id);
 
     List<Rating> findByXmEntityTypeKeyAndTypeKeyIn(String entityTypeKey, List<String> typeKeys);
 }

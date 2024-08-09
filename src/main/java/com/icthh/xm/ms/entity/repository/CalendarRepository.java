@@ -12,10 +12,10 @@ import org.springframework.stereotype.Repository;
  */
 @SuppressWarnings("unused")
 @Repository
-public interface CalendarRepository extends JpaRepository<Calendar, Long>, ResourceRepository {
+public interface CalendarRepository extends JpaRepository<Calendar, Long>, ResourceRepository<Calendar, Long> {
 
     @Override
-    Calendar findResourceById(Object id);
+    Calendar findResourceById(Long id);
 
     Set<Calendar> findByXmEntityTypeKeyAndTypeKeyAndEventsTypeKeyIn(String entityType, String typeKey, List<String> eventTypeKeys);
 }

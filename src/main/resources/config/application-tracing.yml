@@ -1,0 +1,12 @@
+spring:
+  kafka:
+    template:
+      observation-enabled: true # set kafka producer headers
+
+management:
+  tracing:
+    propagation:
+      type: b3
+    enabled: true
+    sampling:
+      probability: 1.0 # report 100% of traces

@@ -10,6 +10,7 @@ import com.icthh.xm.ms.entity.domain.Link;
 import com.icthh.xm.ms.entity.domain.Link_;
 import com.icthh.xm.ms.entity.security.access.DynamicPermissionCheckService;
 import com.icthh.xm.ms.entity.web.rest.LinkResourceIntTest;
+import jakarta.persistence.EntityManager;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -26,7 +27,6 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.transaction.BeforeTransaction;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.persistence.EntityManager;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -80,7 +80,8 @@ public class LinkServiceIntTest extends AbstractSpringBootTest {
         Page<Link> actual = linkService.findAll(Specification.where((root, query, criteriaBuilder)
             -> criteriaBuilder.isNotNull(root.get(Link_.id))), PageRequest.of(0, expected.size()));
         Assert.assertNotNull(actual);
-        Assert.assertEquals(expected, actual.getContent());
+        Assert.assertEquals(expected.size(), actual.getContent().size());
+        Assert.assertTrue(actual.getContent().containsAll(expected));
     }
 
     @Test

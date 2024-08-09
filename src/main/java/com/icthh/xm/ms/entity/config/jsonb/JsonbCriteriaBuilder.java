@@ -1,124 +1,166 @@
 package com.icthh.xm.ms.entity.config.jsonb;
 
+import com.icthh.xm.commons.migration.db.jsonb.JsonbExpression;
 import com.icthh.xm.ms.entity.domain.XmEntity;
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.Expression;
-import javax.persistence.criteria.Predicate;
-import javax.persistence.criteria.Root;
-import lombok.RequiredArgsConstructor;
+import com.icthh.xm.ms.entity.domain.XmEntity_;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.Expression;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
 
-@RequiredArgsConstructor
 public class JsonbCriteriaBuilder {
 
     private final CriteriaBuilder criteriaBuilder;
+    private final JsonbExpression jsonbExpression;
+
+    public JsonbCriteriaBuilder(CriteriaBuilder criteriaBuilder, JsonbExpression jsonbExpression) {
+        this.criteriaBuilder = criteriaBuilder;
+        this.jsonbExpression = jsonbExpression;
+    }
 
     public Predicate equal(Root<XmEntity> root, String jsonPath, Object object) {
         return criteriaBuilder.equal(
-            JsonbUtils.jsonQuery(criteriaBuilder, root, jsonPath),
-            JsonbUtils.toJsonB(criteriaBuilder, object));
+            jsonbExpression.jsonQuery(criteriaBuilder, root, XmEntity_.DATA, jsonPath),
+            jsonbExpression.toJsonB(criteriaBuilder, object));
     }
 
     public Predicate equal(Root<XmEntity> xRoot, String xJsonPath, Root<XmEntity> yRoot, String yJsonPath) {
         return criteriaBuilder.equal(
-            JsonbUtils.jsonQuery(criteriaBuilder, xRoot, xJsonPath),
-            JsonbUtils.jsonQuery(criteriaBuilder, yRoot, yJsonPath));
+            jsonbExpression.jsonQuery(criteriaBuilder, xRoot, XmEntity_.DATA, xJsonPath),
+            jsonbExpression.jsonQuery(criteriaBuilder, yRoot, XmEntity_.DATA, yJsonPath));
     }
 
     public Predicate equal(Root<XmEntity> root, String jsonPath, Expression<?> expression) {
         return criteriaBuilder.equal(
-            JsonbUtils.jsonQuery(criteriaBuilder, root, jsonPath),
-            JsonbUtils.toJsonB(criteriaBuilder, expression));
+            jsonbExpression.jsonQuery(criteriaBuilder, root, XmEntity_.DATA, jsonPath),
+            jsonbExpression.toJsonB(criteriaBuilder, expression));
+    }
+
+    public Predicate equalText(Root<XmEntity> root, String jsonPath, Object object) {
+        return criteriaBuilder.equal(
+            jsonbExpression.jsonQuery(criteriaBuilder, root, XmEntity_.DATA, jsonPath),
+            jsonbExpression.toJsonbText(criteriaBuilder, object));
     }
 
     public Predicate notEqual(Root<XmEntity> root, String jsonPath, Object object) {
         return criteriaBuilder.notEqual(
-            JsonbUtils.jsonQuery(criteriaBuilder, root, jsonPath),
-            JsonbUtils.toJsonB(criteriaBuilder, object));
+            jsonbExpression.jsonQuery(criteriaBuilder, root, XmEntity_.DATA, jsonPath),
+            jsonbExpression.toJsonB(criteriaBuilder, object));
     }
 
     public Predicate notEqual(Root<XmEntity> xRoot, String xJsonPath, Root<XmEntity> yRoot, String yJsonPath) {
         return criteriaBuilder.notEqual(
-            JsonbUtils.jsonQuery(criteriaBuilder, xRoot, xJsonPath),
-            JsonbUtils.jsonQuery(criteriaBuilder, yRoot, yJsonPath));
+            jsonbExpression.jsonQuery(criteriaBuilder, xRoot, XmEntity_.DATA, xJsonPath),
+            jsonbExpression.jsonQuery(criteriaBuilder, yRoot, XmEntity_.DATA, yJsonPath));
     }
 
     public Predicate notEqual(Root<XmEntity> root, String jsonPath, Expression<?> expression) {
         return criteriaBuilder.notEqual(
-            JsonbUtils.jsonQuery(criteriaBuilder, root, jsonPath),
-            JsonbUtils.toJsonB(criteriaBuilder, expression));
+            jsonbExpression.jsonQuery(criteriaBuilder, root, XmEntity_.DATA, jsonPath),
+            jsonbExpression.toJsonB(criteriaBuilder, expression));
     }
 
-    public Predicate greaterThan(Root<XmEntity> root, String jsonPath, Object object) {
+    public Predicate notEqualText(Root<XmEntity> root, String jsonPath, Object object) {
+        return criteriaBuilder.notEqual(
+            jsonbExpression.jsonQuery(criteriaBuilder, root, XmEntity_.DATA, jsonPath),
+            jsonbExpression.toJsonbText(criteriaBuilder, object));
+    }
+
+    public Predicate greaterThanText(Root<XmEntity> root, String jsonPath, Object object) {
         return criteriaBuilder.greaterThan(
-            JsonbUtils.jsonQuery(criteriaBuilder, root, jsonPath, String.class),
-            JsonbUtils.toJsonB(criteriaBuilder, object, String.class));
+            jsonbExpression.jsonQuery(criteriaBuilder, root, XmEntity_.DATA, jsonPath, String.class),
+            jsonbExpression.toJsonbText(criteriaBuilder, object, String.class));
     }
 
     public Predicate greaterThan(Root<XmEntity> xRoot, String xJsonPath, Root<XmEntity> yRoot, String yJsonPath) {
         return criteriaBuilder.greaterThan(
-            JsonbUtils.jsonQuery(criteriaBuilder, xRoot, xJsonPath, String.class),
-            JsonbUtils.jsonQuery(criteriaBuilder, yRoot, yJsonPath, String.class));
+            jsonbExpression.jsonQuery(criteriaBuilder, xRoot, XmEntity_.DATA, xJsonPath, String.class),
+            jsonbExpression.jsonQuery(criteriaBuilder, yRoot, XmEntity_.DATA, yJsonPath, String.class));
     }
 
     public Predicate greaterThan(Root<XmEntity> root, String jsonPath, Expression<?> expression) {
         return criteriaBuilder.greaterThan(
-            JsonbUtils.jsonQuery(criteriaBuilder, root, jsonPath, String.class),
-            JsonbUtils.toJsonB(criteriaBuilder, expression, String.class));
+            jsonbExpression.jsonQuery(criteriaBuilder, root, XmEntity_.DATA, jsonPath, String.class),
+            jsonbExpression.toJsonB(criteriaBuilder, expression, String.class));
+    }
+
+    public Predicate greaterThan(Root<XmEntity> root, String jsonPath, Object object) {
+        return criteriaBuilder.greaterThan(
+            jsonbExpression.jsonQuery(criteriaBuilder, root, XmEntity_.DATA, jsonPath, String.class),
+            jsonbExpression.toJsonB(criteriaBuilder, object, String.class));
     }
 
     public Predicate greaterThanOrEqualTo(Root<XmEntity> root, String jsonPath, Object object) {
         return criteriaBuilder.greaterThanOrEqualTo(
-            JsonbUtils.jsonQuery(criteriaBuilder, root, jsonPath, String.class),
-            JsonbUtils.toJsonB(criteriaBuilder, object, String.class));
+            jsonbExpression.jsonQuery(criteriaBuilder, root, XmEntity_.DATA, jsonPath, String.class),
+            jsonbExpression.toJsonB(criteriaBuilder, object, String.class));
     }
 
     public Predicate greaterThanOrEqualTo(Root<XmEntity> xRoot, String xJsonPath, Root<XmEntity> yRoot,
         String yJsonPath) {
         return criteriaBuilder.greaterThanOrEqualTo(
-            JsonbUtils.jsonQuery(criteriaBuilder, xRoot, xJsonPath, String.class),
-            JsonbUtils.jsonQuery(criteriaBuilder, yRoot, yJsonPath, String.class));
+            jsonbExpression.jsonQuery(criteriaBuilder, xRoot, XmEntity_.DATA, xJsonPath, String.class),
+            jsonbExpression.jsonQuery(criteriaBuilder, yRoot, XmEntity_.DATA, yJsonPath, String.class));
     }
 
     public Predicate greaterThanOrEqualTo(Root<XmEntity> root, String jsonPath, Expression<?> expression) {
         return criteriaBuilder.greaterThanOrEqualTo(
-            JsonbUtils.jsonQuery(criteriaBuilder, root, jsonPath, String.class),
-            JsonbUtils.toJsonB(criteriaBuilder, expression, String.class));
+            jsonbExpression.jsonQuery(criteriaBuilder, root, XmEntity_.DATA, jsonPath, String.class),
+            jsonbExpression.toJsonB(criteriaBuilder, expression, String.class));
+    }
+
+    public Predicate greaterThanOrEqualToText(Root<XmEntity> root, String jsonPath, Object object) {
+        return criteriaBuilder.greaterThanOrEqualTo(
+            jsonbExpression.jsonQuery(criteriaBuilder, root, XmEntity_.DATA, jsonPath, String.class),
+            jsonbExpression.toJsonbText(criteriaBuilder, object, String.class));
     }
 
     public Predicate lessThan(Root<XmEntity> root, String jsonPath, Object object) {
         return criteriaBuilder.lessThan(
-            JsonbUtils.jsonQuery(criteriaBuilder, root, jsonPath, String.class),
-            JsonbUtils.toJsonB(criteriaBuilder, object, String.class));
+            jsonbExpression.jsonQuery(criteriaBuilder, root, XmEntity_.DATA, jsonPath, String.class),
+            jsonbExpression.toJsonB(criteriaBuilder, object, String.class));
     }
 
     public Predicate lessThan(Root<XmEntity> xRoot, String xJsonPath, Root<XmEntity> yRoot, String yJsonPath) {
         return criteriaBuilder.lessThan(
-            JsonbUtils.jsonQuery(criteriaBuilder, xRoot, xJsonPath, String.class),
-            JsonbUtils.jsonQuery(criteriaBuilder, yRoot, yJsonPath, String.class));
+            jsonbExpression.jsonQuery(criteriaBuilder, xRoot, XmEntity_.DATA, xJsonPath, String.class),
+            jsonbExpression.jsonQuery(criteriaBuilder, yRoot, XmEntity_.DATA, yJsonPath, String.class));
     }
 
     public Predicate lessThan(Root<XmEntity> root, String jsonPath, Expression<?> expression) {
         return criteriaBuilder.lessThan(
-            JsonbUtils.jsonQuery(criteriaBuilder, root, jsonPath, String.class),
-            JsonbUtils.toJsonB(criteriaBuilder, expression, String.class));
+            jsonbExpression.jsonQuery(criteriaBuilder, root, XmEntity_.DATA, jsonPath, String.class),
+            jsonbExpression.toJsonB(criteriaBuilder, expression, String.class));
     }
 
     public Predicate lessThanOrEqualTo(Root<XmEntity> root, String jsonPath, Object object) {
         return criteriaBuilder.lessThanOrEqualTo(
-            JsonbUtils.jsonQuery(criteriaBuilder, root, jsonPath, String.class),
-            JsonbUtils.toJsonB(criteriaBuilder, object, String.class));
+            jsonbExpression.jsonQuery(criteriaBuilder, root, XmEntity_.DATA, jsonPath, String.class),
+            jsonbExpression.toJsonB(criteriaBuilder, object, String.class));
+    }
+
+    public Predicate lessThanText(Root<XmEntity> root, String jsonPath, Object object) {
+        return criteriaBuilder.lessThan(
+            jsonbExpression.jsonQuery(criteriaBuilder, root, XmEntity_.DATA, jsonPath, String.class),
+            jsonbExpression.toJsonbText(criteriaBuilder, object, String.class));
     }
 
     public Predicate lessThanOrEqualTo(Root<XmEntity> xRoot, String xJsonPath, Root<XmEntity> yRoot, String yJsonPath) {
         return criteriaBuilder.lessThanOrEqualTo(
-            JsonbUtils.jsonQuery(criteriaBuilder, xRoot, xJsonPath, String.class),
-            JsonbUtils.jsonQuery(criteriaBuilder, yRoot, yJsonPath, String.class));
+            jsonbExpression.jsonQuery(criteriaBuilder, xRoot, XmEntity_.DATA, xJsonPath, String.class),
+            jsonbExpression.jsonQuery(criteriaBuilder, yRoot, XmEntity_.DATA, yJsonPath, String.class));
     }
 
     public Predicate lessThanOrEqualTo(Root<XmEntity> root, String jsonPath, Expression<?> expression) {
         return criteriaBuilder.lessThanOrEqualTo(
-            JsonbUtils.jsonQuery(criteriaBuilder, root, jsonPath, String.class),
-            JsonbUtils.toJsonB(criteriaBuilder, expression, String.class));
+            jsonbExpression.jsonQuery(criteriaBuilder, root, XmEntity_.DATA, jsonPath, String.class),
+            jsonbExpression.toJsonB(criteriaBuilder, expression, String.class));
+    }
+
+    public Predicate lessThanOrEqualToText(Root<XmEntity> root, String jsonPath, Object object) {
+        return criteriaBuilder.lessThanOrEqualTo(
+            jsonbExpression.jsonQuery(criteriaBuilder, root, XmEntity_.DATA, jsonPath, String.class),
+            jsonbExpression.toJsonbText(criteriaBuilder, object, String.class));
     }
 
 }

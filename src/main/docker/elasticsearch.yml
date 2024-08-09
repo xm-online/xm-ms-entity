@@ -1,7 +1,7 @@
 version: '2'
 services:
   entity-elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:6.4.3
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.14.1
     # volumes:
     #     - ~/volumes/jhipster/entity/elasticsearch/:/usr/share/elasticsearch/data/
     ports:

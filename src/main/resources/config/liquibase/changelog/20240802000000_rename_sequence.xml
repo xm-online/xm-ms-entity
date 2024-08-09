@@ -1,0 +1,20 @@
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd
+        http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd">
+
+    <changeSet id="20240802000000" author="vosiievska" context="!test">
+        <preConditions onFail="CONTINUE">
+            <and>
+                <sequenceExists sequenceName="hibernate_sequence"/>
+                <not><dbms type="h2"/></not>
+            </and>
+        </preConditions>
+        <renameSequence newSequenceName="sequencegenerator"
+                        oldSequenceName="hibernate_sequence"/>
+    </changeSet>
+
+</databaseChangeLog>

@@ -9,12 +9,14 @@ import com.icthh.xm.ms.entity.service.ElasticsearchIndexService;
 import lombok.SneakyThrows;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
 
-@WebMvcTest(controllers = ElasticsearchIndexResource.class, secure = false)
+@WebMvcTest(controllers = ElasticsearchIndexResource.class)
+@AutoConfigureMockMvc(addFilters = false)
 @ContextConfiguration(classes={ElasticsearchIndexResource.class})
 public class ElasticsearchIndexResourceUnitTest extends AbstractWebMvcTest {
 

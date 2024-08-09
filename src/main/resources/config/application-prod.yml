@@ -14,9 +14,6 @@
 # ===================================================================
 
 spring:
-    profiles:
-        active: prod
-        include: swagger
     devtools:
         restart:
             enabled: false
@@ -31,7 +28,7 @@ spring:
         stream:
             kafka:
                 binder:
-                    brokers: localhost
+                    brokers: ${spring.kafka.bootstrap-servers}
     datasource:
         type: com.zaxxer.hikari.HikariDataSource
         url: jdbc:postgresql://localhost:5432/entity
@@ -41,7 +38,7 @@ spring:
           poolName: Hikari
           auto-commit: false
     jpa:
-        database-platform: com.icthh.xm.commons.migration.db.jsonb.CustomPostgreSQL95Dialect
+        database-platform: com.icthh.xm.commons.migration.db.jsonb.CustomPostgreSQLDialect
         database: POSTGRESQL
         show-sql: false
         properties:
@@ -57,13 +54,20 @@ spring:
             #hibernate.cache.hazelcast.use_lite_member: true
             hibernate.show_sql: false
             hibernate.format_sql: false
-            hibernate.dialect: com.icthh.xm.commons.migration.db.jsonb.CustomPostgreSQL95Dialect
-    data:
-        elasticsearch:
-            cluster-name:
-            cluster-nodes: localhost:9300
+            hibernate.dialect: com.icthh.xm.commons.migration.db.jsonb.CustomPostgreSQLDialect
     kafka:
-        bootstrap-servers: localhost
+        bootstrap-servers: localhost:9092
+    security:
+        oauth2:
+            client:
+                provider:
+                    uaa:
+                        token-uri: http://localhost:9999/oauth/token
+                registration:
+                    uaa:
+                        authorization-grant-type: client_credentials
+                        client-id: internal
+                        client-secret: internal
     mail:
         host:
         port:
@@ -126,16 +130,12 @@ jhipster:
     mail: # specific JHipster mail property, for standard properties see MailProperties
         from: <tenantname>@xm-online.com
         base-url: http://my-server-url-to-change # Modify according to your server's URL
-    metrics:
-      logs: # Reports metrics in the logs
-        enabled: false
-        report-frequency: 60 # in seconds
     logging:
         logstash: # Forward logs to logstash over a socket, used by LoggingConfiguration
             enabled: false
             host: localhost
             port: 5000
-            queue-size: 512
+            ring-buffer-size: 512
 
 # ===================================================================
 # Application specific properties

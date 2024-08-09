@@ -39,9 +39,9 @@
 
     <logger name="io.github.jhipster" level="#logback.loglevel#"/>
 
-    <logger name="javax.activation" level="WARN"/>
-    <logger name="javax.mail" level="WARN"/>
-    <logger name="javax.xml.bind" level="WARN"/>
+    <logger name="jakarta.annotation" level="WARN"/>
+    <logger name="jakarta.servlet" level="WARN"/>
+    <logger name="jakarta.persistence" level="WARN"/>
     <logger name="ch.qos.logback" level="WARN"/>
     <logger name="com.codahale.metrics" level="WARN"/>
     <logger name="com.netflix" level="WARN"/>

@@ -23,6 +23,8 @@ import com.icthh.xm.ms.entity.domain.spec.LocationSpec;
 import com.icthh.xm.ms.entity.domain.spec.TagSpec;
 import com.icthh.xm.ms.entity.domain.spec.TypeSpec;
 import com.icthh.xm.ms.entity.service.impl.XmEntityServiceImpl;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.Validator;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -34,8 +36,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.List;
 import java.util.Set;
-import javax.validation.ConstraintViolation;
-import javax.validation.Validator;
 
 @Slf4j
 public class XmEntityGeneratorServiceIntTest extends AbstractSpringBootTest {
@@ -85,7 +85,7 @@ public class XmEntityGeneratorServiceIntTest extends AbstractSpringBootTest {
     public void generateXmEntityWithTagsTest() {
         XmEntity generatedEntity = xmEntityGeneratorService.generateXmEntity(ENTITY_TYPE_WITH_TAGS_AND_LOCATIONS_KEY);
 
-        log.info(new ObjectMapper().writeValueAsString(generatedEntity));
+        log.info(objectMapper.writeValueAsString(generatedEntity));
 
         Set<Tag> tags = generatedEntity.getTags();
 
@@ -112,7 +112,7 @@ public class XmEntityGeneratorServiceIntTest extends AbstractSpringBootTest {
     public void generateXmEntityWithLocations() {
         XmEntity generatedEntity = xmEntityGeneratorService.generateXmEntity(ENTITY_TYPE_WITH_TAGS_AND_LOCATIONS_KEY);
 
-        log.info(new ObjectMapper().writeValueAsString(generatedEntity));
+        log.info(objectMapper.writeValueAsString(generatedEntity));
 
         Set<Location> locations = generatedEntity.getLocations();
 
@@ -139,7 +139,7 @@ public class XmEntityGeneratorServiceIntTest extends AbstractSpringBootTest {
     @SneakyThrows
     public void generateXmEntityWithRequiredDataFields() {
         XmEntity generatedEntity = xmEntityGeneratorService.generateXmEntity("TYPE3");
-        log.info(new ObjectMapper().writeValueAsString(generatedEntity));
+        log.info(objectMapper.writeValueAsString(generatedEntity));
 
         Set<ConstraintViolation<XmEntity>> constraintViolations = validator.validate(generatedEntity);
         assertEquals(0, constraintViolations.size());

@@ -90,8 +90,8 @@ public class XmEntityProjectionServiceUnitTest extends AbstractUnitTest {
 
     @Test
     public void findStateProjectionByKeyReturnEmptyIfNotFound() {
-        IdOrKey idOrKey = IdOrKey.of("100");
-        when(xmEntityProjectionRepository.findStateProjectionByKey(eq("100"))).thenReturn(null);
+        IdOrKey idOrKey = IdOrKey.of("key");
+        when(xmEntityProjectionRepository.findStateProjectionByKey(eq("key"))).thenReturn(null);
         Optional<XmEntityStateProjection> stateProjection = xmEntityProjectionService.findStateProjection(idOrKey);
         assertThat(stateProjection).isEmpty();
     }

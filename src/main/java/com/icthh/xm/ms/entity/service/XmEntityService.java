@@ -2,6 +2,7 @@ package com.icthh.xm.ms.entity.service;
 
 import com.icthh.xm.commons.logging.LoggingAspectConfig;
 import com.icthh.xm.commons.permission.access.repository.ResourceRepository;
+import com.icthh.xm.commons.search.dto.SearchDto;
 import com.icthh.xm.ms.entity.domain.Link;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.domain.ext.IdOrKey;
@@ -10,27 +11,25 @@ import com.icthh.xm.ms.entity.projection.XmEntityIdKeyTypeKey;
 import com.icthh.xm.ms.entity.projection.XmEntityStateProjection;
 import com.icthh.xm.ms.entity.service.dto.LinkSourceDto;
 
-import com.icthh.xm.ms.entity.service.dto.SearchDto;
 import java.net.URI;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
-import javax.annotation.Nullable;
 
+import jakarta.annotation.Nullable;
 import org.apache.commons.lang3.NotImplementedException;
 import org.intellij.lang.annotations.Language;
 import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.elasticsearch.core.query.FetchSourceFilter;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-public interface XmEntityService extends ResourceRepository {
+public interface XmEntityService extends ResourceRepository<XmEntity, Long> {
 
     XmEntity save(XmEntity xmEntity);
 
@@ -128,7 +127,7 @@ public interface XmEntityService extends ResourceRepository {
     boolean existsByTypeKeyIgnoreCase(String typeKey, String name);
 
     @Override
-    Object findResourceById(Object id);
+    XmEntity findResourceById(Long id);
 
     /**
      * For backward compatibility in LEPs.

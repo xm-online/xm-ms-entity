@@ -1,20 +1,18 @@
 package com.icthh.xm.ms.entity.config;
 
-import static org.apache.http.client.protocol.HttpClientContext.REQUEST_CONFIG;
-
 import java.net.URI;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.function.Consumer;
-import java.util.function.Function;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import org.apache.http.client.config.RequestConfig;
-import org.apache.http.client.protocol.HttpClientContext;
-import org.apache.http.protocol.HttpContext;
+import org.apache.hc.client5.http.config.RequestConfig;
+import org.apache.hc.client5.http.protocol.HttpClientContext;
+import org.apache.hc.core5.http.protocol.HttpContext;
+import org.apache.hc.core5.util.Timeout;
 import org.springframework.cloud.client.loadbalancer.RestTemplateCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -64,14 +62,14 @@ public class RestTemplateConfiguration {
         protected HttpContext createHttpContext(HttpMethod httpMethod, URI uri) {
             for (PathTimeoutConfig config : pathPatternTimeoutConfigs) {
                 if (httpMethod.equals(config.getHttpMethod()) && matcher.match(config.getPathPattern(), uri.getPath())) {
-                    RequestConfig requestConfig = createRequestConfig(getHttpClient());
-                    RequestConfig.Builder builder = RequestConfig.copy(requestConfig);
-                    setIfNotNull(config.getReadTimeout(),  builder::setSocketTimeout);
+
+                    RequestConfig.Builder builder = RequestConfig.custom();
+                    setIfNotNull(config.getReadTimeout(),  builder::setResponseTimeout);
                     setIfNotNull(config.getConnectionTimeout(),  builder::setConnectTimeout);
                     setIfNotNull(config.getConnectionRequestTimeout(),  builder::setConnectionRequestTimeout);
 
                     HttpClientContext context = HttpClientContext.create();
-                    context.setAttribute(REQUEST_CONFIG, builder.build());
+                    context.setAttribute(HttpClientContext.REQUEST_CONFIG, builder.build());
                     return context;
                 }
             }
@@ -80,11 +78,11 @@ public class RestTemplateConfiguration {
             return null;
         }
 
-        private <T> void setIfNotNull(T value, Consumer<T> setterMethod) {
+        private void setIfNotNull(Integer value, Consumer<Timeout> setterMethod) {
             if (value == null) {
                 return;
             }
-            setterMethod.accept(value);
+            setterMethod.accept(Timeout.ofMilliseconds(value));
         }
 
         public void addPathTimeoutConfig(PathTimeoutConfig pathTimeoutConfig) {

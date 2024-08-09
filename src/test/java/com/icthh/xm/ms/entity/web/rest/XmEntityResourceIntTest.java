@@ -3,15 +3,20 @@ package com.icthh.xm.ms.entity.web.rest;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableMap;
 import com.icthh.xm.commons.i18n.error.web.ExceptionTranslator;
+import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_AUTH_CONTEXT;
+import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_TENANT_CONTEXT;
 import com.icthh.xm.commons.security.XmAuthenticationContext;
 import com.icthh.xm.commons.security.XmAuthenticationContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
+import static com.icthh.xm.commons.tenant.TenantContextUtils.getRequiredTenantKeyValue;
 import com.icthh.xm.lep.api.LepManager;
+import com.icthh.xm.ms.entity.AbstractElasticSpringBootTest;
 import com.icthh.xm.ms.entity.AbstractSpringBootTest;
 import com.icthh.xm.ms.entity.config.ApplicationProperties;
 import com.icthh.xm.ms.entity.config.Constants;
 import com.icthh.xm.ms.entity.config.InternalTransactionService;
+import static com.icthh.xm.ms.entity.config.TenantConfigMockConfiguration.getXmEntityTemplatesSpec;
 import com.icthh.xm.ms.entity.config.XmEntityTenantConfigService;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.domain.spec.StateSpec;
@@ -26,7 +31,6 @@ import com.icthh.xm.ms.entity.repository.search.XmEntityPermittedSearchRepositor
 import com.icthh.xm.ms.entity.repository.search.XmEntitySearchRepository;
 import com.icthh.xm.ms.entity.service.AttachmentService;
 import com.icthh.xm.ms.entity.service.FunctionService;
-import com.icthh.xm.ms.entity.service.json.JsonValidationService;
 import com.icthh.xm.ms.entity.service.LifecycleLepStrategyFactory;
 import com.icthh.xm.ms.entity.service.LinkService;
 import com.icthh.xm.ms.entity.service.ProfileService;
@@ -38,42 +42,10 @@ import com.icthh.xm.ms.entity.service.XmEntitySpecService;
 import com.icthh.xm.ms.entity.service.XmEntityTemplatesSpecService;
 import com.icthh.xm.ms.entity.service.impl.StartUpdateDateGenerationStrategy;
 import com.icthh.xm.ms.entity.service.impl.XmEntityServiceImpl;
+import com.icthh.xm.ms.entity.service.json.JsonValidationService;
+import jakarta.persistence.EntityManager;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.mockito.Mock;
-import org.mockito.Mockito;
-import org.mockito.MockitoAnnotations;
-import org.mockito.Spy;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
-import org.springframework.security.test.context.support.WithMockUser;
-import org.springframework.test.context.transaction.BeforeTransaction;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.validation.Validator;
-
-import javax.persistence.EntityManager;
-import java.net.URI;
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-
-import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_AUTH_CONTEXT;
-import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_TENANT_CONTEXT;
-import static com.icthh.xm.commons.tenant.TenantContextUtils.getRequiredTenantKeyValue;
-import static com.icthh.xm.ms.entity.config.TenantConfigMockConfiguration.getXmEntityTemplatesSpec;
-import static liquibase.util.StringUtils.repeat;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.everyItem;
@@ -85,17 +57,47 @@ import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.nullValue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
+import org.mockito.Mockito;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import org.mockito.MockitoAnnotations;
+import org.mockito.Spy;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
+import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.context.transaction.BeforeTransaction;
+import org.springframework.test.web.servlet.MockMvc;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.validation.Validator;
+
+import java.net.URI;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static software.amazon.awssdk.utils.StringUtils.repeat;
 
 /**
  * Test class for the XmEntityResource REST controller.
@@ -104,7 +106,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  */
 @Slf4j
 @WithMockUser(authorities = {"SUPER-ADMIN"})
-public class XmEntityResourceIntTest extends AbstractSpringBootTest {
+public class XmEntityResourceIntTest extends AbstractElasticSpringBootTest {
 
     private static final String DEFAULT_KEY = "AAAAAAAAAA";
     private static final String UPDATED_KEY = "BBBBBBBBBB";
@@ -230,6 +232,7 @@ public class XmEntityResourceIntTest extends AbstractSpringBootTest {
     private LepManager lepManager;
 
     private MockMvc restXmEntityMockMvc;
+    private MockMvc restXmEntitySearchMockMvc;
 
     private XmEntity xmEntity;
 
@@ -251,17 +254,17 @@ public class XmEntityResourceIntTest extends AbstractSpringBootTest {
     }
 
     @SneakyThrows
-    @Before
+    @BeforeEach
     public void setup() {
 
         TenantContextUtils.setTenant(tenantContextHolder, "RESINTTEST");
 
         //initialize index before test - put valid mapping
         if (!elasticInited) {
-            initElasticsearch();
+            initElasticsearch(tenantContextHolder);
             elasticInited = true;
         }
-        cleanElasticsearch();
+        cleanElasticsearch(tenantContextHolder);
 
         MockitoAnnotations.initMocks(this);
         when(authContextHolder.getContext()).thenReturn(context);
@@ -320,10 +323,16 @@ public class XmEntityResourceIntTest extends AbstractSpringBootTest {
             .setValidator(validator)
             .setMessageConverters(jacksonMessageConverter).build();
 
+        this.restXmEntitySearchMockMvc = MockMvcBuilders.standaloneSetup(new XmEntitySearchResource(xmEntityServiceImpl))
+            .setCustomArgumentResolvers(pageableArgumentResolver)
+            .setControllerAdvice(exceptionTranslator)
+            .setValidator(validator)
+            .setMessageConverters(jacksonMessageConverter).build();
+
         xmEntity = createEntity();
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         lepManager.endThreadContext();
         tenantContextHolder.getPrivilegedContext().destroyCurrentContext();
@@ -350,7 +359,7 @@ public class XmEntityResourceIntTest extends AbstractSpringBootTest {
             .removed(DEFAULT_REMOVED);
     }
 
-    @Before
+    @BeforeEach
     public void initTest() {
         //    xmEntitySearchRepository.deleteAll();
     }
@@ -513,7 +522,7 @@ public class XmEntityResourceIntTest extends AbstractSpringBootTest {
 
     @Test
     @Transactional
-    @Ignore("see XmEntityResourceExtendedIntTest.checkStartDateIsNotRequired instead")
+    @Disabled("see XmEntityResourceExtendedIntTest.checkStartDateIsNotRequired instead")
     public void checkStartDateIsRequired() throws Exception {
         int databaseSizeBeforeTest = xmEntityRepository.findAll().size();
         // set the field null
@@ -538,7 +547,7 @@ public class XmEntityResourceIntTest extends AbstractSpringBootTest {
 
     @Test
     @Transactional
-    @Ignore("see XmEntityResourceExtendedIntTest.checkUpdateDateIsNotRequired instead")
+    @Disabled("see XmEntityResourceExtendedIntTest.checkUpdateDateIsNotRequired instead")
     public void checkUpdateDateIsRequired() throws Exception {
         int databaseSizeBeforeTest = xmEntityRepository.findAll().size();
         // set the field null
@@ -571,7 +580,7 @@ public class XmEntityResourceIntTest extends AbstractSpringBootTest {
         // Get all the xmEntityList
         restXmEntityMockMvc.perform(get("/api/xm-entities?sort=id,desc"))
             .andExpect(status().isOk())
-            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
             .andExpect(jsonPath("$.[*].id").value(hasItem(xmEntity.getId().intValue())))
             .andExpect(jsonPath("$.[*].key").value(hasItem(DEFAULT_KEY.toString())))
             .andExpect(jsonPath("$.[*].typeKey").value(hasItem(DEFAULT_TYPE_KEY.toString())))
@@ -600,7 +609,7 @@ public class XmEntityResourceIntTest extends AbstractSpringBootTest {
         // Get all the xmEntityList
         restXmEntityMockMvc.perform(get("/api/xm-entities-by-ids?ids={ids}&embed=tags&sort=id,desc", en1.getId() + "," + en3.getId()))
             .andExpect(status().isOk())
-            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
             .andExpect(jsonPath("$").value(hasSize(2)))
             .andExpect(header().longValue("X-Total-Count", 2))
             .andExpect(jsonPath("$.[*].id").value(hasItems(en1.getId().intValue(), en3.getId().intValue())))
@@ -630,7 +639,7 @@ public class XmEntityResourceIntTest extends AbstractSpringBootTest {
         // Get the xmEntity
         restXmEntityMockMvc.perform(get("/api/xm-entities/{id}", xmEntity.getId()))
             .andExpect(status().isOk())
-            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
             .andExpect(jsonPath("$.id").value(xmEntity.getId().intValue()))
             .andExpect(jsonPath("$.key").value(DEFAULT_KEY.toString()))
             .andExpect(jsonPath("$.typeKey").value(DEFAULT_TYPE_KEY.toString()))
@@ -774,9 +783,9 @@ public class XmEntityResourceIntTest extends AbstractSpringBootTest {
         xmEntitySearchRepository.refresh();
 
         // Search the xmEntity
-        restXmEntityMockMvc.perform(get("/api/_search/xm-entities?query=id:" + xmEntity.getId()))
+        restXmEntitySearchMockMvc.perform(get("/api/_search/xm-entities?query=id:" + xmEntity.getId()))
             .andExpect(status().isOk())
-            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
             .andExpect(jsonPath("$.[*].id").value(hasItem(xmEntity.getId().intValue())))
             .andExpect(jsonPath("$.[*].key").value(hasItem(DEFAULT_KEY.toString())))
             .andExpect(jsonPath("$.[*].typeKey").value(hasItem(DEFAULT_TYPE_KEY.toString())))
@@ -801,11 +810,11 @@ public class XmEntityResourceIntTest extends AbstractSpringBootTest {
         xmEntitySearchRepository.refresh();
 
         // Search the xmEntity
-        restXmEntityMockMvc.perform(get("/api/_search/v2/xm-entities?query=id:" + xmEntity.getId()
+        restXmEntitySearchMockMvc.perform(get("/api/_search/v2/xm-entities?query=id:" + xmEntity.getId()
             +"&excludes=id&excludes=key&excludes=typeKey"))
             .andDo(print())
             .andExpect(status().isOk())
-            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
             .andExpect(jsonPath("$.[*].id").value(hasItem(nullValue())))
             .andExpect(jsonPath("$.[*].key").value(hasItem(nullValue())))
             .andExpect(jsonPath("$.[*].typeKey").value(hasItem(nullValue())))
@@ -830,10 +839,10 @@ public class XmEntityResourceIntTest extends AbstractSpringBootTest {
         xmEntitySearchRepository.refresh();
 
         // Search the xmEntity
-        restXmEntityMockMvc.perform(get("/api/_search/v2/xm-entities?query=id:" + xmEntity.getId()
+        restXmEntitySearchMockMvc.perform(get("/api/_search/v2/xm-entities?query=id:" + xmEntity.getId()
             +"&includes=id&includes=key&includes=typeKey"))
             .andExpect(status().isOk())
-            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
             .andExpect(jsonPath("$.[*].id").value(hasItem(xmEntity.getId().intValue())))
             .andExpect(jsonPath("$.[*].key").value(hasItem(DEFAULT_KEY)))
             .andExpect(jsonPath("$.[*].typeKey").value(hasItem(DEFAULT_TYPE_KEY)))
@@ -858,9 +867,9 @@ public class XmEntityResourceIntTest extends AbstractSpringBootTest {
         }, this::setup);
         xmEntitySearchRepository.refresh();
         // Search the xmEntity
-        restXmEntityMockMvc.perform(get("/api/_search-with-template/xm-entities?template=BY_TYPEKEY_AND_ID&templateParams[typeKey]=" + xmEntity.getTypeKey() + "&templateParams[id]=" + xmEntity.getId()))
+        restXmEntitySearchMockMvc.perform(get("/api/_search-with-template/xm-entities?template=BY_TYPEKEY_AND_ID&templateParams[typeKey]=" + xmEntity.getTypeKey() + "&templateParams[id]=" + xmEntity.getId()))
             .andExpect(status().isOk())
-            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
             .andExpect(jsonPath("$.[*].id").value(hasItem(xmEntity.getId().intValue())))
             .andExpect(jsonPath("$.[*].key").value(hasItem(DEFAULT_KEY.toString())))
             .andExpect(jsonPath("$.[*].typeKey").value(hasItem(DEFAULT_TYPE_KEY.toString())))
@@ -881,7 +890,7 @@ public class XmEntityResourceIntTest extends AbstractSpringBootTest {
         // Initialize the database
         xmEntityServiceImpl.save(xmEntity);
         // Search the xmEntity
-        restXmEntityMockMvc.perform(get("/api/_search-with-template/xm-entities"))
+        restXmEntitySearchMockMvc.perform(get("/api/_search-with-template/xm-entities"))
             .andExpect(status().is4xxClientError());
     }
 

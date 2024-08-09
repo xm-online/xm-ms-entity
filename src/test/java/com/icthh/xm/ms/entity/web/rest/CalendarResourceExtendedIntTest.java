@@ -25,7 +25,8 @@ import com.icthh.xm.ms.entity.service.impl.StartUpdateDateGenerationStrategy;
 import com.icthh.xm.ms.entity.service.query.EventQueryService;
 import java.time.Instant;
 import java.util.List;
-import javax.persistence.EntityManager;
+
+import jakarta.persistence.EntityManager;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;

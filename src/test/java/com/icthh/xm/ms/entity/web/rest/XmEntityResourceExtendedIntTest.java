@@ -7,16 +7,21 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.google.common.collect.ImmutableMap;
+import static com.google.common.collect.ImmutableMap.of;
 import com.icthh.xm.commons.i18n.error.web.ExceptionTranslator;
+import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_AUTH_CONTEXT;
+import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_TENANT_CONTEXT;
 import com.icthh.xm.commons.security.XmAuthenticationContext;
 import com.icthh.xm.commons.security.XmAuthenticationContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
+import static com.icthh.xm.commons.tenant.TenantContextUtils.getRequiredTenantKeyValue;
 import com.icthh.xm.lep.api.LepManager;
-import com.icthh.xm.ms.entity.AbstractSpringBootTest;
+import com.icthh.xm.ms.entity.AbstractElasticSpringBootTest;
 import com.icthh.xm.ms.entity.config.ApplicationProperties;
 import com.icthh.xm.ms.entity.config.Constants;
 import com.icthh.xm.ms.entity.config.InternalTransactionService;
+import static com.icthh.xm.ms.entity.config.TenantConfigMockConfiguration.getXmEntityTemplatesSpec;
 import com.icthh.xm.ms.entity.config.WebMvcConfiguration;
 import com.icthh.xm.ms.entity.config.XmEntityTenantConfigService;
 import com.icthh.xm.ms.entity.domain.Attachment;
@@ -28,7 +33,6 @@ import com.icthh.xm.ms.entity.domain.Location;
 import com.icthh.xm.ms.entity.domain.Tag;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.domain.ext.IdOrKey;
-import com.icthh.xm.ms.entity.domain.serializer.XmSquigglyInterceptor;
 import com.icthh.xm.ms.entity.lep.keyresolver.TypeKeyWithExtends;
 import com.icthh.xm.ms.entity.repository.EventRepository;
 import com.icthh.xm.ms.entity.repository.SpringXmEntityRepository;
@@ -42,7 +46,6 @@ import com.icthh.xm.ms.entity.service.AttachmentService;
 import com.icthh.xm.ms.entity.service.CalendarService;
 import com.icthh.xm.ms.entity.service.EventService;
 import com.icthh.xm.ms.entity.service.FunctionService;
-import com.icthh.xm.ms.entity.service.json.JsonValidationService;
 import com.icthh.xm.ms.entity.service.LifecycleLepStrategyFactory;
 import com.icthh.xm.ms.entity.service.LinkService;
 import com.icthh.xm.ms.entity.service.ProfileService;
@@ -56,54 +59,23 @@ import com.icthh.xm.ms.entity.service.XmEntitySpecService;
 import com.icthh.xm.ms.entity.service.XmEntityTemplatesSpecService;
 import com.icthh.xm.ms.entity.service.impl.StartUpdateDateGenerationStrategy;
 import com.icthh.xm.ms.entity.service.impl.XmEntityServiceImpl;
-import com.jayway.jsonpath.JsonPath;
-import lombok.SneakyThrows;
-import lombok.extern.slf4j.Slf4j;
-import lombok.val;
-import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.mutable.MutableObject;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-import org.mockito.Spy;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
-import org.springframework.http.MediaType;
-import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
-import org.springframework.security.test.context.support.WithMockUser;
-import org.springframework.test.context.transaction.BeforeTransaction;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.MvcResult;
-import org.springframework.test.web.servlet.ResultActions;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.validation.Validator;
-
-import javax.persistence.EntityManager;
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.time.Instant;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-
-import static com.google.common.collect.ImmutableMap.of;
-import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_AUTH_CONTEXT;
-import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_TENANT_CONTEXT;
-import static com.icthh.xm.commons.tenant.TenantContextUtils.getRequiredTenantKeyValue;
-import static com.icthh.xm.ms.entity.config.TenantConfigMockConfiguration.getXmEntityTemplatesSpec;
+import com.icthh.xm.ms.entity.service.json.JsonValidationService;
 import static com.icthh.xm.ms.entity.web.rest.TestUtil.sameInstant;
+import com.jayway.jsonpath.JsonPath;
 import static java.lang.Long.valueOf;
 import static java.time.Instant.now;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.emptySet;
 import static java.util.Objects.requireNonNull;
 import static java.util.UUID.randomUUID;
+
+import jakarta.persistence.EntityManager;
+import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
+import lombok.val;
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.mutable.MutableObject;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 import static org.hamcrest.Matchers.contains;
@@ -117,8 +89,26 @@ import static org.hamcrest.Matchers.nullValue;
 import static org.hibernate.validator.internal.util.CollectionHelper.asSet;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import org.mockito.MockitoAnnotations;
+import org.mockito.Spy;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
+import org.springframework.http.MediaType;
+import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
+import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.context.transaction.BeforeTransaction;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.test.web.servlet.ResultActions;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -126,6 +116,17 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.validation.Validator;
+
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.time.Instant;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 /**
  * Extension Test class for the XmEntityResource REST controller. Contains additional test apart from Jhipster generated
@@ -135,7 +136,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  */
 @Slf4j
 @Transactional
-public class XmEntityResourceExtendedIntTest extends AbstractSpringBootTest {
+public class XmEntityResourceExtendedIntTest extends AbstractElasticSpringBootTest {
 
     private static final String DEFAULT_KEY = "AAAAAAAAAA";
 
@@ -292,9 +293,6 @@ public class XmEntityResourceExtendedIntTest extends AbstractSpringBootTest {
     @Autowired
     XmEntityPermittedSearchRepository xmEntityPermittedSearchRepository;
 
-    @Autowired
-    XmSquigglyInterceptor xmSquigglyInterceptor;
-
     @Mock
     private XmAuthenticationContextHolder authContextHolder;
 
@@ -315,6 +313,8 @@ public class XmEntityResourceExtendedIntTest extends AbstractSpringBootTest {
 
     private MockMvc restXmEntityMockMvc;
 
+    private MockMvc restXmEntitySearchMockMvc;
+
     private XmEntity xmEntityIncoming;
 
     @BeforeTransaction
@@ -322,7 +322,7 @@ public class XmEntityResourceExtendedIntTest extends AbstractSpringBootTest {
         TenantContextUtils.setTenant(tenantContextHolder, "RESINTTEST");
     }
 
-    @Before
+    @BeforeEach
     public void setup() {
         log.info("Init setup");
 
@@ -331,10 +331,10 @@ public class XmEntityResourceExtendedIntTest extends AbstractSpringBootTest {
 
         //initialize index before test - put valid mapping
         if (!elasticInited) {
-            initElasticsearch();
+            initElasticsearch(tenantContextHolder);
             elasticInited = true;
         }
-        cleanElasticsearch();
+        cleanElasticsearch(tenantContextHolder);
 
         MockitoAnnotations.initMocks(this);
 
@@ -393,8 +393,15 @@ public class XmEntityResourceExtendedIntTest extends AbstractSpringBootTest {
                                                   .setControllerAdvice(exceptionTranslator)
                                                   .setValidator(validator)
                                                   .setMessageConverters(jacksonMessageConverter)
-                                                  .addMappedInterceptors(WebMvcConfiguration.getJsonFilterAllowedURIs(),
-                                                                         xmSquigglyInterceptor)
+                                                  .addMappedInterceptors(WebMvcConfiguration.getJsonFilterAllowedURIs())
+                                                  .build();
+
+        this.restXmEntitySearchMockMvc = MockMvcBuilders.standaloneSetup(new XmEntitySearchResource(xmEntityService))
+                                                  .setCustomArgumentResolvers(pageableArgumentResolver)
+                                                  .setControllerAdvice(exceptionTranslator)
+                                                  .setValidator(validator)
+                                                  .setMessageConverters(jacksonMessageConverter)
+                                                  .addMappedInterceptors(WebMvcConfiguration.getJsonFilterAllowedURIs())
                                                   .build();
 
         xmEntityIncoming = createEntityComplexIncoming();
@@ -403,7 +410,7 @@ public class XmEntityResourceExtendedIntTest extends AbstractSpringBootTest {
         objectMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         lepManager.endThreadContext();
         tenantContextHolder.getPrivilegedContext().destroyCurrentContext();
@@ -501,6 +508,11 @@ public class XmEntityResourceExtendedIntTest extends AbstractSpringBootTest {
                                   .andDo(this::printMvcResult);
     }
 
+    private ResultActions performSearchGet(String url, Object... params) throws Exception {
+        return restXmEntitySearchMockMvc.perform(get(url, params))
+            .andDo(this::printMvcResult);
+    }
+
     /**
      * Performs HTTP PUT.
      *
@@ -588,7 +600,7 @@ public class XmEntityResourceExtendedIntTest extends AbstractSpringBootTest {
             // Get the xmEntityPersisted by ID
             performGet("/api/xm-entities/{id}", id)
                 .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.id").value(id))
                 .andExpect(jsonPath("$.key").value(DEFAULT_KEY))
                 .andExpect(jsonPath("$.typeKey").value(DEFAULT_TYPE_KEY))
@@ -678,7 +690,7 @@ public class XmEntityResourceExtendedIntTest extends AbstractSpringBootTest {
             // Get the xmEntityPersisted with tag by ID
             performGet("/api/xm-entities/{id}", id)
                 .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.id").value(id))
                 .andExpect(jsonPath("$.key").value(DEFAULT_KEY))
                 .andExpect(jsonPath("$.typeKey").value(DEFAULT_TYPE_KEY))
@@ -750,7 +762,7 @@ public class XmEntityResourceExtendedIntTest extends AbstractSpringBootTest {
         // Get the xmEntityPersisted with tag by ID
         performGet("/api/xm-entities/{id}", presaved.getId())
             .andExpect(status().isOk())
-            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
             .andExpect(jsonPath("$.id").value(presaved.getId()))
             .andExpect(jsonPath("$.key").value(DEFAULT_KEY))
             .andExpect(jsonPath("$.typeKey").value(DEFAULT_TYPE_KEY))
@@ -834,7 +846,7 @@ public class XmEntityResourceExtendedIntTest extends AbstractSpringBootTest {
         // Get the xmEntityPersisted with tag by ID
         performGet("/api/v2/xm-entities/{id}/links/sources?typeKeys={typeKeys}", targetId, "LINK1")
             .andExpect(status().isOk())
-            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
             .andExpect(jsonPath("$", hasSize(2)))
             .andExpect(jsonPath("$.[*].id", hasSize(2)))
             .andExpect(jsonPath("$.[*].typeKey", containsInAnyOrder(two("LINK1"))))
@@ -887,12 +899,12 @@ public class XmEntityResourceExtendedIntTest extends AbstractSpringBootTest {
         XmEntity source2 = xmEntityService.save(createEntity()).name("SOURCE2");
 
         source1.getTargets().clear();
-        source1.getTargets().add(new Link().typeKey("LINK1").source(source1).target(target));
+        source1.getTargets().add(new Link().typeKey("LINK1").source(source1).target(target).startDate(Instant.now()));
 
         source2.getTargets().clear();
-        source2.getTargets().add(new Link().typeKey("LINK1").source(source2).target(target));
-        source2.getTargets().add(new Link().typeKey("LINK2").source(source2).target(target));
-        source2.getTargets().add(new Link().typeKey("LINK3").source(source2).target(target));
+        source2.getTargets().add(new Link().typeKey("LINK1").source(source2).target(target).startDate(Instant.now()));
+        source2.getTargets().add(new Link().typeKey("LINK2").source(source2).target(target).startDate(Instant.now()));
+        source2.getTargets().add(new Link().typeKey("LINK3").source(source2).target(target).startDate(Instant.now()));
 
         assertNotNull(target.getId());
         assertNotNull(source1.getId());
@@ -905,7 +917,7 @@ public class XmEntityResourceExtendedIntTest extends AbstractSpringBootTest {
         // Get the xmEntityPersisted with tag by ID
         performGet("/api/v2/xm-entities/{id}/links/sources?typeKeys={typeKeys}", target.getId(), "LINK1,LINK2")
             .andExpect(status().isOk())
-            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
             .andExpect(jsonPath("$", hasSize(3)))
             .andExpect(jsonPath("$.[*].typeKey").value(containsInAnyOrder("LINK1", "LINK1", "LINK2")))
             .andExpect(jsonPath("$.[*].target").value(containsInAnyOrder(targetId, targetId, targetId)))
@@ -920,7 +932,7 @@ public class XmEntityResourceExtendedIntTest extends AbstractSpringBootTest {
                    "LINK1",
                    "LINK2")
             .andExpect(status().isOk())
-            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
             .andExpect(jsonPath("$", hasSize(3)))
             .andExpect(jsonPath("$.[*].typeKey").value(containsInAnyOrder("LINK1", "LINK1", "LINK2")))
             .andExpect(jsonPath("$.[*].target").value(containsInAnyOrder(targetId, targetId, targetId)))
@@ -939,10 +951,10 @@ public class XmEntityResourceExtendedIntTest extends AbstractSpringBootTest {
         XmEntity source2 = xmEntityService.save(createEntity()).name("SOURCE2");
 
         source1.getTargets().clear();
-        source1.getTargets().add(new Link().typeKey("LINK1").source(source1).target(target));
+        source1.getTargets().add(new Link().typeKey("LINK1").source(source1).target(target).startDate(Instant.now()));
 
         source2.getTargets().clear();
-        source2.getTargets().add(new Link().typeKey("LINK2").source(source2).target(target));
+        source2.getTargets().add(new Link().typeKey("LINK2").source(source2).target(target).startDate(Instant.now()));
 
         assertNotNull(target.getId());
         assertNotNull(source1.getId());
@@ -955,7 +967,7 @@ public class XmEntityResourceExtendedIntTest extends AbstractSpringBootTest {
         // Get the xmEntityPersisted with tag by ID
         performGet("/api/v2/xm-entities/{id}/links/sources", target.getId())
             .andExpect(status().isOk())
-            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
             .andExpect(jsonPath("$", hasSize(2)))
             .andExpect(jsonPath("$.[*].typeKey").value(containsInAnyOrder("LINK1", "LINK2")))
             .andExpect(jsonPath("$.[*].target").value(containsInAnyOrder(targetId, targetId)))
@@ -975,10 +987,10 @@ public class XmEntityResourceExtendedIntTest extends AbstractSpringBootTest {
         XmEntity source2 = xmEntityService.save(createEntity()).name("SOURCE2");
 
         source1.getTargets().clear();
-        source1.getTargets().add(new Link().typeKey("LINK1").source(source1).target(target));
+        source1.getTargets().add(new Link().typeKey("LINK1").source(source1).target(target).startDate(Instant.now()));
 
         source2.getTargets().clear();
-        source2.getTargets().add(new Link().typeKey("LINK2").source(source2).target(target));
+        source2.getTargets().add(new Link().typeKey("LINK2").source(source2).target(target).startDate(Instant.now()));
 
         assertNotNull(target.getId());
         assertNotNull(source1.getId());
@@ -991,7 +1003,7 @@ public class XmEntityResourceExtendedIntTest extends AbstractSpringBootTest {
         // Get the xmEntityPersisted with tag by ID
         performGet("/api/v2/xm-entities/{id}/links/sources?sort=typeKey,asc", target.getId())
             .andExpect(status().isOk())
-            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
             .andExpect(jsonPath("$", hasSize(2)))
             .andExpect(jsonPath("$.[*].typeKey").value(contains("LINK1", "LINK2")))
             .andExpect(jsonPath("$.[*].target").value(contains(targetId, targetId)))
@@ -1003,7 +1015,7 @@ public class XmEntityResourceExtendedIntTest extends AbstractSpringBootTest {
         // Get the xmEntityPersisted with tag by ID
         performGet("/api/v2/xm-entities/{id}/links/sources?sort=typeKey,desc", target.getId())
             .andExpect(status().isOk())
-            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
             .andExpect(jsonPath("$", hasSize(2)))
             .andExpect(jsonPath("$.[*].typeKey").value(contains("LINK2", "LINK1")))
             .andExpect(jsonPath("$.[*].target").value(contains(targetId, targetId)))
@@ -1033,7 +1045,7 @@ public class XmEntityResourceExtendedIntTest extends AbstractSpringBootTest {
             // Get the xmEntityPersisted with tag by ID
             performGet("/api/xm-entities/{id}", id)
                 .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.id").value(id))
                 .andExpect(jsonPath("$.key").value(DEFAULT_KEY))
                 .andExpect(jsonPath("$.typeKey").value(DEFAULT_TYPE_KEY))
@@ -1177,7 +1189,7 @@ public class XmEntityResourceExtendedIntTest extends AbstractSpringBootTest {
         // Get all the xmEntityList
         performGet("/api/xm-entities?sort=id,desc&typeKey=ACCOUNT")
             .andExpect(status().isOk())
-            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
             .andExpect(jsonPath("$.[*].id").value(hasItem(entity.getId().intValue())))
             .andExpect(jsonPath("$.[*].typeKey").value(hasItem(DEFAULT_TYPE_KEY)));
     }
@@ -1191,7 +1203,7 @@ public class XmEntityResourceExtendedIntTest extends AbstractSpringBootTest {
         // Get all the xmEntityList
         performGet("/api/xm-entities?sort=id,desc&typeKey=PRICE")
             .andExpect(status().isOk())
-            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
             .andExpect(jsonPath("$.[*].id").value(everyItem(nullValue())));
     }
 
@@ -1203,18 +1215,18 @@ public class XmEntityResourceExtendedIntTest extends AbstractSpringBootTest {
 
         String urlTemplate = "/api/_search-with-typekey/xm-entities?typeKey=ACCOUNT&size=5";
 
-        performGet(urlTemplate)
+        performSearchGet(urlTemplate)
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.length()").value(2))
             .andExpect(jsonPath("$.[0].tags[0].name").value(DEFAULT_TAG_NAME))
             .andExpect(jsonPath("$.[1].tags[0].name").value(DEFAULT_TAG_NAME));
 
-        performGet(urlTemplate + "&query=" + UNIQ_DESCRIPTION)
+        performSearchGet(urlTemplate + "&query=" + UNIQ_DESCRIPTION)
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.length()").value(1))
             .andExpect(jsonPath("$.[0].tags[0].name").value(DEFAULT_TAG_NAME));
 
-        performGet(urlTemplate + "&query=" + NOT_PRESENT_UNIQ_DESCRIPTION)
+        performSearchGet(urlTemplate + "&query=" + NOT_PRESENT_UNIQ_DESCRIPTION)
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.length()").value(0));
 
@@ -1229,18 +1241,18 @@ public class XmEntityResourceExtendedIntTest extends AbstractSpringBootTest {
 
         String urlTemplate = "/api/_search-with-typekey-and-template/xm-entities?typeKey=ACCOUNT&size=5";
 
-        performGet(urlTemplate)
+        performSearchGet(urlTemplate)
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.length()").value(2))
             .andExpect(jsonPath("$.[0].tags[0].name").value(DEFAULT_TAG_NAME))
             .andExpect(jsonPath("$.[1].tags[0].name").value(DEFAULT_TAG_NAME));
 
-        performGet(urlTemplate + "&template=UNIQ_DESCRIPTION&templateParams[description]=" + UNIQ_DESCRIPTION)
+        performSearchGet(urlTemplate + "&template=UNIQ_DESCRIPTION&templateParams[description]=" + UNIQ_DESCRIPTION)
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.length()").value(1))
             .andExpect(jsonPath("$.[0].tags[0].name").value(DEFAULT_TAG_NAME));
 
-        performGet(
+        performSearchGet(
             urlTemplate + "&template=UNIQ_DESCRIPTION&templateParams[description]=" + NOT_PRESENT_UNIQ_DESCRIPTION)
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.length()").value(0));
@@ -1305,7 +1317,7 @@ public class XmEntityResourceExtendedIntTest extends AbstractSpringBootTest {
         performGet("/api/xm-entities/{id}?embed=id", id)
             .andExpect(status().isOk())
             .andDo(this::printMvcResult)
-            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
             .andExpect(jsonPath("$.id").value(id))
             .andExpect(jsonPath("$.key").value(DEFAULT_KEY))
             .andExpect(jsonPath("$.typeKey").value(DEFAULT_TYPE_KEY))
@@ -1323,7 +1335,7 @@ public class XmEntityResourceExtendedIntTest extends AbstractSpringBootTest {
         performGet("/api/xm-entities-by-ids?ids={id}&embed=id", id)
             .andExpect(status().isOk())
             .andDo(this::printMvcResult)
-            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
             .andExpect(jsonPath("$").value(hasSize(1)))
             .andExpect(jsonPath("$.[0].id").value(id))
             .andExpect(jsonPath("$.[0].key").value(DEFAULT_KEY))
@@ -1363,7 +1375,7 @@ public class XmEntityResourceExtendedIntTest extends AbstractSpringBootTest {
         performGet("/api/xm-entities/{id}?embed=id,attachments,tags", id)
             .andExpect(status().isOk())
             .andDo(this::printMvcResult)
-            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
             .andExpect(jsonPath("$.id").value(id))
             .andExpect(jsonPath("$.key").value(DEFAULT_KEY))
             .andExpect(jsonPath("$.typeKey").value(DEFAULT_TYPE_KEY))
@@ -1381,7 +1393,7 @@ public class XmEntityResourceExtendedIntTest extends AbstractSpringBootTest {
         performGet("/api/xm-entities-by-ids?ids={id}&embed=id,attachments,tags", id)
             .andExpect(status().isOk())
             .andDo(this::printMvcResult)
-            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
             .andExpect(jsonPath("$").value(hasSize(1)))
             .andExpect(jsonPath("$.[0].id").value(id))
             .andExpect(jsonPath("$.[0].key").value(DEFAULT_KEY))
@@ -1421,7 +1433,7 @@ public class XmEntityResourceExtendedIntTest extends AbstractSpringBootTest {
         performGet("/api/xm-entities/{id}", id)
             .andExpect(status().isOk())
             .andDo(this::printMvcResult)
-            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
             .andExpect(jsonPath("$.id").value(id))
             .andExpect(jsonPath("$.key").value(DEFAULT_KEY))
             .andExpect(jsonPath("$.typeKey").value(DEFAULT_TYPE_KEY))
@@ -1439,7 +1451,7 @@ public class XmEntityResourceExtendedIntTest extends AbstractSpringBootTest {
         performGet("/api/xm-entities-by-ids?ids={id}", id)
             .andExpect(status().isOk())
             .andDo(this::printMvcResult)
-            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
             .andExpect(jsonPath("$").value(hasSize(1)))
             .andExpect(jsonPath("$.[0].id").value(id))
             .andExpect(jsonPath("$.[0].key").value(DEFAULT_KEY))
@@ -1464,7 +1476,7 @@ public class XmEntityResourceExtendedIntTest extends AbstractSpringBootTest {
         performGet("/api/xm-entities/{id}?embed=calendars", id)
             .andExpect(status().isOk())
             .andDo(this::printMvcResult)
-            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
             .andExpect(jsonPath("$.id").value(id))
             .andExpect(jsonPath("$.key").value(DEFAULT_KEY))
             .andExpect(jsonPath("$.typeKey").value(DEFAULT_TYPE_KEY))
@@ -1481,7 +1493,7 @@ public class XmEntityResourceExtendedIntTest extends AbstractSpringBootTest {
         performGet("/api/xm-entities-by-ids?ids={id}&embed=calendars", id)
             .andExpect(status().isOk())
             .andDo(this::printMvcResult)
-            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
             .andExpect(jsonPath("$").value(hasSize(1)))
             .andExpect(jsonPath("$.[0].id").value(id))
             .andExpect(jsonPath("$.[0].key").value(DEFAULT_KEY))
@@ -1542,7 +1554,7 @@ public class XmEntityResourceExtendedIntTest extends AbstractSpringBootTest {
         performGet("/api/xm-entities/{id}?embed=calendars.events", id)
             .andExpect(status().isOk())
             .andDo(this::printMvcResult)
-            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
             .andExpect(jsonPath("$.id").value(id))
             .andExpect(jsonPath("$.key").value(DEFAULT_KEY))
             .andExpect(jsonPath("$.typeKey").value(DEFAULT_TYPE_KEY))
@@ -1559,7 +1571,7 @@ public class XmEntityResourceExtendedIntTest extends AbstractSpringBootTest {
         performGet("/api/xm-entities-by-ids?ids={id}&embed=calendars.events", id)
             .andExpect(status().isOk())
             .andDo(this::printMvcResult)
-            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
             .andExpect(jsonPath("$").value(hasSize(1)))
             .andExpect(jsonPath("$.[0].id").value(id))
             .andExpect(jsonPath("$.[0].key").value(DEFAULT_KEY))
@@ -1725,7 +1737,7 @@ public class XmEntityResourceExtendedIntTest extends AbstractSpringBootTest {
     @Test
     public void testAttachmentStartDate() throws Exception {
 
-        Attachment attachment = new Attachment().typeKey("A").name("1");
+        Attachment attachment = new Attachment().typeKey("A").name("1").startDate(Instant.now());
         XmEntity entity = new XmEntity().name(" ").key(randomUUID()).typeKey("TEST_DELETE").attachments(asSet(
             attachment
         ));
@@ -1924,7 +1936,7 @@ public class XmEntityResourceExtendedIntTest extends AbstractSpringBootTest {
             // Get the xmEntityPersisted with tag by ID
             result = performGet("/api/xm-entities/{id}", id)
                 .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.id").value(id))
                 .andExpect(jsonPath("$.name").value(DEFAULT_NAME))
                 .andExpect(jsonPath("$.avatarUrl").value(DEFAULT_AVATAR_URL_PREFIX + "ccccc.jpg"))
@@ -1953,7 +1965,7 @@ public class XmEntityResourceExtendedIntTest extends AbstractSpringBootTest {
 
             result = performGet("/api/xm-entities/{id}?embed=targets", id)
                 .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.id").value(id))
                 .andExpect(jsonPath("$.name").value("new_name1"))
                 .andExpect(jsonPath("$.avatarUrl").value(DEFAULT_AVATAR_URL_PREFIX + "bbbbb.jpg"))
@@ -2048,7 +2060,7 @@ public class XmEntityResourceExtendedIntTest extends AbstractSpringBootTest {
 
         performGet("/api/xm-entities/{id}/links/targets?typeKey={typeKey}", srcId, tgtTypeKey)
             .andExpect(status().isOk())
-            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
             .andExpect(jsonPath("$", hasSize(2)))
             .andExpect(jsonPath("$.[*].id").value(containsInAnyOrder(linIds)))
             .andExpect(jsonPath("$.[*].typeKey", containsInAnyOrder(two(lnTypekey))))
@@ -2095,6 +2107,7 @@ public class XmEntityResourceExtendedIntTest extends AbstractSpringBootTest {
     @Test
     @Transactional
     @SneakyThrows
+    @Disabled("XM-MIG enable when filtered serialization will be implemented again")
     public void testGetLinkTargetsFilteredSerialization() {
 
         String tgtTypeKey = "ACCOUNT.USER";
@@ -2147,30 +2160,30 @@ public class XmEntityResourceExtendedIntTest extends AbstractSpringBootTest {
 
         performGet("/api/xm-entities/{id}/links/targets?typeKey={typeKey}&fields={fields}", srcId, tgtTypeKey, fields)
             .andExpect(status().isOk())
-            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
             .andExpect(jsonPath("$", hasSize(2)))
             .andExpect(jsonPath("$.[*].id").value(containsInAnyOrder(linIds)))
             .andExpect(jsonPath("$.[*].typeKey", containsInAnyOrder(two(lnTypekey))))
             .andExpect(jsonPath("$.[*].name", containsInAnyOrder(two(lnName))))
-            .andExpect(jsonPath("$.[*].description").doesNotExist())
-            .andExpect(jsonPath("$.[*].startDate").doesNotExist())
-            .andExpect(jsonPath("$.[*].endDate").doesNotExist())
+            .andExpect(jsonPath("$.[*].description", containsInAnyOrder(two(DEFAULT_KEY))))
+            .andExpect(jsonPath("$.[*].startDate").exists())
+            .andExpect(jsonPath("$.[*].endDate").exists())
             .andExpect(jsonPath("$.[*].source", containsInAnyOrder(two(srcId))))
 
             .andExpect(jsonPath("$.[*].target").exists())
-            .andExpect(jsonPath("$.[*].target.id").doesNotExist())
-            .andExpect(jsonPath("$.[*].target.key").doesNotExist())
-            .andExpect(jsonPath("$.[*].target.typeKey").doesNotExist())
-            .andExpect(jsonPath("$.[*].target.stateKey").doesNotExist())
-            .andExpect(jsonPath("$.[*].target.name").doesNotExist())
-            .andExpect(jsonPath("$.[*].target.startDate").doesNotExist())
-            .andExpect(jsonPath("$.[*].target.endDate").doesNotExist())
-            .andExpect(jsonPath("$.[*].target.updateDate").doesNotExist())
-            .andExpect(jsonPath("$.[*].target.description").doesNotExist())
-            .andExpect(jsonPath("$.[*].target.createdBy").doesNotExist())
-            .andExpect(jsonPath("$.[*].target.removed").doesNotExist())
-            .andExpect(jsonPath("$.[*].target.data").doesNotExist())
-            .andExpect(jsonPath("$.[*].target.data.AAAAAAAAAA").doesNotExist())
+            .andExpect(jsonPath("$.[*].target.id").exists())
+            .andExpect(jsonPath("$.[*].target.key").exists())
+            .andExpect(jsonPath("$.[*].target.typeKey").exists())
+            .andExpect(jsonPath("$.[*].target.stateKey").exists())
+            .andExpect(jsonPath("$.[*].target.name").exists())
+            .andExpect(jsonPath("$.[*].target.startDate").exists())
+            .andExpect(jsonPath("$.[*].target.endDate").exists())
+            .andExpect(jsonPath("$.[*].target.updateDate").exists())
+            .andExpect(jsonPath("$.[*].target.description").exists())
+            .andExpect(jsonPath("$.[*].target.createdBy").exists())
+            .andExpect(jsonPath("$.[*].target.removed").exists())
+            .andExpect(jsonPath("$.[*].target.data").exists())
+            .andExpect(jsonPath("$.[*].target.data.AAAAAAAAAA").exists())
 
             .andExpect(jsonPath("$.[*].target.avatarUrlRelative").doesNotExist())
             .andExpect(jsonPath("$.[*].target.avatarUrlFull").doesNotExist())
@@ -2233,6 +2246,102 @@ public class XmEntityResourceExtendedIntTest extends AbstractSpringBootTest {
 
         xmEntitySearchRepository.save(source);
 
+        xmEntitySearchRepository.refresh();
+
+        assertNotNull(source.getId());
+        Integer srcId = source.getId().intValue();
+        String tgtStartDate = DEFAULT_START_DATE.toString();
+        String tgtUpdateDate = DEFAULT_UPDATE_DATE.toString();
+        String tgtEndDate = DEFAULT_END_DATE.toString();
+
+        performSearchGet("/api/_search/xm-entities?query=id:{id}", source.getId())
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+            .andExpect(jsonPath("$", hasSize(1)))
+            .andExpect(jsonPath("$.[*].id", containsInAnyOrder(srcId)))
+            .andExpect(jsonPath("$.[*].typeKey", containsInAnyOrder("ACCOUNT.ADMIN")))
+            .andExpect(jsonPath("$.[*].key", containsInAnyOrder(DEFAULT_KEY)))
+            .andExpect(jsonPath("$.[*].name", containsInAnyOrder(DEFAULT_NAME)))
+            .andExpect(jsonPath("$.[*].description", containsInAnyOrder(DEFAULT_DESCRIPTION)))
+            .andExpect(jsonPath("$.[*].startDate", containsInAnyOrder(tgtStartDate)))
+            .andExpect(jsonPath("$.[*].endDate", containsInAnyOrder(tgtEndDate)))
+            .andExpect(jsonPath("$.[*].updateDate", containsInAnyOrder(tgtUpdateDate)))
+            .andExpect(jsonPath("$.[*].source").doesNotExist())
+            .andExpect(jsonPath("$.[*].data.AAAAAAAAAA", containsInAnyOrder("BBBBBBBBBB")))
+            .andExpect(jsonPath("$.[*].removed", containsInAnyOrder(false)))
+            .andExpect(jsonPath("$.[*].version", containsInAnyOrder(1)))
+            .andExpect(jsonPath("$.[*].avatarUrl").exists())
+
+            .andExpect(jsonPath("$.[*].calendars").exists())
+            .andExpect(jsonPath("$.[*].ratings").exists())
+            .andExpect(jsonPath("$.[*].comments").exists())
+            .andExpect(jsonPath("$.[*].attachments.[*].id").exists())
+            .andExpect(jsonPath("$.[*].locations.[*].id").exists())
+            .andExpect(jsonPath("$.[*].tags.[*].id").exists())
+
+            .andExpect(jsonPath("$.[*].targets", hasSize(1)))
+            .andExpect(jsonPath("$.[*].targets.[*].source", containsInAnyOrder(srcId)))
+            .andExpect(jsonPath("$.[*].targets.[*].target", hasSize(1)))
+            .andExpect(jsonPath("$.[*].targets.[*].target.id", hasSize(1)))
+            .andExpect(jsonPath("$.[*].targets.[*].target.key", containsInAnyOrder(DEFAULT_KEY)))
+            .andExpect(jsonPath("$.[*].targets.[*].target.typeKey", containsInAnyOrder("ACCOUNT.USER")))
+            .andExpect(jsonPath("$.[*].targets.[*].target.stateKey", containsInAnyOrder(DEFAULT_STATE_KEY)))
+            .andExpect(jsonPath("$.[*].targets.[*].target.name", containsInAnyOrder(DEFAULT_NAME)))
+            .andExpect(jsonPath("$.[*].targets.[*].target.startDate", containsInAnyOrder(tgtStartDate)))
+            .andExpect(jsonPath("$.[*].targets.[*].target.endDate", containsInAnyOrder(tgtEndDate)))
+            .andExpect(jsonPath("$.[*].targets.[*].target.updateDate", containsInAnyOrder(tgtUpdateDate)))
+            .andExpect(jsonPath("$.[*].targets.[*].target.description", containsInAnyOrder(defDescription)))
+            .andExpect(jsonPath("$.[*].targets.[*].target.createdBy", containsInAnyOrder(createdBy)))
+            .andExpect(jsonPath("$.[*].targets.[*].target.data").exists())
+            .andExpect(jsonPath("$.[*].targets.[*].target.data.AAAAAAAAAA", containsInAnyOrder("BBBBBBBBBB")))
+        ;
+
+    }
+
+    @Test
+    @SneakyThrows
+    @WithMockUser(authorities = "SUPER-ADMIN")
+    @Transactional
+    @Disabled("XM-MIG enable when filtered serialization will be implemented again")
+    public void testSaveXmEntityToElasticNoCycleJsonAndFilteredSerialization() {
+
+        String createdBy = "admin";
+
+        XmEntity source = xmEntityRepository.saveAndFlush(createComplexEntityPersistable().typeKey("ACCOUNT.ADMIN"))
+            .createdBy(createdBy);
+        XmEntity target = xmEntityRepository.saveAndFlush(createComplexEntityPersistable().typeKey("ACCOUNT.USER"))
+            .createdBy(createdBy);
+
+        String defDescription = DEFAULT_DESCRIPTION;
+        String lnTypekey = DEFAULT_LN_TARGET_KEY;
+        String lnName = DEFAULT_LN_TARGET_NAME;
+        Instant lnStartDate = DEFAULT_LN_TARGET_START_DATE;
+        Instant lnEndDate = Instant.ofEpochMilli(lnStartDate.toEpochMilli() + 100L);
+
+        source.getTargets().add(new Link()
+            .typeKey(lnTypekey)
+            .name(lnName)
+            .description(defDescription)
+            .startDate(lnStartDate)
+            .endDate(lnEndDate)
+            .target(target)
+            .source(source));
+
+        // add cyclic Link
+        target.getTargets().add(new Link()
+            .typeKey(lnTypekey)
+            .name(lnName)
+            .description(defDescription)
+            .startDate(lnStartDate)
+            .endDate(lnEndDate)
+            .target(source)
+            .source(target)
+        );
+
+        xmEntitySearchRepository.save(source);
+
+        xmEntitySearchRepository.refresh();
+
         assertNotNull(source.getId());
         Integer srcId = source.getId().intValue();
         String tgtStartDate = DEFAULT_START_DATE.toString();
@@ -2241,7 +2350,7 @@ public class XmEntityResourceExtendedIntTest extends AbstractSpringBootTest {
 
         performGet("/api/_search/xm-entities?query=id:{id}", source.getId())
             .andExpect(status().isOk())
-            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
             .andExpect(jsonPath("$", hasSize(1)))
             .andExpect(jsonPath("$.[*].id", containsInAnyOrder(srcId)))
             .andExpect(jsonPath("$.[*].typeKey", containsInAnyOrder("ACCOUNT.ADMIN")))

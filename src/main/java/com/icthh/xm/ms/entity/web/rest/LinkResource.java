@@ -6,11 +6,14 @@ import com.icthh.xm.commons.exceptions.ErrorConstants;
 import com.icthh.xm.commons.permission.annotation.PrivilegeDescription;
 import com.icthh.xm.ms.entity.domain.Link;
 import com.icthh.xm.ms.entity.service.LinkService;
+import com.icthh.xm.ms.entity.service.TransactionPropagationService;
 import com.icthh.xm.ms.entity.web.rest.util.HeaderUtil;
 import com.icthh.xm.ms.entity.web.rest.util.PaginationUtil;
 import com.icthh.xm.ms.entity.web.rest.util.RespContentUtil;
 import io.swagger.annotations.ApiParam;
-import org.springframework.context.annotation.Lazy;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
@@ -31,26 +34,19 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Optional;
-import javax.validation.Valid;
 
 /**
  * REST controller for managing Link.
  */
+@Slf4j
 @RestController
 @RequestMapping("/api")
-public class LinkResource {
+@RequiredArgsConstructor
+public class LinkResource extends TransactionPropagationService<LinkResource> {
 
     private static final String ENTITY_NAME = "link";
 
     private final LinkService linkService;
-    private final LinkResource linkResource;
-
-    public LinkResource(
-                    LinkService linkService,
-                    @Lazy LinkResource linkResource) {
-        this.linkService = linkService;
-        this.linkResource = linkResource;
-    }
 
     /**
      * POST  /links : Create a new link.
@@ -64,11 +60,13 @@ public class LinkResource {
     @PreAuthorize("hasPermission({'link': #link}, 'LINK.CREATE')")
     @PrivilegeDescription("Privilege to create a new link")
     public ResponseEntity<Link> createLink(@Valid @RequestBody Link link) throws URISyntaxException {
+        log.info(">> start /api/links: request {}", link.toString());
         if (link.getId() != null) {
             throw new BusinessException(ErrorConstants.ERR_BUSINESS_IDEXISTS,
                                         "A new link cannot already have an ID");
         }
         Link result = linkService.save(link);
+        log.info(">> end /api/links: request {}", link.toString());
         return ResponseEntity.created(new URI("/api/links/" + result.getId()))
             .headers(HeaderUtil.createEntityCreationAlert(ENTITY_NAME, result.getId().toString()))
             .body(result);
@@ -90,7 +88,7 @@ public class LinkResource {
     public ResponseEntity<Link> updateLink(@Valid @RequestBody Link link) throws URISyntaxException {
         if (link.getId() == null) {
             //in order to call method with permissions check
-            return this.linkResource.createLink(link);
+            return self.createLink(link);
         }
         Link result = linkService.save(link);
         return ResponseEntity.ok()

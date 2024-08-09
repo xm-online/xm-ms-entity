@@ -5,9 +5,6 @@ import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_TENANT_
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.notNullValue;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -31,6 +28,8 @@ import com.icthh.xm.ms.entity.repository.XmEntityRepository;
 import com.icthh.xm.ms.entity.security.access.DynamicPermissionCheckService;
 import com.icthh.xm.ms.entity.service.LinkService;
 import com.icthh.xm.ms.entity.service.impl.StartUpdateDateGenerationStrategy;
+import jakarta.persistence.EntityManager;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -44,19 +43,21 @@ import org.springframework.http.converter.json.MappingJackson2HttpMessageConvert
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.transaction.BeforeTransaction;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.UnsupportedEncodingException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
-import javax.persistence.EntityManager;
 
 /**
  * Test class for the LinkResource REST controller.
  *
  * @see LinkResource
  */
+@Slf4j
 @WithMockUser(authorities = {"SUPER-ADMIN"})
 public class LinkResourceIntTest extends AbstractSpringBootTest {
 
@@ -74,9 +75,6 @@ public class LinkResourceIntTest extends AbstractSpringBootTest {
 
     public static final Instant DEFAULT_END_DATE = Instant.ofEpochMilli(0L);
     private static final Instant UPDATED_END_DATE = Instant.now().truncatedTo(ChronoUnit.MILLIS);
-
-    @Autowired
-    private LinkResource linkResource;
 
     @Autowired
     private LinkRepository linkRepository;
@@ -141,12 +139,15 @@ public class LinkResourceIntTest extends AbstractSpringBootTest {
                                       startUpdateDateGenerationStrategy,
                                       xmEntityRepository,
                                       dynamicPermissionCheckService);
+        linkService.setSelf(linkService);
 
-        LinkResource linkResourceMock = new LinkResource(linkService, linkResource);
+        LinkResource linkResourceMock = new LinkResource(linkService);
         this.restLinkMockMvc = MockMvcBuilders.standaloneSetup(linkResourceMock)
             .setCustomArgumentResolvers(pageableArgumentResolver)
             .setControllerAdvice(exceptionTranslator)
             .setMessageConverters(jacksonMessageConverter).build();
+
+        linkResourceMock.setSelf(linkResourceMock);
 
         link = createEntity(em);
 
@@ -184,11 +185,6 @@ public class LinkResourceIntTest extends AbstractSpringBootTest {
         return link;
     }
 
-    @Before
-    public void initTest() {
-     //   linkSearchRepository.deleteAll();
-    }
-
     @Test
     @Transactional
     public void createLink() throws Exception {
@@ -198,6 +194,7 @@ public class LinkResourceIntTest extends AbstractSpringBootTest {
         restLinkMockMvc.perform(post("/api/links")
             .contentType(TestUtil.APPLICATION_JSON_UTF8)
             .content(TestUtil.convertObjectToJsonBytes(link)))
+            .andDo(this::printMvcResult)
             .andExpect(status().isCreated());
 
         // Validate the Link in the database
@@ -223,6 +220,7 @@ public class LinkResourceIntTest extends AbstractSpringBootTest {
         restLinkMockMvc.perform(post("/api/links")
             .contentType(TestUtil.APPLICATION_JSON_UTF8)
             .content(TestUtil.convertObjectToJsonBytes(link)))
+            .andDo(this::printMvcResult)
             .andExpect(status().isBadRequest())
             .andExpect(jsonPath("$.error").value("error.business.idexists"))
             .andExpect(jsonPath("$.error_description").value(notNullValue()))
@@ -292,7 +290,7 @@ public class LinkResourceIntTest extends AbstractSpringBootTest {
         // Get all the linkList
         restLinkMockMvc.perform(get("/api/links?sort=id,desc"))
             .andExpect(status().isOk())
-            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
             .andExpect(jsonPath("$.[*].id").value(hasItem(link.getId().intValue())))
             .andExpect(jsonPath("$.[*].typeKey").value(hasItem(DEFAULT_TYPE_KEY.toString())))
             .andExpect(jsonPath("$.[*].name").value(hasItem(DEFAULT_NAME.toString())))
@@ -310,7 +308,7 @@ public class LinkResourceIntTest extends AbstractSpringBootTest {
         // Get the link
         restLinkMockMvc.perform(get("/api/links/{id}", link.getId()))
             .andExpect(status().isOk())
-            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
             .andExpect(jsonPath("$.id").value(link.getId().intValue()))
             .andExpect(jsonPath("$.typeKey").value(DEFAULT_TYPE_KEY.toString()))
             .andExpect(jsonPath("$.name").value(DEFAULT_NAME.toString()))
@@ -413,5 +411,9 @@ public class LinkResourceIntTest extends AbstractSpringBootTest {
         assertThat(link1).isNotEqualTo(link2);
         link1.setId(null);
         assertThat(link1).isNotEqualTo(link2);
+    }
+
+    private void printMvcResult(MvcResult result) throws UnsupportedEncodingException {
+        log.info("MVC result: {}", result.getResponse().getContentAsString());
     }
 }

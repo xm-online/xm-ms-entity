@@ -1,6 +1,8 @@
 package com.icthh.xm.ms.entity.web.rest.errors;
 
 import com.icthh.xm.commons.exceptions.BusinessException;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import org.springframework.dao.ConcurrencyFailureException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
@@ -14,8 +16,6 @@ import org.springframework.web.bind.annotation.RestController;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
-import javax.validation.Valid;
-import javax.validation.constraints.NotNull;
 
 @RestController
 public class ExceptionTranslatorTestController {

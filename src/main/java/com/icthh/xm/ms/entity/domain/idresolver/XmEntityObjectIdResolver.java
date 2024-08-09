@@ -2,6 +2,7 @@ package com.icthh.xm.ms.entity.domain.idresolver;
 
 import com.fasterxml.jackson.annotation.ObjectIdGenerator;
 import com.fasterxml.jackson.annotation.ObjectIdResolver;
+import com.fasterxml.jackson.annotation.SimpleObjectIdResolver;
 import com.icthh.xm.commons.exceptions.BusinessException;
 import com.icthh.xm.commons.exceptions.ErrorConstants;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
@@ -10,7 +11,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
-import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -21,7 +21,7 @@ import java.util.Map;
 @Slf4j
 @Component
 @Scope("prototype")
-public class XmEntityObjectIdResolver implements ObjectIdResolver {
+public class XmEntityObjectIdResolver extends SimpleObjectIdResolver {
     protected Map<ObjectIdGenerator.IdKey,Object> items;
 
     private XmEntityRepository repository;
@@ -33,16 +33,6 @@ public class XmEntityObjectIdResolver implements ObjectIdResolver {
 
     public XmEntityObjectIdResolver() {
         log.debug("XmEntity object id resolver inited");
-    }
-
-    @Override
-    public void bindItem(ObjectIdGenerator.IdKey id, Object pojo) {
-        if (items == null) {
-            items = new HashMap<>();
-        } else if (items.containsKey(id)) {
-            log.warn("Already had POJO for id (" + pojo.getClass().getName() + ") [" + id.key + "]");
-        }
-        items.put(id, pojo);
     }
 
     /**

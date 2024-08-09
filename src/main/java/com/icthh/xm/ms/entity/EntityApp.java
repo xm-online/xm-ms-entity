@@ -1,5 +1,6 @@
 package com.icthh.xm.ms.entity;
 
+import com.icthh.xm.commons.client.feign.config.OAuth2InterceptedFeignConfiguration;
 import com.icthh.xm.commons.i18n.spring.config.CommonMessageSourceConfiguration;
 import com.icthh.xm.commons.lep.groovy.GroovyLepEngineConfiguration;
 import com.icthh.xm.commons.lep.spring.LepSpringConfiguration;
@@ -8,14 +9,13 @@ import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
 import com.icthh.xm.commons.tenant.TenantKey;
 import com.icthh.xm.commons.tenant.spring.config.TenantContextConfiguration;
-import com.icthh.xm.ms.entity.client.OAuth2InterceptedFeignConfiguration;
 import com.icthh.xm.ms.entity.config.ApplicationProperties;
 import com.icthh.xm.ms.entity.config.DefaultProfileUtil;
 
 import com.icthh.xm.ms.entity.config.LepConfiguration;
-import io.github.jhipster.config.JHipsterConstants;
 
-import javax.annotation.PreDestroy;
+import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,8 +28,8 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.FilterType;
 import org.springframework.context.annotation.Import;
 import org.springframework.core.env.Environment;
+import tech.jhipster.config.JHipsterConstants;
 
-import javax.annotation.PostConstruct;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Arrays;

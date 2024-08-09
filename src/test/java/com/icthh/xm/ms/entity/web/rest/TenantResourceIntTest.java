@@ -13,10 +13,10 @@ import com.icthh.xm.commons.gen.model.Tenant;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
 import com.icthh.xm.commons.tenantendpoint.TenantManager;
-import com.icthh.xm.ms.entity.AbstractSpringBootTest;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import com.icthh.xm.ms.entity.AbstractElasticSpringBootTest;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
@@ -35,11 +35,11 @@ import javax.sql.DataSource;
  *
  * @see TenantResource
  */
-public class TenantResourceIntTest extends AbstractSpringBootTest {
+public class TenantResourceIntTest extends AbstractElasticSpringBootTest {
 
     private static final String TENANT_SUPER = "XM";
     private static final String TENANT_NEW = "SAMARA";
-    private static final String API_ENDPOINT = "/tenants/";
+    private static final String API_ENDPOINT = "/api/tenants/";
 
     @Autowired
     private MappingJackson2HttpMessageConverter jacksonMessageConverter;
@@ -63,7 +63,7 @@ public class TenantResourceIntTest extends AbstractSpringBootTest {
         TenantContextUtils.setTenant(tenantContextHolder, TENANT_SUPER);
     }
 
-    @Before
+    @BeforeEach
     public void setup() {
         MockitoAnnotations.initMocks(this);
         TenantsApi controller = new TenantsApiController(new TenantResource(tenantManager));
@@ -74,7 +74,7 @@ public class TenantResourceIntTest extends AbstractSpringBootTest {
             .build();
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         tenantContextHolder.getPrivilegedContext().destroyCurrentContext();
     }

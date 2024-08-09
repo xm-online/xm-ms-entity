@@ -1,5 +1,6 @@
 package com.icthh.xm.ms.entity.service;
 
+import com.icthh.xm.commons.i18n.error.web.ExceptionTranslator;
 import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_AUTH_CONTEXT;
 import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_TENANT_CONTEXT;
 import static com.icthh.xm.ms.entity.web.rest.TestUtil.sameInstant;
@@ -11,6 +12,7 @@ import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doAnswer;
@@ -21,12 +23,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.icthh.xm.commons.i18n.error.web.ExceptionTranslator;
+import com.icthh.xm.commons.permission.service.PermissionCheckService;
+import com.icthh.xm.commons.search.ElasticsearchOperations;
 import com.icthh.xm.commons.security.XmAuthenticationContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
 import com.icthh.xm.lep.api.LepManager;
-import com.icthh.xm.ms.entity.AbstractSpringBootTest;
+import com.icthh.xm.ms.entity.AbstractElasticSpringBootTest;
 import com.icthh.xm.ms.entity.config.ApplicationProperties;
 import com.icthh.xm.ms.entity.config.IndexConfiguration;
 import com.icthh.xm.ms.entity.config.MappingConfiguration;
@@ -42,19 +45,19 @@ import com.icthh.xm.ms.entity.repository.search.PermittedSearchRepository;
 import com.icthh.xm.ms.entity.repository.search.XmEntitySearchRepository;
 import com.icthh.xm.ms.entity.web.rest.ElasticsearchIndexResource;
 import com.icthh.xm.ms.entity.web.rest.XmEntityResource;
+
+import com.icthh.xm.ms.entity.web.rest.XmEntitySearchResource;
+import jakarta.persistence.EntityManager;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.assertj.core.util.Lists;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
 import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
@@ -64,7 +67,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.persistence.EntityManager;
+import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.Executor;
@@ -77,16 +80,16 @@ import java.util.concurrent.Executor;
  */
 @Slf4j
 @WithMockUser(authorities = {"SUPER-ADMIN"})
-public class ElasticsearchIndexResourceIntTest extends AbstractSpringBootTest {
+public class ElasticsearchIndexResourceIntTest extends AbstractElasticSpringBootTest {
 
     private static final String DEFAULT_TYPE_KEY = "ACCOUNT.ADMIN";
     private static final String ANOTHER_TYPE_KEY = "ACCOUNT.OWNER";
     private static final String NO_INDEX_TYPE_KEY = "ACCOUNT.NO_ELASTIC_SAVE";
     private static final String DEFAULT_NAME = "AAAAAAAAAA";
 
-    private static boolean elasticInited = false;
-
     private MockMvc mockMvc;
+
+    private MockMvc restXmEntitySearchMockMvc;
 
     @Autowired
     private XmEntityService xmEntityService;
@@ -122,7 +125,7 @@ public class ElasticsearchIndexResourceIntTest extends AbstractSpringBootTest {
     private XmEntitySearchRepository xmEntitySearchRepository;
 
     @Autowired
-    private ElasticsearchTemplate elasticsearchTemplate;
+    private ElasticsearchOperations elasticsearchOperations;
 
     @Autowired
     private MappingConfiguration mappingConfiguration;
@@ -146,6 +149,9 @@ public class ElasticsearchIndexResourceIntTest extends AbstractSpringBootTest {
     private SeparateTransactionExecutor transactionExecutor;
 
     @Autowired
+    private PermissionCheckService permissionCheckService;
+
+    @Autowired
     private ApplicationProperties applicationProperties;
 
     private ElasticsearchIndexService elasticsearchIndexService;
@@ -156,35 +162,31 @@ public class ElasticsearchIndexResourceIntTest extends AbstractSpringBootTest {
     @Mock
     private XmEntitySpecService xmEntitySpecServiceMock;
 
-    @Rule
-    public final ExpectedException exception = ExpectedException.none();
-
     @BeforeTransaction
     public void beforeTransaction() {
         TenantContextUtils.setTenant(tenantContextHolder, "RESINTTEST");
     }
 
-    @Before
-    public void setup() {
+    @BeforeEach
+    public void setup() throws IOException {
 
         lepManager.beginThreadContext(ctx -> {
             ctx.setValue(THREAD_CONTEXT_KEY_TENANT_CONTEXT, tenantContextHolder.getContext());
             ctx.setValue(THREAD_CONTEXT_KEY_AUTH_CONTEXT, authenticationContextHolder.getContext());
         });
 
-        initElasticsearch();
+        initElasticsearch(tenantContextHolder);
 
         // ???
         xmEntityRepositoryInternal.deleteAll();
-        cleanElasticsearch();
-        elasticsearchTemplate.refresh(XmEntity.class);
+        cleanElasticsearch(tenantContextHolder);
 
         mappingConfiguration.onRefresh("/config/tenants/RESINTTEST/entity/mapping.json", null);
         indexConfiguration.onRefresh("/config/tenants/RESINTTEST/entity/index_config.json", null);
 
         elasticsearchIndexService = new ElasticsearchIndexService(xmEntityRepositoryInternal,
                                                                   xmEntitySearchRepository,
-                                                                  elasticsearchTemplate,
+            elasticsearchOperations,
                                                                   tenantContextHolder,
                                                                   mappingConfiguration,
                                                                   indexConfiguration,
@@ -192,12 +194,19 @@ public class ElasticsearchIndexResourceIntTest extends AbstractSpringBootTest {
                                                                   applicationProperties,
                                                                   xmEntitySpecService);
 
+        elasticsearchOperations.refresh(XmEntity.class);
+
         elasticsearchIndexService.setSelfReference(elasticsearchIndexService);
 
         ElasticsearchIndexResource elasticsearchIndexResource =
             new ElasticsearchIndexResource(elasticsearchIndexService);
 
         this.mockMvc = MockMvcBuilders.standaloneSetup(elasticsearchIndexResource, xmEntityResource)
+                                      .setCustomArgumentResolvers(pageableArgumentResolver)
+                                      .setControllerAdvice(exceptionTranslator)
+                                      .setMessageConverters(jacksonMessageConverter).build();
+
+        this.restXmEntitySearchMockMvc = MockMvcBuilders.standaloneSetup(new XmEntitySearchResource(xmEntityService))
                                       .setCustomArgumentResolvers(pageableArgumentResolver)
                                       .setControllerAdvice(exceptionTranslator)
                                       .setMessageConverters(jacksonMessageConverter).build();
@@ -211,7 +220,7 @@ public class ElasticsearchIndexResourceIntTest extends AbstractSpringBootTest {
         xmEntityElasticSearchListener.setXmEntitySpecService(xmEntitySpecServiceMock);
     }
 
-    @After
+    @AfterEach
     public void after() {
         lepManager.endThreadContext();
         tenantContextHolder.getPrivilegedContext().destroyCurrentContext();
@@ -251,9 +260,9 @@ public class ElasticsearchIndexResourceIntTest extends AbstractSpringBootTest {
         assert saved.getId() != null;
         assert tag.getXmEntity().getId() != null;
 
-        mockMvc.perform(get("/api/_search/xm-entities?query=id:{id}", saved.getId()))
+        restXmEntitySearchMockMvc.perform(get("/api/_search/xm-entities?query=id:{id}", saved.getId()))
                .andExpect(status().isOk())
-               .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+               .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                .andExpect(jsonPath("$.[0].id").value(saved.getId()))
                .andExpect(jsonPath("$.[0].key").value(saved.getKey()))
                .andExpect(jsonPath("$.[0].typeKey").value(saved.getTypeKey()))
@@ -300,9 +309,9 @@ public class ElasticsearchIndexResourceIntTest extends AbstractSpringBootTest {
             return createAndFlush();
         });
 
-        mockMvc.perform(get("/api/_search/xm-entities?query=id:{id}", id))
+        restXmEntitySearchMockMvc.perform(get("/api/_search/xm-entities?query=id:{id}", id))
                .andExpect(status().isOk())
-               .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+               .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                .andExpect(jsonPath("$").isArray())
                .andExpect(jsonPath("$").isEmpty())
         ;
@@ -319,9 +328,9 @@ public class ElasticsearchIndexResourceIntTest extends AbstractSpringBootTest {
             return createAndFlush();
         });
 
-        mockMvc.perform(get("/api/_search/xm-entities?query=id:{id}", id))
+        restXmEntitySearchMockMvc.perform(get("/api/_search/xm-entities?query=id:{id}", id))
                .andExpect(status().isOk())
-               .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+               .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                .andExpect(jsonPath("$").isArray())
                .andExpect(jsonPath("$").isNotEmpty())
                .andExpect(jsonPath("$.[0].id").value(id))
@@ -339,9 +348,9 @@ public class ElasticsearchIndexResourceIntTest extends AbstractSpringBootTest {
             return createAndFlush();
         });
 
-        mockMvc.perform(get("/api/_search/xm-entities?query=id:{id}", id))
+        restXmEntitySearchMockMvc.perform(get("/api/_search/xm-entities?query=id:{id}", id))
                .andExpect(status().isOk())
-               .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+               .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                .andExpect(jsonPath("$").isArray())
                .andExpect(jsonPath("$").isNotEmpty())
                .andExpect(jsonPath("$.[0].id").value(id))
@@ -353,9 +362,9 @@ public class ElasticsearchIndexResourceIntTest extends AbstractSpringBootTest {
             return null;
         });
 
-        mockMvc.perform(get("/api/_search/xm-entities?query=id:{id}", id))
+        restXmEntitySearchMockMvc.perform(get("/api/_search/xm-entities?query=id:{id}", id))
                .andExpect(status().isOk())
-               .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+               .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                .andExpect(jsonPath("$").isArray())
                .andExpect(jsonPath("$").isNotEmpty())
                .andExpect(jsonPath("$.[0].id").value(id))
@@ -373,9 +382,9 @@ public class ElasticsearchIndexResourceIntTest extends AbstractSpringBootTest {
             return createAndFlush();
         });
 
-        mockMvc.perform(get("/api/_search/xm-entities?query=id:{id}", id))
+        restXmEntitySearchMockMvc.perform(get("/api/_search/xm-entities?query=id:{id}", id))
                .andExpect(status().isOk())
-               .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+               .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                .andExpect(jsonPath("$").isArray())
                .andExpect(jsonPath("$").isNotEmpty())
                .andExpect(jsonPath("$.[0].id").value(id))
@@ -387,9 +396,9 @@ public class ElasticsearchIndexResourceIntTest extends AbstractSpringBootTest {
             return null;
         });
 
-        mockMvc.perform(get("/api/_search/xm-entities?query=id:{id}", id))
+        restXmEntitySearchMockMvc.perform(get("/api/_search/xm-entities?query=id:{id}", id))
                .andExpect(status().isOk())
-               .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+               .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                .andExpect(jsonPath("$").isArray())
                .andExpect(jsonPath("$").isEmpty())
         ;
@@ -414,9 +423,9 @@ public class ElasticsearchIndexResourceIntTest extends AbstractSpringBootTest {
         long reindexed = elasticsearchIndexService.reindexAll();
         assertEquals(3L, reindexed);
 
-        mockMvc.perform(get("/api/_search/xm-entities?query=*:*"))
+        restXmEntitySearchMockMvc.perform(get("/api/_search/xm-entities?query=*:*"))
                .andExpect(status().isOk())
-               .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+               .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                .andExpect(jsonPath("$").isArray())
                .andExpect(jsonPath("$").value(hasSize(3)))
                .andExpect(jsonPath("$.[*].id")
@@ -436,9 +445,9 @@ public class ElasticsearchIndexResourceIntTest extends AbstractSpringBootTest {
         reindexed = elasticsearchIndexService.reindexAll();
         assertEquals(2L, reindexed);
 
-        mockMvc.perform(get("/api/_search/xm-entities?query=*:*"))
+        restXmEntitySearchMockMvc.perform(get("/api/_search/xm-entities?query=*:*"))
                .andExpect(status().isOk())
-               .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+               .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                .andExpect(jsonPath("$").isArray())
                .andExpect(jsonPath("$").value(hasSize(2)))
                .andExpect(jsonPath("$.[*].id").value(containsInAnyOrder(id5.intValue(), id6.intValue())))
@@ -463,9 +472,9 @@ public class ElasticsearchIndexResourceIntTest extends AbstractSpringBootTest {
         long reindexed = elasticsearchIndexService.reindexAll();
         assertEquals(0L, reindexed);
 
-        mockMvc.perform(get("/api/_search/xm-entities?query=*:*"))
+        restXmEntitySearchMockMvc.perform(get("/api/_search/xm-entities?query=*:*"))
             .andExpect(status().isOk())
-            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
             .andExpect(jsonPath("$").isArray())
             .andExpect(jsonPath("$").value(hasSize(0)))
         ;
@@ -486,9 +495,9 @@ public class ElasticsearchIndexResourceIntTest extends AbstractSpringBootTest {
         long reindexed = elasticsearchIndexService.reindexByTypeKey(DEFAULT_TYPE_KEY);
         assertEquals(2L, reindexed);
 
-        mockMvc.perform(get("/api/_search/xm-entities?query=*:*"))
+        restXmEntitySearchMockMvc.perform(get("/api/_search/xm-entities?query=*:*"))
                .andExpect(status().isOk())
-               .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+               .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                .andExpect(jsonPath("$").isArray())
                .andExpect(jsonPath("$").value(hasSize(2)))
                .andExpect(jsonPath("$.[0].typeKey").value(DEFAULT_TYPE_KEY))
@@ -511,9 +520,9 @@ public class ElasticsearchIndexResourceIntTest extends AbstractSpringBootTest {
         long reindexed = elasticsearchIndexService.reindexByTypeKeyAsync(DEFAULT_TYPE_KEY).get();
         assertEquals(2L, reindexed);
 
-        mockMvc.perform(get("/api/_search/xm-entities?query=*:*"))
+        restXmEntitySearchMockMvc.perform(get("/api/_search/xm-entities?query=*:*"))
                .andExpect(status().isOk())
-               .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+               .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                .andExpect(jsonPath("$").isArray())
                .andExpect(jsonPath("$").value(hasSize(2)))
                .andExpect(jsonPath("$.[0].typeKey").value(DEFAULT_TYPE_KEY))
@@ -527,12 +536,10 @@ public class ElasticsearchIndexResourceIntTest extends AbstractSpringBootTest {
 
         autoIndexDisable();
 
-        exception.expect(NullPointerException.class);
-        exception.expectMessage("typeKey should not be null");
-
         String typeKey = null;
-        elasticsearchIndexService.reindexByTypeKey(typeKey);
-
+        assertThrows("typeKey should not be null", NullPointerException.class, () -> {
+            elasticsearchIndexService.reindexByTypeKey(typeKey);
+        });
     }
 
     @Test
@@ -541,11 +548,11 @@ public class ElasticsearchIndexResourceIntTest extends AbstractSpringBootTest {
 
         autoIndexDisable();
 
-        exception.expect(NullPointerException.class);
-        exception.expectMessage("typeKey should not be null");
-
         String typeKey = null;
-        elasticsearchIndexService.reindexByTypeKeyAsync(typeKey);
+
+        assertThrows("typeKey should not be null", NullPointerException.class, () -> {
+            elasticsearchIndexService.reindexByTypeKeyAsync(typeKey);
+        });
 
     }
 
@@ -567,9 +574,9 @@ public class ElasticsearchIndexResourceIntTest extends AbstractSpringBootTest {
         long reindexed = elasticsearchIndexService.reindexByIds(Lists.newArrayList(id1, id3));
         assertEquals(2L, reindexed);
 
-        mockMvc.perform(get("/api/_search/xm-entities?query=*:*"))
+        restXmEntitySearchMockMvc.perform(get("/api/_search/xm-entities?query=*:*"))
                .andExpect(status().isOk())
-               .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+               .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                .andExpect(jsonPath("$").isArray())
                .andExpect(jsonPath("$").value(hasSize(2)))
                .andExpect(jsonPath("$.[*].id")
@@ -595,9 +602,9 @@ public class ElasticsearchIndexResourceIntTest extends AbstractSpringBootTest {
         long reindexed = elasticsearchIndexService.reindexByIdsAsync(Lists.newArrayList(id1, id3)).get();
         assertEquals(2L, reindexed);
 
-        mockMvc.perform(get("/api/_search/xm-entities?query=*:*"))
+        restXmEntitySearchMockMvc.perform(get("/api/_search/xm-entities?query=*:*"))
                .andExpect(status().isOk())
-               .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+               .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                .andExpect(jsonPath("$").isArray())
                .andExpect(jsonPath("$").value(hasSize(2)))
                .andExpect(jsonPath("$.[*].id")
@@ -611,11 +618,12 @@ public class ElasticsearchIndexResourceIntTest extends AbstractSpringBootTest {
 
         autoIndexDisable();
 
-        exception.expect(NullPointerException.class);
-        exception.expectMessage("ids should not be null");
-
         List<Long> ids = null;
-        elasticsearchIndexService.reindexByIds(ids);
+
+        assertThrows("ids should not be null", NullPointerException.class, () -> {
+            elasticsearchIndexService.reindexByIds(ids);
+        });
+
 
     }
 
@@ -625,12 +633,10 @@ public class ElasticsearchIndexResourceIntTest extends AbstractSpringBootTest {
 
         autoIndexDisable();
 
-        exception.expect(NullPointerException.class);
-        exception.expectMessage("ids should not be null");
-
         List<Long> ids = null;
-        elasticsearchIndexService.reindexByIds(ids);
-
+        assertThrows("ids should not be null", NullPointerException.class, () -> {
+            elasticsearchIndexService.reindexByIds(ids);
+        });
     }
 
 
@@ -653,9 +659,9 @@ public class ElasticsearchIndexResourceIntTest extends AbstractSpringBootTest {
         long reindexed = elasticsearchIndexService.reindexByIds(Lists.newArrayList(id1, id2));
         assertEquals(2L, reindexed);
 
-        mockMvc.perform(get("/api/_search/xm-entities?query=*:*"))
+        restXmEntitySearchMockMvc.perform(get("/api/_search/xm-entities?query=*:*"))
                .andExpect(status().isOk())
-               .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+               .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                .andExpect(jsonPath("$").isArray())
                .andExpect(jsonPath("$").value(hasSize(2)))
                .andExpect(jsonPath("$.[*].id")
@@ -665,9 +671,9 @@ public class ElasticsearchIndexResourceIntTest extends AbstractSpringBootTest {
         reindexed = elasticsearchIndexService.reindexByIds(Lists.newArrayList(id3));
         assertEquals(1L, reindexed);
 
-        mockMvc.perform(get("/api/_search/xm-entities?query=*:*"))
+        restXmEntitySearchMockMvc.perform(get("/api/_search/xm-entities?query=*:*"))
                .andExpect(status().isOk())
-               .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+               .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                .andExpect(jsonPath("$").isArray())
                .andExpect(jsonPath("$").value(hasSize(3)))
                .andExpect(jsonPath("$.[*].id")
@@ -694,9 +700,9 @@ public class ElasticsearchIndexResourceIntTest extends AbstractSpringBootTest {
         long reindexed = elasticsearchIndexService.reindexByIds(ids);
         assertEquals(2L, reindexed);
 
-        mockMvc.perform(get("/api/_search/xm-entities?query=*:*"))
+        restXmEntitySearchMockMvc.perform(get("/api/_search/xm-entities?query=*:*"))
                .andExpect(status().isOk())
-               .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+               .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                .andExpect(jsonPath("$").isArray())
                .andExpect(jsonPath("$").value(hasSize(2)))
                .andExpect(jsonPath("$.[*].id")
@@ -712,9 +718,9 @@ public class ElasticsearchIndexResourceIntTest extends AbstractSpringBootTest {
         reindexed = elasticsearchIndexService.reindexByIds(ids);
         assertEquals(2L, reindexed);
 
-        mockMvc.perform(get("/api/_search/xm-entities?query=*:*"))
+        restXmEntitySearchMockMvc.perform(get("/api/_search/xm-entities?query=*:*"))
                .andExpect(status().isOk())
-               .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+               .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                .andExpect(jsonPath("$").isArray())
                .andExpect(jsonPath("$").value(hasSize(2)))
                .andExpect(jsonPath("$.[*].id")
@@ -726,9 +732,9 @@ public class ElasticsearchIndexResourceIntTest extends AbstractSpringBootTest {
     }
 
     private void assertIndexIsEmpty() throws Exception {
-        mockMvc.perform(get("/api/_search/xm-entities?query=*:*"))
+        restXmEntitySearchMockMvc.perform(get("/api/_search/xm-entities?query=*:*"))
                .andExpect(status().isOk())
-               .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+               .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                .andExpect(jsonPath("$").isArray())
                .andExpect(jsonPath("$").isEmpty())
         ;

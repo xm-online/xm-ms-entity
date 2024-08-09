@@ -17,6 +17,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
+import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.test.context.transaction.BeforeTransaction;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -63,6 +64,9 @@ public class ExceptionTranslatorIntTest extends AbstractSpringBootTest {
     @Autowired
     private LepManager lepManager;
 
+    @Autowired
+    private MappingJackson2HttpMessageConverter jacksonMessageConverter;
+
     @Mock
     private XmAuthenticationContextHolder authContextHolder;
 
@@ -78,6 +82,7 @@ public class ExceptionTranslatorIntTest extends AbstractSpringBootTest {
 
         mockMvc = MockMvcBuilders.standaloneSetup(controller)
             .setControllerAdvice(exceptionTranslator, entityExceptionTranslator)
+            .setMessageConverters(jacksonMessageConverter)
             .build();
 
         when(context.hasAuthentication()).thenReturn(true);

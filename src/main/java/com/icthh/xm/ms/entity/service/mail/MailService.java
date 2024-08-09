@@ -23,15 +23,15 @@ import com.icthh.xm.ms.entity.config.XmEntityTenantConfigService.XmEntityTenantC
 import freemarker.template.Configuration;
 import freemarker.template.Template;
 import freemarker.template.TemplateException;
-import io.github.jhipster.config.JHipsterProperties;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
-import javax.annotation.Resource;
-import javax.mail.internet.MimeMessage;
+
+import jakarta.annotation.Resource;
+import jakarta.mail.internet.MimeMessage;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -45,6 +45,7 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.ui.freemarker.FreeMarkerTemplateUtils;
 import org.springframework.util.CollectionUtils;
+import tech.jhipster.config.JHipsterProperties;
 
 /**
  * Service for sending emails.

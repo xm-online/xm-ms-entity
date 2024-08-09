@@ -1,41 +1,37 @@
 package com.icthh.xm.ms.entity.repository.entitygraph;
 
 import com.icthh.xm.ms.entity.domain.XmEntity;
+import jakarta.persistence.EntityGraph;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.FlushModeType;
+import jakarta.persistence.Query;
+import jakarta.persistence.Subgraph;
+import jakarta.persistence.Tuple;
+import jakarta.persistence.TypedQuery;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaDelete;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.CriteriaUpdate;
+import jakarta.persistence.criteria.Root;
+import jakarta.persistence.criteria.Selection;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.query.QueryUtils;
 import org.springframework.data.jpa.repository.support.JpaEntityInformation;
 import org.springframework.data.jpa.repository.support.SimpleJpaRepository;
 
-import javax.persistence.EntityGraph;
-import javax.persistence.EntityManager;
-import javax.persistence.FlushModeType;
-import javax.persistence.LockModeType;
-import javax.persistence.Query;
-import javax.persistence.Subgraph;
-import javax.persistence.Tuple;
-import javax.persistence.TypedQuery;
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaDelete;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.CriteriaUpdate;
-import javax.persistence.criteria.Root;
-import javax.persistence.criteria.Selection;
 import java.io.Serializable;
-import java.math.BigInteger;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
 import static org.hibernate.jpa.QueryHints.HINT_LOADGRAPH;
-import static org.hibernate.jpa.QueryHints.SPEC_HINT_TIMEOUT;
 
 @Slf4j
 public class EntityGraphRepositoryImpl<T, I extends Serializable>
@@ -124,8 +120,8 @@ public class EntityGraphRepositoryImpl<T, I extends Serializable>
 
     public Long getSequenceNextValString(String sequenceName) {
         Dialect dialect = getDialect(entityManager);
-        Query query = entityManager.createNativeQuery(dialect.getSequenceNextValString(sequenceName));
-        return ((BigInteger) query.getSingleResult()).longValue();
+        Query query = entityManager.createNativeQuery(dialect.getSequenceSupport().getSequenceNextValString(sequenceName));
+        return Long.parseLong(query.getSingleResult().toString());
     }
 
     @Override

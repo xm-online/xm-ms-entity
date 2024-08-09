@@ -31,7 +31,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 @RequiredArgsConstructor
 @LepService(group = "service.event")
-public class EventService {
+public class EventService extends TransactionPropagationService<EventService> {
 
     private final XmEntityService xmEntityService;
     private final EventQueryService eventQueryService;
@@ -39,8 +39,6 @@ public class EventService {
     private final PermittedRepository permittedRepository;
     private final XmEntityRepository xmEntityRepository;
     private final CalendarService calendarService;
-    @Setter(onMethod_ = {@Autowired})
-    private EventService self;
 
     /**
      * Save an event.

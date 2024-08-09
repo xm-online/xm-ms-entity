@@ -12,11 +12,11 @@ import org.springframework.stereotype.Repository;
  * Spring Data JPA repository for the Event entity.
  */
 @Repository
-public interface EventRepository extends JpaRepository<Event, Long>, ResourceRepository,
+public interface EventRepository extends JpaRepository<Event, Long>, ResourceRepository<Event, Long>,
     JpaSpecificationExecutor<Event> {
 
     @Override
-    Event findResourceById(Object id);
+    Event findResourceById(Long id);
 
     Optional<Event> findByEventDataRef(XmEntity eventDataRef);
 }

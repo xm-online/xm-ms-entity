@@ -47,15 +47,20 @@ public class TenantDefaultUserProfileProvisionerTest extends AbstractUnitTest {
     @Test
     public void manageTenant() {
         provisioner.manageTenant("NEWTENANT", "ACTIVE");
-        Mockito.verifyZeroInteractions(tenantContextHolder);
-        Mockito.verifyZeroInteractions(profileService);
+
+        Mockito.inOrder(profileService, tenantContextHolder).verifyNoMoreInteractions();
+//        Mockito.verifyZeroInteractions(tenantContextHolder);
+//        Mockito.verifyZeroInteractions(profileService);
     }
 
     @Test
     public void deleteTenant() {
         provisioner.deleteTenant("NEWTENANT");
-        Mockito.verifyZeroInteractions(tenantContextHolder);
-        Mockito.verifyZeroInteractions(profileService);
+
+        Mockito.inOrder(profileService, tenantContextHolder).verifyNoMoreInteractions();
+
+//        Mockito.verifyZeroInteractions(tenantContextHolder);
+//        Mockito.verifyZeroInteractions(profileService);
     }
 
 }
