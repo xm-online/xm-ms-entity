@@ -24,10 +24,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.icthh.xm.commons.permission.service.PermissionCheckService;
+import com.icthh.xm.commons.search.ElasticsearchOperations;
 import com.icthh.xm.commons.security.XmAuthenticationContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
-import com.icthh.xm.ee.commons.search.ElasticsearchTemplateWrapper;
 import com.icthh.xm.lep.api.LepManager;
 import com.icthh.xm.ms.entity.AbstractElasticSpringBootTest;
 import com.icthh.xm.ms.entity.config.ApplicationProperties;
@@ -86,8 +86,6 @@ public class ElasticsearchIndexResourceIntTest extends AbstractElasticSpringBoot
     private static final String NO_INDEX_TYPE_KEY = "ACCOUNT.NO_ELASTIC_SAVE";
     private static final String DEFAULT_NAME = "AAAAAAAAAA";
 
-    private static boolean elasticInited = false;
-
     private MockMvc mockMvc;
 
     @Autowired
@@ -124,7 +122,7 @@ public class ElasticsearchIndexResourceIntTest extends AbstractElasticSpringBoot
     private XmEntitySearchRepository xmEntitySearchRepository;
 
     @Autowired
-    private ElasticsearchTemplateWrapper elasticsearchTemplateWrapper;
+    private ElasticsearchOperations elasticsearchOperations;
 
     @Autowired
     private MappingConfiguration mappingConfiguration;
@@ -185,7 +183,7 @@ public class ElasticsearchIndexResourceIntTest extends AbstractElasticSpringBoot
 
         elasticsearchIndexService = new ElasticsearchIndexService(xmEntityRepositoryInternal,
                                                                   xmEntitySearchRepository,
-                                                                  elasticsearchTemplateWrapper,
+            elasticsearchOperations,
                                                                   tenantContextHolder,
                                                                   mappingConfiguration,
                                                                   indexConfiguration,
@@ -193,7 +191,7 @@ public class ElasticsearchIndexResourceIntTest extends AbstractElasticSpringBoot
                                                                   applicationProperties,
                                                                   xmEntitySpecService);
 
-        elasticsearchTemplateWrapper.refresh(XmEntity.class);
+        elasticsearchOperations.refresh(XmEntity.class);
 
         elasticsearchIndexService.setSelfReference(elasticsearchIndexService);
 

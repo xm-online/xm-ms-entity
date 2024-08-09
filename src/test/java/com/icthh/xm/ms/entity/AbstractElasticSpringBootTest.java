@@ -1,8 +1,8 @@
 package com.icthh.xm.ms.entity;
 
+import com.icthh.xm.commons.search.ElasticsearchOperations;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
-import com.icthh.xm.ee.commons.search.ElasticsearchTemplateWrapper;
 import com.icthh.xm.ms.entity.config.LepConfiguration;
 import com.icthh.xm.ms.entity.config.SecurityBeanOverrideConfiguration;
 import com.icthh.xm.ms.entity.config.TestLepUpdateModeConfiguration;
@@ -41,7 +41,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 public class AbstractElasticSpringBootTest {
 
     @Autowired
-    private ElasticsearchTemplateWrapper elasticsearchTemplateWrapper;
+    private ElasticsearchOperations elasticsearchOperations;
 
     @Autowired
     private ElasticsearchTestContainer elasticsearchContainer;
@@ -66,11 +66,11 @@ public class AbstractElasticSpringBootTest {
         StopWatch stopWatch = StopWatch.createStarted();
 
         String tenantName = TenantContextUtils.getRequiredTenantKeyValue(tenantContextHolder).toLowerCase();
-        String indexName = elasticsearchTemplateWrapper.composeIndexName(tenantName);
-        elasticsearchTemplateWrapper.deleteIndex(indexName);
-        elasticsearchTemplateWrapper.createIndex(indexName);
+        String indexName = elasticsearchOperations.composeIndexName(tenantName);
+        elasticsearchOperations.deleteIndex(indexName);
+        elasticsearchOperations.createIndex(indexName);
 
-        elasticsearchTemplateWrapper.putMapping(indexName, ElasticsearchTemplateWrapper.INDEX_QUERY_TYPE, getDefaultMapping());
+        elasticsearchOperations.putMapping(indexName, ElasticsearchOperations.INDEX_QUERY_TYPE, getDefaultMapping());
 
         log.info("Elasticsearch index for XmEntity cleaned in {} ms", stopWatch.getTime());
 
@@ -88,11 +88,11 @@ public class AbstractElasticSpringBootTest {
         StopWatch stopWatch = StopWatch.createStarted();
 
         String tenantName = TenantContextUtils.getRequiredTenantKeyValue(tenantContextHolder).toLowerCase();
-        String indexName = elasticsearchTemplateWrapper.composeIndexName(tenantName);
-        elasticsearchTemplateWrapper.deleteIndex(indexName);
-        elasticsearchTemplateWrapper.createIndex(indexName);
+        String indexName = elasticsearchOperations.composeIndexName(tenantName);
+        elasticsearchOperations.deleteIndex(indexName);
+        elasticsearchOperations.createIndex(indexName);
 
-        elasticsearchTemplateWrapper.putMapping(indexName, ElasticsearchTemplateWrapper.INDEX_QUERY_TYPE, getDefaultMapping());
+        elasticsearchOperations.putMapping(indexName, ElasticsearchOperations.INDEX_QUERY_TYPE, getDefaultMapping());
 
         log.info("Elasticsearch index for XmEntity initialized in {} ms", stopWatch.getTime());
 
