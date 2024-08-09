@@ -28,7 +28,7 @@ spring:
         stream:
             kafka:
                 binder:
-                    brokers: localhost
+                    brokers: ${spring.kafka.bootstrap-servers}
     datasource:
         type: com.zaxxer.hikari.HikariDataSource
         url: jdbc:postgresql://localhost:5432/entity
@@ -56,7 +56,7 @@ spring:
             hibernate.format_sql: false
             hibernate.dialect: com.icthh.xm.commons.migration.db.jsonb.CustomPostgreSQLDialect
     kafka:
-        bootstrap-servers: localhost
+        bootstrap-servers: localhost:9092
     security:
         oauth2:
             client:
