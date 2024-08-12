@@ -25,16 +25,4 @@ public class LocaleConfiguration implements WebMvcConfigurer {
         localeChangeInterceptor.setParamName("language");
         registry.addInterceptor(localeChangeInterceptor);
     }
-
-    @Bean
-    public MessageSource messageSource() {
-        ResourceBundleMessageSource messageSource = new ResourceBundleMessageSource();
-        messageSource.setBasenames("messages", "i18n/messages");
-        messageSource.setDefaultEncoding(Charset.forName("UTF-8").name());
-        messageSource.setFallbackToSystemLocale(true);
-        messageSource.setCacheSeconds(-1);
-        messageSource.setAlwaysUseMessageFormat(false);
-        messageSource.setUseCodeAsDefaultMessage(true);
-        return messageSource;
-    }
 }

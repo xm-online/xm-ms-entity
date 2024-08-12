@@ -257,9 +257,6 @@ repositories {
 }
 
 dependencies {
-    // import JHipster dependencies BOM
-//    implementation platform("io.github.jhipster:jhipster-dependencies:${githubJhipsterDependenciesVersion}")
-
     implementation platform("tech.jhipster:jhipster-dependencies:${jhipsterDependenciesVersion}")
     implementation "tech.jhipster:jhipster-dependencies:${jhipsterDependenciesVersion}"
 
@@ -279,26 +276,17 @@ dependencies {
     implementation "com.fasterxml.jackson.core:jackson-databind"
     implementation "org.hibernate.orm:hibernate-core:${hibernateVersion}"
     implementation 'javax.persistence:javax.persistence-api:2.2'
-//    implementation 'org.antlr:antlr4-runtime:4.10'
-//    implementation 'org.antlr:antlr4-runtime:4.9.3'
-
     implementation "com.zaxxer:HikariCP"
     implementation "org.apache.commons:commons-lang3"
     implementation "commons-io:commons-io"
-//    implementation "javax.transaction:javax.transaction-api"
-//    implementation "org.hibernate:hibernate-entitymanager:${hibernateEntityManager}" todo
-//    implementation "org.openapitools:jackson-databind-nullable:${jacksonDatabindNullableVersion}"
     implementation "org.hibernate.validator:hibernate-validator"
     implementation "org.liquibase:liquibase-core"
     liquibaseRuntime "org.liquibase:liquibase-core"
     liquibaseRuntime "org.liquibase.ext:liquibase-hibernate6:${liquibaseHibernate6Version}"
-//    liquibaseRuntime sourceSets.main.compileClasspath
     implementation "org.springframework:spring-aop"
-//    implementation "org.springframework.boot:spring-boot-loader-tools"
     implementation "org.springframework.boot:spring-boot-starter-mail"
     implementation "org.springframework.boot:spring-boot-starter-logging"
     implementation "org.springframework.boot:spring-boot-starter-actuator"
-//    implementation "org.springframework.boot:spring-boot-starter-aop"
     implementation "org.springframework.boot:spring-boot-starter-data-jpa"
     // log4j2-mock needed to create embedded elasticsearch instance with SLF4J
     runtimeOnly "de.dentrassi.elasticsearch:log4j2-mock:${log4j2_mock_version}"
@@ -323,14 +311,12 @@ dependencies {
     implementation "org.springframework.security:spring-security-config"
     implementation "org.springframework.security:spring-security-data"
     implementation "org.springframework.security:spring-security-web"
-//    implementation "org.springframework.security.oauth:spring-security-oauth2:${oauth2Version}"
     implementation "org.springframework.security:spring-security-jwt:${securityJwtVersion}"
     implementation "org.glassfish.jaxb:jaxb-runtime:${jaxb_runtime_version}"
     implementation "io.swagger:swagger-annotations:${swaggerVersion}"
     implementation("io.springfox:springfox-swagger2:${springfoxVersion}") {
         exclude module: "mapstruct"
     }
-//    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.3.0'
     implementation 'io.micrometer:micrometer-tracing'
     implementation 'io.micrometer:micrometer-core'
     implementation 'io.micrometer:micrometer-observation'
@@ -346,7 +332,6 @@ dependencies {
     annotationProcessor "org.mapstruct:mapstruct-processor:${mapstructVersion}"
     annotationProcessor "org.glassfish.jaxb:jaxb-runtime:${jaxb_runtime_version}"
     annotationProcessor("org.springframework.boot:spring-boot-configuration-processor") {
-//    annotationProcessor("org.springframework.boot:spring-boot-configuration-processor:${springBootVersion}") {
         exclude group: "com.vaadin.external.google", module: "android-json"
     }
     // XM custom dependencies
@@ -355,8 +340,6 @@ dependencies {
     }
     implementation "com.amazonaws:aws-java-sdk-s3:${amazonawsVersion}"
     implementation "com.amazonaws:aws-java-sdk-core:${amazonawsVersion}"
-    // "org.json:json" already present in org.apache.geronimo.bundles:json:20090211_1 dependency for jackson-datatype-json-org
-    //compile "org.json:json:20160212" // for LinkedIn LEP
     implementation "org.jsoup:jsoup:1.18.1" // for LinkedIn LEP
     implementation "com.jayway.jsonpath:json-path"
     implementation "com.mortennobel:java-image-scaling:0.8.6"
@@ -390,17 +373,13 @@ dependencies {
     implementation "com.icthh.xm.commons:xm-commons-lep-annotation-processor:${xm_commons_version}"
     implementation "com.icthh.xm.commons:xm-commons-search:${xm_commons_version}"
 
-
-
     annotationProcessor "com.icthh.xm.commons:xm-commons-lep-annotation-processor:${xm_commons_version}"
 
     implementation "org.freemarker:freemarker:${freemarker_version}"
     implementation "org.apache.poi:poi-ooxml:${apache_poi_version}"
     implementation "org.modelmapper:modelmapper:${modelmapper_version}"
-    implementation "com.github.bohnman:squiggly-filter-jackson:${squiggly_filter_version}" // todo: delete
     implementation "javax.servlet:javax.servlet-api:${javaxServletVersion}"
     implementation "org.apache.httpcomponents.client5:httpclient5:${httpClient5Version}"
-//    implementation "com.vladmihalcea:hibernate-types-60:${hibernateTypes60}"
     implementation 'io.hypersistence:hypersistence-utils-hibernate-63:3.8.2'
 
     // security fixes
@@ -436,7 +415,6 @@ dependencies {
     testImplementation "org.springframework.boot:spring-boot-test"
     testImplementation "org.junit.jupiter:junit-jupiter-engine"
     testImplementation "org.junit.vintage:junit-vintage-engine"
-//    testImplementation 'org.springframework.cloud:spring-cloud-stream-test-support'
     testImplementation "com.tngtech.archunit:archunit-junit5-api:${archunitJunit5Version}"
     testRuntimeOnly "com.tngtech.archunit:archunit-junit5-engine:${archunitJunit5Version}"
     testImplementation "org.assertj:assertj-core"
@@ -445,12 +423,9 @@ dependencies {
     testImplementation "org.hamcrest:hamcrest-library"
     testImplementation "com.h2database:h2"
     liquibaseRuntime "com.h2database:h2"
-//    developmentOnly "org.springframework.boot:spring-boot-devtools:${springBootVersion}"
-    //jhipster-needle-gradle-dependency - JHipster will add additional dependencies here
     testImplementation 'com.adobe.testing:s3mock-junit4:3.7.3'
     testImplementation 'org.awaitility:awaitility:4.2.1'
     testImplementation "org.wiremock:wiremock-jetty12:3.9.0"
-//    testImplementation 'com.github.tomakehurst:wiremock-jre8:3.0.1'
     testImplementation "org.testcontainers:testcontainers:${testcontainersVersion}"
     testImplementation "org.testcontainers:junit-jupiter:${testcontainersVersion}"
     testImplementation "org.testcontainers:postgresql:${testcontainersVersion}"
