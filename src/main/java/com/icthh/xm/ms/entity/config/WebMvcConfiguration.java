@@ -1,5 +1,6 @@
 package com.icthh.xm.ms.entity.config;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.AbstractHttpMessageConverter;
@@ -14,7 +15,12 @@ import java.util.Collections;
 import java.util.List;
 
 @Configuration
+@Slf4j
 public class WebMvcConfiguration implements WebMvcConfigurer {
+
+    public WebMvcConfiguration() {
+        log.info(">> TEST log for new version"); // todo remove
+    }
 
     private static final Collection<String> JSON_FILTER_APPLIED_URI =
         Collections.singletonList("/api/xm-entities/*/links/targets");
