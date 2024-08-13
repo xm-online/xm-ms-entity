@@ -11,7 +11,7 @@ public class SwaggerGeneratorTest {
 
     @Test
     public void testTransformJsonSchemaToSwaggerSchema() {
-        SwaggerGenerator swaggerGenerator = new SwaggerGenerator();
+        SwaggerJsonSchemaConverter swaggerGenerator = new SwaggerJsonSchemaConverter();
         String jsonSchema = loadFile("config/testjsonschema.json");
         String result = swaggerGenerator.transformJsonSchemaToSwaggerSchema("TestType", jsonSchema, new HashMap<>());
         System.out.println(result);

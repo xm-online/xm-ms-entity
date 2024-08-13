@@ -4,6 +4,8 @@ import com.icthh.xm.ms.entity.domain.spec.FunctionSpec;
 import com.icthh.xm.ms.entity.domain.spec.XmEntitySpec;
 import com.icthh.xm.ms.entity.service.swagger.SwaggerGenerator.SwaggerFunction;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import static java.lang.Boolean.TRUE;
@@ -11,7 +13,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.stripEnd;
 import static org.apache.commons.lang3.StringUtils.stripStart;
 
-public class SwaggerFunctionGenerator {
+public class DynamicSwaggerFunctionGenerator {
 
     public void generateSwagger(String baseUrl, XmEntitySpec xmEntitySpec) {
 
@@ -36,6 +38,7 @@ public class SwaggerFunctionGenerator {
             name,
             functionSpec.getInputSpec(),
             functionSpec.getContextDataSpec(),
+            new ArrayList<>(),
             functionSpec.getBinaryDataType()
         );
     }
