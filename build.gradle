@@ -95,7 +95,7 @@ eclipse {
 // See https://virgo47.wordpress.com/2018/09/14/classpath-too-long-with-spring-boot-and-gradle/ for details
 // https://github.com/jhipster/generator-jhipster/issues/9713
 if (OperatingSystem.current().isWindows()) {
-    task classpathJar(type: Jar) {
+    tasks.register('classpathJar', Jar) {
         inputs.files sourceSets.main.runtimeClasspath
 
         archiveName = "runboot-classpath.jar"
@@ -143,7 +143,7 @@ test {
     }
 
     exclude '**/CucumberTest*'
-    exclude '**/ElasticsearchTest*'
+    exclude '**/*ElasticsearchTest*'
     dependsOn 'clean', 'runCategorizedTests'
     classes.mustRunAfter 'clean'
     systemProperty "spring.profiles.active", "test"
@@ -168,14 +168,14 @@ test {
 
 }
 
-task runCategorizedTests(type: Test) {
+tasks.register('runCategorizedTests', Test) {
     useJUnitPlatform {
         includeTags(testCategories)
     }
     testLogging testLoggingConf
 }
 
-task cucumberTest(type: Test) {
+tasks.register('cucumberTest', Test) {
     description = "Execute cucumber BDD tests."
     group = "verification"
     include '**/CucumberTest*'
@@ -188,12 +188,29 @@ task cucumberTest(type: Test) {
 
 check.dependsOn cucumberTest
 
-task testReport(type: TestReport) {
+tasks.register('runElasticsearchTest', Test) {
+    description = 'Execute elasticsearch tests'
+    group = 'verification'
+
+    filter {
+        includeTestsMatching "*ElasticsearchTest*"
+    }
+
+    systemProperty 'spring.profiles.active', 'test'
+    dependsOn 'clean'
+
+    useJUnitPlatform {
+        includeTags ['com.icthh.xm.ms.entity.elasticsearch.AbstractElasticSpringBootTest']
+    }
+    reports.html.required = false
+}
+
+tasks.register('testReport', TestReport) {
     getDestinationDirectory().set(file("$buildDir/reports/tests"))
     reportOn test
 }
 
-task cucumberTestReport(type: TestReport) {
+tasks.register('cucumberTestReport', TestReport) {
     getDestinationDirectory().set(file("$buildDir/reports/tests"))
     reportOn test
 }
@@ -239,7 +256,7 @@ nohttp {
 configurations {
     providedRuntime
     implementation.exclude module: "spring-boot-starter-tomcat"
-    all {
+    configureEach {
         resolutionStrategy {
             // Inherited version from Spring Boot can't be used because of regressions:
             // To be removed as soon as spring-boot use the same version
@@ -343,8 +360,8 @@ dependencies {
     implementation "com.amazonaws:aws-java-sdk-core:${amazonawsVersion}"
     implementation "org.jsoup:jsoup:1.18.1" // for LinkedIn LEP
     implementation "com.jayway.jsonpath:json-path"
-    implementation "com.mortennobel:java-image-scaling:0.8.6"
-    implementation 'org.codehaus.groovy.modules.http-builder:http-builder:0.7'
+    implementation "com.mortennobel:java-image-scaling:${mortennobelVersion}"
+    implementation "org.codehaus.groovy.modules.http-builder:http-builder:${codehausVersion}"
     implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-csv'
     implementation 'com.fasterxml.jackson.module:jackson-module-jsonSchema'
     implementation 'com.fasterxml.jackson.module:jackson-module-afterburner'
@@ -381,7 +398,7 @@ dependencies {
     implementation "org.modelmapper:modelmapper:${modelmapper_version}"
     implementation "javax.servlet:javax.servlet-api:${javaxServletVersion}"
     implementation "org.apache.httpcomponents.client5:httpclient5:${httpClient5Version}"
-    implementation 'io.hypersistence:hypersistence-utils-hibernate-63:3.8.2'
+    implementation "io.hypersistence:hypersistence-utils-hibernate-63:${hypersistenceVersion}"
 
     // security fixes
     implementation "io.netty:netty-buffer:${netty_version}"
@@ -424,9 +441,9 @@ dependencies {
     testImplementation "org.hamcrest:hamcrest-library"
     testImplementation "com.h2database:h2"
     liquibaseRuntime "com.h2database:h2"
-    testImplementation 'com.adobe.testing:s3mock-junit4:3.7.3'
-    testImplementation 'org.awaitility:awaitility:4.2.1'
-    testImplementation "org.wiremock:wiremock-jetty12:3.9.0"
+    testImplementation "com.adobe.testing:s3mock-junit4:${s3mockVersion}"
+    testImplementation "org.awaitility:awaitility:${awaitilityVersion}"
+    testImplementation "org.wiremock:wiremock-jetty12:${wiremockVersion}"
     testImplementation "org.testcontainers:testcontainers:${testcontainersVersion}"
     testImplementation "org.testcontainers:junit-jupiter:${testcontainersVersion}"
     testImplementation "org.testcontainers:postgresql:${testcontainersVersion}"
@@ -458,7 +475,7 @@ pmd {
     ruleSetFiles = files("./qa/pmd.xml")
 }
 
-task cleanResources(type: Delete) {
+tasks.register('cleanResources', Delete) {
     delete "build/resources"
 }
 
@@ -466,7 +483,8 @@ wrapper {
     gradleVersion = "8.8"
 }
 
-task stage(dependsOn: 'bootWar') {
+tasks.register('stage') {
+    dependsOn 'bootWar'
 }
 
 compileJava {

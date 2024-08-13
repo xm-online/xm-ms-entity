@@ -36,7 +36,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
     SecurityBeanOverrideConfiguration.class,
     WebappTenantOverrideConfiguration.class
 })
-@Category(AbstractSpringBootTest.class)
+@Category(AbstractElasticSpringBootTest.class)
 @Testcontainers
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @ContextConfiguration(classes = { ElasticsearchTestContainerConfiguration.class })
