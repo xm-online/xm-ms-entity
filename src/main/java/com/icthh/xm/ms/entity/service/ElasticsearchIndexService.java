@@ -55,7 +55,7 @@ import java.util.stream.Collectors;
 
 @Slf4j
 @Service
-public class ElasticsearchIndexService {
+public class ElasticsearchIndexService extends TransactionPropagationService<ElasticsearchIndexService> {
 
     private static final Lock reindexLock = new ReentrantLock();
     private static final int PAGE_SIZE = 100;
@@ -76,11 +76,6 @@ public class ElasticsearchIndexService {
 
     @PersistenceContext
     private final EntityManager entityManager;
-
-    @Setter(AccessLevel.PACKAGE)
-    @Resource
-    @Lazy
-    private ElasticsearchIndexService selfReference;
 
     public ElasticsearchIndexService(XmEntityRepositoryInternal xmEntityRepositoryInternal,
                                      XmEntitySearchRepository xmEntitySearchRepository,
@@ -114,7 +109,7 @@ public class ElasticsearchIndexService {
         String rid = MdcUtils.getRid();
         return CompletableFuture.supplyAsync(() -> execForCustomContext(tenantKey,
                                                                         rid,
-                                                                        selfReference::reindexAll), executor);
+                                                                        self::reindexAll), executor);
     }
 
     /**
@@ -133,7 +128,7 @@ public class ElasticsearchIndexService {
         String rid = MdcUtils.getRid();
         return CompletableFuture.supplyAsync(() -> execForCustomContext(tenantKey,
                                                                         rid,
-                                                                        () -> selfReference.reindexByTypeKey(typeKey)), executor);
+                                                                        () -> self.reindexByTypeKey(typeKey)), executor);
     }
 
     /**
@@ -152,7 +147,7 @@ public class ElasticsearchIndexService {
         String rid = MdcUtils.getRid();
         return CompletableFuture.supplyAsync(() -> execForCustomContext(tenantKey,
                                                                         rid,
-                                                                        () -> selfReference.reindexByIds(ids)), executor);
+                                                                        () -> self.reindexByIds(ids)), executor);
     }
 
     /**

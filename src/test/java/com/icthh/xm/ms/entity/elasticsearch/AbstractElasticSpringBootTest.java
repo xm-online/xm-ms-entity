@@ -1,13 +1,15 @@
-package com.icthh.xm.ms.entity;
+package com.icthh.xm.ms.entity.elasticsearch;
 
 import com.icthh.xm.commons.search.ElasticsearchOperations;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
+import com.icthh.xm.ms.entity.AbstractSpringBootTest;
+import com.icthh.xm.ms.entity.EntityApp;
 import com.icthh.xm.ms.entity.config.LepConfiguration;
 import com.icthh.xm.ms.entity.config.SecurityBeanOverrideConfiguration;
 import com.icthh.xm.ms.entity.config.TestLepUpdateModeConfiguration;
-import com.icthh.xm.ms.entity.config.elasticsearch.ElasticsearchTestContainer;
-import com.icthh.xm.ms.entity.config.elasticsearch.ElasticsearchTestContainerConfiguration;
+import com.icthh.xm.ms.entity.elasticsearch.config.ElasticsearchTestContainer;
+import com.icthh.xm.ms.entity.elasticsearch.config.ElasticsearchTestContainerConfiguration;
 import com.icthh.xm.ms.entity.config.tenant.WebappTenantOverrideConfiguration;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;

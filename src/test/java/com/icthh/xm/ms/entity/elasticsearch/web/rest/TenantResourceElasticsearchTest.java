@@ -1,4 +1,4 @@
-package com.icthh.xm.ms.entity.web.rest;
+package com.icthh.xm.ms.entity.elasticsearch.web.rest;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -13,7 +13,9 @@ import com.icthh.xm.commons.gen.model.Tenant;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
 import com.icthh.xm.commons.tenantendpoint.TenantManager;
-import com.icthh.xm.ms.entity.AbstractElasticSpringBootTest;
+import com.icthh.xm.ms.entity.elasticsearch.AbstractElasticSpringBootTest;
+import com.icthh.xm.ms.entity.web.rest.TenantResource;
+import com.icthh.xm.ms.entity.web.rest.TestUtil;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -35,7 +37,7 @@ import javax.sql.DataSource;
  *
  * @see TenantResource
  */
-public class TenantResourceIntTest extends AbstractElasticSpringBootTest {
+public class TenantResourceElasticsearchTest extends AbstractElasticSpringBootTest {
 
     private static final String TENANT_SUPER = "XM";
     private static final String TENANT_NEW = "SAMARA";

@@ -1,4 +1,4 @@
-package com.icthh.xm.ms.entity.web.rest;
+package com.icthh.xm.ms.entity.elasticsearch.web.rest;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
@@ -14,12 +14,17 @@ import com.icthh.xm.commons.security.XmAuthenticationContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import static com.icthh.xm.commons.tenant.TenantContextUtils.setTenant;
 import com.icthh.xm.lep.api.LepManager;
-import com.icthh.xm.ms.entity.AbstractElasticSpringBootTest;
+import com.icthh.xm.ms.entity.elasticsearch.AbstractElasticSpringBootTest;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.repository.XmEntityRepositoryInternal;
 import com.icthh.xm.ms.entity.service.SeparateTransactionExecutor;
 import com.icthh.xm.ms.entity.service.impl.XmEntityServiceImpl;
 import static java.nio.charset.StandardCharsets.UTF_8;
+
+import com.icthh.xm.ms.entity.web.rest.TestUtil;
+import com.icthh.xm.ms.entity.web.rest.XmEntityResource;
+import com.icthh.xm.ms.entity.web.rest.XmEntitySearchResource;
+import com.icthh.xm.ms.entity.web.rest.XmEntitySpecResource;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -56,7 +61,7 @@ import java.util.UUID;
  * @see XmEntitySpecResource
  */
 @Slf4j
-public class XmEntitySearchIntTest extends AbstractElasticSpringBootTest {
+public class XmEntitySearchElasticsearchTest extends AbstractElasticSpringBootTest {
 
     private static final String KEY1 = "ACCOUNT";
 

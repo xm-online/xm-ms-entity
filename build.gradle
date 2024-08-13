@@ -143,6 +143,7 @@ test {
     }
 
     exclude '**/CucumberTest*'
+    exclude '**/ElasticsearchTest*'
     dependsOn 'clean', 'runCategorizedTests'
     classes.mustRunAfter 'clean'
     systemProperty "spring.profiles.active", "test"
@@ -188,13 +189,13 @@ task cucumberTest(type: Test) {
 check.dependsOn cucumberTest
 
 task testReport(type: TestReport) {
-    destinationDir = file("$buildDir/reports/tests")
+    getDestinationDirectory().set(file("$buildDir/reports/tests"))
     reportOn test
 }
 
 task cucumberTestReport(type: TestReport) {
-    destinationDir = file("$buildDir/reports/tests")
-    reportOn cucumberTest
+    getDestinationDirectory().set(file("$buildDir/reports/tests"))
+    reportOn test
 }
 
 if (!project.hasProperty("runList")) {

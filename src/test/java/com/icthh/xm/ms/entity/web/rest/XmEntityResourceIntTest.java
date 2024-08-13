@@ -11,7 +11,6 @@ import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
 import static com.icthh.xm.commons.tenant.TenantContextUtils.getRequiredTenantKeyValue;
 import com.icthh.xm.lep.api.LepManager;
-import com.icthh.xm.ms.entity.AbstractElasticSpringBootTest;
 import com.icthh.xm.ms.entity.AbstractSpringBootTest;
 import com.icthh.xm.ms.entity.config.ApplicationProperties;
 import com.icthh.xm.ms.entity.config.Constants;
@@ -58,10 +57,10 @@ import static org.hamcrest.Matchers.nullValue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
-import org.junit.jupiter.api.Test;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Ignore;
+import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import static org.mockito.Mockito.mock;
@@ -76,7 +75,6 @@ import org.springframework.http.converter.json.MappingJackson2HttpMessageConvert
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.transaction.BeforeTransaction;
 import org.springframework.test.web.servlet.MockMvc;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -96,7 +94,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static software.amazon.awssdk.utils.StringUtils.repeat;
 
 /**
@@ -106,47 +103,33 @@ import static software.amazon.awssdk.utils.StringUtils.repeat;
  */
 @Slf4j
 @WithMockUser(authorities = {"SUPER-ADMIN"})
-public class XmEntityResourceIntTest extends AbstractElasticSpringBootTest {
+public class XmEntityResourceIntTest extends AbstractSpringBootTest {
 
     private static final String DEFAULT_KEY = "AAAAAAAAAA";
-    private static final String UPDATED_KEY = "BBBBBBBBBB";
 
     public static final String DEFAULT_TYPE_KEY = "ACCOUNT.ADMIN";
-    private static final String UPDATED_TYPE_KEY = "ACCOUNT.OWNER";
 
     private static final String DEFAULT_STATE_KEY = "STATE2";
-    private static final String UPDATED_STATE_KEY = "STATE3";
 
     private static final String DEFAULT_NAME = "AAAAAAAAAA";
-    private static final String UPDATED_NAME = "BBBBBBBBBB";
 
     private static final Instant DEFAULT_START_DATE = Instant.ofEpochMilli(0L);
-    private static final Instant UPDATED_START_DATE = Instant.now().truncatedTo(ChronoUnit.MILLIS);
 
     private static final Instant DEFAULT_UPDATE_DATE = Instant.ofEpochMilli(0L);
-    private static final Instant UPDATED_UPDATE_DATE = Instant.now().truncatedTo(ChronoUnit.MILLIS);
 
     private static final Instant MOCKED_START_DATE = Instant.ofEpochMilli(42L);
     private static final Instant MOCKED_UPDATE_DATE = Instant.ofEpochMilli(84L);
 
     private static final Instant DEFAULT_END_DATE = Instant.ofEpochMilli(0L);
-    private static final Instant UPDATED_END_DATE = Instant.now().truncatedTo(ChronoUnit.MILLIS);
 
     private static final String DEFAULT_AVATAR_URL = "http://hello.rgw.icthh.test/aaaaa.jpg";
-    private static final String UPDATED_AVATAR_URL = "http://hello.rgw.icthh.test/bbbbb.jpg";
 
     private static final String DEFAULT_DESCRIPTION = "AAAAAAAAAA";
-    private static final String UPDATED_DESCRIPTION = "BBBBBBBBBB";
 
     private static final Map<String, Object> DEFAULT_DATA = ImmutableMap.<String, Object>builder()
         .put("AAAAAAAAAA", "BBBBBBBBBB").build();
-    private static final Map<String, Object> UPDATED_DATA = ImmutableMap.<String, Object>builder()
-        .put("AAAAAAAAAA", "CCCCCCCCCC").build();
 
     private static final Boolean DEFAULT_REMOVED = false;
-    private static final Boolean UPDATED_REMOVED = true;
-
-    private static boolean elasticInited = false;
 
     @Autowired
     private ApplicationProperties applicationProperties;
@@ -254,17 +237,10 @@ public class XmEntityResourceIntTest extends AbstractElasticSpringBootTest {
     }
 
     @SneakyThrows
-    @BeforeEach
+    @Before
     public void setup() {
 
         TenantContextUtils.setTenant(tenantContextHolder, "RESINTTEST");
-
-        //initialize index before test - put valid mapping
-        if (!elasticInited) {
-            initElasticsearch(tenantContextHolder);
-            elasticInited = true;
-        }
-        cleanElasticsearch(tenantContextHolder);
 
         MockitoAnnotations.initMocks(this);
         when(authContextHolder.getContext()).thenReturn(context);
@@ -332,7 +308,7 @@ public class XmEntityResourceIntTest extends AbstractElasticSpringBootTest {
         xmEntity = createEntity();
     }
 
-    @AfterEach
+    @After
     public void tearDown() {
         lepManager.endThreadContext();
         tenantContextHolder.getPrivilegedContext().destroyCurrentContext();
@@ -359,48 +335,9 @@ public class XmEntityResourceIntTest extends AbstractElasticSpringBootTest {
             .removed(DEFAULT_REMOVED);
     }
 
-    @BeforeEach
+    @Before
     public void initTest() {
         //    xmEntitySearchRepository.deleteAll();
-    }
-
-    @Test
-    @Transactional
-    public void createXmEntity() throws Exception {
-
-        XmEntity dbXmEntity = transactionService.inNestedTransaction(() -> {
-
-            int databaseSizeBeforeCreate = xmEntityRepository.findAll().size();
-
-            // Create the XmEntity
-            restXmEntityMockMvc.perform(post("/api/xm-entities")
-                .contentType(TestUtil.APPLICATION_JSON_UTF8)
-                .content(TestUtil.convertObjectToJsonBytes(xmEntity)))
-                .andExpect(status().isCreated());
-
-            // Validate the XmEntity in the database
-            List<XmEntity> xmEntityList = xmEntityRepository.findAll();
-            assertThat(xmEntityList).hasSize(databaseSizeBeforeCreate + 1);
-            XmEntity testXmEntity = xmEntityList.get(xmEntityList.size() - 1);
-            assertThat(testXmEntity.getKey()).isEqualTo(DEFAULT_KEY);
-            assertThat(testXmEntity.getTypeKey()).isEqualTo(DEFAULT_TYPE_KEY);
-            assertThat(testXmEntity.getStateKey()).isEqualTo(DEFAULT_STATE_KEY);
-            assertThat(testXmEntity.getName()).isEqualTo(DEFAULT_NAME);
-            assertThat(testXmEntity.getStartDate()).isEqualTo(MOCKED_START_DATE);
-            assertThat(testXmEntity.getUpdateDate()).isEqualTo(MOCKED_UPDATE_DATE);
-            assertThat(testXmEntity.getEndDate()).isEqualTo(DEFAULT_END_DATE);
-            assertThat(testXmEntity.getAvatarUrl()).contains("aaaaa.jpg");
-            assertThat(testXmEntity.getDescription()).isEqualTo(DEFAULT_DESCRIPTION);
-            assertThat(testXmEntity.getData()).isEqualTo(DEFAULT_DATA);
-            assertThat(testXmEntity.isRemoved()).isEqualTo(DEFAULT_REMOVED);
-
-            return testXmEntity;
-        }, this::setup);
-        xmEntitySearchRepository.refresh();
-        // Validate the XmEntity in Elasticsearch
-        XmEntity xmEntityEs = xmEntitySearchRepository.findById(dbXmEntity.getId())
-            .orElseThrow(NullPointerException::new);
-        assertThat(xmEntityEs).isEqualToIgnoringGivenFields(dbXmEntity, "avatarUrlRelative", "avatarUrlFull");
     }
 
     @Test
@@ -522,7 +459,7 @@ public class XmEntityResourceIntTest extends AbstractElasticSpringBootTest {
 
     @Test
     @Transactional
-    @Disabled("see XmEntityResourceExtendedIntTest.checkStartDateIsNotRequired instead")
+    @Ignore("see XmEntityResourceExtendedIntTest.checkStartDateIsNotRequired instead")
     public void checkStartDateIsRequired() throws Exception {
         int databaseSizeBeforeTest = xmEntityRepository.findAll().size();
         // set the field null
@@ -547,7 +484,7 @@ public class XmEntityResourceIntTest extends AbstractElasticSpringBootTest {
 
     @Test
     @Transactional
-    @Disabled("see XmEntityResourceExtendedIntTest.checkUpdateDateIsNotRequired instead")
+    @Ignore("see XmEntityResourceExtendedIntTest.checkUpdateDateIsNotRequired instead")
     public void checkUpdateDateIsRequired() throws Exception {
         int databaseSizeBeforeTest = xmEntityRepository.findAll().size();
         // set the field null
@@ -667,78 +604,6 @@ public class XmEntityResourceIntTest extends AbstractElasticSpringBootTest {
 
     @Test
     @Transactional
-    public void updateXmEntity() throws Exception {
-        XmEntity dbXmEntity = transactionService.inNestedTransaction(() -> {
-
-            // Initialize the database
-            xmEntity = xmEntityServiceImpl.save(xmEntity);
-
-            int databaseSizeBeforeUpdate = xmEntityRepository.findAll().size();
-
-            // Update the xmEntity
-            XmEntity updatedXmEntity = xmEntityRepository.findById(xmEntity.getId())
-                .orElseThrow(NullPointerException::new);
-
-            em.detach(updatedXmEntity);
-
-            updatedXmEntity
-                .key(UPDATED_KEY)
-                .typeKey(UPDATED_TYPE_KEY)
-                .stateKey(UPDATED_STATE_KEY)
-                .name(UPDATED_NAME)
-                .startDate(UPDATED_START_DATE)
-                .updateDate(UPDATED_UPDATE_DATE)
-                .endDate(UPDATED_END_DATE)
-                .avatarUrl(UPDATED_AVATAR_URL)
-                .description(UPDATED_DESCRIPTION)
-                .data(UPDATED_DATA)
-                .removed(UPDATED_REMOVED);
-
-            restXmEntityMockMvc.perform(put("/api/xm-entities")
-                .contentType(TestUtil.APPLICATION_JSON_UTF8)
-                .content(TestUtil.convertObjectToJsonBytes(updatedXmEntity)))
-                .andExpect(status().isOk());
-
-            // Validate the XmEntity in the database
-            List<XmEntity> xmEntityList = xmEntityRepository.findAll();
-            assertThat(xmEntityList).hasSize(databaseSizeBeforeUpdate);
-            XmEntity testXmEntity = xmEntityList.get(xmEntityList.size() - 1);
-            assertThat(testXmEntity.getKey()).isEqualTo(UPDATED_KEY);
-            assertThat(testXmEntity.getTypeKey()).isEqualTo(UPDATED_TYPE_KEY);
-            assertThat(testXmEntity.getStateKey()).isEqualTo(UPDATED_STATE_KEY);
-            assertThat(testXmEntity.getName()).isEqualTo(UPDATED_NAME);
-            assertThat(testXmEntity.getStartDate()).isEqualTo(MOCKED_START_DATE);
-            assertThat(testXmEntity.getUpdateDate()).isEqualTo(MOCKED_UPDATE_DATE);
-            assertThat(testXmEntity.getEndDate()).isEqualTo(UPDATED_END_DATE);
-            assertThat(testXmEntity.getAvatarUrl()).contains("bbbbb.jpg");
-            assertThat(testXmEntity.getDescription()).isEqualTo(UPDATED_DESCRIPTION);
-            assertThat(testXmEntity.getData()).isEqualTo(UPDATED_DATA);
-            assertThat(testXmEntity.isRemoved()).isEqualTo(UPDATED_REMOVED);
-            return testXmEntity;
-        }, this::setup);
-        xmEntitySearchRepository.refresh();
-        // Validate the XmEntity in Elasticsearch
-        XmEntity xmEntityEs = xmEntitySearchRepository.findById(dbXmEntity.getId())
-            .orElseThrow(NullPointerException::new);
-        assertThat(xmEntityEs).isEqualToIgnoringGivenFields(dbXmEntity,
-                                                            "avatarUrlRelative", "avatarUrlFull",
-                                                            "version",
-                                                            "attachments",
-                                                            "calendars",
-                                                            "locations",
-                                                            "ratings",
-                                                            "votes",
-                                                            "events",
-                                                            "uniqueFields",
-                                                            "sources",
-                                                            "tags",
-                                                            "comments",
-                                                            "targets",
-                                                            "functionContexts");
-    }
-
-    @Test
-    @Transactional
     public void updateNonExistingXmEntity() throws Exception {
         // Create the XmEntity
 
@@ -747,141 +612,6 @@ public class XmEntityResourceIntTest extends AbstractElasticSpringBootTest {
             .contentType(TestUtil.APPLICATION_JSON_UTF8)
             .content(TestUtil.convertObjectToJsonBytes(xmEntity)))
             .andExpect(status().isCreated());
-    }
-
-    @Test
-    @Transactional
-    public void deleteXmEntity() throws Exception {
-        int databaseSizeBeforeDelete = transactionService.inNestedTransaction(() -> {
-            // Initialize the database
-            xmEntity = xmEntityServiceImpl.save(xmEntity);
-
-            int databaseSizeBeforeDeleteDb = xmEntityRepository.findAll().size();
-
-            // Get the xmEntity
-            restXmEntityMockMvc.perform(delete("/api/xm-entities/{id}", xmEntity.getId())
-                .accept(TestUtil.APPLICATION_JSON_UTF8))
-                .andExpect(status().isOk());
-            return databaseSizeBeforeDeleteDb;
-        }, this::setup);
-        // Validate Elasticsearch is empty
-        boolean xmEntityExistsInEs = xmEntitySearchRepository.existsById(xmEntity.getId());
-        assertThat(xmEntityExistsInEs).isFalse();
-
-        // Validate the database is empty
-        List<XmEntity> xmEntityList = xmEntityRepository.findAll();
-        assertThat(xmEntityList).hasSize(databaseSizeBeforeDelete - 1);
-    }
-
-    @Test
-    @Transactional
-    public void searchXmEntity() throws Exception {
-        xmEntity = transactionService.inNestedTransaction(() -> {
-                // Initialize the database
-                return xmEntityServiceImpl.save(xmEntity);
-        }, this::setup);
-        xmEntitySearchRepository.refresh();
-
-        // Search the xmEntity
-        restXmEntitySearchMockMvc.perform(get("/api/_search/xm-entities?query=id:" + xmEntity.getId()))
-            .andExpect(status().isOk())
-            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-            .andExpect(jsonPath("$.[*].id").value(hasItem(xmEntity.getId().intValue())))
-            .andExpect(jsonPath("$.[*].key").value(hasItem(DEFAULT_KEY.toString())))
-            .andExpect(jsonPath("$.[*].typeKey").value(hasItem(DEFAULT_TYPE_KEY.toString())))
-            .andExpect(jsonPath("$.[*].stateKey").value(hasItem(DEFAULT_STATE_KEY.toString())))
-            .andExpect(jsonPath("$.[*].name").value(hasItem(DEFAULT_NAME.toString())))
-            .andExpect(jsonPath("$.[*].startDate").value(hasItem(MOCKED_START_DATE.toString())))
-            .andExpect(jsonPath("$.[*].updateDate").value(hasItem(MOCKED_UPDATE_DATE.toString())))
-            .andExpect(jsonPath("$.[*].endDate").value(hasItem(DEFAULT_END_DATE.toString())))
-            .andExpect(jsonPath("$.[*].avatarUrl").value(hasItem(containsString("aaaaa.jpg"))))
-            .andExpect(jsonPath("$.[*].description").value(hasItem(DEFAULT_DESCRIPTION.toString())))
-            .andExpect(jsonPath("$.[*].data").value(hasItem(DEFAULT_DATA)))
-            .andExpect(jsonPath("$.[*].removed").value(hasItem(DEFAULT_REMOVED.booleanValue())));
-    }
-
-    @Test
-    @Transactional
-    public void searchXmEntityWithExcludeFields() throws Exception {
-        xmEntity = transactionService.inNestedTransaction(() -> {
-            // Initialize the database
-            return xmEntityServiceImpl.save(xmEntity);
-        }, this::setup);
-        xmEntitySearchRepository.refresh();
-
-        // Search the xmEntity
-        restXmEntitySearchMockMvc.perform(get("/api/_search/v2/xm-entities?query=id:" + xmEntity.getId()
-            +"&excludes=id&excludes=key&excludes=typeKey"))
-            .andDo(print())
-            .andExpect(status().isOk())
-            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-            .andExpect(jsonPath("$.[*].id").value(hasItem(nullValue())))
-            .andExpect(jsonPath("$.[*].key").value(hasItem(nullValue())))
-            .andExpect(jsonPath("$.[*].typeKey").value(hasItem(nullValue())))
-            .andExpect(jsonPath("$.[*].stateKey").value(hasItem(DEFAULT_STATE_KEY)))
-            .andExpect(jsonPath("$.[*].name").value(hasItem(DEFAULT_NAME)))
-            .andExpect(jsonPath("$.[*].startDate").value(hasItem(MOCKED_START_DATE.toString())))
-            .andExpect(jsonPath("$.[*].updateDate").value(hasItem(MOCKED_UPDATE_DATE.toString())))
-            .andExpect(jsonPath("$.[*].endDate").value(hasItem(DEFAULT_END_DATE.toString())))
-            .andExpect(jsonPath("$.[*].avatarUrl").value(hasItem(containsString("aaaaa.jpg"))))
-            .andExpect(jsonPath("$.[*].description").value(hasItem(DEFAULT_DESCRIPTION.toString())))
-            .andExpect(jsonPath("$.[*].data").value(hasItem(DEFAULT_DATA)))
-            .andExpect(jsonPath("$.[*].removed").value(hasItem(DEFAULT_REMOVED.booleanValue())));
-    }
-
-    @Test
-    @Transactional
-    public void searchXmEntityWithIncludeFields() throws Exception {
-        xmEntity = transactionService.inNestedTransaction(() -> {
-            // Initialize the database
-            return xmEntityServiceImpl.save(xmEntity);
-        }, this::setup);
-        xmEntitySearchRepository.refresh();
-
-        // Search the xmEntity
-        restXmEntitySearchMockMvc.perform(get("/api/_search/v2/xm-entities?query=id:" + xmEntity.getId()
-            +"&includes=id&includes=key&includes=typeKey"))
-            .andExpect(status().isOk())
-            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-            .andExpect(jsonPath("$.[*].id").value(hasItem(xmEntity.getId().intValue())))
-            .andExpect(jsonPath("$.[*].key").value(hasItem(DEFAULT_KEY)))
-            .andExpect(jsonPath("$.[*].typeKey").value(hasItem(DEFAULT_TYPE_KEY)))
-            .andExpect(jsonPath("$.[*].stateKey").value(hasItem(nullValue())))
-            .andExpect(jsonPath("$.[*].name").value(hasItem(nullValue())))
-            .andExpect(jsonPath("$.[*].startDate").value(hasItem(nullValue())))
-            .andExpect(jsonPath("$.[*].updateDate").value(hasItem(nullValue())))
-            .andExpect(jsonPath("$.[*].endDate").value(hasItem(nullValue())))
-            .andExpect(jsonPath("$.[*].avatarUrl").value(hasItem(nullValue())))
-            .andExpect(jsonPath("$.[*].description").value(hasItem(nullValue())))
-            .andExpect(jsonPath("$.[*].removed").value(hasItem(nullValue())));
-    }
-
-
-
-    @Test
-    @Transactional
-    public void searchXmEntityWithTemplate() throws Exception {
-        xmEntity = transactionService.inNestedTransaction(() -> {
-            // Initialize the database
-            return xmEntityServiceImpl.save(xmEntity);
-        }, this::setup);
-        xmEntitySearchRepository.refresh();
-        // Search the xmEntity
-        restXmEntitySearchMockMvc.perform(get("/api/_search-with-template/xm-entities?template=BY_TYPEKEY_AND_ID&templateParams[typeKey]=" + xmEntity.getTypeKey() + "&templateParams[id]=" + xmEntity.getId()))
-            .andExpect(status().isOk())
-            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-            .andExpect(jsonPath("$.[*].id").value(hasItem(xmEntity.getId().intValue())))
-            .andExpect(jsonPath("$.[*].key").value(hasItem(DEFAULT_KEY.toString())))
-            .andExpect(jsonPath("$.[*].typeKey").value(hasItem(DEFAULT_TYPE_KEY.toString())))
-            .andExpect(jsonPath("$.[*].stateKey").value(hasItem(DEFAULT_STATE_KEY.toString())))
-            .andExpect(jsonPath("$.[*].name").value(hasItem(DEFAULT_NAME.toString())))
-            .andExpect(jsonPath("$.[*].startDate").value(hasItem(MOCKED_START_DATE.toString())))
-            .andExpect(jsonPath("$.[*].updateDate").value(hasItem(MOCKED_UPDATE_DATE.toString())))
-            .andExpect(jsonPath("$.[*].endDate").value(hasItem(DEFAULT_END_DATE.toString())))
-            .andExpect(jsonPath("$.[*].avatarUrl").value(hasItem(containsString("aaaaa.jpg"))))
-            .andExpect(jsonPath("$.[*].description").value(hasItem(DEFAULT_DESCRIPTION.toString())))
-            .andExpect(jsonPath("$.[*].data").value(hasItem(DEFAULT_DATA)))
-            .andExpect(jsonPath("$.[*].removed").value(hasItem(DEFAULT_REMOVED.booleanValue())));
     }
 
     @Test

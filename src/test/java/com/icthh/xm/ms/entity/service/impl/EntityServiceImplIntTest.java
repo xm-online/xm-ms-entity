@@ -12,7 +12,7 @@ import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
 import static com.icthh.xm.commons.tenant.TenantContextUtils.getRequiredTenantKeyValue;
 import com.icthh.xm.lep.api.LepManager;
-import com.icthh.xm.ms.entity.AbstractElasticSpringBootTest;
+import com.icthh.xm.ms.entity.AbstractSpringBootTest;
 import com.icthh.xm.ms.entity.config.ApplicationProperties;
 import static com.icthh.xm.ms.entity.config.TenantConfigMockConfiguration.getXmEntityTemplatesSpec;
 import com.icthh.xm.ms.entity.config.XmEntityTenantConfigService;
@@ -22,7 +22,6 @@ import com.icthh.xm.ms.entity.domain.Profile;
 import com.icthh.xm.ms.entity.domain.UniqueField;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.domain.ext.IdOrKey;
-import com.icthh.xm.ms.entity.domain.template.TemplateParamsHolder;
 import com.icthh.xm.ms.entity.lep.keyresolver.TypeKeyWithExtends;
 import com.icthh.xm.ms.entity.repository.EventRepository;
 import com.icthh.xm.ms.entity.repository.LinkRepository;
@@ -47,18 +46,16 @@ import static java.time.Instant.now;
 import static java.util.Arrays.asList;
 import static java.util.UUID.randomUUID;
 
-import jakarta.validation.ConstraintViolationException;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThrows;
-import static org.junit.Assert.fail;
 
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import static org.mockito.Mockito.mock;
@@ -67,8 +64,6 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpEntity;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.test.context.support.WithMockUser;
@@ -90,7 +85,7 @@ import java.util.Map;
 import java.util.Set;
 
 @Slf4j
-public class EntityServiceImplIntTest extends AbstractElasticSpringBootTest {
+public class EntityServiceImplIntTest extends AbstractSpringBootTest {
 
     private XmEntityServiceImpl xmEntityService;
 
@@ -175,12 +170,6 @@ public class EntityServiceImplIntTest extends AbstractElasticSpringBootTest {
 
         TenantContextUtils.setTenant(tenantContextHolder, "RESINTTEST");
 
-        if (!elasticInited) {
-            initElasticsearch(tenantContextHolder);
-            elasticInited = true;
-        }
-        cleanElasticsearch(tenantContextHolder);
-
         MockitoAnnotations.initMocks(this);
         when(authContextHolder.getContext()).thenReturn(context);
         when(context.getRequiredUserKey()).thenReturn("userKey");
@@ -222,7 +211,7 @@ public class EntityServiceImplIntTest extends AbstractElasticSpringBootTest {
         });
     }
 
-    @BeforeEach
+    @Before
     public void before() {
         XmEntity sourceEntity = xmEntityRepository.save(createEntity(1l, TARGET_TYPE_KEY));
         self = new Profile();
@@ -232,7 +221,7 @@ public class EntityServiceImplIntTest extends AbstractElasticSpringBootTest {
         Locale.setDefault(Locale.US);
     }
 
-    @AfterEach
+    @After
     public void afterTest() {
         tenantContextHolder.getPrivilegedContext().destroyCurrentContext();
         Locale.setDefault(locale);
@@ -247,26 +236,6 @@ public class EntityServiceImplIntTest extends AbstractElasticSpringBootTest {
         long seq2 = xmEntityRepository.getSequenceNextValString("hibernate_sequence");
 
         assertEquals(seq + incrementValue, seq2);
-    }
-
-    @Test
-    @Rollback
-    @Transactional
-    public void whenLazySetAndProcessingDisabledSourcesWillNotBeSet() {
-        XmEntity e1 = xmEntityService.save(new XmEntity().typeKey("TEST_NO_PROCESSING_REFS").name("someName").key("somKey"));
-        XmEntity e2 = xmEntityService.save(new XmEntity().typeKey("TEST_NO_PROCESSING_REFS").name("someName").key("somKey"));
-        try {
-            e1 = xmEntityRepository.findOneById(e1.getId());
-            e1.getTargets().add(new Link().typeKey("TEST_NO_PROCESSING_REFS_LINK_KEY").target(e2));
-            XmEntity saved = xmEntityService.save(e1);
-            xmEntityRepository.saveAndFlush(saved); // init validation
-            fail("Expected TransactionSystemException");
-        } catch (ConstraintViolationException e) {
-            String message = "[ConstraintViolationImpl{interpolatedMessage='must not be null', propertyPath=source, rootBeanClass=class com.icthh.xm.ms.entity.domain.Link, messageTemplate='{jakarta.validation.constraints.NotNull.message}'}]";
-            assertEquals(message, e.getConstraintViolations().toString());
-        }
-        xmEntityRepository.deleteAll(List.of(e1, e2));
-        xmEntitySearchRepository.deleteAll();
     }
 
 
@@ -470,67 +439,6 @@ public class EntityServiceImplIntTest extends AbstractElasticSpringBootTest {
         assertThrows(BusinessException.class, () -> {
             xmEntityService.deleteLinkTarget(IdOrKey.SELF, link.getId().toString());
         });
-    }
-
-    @Test
-    @Transactional
-    @WithMockUser(authorities = "SUPER-ADMIN")
-    public void searchByQuery() {
-        long id = 101L;
-        XmEntity given = createEntity(id, "ACCOUNT.USER");
-        given.setId(id);
-        xmEntitySearchRepository.save(given);
-        xmEntitySearchRepository.refresh();
-        Page<XmEntity> result = xmEntityService.search("typeKey:ACCOUNT.USER AND id:" + id, Pageable.unpaged(), null);
-        assertThat(result.getContent().size()).isEqualTo(1);
-        assertThat(result.getContent().get(0)).isEqualTo(given);
-    }
-
-    @Test
-    @Transactional
-    @WithMockUser(authorities = "SUPER-ADMIN")
-    public void searchByTemplate() {
-        long id = 102L;
-        XmEntity given = createEntity(id, "ACCOUNT.USER");
-        given.setId(id);
-        xmEntitySearchRepository.save(given);
-        xmEntitySearchRepository.refresh();
-        TemplateParamsHolder templateParamsHolder = new TemplateParamsHolder();
-        templateParamsHolder.getTemplateParams().put("typeKey", "ACCOUNT.USER");
-        templateParamsHolder.getTemplateParams().put("id", String.valueOf(id));
-        Page<XmEntity> result = xmEntityService.search("BY_TYPEKEY_AND_ID", templateParamsHolder, Pageable.unpaged(), null);
-        assertThat(result.getContent().size()).isEqualTo(1);
-        assertThat(result.getContent().get(0)).isEqualTo(given);
-    }
-
-    @Test
-    @Transactional
-    @WithMockUser(authorities = "SUPER-ADMIN")
-    public void searchByQueryAndTypeKey() {
-        long id = 103L;
-        XmEntity given = createEntity(id, "ACCOUNT.USER");
-        given.setId(id);
-        xmEntitySearchRepository.save(given);
-        xmEntitySearchRepository.refresh();
-        Page<XmEntity> result = xmEntityService.searchByQueryAndTypeKey("103", "ACCOUNT", Pageable.unpaged(), null);
-        assertThat(result.getContent().size()).isEqualTo(1);
-        assertThat(result.getContent().get(0)).isEqualTo(given);
-    }
-
-    @Test
-    @Transactional
-    @WithMockUser(authorities = "SUPER-ADMIN")
-    public void searchByTemplateAndTypeKey() {
-        long id = 103L;
-        XmEntity given = createEntity(id, "ACCOUNT.USER");
-        given.setId(id);
-        xmEntitySearchRepository.save(given);
-        xmEntitySearchRepository.refresh();
-        TemplateParamsHolder templateParamsHolder = new TemplateParamsHolder();
-        templateParamsHolder.getTemplateParams().put("typeKey", "ACCOUNT.USER");
-        Page<XmEntity> result = xmEntityService.searchByQueryAndTypeKey("BY_TYPEKEY", templateParamsHolder, "ACCOUNT", Pageable.unpaged(), null);
-        assertThat(result.getContent().size()).isEqualTo(1);
-        assertThat(result.getContent().get(0)).isEqualTo(given);
     }
 
     private XmEntity createEntity(Long id, String typeKey) {

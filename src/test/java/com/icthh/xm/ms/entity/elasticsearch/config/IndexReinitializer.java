@@ -1,4 +1,4 @@
-package com.icthh.xm.ms.entity.config.elasticsearch;
+package com.icthh.xm.ms.entity.elasticsearch.config;
 
 import static java.lang.System.currentTimeMillis;
 

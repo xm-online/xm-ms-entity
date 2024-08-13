@@ -75,7 +75,7 @@ public class ElasticsearchIndexServiceUnitTest extends AbstractUnitTest {
         service = new ElasticsearchIndexService(xmEntityRepository, xmEntitySearchRepository, elasticsearchOperations,
             tenantContextHolder, mappingConfiguration, indexConfiguration, null, entityManager, applicationProperties,
             xmEntitySpecService);
-        service.setSelfReference(service);
+        service.setSelf(service);
     }
 
     @Test

@@ -1,4 +1,4 @@
-package com.icthh.xm.ms.entity.config.elasticsearch;
+package com.icthh.xm.ms.entity.elasticsearch.config;
 
 import org.testcontainers.elasticsearch.ElasticsearchContainer;
 import org.testcontainers.utility.DockerImageName;

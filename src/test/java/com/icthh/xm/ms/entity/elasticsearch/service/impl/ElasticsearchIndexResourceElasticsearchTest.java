@@ -1,35 +1,12 @@
-package com.icthh.xm.ms.entity.service;
+package com.icthh.xm.ms.entity.elasticsearch.service.impl;
 
 import com.icthh.xm.commons.i18n.error.web.ExceptionTranslator;
-import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_AUTH_CONTEXT;
-import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_TENANT_CONTEXT;
-import static com.icthh.xm.ms.entity.web.rest.TestUtil.sameInstant;
-import static com.icthh.xm.ms.entity.web.rest.XmEntityResourceExtendedIntTest.createEntity;
-import static com.icthh.xm.ms.entity.web.rest.XmEntityResourceExtendedIntTest.createEntityComplexIncoming;
-import static org.hamcrest.Matchers.containsInAnyOrder;
-import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.hasSize;
-import static org.hamcrest.Matchers.notNullValue;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertThrows;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
 import com.icthh.xm.commons.permission.service.PermissionCheckService;
 import com.icthh.xm.commons.search.ElasticsearchOperations;
 import com.icthh.xm.commons.security.XmAuthenticationContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
 import com.icthh.xm.lep.api.LepManager;
-import com.icthh.xm.ms.entity.AbstractElasticSpringBootTest;
 import com.icthh.xm.ms.entity.config.ApplicationProperties;
 import com.icthh.xm.ms.entity.config.IndexConfiguration;
 import com.icthh.xm.ms.entity.config.MappingConfiguration;
@@ -40,12 +17,16 @@ import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.domain.ext.IdOrKey;
 import com.icthh.xm.ms.entity.domain.listener.XmEntityElasticSearchListener;
 import com.icthh.xm.ms.entity.domain.spec.TypeSpec;
+import com.icthh.xm.ms.entity.elasticsearch.AbstractElasticSpringBootTest;
 import com.icthh.xm.ms.entity.repository.XmEntityRepositoryInternal;
 import com.icthh.xm.ms.entity.repository.search.PermittedSearchRepository;
 import com.icthh.xm.ms.entity.repository.search.XmEntitySearchRepository;
+import com.icthh.xm.ms.entity.service.ElasticsearchIndexService;
+import com.icthh.xm.ms.entity.service.SeparateTransactionExecutor;
+import com.icthh.xm.ms.entity.service.XmEntityService;
+import com.icthh.xm.ms.entity.service.XmEntitySpecService;
 import com.icthh.xm.ms.entity.web.rest.ElasticsearchIndexResource;
 import com.icthh.xm.ms.entity.web.rest.XmEntityResource;
-
 import com.icthh.xm.ms.entity.web.rest.XmEntitySearchResource;
 import jakarta.persistence.EntityManager;
 import lombok.SneakyThrows;
@@ -72,6 +53,28 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.Executor;
 
+import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_AUTH_CONTEXT;
+import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_TENANT_CONTEXT;
+import static com.icthh.xm.ms.entity.web.rest.TestUtil.sameInstant;
+import static com.icthh.xm.ms.entity.web.rest.XmEntityResourceExtendedIntTest.createEntity;
+import static com.icthh.xm.ms.entity.web.rest.XmEntityResourceExtendedIntTest.createEntityComplexIncoming;
+import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.notNullValue;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
 /**
  * Test class for the ElasticsearchIndexResource REST controller and ElasticsearchIndexService service.
  *
@@ -80,7 +83,7 @@ import java.util.concurrent.Executor;
  */
 @Slf4j
 @WithMockUser(authorities = {"SUPER-ADMIN"})
-public class ElasticsearchIndexResourceIntTest extends AbstractElasticSpringBootTest {
+public class ElasticsearchIndexResourceElasticsearchTest extends AbstractElasticSpringBootTest {
 
     private static final String DEFAULT_TYPE_KEY = "ACCOUNT.ADMIN";
     private static final String ANOTHER_TYPE_KEY = "ACCOUNT.OWNER";
@@ -196,7 +199,7 @@ public class ElasticsearchIndexResourceIntTest extends AbstractElasticSpringBoot
 
         elasticsearchOperations.refresh(XmEntity.class);
 
-        elasticsearchIndexService.setSelfReference(elasticsearchIndexService);
+        elasticsearchIndexService.setSelf(elasticsearchIndexService);
 
         ElasticsearchIndexResource elasticsearchIndexResource =
             new ElasticsearchIndexResource(elasticsearchIndexService);

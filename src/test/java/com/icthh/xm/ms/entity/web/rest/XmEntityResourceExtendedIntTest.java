@@ -17,7 +17,7 @@ import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
 import static com.icthh.xm.commons.tenant.TenantContextUtils.getRequiredTenantKeyValue;
 import com.icthh.xm.lep.api.LepManager;
-import com.icthh.xm.ms.entity.AbstractElasticSpringBootTest;
+import com.icthh.xm.ms.entity.AbstractSpringBootTest;
 import com.icthh.xm.ms.entity.config.ApplicationProperties;
 import com.icthh.xm.ms.entity.config.Constants;
 import com.icthh.xm.ms.entity.config.InternalTransactionService;
@@ -32,7 +32,6 @@ import com.icthh.xm.ms.entity.domain.Link;
 import com.icthh.xm.ms.entity.domain.Location;
 import com.icthh.xm.ms.entity.domain.Tag;
 import com.icthh.xm.ms.entity.domain.XmEntity;
-import com.icthh.xm.ms.entity.domain.ext.IdOrKey;
 import com.icthh.xm.ms.entity.lep.keyresolver.TypeKeyWithExtends;
 import com.icthh.xm.ms.entity.repository.EventRepository;
 import com.icthh.xm.ms.entity.repository.SpringXmEntityRepository;
@@ -62,7 +61,6 @@ import com.icthh.xm.ms.entity.service.impl.XmEntityServiceImpl;
 import com.icthh.xm.ms.entity.service.json.JsonValidationService;
 import static com.icthh.xm.ms.entity.web.rest.TestUtil.sameInstant;
 import com.jayway.jsonpath.JsonPath;
-import static java.lang.Long.valueOf;
 import static java.time.Instant.now;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.emptySet;
@@ -80,20 +78,18 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsInAnyOrder;
-import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.everyItem;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.hasSize;
-import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.nullValue;
 import static org.hibernate.validator.internal.util.CollectionHelper.asSet;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
-import org.junit.jupiter.api.Test;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Ignore;
+import org.junit.Test;
 import org.mockito.Mock;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -136,7 +132,7 @@ import java.util.Optional;
  */
 @Slf4j
 @Transactional
-public class XmEntityResourceExtendedIntTest extends AbstractElasticSpringBootTest {
+public class XmEntityResourceExtendedIntTest extends AbstractSpringBootTest {
 
     private static final String DEFAULT_KEY = "AAAAAAAAAA";
 
@@ -322,19 +318,11 @@ public class XmEntityResourceExtendedIntTest extends AbstractElasticSpringBootTe
         TenantContextUtils.setTenant(tenantContextHolder, "RESINTTEST");
     }
 
-    @BeforeEach
+    @Before
     public void setup() {
         log.info("Init setup");
 
         TenantContextUtils.setTenant(tenantContextHolder, "RESINTTEST");
-        //xmEntitySearchRepository.deleteAll();
-
-        //initialize index before test - put valid mapping
-        if (!elasticInited) {
-            initElasticsearch(tenantContextHolder);
-            elasticInited = true;
-        }
-        cleanElasticsearch(tenantContextHolder);
 
         MockitoAnnotations.initMocks(this);
 
@@ -410,7 +398,7 @@ public class XmEntityResourceExtendedIntTest extends AbstractElasticSpringBootTe
         objectMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
     }
 
-    @AfterEach
+    @After
     public void tearDown() {
         lepManager.endThreadContext();
         tenantContextHolder.getPrivilegedContext().destroyCurrentContext();
@@ -577,226 +565,6 @@ public class XmEntityResourceExtendedIntTest extends AbstractElasticSpringBootTe
 
     private XmEntity convertJsonToObject(String json) throws IOException {
         return objectMapper.readValue(json, XmEntity.class);
-    }
-
-    @Test
-    public void createXmEntityWithTagsAttachmentsLocations() throws Exception {
-
-        XmEntity testXmEntity = separateTransactionExecutor.doInSeparateTransaction(() -> {
-
-            int databaseSizeBeforeCreate = xmEntityRepository.findAll().size();
-
-            // Create the XmEntity with tag, attachment and location
-            MvcResult result = performPost("/api/xm-entities", xmEntityIncoming)
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.key").value(DEFAULT_KEY))
-                .andReturn();
-
-            Integer id = JsonPath.read(result.getResponse().getContentAsString(), "$.id");
-
-            List<XmEntity> xmEntityList = validateEntityInDB(databaseSizeBeforeCreate + 1);
-            XmEntity resultXmEntity = xmEntityList.get(xmEntityList.size() - 1);
-
-            // Get the xmEntityPersisted by ID
-            performGet("/api/xm-entities/{id}", id)
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.id").value(id))
-                .andExpect(jsonPath("$.key").value(DEFAULT_KEY))
-                .andExpect(jsonPath("$.typeKey").value(DEFAULT_TYPE_KEY))
-                .andExpect(jsonPath("$.stateKey").value(DEFAULT_STATE_KEY))
-                .andExpect(jsonPath("$.name").value(DEFAULT_NAME))
-                .andExpect(jsonPath("$.startDate").value(sameInstant(MOCKED_START_DATE)))
-                .andExpect(jsonPath("$.updateDate").value(sameInstant(MOCKED_UPDATE_DATE)))
-                .andExpect(jsonPath("$.endDate").value(sameInstant(DEFAULT_END_DATE)))
-                .andExpect(jsonPath("$.avatarUrl").value(containsString("aaaaa.jpg")))
-                .andExpect(jsonPath("$.avatarUrl").value(DEFAULT_AVATAR_URL))
-                .andExpect(jsonPath("$.description").value(DEFAULT_DESCRIPTION))
-                .andExpect(jsonPath("$.data.AAAAAAAAAA").value("BBBBBBBBBB"))
-
-                .andExpect(jsonPath("$.tags[0].id").value(notNullValue()))
-                .andExpect(jsonPath("$.tags[0].name").value(DEFAULT_TAG_NAME))
-                .andExpect(jsonPath("$.tags[0].typeKey").value(DEFAULT_TAG_KEY))
-                .andExpect(jsonPath("$.tags[0].xmEntity").value(id))
-
-                .andExpect(jsonPath("$.attachments[0].id").value(notNullValue()))
-                .andExpect(jsonPath("$.attachments[0].typeKey").value(DEFAULT_ATTACHMENT_KEY))
-                .andExpect(jsonPath("$.attachments[0].name").value(DEFAULT_ATTACHMENT_NAME))
-                .andExpect(jsonPath("$.attachments[0].contentUrl").value(DEFAULT_ATTACHMENT_URL))
-                .andExpect(jsonPath("$.attachments[0].description").value(DEFAULT_ATTACHMENT_DESCRIPTION))
-                .andExpect(jsonPath("$.attachments[0].startDate").value(DEFAULT_ATTACHMENT_START_DATE.toString()))
-                .andExpect(jsonPath("$.attachments[0].endDate").value(DEFAULT_ATTACHMENT_END_DATE.toString()))
-                .andExpect(jsonPath("$.attachments[0].valueContentType").value(DEFAULT_ATTACHMENT_CONTENT_TYPE))
-                .andExpect(jsonPath("$.attachments[0].valueContentSize").value(DEFAULT_ATTACHMENT_CONTENT_SIZE))
-                .andExpect(jsonPath("$.attachments[0].xmEntity").value(id))
-
-                .andExpect(jsonPath("$.locations[0].id").value(notNullValue()))
-                .andExpect(jsonPath("$.locations[0].typeKey").value(DEFAULT_LOCATION_KEY))
-                .andExpect(jsonPath("$.locations[0].name").value(DEFAULT_LOCATION_NAME))
-                .andExpect(jsonPath("$.locations[0].countryKey").value(DEFAULT_LOCATION_COUNTRY_KEY))
-                .andExpect(jsonPath("$.locations[0].xmEntity").value(id));
-
-            // TODO - check not implemented XmEntity references. Replace with correct assertions after implementation
-            //.andExpect(jsonPath("$.calendars.length()").value(0))
-
-            // FIXME - content is returned in TEST mode besides LAZY fetchtype. Need to investigate.
-            // .andExpect(jsonPath("$.attachments[0].content.id").value(notNullValue()))
-
-            return resultXmEntity;
-        });
-
-        xmEntitySearchRepository.refresh();
-
-        // Validate the XmEntity in Elasticsearch
-        XmEntity xmEntityEs = xmEntitySearchRepository.findById(valueOf(testXmEntity.getId().toString()))
-                                                      .orElseThrow(NullPointerException::new);
-        assertThat(xmEntityEs).isEqualToIgnoringGivenFields(testXmEntity, "avatarUrlRelative");
-        separateTransactionExecutor.doInSeparateTransaction(() -> {
-            xmEntityService.delete(testXmEntity.getId());
-            return null;
-        });
-    }
-
-    @Test
-    public void createXmEntityWithLinks() throws Exception {
-
-        XmEntity resultXmEntity = separateTransactionExecutor.doInSeparateTransaction(() -> {
-
-            XmEntity presaved = xmEntityService.save(createEntity());
-
-            assertNotNull(presaved.getId());
-
-            int databaseSizeBeforeCreate = xmEntityRepository.findAll().size();
-
-            XmEntity entity = xmEntityIncoming;
-            entity.getTargets().add(new Link()
-                                        .typeKey(DEFAULT_LN_TARGET_KEY)
-                                        .name(DEFAULT_LN_TARGET_NAME)
-                                        .startDate(DEFAULT_LN_TARGET_START_DATE)
-                                        .target(presaved)
-                                   );
-
-            // Create the XmEntity with tag
-            MvcResult result = performPost("/api/xm-entities", entity)
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.key").value(DEFAULT_KEY))
-                .andReturn();
-
-            Integer id = JsonPath.read(result.getResponse().getContentAsString(), "$.id");
-
-            List<XmEntity> xmEntityList = validateEntityInDB(databaseSizeBeforeCreate + 1);
-            XmEntity testXmEntity = xmEntityList.get(xmEntityList.size() - 1);
-
-            // Get the xmEntityPersisted with tag by ID
-            performGet("/api/xm-entities/{id}", id)
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.id").value(id))
-                .andExpect(jsonPath("$.key").value(DEFAULT_KEY))
-                .andExpect(jsonPath("$.typeKey").value(DEFAULT_TYPE_KEY))
-                .andExpect(jsonPath("$.stateKey").value(DEFAULT_STATE_KEY))
-                .andExpect(jsonPath("$.name").value(DEFAULT_NAME))
-                .andExpect(jsonPath("$.startDate").value(sameInstant(MOCKED_START_DATE)))
-                .andExpect(jsonPath("$.updateDate").value(sameInstant(MOCKED_UPDATE_DATE)))
-                .andExpect(jsonPath("$.endDate").value(sameInstant(DEFAULT_END_DATE)))
-                .andExpect(jsonPath("$.avatarUrl").value(containsString("aaaaa.jpg")))
-                .andExpect(jsonPath("$.avatarUrl").value(DEFAULT_AVATAR_URL))
-                .andExpect(jsonPath("$.description").value(DEFAULT_DESCRIPTION))
-                .andExpect(jsonPath("$.data.AAAAAAAAAA").value("BBBBBBBBBB"))
-
-                .andExpect(jsonPath("$.targets[0].id").value(notNullValue()))
-                .andExpect(jsonPath("$.targets[0].name").value(DEFAULT_LN_TARGET_NAME))
-                .andExpect(jsonPath("$.targets[0].typeKey").value(DEFAULT_LN_TARGET_KEY))
-                .andExpect(jsonPath("$.targets[0].source").value(id))
-                .andExpect(jsonPath("$.targets[0].target.id").value(presaved.getId()))
-                .andExpect(jsonPath("$.targets[0].target.typeKey").value(presaved.getTypeKey()));
-            return testXmEntity;
-        });
-
-        xmEntitySearchRepository.refresh();
-
-        // Validate the XmEntity in Elasticsearch
-        XmEntity xmEntityEs = xmEntitySearchRepository.findById(valueOf(resultXmEntity.getId().toString()))
-                                                      .orElseThrow(NullPointerException::new);
-        assertThat(xmEntityEs).isEqualToIgnoringGivenFields(resultXmEntity, "avatarUrlRelative");
-        separateTransactionExecutor.doInSeparateTransaction(() -> {
-            xmEntityService.delete(resultXmEntity.getId());
-            return null;
-        });
-    }
-
-    @Test
-    public void createXmEntityWithSourceLinks() throws Exception {
-
-        XmEntity testXmEntity = separateTransactionExecutor.doInSeparateTransaction(() -> {
-
-        XmEntity presaved = xmEntityService.save(createEntity());
-
-        int databaseSizeBeforeCreate = xmEntityRepository.findAll().size();
-
-        XmEntity entity = xmEntityIncoming;
-        entity.setSources(Collections.singleton(new Link()
-                                                    .typeKey(DEFAULT_LN_TARGET_KEY)
-                                                    .name(DEFAULT_LN_TARGET_NAME)
-                                                    .startDate(DEFAULT_LN_TARGET_START_DATE)
-                                                    .source(presaved))
-        );
-
-        // Create the XmEntity with tag
-        MvcResult result = performPost("/api/xm-entities", entity)
-            .andExpect(status().isCreated())
-            .andExpect(jsonPath("$.key").value(DEFAULT_KEY))
-            .andReturn();
-
-        Integer id = JsonPath.read(result.getResponse().getContentAsString(), "$.id");
-
-        em.detach(presaved);
-
-        List<XmEntity> xmEntityList = validateEntityInDB(databaseSizeBeforeCreate + 1);
-        XmEntity resultXmEntity = xmEntityList.get(xmEntityList.size() - 1);
-
-        presaved = xmEntityService.findOne(IdOrKey.of(presaved.getId()));
-
-        assertNotNull(presaved.getId());
-
-        // Get the xmEntityPersisted with tag by ID
-        performGet("/api/xm-entities/{id}", presaved.getId())
-            .andExpect(status().isOk())
-            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-            .andExpect(jsonPath("$.id").value(presaved.getId()))
-            .andExpect(jsonPath("$.key").value(DEFAULT_KEY))
-            .andExpect(jsonPath("$.typeKey").value(DEFAULT_TYPE_KEY))
-            .andExpect(jsonPath("$.stateKey").value(DEFAULT_STATE_KEY))
-            .andExpect(jsonPath("$.name").value(DEFAULT_NAME))
-            .andExpect(jsonPath("$.startDate").value(sameInstant(MOCKED_START_DATE)))
-            .andExpect(jsonPath("$.updateDate").value(sameInstant(MOCKED_UPDATE_DATE)))
-            .andExpect(jsonPath("$.endDate").value(sameInstant(DEFAULT_END_DATE)))
-            .andExpect(jsonPath("$.avatarUrl").value(containsString("aaaaa.jpg")))
-            .andExpect(jsonPath("$.avatarUrl").value(DEFAULT_AVATAR_URL))
-            .andExpect(jsonPath("$.description").value(DEFAULT_DESCRIPTION))
-            .andExpect(jsonPath("$.data.AAAAAAAAAA").value("BBBBBBBBBB"))
-
-            .andExpect(jsonPath("$.targets[0].id").value(notNullValue()))
-            .andExpect(jsonPath("$.targets[0].name").value(DEFAULT_LN_TARGET_NAME))
-            .andExpect(jsonPath("$.targets[0].typeKey").value(DEFAULT_LN_TARGET_KEY))
-            .andExpect(jsonPath("$.targets[0].source").value(presaved.getId()))
-            .andExpect(jsonPath("$.targets[0].target.id").value(id));
-            return resultXmEntity;
-        });
-
-        xmEntitySearchRepository.refresh();
-        // Validate the XmEntity in Elasticsearch
-        XmEntity xmEntityEs = xmEntitySearchRepository.findById(valueOf(testXmEntity.getId().toString()))
-                                                      .orElseThrow(NullPointerException::new);
-        // TODO - may be compare avatarUrl too ?
-        assertThat(xmEntityEs).isEqualToIgnoringGivenFields(testXmEntity, "sources", "avatarUrlRelative");
-
-
-        separateTransactionExecutor.doInSeparateTransaction(() -> {
-            testXmEntity.getSources().forEach(it -> linkService.delete(it.getId()));
-            xmEntityService.delete(testXmEntity.getId());
-            return null;
-        });
     }
 
     @Test
@@ -1027,60 +795,6 @@ public class XmEntityResourceExtendedIntTest extends AbstractElasticSpringBootTe
     }
 
     @Test
-    public void createXmEntityWithLargeData() throws Exception {
-
-        XmEntity testXmEntity = separateTransactionExecutor.doInSeparateTransaction(() -> {
-
-            int databaseSizeBeforeCreate = xmEntityRepository.findAll().size();
-
-            xmEntityIncoming.setData(LARGE_DATA);
-
-            // Create the XmEntity
-            MvcResult result = performPost("/api/xm-entities", xmEntityIncoming)
-                .andExpect(status().isCreated())
-                .andReturn();
-
-            Integer id = JsonPath.read(result.getResponse().getContentAsString(), "$.id");
-
-            // Get the xmEntityPersisted with tag by ID
-            performGet("/api/xm-entities/{id}", id)
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.id").value(id))
-                .andExpect(jsonPath("$.key").value(DEFAULT_KEY))
-                .andExpect(jsonPath("$.typeKey").value(DEFAULT_TYPE_KEY))
-                .andExpect(jsonPath("$.stateKey").value(DEFAULT_STATE_KEY))
-                .andExpect(jsonPath("$.name").value(DEFAULT_NAME))
-                .andExpect(jsonPath("$.startDate").value(sameInstant(MOCKED_START_DATE)))
-                .andExpect(jsonPath("$.updateDate").value(sameInstant(MOCKED_UPDATE_DATE)))
-                .andExpect(jsonPath("$.endDate").value(sameInstant(DEFAULT_END_DATE)))
-                .andExpect(jsonPath("$.avatarUrl").value(containsString("aaaaa.jpg")))
-                .andExpect(jsonPath("$.avatarUrl").value(DEFAULT_AVATAR_URL))
-                .andExpect(jsonPath("$.description").value(DEFAULT_DESCRIPTION))
-                .andExpect(jsonPath("$.data.AAAAAAAAAA").value(LARGE_VALUE));
-
-            // Validate the XmEntity in the database
-            List<XmEntity> xmEntityList = validateEntityInDB(databaseSizeBeforeCreate + 1);
-
-            XmEntity resultXmEntity = xmEntityList.get(xmEntityList.size() - 1);
-            assertNotNull(resultXmEntity.getId());
-            assertThat(resultXmEntity.getData()).isEqualTo(LARGE_DATA);
-            return resultXmEntity;
-        });
-
-        xmEntitySearchRepository.refresh();
-        // Validate the XmEntity in Elasticsearch
-        XmEntity xmEntityEs = xmEntitySearchRepository.findById(testXmEntity.getId())
-                                                      .orElseThrow(NullPointerException::new);
-        assertThat(xmEntityEs).isEqualToIgnoringGivenFields(testXmEntity, "avatarUrlRelative");
-        assertThat(xmEntityEs.getData()).isEqualTo(LARGE_DATA);
-        separateTransactionExecutor.doInSeparateTransaction(() -> {
-            xmEntityService.delete(testXmEntity.getId());
-            return null;
-        });
-    }
-
-    @Test
     public void checkJsonShemeDateTypeProperties() throws Exception {
 
         int databaseSizeBeforeTest = xmEntityRepository.findAll().size();
@@ -1205,59 +919,6 @@ public class XmEntityResourceExtendedIntTest extends AbstractElasticSpringBootTe
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON))
             .andExpect(jsonPath("$.[*].id").value(everyItem(nullValue())));
-    }
-
-    @Test
-    @WithMockUser(authorities = "SUPER-ADMIN")
-    public void testSearchByTypeKeyAndQuery() throws Exception {
-
-        prepareSearch();
-
-        String urlTemplate = "/api/_search-with-typekey/xm-entities?typeKey=ACCOUNT&size=5";
-
-        performSearchGet(urlTemplate)
-            .andExpect(status().isOk())
-            .andExpect(jsonPath("$.length()").value(2))
-            .andExpect(jsonPath("$.[0].tags[0].name").value(DEFAULT_TAG_NAME))
-            .andExpect(jsonPath("$.[1].tags[0].name").value(DEFAULT_TAG_NAME));
-
-        performSearchGet(urlTemplate + "&query=" + UNIQ_DESCRIPTION)
-            .andExpect(status().isOk())
-            .andExpect(jsonPath("$.length()").value(1))
-            .andExpect(jsonPath("$.[0].tags[0].name").value(DEFAULT_TAG_NAME));
-
-        performSearchGet(urlTemplate + "&query=" + NOT_PRESENT_UNIQ_DESCRIPTION)
-            .andExpect(status().isOk())
-            .andExpect(jsonPath("$.length()").value(0));
-
-        deleteData();
-    }
-
-    @Test
-    @WithMockUser(authorities = "SUPER-ADMIN")
-    public void testSearchByTypeKeyAndTemplate() throws Exception {
-
-        prepareSearch();
-
-        String urlTemplate = "/api/_search-with-typekey-and-template/xm-entities?typeKey=ACCOUNT&size=5";
-
-        performSearchGet(urlTemplate)
-            .andExpect(status().isOk())
-            .andExpect(jsonPath("$.length()").value(2))
-            .andExpect(jsonPath("$.[0].tags[0].name").value(DEFAULT_TAG_NAME))
-            .andExpect(jsonPath("$.[1].tags[0].name").value(DEFAULT_TAG_NAME));
-
-        performSearchGet(urlTemplate + "&template=UNIQ_DESCRIPTION&templateParams[description]=" + UNIQ_DESCRIPTION)
-            .andExpect(status().isOk())
-            .andExpect(jsonPath("$.length()").value(1))
-            .andExpect(jsonPath("$.[0].tags[0].name").value(DEFAULT_TAG_NAME));
-
-        performSearchGet(
-            urlTemplate + "&template=UNIQ_DESCRIPTION&templateParams[description]=" + NOT_PRESENT_UNIQ_DESCRIPTION)
-            .andExpect(status().isOk())
-            .andExpect(jsonPath("$.length()").value(0));
-
-        deleteData();
     }
 
     private void deleteData() {
@@ -1900,109 +1561,6 @@ public class XmEntityResourceExtendedIntTest extends AbstractElasticSpringBootTe
 
     @Test
     @Transactional
-    public void manageXmEntityAvatarUrl() throws Exception {
-
-        MvcResult mvcResult = separateTransactionExecutor.doInSeparateTransaction(() -> {
-
-            XmEntity presaved = xmEntityService.save(createEntity());
-
-            int databaseSizeBeforeCreate = xmEntityRepository.findAll().size();
-
-            XmEntity entity = xmEntityIncoming;
-            entity
-                .avatarUrl(DEFAULT_AVATAR_URL_PREFIX + "ccccc.jpg")
-                .getTargets().add(new Link()
-                                      .typeKey(DEFAULT_LN_TARGET_KEY)
-                                      .name(DEFAULT_LN_TARGET_NAME)
-                                      .startDate(DEFAULT_LN_TARGET_START_DATE)
-                                      .target(presaved)
-                                 );
-
-            // Create the XmEntity with link
-            MvcResult result = performPost("/api/xm-entities", entity)
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.key").value(DEFAULT_KEY))
-                .andExpect(jsonPath("$.avatarUrl").value(DEFAULT_AVATAR_URL_PREFIX + "ccccc.jpg"))
-                .andExpect(jsonPath("$.avatarUrlFull").doesNotExist())
-                .andExpect(jsonPath("$.avatarUrlRelative").doesNotExist())
-                .andReturn();
-
-            Integer id = JsonPath.read(result.getResponse().getContentAsString(), "$.id");
-
-            validateEntityInDB(databaseSizeBeforeCreate + 1);
-
-            assertNotNull(presaved.getId());
-
-            // Get the xmEntityPersisted with tag by ID
-            result = performGet("/api/xm-entities/{id}", id)
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.id").value(id))
-                .andExpect(jsonPath("$.name").value(DEFAULT_NAME))
-                .andExpect(jsonPath("$.avatarUrl").value(DEFAULT_AVATAR_URL_PREFIX + "ccccc.jpg"))
-                .andExpect(jsonPath("$.avatarUrlFull").doesNotExist())
-                .andExpect(jsonPath("$.avatarUrlRelative").doesNotExist())
-
-                .andExpect(jsonPath("$.targets[0].source").value(id))
-                .andExpect(jsonPath("$.targets[0].target.id").value(presaved.getId()))
-                .andExpect(jsonPath("$.targets[0].target.avatarUrl").value(DEFAULT_AVATAR_URL))
-                .andReturn()
-            ;
-
-            XmEntity toUpdate = convertJsonToObject(result.getResponse().getContentAsString());
-            toUpdate.setAvatarUrl(DEFAULT_AVATAR_URL_PREFIX + "bbbbb.jpg");
-            toUpdate.setName("new_name1");
-
-            performPut(toUpdate)
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.key").value(DEFAULT_KEY))
-                .andExpect(jsonPath("$.name").value("new_name1"))
-                .andExpect(jsonPath("$.avatarUrlFull").doesNotExist())
-                .andExpect(jsonPath("$.avatarUrlRelative").doesNotExist())
-                // TODO fix: old entity was returned as a result
-                //            .andExpect(jsonPath("$.avatarUrl").value(DEFAULT_AVATAR_URL_PREFIX+"bbbbb.jpg"))
-                .andReturn();
-
-            result = performGet("/api/xm-entities/{id}?embed=targets", id)
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.id").value(id))
-                .andExpect(jsonPath("$.name").value("new_name1"))
-                .andExpect(jsonPath("$.avatarUrl").value(DEFAULT_AVATAR_URL_PREFIX + "bbbbb.jpg"))
-                .andExpect(jsonPath("$.avatarUrlFull").doesNotExist())
-                .andExpect(jsonPath("$.avatarUrlRelative").doesNotExist())
-
-                .andExpect(jsonPath("$.targets[0].source").value(id))
-                .andExpect(jsonPath("$.targets[0].target.id").value(presaved.getId()))
-                .andExpect(jsonPath("$.targets[0].target.avatarUrl").value(DEFAULT_AVATAR_URL))
-                .andReturn()
-            ;
-            return result;
-        });
-
-        Integer id = JsonPath.read(mvcResult.getResponse().getContentAsString(), "$.id");
-
-        xmEntitySearchRepository.refresh();
-        // Validate the XmEntity in Elasticsearch
-        XmEntity xmEntityEs = xmEntitySearchRepository.findById(valueOf(id.toString()))
-                                                      .orElseThrow(NullPointerException::new);
-        XmEntity testXmEntity = convertJsonToObject(mvcResult.getResponse().getContentAsString());
-        assertThat(xmEntityEs).isEqualToIgnoringGivenFields(testXmEntity,
-                                                            "version",
-                                                            "avatarUrlRelative",
-                                                            "avatarUrlFull");
-
-        // TODO: fix: old avatarUrl inside elasticsearch after save
-//        assertEquals(testXmEntity.getAvatarUrl(), xmEntityEs.getAvatarUrl());
-//        assertEquals(testXmEntity.getAvatarUrlRelative(), xmEntityEs.getAvatarUrlRelative());
-        separateTransactionExecutor.doInSeparateTransaction(() -> {
-            xmEntityService.delete(id.longValue());
-            return null;
-        });
-    }
-
-    @Test
-    @Transactional
     @SneakyThrows
     public void testGetLinkTargetsDefaultSerialization() {
 
@@ -2107,7 +1665,7 @@ public class XmEntityResourceExtendedIntTest extends AbstractElasticSpringBootTe
     @Test
     @Transactional
     @SneakyThrows
-    @Disabled("XM-MIG enable when filtered serialization will be implemented again")
+    @Ignore("XM-MIG enable when filtered serialization will be implemented again")
     public void testGetLinkTargetsFilteredSerialization() {
 
         String tgtTypeKey = "ACCOUNT.USER";
@@ -2209,100 +1767,7 @@ public class XmEntityResourceExtendedIntTest extends AbstractElasticSpringBootTe
     @SneakyThrows
     @WithMockUser(authorities = "SUPER-ADMIN")
     @Transactional
-    public void testSaveXmEntityToElasticNoCycleJson() {
-
-        String createdBy = "admin";
-
-        XmEntity source = xmEntityRepository.saveAndFlush(createComplexEntityPersistable().typeKey("ACCOUNT.ADMIN"))
-                                            .createdBy(createdBy);
-        XmEntity target = xmEntityRepository.saveAndFlush(createComplexEntityPersistable().typeKey("ACCOUNT.USER"))
-                                            .createdBy(createdBy);
-
-        String defDescription = DEFAULT_DESCRIPTION;
-        String lnTypekey = DEFAULT_LN_TARGET_KEY;
-        String lnName = DEFAULT_LN_TARGET_NAME;
-        Instant lnStartDate = DEFAULT_LN_TARGET_START_DATE;
-        Instant lnEndDate = Instant.ofEpochMilli(lnStartDate.toEpochMilli() + 100L);
-
-        source.getTargets().add(new Link()
-                                    .typeKey(lnTypekey)
-                                    .name(lnName)
-                                    .description(defDescription)
-                                    .startDate(lnStartDate)
-                                    .endDate(lnEndDate)
-                                    .target(target)
-                                    .source(source));
-
-        // add cyclic Link
-        target.getTargets().add(new Link()
-                                    .typeKey(lnTypekey)
-                                    .name(lnName)
-                                    .description(defDescription)
-                                    .startDate(lnStartDate)
-                                    .endDate(lnEndDate)
-                                    .target(source)
-                                    .source(target)
-        );
-
-        xmEntitySearchRepository.save(source);
-
-        xmEntitySearchRepository.refresh();
-
-        assertNotNull(source.getId());
-        Integer srcId = source.getId().intValue();
-        String tgtStartDate = DEFAULT_START_DATE.toString();
-        String tgtUpdateDate = DEFAULT_UPDATE_DATE.toString();
-        String tgtEndDate = DEFAULT_END_DATE.toString();
-
-        performSearchGet("/api/_search/xm-entities?query=id:{id}", source.getId())
-            .andExpect(status().isOk())
-            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-            .andExpect(jsonPath("$", hasSize(1)))
-            .andExpect(jsonPath("$.[*].id", containsInAnyOrder(srcId)))
-            .andExpect(jsonPath("$.[*].typeKey", containsInAnyOrder("ACCOUNT.ADMIN")))
-            .andExpect(jsonPath("$.[*].key", containsInAnyOrder(DEFAULT_KEY)))
-            .andExpect(jsonPath("$.[*].name", containsInAnyOrder(DEFAULT_NAME)))
-            .andExpect(jsonPath("$.[*].description", containsInAnyOrder(DEFAULT_DESCRIPTION)))
-            .andExpect(jsonPath("$.[*].startDate", containsInAnyOrder(tgtStartDate)))
-            .andExpect(jsonPath("$.[*].endDate", containsInAnyOrder(tgtEndDate)))
-            .andExpect(jsonPath("$.[*].updateDate", containsInAnyOrder(tgtUpdateDate)))
-            .andExpect(jsonPath("$.[*].source").doesNotExist())
-            .andExpect(jsonPath("$.[*].data.AAAAAAAAAA", containsInAnyOrder("BBBBBBBBBB")))
-            .andExpect(jsonPath("$.[*].removed", containsInAnyOrder(false)))
-            .andExpect(jsonPath("$.[*].version", containsInAnyOrder(1)))
-            .andExpect(jsonPath("$.[*].avatarUrl").exists())
-
-            .andExpect(jsonPath("$.[*].calendars").exists())
-            .andExpect(jsonPath("$.[*].ratings").exists())
-            .andExpect(jsonPath("$.[*].comments").exists())
-            .andExpect(jsonPath("$.[*].attachments.[*].id").exists())
-            .andExpect(jsonPath("$.[*].locations.[*].id").exists())
-            .andExpect(jsonPath("$.[*].tags.[*].id").exists())
-
-            .andExpect(jsonPath("$.[*].targets", hasSize(1)))
-            .andExpect(jsonPath("$.[*].targets.[*].source", containsInAnyOrder(srcId)))
-            .andExpect(jsonPath("$.[*].targets.[*].target", hasSize(1)))
-            .andExpect(jsonPath("$.[*].targets.[*].target.id", hasSize(1)))
-            .andExpect(jsonPath("$.[*].targets.[*].target.key", containsInAnyOrder(DEFAULT_KEY)))
-            .andExpect(jsonPath("$.[*].targets.[*].target.typeKey", containsInAnyOrder("ACCOUNT.USER")))
-            .andExpect(jsonPath("$.[*].targets.[*].target.stateKey", containsInAnyOrder(DEFAULT_STATE_KEY)))
-            .andExpect(jsonPath("$.[*].targets.[*].target.name", containsInAnyOrder(DEFAULT_NAME)))
-            .andExpect(jsonPath("$.[*].targets.[*].target.startDate", containsInAnyOrder(tgtStartDate)))
-            .andExpect(jsonPath("$.[*].targets.[*].target.endDate", containsInAnyOrder(tgtEndDate)))
-            .andExpect(jsonPath("$.[*].targets.[*].target.updateDate", containsInAnyOrder(tgtUpdateDate)))
-            .andExpect(jsonPath("$.[*].targets.[*].target.description", containsInAnyOrder(defDescription)))
-            .andExpect(jsonPath("$.[*].targets.[*].target.createdBy", containsInAnyOrder(createdBy)))
-            .andExpect(jsonPath("$.[*].targets.[*].target.data").exists())
-            .andExpect(jsonPath("$.[*].targets.[*].target.data.AAAAAAAAAA", containsInAnyOrder("BBBBBBBBBB")))
-        ;
-
-    }
-
-    @Test
-    @SneakyThrows
-    @WithMockUser(authorities = "SUPER-ADMIN")
-    @Transactional
-    @Disabled("XM-MIG enable when filtered serialization will be implemented again")
+    @Ignore("XM-MIG enable when filtered serialization will be implemented again")
     public void testSaveXmEntityToElasticNoCycleJsonAndFilteredSerialization() {
 
         String createdBy = "admin";

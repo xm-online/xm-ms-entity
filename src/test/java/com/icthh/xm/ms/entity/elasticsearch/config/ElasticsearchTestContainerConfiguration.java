@@ -1,4 +1,4 @@
-package com.icthh.xm.ms.entity.config.elasticsearch;
+package com.icthh.xm.ms.entity.elasticsearch.config;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.HttpHost;
@@ -7,8 +7,8 @@ import org.elasticsearch.client.RestClientBuilder;
 import org.springframework.context.annotation.Bean;
 import org.testcontainers.elasticsearch.ElasticsearchContainer;
 
-import static com.icthh.xm.ms.entity.config.elasticsearch.ElasticsearchTestContainer.ELASTICSEARCH_PORT;
-import static com.icthh.xm.ms.entity.config.elasticsearch.ElasticsearchTestContainer.ELASTICSEARCH_SCHEME;
+import static com.icthh.xm.ms.entity.elasticsearch.config.ElasticsearchTestContainer.ELASTICSEARCH_PORT;
+import static com.icthh.xm.ms.entity.elasticsearch.config.ElasticsearchTestContainer.ELASTICSEARCH_SCHEME;
 
 @Slf4j
 public class ElasticsearchTestContainerConfiguration {
