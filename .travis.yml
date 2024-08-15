@@ -1,11 +1,7 @@
 language: java
 jdk:
-- eclipse-temurin:21-jdk-jammy
+- gradle:8.9-jdk21
 install: true
-
-before_install:
-  - export JAVA_HOME=$(jdk_switcher home eclipse-temurin-21)
-
 addons:
   sonarcloud:
     organization: xm-online
@@ -16,10 +12,11 @@ addons:
     - main
 
 script:
+  - jdk_switcher use eclipse-temurin-21
   - java -version
   - set -e
-  - "./gradlew --no-daemon --refresh-dependencies clean check test"
-  - "./gradlew -x test -Pprod --no-daemon bootWar"
+  - "gradle --no-daemon --refresh-dependencies clean check test"
+  - "gradle -x test -Pprod --no-daemon bootWar"
   - docker login -u $DOCKER_USER -p $DOCKER_PASS
   - export DOCKER_REPO=$(echo  -n $TRAVIS_REPO_SLUG | sed -e 's/^xm-online\//xmonline\//g')
   - export IMAGE_BRANCH=$(echo -n $TRAVIS_BRANCH | sed -e 's/\//-/g')
@@ -37,10 +34,10 @@ script:
         docker push $DOCKER_REPO:$TAG;
     done
 
-#cache: fixme: tmp
-#  directories:
-#  - "~/.gradle"
-#  - "~/.m2"
+cache:
+  directories:
+  - "~/.gradle"
+  - "~/.m2"
 env:
   global:
   - secure: qEXYGGyvUzMXdu0ddksUB/UFLEIXO07TVZovSNTAGjKkgsAfRoTjLP4eZ6NxIIYrsO8yWmMkyeQzpJZy2v7H1rLoYuT7PXtLBaVN0NN7J8yb2JYu99/oQSUTTTuE5NneP3g84AYbbRGNiKr4si3JRSqK+vpixxhPuAgV1VE8fcFvKTWlao41uRPvkjNPO1e9872xcZ9oZX7zbRuJ7o6Rqx8IL23/mWd9k/N9cap6lxXBk2WNzepmP2lIVMXfPE6YUvSBNMM4R/HoXR2s2zVVRc/xJDaQu/uKOttOVFeXDGfkAq6I336B+BDKpW4fdMhSAlnsw0FBrb/Sbj7jPWUm+XcDBaV7tfvKWhNW8Oj8CD95UXdE9tVKzN12k35LhT0j9AxxmIq98Xnyz/l0cD41y2RAbyEY3+4QCzFim19iRB9ZDshKQi4d2CZl+QpEr0sYsn+3oehF1rrtiItXipHYymEwdiHDCdzWIx+VJMyIDX9VdMlAxvOx1N0SMo2jOHe+mNigHqCLLvqv2ZPakT3SC3o053IIbQ7MozUYeDcUjxw+UqHy2HzgGPqGRqZwxy/OwopVh8k5DNRgT3ma4oGWjZ417xzSEp3OrHWyLnzrDA/W6+kEe1xzygZoQtTSGHGZ/3S5iEcecHd+tIveKkzB+6ispZUEhPP3G1OhTss+Il0=
