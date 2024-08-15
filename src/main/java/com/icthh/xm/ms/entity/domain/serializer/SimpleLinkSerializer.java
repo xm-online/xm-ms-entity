@@ -54,13 +54,6 @@ public class SimpleLinkSerializer extends JsonObjectSerializer<Link> {
             write(jsonGenerator, provider, "removed", value.getTarget().isRemoved());
             write(jsonGenerator, provider, "data", value.getTarget().getData());
         }
-
-//        write(jsonGenerator, provider, "attachments", value.getTarget().getAttachments());
-//        write(jsonGenerator, provider, "calendars", value.getTarget().getCalendars());
-//        write(jsonGenerator, provider, "locations", value.getTarget().getLocations());
-//        write(jsonGenerator, provider, "ratings", value.getTarget().getRatings());
-//        write(jsonGenerator, provider, "tags", value.getTarget().getTags());
-//        write(jsonGenerator, provider, "comments", value.getTarget().getComments());
         jsonGenerator.writeEndObject();
 
         if (value.getSource() != null) {

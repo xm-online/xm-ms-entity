@@ -18,18 +18,6 @@ import org.springframework.web.client.RestTemplate;
 @Configuration
 public class SecurityBeanOverrideConfiguration {
 
-//    @Bean
-//    @Primary
-//    public TokenStore tokenStore() {
-//        return mock(TokenStore.class);
-//    }
-//
-//    @Bean
-//    @Primary
-//    public JwtAccessTokenConverter jwtAccessTokenConverter() {
-//        return mock(JwtAccessTokenConverter.class);
-//    }
-
     @Bean
     @Primary
     public TokenProvider tokenProvider() {

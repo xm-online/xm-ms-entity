@@ -18,10 +18,6 @@ import java.util.List;
 @Slf4j
 public class WebMvcConfiguration implements WebMvcConfigurer {
 
-    public WebMvcConfiguration() {
-        log.info(">> TEST log for new version"); // todo remove
-    }
-
     private static final Collection<String> JSON_FILTER_APPLIED_URI =
         Collections.singletonList("/api/xm-entities/*/links/targets");
 
