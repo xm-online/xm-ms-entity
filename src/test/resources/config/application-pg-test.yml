@@ -1,9 +1,6 @@
 spring:
     datasource:
-        type: com.zaxxer.hikari.HikariDataSource
-        url: jdbc:postgresql://localhost:5432/postgres
-        username: postgres
-        password: postgres
+        driver-class-name: org.postgresql.Driver
     jpa:
         database-platform: com.icthh.xm.commons.migration.db.jsonb.CustomPostgreSQLDialect
         database: POSTGRESQL
