@@ -1,6 +1,6 @@
 ranguage: java
 jdk:
-- oraclejdk11
+- 8.9-jdk21
 install: true
 addons:
   sonarcloud:
@@ -13,15 +13,15 @@ addons:
 
 script:
   - set -e
-  - "./gradlew --no-daemon --refresh-dependencies clean check test"
-  - "./gradlew -x test -Pprod --no-daemon bootWar"
+  - "gradle --no-daemon --refresh-dependencies clean check test"
+  - "gradle -x test -Pprod --no-daemon bootWar"
   - docker login -u $DOCKER_USER -p $DOCKER_PASS
   - export DOCKER_REPO=$(echo  -n $TRAVIS_REPO_SLUG | sed -e 's/^xm-online\//xmonline\//g')
   - export IMAGE_BRANCH=$(echo -n $TRAVIS_BRANCH | sed -e 's/\//-/g')
   - export PROJECT_VERSION="$IMAGE_BRANCH"
   - if [ "$TRAVIS_PULL_REQUEST" == "false" ];
     then
-        PROJECT_VERSION=$(./gradlew -q  getProjectVersion);
+        PROJECT_VERSION=$(gradle -q  getProjectVersion);
         export SONAR_PK=$(echo  -n $TRAVIS_REPO_SLUG | sed -e 's/\//:/g');
         TAGS="$PROJECT_VERSION $PROJECT_VERSION-$TRAVIS_BUILD_NUMBER $(echo $PROJECT_VERSION | awk -F '.' '{printf $1"."$2" "$1}') latest";
     fi
