@@ -2,6 +2,10 @@ language: java
 jdk:
 - eclipse-temurin:21-jdk-jammy
 install: true
+
+before_install:
+  - export JAVA_HOME=$(jdk_switcher home eclipse-temurin-21)
+
 addons:
   sonarcloud:
     organization: xm-online
