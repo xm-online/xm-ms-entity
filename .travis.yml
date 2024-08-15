@@ -1,4 +1,4 @@
-ranguage: java
+language: java
 jdk:
 - 8.9-jdk21
 install: true
