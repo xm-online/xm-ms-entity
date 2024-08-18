@@ -34,6 +34,10 @@ public class DynamicSwaggerFunctionGenerator {
     private final DynamicSwaggerRefreshableConfiguration dynamicSwaggerConfiguration;
 
     public SwaggerModel generateSwagger(String baseUrl, Collection<TypeSpec> specs) {
+        // implement function response
+        // implement binary data type
+        // fix #ref to definitions
+        // ref x- prefix
         SwaggerGenerator swaggerGenerator = new SwaggerGenerator(baseUrl, dynamicSwaggerConfiguration.getConfiguration());
         for (var spec : specs) {
             List<FunctionSpec> functions = spec.getFunctions();
