@@ -21,8 +21,9 @@ import static com.google.common.collect.Streams.stream;
 import static com.icthh.xm.ms.entity.service.processor.DefinitionSpecProcessor.XM_ENTITY_DEFINITION;
 import static com.icthh.xm.ms.entity.service.spec.SpecInheritanceProcessor.XM_ENTITY_INHERITANCE_DEFINITION;
 import static java.util.stream.Collectors.toList;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 
-public class SwaggerJsonSchemaConverter {
+public class JsonSchemaToSwaggerSchemaConverter {
 
     public static final String DEFINITIONS = "definitions";
     public static final Set<String> DEFINITION_PREFIXES = Set.of(DEFINITIONS, XM_ENTITY_DEFINITION, XM_ENTITY_INHERITANCE_DEFINITION);
@@ -51,18 +52,32 @@ public class SwaggerJsonSchemaConverter {
     );
     public final ObjectMapper objectMapper = new ObjectMapper();
 
+    public String transformToSwaggerJson(String typeName, String jsonSchema, Map<String, Object> definitions) {
+        JsonNode json = transformToJsonNode(typeName, jsonSchema, definitions);
+        return writeJson(json);
+    }
 
-    public String transformJsonSchemaToSwaggerSchema(String typeName, String jsonSchema, Map<String, Object> definitions) {
+    public JsonNode transformToJsonNode(String typeName, String jsonSchema, Map<String, Object> definitions) {
+        if (isBlank(jsonSchema)) {
+            return instance.nullNode();
+        }
+
         JsonNode json = readJson(jsonSchema);
         if (!json.isObject()) {
             throw new IllegalArgumentException("Json schema should be an object");
         }
-        transformJsonSchemaToSwaggerSchema(typeName, (ObjectNode) json, definitions);
-        return writeJson(json);
+
+        if (!json.has("type") && !json.has("properties")) {
+            ObjectNode object = object("type", instance.textNode("object"));
+            object.set("properties", json);
+            json = object;
+        }
+        transformToSwaggerJson(typeName, (ObjectNode) json, definitions);
+        return json;
     }
 
-    private void transformJsonSchemaToSwaggerSchema(String typeName, ObjectNode json, Map<String, Object> definitions) {
-        if (json == null || !json.isObject()) {
+    private void transformToSwaggerJson(String typeName, ObjectNode json, Map<String, Object> definitions) {
+        if (!json.isObject()) {
             return;
         }
 

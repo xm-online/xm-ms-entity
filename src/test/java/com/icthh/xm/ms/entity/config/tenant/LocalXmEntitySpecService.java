@@ -17,6 +17,7 @@ import com.icthh.xm.ms.entity.service.spec.XmEntitySpecCustomizer;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Primary;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -28,6 +29,7 @@ import static com.icthh.xm.ms.entity.config.TenantConfigMockConfiguration.getXmE
 @Slf4j
 @Service
 @Primary
+@Profile("!test-entity-spec")
 public class LocalXmEntitySpecService extends XmEntitySpecService {
 
     private final ApplicationProperties applicationProperties;
