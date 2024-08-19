@@ -64,6 +64,7 @@ public class JsonbCriteriaBuilderIntTest extends AbstractSpringBootTest {
                 "spring.datasource.password=" + postgreSQLContainer.getPassword()
             ).applyTo(configurableApplicationContext.getEnvironment());
             log.info("spring.datasource.url: {}", postgreSQLContainer.getJdbcUrl());
+            log.info("u: {}, p: {}", postgreSQLContainer.getUsername(), postgreSQLContainer.getPassword());
         }
     }
 

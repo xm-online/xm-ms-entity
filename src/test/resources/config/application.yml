@@ -13,7 +13,16 @@
 # http://docs.spring.io/spring-boot/docs/current/reference/html/common-application-properties.html
 # ===================================================================
 
-
+logging: # todo delete this block
+    level:
+        ROOT: INFO
+        io.github.jhipster: INFO
+        com.icthh.xm: DEBUG
+        com.fasterxml.jackson: DEBUG
+        org.springframework.web: DEBUG
+#        liquibase: DEBUG
+        org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+        org.hibernate.SQL: DEBUG
 spring:
     application:
         name: entity
