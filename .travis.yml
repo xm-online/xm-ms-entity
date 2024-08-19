@@ -21,7 +21,7 @@ script:
   - export PROJECT_VERSION="$IMAGE_BRANCH"
   - if [ "$TRAVIS_PULL_REQUEST" == "false" ];
     then
-        PROJECT_VERSION=$(gradle -q  getProjectVersion);
+        PROJECT_VERSION=$(./gradlew -q  getProjectVersion);
         export SONAR_PK=$(echo  -n $TRAVIS_REPO_SLUG | sed -e 's/\//:/g');
         TAGS="$PROJECT_VERSION $PROJECT_VERSION-$TRAVIS_BUILD_NUMBER $(echo $PROJECT_VERSION | awk -F '.' '{printf $1"."$2" "$1}') latest";
     fi
