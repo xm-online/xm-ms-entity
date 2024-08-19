@@ -11,7 +11,7 @@ import com.icthh.xm.commons.security.XmAuthenticationContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
 import com.icthh.xm.lep.api.LepManager;
-import com.icthh.xm.ms.entity.AbstractSpringBootTest;
+import com.icthh.xm.ms.entity.AbstractJupiterSpringBootTest;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.domain.XmEntity_;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
@@ -21,51 +21,44 @@ import java.util.Map;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Root;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.util.TestPropertyValues;
-import org.springframework.context.ApplicationContextInitializer;
-import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.transaction.BeforeTransaction;
 import org.springframework.transaction.annotation.Transactional;
 import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 @Slf4j
 @Transactional
-@ContextConfiguration(initializers = {JsonbCriteriaBuilderIntTest.Initializer.class})
 @ActiveProfiles("pg-test")
 @Testcontainers
-public class JsonbCriteriaBuilderIntTest extends AbstractSpringBootTest {
+public class JsonbCriteriaBuilderIntTest extends AbstractJupiterSpringBootTest {
 
     public static final String FIRST_DATA_KEY = "firstDataKey";
     public static final String SECOND_DATA_KEY = "secondDataKey";
     public static final String FIRST_DATA_VALUE = "firstDataValue";
     public static final String SECOND_DATA_VALUE = "secondDataValue";
 
-    @ClassRule
-    public static PostgreSQLContainer postgreSQLContainer = new PostgreSQLContainer("postgres:16.3")
+    @Container
+    public static PostgreSQLContainer<?> postgreSQLContainer = new PostgreSQLContainer<>("postgres:16.3")
         .withDatabaseName("entity")
         .withUsername("sa")
         .withPassword("sa");
 
-    static class Initializer implements ApplicationContextInitializer<ConfigurableApplicationContext> {
-
-        public void initialize(ConfigurableApplicationContext configurableApplicationContext) {
-            TestPropertyValues.of(
-                "spring.datasource.url=" + postgreSQLContainer.getJdbcUrl(),
-                "spring.datasource.username=" + postgreSQLContainer.getUsername(),
-                "spring.datasource.password=" + postgreSQLContainer.getPassword()
-            ).applyTo(configurableApplicationContext.getEnvironment());
-            log.info("spring.datasource.url: {}", postgreSQLContainer.getJdbcUrl());
-            log.info("u: {}, p: {}", postgreSQLContainer.getUsername(), postgreSQLContainer.getPassword());
-        }
+    @DynamicPropertySource
+    static void setPostgreSQLContainer(DynamicPropertyRegistry registry) {
+        registry.add("spring.datasource.url", postgreSQLContainer::getJdbcUrl);
+        registry.add("spring.datasource.username", postgreSQLContainer::getUsername);
+        registry.add("spring.datasource.password", postgreSQLContainer::getPassword);
+        log.info("spring.datasource.url: {}", postgreSQLContainer.getJdbcUrl());
+        log.info("u: {}, p: {}", postgreSQLContainer.getUsername(), postgreSQLContainer.getPassword());
     }
 
     @Autowired
@@ -83,7 +76,7 @@ public class JsonbCriteriaBuilderIntTest extends AbstractSpringBootTest {
     @Autowired
     private JsonbExpression jsonbExpression;
 
-    @Before
+    @BeforeEach
     @BeforeTransaction
     public void beforeTransaction() {
         TenantContextUtils.setTenant(tenantContextHolder, "TEST");
@@ -93,7 +86,7 @@ public class JsonbCriteriaBuilderIntTest extends AbstractSpringBootTest {
         });
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         tenantContextHolder.getPrivilegedContext().destroyCurrentContext();
         lepManager.endThreadContext();
