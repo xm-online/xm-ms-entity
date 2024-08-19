@@ -50,7 +50,10 @@ public class JsonbCriteriaBuilderIntTest extends AbstractSpringBootTest {
     public static final String SECOND_DATA_VALUE = "secondDataValue";
 
     @ClassRule
-    public static PostgreSQLContainer postgreSQLContainer = new PostgreSQLContainer("postgres:16.3");
+    public static PostgreSQLContainer postgreSQLContainer = new PostgreSQLContainer("postgres:16.3")
+        .withDatabaseName("entity")
+        .withUsername("sa")
+        .withPassword("sa");
 
     static class Initializer implements ApplicationContextInitializer<ConfigurableApplicationContext> {
 
