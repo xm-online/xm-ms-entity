@@ -35,11 +35,13 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.transaction.BeforeTransaction;
 import org.springframework.transaction.annotation.Transactional;
 import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.junit.jupiter.Testcontainers;
 
 @Slf4j
 @Transactional
 @ContextConfiguration(initializers = {JsonbCriteriaBuilderIntTest.Initializer.class})
 @ActiveProfiles("pg-test")
+@Testcontainers
 public class JsonbCriteriaBuilderIntTest extends AbstractSpringBootTest {
 
     public static final String FIRST_DATA_KEY = "firstDataKey";
