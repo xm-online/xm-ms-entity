@@ -1,24 +1,34 @@
 package com.icthh.xm.ms.entity.service.swagger;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.PropertyAccessor;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.fasterxml.jackson.module.jsonSchema.JsonSchema;
+import com.fasterxml.jackson.module.jsonSchema.JsonSchemaGenerator;
+import com.icthh.xm.ms.entity.domain.FunctionContext;
 import com.icthh.xm.ms.entity.service.swagger.DynamicSwaggerRefreshableConfiguration.DynamicSwaggerConfiguration;
 import com.icthh.xm.ms.entity.service.swagger.model.ServerObject;
 import com.icthh.xm.ms.entity.service.swagger.model.SwaggerFunction;
 import com.icthh.xm.ms.entity.service.swagger.model.SwaggerModel;
 import com.icthh.xm.ms.entity.service.swagger.model.SwaggerModel.ApiMethod;
+import com.icthh.xm.ms.entity.service.swagger.model.SwaggerModel.BodyContent;
 import com.icthh.xm.ms.entity.service.swagger.model.SwaggerModel.RequestBody;
-import com.icthh.xm.ms.entity.service.swagger.model.SwaggerModel.RequestBodyContent;
 import com.icthh.xm.ms.entity.service.swagger.model.SwaggerModel.SwaggerContent;
 import com.icthh.xm.ms.entity.service.swagger.model.SwaggerModel.SwaggerResponse;
 import com.icthh.xm.ms.entity.service.swagger.model.SwaggerParameter;
 import lombok.Getter;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.text.StringSubstitutor;
 import org.jetbrains.annotations.NotNull;
 
+import javax.persistence.Transient;
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -26,6 +36,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import static java.lang.Boolean.TRUE;
 import static java.util.Optional.ofNullable;
 import static org.apache.commons.lang.StringUtils.isBlank;
 import static org.apache.commons.text.CaseUtils.toCamelCase;
@@ -43,6 +54,12 @@ public class SwaggerGenerator {
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     public SwaggerGenerator(String baseUrl, DynamicSwaggerConfiguration configuration) {
+        // test on others specs
+        // implement include/exclude by tags
+        // implement includeStrategy defaultInclude/defaultExclude
+        // implement include/exclude by path ant patterns
+        // implement include/exclude by key patterns
+
         swaggerBody.setServers(List.of(new ServerObject(baseUrl)));
         if (configuration != null) {
             ofNullable(configuration.getInfo()).ifPresent(swaggerBody::setInfo);
@@ -75,10 +92,12 @@ public class SwaggerGenerator {
     private void addResponse(String code, String description) {
         Map<String, Object> responses = swaggerBody.getComponents().getResponses();
         responses.put(code, new SwaggerResponse(
-            Map.of(
-                "application/json", new SwaggerContent(Map.of(
-                    "$ref", "#/components/schemas/RequestError"
-                ))
+            new BodyContent(
+                new SwaggerContent(
+                    Map.of(
+                        "$ref", "#/components/schemas/RequestError"
+                    )
+                )
             ),
             description
         ));
@@ -116,14 +135,63 @@ public class SwaggerGenerator {
         buildParameters(pathPrefixParams, swaggerFunction, operation, httpMethod);
         operation.setSummary(swaggerFunction.getName());
         operation.setTags(swaggerFunction.getTags());
-        buildResponse(operation);
+        buildResponse(swaggerFunction, operation, httpMethod);
 
         return operation;
     }
 
-    private void buildResponse(ApiMethod operation) {
+    private void buildResponse(SwaggerFunction swaggerFunction, ApiMethod operation, String httpMethod) {
         operation.setResponses(new LinkedHashMap<>());
         generateDefaultResponse(operation);
+        if ("POST".equals(httpMethod) || "POST_URLENCODED".equals(httpMethod)) {
+            addSuccess(swaggerFunction, operation, "201");
+        } else {
+            addSuccess(swaggerFunction, operation, "200");
+        }
+    }
+
+    @SneakyThrows
+    private ObjectNode generateFunctionContext() {
+        var mapper = new ObjectMapper();
+        mapper.registerModule(new JavaTimeModule());
+
+        JsonSchemaGenerator schemaGen = new JsonSchemaGenerator(mapper);
+        JsonSchema jsonSchema = schemaGen.generateSchema(FunctionContext.class);
+        ObjectNode tree = (ObjectNode) mapper.readTree(mapper.writeValueAsString(jsonSchema));
+        ObjectNode properties = (ObjectNode) tree.get("properties");
+        tree.remove("id");
+        properties.remove("xmEntity");
+        properties.remove("binaryData");
+        properties.remove("binaryDataType");
+        return tree;
+    }
+
+    private void addSuccess(SwaggerFunction swaggerFunction, ApiMethod operation, String code) {
+        String successfulMessage = "Successful operation";
+
+        if (swaggerFunction.getCustomBinaryDataType() != null) {
+            operation.getResponses().put(code, new SwaggerResponse(Map.of(
+                swaggerFunction.getCustomBinaryDataType(), Map.of(
+                    "type", "string",
+                    "format", "binary"
+                )
+            )));
+            return;
+        }
+
+        JsonNode jsonNode = jsonSchemaConverter.transformToJsonNode(
+            operation.getOperationId(),
+            swaggerFunction.getOutputJsonSchema(),
+            definitions
+        );
+        if (!TRUE.equals(swaggerFunction.getOnlyData())) {
+            ObjectNode functionContext = generateFunctionContext();
+            ObjectNode properties = (ObjectNode) functionContext.get("properties");
+            properties.set("data", jsonNode);
+            jsonNode = functionContext;
+        }
+        Map<String, Object> schema = convertToMap(jsonNode);
+        operation.getResponses().put(code, new SwaggerResponse(new BodyContent(new SwaggerContent(schema)), successfulMessage));
     }
 
     private void generateDefaultResponse(ApiMethod operation) {
@@ -133,7 +201,6 @@ public class SwaggerGenerator {
         operation.getResponses().put("404", new SwaggerResponse("#/components/responses/404"));
         operation.getResponses().put("500", new SwaggerResponse("#/components/responses/500"));
     }
-
 
     private void buildParameters(Map<String, SwaggerParameter> pathPrefixParams,
                                  SwaggerFunction swaggerFunction,
@@ -160,7 +227,7 @@ public class SwaggerGenerator {
     private void addRequestBody(JsonNode jsonNode, ApiMethod operation, String httpMethod) {
         if (METHODS_WITH_BODY.contains(httpMethod)) {
             Map<String, Object> schema = convertToMap(jsonNode);
-            operation.setRequestBody(new RequestBody(true, new RequestBodyContent(new SwaggerContent(schema))));
+            operation.setRequestBody(new RequestBody(true, new BodyContent(new SwaggerContent(schema))));
         }
     }
 

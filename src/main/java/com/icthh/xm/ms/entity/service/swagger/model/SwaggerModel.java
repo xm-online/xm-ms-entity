@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -36,12 +35,18 @@ public class SwaggerModel {
     @AllArgsConstructor
     public static class RequestBody {
         private Boolean required;
-        private RequestBodyContent content;
+        private BodyContent content;
     }
 
     @Data
     @AllArgsConstructor
-    public static class RequestBodyContent {
+    public static class ResponseBody {
+        private BodyContent content;
+    }
+
+    @Data
+    @AllArgsConstructor
+    public static class BodyContent {
         @JsonProperty("application/json")
         private SwaggerContent applicationJson;
     }
@@ -56,17 +61,21 @@ public class SwaggerModel {
     @Data
     public static class SwaggerResponse {
         private String description;
-        private Map<String, SwaggerContent> content;
+        private Object content;
         private String $ref;
 
         public SwaggerResponse() {
         }
 
-        public SwaggerResponse(Map<String, SwaggerContent> content) {
+        public SwaggerResponse(BodyContent content) {
             this.content = content;
         }
 
-        public SwaggerResponse(Map<String, SwaggerContent> content, String description) {
+        public SwaggerResponse(Map<String, Object> content) {
+            this.content = content;
+        }
+
+        public SwaggerResponse(BodyContent content, String description) {
             this.description = description;
             this.content = content;
         }

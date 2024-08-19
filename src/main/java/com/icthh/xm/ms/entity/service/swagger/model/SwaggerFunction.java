@@ -20,12 +20,13 @@ public class SwaggerFunction {
     /**
      type: string, format: binary =>
      responseBody:
-     content:
-     custom/content-type:
-     schema:
-     type: string
-     format: binary
+         content:
+             custom/content-type:
+                 schema:
+                     type: string
+                     format: binary
      */
     private String customBinaryDataType;
+    private Boolean onlyData;
 
 }

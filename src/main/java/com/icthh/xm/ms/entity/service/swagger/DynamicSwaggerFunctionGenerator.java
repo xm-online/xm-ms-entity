@@ -53,27 +53,14 @@ public class DynamicSwaggerFunctionGenerator {
         String path = isNotBlank(functionSpec.getPath()) ? functionSpec.getPath() : functionSpec.getKey();
         path = makeAsPath(path);
 
-        String prefix = "/entity/api/functions";
-        Map<String, SwaggerParameter> pathPrefixParams = Map.of();
-        if (TRUE.equals(functionSpec.getWithEntityId())) {
-            prefix = "/entity/api/xm-entities/{idOrKey}/functions";
-            pathPrefixParams = buildIdOrKey();
-            filterHttpMethods(functionSpec, SUPPORTED_WITH_ENTITY_ID_HTTP_METHODS);
-        } else if (TRUE.equals(functionSpec.getAnonymous())) {
-            prefix = prefix + "/anonymous";
-            filterHttpMethods(functionSpec, SUPPORTED_ANONYMOUS_HTTP_METHODS);
-        }
-        filterHttpMethods(functionSpec, SUPPORTED_HTTP_METHODS);
+        Map<String, SwaggerParameter> pathPrefixParams = buildPrefixPathParams(functionSpec);
+        String prefix = buildPathPrefix(functionSpec);
+        filterHttpMethods(functionSpec);
 
         List<String> tags = functionSpec.getTags();
         tags = tags != null ? tags : new ArrayList<>();
 
-        Map<String, String> nameMap = functionSpec.getName();
-        nameMap = nameMap != null ? nameMap : Map.of();
-        String name = nameMap.get("en");
-        if (name == null) {
-            name = nameMap.values().stream().findFirst().orElse(functionSpec.getKey());
-        }
+        String name = getName(functionSpec);
 
         SwaggerFunction swaggerFunction = new SwaggerFunction(
             functionSpec.getKey(),
@@ -83,9 +70,49 @@ public class DynamicSwaggerFunctionGenerator {
             functionSpec.getContextDataSpec(),
             tags,
             functionSpec.getHttpMethods(),
-            functionSpec.getBinaryDataType()
+            functionSpec.getBinaryDataType(),
+            functionSpec.getOnlyData()
         );
         swaggerGenerator.generateFunction(prefix, pathPrefixParams, swaggerFunction);
+    }
+
+    @NotNull
+    private Map<String, SwaggerParameter> buildPrefixPathParams(FunctionSpec functionSpec) {
+        Map<String, SwaggerParameter> pathPrefixParams = Map.of();
+        if (TRUE.equals(functionSpec.getWithEntityId())) {
+            pathPrefixParams = buildIdOrKey();
+        }
+        return pathPrefixParams;
+    }
+
+    @NotNull
+    private static String buildPathPrefix(FunctionSpec functionSpec) {
+        String prefix = "/entity/api/functions";
+        if (TRUE.equals(functionSpec.getWithEntityId())) {
+            prefix = "/entity/api/xm-entities/{idOrKey}/functions";
+        } else if (TRUE.equals(functionSpec.getAnonymous())) {
+            prefix = prefix + "/anonymous";
+        }
+        return prefix;
+    }
+
+    private static void filterHttpMethods(FunctionSpec functionSpec) {
+        if (TRUE.equals(functionSpec.getWithEntityId())) {
+            filterHttpMethods(functionSpec, SUPPORTED_WITH_ENTITY_ID_HTTP_METHODS);
+        } else if (TRUE.equals(functionSpec.getAnonymous())) {
+            filterHttpMethods(functionSpec, SUPPORTED_ANONYMOUS_HTTP_METHODS);
+        }
+        filterHttpMethods(functionSpec, SUPPORTED_HTTP_METHODS);
+    }
+
+    private static String getName(FunctionSpec functionSpec) {
+        Map<String, String> nameMap = functionSpec.getName();
+        nameMap = nameMap != null ? nameMap : Map.of();
+        String name = nameMap.get("en");
+        if (name == null) {
+            name = nameMap.values().stream().findFirst().orElse(functionSpec.getKey());
+        }
+        return name;
     }
 
     private Map<String, SwaggerParameter> buildIdOrKey() {
