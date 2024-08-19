@@ -37,6 +37,8 @@ entity-functions:
 - key: "FUNCTION.CALL.v1/billingcycles/manage"
 - key: "FUNCTION.CALL.v1/billingcycles/products"
 - key: "FUNCTION.CALL.in/package/FUNCTION4"
+- key: "FUNCTION.CALL.in/package/FUNCTION5"
+- key: "FUNCTION.CALL.in/package/FUNCTION6"
 - key: "XMENTITY.FUNCTION.EXECUTE.FUNCTION2"
 applications:
 - key: "APPLICATION.TYPE1"

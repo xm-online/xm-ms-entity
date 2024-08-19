@@ -6,6 +6,7 @@ import com.icthh.xm.ms.entity.service.swagger.model.SwaggerFunction;
 import com.icthh.xm.ms.entity.service.swagger.model.SwaggerModel;
 import com.icthh.xm.ms.entity.service.swagger.model.SwaggerParameter;
 import lombok.RequiredArgsConstructor;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -25,7 +26,7 @@ import static org.apache.commons.lang3.StringUtils.stripStart;
 @RequiredArgsConstructor
 public class DynamicSwaggerFunctionGenerator {
 
-    public static final List<String> SUPPORTED_HTTP_METHODS = List.of(
+    public static final Set<String> SUPPORTED_HTTP_METHODS = Set.of(
         "GET", "POST", "PUT", "DELETE", "PATCH", "POST_URLENCODED"
     );
     public static final Set<String> SUPPORTED_ANONYMOUS_HTTP_METHODS = Set.of("GET", "POST", "POST_URLENCODED");
@@ -36,8 +37,6 @@ public class DynamicSwaggerFunctionGenerator {
     public SwaggerModel generateSwagger(String baseUrl, Collection<TypeSpec> specs) {
         // implement function response
         // implement binary data type
-        // fix #ref to definitions
-        // ref x- prefix
         SwaggerGenerator swaggerGenerator = new SwaggerGenerator(baseUrl, dynamicSwaggerConfiguration.getConfiguration());
         for (var spec : specs) {
             List<FunctionSpec> functions = spec.getFunctions();
@@ -48,7 +47,7 @@ public class DynamicSwaggerFunctionGenerator {
     }
 
     public void generateForFunction(FunctionSpec functionSpec, SwaggerGenerator swaggerGenerator) {
-        List<String> httpMethods = isEmpty(functionSpec.getHttpMethods()) ? SUPPORTED_HTTP_METHODS : functionSpec.getHttpMethods();
+        List<String> httpMethods = isEmpty(functionSpec.getHttpMethods()) ? List.of("GET", "POST") : functionSpec.getHttpMethods();
         functionSpec.setHttpMethods(httpMethods);
 
         String path = isNotBlank(functionSpec.getPath()) ? functionSpec.getPath() : functionSpec.getKey();
@@ -58,17 +57,13 @@ public class DynamicSwaggerFunctionGenerator {
         Map<String, SwaggerParameter> pathPrefixParams = Map.of();
         if (TRUE.equals(functionSpec.getWithEntityId())) {
             prefix = "/entity/api/xm-entities/{idOrKey}/functions";
-            pathPrefixParams = Map.of("idOrKey", new SwaggerParameter(
-                "idOrKey", true, Map.of(
-                "anyOf", List.of(
-                    Map.of("type", "integer", "format", "int64"),
-                    Map.of("type", "string")
-                ))));
+            pathPrefixParams = buildIdOrKey();
             filterHttpMethods(functionSpec, SUPPORTED_WITH_ENTITY_ID_HTTP_METHODS);
         } else if (TRUE.equals(functionSpec.getAnonymous())) {
             prefix = prefix + "/anonymous";
             filterHttpMethods(functionSpec, SUPPORTED_ANONYMOUS_HTTP_METHODS);
         }
+        filterHttpMethods(functionSpec, SUPPORTED_HTTP_METHODS);
 
         List<String> tags = functionSpec.getTags();
         tags = tags != null ? tags : new ArrayList<>();
@@ -91,6 +86,15 @@ public class DynamicSwaggerFunctionGenerator {
             functionSpec.getBinaryDataType()
         );
         swaggerGenerator.generateFunction(prefix, pathPrefixParams, swaggerFunction);
+    }
+
+    private Map<String, SwaggerParameter> buildIdOrKey() {
+        return Map.of("idOrKey", new SwaggerParameter(
+            "idOrKey", true, Map.of(
+            "anyOf", List.of(
+                Map.of("type", "integer", "format", "int64"),
+                Map.of("type", "string")
+            ))));
     }
 
     private static void filterHttpMethods(FunctionSpec functionSpec, Set<String> supportedMethods) {

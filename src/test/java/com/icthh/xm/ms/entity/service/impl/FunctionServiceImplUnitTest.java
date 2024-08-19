@@ -98,7 +98,7 @@ public class FunctionServiceImplUnitTest extends AbstractUnitTest {
     public void executeSpecNotFoundCheck() {
         exception.expect(IllegalArgumentException.class);
         exception.expectMessage("Function not found, function key: " + UNKNOWN_KEY);
-        when(xmEntitySpecService.findFunction(UNKNOWN_KEY))
+        when(xmEntitySpecService.findFunction(UNKNOWN_KEY, "POST"))
             .thenReturn(Optional.empty());
         functionService.execute(UNKNOWN_KEY, Maps.newHashMap(), null);
     }
@@ -113,15 +113,15 @@ public class FunctionServiceImplUnitTest extends AbstractUnitTest {
         Map<String, Object> data = Maps.newHashMap();
         data.put("KEY1", "VAL1");
 
-        when(xmEntitySpecService.findFunction(functionName))
+        when(xmEntitySpecService.findFunction(functionName, "POST"))
             .thenReturn(Optional.of(spec));
 
-        when(functionExecutorService.execute(functionName, context, null))
+        when(functionExecutorService.execute(functionName, context, "POST"))
             .thenReturn(data);
 
         when(functionContextService.save(any())).thenReturn(new FunctionContext());
 
-        FunctionContext fc = functionService.execute(functionName, context, null);
+        FunctionContext fc = functionService.execute(functionName, context, "POST");
         assertThat(fc.getTypeKey()).isEqualTo(functionName);
         assertThat(fc.getKey()).contains(functionName);
         assertThat(fc.getData().keySet()).containsSequence(data.keySet().toArray(new String[0]));
@@ -143,10 +143,10 @@ public class FunctionServiceImplUnitTest extends AbstractUnitTest {
         Map<String, Object> data = Maps.newHashMap();
         data.put("KEY1", "VAL1");
 
-        when(xmEntitySpecService.findFunction(functionName))
+        when(xmEntitySpecService.findFunction(functionName, "POST"))
             .thenReturn(Optional.of(spec));
 
-        when(functionExecutorService.execute(functionName, context, null))
+        when(functionExecutorService.execute(functionName, context, "POST"))
             .thenReturn(data);
 
         when(functionContextService.save(any())).thenAnswer((Answer<FunctionContext>) invocation -> {
@@ -154,7 +154,7 @@ public class FunctionServiceImplUnitTest extends AbstractUnitTest {
             return (FunctionContext) args[0];
         });
 
-        FunctionContext fc = functionService.execute(functionName, context, null);
+        FunctionContext fc = functionService.execute(functionName, context, "POST");
         assertThat(fc.getTypeKey()).isEqualTo(functionName);
         assertThat(fc.getKey()).contains(functionName);
         assertThat(fc.getData().keySet()).containsSequence(data.keySet().toArray(new String[0]));
@@ -188,7 +188,7 @@ public class FunctionServiceImplUnitTest extends AbstractUnitTest {
 
         when(xmEntityService.findStateProjectionById(key)).thenReturn(getProjection(key));
 
-        when(xmEntitySpecService.findFunction(xmEntityTypeKey, functionKey))
+        when(xmEntitySpecService.findEntityFunction(xmEntityTypeKey, functionKey))
             .thenReturn(Optional.empty());
 
         exception.expect(IllegalArgumentException.class);
@@ -211,7 +211,7 @@ public class FunctionServiceImplUnitTest extends AbstractUnitTest {
 
         when(xmEntityService.findStateProjectionById(key)).thenReturn(getProjection(key));
 
-        when(xmEntitySpecService.findFunction(xmEntityTypeKey, functionName))
+        when(xmEntitySpecService.findEntityFunction(xmEntityTypeKey, functionName))
             .thenReturn(Optional.of(spec));
 
         exception.expect(IllegalStateException.class);
@@ -233,7 +233,7 @@ public class FunctionServiceImplUnitTest extends AbstractUnitTest {
 
         when(xmEntityService.findStateProjectionById(key)).thenReturn(getProjection(key));
 
-        when(xmEntitySpecService.findFunction(xmEntityTypeKey, functionName))
+        when(xmEntitySpecService.findEntityFunction(xmEntityTypeKey, functionName))
             .thenReturn(Optional.of(spec));
 
         when(functionExecutorService.execute(functionName, key, xmEntityTypeKey, context))
@@ -261,7 +261,7 @@ public class FunctionServiceImplUnitTest extends AbstractUnitTest {
 
         when(xmEntityService.findStateProjectionById(key)).thenReturn(getProjection(key));
 
-        when(xmEntitySpecService.findFunction(xmEntityTypeKey, functionName))
+        when(xmEntitySpecService.findEntityFunction(xmEntityTypeKey, functionName))
             .thenReturn(Optional.of(spec));
 
         when(functionExecutorService.execute(functionName, key, xmEntityTypeKey, context))
@@ -289,7 +289,7 @@ public class FunctionServiceImplUnitTest extends AbstractUnitTest {
 
         when(xmEntityService.findStateProjectionById(key)).thenReturn(getProjection(key));
 
-        when(xmEntitySpecService.findFunction(xmEntityTypeKey, functionName))
+        when(xmEntitySpecService.findEntityFunction(xmEntityTypeKey, functionName))
             .thenReturn(Optional.of(spec));
 
         when(functionExecutorService.execute(functionName, key, xmEntityTypeKey, context))
@@ -346,7 +346,7 @@ public class FunctionServiceImplUnitTest extends AbstractUnitTest {
         spec.setBinaryDataField("contentBytes");
         spec.setBinaryDataType("application/pdf");
 
-        when(xmEntitySpecService.findFunction(xmEntityTypeKey, "FUNCTION_WITH_BINARY_RESULT"))
+        when(xmEntitySpecService.findEntityFunction(xmEntityTypeKey, "FUNCTION_WITH_BINARY_RESULT"))
             .thenReturn(Optional.of(spec));
 
         Map<String, Object> functionResult = new HashMap<>();
@@ -370,7 +370,7 @@ public class FunctionServiceImplUnitTest extends AbstractUnitTest {
         spec.setPath("my/api-path/with/{param1}/and/{param2}");
 
         //GIVEN
-        when(xmEntitySpecService.findFunction("my/api-path/with/101/and/value2"))
+        when(xmEntitySpecService.findFunction("my/api-path/with/101/and/value2", "POST"))
                 .thenReturn(Optional.of(spec));
 
         when(functionExecutorService.execute(eq("FUNCTION_WITH_PATH"), any(), eq("POST")))
@@ -404,7 +404,7 @@ public class FunctionServiceImplUnitTest extends AbstractUnitTest {
         spec.setAnonymous(true);
 
         //GIVEN
-        when(xmEntitySpecService.findFunction("my/api-path/with/101/and/value2"))
+        when(xmEntitySpecService.findFunction("my/api-path/with/101/and/value2", "POST"))
                 .thenReturn(Optional.of(spec));
 
         when(functionExecutorService.executeAnonymousFunction(eq("FUNCTION_WITH_PATH"), any(), eq("POST")))
@@ -474,12 +474,12 @@ public class FunctionServiceImplUnitTest extends AbstractUnitTest {
 
     public void noValidation(Boolean validateFunctionInput) {
         FunctionSpec spec = generateFunctionSpec(validateFunctionInput);
-        when(xmEntitySpecService.findFunction(VALIDATION_FUNCTION)).thenReturn(Optional.of(spec));
-        functionService.execute(VALIDATION_FUNCTION, Map.of("numberArgument", "stringValue"), null);
+        when(xmEntitySpecService.findFunction(VALIDATION_FUNCTION, "POST")).thenReturn(Optional.of(spec));
+        functionService.execute(VALIDATION_FUNCTION, Map.of("numberArgument", "stringValue"), "POST");
         verifyNoMoreInteractions(jsonValidationService);
 
         spec.setWithEntityId(true);
-        when(xmEntitySpecService.findFunction(xmEntityTypeKey, VALIDATION_FUNCTION)).thenReturn(Optional.of(spec));
+        when(xmEntitySpecService.findEntityFunction(xmEntityTypeKey, VALIDATION_FUNCTION)).thenReturn(Optional.of(spec));
         when(xmEntityService.findStateProjectionById(SELF)).thenReturn(getProjection(SELF));
         functionService.execute(VALIDATION_FUNCTION, SELF, Map.of("numberArgument", "stringValue"));
         verifyNoMoreInteractions(jsonValidationService);
@@ -487,12 +487,12 @@ public class FunctionServiceImplUnitTest extends AbstractUnitTest {
 
     private void validatedSuccess(Boolean validateFunctionInput) {
         FunctionSpec spec = generateFunctionSpec(validateFunctionInput);
-        when(xmEntitySpecService.findFunction(VALIDATION_FUNCTION)).thenReturn(Optional.of(spec));
+        when(xmEntitySpecService.findFunction(VALIDATION_FUNCTION, "POST")).thenReturn(Optional.of(spec));
         Map<String, Object> functionInput = Map.of("numberArgument", 2);
-        functionService.execute(VALIDATION_FUNCTION, functionInput, null);
+        functionService.execute(VALIDATION_FUNCTION, functionInput, "POST");
 
         spec.setWithEntityId(true);
-        when(xmEntitySpecService.findFunction(xmEntityTypeKey, VALIDATION_FUNCTION)).thenReturn(Optional.of(spec));
+        when(xmEntitySpecService.findEntityFunction(xmEntityTypeKey, VALIDATION_FUNCTION)).thenReturn(Optional.of(spec));
         when(xmEntityService.findStateProjectionById(SELF)).thenReturn(getProjection(SELF));
         functionService.execute(VALIDATION_FUNCTION, SELF, functionInput);
 
@@ -506,9 +506,9 @@ public class FunctionServiceImplUnitTest extends AbstractUnitTest {
         exception.expectMessage(exceptionMessage);
 
         FunctionSpec spec = generateFunctionSpec(true);
-        when(xmEntitySpecService.findFunction(VALIDATION_FUNCTION)).thenReturn(Optional.of(spec));
+        when(xmEntitySpecService.findFunction(VALIDATION_FUNCTION, "POST")).thenReturn(Optional.of(spec));
         Map<String, Object> functionInput = Map.of("numberArgument", "stringValue");
-        functionService.execute(VALIDATION_FUNCTION, functionInput, null);
+        functionService.execute(VALIDATION_FUNCTION, functionInput, "POST");
         verify(jsonValidationService).assertJson(eq(functionInput), eq(spec.getInputSpec()));
     }
 
@@ -521,7 +521,7 @@ public class FunctionServiceImplUnitTest extends AbstractUnitTest {
         FunctionSpec spec = generateFunctionSpec(true);
         Map<String, Object> functionInput = Map.of("numberArgument", "stringValue");
         spec.setWithEntityId(true);
-        when(xmEntitySpecService.findFunction(xmEntityTypeKey, VALIDATION_FUNCTION)).thenReturn(Optional.of(spec));
+        when(xmEntitySpecService.findEntityFunction(xmEntityTypeKey, VALIDATION_FUNCTION)).thenReturn(Optional.of(spec));
         when(xmEntityService.findStateProjectionById(SELF)).thenReturn(getProjection(SELF));
         functionService.execute(VALIDATION_FUNCTION, SELF, functionInput);
         verify(jsonValidationService).assertJson(eq(functionInput), eq(spec.getInputSpec()));

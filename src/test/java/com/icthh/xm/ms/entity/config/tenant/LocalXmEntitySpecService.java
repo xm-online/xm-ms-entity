@@ -79,11 +79,11 @@ public class LocalXmEntitySpecService extends XmEntitySpecService {
     }
 
     @Override
-    public Optional<FunctionSpec> findFunction(String functionKey) {
-        return super.findFunction(functionKey)
+    public Optional<FunctionSpec> findFunction(String functionKey, String httpMethod) {
+        return super.findFunction(functionKey, httpMethod)
                 .or(() -> {
                     getTypeSpecs(); // trigger refresh config which populates functionsByTenant cache
-                    return super.findFunction(functionKey);
+                    return super.findFunction(functionKey, httpMethod);
                 });
     }
 }

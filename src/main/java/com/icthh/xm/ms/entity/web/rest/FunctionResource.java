@@ -37,6 +37,7 @@ import java.util.Optional;
 
 import static com.google.common.collect.ImmutableMap.of;
 import static com.icthh.xm.ms.entity.config.Constants.MVC_FUNC_RESULT;
+import static com.icthh.xm.ms.entity.service.impl.FunctionServiceImpl.POST_URLENCODED;
 import static org.springframework.web.servlet.HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE;
 import static org.springframework.web.servlet.HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE;
 
@@ -123,7 +124,8 @@ public class FunctionResource {
     @PrivilegeDescription("Privilege to execute a function by key (key in entity specification)")
     public ResponseEntity<Object> callPostFormFunction(@PathVariable("functionKey") String functionKey,
                                                        @RequestParam(required = false) Map<String, Object> functionInput) {
-        return callPostFunction(functionKey, functionInput);
+        FunctionContext result = functionService.execute(functionKey, functionInput, POST_URLENCODED);
+        return processCreatedResponse(result);
     }
 
     /**
@@ -167,7 +169,8 @@ public class FunctionResource {
     })
     public ResponseEntity<Object> callPostFormAnonymousFunction(@PathVariable("functionKey") String functionKey,
                                                                 @RequestParam(required = false) Map<String, Object> functionInput) {
-        return callPostAnonymousFunction(functionKey, functionInput);
+        FunctionContext result = functionService.executeAnonymous(functionKey, functionInput, POST_URLENCODED);
+        return processCreatedResponse(result);
     }
 
 

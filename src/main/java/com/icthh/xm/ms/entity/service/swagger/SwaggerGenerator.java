@@ -112,11 +112,11 @@ public class SwaggerGenerator {
                                         String httpMethod) {
         ApiMethod operation = new ApiMethod();
 
+        setOperationId(swaggerFunction, httpMethod, operation);
         buildParameters(pathPrefixParams, swaggerFunction, operation, httpMethod);
         operation.setSummary(swaggerFunction.getName());
         operation.setTags(swaggerFunction.getTags());
         buildResponse(operation);
-        setOperationId(swaggerFunction, httpMethod, operation);
 
         return operation;
     }
@@ -145,7 +145,7 @@ public class SwaggerGenerator {
         }
 
         JsonNode jsonNode = jsonSchemaConverter.transformToJsonNode(
-            swaggerFunction.getOperationId(),
+            operation.getOperationId(),
             swaggerFunction.getInputJsonSchema(),
             definitions
         );

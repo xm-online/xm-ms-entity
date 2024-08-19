@@ -291,8 +291,7 @@ public class XmEntitySpecService implements RefreshableConfiguration {
     }
 
     @IgnoreLogginAspect
-    public Optional<FunctionSpec> findFunction(String functionKey) {
-
+    public Optional<FunctionSpec> findFunction(String functionKey, String httpMethod) {
         String tenantKey = getTenantKeyValue();
         Map<String, FunctionSpec> functions = xmEntitySpecContextService.functionsByTenant(tenantKey);
         return Optional.of(functions)
@@ -300,12 +299,13 @@ public class XmEntitySpecService implements RefreshableConfiguration {
                 .or(() -> xmEntitySpecContextService.functionsByTenantOrdered(tenantKey).stream()
                         .filter(fs -> fs.getPath() != null)
                         .filter(fs -> matcher.match(fs.getPath(), functionKey))
+                        .filter(fs -> isEmpty(fs.getHttpMethods()) || fs.getHttpMethods().contains(httpMethod))
                         .findFirst());
 
     }
 
     @IgnoreLogginAspect
-    public Optional<FunctionSpec> findFunction(String typeKey, String functionKey) {
+    public Optional<FunctionSpec> findEntityFunction(String typeKey, String functionKey) {
         Predicate<FunctionSpec> keysEquals = fs -> StringUtils.equals(fs.getKey(), functionKey);
 
         List<FunctionSpec> functionSpecs = getTypeSpecByKey(typeKey)

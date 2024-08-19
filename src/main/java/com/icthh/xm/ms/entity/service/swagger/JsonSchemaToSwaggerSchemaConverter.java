@@ -6,14 +6,16 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.icthh.xm.commons.exceptions.BusinessException;
 import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.IteratorUtils;
+import org.apache.logging.log4j.util.TriConsumer;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 
 import static com.fasterxml.jackson.databind.node.JsonNodeFactory.instance;
@@ -21,8 +23,10 @@ import static com.google.common.collect.Streams.stream;
 import static com.icthh.xm.ms.entity.service.processor.DefinitionSpecProcessor.XM_ENTITY_DEFINITION;
 import static com.icthh.xm.ms.entity.service.spec.SpecInheritanceProcessor.XM_ENTITY_INHERITANCE_DEFINITION;
 import static java.util.stream.Collectors.toList;
+import static org.apache.commons.lang3.StringUtils.capitalize;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
+@Slf4j
 public class JsonSchemaToSwaggerSchemaConverter {
 
     public static final String DEFINITIONS = "definitions";
@@ -52,12 +56,14 @@ public class JsonSchemaToSwaggerSchemaConverter {
     );
     public final ObjectMapper objectMapper = new ObjectMapper();
 
-    public String transformToSwaggerJson(String typeName, String jsonSchema, Map<String, Object> definitions) {
+    public String transformToSwaggerJson(String typeName, String jsonSchema,
+                                         Map<String, Object> definitions) {
         JsonNode json = transformToJsonNode(typeName, jsonSchema, definitions);
         return writeJson(json);
     }
 
-    public JsonNode transformToJsonNode(String typeName, String jsonSchema, Map<String, Object> definitions) {
+    public JsonNode transformToJsonNode(String typeName, String jsonSchema,
+                                        Map<String, Object> definitions) {
         if (isBlank(jsonSchema)) {
             return instance.nullNode();
         }
@@ -76,16 +82,18 @@ public class JsonSchemaToSwaggerSchemaConverter {
         return json;
     }
 
-    private void transformToSwaggerJson(String typeName, ObjectNode json, Map<String, Object> definitions) {
+    private void transformToSwaggerJson(String typeName, ObjectNode json,
+                                        Map<String, Object> definitions) {
         if (!json.isObject()) {
             return;
         }
 
-        traverseSchema(instance.nullNode(), typeName, json);
         processDefinitions(typeName, json, definitions);
+        traverseSchema(instance.nullNode(), typeName, json, this::convertElement);
+        traverseSchema(instance.nullNode(), typeName, json, this::rewriteUnsupportedKeywords);
     }
 
-    private void traverseSchema(JsonNode parent, String fieldName, JsonNode json) {
+    private void traverseSchema(JsonNode parent, String fieldName, JsonNode json, TriConsumer<JsonNode, String, ObjectNode> convertElement) {
         if (json == null) {
             return;
         }
@@ -93,29 +101,30 @@ public class JsonSchemaToSwaggerSchemaConverter {
         if (json.isArray()) {
             int index = 0;
             json.forEach(it -> {
-                traverseSchema(json, fieldName + "__" + index, it);
+                traverseSchema(json, fieldName + "__" + index, it, convertElement);
             });
         } else if (json.isObject()) {
-            convert(parent, fieldName, json);
+            convert(parent, fieldName, json, convertElement);
             json.fields().forEachRemaining(it -> {
-                traverseSchema(json, it.getKey(), it.getValue());
+                traverseSchema(json, it.getKey(), it.getValue(), convertElement);
             });
         }
     }
 
-    private void convert(JsonNode parent, String fieldName, JsonNode json) {
+    private void convert(JsonNode parent, String fieldName, JsonNode json, TriConsumer<JsonNode, String, ObjectNode> function) {
         if (json == null || !json.isObject()) {
             return;
         }
 
-        ObjectNode object = (ObjectNode) json;
+        function.accept(parent, fieldName, (ObjectNode) json);
+    }
 
+    private void convertElement(JsonNode parent, String fieldName, ObjectNode object) {
         convertNullable(parent, fieldName, object);
         rewriteConst(object);
         rewriteIfThenElse(object);
         rewriteExclusiveMinMax(object);
         convertDependencies(parent, fieldName, object);
-        rewriteUnsupportedKeywords(parent, fieldName, object);
         removeEmptyRequired(object);
     }
 
@@ -168,7 +177,6 @@ public class JsonSchemaToSwaggerSchemaConverter {
         });
     }
 
-
     private void rewriteUnsupportedKeywords(JsonNode parent, String parentFieldName, ObjectNode json) {
         if (insideProperties(parent, parentFieldName)) {
             return;
@@ -188,17 +196,75 @@ public class JsonSchemaToSwaggerSchemaConverter {
         return parentFieldName.equals("properties") && parent.has("type") && parent.get("type").asText().equals("object");
     }
 
-    private Map<String, String> processDefinitions(String typeName, ObjectNode json, Map<String, Object> definitions) {
-        Map<String, String> keyToRef = new HashMap<>();
-        DEFINITION_PREFIXES.stream()
-            .filter(json::has).map(json::remove)
-            .filter(JsonNode::isObject)
-            .map(JsonNode::fields).flatMap(it -> stream(() -> it))
-            .forEach(definition -> {
-                addDefinition(typeName, definition.getKey(), definition.getValue(), definitions, keyToRef);
-            });
+    private void processDefinitions(String typeName, ObjectNode json,
+                                    Map<String, Object> definitions) {
+        ObjectNode objectNode = instance.objectNode();
+        for (var definitionsField: DEFINITION_PREFIXES) {
+            if (json.has(definitionsField)) {
+                objectNode.set(definitionsField, json.remove(definitionsField));
+            }
+        }
 
-        return keyToRef;
+        traverseSchema(instance.nullNode(), typeName, json, (parent, fieldName, object) -> {
+            if (object.has("$ref")) {
+                String ref = object.get("$ref").asText();
+                Optional<String> definitionField = DEFINITION_PREFIXES.stream().map(it -> "#/" + it + "/").filter(ref::startsWith).findFirst();
+                if (definitionField.isEmpty()) {
+                    return;
+                }
+                String typePath = ref.substring((definitionField.get()).length());
+                JsonNode currentNode = readByPath(ref, objectNode);
+                String definitionName = getDefinitionName(typeName, definitions, typePath, currentNode);
+                if (currentNode != null) {
+                    definitions.put(definitionName, currentNode);
+                    object.put("$ref", "#/components/schemas/" + definitionName);
+                }
+            }
+        });
+    }
+
+    private JsonNode readByPath(String ref, ObjectNode objectNode) {
+        String path = ref.replace("#/", "");
+        JsonNode currentNode = objectNode;
+        for (var field: path.split("/")) {
+            if (currentNode.has(field)) {
+                currentNode = currentNode.get(field);
+            } else {
+                log.warn("Definition not found: {}", ref);
+                currentNode = null;
+                break;
+            }
+        }
+        return currentNode;
+    }
+
+    private String getDefinitionName(String typeName, Map<String, Object> definitions, String path, JsonNode currentNode) {
+        String[] segments = path.split("/");
+        String uniqKey = "";
+        for (int i = segments.length - 1; i >= 0; i--) {
+            uniqKey = capitalize(segments[i]) + uniqKey;
+            if (!containsDefinition(definitions, currentNode, uniqKey)) {
+                return uniqKey;
+            }
+        }
+
+        if (!containsDefinition(definitions, currentNode, uniqKey)) {
+            return uniqKey;
+        }
+
+        uniqKey = capitalize(typeName) + uniqKey;
+        int i = 1;
+        String tempKey = uniqKey;
+        while (containsDefinition(definitions, currentNode, uniqKey)) {
+            tempKey = uniqKey + i;
+            i++;
+        }
+
+        return tempKey;
+    }
+
+    private static boolean containsDefinition(Map<String, Object> definitions, JsonNode currentNode, String uniqKey) {
+        return definitions.get(uniqKey) != null && !definitions.get(uniqKey).equals(currentNode);
     }
 
     private void validateTypes(JsonNode parent, String fieldName, JsonNode typeBlock) {
@@ -326,24 +392,6 @@ public class JsonSchemaToSwaggerSchemaConverter {
         ObjectNode objectNode = instance.objectNode();
         objectNode.set(type, it);
         return objectNode;
-    }
-
-    private static void addDefinition(String typeName, String key, Object value, Map<String, Object> definitions, Map<String, String> keyToRef) {
-        Object existsDefinition = definitions.get(key);
-        if (existsDefinition != null && !existsDefinition.equals(value)) {
-            String ref = typeName + key;
-            int i = 0;
-            while(definitions.containsKey(ref)) {
-                i++;
-                ref = ref + "_" + i;
-            }
-
-            definitions.put(ref, value);
-            keyToRef.put(key, ref);
-        } else {
-            definitions.put(key, value);
-            keyToRef.put(key, key);
-        }
     }
 
     @SneakyThrows
