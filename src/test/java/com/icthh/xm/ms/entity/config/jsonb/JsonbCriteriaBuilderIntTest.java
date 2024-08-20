@@ -15,6 +15,8 @@ import com.icthh.xm.ms.entity.AbstractJupiterSpringBootTest;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.domain.XmEntity_;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
+
+import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 
@@ -48,7 +50,7 @@ public class JsonbCriteriaBuilderIntTest extends AbstractJupiterSpringBootTest {
 
     @Container
     public static PostgreSQLContainer<?> postgreSQLContainer = new PostgreSQLContainer<>("postgres:16.3")
-        .withExposedPorts(5432)
+        .withStartupTimeout(Duration.ofMinutes(5))
         .withDatabaseName("entity")
         .withUsername("sa")
         .withPassword("sa");
