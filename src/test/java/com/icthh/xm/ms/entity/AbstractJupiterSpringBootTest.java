@@ -5,11 +5,8 @@ import com.icthh.xm.ms.entity.config.SecurityBeanOverrideConfiguration;
 import com.icthh.xm.ms.entity.config.TestLepUpdateModeConfiguration;
 import com.icthh.xm.ms.entity.config.tenant.WebappTenantOverrideConfiguration;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.experimental.categories.Category;
-import org.junit.jupiter.api.TestInstance;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Tag;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.junit4.SpringRunner;
 
 /**
  * Abstract test for extension for any SpringBoot test.
@@ -24,8 +21,7 @@ import org.springframework.test.context.junit4.SpringRunner;
     SecurityBeanOverrideConfiguration.class,
     WebappTenantOverrideConfiguration.class
 })
-@Category(AbstractJupiterSpringBootTest.class)
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+@Tag("com.icthh.xm.ms.entity.AbstractSpringBootTest")
 public abstract class AbstractJupiterSpringBootTest {
 
 }

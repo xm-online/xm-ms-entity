@@ -128,7 +128,6 @@ springBoot {
 }
 
 String[] testCategories = ['com.icthh.xm.ms.entity.AbstractSpringBootTest',
-                           'com.icthh.xm.ms.entity.AbstractJupiterSpringBootTest',
                            'com.icthh.xm.ms.entity.AbstractUnitTest',
                            'com.icthh.xm.ms.entity.AbstractWebMvcTest']
 
@@ -201,7 +200,7 @@ tasks.register('runElasticsearchTest', Test) {
     dependsOn 'clean'
 
     useJUnitPlatform {
-        includeTags ['com.icthh.xm.ms.entity.elasticsearch.AbstractElasticSpringBootTest']
+        includeTags 'elastic-spring-boot'
     }
     reports.html.required = false
 }
