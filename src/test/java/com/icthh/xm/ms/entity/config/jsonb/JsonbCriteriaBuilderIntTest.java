@@ -48,6 +48,7 @@ public class JsonbCriteriaBuilderIntTest extends AbstractJupiterSpringBootTest {
 
     @Container
     public static PostgreSQLContainer<?> postgreSQLContainer = new PostgreSQLContainer<>("postgres:16.3")
+        .withExposedPorts(5432)
         .withDatabaseName("entity")
         .withUsername("sa")
         .withPassword("sa");
