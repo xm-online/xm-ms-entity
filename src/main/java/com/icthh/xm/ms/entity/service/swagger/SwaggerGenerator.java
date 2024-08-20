@@ -71,10 +71,12 @@ public class SwaggerGenerator {
         Map<String, Map<String, ApiMethod>> paths = swaggerBody.getPaths();
         Map<String, ApiMethod> methods = new HashMap<>();
         swaggerFunction.getHttpMethods().forEach(httpMethod -> {
-            ApiMethod apiMethod = generateApiMethod(pathPrefixParams, swaggerFunction, httpMethod);
-            if (httpMethod.equalsIgnoreCase("POST_URLENCODED")) {
-                httpMethod = "POST";
+            if (httpMethod.equalsIgnoreCase("POST_URLENCODED") && swaggerFunction.getHttpMethods().contains("POST")) {
+                return;
             }
+
+            ApiMethod apiMethod = generateApiMethod(pathPrefixParams, swaggerFunction, httpMethod);
+            httpMethod = httpMethod.equalsIgnoreCase("POST_URLENCODED") ? "POST" : httpMethod;
             methods.put(httpMethod.toLowerCase(), apiMethod);
         });
 
@@ -220,15 +222,24 @@ public class SwaggerGenerator {
         addPathParameters(swaggerFunction, jsonNode, parameters);
         addQueryParameters(jsonNode, parameters, httpMethod);
         if (isNotBlank(swaggerFunction.getInputJsonSchema())) {
-            addRequestBody(jsonNode, operation, httpMethod);
+            addRequestBody(swaggerFunction, jsonNode, operation, httpMethod);
         }
 
         operation.setParameters(new ArrayList<>(parameters.values()));
     }
 
-    private void addRequestBody(JsonNode jsonNode, ApiMethod operation, String httpMethod) {
-        if (METHODS_WITH_BODY.contains(httpMethod)) {
-            Map<String, Object> schema = convertToMap(jsonNode);
+    private void addRequestBody(SwaggerFunction swaggerFunction, JsonNode jsonNode, ApiMethod operation, String httpMethod) {
+        if (!METHODS_WITH_BODY.contains(httpMethod)) {
+            return;
+        }
+
+        Map<String, Object> schema = convertToMap(jsonNode);
+        if (httpMethod.equals("POST") && swaggerFunction.getHttpMethods().contains("POST_URLENCODED")) {
+            operation.setRequestBody(new RequestBody(true, Map.of(
+                "application/x-www-form-urlencoded", new SwaggerContent(schema),
+                "application/json", new SwaggerContent(schema)
+            )));
+        } else {
             operation.setRequestBody(new RequestBody(true, new BodyContent(new SwaggerContent(schema))));
         }
     }

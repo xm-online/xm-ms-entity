@@ -35,9 +35,15 @@ public class DynamicSwaggerFunctionGenerator {
     private final DynamicSwaggerRefreshableConfiguration dynamicSwaggerConfiguration;
 
     public SwaggerModel generateSwagger(String baseUrl, Collection<TypeSpec> specs) {
-        // test on others specs
+        // fix union org
+
+        // add api to return swagger
+
+        // add authorization
+
         // implement include/exclude by tags
         // implement includeStrategy defaultInclude/defaultExclude
+
         // implement include/exclude by path ant patterns
         // implement include/exclude by key patterns
 

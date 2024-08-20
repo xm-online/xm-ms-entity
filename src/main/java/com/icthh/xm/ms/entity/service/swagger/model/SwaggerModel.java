@@ -32,10 +32,20 @@ public class SwaggerModel {
     }
 
     @Data
-    @AllArgsConstructor
     public static class RequestBody {
         private Boolean required;
-        private BodyContent content;
+        private Object content;
+
+        public RequestBody(Boolean required, BodyContent content) {
+            this.content = content;
+            this.required = required;
+        }
+
+        public RequestBody(Boolean required, Map<String, SwaggerContent> content) {
+            this.content = content;
+            this.required = required;
+        }
+
     }
 
     @Data

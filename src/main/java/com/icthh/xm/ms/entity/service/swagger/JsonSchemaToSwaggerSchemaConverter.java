@@ -215,9 +215,10 @@ public class JsonSchemaToSwaggerSchemaConverter {
                 String typePath = ref.substring((definitionField.get()).length());
                 JsonNode currentNode = readByPath(ref, objectNode);
                 String definitionName = getDefinitionName(typeName, definitions, typePath, currentNode);
-                if (currentNode != null) {
+                if (currentNode != null && currentNode.isObject()) {
                     definitions.put(definitionName, currentNode);
                     object.put("$ref", "#/components/schemas/" + definitionName);
+                    transformToSwaggerJson(definitionName, (ObjectNode) currentNode, definitions);
                 }
             }
         });
