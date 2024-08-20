@@ -35,8 +35,12 @@ public class DynamicSwaggerFunctionGenerator {
     private final DynamicSwaggerRefreshableConfiguration dynamicSwaggerConfiguration;
 
     public SwaggerModel generateSwagger(String baseUrl, Collection<TypeSpec> specs) {
-        // implement function response
-        // implement binary data type
+        // test on others specs
+        // implement include/exclude by tags
+        // implement includeStrategy defaultInclude/defaultExclude
+        // implement include/exclude by path ant patterns
+        // implement include/exclude by key patterns
+
         SwaggerGenerator swaggerGenerator = new SwaggerGenerator(baseUrl, dynamicSwaggerConfiguration.getConfiguration());
         for (var spec : specs) {
             List<FunctionSpec> functions = spec.getFunctions();
@@ -66,6 +70,7 @@ public class DynamicSwaggerFunctionGenerator {
             functionSpec.getKey(),
             path,
             name,
+            functionSpec.getKey(),
             functionSpec.getInputSpec(),
             functionSpec.getContextDataSpec(),
             tags,

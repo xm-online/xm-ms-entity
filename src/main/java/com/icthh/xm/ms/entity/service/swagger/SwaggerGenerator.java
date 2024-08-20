@@ -39,27 +39,23 @@ import java.util.Set;
 import static java.lang.Boolean.TRUE;
 import static java.util.Optional.ofNullable;
 import static org.apache.commons.lang.StringUtils.isBlank;
+import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.apache.commons.text.CaseUtils.toCamelCase;
 
 @Slf4j
 public class SwaggerGenerator {
 
     private static final Set<String> METHODS_WITH_BODY = Set.of("POST", "PUT", "PATCH");
-    private static final Set<String> METHODS_WITH_PARAMS = Set.of("GET", "POST_URLENCODED", "DELETE");
+    private static final Set<String> METHODS_WITH_PARAMS = Set.of("GET", "DELETE");
 
     @Getter
     private final SwaggerModel swaggerBody = new SwaggerModel();
     private final JsonSchemaToSwaggerSchemaConverter jsonSchemaConverter = new JsonSchemaToSwaggerSchemaConverter();
     private final Map<String, Object> definitions = new LinkedHashMap<>();
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
+    private final DynamicSwaggerConfiguration configuration;
 
     public SwaggerGenerator(String baseUrl, DynamicSwaggerConfiguration configuration) {
-        // test on others specs
-        // implement include/exclude by tags
-        // implement includeStrategy defaultInclude/defaultExclude
-        // implement include/exclude by path ant patterns
-        // implement include/exclude by key patterns
-
         swaggerBody.setServers(List.of(new ServerObject(baseUrl)));
         if (configuration != null) {
             ofNullable(configuration.getInfo()).ifPresent(swaggerBody::setInfo);
@@ -67,7 +63,37 @@ public class SwaggerGenerator {
             ofNullable(configuration.getServers()).ifPresent(swaggerBody::setServers);
         }
         swaggerBody.getComponents().setSchemas(definitions);
+        this.configuration = configuration;
         addResponses();
+    }
+
+    public void generateFunction(String pathPrefix, Map<String, SwaggerParameter> pathPrefixParams, SwaggerFunction swaggerFunction) {
+        Map<String, Map<String, ApiMethod>> paths = swaggerBody.getPaths();
+        Map<String, ApiMethod> methods = new HashMap<>();
+        swaggerFunction.getHttpMethods().forEach(httpMethod -> {
+            ApiMethod apiMethod = generateApiMethod(pathPrefixParams, swaggerFunction, httpMethod);
+            if (httpMethod.equalsIgnoreCase("POST_URLENCODED")) {
+                httpMethod = "POST";
+            }
+            methods.put(httpMethod.toLowerCase(), apiMethod);
+        });
+
+        paths.put(pathPrefix + swaggerFunction.getPath(), methods);
+    }
+
+    private ApiMethod generateApiMethod(Map<String, SwaggerParameter> pathPrefixParams,
+                                        SwaggerFunction swaggerFunction,
+                                        String httpMethod) {
+        ApiMethod operation = new ApiMethod();
+
+        setOperationId(swaggerFunction, httpMethod, operation);
+        buildParameters(pathPrefixParams, swaggerFunction, operation, httpMethod);
+        operation.setSummary(swaggerFunction.getName());
+        operation.setDescription(swaggerFunction.getDescription());
+        operation.setTags(swaggerFunction.getTags());
+        buildResponse(swaggerFunction, operation, httpMethod);
+
+        return operation;
     }
 
     private void addResponses() {
@@ -103,20 +129,6 @@ public class SwaggerGenerator {
         ));
     }
 
-    public void generateFunction(String pathPrefix, Map<String, SwaggerParameter> pathPrefixParams, SwaggerFunction swaggerFunction) {
-        Map<String, Map<String, ApiMethod>> paths = swaggerBody.getPaths();
-        Map<String, ApiMethod> methods = new HashMap<>();
-        swaggerFunction.getHttpMethods().forEach(httpMethod -> {
-            ApiMethod apiMethod = generateApiMethod(pathPrefixParams, swaggerFunction, httpMethod);
-            if (httpMethod.equalsIgnoreCase("POST_URLENCODED")) {
-                httpMethod = "POST";
-            }
-            methods.put(httpMethod.toLowerCase(), apiMethod);
-        });
-
-        paths.put(pathPrefix + swaggerFunction.getPath(), methods);
-    }
-
     private void setOperationId(SwaggerFunction swaggerFunction, String httpMethod, ApiMethod apiMethod) {
         var operationId = swaggerFunction.getOperationId();
         if (swaggerFunction.getHttpMethods().size() > 1) {
@@ -124,20 +136,6 @@ public class SwaggerGenerator {
         }
         operationId = toCamelCase(operationId, false, '_', '-', '/', ' ');
         apiMethod.setOperationId(operationId);
-    }
-
-    private ApiMethod generateApiMethod(Map<String, SwaggerParameter> pathPrefixParams,
-                                        SwaggerFunction swaggerFunction,
-                                        String httpMethod) {
-        ApiMethod operation = new ApiMethod();
-
-        setOperationId(swaggerFunction, httpMethod, operation);
-        buildParameters(pathPrefixParams, swaggerFunction, operation, httpMethod);
-        operation.setSummary(swaggerFunction.getName());
-        operation.setTags(swaggerFunction.getTags());
-        buildResponse(swaggerFunction, operation, httpMethod);
-
-        return operation;
     }
 
     private void buildResponse(SwaggerFunction swaggerFunction, ApiMethod operation, String httpMethod) {
@@ -152,12 +150,11 @@ public class SwaggerGenerator {
 
     @SneakyThrows
     private ObjectNode generateFunctionContext() {
-        var mapper = new ObjectMapper();
-        mapper.registerModule(new JavaTimeModule());
+        objectMapper.registerModule(new JavaTimeModule());
 
-        JsonSchemaGenerator schemaGen = new JsonSchemaGenerator(mapper);
+        JsonSchemaGenerator schemaGen = new JsonSchemaGenerator(objectMapper);
         JsonSchema jsonSchema = schemaGen.generateSchema(FunctionContext.class);
-        ObjectNode tree = (ObjectNode) mapper.readTree(mapper.writeValueAsString(jsonSchema));
+        ObjectNode tree = (ObjectNode) objectMapper.readTree(objectMapper.writeValueAsString(jsonSchema));
         ObjectNode properties = (ObjectNode) tree.get("properties");
         tree.remove("id");
         properties.remove("xmEntity");
@@ -171,11 +168,11 @@ public class SwaggerGenerator {
 
         if (swaggerFunction.getCustomBinaryDataType() != null) {
             operation.getResponses().put(code, new SwaggerResponse(Map.of(
-                swaggerFunction.getCustomBinaryDataType(), Map.of(
+                swaggerFunction.getCustomBinaryDataType(), new SwaggerContent(Map.of(
                     "type", "string",
                     "format", "binary"
-                )
-            )));
+                ))
+            ), successfulMessage));
             return;
         }
 
@@ -187,7 +184,14 @@ public class SwaggerGenerator {
         if (!TRUE.equals(swaggerFunction.getOnlyData())) {
             ObjectNode functionContext = generateFunctionContext();
             ObjectNode properties = (ObjectNode) functionContext.get("properties");
-            properties.set("data", jsonNode);
+            if (isNotBlank(swaggerFunction.getOutputJsonSchema())) {
+                properties.set("data", jsonNode);
+            } else {
+                ObjectNode objectNode = objectMapper.createObjectNode();
+                objectNode.put("type", "object");
+                objectNode.put("additionalProperties", true);
+                properties.set("data", objectNode);
+            }
             jsonNode = functionContext;
         }
         Map<String, Object> schema = convertToMap(jsonNode);
@@ -206,10 +210,6 @@ public class SwaggerGenerator {
                                  SwaggerFunction swaggerFunction,
                                  ApiMethod operation,
                                  String httpMethod) {
-        if (isBlank(swaggerFunction.getInputJsonSchema())) {
-            operation.setParameters(new ArrayList<>(pathPrefixParams.values()));
-            return;
-        }
 
         JsonNode jsonNode = jsonSchemaConverter.transformToJsonNode(
             operation.getOperationId(),
@@ -219,7 +219,9 @@ public class SwaggerGenerator {
         Map<String, SwaggerParameter> parameters = new LinkedHashMap<>(pathPrefixParams);
         addPathParameters(swaggerFunction, jsonNode, parameters);
         addQueryParameters(jsonNode, parameters, httpMethod);
-        addRequestBody(jsonNode, operation, httpMethod);
+        if (isNotBlank(swaggerFunction.getInputJsonSchema())) {
+            addRequestBody(jsonNode, operation, httpMethod);
+        }
 
         operation.setParameters(new ArrayList<>(parameters.values()));
     }
@@ -284,11 +286,13 @@ public class SwaggerGenerator {
     private void addPathParameters(SwaggerFunction swaggerFunction, JsonNode jsonNode, Map<String, SwaggerParameter> parameters) {
         List<String> variablesInPath = getPathVariables(swaggerFunction);
         variablesInPath.forEach(variable -> {
-            if (jsonNode.get("properties").has(variable)) {
+            if (jsonNode.has("properties") && jsonNode.get("properties").has(variable)) {
                 ObjectNode object = (ObjectNode) jsonNode.get("properties");
                 JsonNode variableSchema = object.remove(variable);
                 Map<String, Object> schema = convertToMap(variableSchema);
                 parameters.put(variable, new SwaggerParameter(variable, true, schema));
+            } else {
+                parameters.put(variable, new SwaggerParameter(variable, true, Map.of("type", "string")));
             }
         });
     }
@@ -299,7 +303,7 @@ public class SwaggerGenerator {
         StringSubstitutor stringSubstitutor = new StringSubstitutor(
             key -> {
                 variablesInPath.add(key);
-                return "{" + key + "}";
+                return key;
             }, "{", "}", '\\');
         stringSubstitutor.replace(swaggerFunction.getPath());
         return variablesInPath;

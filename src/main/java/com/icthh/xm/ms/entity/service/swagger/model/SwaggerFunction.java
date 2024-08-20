@@ -12,6 +12,7 @@ public class SwaggerFunction {
     private String operationId;
     private String path;
     private String name;
+    private String description;
     private String inputJsonSchema;
     private String outputJsonSchema;
     private List<String> tags = new ArrayList<>();

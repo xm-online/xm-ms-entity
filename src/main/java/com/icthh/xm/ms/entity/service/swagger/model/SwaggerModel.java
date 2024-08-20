@@ -71,8 +71,9 @@ public class SwaggerModel {
             this.content = content;
         }
 
-        public SwaggerResponse(Map<String, Object> content) {
+        public SwaggerResponse(Map<String, SwaggerContent> content, String description) {
             this.content = content;
+            this.description = description;
         }
 
         public SwaggerResponse(BodyContent content, String description) {

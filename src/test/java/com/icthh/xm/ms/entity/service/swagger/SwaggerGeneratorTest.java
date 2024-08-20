@@ -59,7 +59,8 @@ public class SwaggerGeneratorTest extends AbstractSpringBootTest {
     @Test
     @SneakyThrows
     public void testSwaggerGenerator() {
-        var files = loadByPath("/home/ssenko/work/COMPASS/compass-config/config/tenants/COMPASS/");
+        var files = loadByPath("/home/ssenko/work/XM2/ispgest-xm-configuration-dev/config/tenants/ROOT0CORE");
+        //var files = loadByPath("/home/ssenko/work/OKKOON/config-repo/config/tenants/BILLING");
         List.of(jsonConfigurationListener, xmEntitySpecService).forEach(rc -> {
             var keys = files.keySet().stream().filter(rc::isListeningConfiguration).collect(Collectors.toList());
             keys.forEach(k -> rc.onRefresh(k, files.get(k)));
@@ -102,7 +103,7 @@ public class SwaggerGeneratorTest extends AbstractSpringBootTest {
             for (File file : files) {
                 String content = FileUtils.readFileToString(file, "UTF-8");
                 String relativePath = baseDir.toURI().relativize(file.toURI()).getPath();
-                String newPath = FilenameUtils.concat(newBasePath, relativePath);
+                String newPath = FilenameUtils.concat(newBasePath + "/entity/xmentityspec", relativePath);
                 fileMap.put(newPath, content);
             }
         }
