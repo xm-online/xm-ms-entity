@@ -1,11 +1,11 @@
-FROM eclipse-temurin:21
+FROM eclipse-temurin:21.0.4_7-jre
 
 ENTRYPOINT ["/entrypoint.sh"]
 
 ADD src/main/docker/entrypoint.sh /
 
 RUN chmod 755 entrypoint.sh
-RUN apt-get update
+RUN apt-get update && rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/*.deb
 RUN apt-get install -y locales locales-all zip unzip curl
 RUN apt-get clean
 
