@@ -4,11 +4,7 @@ ENTRYPOINT ["/entrypoint.sh"]
 
 ADD src/main/docker/entrypoint.sh /
 
-RUN chmod 755 entrypoint.sh
-RUN rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/*.deb /var/cache/apt/archives/partial/*.deb /var/cache/apt/*.bin
-RUN apt-get -o Debug::pkgProblemResolver=yes -o Debug::Acquire::http=true update
-RUN apt-get install -y locales locales-all zip unzip curl
-RUN apt-get clean
+RUN chmod 755 entrypoint.sh && apt-get update -y && apt-get install -y locales locales-all zip unzip curl && apt-get clean
 
 ENV SPRING_OUTPUT_ANSI_ENABLED=ALWAYS \
     JHIPSTER_SLEEP=0 \
