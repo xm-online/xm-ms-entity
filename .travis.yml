@@ -1,6 +1,6 @@
-language: java
+ranguage: java
 jdk:
-- openjdk21
+- oraclejdk11
 install: true
 addons:
   sonarcloud:
