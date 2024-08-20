@@ -49,7 +49,7 @@ public class JsonbCriteriaBuilderIntTest extends AbstractJupiterSpringBootTest {
     public static final String SECOND_DATA_VALUE = "secondDataValue";
 
     @Container
-    public static PostgreSQLContainer<?> postgreSQLContainer = new PostgreSQLContainer<>("postgres:16.3")
+    public static PostgreSQLContainer<?> postgreSQLContainer = new PostgreSQLContainer<>("postgres:12.7")
         .withDatabaseName("entity")
         .withUsername("sa")
         .withPassword("sa");
