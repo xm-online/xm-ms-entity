@@ -1,4 +1,4 @@
-ranguage: java
+language: java
 jdk:
 - oraclejdk11
 install: true
