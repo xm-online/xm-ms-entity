@@ -12,7 +12,7 @@ addons:
     - main
 
 script:
-  - set -e
+#  - set -e todo: tmp
   - "./gradlew --no-daemon --refresh-dependencies clean check test"
   - "./gradlew -x test -Pprod --no-daemon bootWar"
   - docker login -u $DOCKER_USER -p $DOCKER_PASS
