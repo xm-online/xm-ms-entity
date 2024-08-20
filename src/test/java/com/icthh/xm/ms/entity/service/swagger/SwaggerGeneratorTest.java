@@ -52,7 +52,7 @@ public class SwaggerGeneratorTest extends AbstractSpringBootTest {
     public void testTransformJsonSchemaToSwaggerSchema() {
         JsonSchemaToSwaggerSchemaConverter swaggerGenerator = new JsonSchemaToSwaggerSchemaConverter();
         String jsonSchema = loadFile("config/testjsonschema.json");
-        String result = swaggerGenerator.transformToSwaggerJson("TestType", jsonSchema, new HashMap<>());
+        String result = swaggerGenerator.transformToSwaggerJson("TestType", jsonSchema, new HashMap<>(), new HashMap<>());
         System.out.println(result);
     }
 

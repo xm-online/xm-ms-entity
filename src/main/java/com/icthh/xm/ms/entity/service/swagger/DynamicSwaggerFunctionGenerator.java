@@ -35,7 +35,6 @@ public class DynamicSwaggerFunctionGenerator {
     private final DynamicSwaggerRefreshableConfiguration dynamicSwaggerConfiguration;
 
     public SwaggerModel generateSwagger(String baseUrl, Collection<TypeSpec> specs) {
-        // fix union org
 
         // add api to return swagger
 

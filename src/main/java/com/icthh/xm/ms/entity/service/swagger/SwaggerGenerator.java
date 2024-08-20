@@ -52,6 +52,7 @@ public class SwaggerGenerator {
     private final SwaggerModel swaggerBody = new SwaggerModel();
     private final JsonSchemaToSwaggerSchemaConverter jsonSchemaConverter = new JsonSchemaToSwaggerSchemaConverter();
     private final Map<String, Object> definitions = new LinkedHashMap<>();
+    private final Map<String, Object> originalDefinitions = new LinkedHashMap<>();
     private final ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
     private final DynamicSwaggerConfiguration configuration;
 
@@ -181,7 +182,8 @@ public class SwaggerGenerator {
         JsonNode jsonNode = jsonSchemaConverter.transformToJsonNode(
             operation.getOperationId(),
             swaggerFunction.getOutputJsonSchema(),
-            definitions
+            definitions,
+            originalDefinitions
         );
         if (!TRUE.equals(swaggerFunction.getOnlyData())) {
             ObjectNode functionContext = generateFunctionContext();
@@ -216,7 +218,8 @@ public class SwaggerGenerator {
         JsonNode jsonNode = jsonSchemaConverter.transformToJsonNode(
             operation.getOperationId(),
             swaggerFunction.getInputJsonSchema(),
-            definitions
+            definitions,
+            originalDefinitions
         );
         Map<String, SwaggerParameter> parameters = new LinkedHashMap<>(pathPrefixParams);
         addPathParameters(swaggerFunction, jsonNode, parameters);

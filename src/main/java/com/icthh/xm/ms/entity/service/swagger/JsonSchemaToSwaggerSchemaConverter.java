@@ -57,13 +57,15 @@ public class JsonSchemaToSwaggerSchemaConverter {
     public final ObjectMapper objectMapper = new ObjectMapper();
 
     public String transformToSwaggerJson(String typeName, String jsonSchema,
-                                         Map<String, Object> definitions) {
-        JsonNode json = transformToJsonNode(typeName, jsonSchema, definitions);
+                                         Map<String, Object> definitions,
+                                         Map<String, Object> originalDefinitions) {
+        JsonNode json = transformToJsonNode(typeName, jsonSchema, definitions, originalDefinitions);
         return writeJson(json);
     }
 
     public JsonNode transformToJsonNode(String typeName, String jsonSchema,
-                                        Map<String, Object> definitions) {
+                                        Map<String, Object> definitions,
+                                        Map<String, Object> originalDefinitions) {
         if (isBlank(jsonSchema)) {
             return instance.nullNode();
         }
@@ -78,17 +80,18 @@ public class JsonSchemaToSwaggerSchemaConverter {
             object.set("properties", json);
             json = object;
         }
-        transformToSwaggerJson(typeName, (ObjectNode) json, definitions);
+        transformToSwaggerJson(typeName, (ObjectNode) json, definitions, originalDefinitions);
         return json;
     }
 
     private void transformToSwaggerJson(String typeName, ObjectNode json,
-                                        Map<String, Object> definitions) {
+                                        Map<String, Object> definitions,
+                                        Map<String, Object> originalDefinitions) {
         if (!json.isObject()) {
             return;
         }
 
-        processDefinitions(typeName, json, definitions);
+        processDefinitions(typeName, json, definitions, originalDefinitions);
         traverseSchema(instance.nullNode(), typeName, json, this::convertElement);
         traverseSchema(instance.nullNode(), typeName, json, this::rewriteUnsupportedKeywords);
     }
@@ -197,7 +200,8 @@ public class JsonSchemaToSwaggerSchemaConverter {
     }
 
     private void processDefinitions(String typeName, ObjectNode json,
-                                    Map<String, Object> definitions) {
+                                    Map<String, Object> definitions,
+                                    Map<String, Object> originalDefinitions) {
         ObjectNode objectNode = instance.objectNode();
         for (var definitionsField: DEFINITION_PREFIXES) {
             if (json.has(definitionsField)) {
@@ -214,11 +218,13 @@ public class JsonSchemaToSwaggerSchemaConverter {
                 }
                 String typePath = ref.substring((definitionField.get()).length());
                 JsonNode currentNode = readByPath(ref, objectNode);
-                String definitionName = getDefinitionName(typeName, definitions, typePath, currentNode);
+                String definitionName = getDefinitionName(typeName, originalDefinitions, typePath, currentNode);
                 if (currentNode != null && currentNode.isObject()) {
-                    definitions.put(definitionName, currentNode);
+                    ObjectNode definitionNode = currentNode.deepCopy();
+                    definitions.put(definitionName, definitionNode);
+                    originalDefinitions.put(definitionName, definitionNode.deepCopy());
                     object.put("$ref", "#/components/schemas/" + definitionName);
-                    transformToSwaggerJson(definitionName, (ObjectNode) currentNode, definitions);
+                    transformToSwaggerJson(definitionName, definitionNode, definitions, originalDefinitions);
                 }
             }
         });
