@@ -1,4 +1,4 @@
-FROM eclipse-temurin:21.0.0_35-jdk-jammy
+FROM eclipse-temurin:21.0.4_7-jdk-jammy
 
 ENTRYPOINT ["/entrypoint.sh"]
 
