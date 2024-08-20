@@ -4,9 +4,9 @@ ENTRYPOINT ["/entrypoint.sh"]
 
 ADD src/main/docker/entrypoint.sh /
 
-RUN chmod 755 entrypoint.sh  \
-RUN apt-get update \
-RUN apt-get install -y locales locales-all zip unzip curl \
+RUN chmod 755 entrypoint.sh
+RUN apt-get update
+RUN apt-get install -y locales locales-all zip unzip curl
 RUN apt-get clean
 
 ENV SPRING_OUTPUT_ANSI_ENABLED=ALWAYS \
