@@ -1,6 +1,6 @@
 language: java
 jdk:
-- gradle:8-jdk21
+- eclipse-temurin:21-jdk-jammy
 install: true
 addons:
   sonarcloud:
