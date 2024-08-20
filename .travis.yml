@@ -1,6 +1,6 @@
 language: java
 jdk:
-- openjdk21
+- gradle:8-jdk21
 install: true
 addons:
   sonarcloud:
