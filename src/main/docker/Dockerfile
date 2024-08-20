@@ -10,7 +10,7 @@ RUN apt-get -o Debug::pkgProblemResolver=yes -o Debug::Acquire::http=true update
 RUN apt-get install -y locales locales-all zip unzip curl
 RUN apt-get clean
 
-ENV SPRING_OUTPUT_ANSI_ENABLED=ALWAYS \fast_743@Wicher
+ENV SPRING_OUTPUT_ANSI_ENABLED=ALWAYS \
     JHIPSTER_SLEEP=0 \
     XMX=256m \
 		TZ=Europe/Kiev \
