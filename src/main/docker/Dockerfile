@@ -5,7 +5,8 @@ ENTRYPOINT ["/entrypoint.sh"]
 ADD src/main/docker/entrypoint.sh /
 
 RUN chmod 755 entrypoint.sh
-RUN apt-get update && rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/*.deb
+RUN rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/*.deb
+RUN apt-get update
 RUN apt-get install -y locales locales-all zip unzip curl
 RUN apt-get clean
 
