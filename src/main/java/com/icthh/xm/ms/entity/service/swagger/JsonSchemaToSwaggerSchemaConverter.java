@@ -80,18 +80,21 @@ public class JsonSchemaToSwaggerSchemaConverter {
             object.set("properties", json);
             json = object;
         }
-        transformToSwaggerJson(typeName, (ObjectNode) json, definitions, originalDefinitions);
+        if (json.has("properties") && !json.has("type")) {
+            ((ObjectNode) json).put("type", "object");
+        }
+        transformToSwaggerJson(typeName, (ObjectNode) json, definitions, originalDefinitions, instance.objectNode());
         return json;
     }
 
     private void transformToSwaggerJson(String typeName, ObjectNode json,
                                         Map<String, Object> definitions,
-                                        Map<String, Object> originalDefinitions) {
+                                        Map<String, Object> originalDefinitions, ObjectNode objectDefinitions) {
         if (!json.isObject()) {
             return;
         }
 
-        processDefinitions(typeName, json, definitions, originalDefinitions);
+        processDefinitions(typeName, json, definitions, originalDefinitions, objectDefinitions);
         traverseSchema(instance.nullNode(), typeName, json, this::convertElement);
         traverseSchema(instance.nullNode(), typeName, json, this::rewriteUnsupportedKeywords);
     }
@@ -123,12 +126,20 @@ public class JsonSchemaToSwaggerSchemaConverter {
     }
 
     private void convertElement(JsonNode parent, String fieldName, ObjectNode object) {
+        fixArrayDeclarations(parent, fieldName, object);
         convertNullable(parent, fieldName, object);
         rewriteConst(object);
         rewriteIfThenElse(object);
         rewriteExclusiveMinMax(object);
         convertDependencies(parent, fieldName, object);
         removeEmptyRequired(object);
+    }
+
+    private void fixArrayDeclarations(JsonNode parent, String fieldName, ObjectNode object) {
+        if (object.has("type") && object.get("type").asText().equals("array")
+            && object.has("items") && object.get("items").isArray() && object.get("items").size() == 1) {
+            object.set("items", object.get("items").get(0));
+        }
     }
 
     private void removeEmptyRequired(ObjectNode object) {
@@ -201,11 +212,11 @@ public class JsonSchemaToSwaggerSchemaConverter {
 
     private void processDefinitions(String typeName, ObjectNode json,
                                     Map<String, Object> definitions,
-                                    Map<String, Object> originalDefinitions) {
-        ObjectNode objectNode = instance.objectNode();
+                                    Map<String, Object> originalDefinitions,
+                                    ObjectNode objectDefinitions) {
         for (var definitionsField: DEFINITION_PREFIXES) {
             if (json.has(definitionsField)) {
-                objectNode.set(definitionsField, json.remove(definitionsField));
+                objectDefinitions.set(definitionsField, json.remove(definitionsField));
             }
         }
 
@@ -217,14 +228,14 @@ public class JsonSchemaToSwaggerSchemaConverter {
                     return;
                 }
                 String typePath = ref.substring((definitionField.get()).length());
-                JsonNode currentNode = readByPath(ref, objectNode);
+                JsonNode currentNode = readByPath(ref, objectDefinitions);
                 String definitionName = getDefinitionName(typeName, originalDefinitions, typePath, currentNode);
                 if (currentNode != null && currentNode.isObject()) {
                     ObjectNode definitionNode = currentNode.deepCopy();
                     definitions.put(definitionName, definitionNode);
                     originalDefinitions.put(definitionName, definitionNode.deepCopy());
                     object.put("$ref", "#/components/schemas/" + definitionName);
-                    transformToSwaggerJson(definitionName, definitionNode, definitions, originalDefinitions);
+                    transformToSwaggerJson(definitionName, definitionNode, definitions, originalDefinitions, objectDefinitions);
                 }
             }
         });

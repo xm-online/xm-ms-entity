@@ -59,7 +59,7 @@ public class SwaggerGeneratorTest extends AbstractSpringBootTest {
     @Test
     @SneakyThrows
     public void testSwaggerGenerator() {
-        var files = loadByPath("/home/ssenko/work/SUFORIA/xm-ms-config-repository/config/tenants/UNIONORG");
+        var files = loadByPath("/home/ssenko/work/mw-ms-config-repository/config/tenants/XM");
         List.of(jsonConfigurationListener, xmEntitySpecService).forEach(rc -> {
             var keys = files.keySet().stream().filter(rc::isListeningConfiguration).collect(Collectors.toList());
             keys.forEach(k -> rc.onRefresh(k, files.get(k)));
