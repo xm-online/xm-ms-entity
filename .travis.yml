@@ -13,6 +13,7 @@ addons:
 
 script:
   - set -e
+  - lsb_release -a
   - docker --version
 #  - "./gradlew --no-daemon --refresh-dependencies clean check test" todo: tmp
   - "./gradlew -x test -Pprod --no-daemon bootWar"
