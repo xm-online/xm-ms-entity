@@ -5,12 +5,11 @@ ENTRYPOINT ["/entrypoint.sh"]
 ADD src/main/docker/entrypoint.sh /
 
 RUN chmod 755 entrypoint.sh
-#    && apt-get update -y && apt-get install -y locales locales-all zip unzip curl && apt-get clean
 
 ENV SPRING_OUTPUT_ANSI_ENABLED=ALWAYS \
     JHIPSTER_SLEEP=0 \
     XMX=256m \
-		TZ=Europe/Kiev \
+		TZ=Europe/Kyiv \
 		LANG=en_US.UTF-8 \
 		LANGUAGE=en_US:en \
 		TERM=xterm \

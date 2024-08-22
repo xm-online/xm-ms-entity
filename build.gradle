@@ -461,6 +461,7 @@ checkstyle {
     toolVersion = "${checkstyleToolVersion}"
     ignoreFailures = true
     configFile file("qa/checkstyle.xml")
+    checkstyleMain.enabled = false // fixme: config file needs to be actualized to run checkstyle task
     checkstyleTest.enabled = false
 }
 

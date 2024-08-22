@@ -74,8 +74,8 @@ public class CalendarResourceIntTest extends AbstractSpringBootTest {
     private static final String DEFAULT_DESCRIPTION = "AAAAAAAAAA";
     private static final String UPDATED_DESCRIPTION = "BBBBBBBBBB";
 
-    private static final String DEFAULT_TIMEZONE_ID = "Europe/Kiev";
-    private static final String UPDATED_TIMEZONE_ID = "Europe/Kiev1";
+    private static final String DEFAULT_TIMEZONE_ID = "Europe/Kyiv";
+    private static final String UPDATED_TIMEZONE_ID = "Europe/Kyiv1";
 
     private static final Instant DEFAULT_START_DATE = Instant.ofEpochMilli(0L);
     private static final Instant UPDATED_START_DATE = Instant.now().truncatedTo(ChronoUnit.MILLIS);
