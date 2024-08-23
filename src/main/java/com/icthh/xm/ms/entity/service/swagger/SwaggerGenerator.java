@@ -1,7 +1,5 @@
 package com.icthh.xm.ms.entity.service.swagger;
 
-import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import com.fasterxml.jackson.annotation.PropertyAccessor;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -26,9 +24,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.text.StringSubstitutor;
 import org.jetbrains.annotations.NotNull;
 
-import javax.persistence.Transient;
-import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -36,16 +31,18 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import static com.icthh.xm.ms.entity.service.impl.FunctionServiceImpl.POST_URLENCODED;
 import static java.lang.Boolean.TRUE;
+import static java.lang.String.join;
 import static java.util.Optional.ofNullable;
-import static org.apache.commons.lang.StringUtils.isBlank;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
+import static org.apache.commons.lang3.StringUtils.splitByCharacterTypeCamelCase;
 import static org.apache.commons.text.CaseUtils.toCamelCase;
 
 @Slf4j
 public class SwaggerGenerator {
 
-    private static final Set<String> METHODS_WITH_BODY = Set.of("POST", "PUT", "PATCH");
+    private static final Set<String> METHODS_WITH_BODY = Set.of("POST", "PUT", "PATCH", "POST_URLENCODED");
     private static final Set<String> METHODS_WITH_PARAMS = Set.of("GET", "DELETE");
 
     @Getter
@@ -135,8 +132,9 @@ public class SwaggerGenerator {
     private void setOperationId(SwaggerFunction swaggerFunction, String httpMethod, ApiMethod apiMethod) {
         var operationId = swaggerFunction.getOperationId();
         if (swaggerFunction.getHttpMethods().size() > 1) {
-            operationId = operationId + "-" + httpMethod;
+            operationId = operationId + httpMethod;
         }
+        operationId = join("-", splitByCharacterTypeCamelCase(operationId));
         operationId = toCamelCase(operationId, false, '_', '-', '/', ' ');
         apiMethod.setOperationId(operationId);
     }
@@ -237,12 +235,16 @@ public class SwaggerGenerator {
         }
 
         Map<String, Object> schema = convertToMap(jsonNode);
-        if (httpMethod.equals("POST") && swaggerFunction.getHttpMethods().contains("POST_URLENCODED")) {
+        if (httpMethod.equals("POST") && swaggerFunction.getHttpMethods().contains(POST_URLENCODED)) {
             operation.setRequestBody(new RequestBody(true, Map.of(
                 "application/x-www-form-urlencoded", new SwaggerContent(schema),
                 "application/json", new SwaggerContent(schema)
             )));
-        } else {
+        } else if (httpMethod.equals(POST_URLENCODED) && !swaggerFunction.getHttpMethods().contains("POST")) {
+            operation.setRequestBody(new RequestBody(true, Map.of(
+                "application/x-www-form-urlencoded", new SwaggerContent(schema)
+            )));
+        } else if (!httpMethod.equals(POST_URLENCODED)) {
             operation.setRequestBody(new RequestBody(true, new BodyContent(new SwaggerContent(schema))));
         }
     }

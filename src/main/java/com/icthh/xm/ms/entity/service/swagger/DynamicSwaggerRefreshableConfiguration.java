@@ -65,5 +65,13 @@ public class DynamicSwaggerRefreshableConfiguration implements RefreshableConfig
         private List<ServerObject> servers;
         private List<TagObject> tags;
 
+        private List<String> includeTags;
+        private List<String> excludeTags;
+
+        // regexps
+        private List<String> includePathPatterns;
+        private List<String> excludePathPatterns;
+        private List<String> includeKeyPatterns;
+        private List<String> excludeKeyPatterns;
     }
 }

@@ -2,6 +2,8 @@ package com.icthh.xm.ms.entity.service.swagger;
 
 import com.icthh.xm.ms.entity.domain.spec.FunctionSpec;
 import com.icthh.xm.ms.entity.domain.spec.TypeSpec;
+import com.icthh.xm.ms.entity.service.XmEntitySpecService;
+import com.icthh.xm.ms.entity.service.swagger.DynamicSwaggerRefreshableConfiguration.DynamicSwaggerConfiguration;
 import com.icthh.xm.ms.entity.service.swagger.model.SwaggerFunction;
 import com.icthh.xm.ms.entity.service.swagger.model.SwaggerModel;
 import com.icthh.xm.ms.entity.service.swagger.model.SwaggerParameter;
@@ -13,7 +15,9 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
+import java.util.function.Predicate;
 
 import static java.lang.Boolean.TRUE;
 import static java.util.stream.Collectors.toList;
@@ -33,29 +37,27 @@ public class DynamicSwaggerFunctionGenerator {
     public static final Set<String> SUPPORTED_WITH_ENTITY_ID_HTTP_METHODS = Set.of("GET", "POST");
 
     private final DynamicSwaggerRefreshableConfiguration dynamicSwaggerConfiguration;
+    private final XmEntitySpecService xmEntitySpecService;
+
+    public SwaggerModel generateSwagger(String baseUrl) {
+        return generateSwagger(baseUrl, xmEntitySpecService.getAllSpecs());
+    }
 
     public SwaggerModel generateSwagger(String baseUrl, Collection<TypeSpec> specs) {
+        DynamicSwaggerConfiguration configuration = dynamicSwaggerConfiguration.getConfiguration();
+        SwaggerGenerator swaggerGenerator = new SwaggerGenerator(baseUrl, configuration);
+        List<FunctionSpec> functions = specs.stream()
+            .map(TypeSpec::getFunctions)
+            .flatMap(Collection::stream)
+            .filter(Objects::nonNull)
+            .filter(byFilters(configuration))
+            .collect(toList());
 
-        // add api to return swagger
-
-        // add authorization
-
-        // implement include/exclude by tags
-        // implement includeStrategy defaultInclude/defaultExclude
-
-        // implement include/exclude by path ant patterns
-        // implement include/exclude by key patterns
-
-        SwaggerGenerator swaggerGenerator = new SwaggerGenerator(baseUrl, dynamicSwaggerConfiguration.getConfiguration());
-        for (var spec : specs) {
-            List<FunctionSpec> functions = spec.getFunctions();
-            functions = functions != null ? functions : new ArrayList<>();
-            functions.forEach(it -> generateForFunction(it, swaggerGenerator));
-        }
+        functions.forEach(it -> generateForFunction(it, swaggerGenerator));
         return swaggerGenerator.getSwaggerBody();
     }
 
-    public void generateForFunction(FunctionSpec functionSpec, SwaggerGenerator swaggerGenerator) {
+     public void generateForFunction(FunctionSpec functionSpec, SwaggerGenerator swaggerGenerator) {
         List<String> httpMethods = isEmpty(functionSpec.getHttpMethods()) ? List.of("GET", "POST") : functionSpec.getHttpMethods();
         functionSpec.setHttpMethods(httpMethods);
 
@@ -145,6 +147,44 @@ public class DynamicSwaggerFunctionGenerator {
         path = stripEnd(path, "/");
         path = "/" + path;
         return path;
+    }
+
+    private Predicate<? super FunctionSpec> byFilters(DynamicSwaggerConfiguration configuration) {
+        return functionSpec -> {
+            if (configuration == null) {
+                return true;
+            }
+
+            List<String> includeTags = nullSafe(configuration.getIncludeTags());
+            List<String> includePaths = nullSafe(configuration.getIncludePathPatterns());
+            List<String> includeKeys = nullSafe(configuration.getIncludeKeyPatterns());
+
+            List<String> excludeTags = nullSafe(configuration.getExcludeTags());
+            List<String> excludeKeys = nullSafe(configuration.getExcludeKeyPatterns());
+            List<String> excludePaths = nullSafe(configuration.getExcludePathPatterns());
+
+            if (includeTags.isEmpty() && includePaths.isEmpty() && includeKeys.isEmpty()) {
+                return !checkFilters(functionSpec, excludeTags, excludePaths, excludeKeys);
+            } else {
+                return checkFilters(functionSpec, includeTags, includePaths, includeKeys)
+                    && !checkFilters(functionSpec, excludeTags, excludePaths, excludeKeys);
+            }
+        };
+    }
+
+    private boolean checkFilters(FunctionSpec functionSpec, List<String> tags, List<String> pathPatterns, List<String> keyPatterns) {
+        List<String> funcTags = nullSafe(functionSpec.getTags());
+        if (tags.stream().anyMatch(funcTags::contains)) {
+            return true;
+        }
+        if (pathPatterns.stream().anyMatch(it -> functionSpec.getPath().matches(it))) {
+            return true;
+        }
+        return keyPatterns.stream().anyMatch(it -> functionSpec.getKey().matches(it));
+    }
+
+    private <T> List<T> nullSafe(List<T> list) {
+        return list != null ? list : new ArrayList<>();
     }
 
 }

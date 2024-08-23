@@ -1,9 +1,12 @@
 package com.icthh.xm.ms.entity.service.swagger.model;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -15,26 +18,35 @@ public class SwaggerModel {
 
     private final String openapi = SWAGGER_VERSION;
     private SwaggerInfo info = new SwaggerInfo();
-    private List<ServerObject> servers;
-    private List<TagObject> tags;
+    private List<ServerObject> servers = new ArrayList<>();
+    private List<TagObject> tags = new ArrayList<>();
     private Map<String, Map<String, ApiMethod>> paths = new LinkedHashMap<>();
     private SwaggerComponents components = new SwaggerComponents();
+    @JsonInclude()
+    private List<Map<String, List<Object>>> security = new ArrayList<>();
+
+    {
+        security.add(Map.of("oAuth2Password", new ArrayList<>()));
+        security.add(Map.of("oAuth2ClientCredentials", new ArrayList<>()));
+    }
 
     @Data
     public static class ApiMethod {
         private String summary;
         private String description;
         private String operationId;
-        private List<String> tags;
-        private List<SwaggerParameter> parameters;
+        private List<String> tags = new ArrayList<>();
+        private List<SwaggerParameter> parameters = new ArrayList<>();
         private Object requestBody;
-        private Map<String, SwaggerResponse> responses;
+        private Map<String, SwaggerResponse> responses = new LinkedHashMap<>();
     }
 
     @Data
     public static class RequestBody {
         private Boolean required;
         private Object content;
+
+        public RequestBody() {}
 
         public RequestBody(Boolean required, BodyContent content) {
             this.content = content;
@@ -52,6 +64,8 @@ public class SwaggerModel {
     @AllArgsConstructor
     public static class ResponseBody {
         private BodyContent content;
+
+        public ResponseBody() {}
     }
 
     @Data
@@ -59,13 +73,41 @@ public class SwaggerModel {
     public static class BodyContent {
         @JsonProperty("application/json")
         private SwaggerContent applicationJson;
+
+        public BodyContent() {}
     }
 
     @Data
     public static class SwaggerComponents {
         private Map<String, Object> responses = new LinkedHashMap<>();
         private Map<String, Object> schemas = new LinkedHashMap<>();
-        private Object securitySchemes;
+        private Map<String, SecuritySchemes> securitySchemes = new LinkedHashMap<>();
+
+        {
+            securitySchemes.put("oAuth2Password", new SecuritySchemes("password"));
+            securitySchemes.put("oAuth2ClientCredentials", new SecuritySchemes("clientCredentials"));
+        }
+
+    }
+
+    @Data
+    public static class SecuritySchemes {
+        private String type = "oauth2";
+        private Map<String, SecurityFlow> flows = new HashMap<>();
+
+        public SecuritySchemes() {}
+
+        public SecuritySchemes(String flow) {
+            flows.put(flow, new SecurityFlow());
+        }
+    }
+
+    @Data
+    public static class SecurityFlow {
+        private String tokenUrl = "/uaa/oauth/token";
+        private Map<String, String> scopes = new HashMap<>() {{
+            put("openapi", "Default client scope");
+        }};
     }
 
     @Data

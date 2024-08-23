@@ -5,6 +5,7 @@ import com.icthh.xm.commons.logging.aop.IgnoreLogginAspect;
 import com.icthh.xm.commons.permission.annotation.PrivilegeDescription;
 import com.icthh.xm.ms.entity.domain.FunctionContext;
 import com.icthh.xm.ms.entity.service.FunctionService;
+import com.icthh.xm.ms.entity.service.swagger.DynamicSwaggerFunctionGenerator;
 import com.icthh.xm.ms.entity.web.rest.util.HeaderUtil;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -56,16 +57,27 @@ public class FunctionResource {
     private static final String UPLOAD = "/upload";
 
     private final FunctionService functionService;
+    private final DynamicSwaggerFunctionGenerator functionDocService;
 
     private FunctionResource self;
 
-    public FunctionResource(@Qualifier("functionService") FunctionService functionService) {
+    public FunctionResource(@Qualifier("functionService") FunctionService functionService,
+                            DynamicSwaggerFunctionGenerator functionDocService) {
         this.functionService = functionService;
+        this.functionDocService = functionDocService;
     }
 
     @Autowired
     public void setSelf(@Lazy FunctionResource self) {
         this.self = self;
+    }
+
+    @Timed
+    @GetMapping("/functions/api-docs")
+    @PrivilegeDescription("Privilege to get openapi documentation for functions api")
+    public ResponseEntity<Object> callGetFunction(HttpServletRequest request) {
+        String url = "https://" + request.getHeader("x-domain") + ":" + request.getHeader("x-port");
+        return ResponseEntity.ok().body(functionDocService.generateSwagger(url));
     }
 
     @Timed
