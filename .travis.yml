@@ -12,11 +12,11 @@ addons:
     - main
   apt:
       packages:
-          - docker-ce
+          - docker-engine
 
 script:
   - sudo apt update -y
-  - sudo apt install --only-upgrade docker-ce -y
+  - sudo apt install --only-upgrade docker-engine -y
   - docker info
   - set -e
 #  - "./gradlew --no-daemon --refresh-dependencies clean check test" todo tmp
