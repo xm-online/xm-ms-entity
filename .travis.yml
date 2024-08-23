@@ -15,9 +15,11 @@ addons:
           - docker-ce
 
 script:
+  - sudo apt update -y
+  - sudo apt install --only-upgrade docker-ce -y
+  - docker info
   - set -e
 #  - "./gradlew --no-daemon --refresh-dependencies clean check test" todo tmp
-  - docker --version
   - "./gradlew -x test -Pprod --no-daemon bootWar"
   - docker login -u $DOCKER_USER -p $DOCKER_PASS
   - export DOCKER_REPO=$(echo  -n $TRAVIS_REPO_SLUG | sed -e 's/^xm-online\//xmonline\//g')
