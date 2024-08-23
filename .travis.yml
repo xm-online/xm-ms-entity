@@ -10,9 +10,9 @@ addons:
     branches:
     - master
     - main
-  apt:
-    update: true
 before_install:
+    - sudo apt update -y
+    - sudo apt upgrade -y
     - sudo apt install --only-upgrade docker-ce -y
     - docker info
 
