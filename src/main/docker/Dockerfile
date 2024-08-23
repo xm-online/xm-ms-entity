@@ -1,4 +1,4 @@
-FROM eclipse-temurin:21-alpine
+FROM eclipse-temurin:21-jre-jammy
 
 ENTRYPOINT ["/entrypoint.sh"]
 
