@@ -4,7 +4,7 @@ ENTRYPOINT ["/entrypoint.sh"]
 
 ADD src/main/docker/entrypoint.sh /
 
-RUN chmod 755 entrypoint.sh
+RUN chmod 755 entrypoint.sh && apt-get install -y zip unzip
 
 ENV SPRING_OUTPUT_ANSI_ENABLED=ALWAYS \
     JHIPSTER_SLEEP=0 \
