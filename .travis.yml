@@ -11,13 +11,14 @@ addons:
     - master
     - main
   apt:
-      packages:
-          - docker-engine
+    packages:
+      - docker-ce
+before_install:
+    - sudo apt update -y
+    - sudo apt install --only-upgrade docker-ce -y
+    - docker info
 
 script:
-  - sudo apt update -y
-  - sudo apt install --only-upgrade docker-engine -y
-  - docker info
   - set -e
 #  - "./gradlew --no-daemon --refresh-dependencies clean check test" todo tmp
   - "./gradlew -x test -Pprod --no-daemon bootWar"
