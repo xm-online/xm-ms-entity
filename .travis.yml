@@ -11,10 +11,8 @@ addons:
     - master
     - main
   apt:
-    packages:
-      - docker-ce
+    update: true
 before_install:
-    - sudo apt update -y
     - sudo apt install --only-upgrade docker-ce -y
     - docker info
 
