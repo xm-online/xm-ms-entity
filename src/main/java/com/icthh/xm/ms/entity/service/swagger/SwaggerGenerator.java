@@ -78,7 +78,12 @@ public class SwaggerGenerator {
             methods.put(httpMethod.toLowerCase(), apiMethod);
         });
 
-        paths.put(pathPrefix + swaggerFunction.getPath(), methods);
+        String path = pathPrefix + swaggerFunction.getPath();
+        if (paths.containsKey(path)) {
+            paths.get(path).putAll(methods);
+        } else {
+            paths.put(path, methods);
+        }
     }
 
     private ApiMethod generateApiMethod(Map<String, SwaggerParameter> pathPrefixParams,

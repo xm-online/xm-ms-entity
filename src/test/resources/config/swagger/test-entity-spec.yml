@@ -6,6 +6,7 @@ types:
       isAbstract: false
       functions:
           - key: folder/v1/TestName
+            tags: ["external"]
             name: {"uk": "Test Name"}
             actionName: {en: "Test Name From Action"}
             inputSpec: |
@@ -17,8 +18,19 @@ types:
                     }
                   }
                 }
+          - key: check/path/TestNamePut
+            tags: ["test", "duplicatePath"]
+            path: /check/different/key/with/same/path
+            httpMethods: ["PUT"]
+            onlyData: true
+          - key: check/path/TestNameDelete
+            tags: ["test", "duplicatePath", "duplicatePathExclude"]
+            path: /check/different/key/with/same/path
+            httpMethods: ["DELETE"]
+            onlyData: true
           - key: NameFromKeyOnlyDataInReturn
             httpMethods: ["POST_URLENCODED", "DELETE"]
+            tags: ["test", "external"]
             onlyData: true
             inputSpec: |
                 {
@@ -45,6 +57,7 @@ types:
                   }
                 }
           - key: TestFunctionGeneration
+            tags: ["test", "internal"]
             name: {en: "TestFunctionGeneration name"}
             actionName: {en: "ActionName"}
             path: /relative/path/{pathVariable}/other/{otherPathVariable}/{notDefinedVariable}/etc

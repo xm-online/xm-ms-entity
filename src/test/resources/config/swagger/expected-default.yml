@@ -100,11 +100,59 @@ paths:
                                     data:
                                         type: "object"
                                         additionalProperties: true
+    /entity/api/functions/check/different/key/with/same/path:
+        delete:
+            summary: "check/path/TestNameDelete"
+            description: "check/path/TestNameDelete"
+            operationId: "checkPathTestNameDelete"
+            tags:
+                - "test"
+                - "duplicatePath"
+            responses:
+                400:
+                    $ref: "#/components/responses/400"
+                401:
+                    $ref: "#/components/responses/401"
+                403:
+                    $ref: "#/components/responses/403"
+                404:
+                    $ref: "#/components/responses/404"
+                500:
+                    $ref: "#/components/responses/500"
+                200:
+                    description: "Successful operation"
+                    content:
+                        application/json: {}
+        put:
+            summary: "check/path/TestNamePut"
+            description: "check/path/TestNamePut"
+            operationId: "checkPathTestNamePut"
+            tags:
+                - "test"
+                - "duplicatePath"
+            responses:
+                400:
+                    $ref: "#/components/responses/400"
+                401:
+                    $ref: "#/components/responses/401"
+                403:
+                    $ref: "#/components/responses/403"
+                404:
+                    $ref: "#/components/responses/404"
+                500:
+                    $ref: "#/components/responses/500"
+                200:
+                    description: "Successful operation"
+                    content:
+                        application/json: {}
     /entity/api/functions/NameFromKeyOnlyDataInReturn:
         post:
             summary: "NameFromKeyOnlyDataInReturn"
             description: "NameFromKeyOnlyDataInReturn"
             operationId: "nameFromKeyOnlyDataInReturnPostUrlencoded"
+            tags:
+                - "test"
+                - "external"
             requestBody:
                 required: true
                 content:
@@ -142,6 +190,9 @@ paths:
             summary: "NameFromKeyOnlyDataInReturn"
             description: "NameFromKeyOnlyDataInReturn"
             operationId: "nameFromKeyOnlyDataInReturnDelete"
+            tags:
+                - "test"
+                - "external"
             parameters:
                 - in: "query"
                   name: "phone"
@@ -180,6 +231,9 @@ paths:
             summary: "TestFunctionGeneration name"
             description: "TestFunctionGeneration"
             operationId: "testFunctionGenerationPost"
+            tags:
+                - "test"
+                - "internal"
             parameters:
                 - in: "path"
                   name: "pathVariable"
@@ -268,6 +322,9 @@ paths:
             summary: "TestFunctionGeneration name"
             description: "TestFunctionGeneration"
             operationId: "testFunctionGenerationGet"
+            tags:
+                - "test"
+                - "internal"
             parameters:
                 - in: "path"
                   name: "pathVariable"
@@ -349,6 +406,9 @@ paths:
             summary: "TestFunctionGeneration name"
             description: "TestFunctionGeneration"
             operationId: "testFunctionGenerationDelete"
+            tags:
+                - "test"
+                - "internal"
             parameters:
                 - in: "path"
                   name: "pathVariable"
@@ -430,6 +490,9 @@ paths:
             summary: "TestFunctionGeneration name"
             description: "TestFunctionGeneration"
             operationId: "testFunctionGenerationPut"
+            tags:
+                - "test"
+                - "internal"
             parameters:
                 - in: "path"
                   name: "pathVariable"
@@ -567,4 +630,3 @@ components:
 security:
     - oAuth2Password: []
     - oAuth2ClientCredentials: []
-
