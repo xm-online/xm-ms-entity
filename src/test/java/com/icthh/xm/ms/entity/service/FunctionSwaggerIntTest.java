@@ -16,12 +16,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.util.TestPropertyValues;
-import org.springframework.context.ApplicationContextInitializer;
-import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.core.io.ClassPathResource;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.ContextConfiguration;
 
 import java.io.InputStream;
 import java.util.HashSet;
@@ -37,7 +32,6 @@ import static com.fasterxml.jackson.databind.SerializationFeature.ORDER_MAP_ENTR
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.assertEquals;
 
-@ContextConfiguration(initializers = {FunctionSwaggerIntTest.Initializer.class})
 public class FunctionSwaggerIntTest extends AbstractSpringBootTest {
 
     @Autowired
@@ -50,17 +44,6 @@ public class FunctionSwaggerIntTest extends AbstractSpringBootTest {
     private JsonConfigurationListener jsonConfigurationListener;
     @Autowired
     private TenantContextHolder tenantContextHolder;
-
-    static class Initializer implements ApplicationContextInitializer<ConfigurableApplicationContext> {
-
-        public void initialize(ConfigurableApplicationContext configurableApplicationContext) {
-            TestPropertyValues.of(
-            "application.specification-folder-path-pattern=/config/tenants/{tenantName}/entity/xmentityspec/*.yml",
-            "application.specification-path-pattern=/config/tenants/{tenantName}/entity/xmentityspec.yml",
-            "application.specification-name=xmentityspec.yml"
-            ).applyTo(configurableApplicationContext.getEnvironment());
-        }
-    }
 
     @Before
     public void before() {
@@ -78,7 +61,7 @@ public class FunctionSwaggerIntTest extends AbstractSpringBootTest {
             null);
 
         initConfig(Map.of(
-            "/config/tenants/TEST_TENANT/entity/xmentityspec.yml", loadFile("config/swagger/test-entity-spec.yml")
+            "/config/tenants/TEST_TENANT/entity/xmentityspec/spec.yml", loadFile("config/swagger/test-entity-spec.yml")
         ));
 
         var swagger = dynamicSwaggerFunctionGenerator.generateSwagger("https://xm.domain.com:8080");
@@ -90,7 +73,7 @@ public class FunctionSwaggerIntTest extends AbstractSpringBootTest {
     @Test
     public void testOverrideConfiguration() {
         initConfig(Map.of(
-            "/config/tenants/TEST_TENANT/entity/xmentityspec.yml", loadFile("config/swagger/test-entity-spec.yml")
+            "/config/tenants/TEST_TENANT/entity/xmentityspec/spec.yml", loadFile("config/swagger/test-entity-spec.yml")
         ));
 
         dynamicSwaggerRefreshableConfiguration.onRefresh("/config/tenants/TEST_TENANT/entity/swagger.yml",
@@ -112,7 +95,7 @@ public class FunctionSwaggerIntTest extends AbstractSpringBootTest {
     @Test
     public void testExcludeInclude() {
         initConfig(Map.of(
-            "/config/tenants/TEST_TENANT/entity/xmentityspec.yml", loadFile("config/swagger/test-entity-spec.yml")
+            "/config/tenants/TEST_TENANT/entity/xmentityspec/spec.yml", loadFile("config/swagger/test-entity-spec.yml")
         ));
 
         {

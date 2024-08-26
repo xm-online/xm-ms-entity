@@ -137,6 +137,8 @@ test {
         println '!!! ATTENTION: start execution of non-categorized tests. it may impact test performance !!!'
     }
 
+    jvmArgs '-XX:+HeapDumpOnOutOfMemoryError'
+
     exclude '**/CucumberTest*'
     dependsOn 'clean', 'runCategorizedTests'
     classes.mustRunAfter 'clean'
