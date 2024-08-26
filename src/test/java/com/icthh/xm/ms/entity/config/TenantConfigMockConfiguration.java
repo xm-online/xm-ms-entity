@@ -25,6 +25,7 @@ import lombok.SneakyThrows;
 import org.apache.commons.io.IOUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
@@ -48,11 +49,11 @@ public class TenantConfigMockConfiguration {
         tenants.add("TEST");
         tenants.add("RESINTTEST");
         tenants.add("SPECIFICATIONS");
+        tenants.add("TEST_TENANT");
         tenants.addAll(lepTestTenants);
     }
 
     @Bean
-    @Profile("!test-entity-spec")
     public XmEntitySpecService xmEntitySpecService(ApplicationProperties applicationProperties,
                                                    TenantContextHolder tenantContextHolder,
                                                    XmEntitySpecCustomizer xmEntitySpecCustomizer,

@@ -252,7 +252,8 @@ public class FunctionResource {
     })
     public ModelAndView callPostFormMvcAnonymousFunction(@PathVariable("functionKey") String functionKey,
                                                          @RequestParam(required = false) Map<String, Object> functionInput) {
-        return callMvcAnonymousFunction(functionKey, functionInput);
+        FunctionContext result = functionService.executeAnonymous(functionKey, functionInput, POST_URLENCODED);
+        return getMvcResult(result);
     }
 
     @IgnoreLogginAspect
@@ -278,7 +279,7 @@ public class FunctionResource {
     })
     public ResponseEntity<Object> callPostFormFunction(HttpServletRequest request,
                                                        @RequestParam(required = false) Map<String, Object> functionInput) {
-        return self.callPostFunction(getFunctionKey(request), functionInput);
+        return self.callPostFormFunction(getFunctionKey(request), functionInput);
     }
 
     @IgnoreLogginAspect
@@ -372,7 +373,7 @@ public class FunctionResource {
     })
     public ResponseEntity<Object> callPostFormAnonymousFunction(HttpServletRequest request,
                                                                 @RequestParam(required = false) Map<String, Object> functionInput) {
-        return self.callPostAnonymousFunction(getFunctionKey(request), functionInput);
+        return self.callPostFormAnonymousFunction(getFunctionKey(request), functionInput);
     }
 
     @Timed
