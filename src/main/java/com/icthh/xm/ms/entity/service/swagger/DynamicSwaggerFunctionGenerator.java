@@ -48,6 +48,7 @@ public class DynamicSwaggerFunctionGenerator {
         SwaggerGenerator swaggerGenerator = new SwaggerGenerator(baseUrl, configuration);
         List<FunctionSpec> functions = specs.stream()
             .map(TypeSpec::getFunctions)
+            .filter(Objects::nonNull)
             .flatMap(Collection::stream)
             .filter(Objects::nonNull)
             .filter(byFilters(configuration))
