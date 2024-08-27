@@ -5,6 +5,22 @@ types:
       isApp: false
       isAbstract: false
       functions:
+          - key: job/COMPLETE-JOB-REQUIREMENT
+            name:
+                en: Complete job requirement
+            actionName:
+                en: Complete job requirement
+            inputSpec: |
+                {
+                  "jobId": { "type": "number" },
+                  "requirementIndex": { "type": "number" },
+                  "socialNetworkIds": {
+                    "type": "array",
+                    "items": { "type": "number" }
+                  }
+                }
+            allowedStateKeys:
+                - NEVER
           - key: folder/v1/TestName
             tags: ["external"]
             name: {"uk": "Test Name"}

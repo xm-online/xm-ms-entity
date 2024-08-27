@@ -70,21 +70,30 @@ public class JsonSchemaToSwaggerSchemaConverter {
             return instance.nullNode();
         }
 
-        JsonNode json = readJson(jsonSchema);
-        if (!json.isObject()) {
+        JsonNode inputJson = readJson(jsonSchema);
+        if (!inputJson.isObject()) {
             throw new IllegalArgumentException("Json schema should be an object");
         }
 
+        ObjectNode json = (ObjectNode) inputJson;
         if (!json.has("type") && !json.has("properties")) {
+            removeEmptyDefinition(json);
             ObjectNode object = object("type", instance.textNode("object"));
             object.set("properties", json);
             json = object;
         }
         if (json.has("properties") && !json.has("type")) {
-            ((ObjectNode) json).put("type", "object");
+            removeEmptyDefinition(json);
+            json.put("type", "object");
         }
-        transformToSwaggerJson(typeName, (ObjectNode) json, definitions, originalDefinitions, instance.objectNode());
+        transformToSwaggerJson(typeName, json, definitions, originalDefinitions, instance.objectNode());
         return json;
+    }
+
+    private static void removeEmptyDefinition(ObjectNode json) {
+        if (json.has("xmEntityDefinition") && json.get("xmEntityDefinition").isObject() && json.get("xmEntityDefinition").isEmpty()) {
+            json.remove("xmEntityDefinition");
+        }
     }
 
     private void transformToSwaggerJson(String typeName, ObjectNode json,
