@@ -97,6 +97,9 @@ public class SwaggerGenerator {
         operation.setDescription(swaggerFunction.getDescription());
         operation.setTags(swaggerFunction.getTags());
         buildResponse(swaggerFunction, operation, httpMethod);
+        if (TRUE.equals(swaggerFunction.getAnonymous())) {
+            operation.setSecurity(List.of());
+        }
 
         return operation;
     }

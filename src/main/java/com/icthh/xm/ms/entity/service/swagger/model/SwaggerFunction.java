@@ -29,5 +29,6 @@ public class SwaggerFunction {
      */
     private String customBinaryDataType;
     private Boolean onlyData;
+    private Boolean anonymous;
 
 }

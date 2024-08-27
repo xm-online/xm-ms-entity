@@ -83,7 +83,8 @@ public class DynamicSwaggerFunctionGenerator {
             tags,
             functionSpec.getHttpMethods(),
             functionSpec.getBinaryDataType(),
-            functionSpec.getOnlyData()
+            functionSpec.getOnlyData(),
+            functionSpec.getAnonymous()
         );
         swaggerGenerator.generateFunction(prefix, pathPrefixParams, swaggerFunction);
     }

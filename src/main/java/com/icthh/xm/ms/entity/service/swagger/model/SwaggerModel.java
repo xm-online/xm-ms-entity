@@ -11,6 +11,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
+
 @Data
 public class SwaggerModel {
 
@@ -39,6 +41,8 @@ public class SwaggerModel {
         private List<SwaggerParameter> parameters = new ArrayList<>();
         private Object requestBody;
         private Map<String, SwaggerResponse> responses = new LinkedHashMap<>();
+        @JsonInclude(NON_NULL)
+        private List<Object> security;
     }
 
     @Data
