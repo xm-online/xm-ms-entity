@@ -77,11 +77,15 @@ public class FunctionServiceImpl implements FunctionService {
 
         // execute function
         return callLepExecutor(functionSpec.getTxType(), () -> {
-            var lepHttpMethod = POST_URLENCODED.equals(httpMethod) ? "POST" : httpMethod;
+            var lepHttpMethod = convertToCanonicalHttpMethod(httpMethod);
             Map<String, Object> data = functionExecutorService.execute(functionSpec.getKey(), vInput, lepHttpMethod);
             return processFunctionResult(functionKey, data, functionSpec);
         });
 
+    }
+
+    private static String convertToCanonicalHttpMethod(String httpMethod) {
+        return POST_URLENCODED.equals(httpMethod) ? "POST" : httpMethod;
     }
 
     /**
@@ -134,7 +138,7 @@ public class FunctionServiceImpl implements FunctionService {
         enrichInputFromPathParams(functionKey, vInput, functionSpec);
 
         return callLepExecutor(functionSpec.getTxType(), () -> {
-            var lepHttpMethod = POST_URLENCODED.equals(httpMethod) ? "POST" : httpMethod;
+            var lepHttpMethod = convertToCanonicalHttpMethod(httpMethod);
             Map<String, Object> data = functionExecutorService.executeAnonymousFunction(functionSpec.getKey(), vInput, lepHttpMethod);
             return processFunctionResult(functionKey, data, functionSpec);
         });
