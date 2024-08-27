@@ -300,12 +300,26 @@ public class XmEntitySpecService implements RefreshableConfiguration {
         Map<String, FunctionSpec> functions = xmEntitySpecContextService.functionsByTenant(tenantKey);
         return Optional.of(functions)
             .map(fs -> fs.get(functionKey))
+            .filter(fs -> filterAndLogByHttpMethod(httpMethod, fs))
                 .or(() -> xmEntitySpecContextService.functionsByTenantOrdered(tenantKey).stream()
                         .filter(fs -> fs.getPath() != null)
                         .filter(fs -> matcher.match(fs.getPath(), functionKey))
-                        .filter(fs -> isEmpty(fs.getHttpMethods()) || fs.getHttpMethods().contains(httpMethod))
+                        .filter(fs -> filterByHttpMethod(httpMethod, fs))
                         .findFirst());
 
+    }
+
+    private static boolean filterAndLogByHttpMethod(String httpMethod, FunctionSpec fs) {
+        if (filterByHttpMethod(httpMethod, fs)) {
+            return true;
+        } else {
+            log.error("Function {} not found for http method {}", fs.getKey(), httpMethod);
+            return false;
+        }
+    }
+
+    private static boolean filterByHttpMethod(String httpMethod, FunctionSpec fs) {
+        return isEmpty(fs.getHttpMethods()) || fs.getHttpMethods().contains(httpMethod);
     }
 
     @IgnoreLogginAspect
