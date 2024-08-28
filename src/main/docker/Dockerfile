@@ -1,4 +1,4 @@
-FROM sapmachine:21
+FROM sapmachine:21-jre-ubuntu-jammy
 
 ENTRYPOINT ["/entrypoint.sh"]
 
