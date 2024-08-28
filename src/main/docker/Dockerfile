@@ -1,4 +1,4 @@
-FROM ubuntu:22.04
+FROM ibm-semeru-runtimes:open-21.0.4_7-jre-jammy
 
 ENTRYPOINT ["/entrypoint.sh"]
 
