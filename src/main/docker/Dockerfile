@@ -1,9 +1,10 @@
-FROM adoptopenjdk:11-jre-hotspot
+FROM eclipse-temurin:21-jre-jammy
 
 ENTRYPOINT ["/entrypoint.sh"]
 
 ADD src/main/docker/entrypoint.sh /
 
+RUN add-apt-repository ppa:pascallj/docker.io-clone3
 RUN chmod 755 entrypoint.sh && apt-get update && apt-get install -y locales locales-all zip unzip curl && apt-get clean
 
 ENV SPRING_OUTPUT_ANSI_ENABLED=ALWAYS \
