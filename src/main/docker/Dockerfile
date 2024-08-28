@@ -1,4 +1,4 @@
-FROM amazoncorretto:21.0.4-alpine
+FROM eclipse-temurin:21.0.4_7-jre
 
 ENTRYPOINT ["/entrypoint.sh"]
 
