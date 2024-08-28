@@ -1,10 +1,13 @@
-FROM eclipse-temurin:21.0.2_13-jdk-jammy
+FROM eclipse-temurin:21.0.1_12-jre-jammy
 
 #ENTRYPOINT ["/entrypoint.sh"]
 #
 #ADD src/main/docker/entrypoint.sh /
-
-RUN apt-get update && apt-get install -y unzip && apt install -y graphviz && rm -rf /var/lib/apt/lists/*
+#
+#RUN chmod 755 entrypoint.sh
+RUN apt-get update
+RUN apt-get install -y locales locales-all zip unzip curl
+RUN apt-get clean
 
 ENV SPRING_OUTPUT_ANSI_ENABLED=ALWAYS \
     JHIPSTER_SLEEP=0 \
