@@ -1,11 +1,11 @@
-FROM eclipse-temurin:21.0.1_12-jre-jammy
+FROM bellsoft/liberica-openjre-alpine:21
 
 ENTRYPOINT ["/entrypoint.sh"]
 
 ADD src/main/docker/entrypoint.sh /
 
 RUN chmod 755 entrypoint.sh
-RUN echo 'DPkg::Post-Invoke {"true";};' > /etc/apt/apt.conf.d/no-cache-clean && apt-get update
+RUN apt-get update
 RUN apt-get install -y locales locales-all zip unzip curl
 RUN apt-get clean
 
