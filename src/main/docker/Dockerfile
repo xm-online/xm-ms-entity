@@ -1,11 +1,11 @@
-FROM bellsoft/liberica-openjre-alpine:21
+FROM tomcat:jdk21-openjdk-slim
 
 ENTRYPOINT ["/entrypoint.sh"]
 
 ADD src/main/docker/entrypoint.sh /
 
 RUN chmod 755 entrypoint.sh
-RUN apt-get update
+RUN apt-get update --security-opt seccomp=unconfined
 RUN apt-get install -y locales locales-all zip unzip curl
 RUN apt-get clean
 
