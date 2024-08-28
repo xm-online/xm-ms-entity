@@ -1,6 +1,5 @@
 language: java
 jdk:
-    - oraclejdk11
     - oraclejdk21
 install: true
 addons:
