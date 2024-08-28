@@ -1,4 +1,4 @@
-FROM ibm-semeru-runtimes:open-21.0.4_7-jre-jammy
+FROM ibm-semeru-runtimes:open-21-jre-jammy
 
 ENTRYPOINT ["/entrypoint.sh"]
 
