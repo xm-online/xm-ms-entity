@@ -1,4 +1,4 @@
-FROM azul/zulu-openjdk:21-jre
+FROM adoptopenjdk:11-jre-hotspot
 
 ENTRYPOINT ["/entrypoint.sh"]
 
