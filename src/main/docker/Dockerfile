@@ -1,10 +1,9 @@
-FROM eclipse-temurin:21-jre-jammy
+FROM amazoncorretto:21.0.4-alpine
 
 ENTRYPOINT ["/entrypoint.sh"]
 
 ADD src/main/docker/entrypoint.sh /
 
-RUN add-apt-repository ppa:pascallj/docker.io-clone3
 RUN chmod 755 entrypoint.sh && apt-get update && apt-get install -y locales locales-all zip unzip curl && apt-get clean
 
 ENV SPRING_OUTPUT_ANSI_ENABLED=ALWAYS \
