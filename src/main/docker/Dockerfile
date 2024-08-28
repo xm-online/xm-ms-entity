@@ -5,7 +5,7 @@ ENTRYPOINT ["/entrypoint.sh"]
 ADD src/main/docker/entrypoint.sh /
 
 RUN chmod 755 entrypoint.sh
-RUN apt-get update && apt-get install -y --no-install-recommends && rm -rf /var/lib/apt/lists/* /var/cache/apt/*
+RUN echo 'DPkg::Post-Invoke {"true";};' > /etc/apt/apt.conf.d/no-cache-clean && apt-get update
 RUN apt-get install -y locales locales-all zip unzip curl
 RUN apt-get clean
 
