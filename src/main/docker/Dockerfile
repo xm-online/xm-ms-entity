@@ -1,4 +1,4 @@
-FROM ibm-semeru-runtimes:open-21-jre
+FROM sapmachine:21.0.4-jre-ubuntu
 
 ENTRYPOINT ["/entrypoint.sh"]
 
