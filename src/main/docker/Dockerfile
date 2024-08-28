@@ -1,13 +1,13 @@
-FROM adoptopenjdk:11-jre-hotspot
+FROM eclipse-temurin:21.0.1_12-jre-jammy
 
 ENTRYPOINT ["/entrypoint.sh"]
 
 ADD src/main/docker/entrypoint.sh /
 
 RUN chmod 755 entrypoint.sh
-RUN apt update
-RUN install -y locales locales-all zip unzip curl
-RUN apt clean
+RUN apt-get update
+RUN apt-get install -y locales locales-all zip unzip curl \
+RUN apt-get clean
 
 ENV SPRING_OUTPUT_ANSI_ENABLED=ALWAYS \
     JHIPSTER_SLEEP=0 \
