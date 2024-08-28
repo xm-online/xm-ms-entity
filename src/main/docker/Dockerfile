@@ -1,8 +1,8 @@
-FROM eclipse-temurin:21.0.1_12-jre-jammy
+FROM eclipse-temurin:21.0.2_13-jdk-jammy
 
-ENTRYPOINT ["/entrypoint.sh"]
-
-ADD src/main/docker/entrypoint.sh /
+#ENTRYPOINT ["/entrypoint.sh"]
+#
+#ADD src/main/docker/entrypoint.sh /
 
 RUN apt-get update && apt-get install -y unzip && apt install -y graphviz && rm -rf /var/lib/apt/lists/*
 
