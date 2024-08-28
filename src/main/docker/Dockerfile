@@ -1,4 +1,4 @@
-FROM eclipse-temurin:21.0.4_7-jre
+FROM ubuntu:22.04
 
 ENTRYPOINT ["/entrypoint.sh"]
 
