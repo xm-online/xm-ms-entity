@@ -1,4 +1,4 @@
-FROM sapmachine:21-jre-ubuntu-jammy
+FROM azul/zulu-openjdk:21-jre
 
 ENTRYPOINT ["/entrypoint.sh"]
 
