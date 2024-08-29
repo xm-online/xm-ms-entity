@@ -53,6 +53,7 @@ public class MicroserviceSecurityConfiguration extends ResourceServerConfigurerA
             .antMatchers("/api/profile-info").permitAll()
             .antMatchers("/api/xm-entities/registration").permitAll()
             .antMatchers("/api/functions/anonymous/**").permitAll()
+            .antMatchers("/api/functions/api-docs").permitAll()
             .antMatchers("/api/xm-entities/registration/activate/*").permitAll()
             .antMatchers("/api/**").authenticated()
             .antMatchers("/management/health").permitAll()

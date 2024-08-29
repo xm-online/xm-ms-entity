@@ -5,6 +5,7 @@ import com.icthh.xm.commons.i18n.spring.service.LocalizationMessageService;
 import com.icthh.xm.ms.entity.AbstractWebMvcTest;
 import com.icthh.xm.ms.entity.domain.FunctionContext;
 import com.icthh.xm.ms.entity.service.FunctionService;
+import com.icthh.xm.ms.entity.service.swagger.DynamicSwaggerFunctionGenerator;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
@@ -54,6 +55,9 @@ public class FunctionResourceMvcIntTest extends AbstractWebMvcTest {
     @MockBean
     private LocalizationMessageService localizationMessageService;
 
+    @MockBean
+    private DynamicSwaggerFunctionGenerator dynamicSwaggerFunctionGenerator;
+
     @Before
     public void setup() {
         // Setup MockMVC to use our Spring Configuration
@@ -89,7 +93,7 @@ public class FunctionResourceMvcIntTest extends AbstractWebMvcTest {
     @Test
     @SneakyThrows
     public void testCallPostAnonymousFunctionWithUrlEncodedParams() {
-        when(functionService.executeAnonymous("SOME-ANONYMOUS-FUNCTION_KEY.TROLOLO", of("var1", "val1", "var2", "val2"), "POST"))
+        when(functionService.executeAnonymous("SOME-ANONYMOUS-FUNCTION_KEY.TROLOLO", of("var1", "val1", "var2", "val2"), "POST_URLENCODED"))
             .thenReturn(new FunctionContext().data(of("test", "result")));
         mockMvc.perform(post("/api/functions/anonymous/SOME-ANONYMOUS-FUNCTION_KEY.TROLOLO")
                 .contentType(MediaType.APPLICATION_FORM_URLENCODED)
@@ -99,13 +103,13 @@ public class FunctionResourceMvcIntTest extends AbstractWebMvcTest {
             .andDo(print())
             .andExpect(jsonPath("$.data.test").value("result"))
             .andExpect(status().isCreated());
-        verify(functionService).executeAnonymous(eq("SOME-ANONYMOUS-FUNCTION_KEY.TROLOLO"), eq(of("var1", "val1", "var2", "val2")), eq("POST"));
+        verify(functionService).executeAnonymous(eq("SOME-ANONYMOUS-FUNCTION_KEY.TROLOLO"), eq(of("var1", "val1", "var2", "val2")), eq("POST_URLENCODED"));
     }
 
     @Test
     @SneakyThrows
     public void testCallPostAnonymousFunctionWithPathWithUrlEncodedParams() {
-        when(functionService.executeAnonymous("SOME-ANONYMOUS-FUNCTION_KEY/TROLOLO", of("var1", "val1", "var2", "val2"), "POST"))
+        when(functionService.executeAnonymous("SOME-ANONYMOUS-FUNCTION_KEY/TROLOLO", of("var1", "val1", "var2", "val2"), "POST_URLENCODED"))
             .thenReturn(new FunctionContext().data(of("test", "result")));
         mockMvc.perform(post("/api/functions/anonymous/SOME-ANONYMOUS-FUNCTION_KEY/TROLOLO")
                 .contentType(MediaType.APPLICATION_FORM_URLENCODED)
@@ -115,13 +119,13 @@ public class FunctionResourceMvcIntTest extends AbstractWebMvcTest {
             .andDo(print())
             .andExpect(jsonPath("$.data.test").value("result"))
             .andExpect(status().isCreated());
-        verify(functionService).executeAnonymous(eq("SOME-ANONYMOUS-FUNCTION_KEY/TROLOLO"), eq(of("var1", "val1", "var2", "val2")), eq("POST"));
+        verify(functionService).executeAnonymous(eq("SOME-ANONYMOUS-FUNCTION_KEY/TROLOLO"), eq(of("var1", "val1", "var2", "val2")), eq("POST_URLENCODED"));
     }
 
     @Test
     @SneakyThrows
     public void testCallPostFunctionWithUrlEncodedParams() {
-        when(functionService.execute("SOME-FUNCTION_KEY.TROLOLO", of("var1", "val1", "var2", "val2"), "POST"))
+        when(functionService.execute("SOME-FUNCTION_KEY.TROLOLO", of("var1", "val1", "var2", "val2"), "POST_URLENCODED"))
             .thenReturn(new FunctionContext().data(of("test", "result")));
         mockMvc.perform(post("/api/functions/SOME-FUNCTION_KEY.TROLOLO")
                 .contentType(MediaType.APPLICATION_FORM_URLENCODED)
@@ -131,13 +135,13 @@ public class FunctionResourceMvcIntTest extends AbstractWebMvcTest {
             .andDo(print())
             .andExpect(jsonPath("$.data.test").value("result"))
             .andExpect(status().isCreated());
-        verify(functionService).execute(eq("SOME-FUNCTION_KEY.TROLOLO"), eq(of("var1", "val1", "var2", "val2")), eq("POST"));
+        verify(functionService).execute(eq("SOME-FUNCTION_KEY.TROLOLO"), eq(of("var1", "val1", "var2", "val2")), eq("POST_URLENCODED"));
     }
 
     @Test
     @SneakyThrows
     public void testCallMvcAnonymousPostFunctionWithUrlEncodedParams() {
-        when(functionService.executeAnonymous("SOME-ANONYMOUS-FUNCTION_KEY.TROLOLO", of("var1", "val1", "var2", "val2"), "POST"))
+        when(functionService.executeAnonymous("SOME-ANONYMOUS-FUNCTION_KEY.TROLOLO", of("var1", "val1", "var2", "val2"), "POST_URLENCODED"))
             .thenReturn(new FunctionContext().data( of(MVC_FUNC_RESULT, new ModelAndView("redirect:https://google.com"))));
         mockMvc.perform(post("/api/functions/anonymous/mvc/SOME-ANONYMOUS-FUNCTION_KEY.TROLOLO")
                 .contentType(MediaType.APPLICATION_FORM_URLENCODED)
@@ -147,7 +151,7 @@ public class FunctionResourceMvcIntTest extends AbstractWebMvcTest {
             .andDo(print())
             .andExpect(header().string("Location", "https://google.com"))
             .andExpect(status().isFound());
-        verify(functionService).executeAnonymous(eq("SOME-ANONYMOUS-FUNCTION_KEY.TROLOLO"), eq(of("var1", "val1", "var2", "val2")), eq("POST"));
+        verify(functionService).executeAnonymous(eq("SOME-ANONYMOUS-FUNCTION_KEY.TROLOLO"), eq(of("var1", "val1", "var2", "val2")), eq("POST_URLENCODED"));
     }
 
     @Test

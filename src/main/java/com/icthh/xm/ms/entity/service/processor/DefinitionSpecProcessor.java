@@ -29,7 +29,7 @@ import static org.springframework.util.CollectionUtils.isEmpty;
 @Component
 public class DefinitionSpecProcessor extends SpecProcessor {
 
-    private static final String XM_ENTITY_DEFINITION = "xmEntityDefinition";
+    public static final String XM_ENTITY_DEFINITION = "xmEntityDefinition";
     private static final String REF_DEFINITION_PATTERN = "#/xmEntityDefinition/**/*";
     private static final String KEY_DEFINITION_TEMPLATE = "#/xmEntityDefinition/{definitionKey}/**";
     private final Map<String, Map<String, DefinitionSpec>> definitionsByTenant;
