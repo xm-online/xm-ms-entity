@@ -87,10 +87,10 @@ public class FunctionServiceImplTxControlUnitTest extends AbstractUnitTest {
         Map<String, Object> data = Maps.newHashMap();
         data.put("KEY1", "VAL1");
 
-        when(xmEntitySpecService.findFunction(functionName))
+        when(xmEntitySpecService.findFunction(functionName, "POST"))
             .thenReturn(Optional.of(spec));
 
-        when(functionExecutorService.execute(functionName, context, null))
+        when(functionExecutorService.execute(functionName, context, "POST"))
             .thenReturn(data);
 
         when(functionContextService.save(any())).thenReturn(new FunctionContext());
@@ -99,7 +99,7 @@ public class FunctionServiceImplTxControlUnitTest extends AbstractUnitTest {
         verify(functionTxControl, never()).executeInTransactionWithRoMode(any());
         verify(functionTxControl, never()).executeInTransaction(any());
 
-        FunctionContext fc = functionService.execute(functionName, context, null);
+        FunctionContext fc = functionService.execute(functionName, context, "POST");
         assertThat(fc.getTypeKey()).isEqualTo(functionName);
         assertThat(fc.getKey()).contains(functionName);
         assertThat(fc.getData().keySet()).containsSequence(data.keySet().toArray(new String[0]));
@@ -125,10 +125,10 @@ public class FunctionServiceImplTxControlUnitTest extends AbstractUnitTest {
         Map<String, Object> data = Maps.newHashMap();
         data.put("KEY1", "VAL1");
 
-        when(xmEntitySpecService.findFunction(functionName))
+        when(xmEntitySpecService.findFunction(functionName, "POST"))
             .thenReturn(Optional.of(spec));
 
-        when(functionExecutorService.execute(functionName, context, null))
+        when(functionExecutorService.execute(functionName, context, "POST"))
             .thenReturn(data);
 
         when(functionContextService.save(any())).thenReturn(new FunctionContext());
@@ -137,7 +137,7 @@ public class FunctionServiceImplTxControlUnitTest extends AbstractUnitTest {
         verify(functionTxControl, never()).executeInTransactionWithRoMode(any());
         verify(functionTxControl, never()).executeInTransaction(any());
 
-        FunctionContext fc = functionService.execute(functionName, context, null);
+        FunctionContext fc = functionService.execute(functionName, context, "POST");
         assertThat(fc.getTypeKey()).isEqualTo(functionName);
         assertThat(fc.getKey()).contains(functionName);
         assertThat(fc.getData().keySet()).containsSequence(data.keySet().toArray(new String[0]));
@@ -163,10 +163,10 @@ public class FunctionServiceImplTxControlUnitTest extends AbstractUnitTest {
         Map<String, Object> data = Maps.newHashMap();
         data.put("KEY1", "VAL1");
 
-        when(xmEntitySpecService.findFunction(functionName))
+        when(xmEntitySpecService.findFunction(functionName, "POST"))
             .thenReturn(Optional.of(spec));
 
-        when(functionExecutorService.execute(functionName, context, null))
+        when(functionExecutorService.execute(functionName, context, "POST"))
             .thenReturn(data);
 
         when(functionContextService.save(any())).thenReturn(new FunctionContext());
@@ -175,7 +175,7 @@ public class FunctionServiceImplTxControlUnitTest extends AbstractUnitTest {
         verify(functionTxControl, never()).executeInTransactionWithRoMode(any());
         verify(functionTxControl, never()).executeInTransaction(any());
 
-        FunctionContext fc = functionService.execute(functionName, context, null);
+        FunctionContext fc = functionService.execute(functionName, context, "POST");
         assertThat(fc.getTypeKey()).isEqualTo(functionName);
         assertThat(fc.getKey()).contains(functionName);
         assertThat(fc.getData().keySet()).containsSequence(data.keySet().toArray(new String[0]));

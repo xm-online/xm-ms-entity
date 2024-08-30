@@ -39,6 +39,7 @@ import static java.util.Collections.emptyList;
 @RequiredArgsConstructor
 public class FunctionServiceImpl implements FunctionService {
 
+    public static final String POST_URLENCODED = "POST_URLENCODED";
     //Function is not visible, but could be executed
     public static String NONE = "NONE";
 
@@ -68,7 +69,7 @@ public class FunctionServiceImpl implements FunctionService {
         dynamicPermissionCheckService.checkContextPermission(DynamicPermissionCheckService.FeatureContext.FUNCTION,
             FUNCTION_CALL_PRIV, functionKey);
 
-        FunctionSpec functionSpec = findFunctionSpec(functionKey, null);
+        FunctionSpec functionSpec = findFunctionSpec(functionKey, httpMethod);
 
         validateFunctionInput(functionSpec, functionInput);
 
@@ -76,10 +77,15 @@ public class FunctionServiceImpl implements FunctionService {
 
         // execute function
         return callLepExecutor(functionSpec.getTxType(), () -> {
-            Map<String, Object> data = functionExecutorService.execute(functionSpec.getKey(), vInput, httpMethod);
+            var lepHttpMethod = convertToCanonicalHttpMethod(httpMethod);
+            Map<String, Object> data = functionExecutorService.execute(functionSpec.getKey(), vInput, lepHttpMethod);
             return processFunctionResult(functionKey, data, functionSpec);
         });
 
+    }
+
+    private static String convertToCanonicalHttpMethod(String httpMethod) {
+        return POST_URLENCODED.equals(httpMethod) ? "POST" : httpMethod;
     }
 
     /**
@@ -120,7 +126,7 @@ public class FunctionServiceImpl implements FunctionService {
 
     @Override
     public FunctionContext executeAnonymous(String functionKey, Map<String, Object> functionInput, String httpMethod) {
-        FunctionSpec functionSpec = findFunctionSpec(functionKey, null);
+        FunctionSpec functionSpec = findFunctionSpec(functionKey, httpMethod);
 
         if (!functionSpec.getAnonymous()) {
             throw new AccessDeniedException("access denied");
@@ -132,7 +138,8 @@ public class FunctionServiceImpl implements FunctionService {
         enrichInputFromPathParams(functionKey, vInput, functionSpec);
 
         return callLepExecutor(functionSpec.getTxType(), () -> {
-            Map<String, Object> data = functionExecutorService.executeAnonymousFunction(functionSpec.getKey(), vInput, httpMethod);
+            var lepHttpMethod = convertToCanonicalHttpMethod(httpMethod);
+            Map<String, Object> data = functionExecutorService.executeAnonymousFunction(functionSpec.getKey(), vInput, lepHttpMethod);
             return processFunctionResult(functionKey, data, functionSpec);
         });
 
@@ -191,14 +198,15 @@ public class FunctionServiceImpl implements FunctionService {
     }
 
     private FunctionSpec findFunctionSpec(String functionKey, XmEntityIdKeyTypeKey projection) {
-        if (projection == null) {
-            return xmEntitySpecService.findFunction(functionKey).orElseThrow(
-                () -> new IllegalArgumentException("Function not found, function key: " + functionKey));
-        }
-        return xmEntitySpecService.findFunction(projection.getTypeKey(), functionKey).orElseThrow(
+        return xmEntitySpecService.findEntityFunction(projection.getTypeKey(), functionKey).orElseThrow(
             () -> new IllegalArgumentException("Function not found for entity type key " + projection.getTypeKey()
                 + " and function key: " + functionKey)
         );
+    }
+
+    private FunctionSpec findFunctionSpec(String functionKey, String httpMethod) {
+        return xmEntitySpecService.findFunction(functionKey, httpMethod).orElseThrow(
+            () -> new IllegalArgumentException("Function not found, function key: " + functionKey));
     }
 
     private FunctionContext processFunctionResult(String functionKey,

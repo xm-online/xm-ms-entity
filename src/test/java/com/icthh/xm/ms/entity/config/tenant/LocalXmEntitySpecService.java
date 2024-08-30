@@ -16,7 +16,9 @@ import com.icthh.xm.ms.entity.service.spec.XmEntitySpecContextService;
 import com.icthh.xm.ms.entity.service.spec.XmEntitySpecCustomizer;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Primary;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -77,11 +79,11 @@ public class LocalXmEntitySpecService extends XmEntitySpecService {
     }
 
     @Override
-    public Optional<FunctionSpec> findFunction(String functionKey) {
-        return super.findFunction(functionKey)
+    public Optional<FunctionSpec> findFunction(String functionKey, String httpMethod) {
+        return super.findFunction(functionKey, httpMethod)
                 .or(() -> {
                     getTypeSpecs(); // trigger refresh config which populates functionsByTenant cache
-                    return super.findFunction(functionKey);
+                    return super.findFunction(functionKey, httpMethod);
                 });
     }
 }

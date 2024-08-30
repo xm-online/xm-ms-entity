@@ -142,6 +142,8 @@ test {
         println '!!! ATTENTION: start execution of non-categorized tests. it may impact test performance !!!'
     }
 
+    jvmArgs '-XX:+HeapDumpOnOutOfMemoryError'
+
     exclude '**/CucumberTest*'
     exclude '**/*ElasticsearchTest*'
     dependsOn 'clean', 'runCategorizedTests'

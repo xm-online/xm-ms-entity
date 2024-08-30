@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -17,7 +18,7 @@ import static com.icthh.xm.ms.entity.service.impl.FunctionServiceImpl.XM_ENITITY
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({"key", "name", "actionName", "allowedStateKeys", "withEntityId", "isShowFormWithoutData", "inputSpec", "inputForm",
-    "contextDataSpec", "contextDataForm", "showResponse", "onlyData", "validateFunctionInput", "txType"})
+    "contextDataSpec", "contextDataForm", "showResponse", "onlyData", "validateFunctionInput", "txType", "tags", "httpMethods"})
 @Data
 public class FunctionSpec {
 
@@ -110,6 +111,12 @@ public class FunctionSpec {
 
     @JsonProperty("txType")
     private FunctionTxTypes txType = FunctionTxTypes.TX;
+
+    @JsonProperty("tags")
+    private List<String> tags = new ArrayList<>();
+
+    @JsonProperty("httpMethods")
+    private List<String> httpMethods = new ArrayList<>();
 
     public Boolean getSaveFunctionContext() {
         return saveFunctionContext == null ? false : saveFunctionContext;

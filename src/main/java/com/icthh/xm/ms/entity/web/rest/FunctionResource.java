@@ -5,6 +5,7 @@ import com.icthh.xm.commons.logging.aop.IgnoreLogginAspect;
 import com.icthh.xm.commons.permission.annotation.PrivilegeDescription;
 import com.icthh.xm.ms.entity.domain.FunctionContext;
 import com.icthh.xm.ms.entity.service.FunctionService;
+import com.icthh.xm.ms.entity.service.swagger.DynamicSwaggerFunctionGenerator;
 import com.icthh.xm.ms.entity.web.rest.util.HeaderUtil;
 import io.undertow.util.BadRequestException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -38,6 +39,7 @@ import java.util.Optional;
 
 import static com.google.common.collect.ImmutableMap.of;
 import static com.icthh.xm.ms.entity.config.Constants.MVC_FUNC_RESULT;
+import static com.icthh.xm.ms.entity.service.impl.FunctionServiceImpl.POST_URLENCODED;
 import static org.springframework.web.servlet.HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE;
 import static org.springframework.web.servlet.HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE;
 
@@ -56,16 +58,27 @@ public class FunctionResource {
     private static final String UPLOAD = "/upload";
 
     private final FunctionService functionService;
+    private final DynamicSwaggerFunctionGenerator functionDocService;
 
     private FunctionResource self;
 
-    public FunctionResource(@Qualifier("functionService") FunctionService functionService) {
+    public FunctionResource(@Qualifier("functionService") FunctionService functionService,
+                            DynamicSwaggerFunctionGenerator functionDocService) {
         this.functionService = functionService;
+        this.functionDocService = functionDocService;
     }
 
     @Autowired
     public void setSelf(@Lazy FunctionResource self) {
         this.self = self;
+    }
+
+    @Timed
+    @GetMapping("/functions/api-docs")
+    @PrivilegeDescription("Privilege to get openapi documentation for functions api")
+    public ResponseEntity<Object> callGetFunction(HttpServletRequest request) {
+        String url = "https://" + request.getHeader("x-domain") + ":" + request.getHeader("x-port");
+        return ResponseEntity.ok().body(functionDocService.generateSwagger(url));
     }
 
     @Timed
@@ -124,7 +137,8 @@ public class FunctionResource {
     @PrivilegeDescription("Privilege to execute a function by key (key in entity specification)")
     public ResponseEntity<Object> callPostFormFunction(@PathVariable("functionKey") String functionKey,
                                                        @RequestParam(required = false) Map<String, Object> functionInput) {
-        return callPostFunction(functionKey, functionInput);
+        FunctionContext result = functionService.execute(functionKey, functionInput, POST_URLENCODED);
+        return processCreatedResponse(result);
     }
 
     /**
@@ -168,7 +182,8 @@ public class FunctionResource {
     })
     public ResponseEntity<Object> callPostFormAnonymousFunction(@PathVariable("functionKey") String functionKey,
                                                                 @RequestParam(required = false) Map<String, Object> functionInput) {
-        return callPostAnonymousFunction(functionKey, functionInput);
+        FunctionContext result = functionService.executeAnonymous(functionKey, functionInput, POST_URLENCODED);
+        return processCreatedResponse(result);
     }
 
 
@@ -238,7 +253,8 @@ public class FunctionResource {
     })
     public ModelAndView callPostFormMvcAnonymousFunction(@PathVariable("functionKey") String functionKey,
                                                          @RequestParam(required = false) Map<String, Object> functionInput) {
-        return callMvcAnonymousFunction(functionKey, functionInput);
+        FunctionContext result = functionService.executeAnonymous(functionKey, functionInput, POST_URLENCODED);
+        return getMvcResult(result);
     }
 
     @IgnoreLogginAspect
@@ -264,7 +280,7 @@ public class FunctionResource {
     })
     public ResponseEntity<Object> callPostFormFunction(HttpServletRequest request,
                                                        @RequestParam(required = false) Map<String, Object> functionInput) {
-        return self.callPostFunction(getFunctionKey(request), functionInput);
+        return self.callPostFormFunction(getFunctionKey(request), functionInput);
     }
 
     @IgnoreLogginAspect
@@ -358,7 +374,7 @@ public class FunctionResource {
     })
     public ResponseEntity<Object> callPostFormAnonymousFunction(HttpServletRequest request,
                                                                 @RequestParam(required = false) Map<String, Object> functionInput) {
-        return self.callPostAnonymousFunction(getFunctionKey(request), functionInput);
+        return self.callPostFormAnonymousFunction(getFunctionKey(request), functionInput);
     }
 
     @Timed

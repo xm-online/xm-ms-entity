@@ -33,7 +33,7 @@ public class SpecInheritanceProcessor {
 
     private static final String TYPE_SEPARATOR_REGEXP = "\\.";
     private static final String TYPE_SEPARATOR = ".";
-    private static final String XM_ENTITY_INHERITANCE_DEFINITION = "xmEntityInheritanceDefinition";
+    public static final String XM_ENTITY_INHERITANCE_DEFINITION = "xmEntityInheritanceDefinition";
 
     private final XmEntityTenantConfigService tenantConfigService;
 

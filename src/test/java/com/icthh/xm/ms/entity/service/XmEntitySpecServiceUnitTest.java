@@ -220,7 +220,7 @@ public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
 
         List<FunctionSpec> functions = flattenFunctions(types);
 
-        assertThat(functions.size()).isEqualTo(8);
+        assertThat(functions.size()).isEqualTo(10);
 
     }
 
@@ -305,7 +305,7 @@ public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
         assertThat(keys).containsExactlyInAnyOrder(KEY2, KEY3, KEY5, KEY6, KEY7);
 
         List<FunctionSpec> functions = flattenFunctions(types);
-        assertThat(functions.size()).isEqualTo(7);
+        assertThat(functions.size()).isEqualTo(9);
     }
 
     @Test
@@ -728,22 +728,22 @@ public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
     public void testFindFunctionByKey() {
         // init typespecs
         xmEntitySpecService.getTypeSpecs();
-        FunctionSpec functionSpec = xmEntitySpecService.findFunction("FUNCTION1").orElse(null);
+        FunctionSpec functionSpec = xmEntitySpecService.findFunction("FUNCTION1", "POST").orElse(null);
         assertNotNull(functionSpec);
         assertEquals(functionSpec.getKey(), "FUNCTION1");
         assertNull(functionSpec.getPath());
 
-        functionSpec = xmEntitySpecService.findFunction("FUNCTION3").orElse(null);
+        functionSpec = xmEntitySpecService.findFunction("FUNCTION3", "POST").orElse(null);
         assertNotNull(functionSpec);
         assertEquals(functionSpec.getKey(), "FUNCTION3");
         assertEquals(functionSpec.getPath(), "call/function/by-path/{id}");
 
-        functionSpec = xmEntitySpecService.findFunction("in/package/FUNCTION4").orElse(null);
+        functionSpec = xmEntitySpecService.findFunction("in/package/FUNCTION4", "POST").orElse(null);
         assertNotNull(functionSpec);
         assertEquals(functionSpec.getKey(), "in/package/FUNCTION4");
         assertEquals(functionSpec.getPath(), "call/function/by-path/{id}/and/param/{param}");
 
-        functionSpec = xmEntitySpecService.findFunction("FUNCTION_NOT_FOUND").orElse(null);
+        functionSpec = xmEntitySpecService.findFunction("FUNCTION_NOT_FOUND", "POST").orElse(null);
         assertNull(functionSpec);
     }
 
@@ -751,27 +751,45 @@ public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
     public void testFindFunctionByPath() {
         // init typespecs
         xmEntitySpecService.getTypeSpecs();
-        FunctionSpec functionSpec = xmEntitySpecService.findFunction("call/function/by-path/111").orElse(null);
+        FunctionSpec functionSpec = xmEntitySpecService.findFunction("call/function/by-path/111", "POST").orElse(null);
         assertNotNull(functionSpec);
         assertEquals(functionSpec.getKey(), "FUNCTION3");
         assertEquals(functionSpec.getPath(), "call/function/by-path/{id}");
 
-        functionSpec = xmEntitySpecService.findFunction("call/function/by-path/D42/and/param/my-param-value").orElse(null);
+        functionSpec = xmEntitySpecService.findFunction("call/function/by-path/D42/and/param/my-param-value", "POST").orElse(null);
         assertNotNull(functionSpec);
         assertEquals(functionSpec.getKey(), "in/package/FUNCTION4");
         assertEquals(functionSpec.getPath(), "call/function/by-path/{id}/and/param/{param}");
+
+        functionSpec = xmEntitySpecService.findFunction("call/function/by-path/D42/filtered/by/methods/my-param-value", "POST").orElse(null);
+        assertNotNull(functionSpec);
+        assertEquals(functionSpec.getKey(), "in/package/FUNCTION5");
+        assertEquals(functionSpec.getPath(), "call/function/by-path/{id}/filtered/by/methods/{param}");
+
+        functionSpec = xmEntitySpecService.findFunction("call/function/by-path/D42/filtered/by/methods/my-param-value", "GET").orElse(null);
+        assertNotNull(functionSpec);
+        assertEquals(functionSpec.getKey(), "in/package/FUNCTION5");
+        assertEquals(functionSpec.getPath(), "call/function/by-path/{id}/filtered/by/methods/{param}");
+
+        functionSpec = xmEntitySpecService.findFunction("call/function/by-path/D42/filtered/by/methods/my-param-value", "POST_URLENCODED").orElse(null);
+        assertNotNull(functionSpec);
+        assertEquals(functionSpec.getKey(), "in/package/FUNCTION6");
+        assertEquals(functionSpec.getPath(), "call/function/by-path/{id}/filtered/by/methods/{param}");
+
+        functionSpec = xmEntitySpecService.findFunction("call/function/by-path/D42/filtered/by/methods/my-param-value", "PUT").orElse(null);
+        assertNull(functionSpec);
     }
 
     @Test
     public void testFindFunctionByMostSpecificPath() {
         // init typespecs
         xmEntitySpecService.getTypeSpecs();
-        FunctionSpec functionSpec = xmEntitySpecService.findFunction("v1/billing-cycles/123/action").orElse(null);
+        FunctionSpec functionSpec = xmEntitySpecService.findFunction("v1/billing-cycles/123/action", "POST").orElse(null);
         assertNotNull(functionSpec);
         assertEquals(functionSpec.getKey(), "v1/billingcycles/manage");
         assertEquals(functionSpec.getPath(), "v1/billing-cycles/{billingCycleId}/{actionKey}");
 
-        functionSpec = xmEntitySpecService.findFunction("v1/billing-cycles/325/products").orElse(null);
+        functionSpec = xmEntitySpecService.findFunction("v1/billing-cycles/325/products", "POST").orElse(null);
         assertNotNull(functionSpec);
         assertEquals(functionSpec.getKey(), "v1/billingcycles/products");
         assertEquals(functionSpec.getPath(), "v1/billing-cycles/{billingCycleId}/products");

@@ -186,6 +186,21 @@ types:
             name: { en: "Function 4" }
             saveFunctionContext: false
             withEntityId: false
+          - key: in/package/FUNCTION5
+            path: call/function/by-path/{id}/filtered/by/methods/{param}
+            name: { en: "Function 5" }
+            saveFunctionContext: false
+            withEntityId: false
+            httpMethods:
+              - POST
+              - GET
+          - key: in/package/FUNCTION6
+            path: call/function/by-path/{id}/filtered/by/methods/{param}
+            name: { en: "Function 6" }
+            saveFunctionContext: false
+            withEntityId: false
+            httpMethods:
+              - POST_URLENCODED
 
     - key: TYPE1-OTHER
       name: { en: "Type 1 other", ru: "Тип 1 другая" }
