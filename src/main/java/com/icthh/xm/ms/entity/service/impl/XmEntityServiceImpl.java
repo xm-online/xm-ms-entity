@@ -114,7 +114,7 @@ import static org.springframework.beans.BeanUtils.isSimpleValueType;
  * Service Implementation for managing XmEntity.
  */
 @Slf4j
-@LepService(group = "service.entity")
+@LepService(group = "service.entity", name = "default")
 @Transactional
 @RequiredArgsConstructor
 public class XmEntityServiceImpl implements XmEntityService {

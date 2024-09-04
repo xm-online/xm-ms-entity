@@ -11,7 +11,7 @@ import org.springframework.stereotype.Service;
 @Slf4j
 @RequiredArgsConstructor
 @Service
-public class SystemTopicConsumer { // todo: commons
+public class SystemTopicConsumer {
 
     /**
      * Consume tenant command event message.

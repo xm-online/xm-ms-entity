@@ -87,7 +87,7 @@ public class XmEntitySearchRepositoryImpl implements XmEntitySearchRepository {
         SearchQuery query = new NativeSearchQueryBuilder()
             .withQuery(matchAllQuery())
             .withIndices(elasticsearchOperations.getIndexName())
-//            .withTypes(ElasticsearchTemplateWrapper.INDEX_QUERY_TYPE) TODO-IMPL: Removed in 8.14v
+            .withTypes(ElasticsearchOperations.INDEX_QUERY_TYPE)
             .withPageable(pageable)
             .build();
         return elasticsearchOperations.queryForPage(query, getEntityClass());
@@ -120,8 +120,6 @@ public class XmEntitySearchRepositoryImpl implements XmEntitySearchRepository {
         query.setId(String.valueOf(entity.getId()));
         query.setType(ElasticsearchOperations.INDEX_QUERY_TYPE);
         query.setIndexName(indexName);
-//        query.setVersion(extractVersionFromBean(entity)); // TODO
-//        query.setParentId(extractParentIdFromBean(entity)); // TODO
         return query;
     }
 
@@ -157,7 +155,7 @@ public class XmEntitySearchRepositoryImpl implements XmEntitySearchRepository {
         SearchQuery query = new NativeSearchQueryBuilder()
             .withQuery(matchAllQuery())
             .withIndices(elasticsearchOperations.getIndexName())
-//            .withTypes(ElasticsearchTemplateWrapper.INDEX_QUERY_TYPE)
+            .withTypes(ElasticsearchOperations.INDEX_QUERY_TYPE)
             .build();
         return elasticsearchOperations.count(query, getEntityClass());
     }

@@ -60,13 +60,11 @@ public class LinkResource extends TransactionPropagationService<LinkResource> {
     @PreAuthorize("hasPermission({'link': #link}, 'LINK.CREATE')")
     @PrivilegeDescription("Privilege to create a new link")
     public ResponseEntity<Link> createLink(@Valid @RequestBody Link link) throws URISyntaxException {
-        log.info(">> start /api/links: request {}", link.toString());
         if (link.getId() != null) {
             throw new BusinessException(ErrorConstants.ERR_BUSINESS_IDEXISTS,
                                         "A new link cannot already have an ID");
         }
         Link result = linkService.save(link);
-        log.info(">> end /api/links: request {}", link.toString());
         return ResponseEntity.created(new URI("/api/links/" + result.getId()))
             .headers(HeaderUtil.createEntityCreationAlert(ENTITY_NAME, result.getId().toString()))
             .body(result);

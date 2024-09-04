@@ -131,15 +131,6 @@ xm-config:
     enabled: false
 
 application:
-    elastic:
-        scheme: "http"
-        userName: ""
-        password: ""
-        host: "localhost"
-        port: 9200
-        connect-request-timeout: 5000
-        socket-timeout: 3000
-        connect-timeout: 30000
     domain-event:
         enabled: true
     timeline-ignored-http-methods:

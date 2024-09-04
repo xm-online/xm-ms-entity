@@ -1,13 +1,4 @@
 
-configurations {
-  all {
-    resolutionStrategy {
-      // TODO drop forced version. Refer to https://github.com/jhipster/generator-jhipster/issues/22579
-      force "org.hibernate.orm:hibernate-core:${hibernateVersion}"
-    }
-  }
-}
-
 dependencies {
     implementation "org.postgresql:postgresql"
     testImplementation "org.testcontainers:postgresql"

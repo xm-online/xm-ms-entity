@@ -43,8 +43,10 @@ public class RestTemplateConfiguration {
         return restTemplate;
     }
 
-    // To propagate traceId across third services with RestTemplate client,
-    // rest template should be created using builder
+    /**
+     * To propagate traceId across third services with RestTemplate client,
+     * rest template should be created using builder
+     */
     @Bean
     public RestTemplate plainRestTemplate(RestTemplateBuilder builder) {
         return builder.build();

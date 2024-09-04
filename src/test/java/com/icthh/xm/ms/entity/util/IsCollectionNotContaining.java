@@ -28,7 +28,6 @@ public class IsCollectionNotContaining<T> extends TypeSafeDiagnosingMatcher<Iter
         description.appendText("a collection not containing ").appendDescriptionOf(this.elementMatcher);
     }
 
-//    @Factory
     public static <T> Matcher<Iterable<? super T>> hasNotItem(T item) {
         return new IsCollectionNotContaining<T>(IsEqual.equalTo(item));
     }

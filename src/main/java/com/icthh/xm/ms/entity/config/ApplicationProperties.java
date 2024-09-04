@@ -66,8 +66,6 @@ public class ApplicationProperties {
 
     private DomainEvent domainEvent;
 
-    private Elastic elastic;
-
     @Getter
     @Setter
     public static class Amazon {
@@ -137,18 +135,5 @@ public class ApplicationProperties {
     @Setter
     public static class Jpa {
         private Integer findOneByIdForUpdateTimeout = 10000;
-    }
-
-    @Getter
-    @Setter
-    public static class Elastic {
-        private String scheme;
-        private String userName;
-        private String password;
-        private String host;
-        private Integer port;
-        private Integer connectTimeout;
-        private Integer socketTimeout;
-        private Integer connectRequestTimeout;
     }
 }

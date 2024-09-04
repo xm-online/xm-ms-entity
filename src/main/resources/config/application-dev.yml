@@ -149,11 +149,5 @@ application:
 ##   uncomment to read LEPs from flocal file storage
 ##   filestorage can be created as link to xm-sm-config-repository forlder using command:
 ##   'ln -s <xm-sm-config-repository> ~/xm-online'
-    elastic:
-        scheme: "http"
-        userName: ""
-        password: ""
-        host: "localhost"
-        port: 9200
     lep:
         tenant-script-storage: FILE

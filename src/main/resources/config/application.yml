@@ -243,16 +243,6 @@ application:
         metricTopics: system_topic
     domain-event:
         enabled: true
-    elastic:
-        scheme: "http"
-        userName: ""
-        password: ""
-        host: ""
-        port: 9200
-        connectTimeout: 5000
-        socketTimeout: 30000
-        connectRequestTimeout: 30000
-
 
 # ===================================================================
 # Timeline specific properties

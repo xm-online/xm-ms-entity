@@ -199,6 +199,8 @@ tasks.register('runElasticsearchTest', Test) {
     }
 
     systemProperty 'spring.profiles.active', 'test'
+    // add elastic system properties
+
     dependsOn 'clean'
 
     useJUnitPlatform {

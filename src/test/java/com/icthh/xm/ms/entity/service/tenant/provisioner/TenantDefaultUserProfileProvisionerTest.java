@@ -49,8 +49,6 @@ public class TenantDefaultUserProfileProvisionerTest extends AbstractUnitTest {
         provisioner.manageTenant("NEWTENANT", "ACTIVE");
 
         Mockito.inOrder(profileService, tenantContextHolder).verifyNoMoreInteractions();
-//        Mockito.verifyZeroInteractions(tenantContextHolder);
-//        Mockito.verifyZeroInteractions(profileService);
     }
 
     @Test
@@ -58,9 +56,6 @@ public class TenantDefaultUserProfileProvisionerTest extends AbstractUnitTest {
         provisioner.deleteTenant("NEWTENANT");
 
         Mockito.inOrder(profileService, tenantContextHolder).verifyNoMoreInteractions();
-
-//        Mockito.verifyZeroInteractions(tenantContextHolder);
-//        Mockito.verifyZeroInteractions(profileService);
     }
 
 }
