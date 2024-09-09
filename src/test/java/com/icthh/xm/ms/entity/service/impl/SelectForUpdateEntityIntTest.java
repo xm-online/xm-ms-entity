@@ -141,7 +141,6 @@ public class SelectForUpdateEntityIntTest extends AbstractSpringBootTest {
 
     private XmEntity createEntity(Long id, String typeKey) {
         XmEntity entity = new XmEntity();
-        entity.setId(id);
         entity.setName("Initial");
         entity.setTypeKey(typeKey);
         entity.setStartDate(new Date().toInstant());

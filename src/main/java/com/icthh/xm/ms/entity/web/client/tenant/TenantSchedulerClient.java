@@ -1,7 +1,8 @@
 package com.icthh.xm.ms.entity.web.client.tenant;
 
+import com.icthh.xm.commons.client.feign.AuthorizedFeignClient;
 import com.icthh.xm.commons.gen.model.Tenant;
-import com.icthh.xm.ms.entity.client.AuthorizedFeignClient;
+import jakarta.validation.Valid;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -11,7 +12,6 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestPart;
 
-import javax.validation.Valid;
 import java.util.List;
 
 @AuthorizedFeignClient(

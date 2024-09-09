@@ -28,6 +28,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.context.WebApplicationContext;
 
 import java.io.InputStream;
 import java.util.UUID;
@@ -81,6 +82,9 @@ public class FunctionResourceIntTest extends AbstractSpringBootTest {
 
     @Autowired
     private ExceptionTranslator exceptionTranslator;
+
+    @Autowired
+    private WebApplicationContext webApplicationContext;
 
     @BeforeTransaction
     public void beforeTransaction() {
@@ -153,6 +157,15 @@ public class FunctionResourceIntTest extends AbstractSpringBootTest {
         mockMvc.perform(multipart("/api/functions/UPLOAD").file(file))
                .andDo(print())
                .andExpect(status().is5xxServerError());
+    }
+
+    @Test
+    @SneakyThrows
+    public void testFailFunctionWithInvalidUrl() {
+        MockMultipartFile file = new MockMultipartFile("file", "orig", "text/plain", "test no json content" .getBytes(UTF_8));
+        mockMvc.perform(multipart("/api/functions/some/path").file(file))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$").value("Invalid upload url"));
     }
 
     @Test
@@ -292,13 +305,13 @@ public class FunctionResourceIntTest extends AbstractSpringBootTest {
         //THEN
         functionWithAnonymousFlagNotExplicitlySetCallResult
             .andExpect(status().is4xxClientError())
-            .andExpect(header().string("content-type", "application/json;charset=UTF-8"));
+            .andExpect(header().string("content-type", "application/json"));
         functionWithAnonymousFlagSetToFalse
             .andExpect(status().is4xxClientError())
-            .andExpect(header().string("content-type", "application/json;charset=UTF-8"));
+            .andExpect(header().string("content-type", "application/json"));
         functionWithAnonymousFlagSetToTrue
             .andExpect(status().is2xxSuccessful())
-            .andExpect(header().string("content-type", "application/json;charset=UTF-8"))
+            .andExpect(header().string("content-type", "application/json"))
             .andExpect(content().json("{\"data\":{\"someKey\":\"someValue\"}}"));
     }
 

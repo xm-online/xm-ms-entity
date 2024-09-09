@@ -17,6 +17,7 @@ import com.icthh.xm.ms.entity.repository.VoteRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
 import com.icthh.xm.ms.entity.service.VoteService;
 import com.icthh.xm.ms.entity.service.impl.StartUpdateDateGenerationStrategy;
+import jakarta.persistence.EntityManager;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -34,7 +35,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.List;
-import javax.persistence.EntityManager;
 
 /**
  * Extended Test class for the VoteResource REST controller.

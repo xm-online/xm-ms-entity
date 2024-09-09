@@ -4,7 +4,6 @@ import static com.icthh.xm.commons.i18n.I18nConstants.LANGUAGE;
 import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_AUTH_CONTEXT;
 import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_TENANT_CONTEXT;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -23,6 +22,7 @@ import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.repository.ProfileRepository;
 import com.icthh.xm.ms.entity.repository.search.XmEntitySearchRepository;
 import com.icthh.xm.ms.entity.service.ProfileService;
+import jakarta.persistence.EntityManager;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -39,7 +39,6 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
-import javax.persistence.EntityManager;
 
 /**
  * Test class for the ProfileResource REST controller.
@@ -154,7 +153,7 @@ public class ProfileResourceIntTest extends AbstractSpringBootTest {
         // Get the profile
         restProfileMockMvc.perform(get("/api/profile"))
             .andExpect(status().isOk())
-            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
             .andExpect(jsonPath("$.name").value(entity.getName()));
     }
 

@@ -13,7 +13,6 @@
 # http://docs.spring.io/spring-boot/docs/current/reference/html/common-application-properties.html
 # ===================================================================
 
-
 spring:
     application:
         name: entity
@@ -43,24 +42,31 @@ spring:
                 implicit-strategy: org.springframework.boot.orm.jpa.hibernate.SpringImplicitNamingStrategy
         properties:
             hibernate.model.generator_name_as_sequence_name: false # see org.hibernate.cfg.AvailableSettings.PREFER_GENERATOR_NAME_AS_DEFAULT_SEQUENCE_NAME
-            hibernate.id.new_generator_mappings: true
+            hibernate.id.use_new_generator_mappings: false
+            hibernate.id.db_structure_naming_strategy: single # use legacy hibernate_sequence
             hibernate.connection.provider_disables_autocommit: true
             hibernate.cache.use_second_level_cache: false
             hibernate.cache.use_query_cache: false
             hibernate.generate_statistics: true
             hibernate.jdbc.time_zone: UTC
-    data:
-        elasticsearch:
-            properties:
-                path:
-                  home: build/elasticsearch
+    security:
+        oauth2:
+            client:
+                provider:
+                    uaa:
+                        token-uri: http://localhost:9999/oauth/token
+                registration:
+                    uaa:
+                        authorization-grant-type: client_credentials
+                        client-id: internal
+                        client-secret: internal
     mail:
         host: localhost
     messages:
         basename: i18n/messages
     mvc:
-        favicon:
-            enabled: false
+        pathmatch:
+            matching-strategy: ANT_PATH_MATCHER
     thymeleaf:
         mode: XHTML
     liquibase:
@@ -77,10 +83,13 @@ server:
 # Full reference is available at: https://www.jhipster.tech/common-application-properties/
 # ===================================================================
 management:
-    metrics:
-        export:
-            prometheus:
+    prometheus:
+        metrics:
+            export:
                 enabled: true
+    health:
+        mail:
+            enabled: false # When using the MailService, configure an SMTP server and set this to true
 
 jhipster:
     clientApp:
@@ -95,7 +104,7 @@ jhipster:
             enabled: true
             host: localhost
             port: 5000
-            queue-size: 512
+            ring-buffer-size: 512
     security:
         authentication:
             jwt:
@@ -126,6 +135,7 @@ application:
         enabled: true
     timeline-ignored-http-methods:
     scheduler-enabled: false
+    tenant-ignored-path-list: /v2/api-docs, /api/profile-info, /swagger-resources/configuration/ui, /management/health
     kafka-enabled: false
     amazon:
         avatar:

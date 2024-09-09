@@ -3,7 +3,6 @@ package com.icthh.xm.ms.entity.web.rest;
 import static com.icthh.xm.commons.i18n.I18nConstants.LANGUAGE;
 import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_AUTH_CONTEXT;
 import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_TENANT_CONTEXT;
-import static liquibase.util.StringUtils.repeat;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.notNullValue;
@@ -16,6 +15,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static software.amazon.awssdk.utils.StringUtils.repeat;
 
 import com.icthh.xm.commons.i18n.error.web.ExceptionTranslator;
 import com.icthh.xm.commons.lep.XmLepScriptConfigServerResourceLoader;
@@ -31,7 +31,7 @@ import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.repository.CommentRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
 import com.icthh.xm.ms.entity.service.CommentService;
-import liquibase.util.StringUtils;
+import jakarta.persistence.EntityManager;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -51,7 +51,6 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
-import javax.persistence.EntityManager;
 
 /**
  * Test class for the CommentResource REST controller.
@@ -285,7 +284,7 @@ public class CommentResourceIntTest extends AbstractSpringBootTest {
         // Get all the commentList
         restCommentMockMvc.perform(get("/api/comments?sort=id,desc"))
             .andExpect(status().isOk())
-            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
             .andExpect(jsonPath("$.[*].id").value(hasItem(comment.getId().intValue())))
             .andExpect(jsonPath("$.[*].userKey").value(hasItem(DEFAULT_USER_KEY)))
             .andExpect(jsonPath("$.[*].message").value(hasItem(DEFAULT_MESSAGE)))
@@ -303,7 +302,7 @@ public class CommentResourceIntTest extends AbstractSpringBootTest {
         restCommentMockMvc.perform(get("/api/xm-entities/" + comment.getXmEntity().getId() + "/comments?sort=id,desc"))
             .andExpect(status().isOk())
             .andDo(print())
-            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
             .andExpect(jsonPath("$.[*].id").value(hasItem(comment.getId().intValue())))
             .andExpect(jsonPath("$.[*].userKey").value(hasItem(DEFAULT_USER_KEY)))
             .andExpect(jsonPath("$.[*].message").value(hasItem(DEFAULT_MESSAGE)))
@@ -319,7 +318,7 @@ public class CommentResourceIntTest extends AbstractSpringBootTest {
         // Get the comment
         restCommentMockMvc.perform(get("/api/comments/{id}", comment.getId()))
             .andExpect(status().isOk())
-            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
             .andExpect(jsonPath("$.id").value(comment.getId().intValue()))
             .andExpect(jsonPath("$.userKey").value(DEFAULT_USER_KEY))
             .andExpect(jsonPath("$.message").value(DEFAULT_MESSAGE))

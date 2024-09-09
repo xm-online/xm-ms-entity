@@ -6,7 +6,6 @@ import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.Assert.assertFalse;
-import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -27,6 +26,7 @@ import com.icthh.xm.ms.entity.repository.XmEntityRepository;
 import com.icthh.xm.ms.entity.security.access.DynamicPermissionCheckService;
 import com.icthh.xm.ms.entity.service.LinkService;
 import com.icthh.xm.ms.entity.service.impl.StartUpdateDateGenerationStrategy;
+import jakarta.persistence.EntityManager;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.After;
@@ -49,7 +49,6 @@ import org.springframework.validation.Validator;
 
 import java.time.Instant;
 import java.util.List;
-import javax.persistence.EntityManager;
 
 /**
  * Extended Test class for the LinkResource REST controller.
@@ -82,9 +81,6 @@ public class LinkResourceExtendedIntTest extends AbstractSpringBootTest {
 
     @Autowired
     private LinkRepository linkRepository;
-
-    @Autowired
-    private LinkResource linkResource;
 
     @Autowired
     private LinkPermittedRepository permittedRepository;
@@ -125,7 +121,7 @@ public class LinkResourceExtendedIntTest extends AbstractSpringBootTest {
             xmEntityRepository,
             dynamicPermissionCheckService);
 
-        LinkResource linkResourceMock = new LinkResource(linkService, linkResource);
+        LinkResource linkResourceMock = new LinkResource(linkService);
         this.restLinkMockMvc = MockMvcBuilders.standaloneSetup(linkResourceMock)
                                               .setCustomArgumentResolvers(pageableArgumentResolver)
                                               .setControllerAdvice(exceptionTranslator)
@@ -176,6 +172,7 @@ public class LinkResourceExtendedIntTest extends AbstractSpringBootTest {
         restLinkMockMvc.perform(post("/api/links")
                                     .contentType(TestUtil.APPLICATION_JSON_UTF8)
                                     .content(TestUtil.convertObjectToJsonBytes(link)))
+                       .andDo(this::printMvcResult)
                        .andExpect(status().isCreated())
                        .andExpect(jsonPath("$.startDate").value(MOCKED_START_DATE.toString()));
 
@@ -219,7 +216,7 @@ public class LinkResourceExtendedIntTest extends AbstractSpringBootTest {
         restLinkMockMvc.perform(get("/api/links?sort=id,desc"))
                        .andExpect(status().isOk())
                        .andDo(this::printMvcResult)
-                       .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+                       .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                        .andExpect(jsonPath("$", hasSize(1)))
                        .andExpect(jsonPath("$.[*].id", containsInAnyOrder(link.getId().intValue())))
                        .andExpect(jsonPath("$.[*].typeKey", containsInAnyOrder(LinkResourceIntTest.DEFAULT_TYPE_KEY)))
@@ -274,7 +271,7 @@ public class LinkResourceExtendedIntTest extends AbstractSpringBootTest {
         restLinkMockMvc.perform(get("/api/links/{id}", link.getId()))
                        .andExpect(status().isOk())
                        .andDo(this::printMvcResult)
-                       .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+                       .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                        .andExpect(jsonPath("$.id").value(link.getId().intValue()))
                        .andExpect(jsonPath("$.typeKey").value(LinkResourceIntTest.DEFAULT_TYPE_KEY))
                        .andExpect(jsonPath("$.name").value(LinkResourceIntTest.DEFAULT_NAME))
@@ -293,8 +290,6 @@ public class LinkResourceExtendedIntTest extends AbstractSpringBootTest {
                        .andExpect(jsonPath("$.target.description").value(notNullValue()))
                        .andExpect(jsonPath("$.target.createdBy").value(notNullValue()))
                        .andExpect(jsonPath("$.target.removed").value(notNullValue()))
-                       .andExpect(jsonPath("$.target.data").exists())
-                       .andExpect(jsonPath("$.target.data.AAAAAAAAAA").value(notNullValue()))
 
                        .andExpect(jsonPath("$.target.avatarUrlRelative").doesNotExist())
                        .andExpect(jsonPath("$.target.avatarUrlFull").doesNotExist())

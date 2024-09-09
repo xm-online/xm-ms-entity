@@ -167,7 +167,7 @@ public class XmTenantLifecycleServiceUnitTest extends AbstractUnitTest {
     @Test
     @SneakyThrows
     public void testServiceInfoSerializable(){
-        val serviceInfo = new XmTenantLifecycleService.ServiceInfo(false, "error message");
+        val serviceInfo = new ServiceInfo(false, "error message");
         new ObjectOutputStream(System.out).writeObject(serviceInfo);
     }
 

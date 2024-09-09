@@ -5,6 +5,7 @@ import com.icthh.xm.commons.lep.api.LepManagementService;
 import com.icthh.xm.commons.lep.spring.LepService;
 import com.icthh.xm.commons.logging.util.MdcUtils;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
+import com.icthh.xm.ms.entity.service.TransactionPropagationService;
 import com.icthh.xm.ms.entity.service.metrics.CustomMetricsConfiguration.CustomMetric;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
@@ -23,11 +24,9 @@ import static java.util.Collections.emptyMap;
 @Component
 @LepService(group = "metrics")
 @RequiredArgsConstructor
-public class CustomMetricsService {
+public class CustomMetricsService extends TransactionPropagationService<CustomMetricsService> {
 
     private final Map<String, Map<String, Object>> metricsCache = new ConcurrentHashMap<>();
-    @Setter(onMethod = @__(@Autowired))
-    private CustomMetricsService self;
 
     private final TenantContextHolder tenantContextHolder;
     private final LepManagementService lepManagementService;

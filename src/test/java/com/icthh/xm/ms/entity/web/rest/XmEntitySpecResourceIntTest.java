@@ -13,6 +13,7 @@ import com.icthh.xm.ms.entity.service.XmEntityGeneratorService;
 import com.icthh.xm.ms.entity.service.XmEntitySpecService;
 import com.icthh.xm.ms.entity.service.impl.XmEntityServiceImpl;
 import lombok.SneakyThrows;
+import org.json.JSONObject;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -20,7 +21,9 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
+import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import static com.icthh.xm.commons.tenant.TenantContextUtils.setTenant;
@@ -29,6 +32,7 @@ import static com.icthh.xm.ms.entity.service.impl.XmEntityCommonsIntTest.loadFil
 import static com.icthh.xm.ms.entity.util.IsCollectionNotContaining.hasNotItem;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.hasSize;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -88,6 +92,9 @@ public class XmEntitySpecResourceIntTest extends AbstractSpringBootTest {
     @Autowired
     private XmLepScriptConfigServerResourceLoader lepResourceLoader;
 
+    @Autowired
+    private MappingJackson2HttpMessageConverter jacksonMessageConverter;
+
     private XmEntityGeneratorService xmEntityGeneratorService;
 
     private MockMvc restXmEntitySpecMockMvc;
@@ -108,6 +115,7 @@ public class XmEntitySpecResourceIntTest extends AbstractSpringBootTest {
         XmEntitySpecResource xmEntitySpecResource = new XmEntitySpecResource(xmEntitySpecService,
             xmEntityGeneratorService, jsonSchemaGenerationService);
         this.restXmEntitySpecMockMvc = MockMvcBuilders.standaloneSetup(xmEntitySpecResource)
+            .setMessageConverters(jacksonMessageConverter)
             .setControllerAdvice(exceptionTranslator).build();
     }
 
@@ -121,7 +129,7 @@ public class XmEntitySpecResourceIntTest extends AbstractSpringBootTest {
     public void getAllXmEntityTypeSpecs() throws Exception {
         restXmEntitySpecMockMvc.perform(get("/api/xm-entity-specs"))
             .andExpect(status().isOk())
-            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
             .andExpect(jsonPath("$.[*].key").value(hasItem(KEY1)))
             .andExpect(jsonPath("$.[*].key").value(hasItem(KEY2)))
             .andExpect(jsonPath("$.[*].key").value(hasItem(KEY3)));
@@ -133,7 +141,7 @@ public class XmEntitySpecResourceIntTest extends AbstractSpringBootTest {
         xmEntitySpecService.onRefresh(configPath, getXmEntitySpec("additional"));
         restXmEntitySpecMockMvc.perform(get("/api/xm-entity-specs"))
             .andExpect(status().isOk())
-            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
             .andExpect(jsonPath("$.[*].key").value(hasItem(KEY1)))
             .andExpect(jsonPath("$.[*].key").value(hasItem(KEY2)))
             .andExpect(jsonPath("$.[*].key").value(hasItem(KEY3)))
@@ -146,7 +154,7 @@ public class XmEntitySpecResourceIntTest extends AbstractSpringBootTest {
         xmEntitySpecService.onRefresh(configPath, getXmEntitySpec("additional"));
         restXmEntitySpecMockMvc.perform(get("/api/xm-entity-specs"))
             .andExpect(status().isOk())
-            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
             .andExpect(jsonPath("$.[*].key").value(hasItem(KEY1)))
             .andExpect(jsonPath("$.[*].key").value(hasItem(KEY2)))
             .andExpect(jsonPath("$.[*].key").value(hasItem(KEY3)))
@@ -164,7 +172,7 @@ public class XmEntitySpecResourceIntTest extends AbstractSpringBootTest {
         xmEntitySpecService.onRefresh(configPath, getXmEntitySpec("additional"));
         restXmEntitySpecMockMvc.perform(get("/api/xm-entity-specs"))
             .andExpect(status().isOk())
-            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
             .andExpect(jsonPath("$.[*].key").value(hasItem(KEY1)))
             .andExpect(jsonPath("$.[*].key").value(hasItem(KEY2)))
             .andExpect(jsonPath("$.[*].key").value(hasItem(KEY3)))
@@ -178,14 +186,14 @@ public class XmEntitySpecResourceIntTest extends AbstractSpringBootTest {
         xmEntitySpecService.onRefresh(configPath, getXmEntitySpec("additional"));
         restXmEntitySpecMockMvc.perform(get("/api/xm-entity-specs"))
             .andExpect(status().isOk())
-            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
             .andExpect(jsonPath("$.[*].key").value(hasItem(KEY1)))
             .andExpect(jsonPath("$.[*].key").value(hasItem(KEY5)))
             .andExpect(jsonPath("$.[*].key").value(hasSize(13)));
         xmEntitySpecService.onRefresh(configPath, null);
         restXmEntitySpecMockMvc.perform(get("/api/xm-entity-specs"))
             .andExpect(status().isOk())
-            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
             .andExpect(jsonPath("$.[*].key").value(hasItem(KEY1)))
             .andExpect(jsonPath("$.[*].key").value(hasNotItem(KEY5)))
             .andExpect(jsonPath("$.[*].key").value(hasSize(12)));
@@ -195,7 +203,7 @@ public class XmEntitySpecResourceIntTest extends AbstractSpringBootTest {
     public void getAllXmEntityTypeSpecsByFilter() throws Exception {
         restXmEntitySpecMockMvc.perform(get("/api/xm-entity-specs?filter=" + XmEntitySpecResource.Filter.ALL))
             .andExpect(status().isOk())
-            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
             .andExpect(jsonPath("$.[*].key").value(hasItem(KEY1)))
             .andExpect(jsonPath("$.[*].key").value(hasItem(KEY2)))
             .andExpect(jsonPath("$.[*].key").value(hasItem(KEY3)));
@@ -205,7 +213,7 @@ public class XmEntitySpecResourceIntTest extends AbstractSpringBootTest {
     public void getAllAppXmEntityTypeSpecs() throws Exception {
         restXmEntitySpecMockMvc.perform(get("/api/xm-entity-specs?filter=" + XmEntitySpecResource.Filter.APP))
             .andExpect(status().isOk())
-            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
             .andExpect(jsonPath("$.[*].key").value(hasItem(KEY1)))
             .andExpect(jsonPath("$.[*].key").value(hasItem(KEY4)));
     }
@@ -214,7 +222,7 @@ public class XmEntitySpecResourceIntTest extends AbstractSpringBootTest {
     public void getAllNonAbstractXmEntityTypeSpecs() throws Exception {
         restXmEntitySpecMockMvc.perform(get("/api/xm-entity-specs?filter=" + XmEntitySpecResource.Filter.NON_ABSTRACT))
             .andExpect(status().isOk())
-            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
             .andExpect(jsonPath("$.[*].key").value(hasItem(KEY2)))
             .andExpect(jsonPath("$.[*].key").value(hasItem(KEY3)));
     }
@@ -223,7 +231,7 @@ public class XmEntitySpecResourceIntTest extends AbstractSpringBootTest {
     public void getXmEntityTypeSpec() throws Exception {
         restXmEntitySpecMockMvc.perform(get("/api/xm-entity-specs/" + KEY1))
             .andExpect(status().isOk())
-            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
             .andExpect(jsonPath("$.key").value(KEY1));
     }
 
@@ -231,25 +239,28 @@ public class XmEntitySpecResourceIntTest extends AbstractSpringBootTest {
     public void getXmEntityTypeSpecNotFound() throws Exception {
         restXmEntitySpecMockMvc.perform(get("/api/xm-entity-specs/UNDEFINED_KEY"))
             .andExpect(status().isNotFound())
-            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE));
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON));
     }
 
     @Test
     public void getGenerateXmEntity() throws Exception {
         restXmEntitySpecMockMvc.perform(post("/api/xm-entity-specs/generate-xm-entity"))
             .andExpect(status().isCreated())
-            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
             .andDo(mvcResult -> System.out.println(mvcResult.getResponse().getContentAsString()))
             .andExpect(jsonPath("$.id").isNotEmpty());
     }
 
     @Test
     public void getXmEntityTypeSpecSchema() throws Exception {
-        restXmEntitySpecMockMvc.perform(get("/api/xm-entity-specs/schema"))
+        MvcResult result = restXmEntitySpecMockMvc.perform(get("/api/xm-entity-specs/schema"))
             .andDo(print())
             .andExpect(status().isOk())
-            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
-            .andExpect(jsonPath("$.id").value(XM_ENTITY_SPEC));
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
+            .andReturn();
+
+        String responseContent = result.getResponse().getContentAsString();
+        assertTrue(responseContent.contains(String.format("\\\"id\\\" : \\\"%s\\\"", XM_ENTITY_SPEC)));
     }
 
 }

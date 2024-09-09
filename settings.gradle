@@ -6,18 +6,17 @@ pluginManagement {
         mavenCentral()
         //jhipster-needle-gradle-plugin-management-repositories - JHipster will add additional entries here
     }
-     plugins {
-          id 'org.springframework.boot' version "${spring_boot_version}"
-          id 'com.google.cloud.tools.jib' version "${jib_plugin_version}"
-          id 'com.gorylenko.gradle-git-properties' version "${gitPropertiesPluginVersion}"
-          id 'org.liquibase.gradle' version "${liquibase_plugin_version}"
-          id 'org.sonarqube' version "${sonarqube_plugin_version}"
-          id 'net.ltgt.apt-eclipse' version "${apt_plugin_version}"
-          id 'net.ltgt.apt-idea' version "${apt_plugin_version}"
-          id 'net.ltgt.apt' version "${apt_plugin_version}"
-          id "io.spring.nohttp" version "${spring_no_http_plugin_version}"
-          id 'com.github.spotbugs' version "${spotbugs_plugin_version}"
-     }
+    plugins {
+        id 'org.springframework.boot' version "${springBootVersion}"
+        id 'com.google.cloud.tools.jib' version "${jibPluginVersion}"
+        id 'com.gorylenko.gradle-git-properties' version "${gitPropertiesPluginVersion}"
+        id 'org.liquibase.gradle' version "${liquibasePluginVersion}"
+        id 'org.sonarqube' version "${sonarqubePluginVersion}"
+        id "io.spring.nohttp" version "${noHttpCheckstyleVersion}"
+
+        id 'com.github.spotbugs' version "${spotbugsPluginVersion}"
+        //jhipster-needle-gradle-plugin-management-plugins - JHipster will add additional entries here
+    }
 }
 
 rootProject.name = 'xm-ms-entity'

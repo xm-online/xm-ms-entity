@@ -10,7 +10,9 @@ import com.icthh.xm.commons.logging.web.rest.vm.LoggerVm;
 import com.icthh.xm.ms.entity.AbstractSpringBootTest;
 import org.junit.Before;
 import org.junit.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
+import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
@@ -27,6 +29,9 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 //})
 public class LogsResourceIntTest extends AbstractSpringBootTest {
 
+    @Autowired
+    private MappingJackson2HttpMessageConverter jacksonMessageConverter;
+
     private MockMvc restLogsMockMvc;
 
     @Before
@@ -34,6 +39,7 @@ public class LogsResourceIntTest extends AbstractSpringBootTest {
         LogsResource logsResource = new LogsResource();
         this.restLogsMockMvc = MockMvcBuilders
             .standaloneSetup(logsResource)
+            .setMessageConverters(jacksonMessageConverter)
             .build();
     }
 
@@ -42,7 +48,7 @@ public class LogsResourceIntTest extends AbstractSpringBootTest {
         restLogsMockMvc
             .perform(get("/management/logs"))
             .andExpect(status().isOk())
-            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE));
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON));
     }
 
     @Test

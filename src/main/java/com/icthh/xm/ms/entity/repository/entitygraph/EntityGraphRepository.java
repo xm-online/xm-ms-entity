@@ -1,18 +1,18 @@
 package com.icthh.xm.ms.entity.repository.entitygraph;
 
 import com.icthh.xm.ms.entity.domain.XmEntity;
+import jakarta.persistence.FlushModeType;
+import jakarta.persistence.Tuple;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaDelete;
+import jakarta.persistence.criteria.CriteriaUpdate;
+import jakarta.persistence.criteria.Root;
+import jakarta.persistence.criteria.Selection;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.repository.NoRepositoryBean;
 
-import javax.persistence.FlushModeType;
-import javax.persistence.Tuple;
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaDelete;
-import javax.persistence.criteria.CriteriaUpdate;
-import javax.persistence.criteria.Root;
-import javax.persistence.criteria.Selection;
 import java.io.Serializable;
 import java.util.List;
 import java.util.Map;

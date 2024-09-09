@@ -1,7 +1,7 @@
 apply plugin: "war"
 
 bootWar {
-    mainClassName = "com.icthh.xm.ms.entity.EntityApp"
+    mainClass = "com.icthh.xm.ms.entity.EntityApp"
     includes = ["WEB-INF/**", "META-INF/**"]
 }
 

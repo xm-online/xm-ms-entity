@@ -10,10 +10,10 @@ import org.springframework.stereotype.Repository;
  */
 @SuppressWarnings("unused")
 @Repository
-public interface VoteRepository extends JpaRepository<Vote, Long>, ResourceRepository {
+public interface VoteRepository extends JpaRepository<Vote, Long>, ResourceRepository<Vote, Long> {
 
     @Override
-    Vote findResourceById(Object id);
+    Vote findResourceById(Long id);
 
     Long countByRatingId(Long id);
 
