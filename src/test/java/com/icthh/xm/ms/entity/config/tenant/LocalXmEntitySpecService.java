@@ -15,6 +15,7 @@ import com.icthh.xm.ms.entity.service.spec.XmEntitySpecContextService;
 
 import com.icthh.xm.ms.entity.service.spec.XmEntitySpecCustomizer;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Primary;
@@ -35,7 +36,7 @@ public class LocalXmEntitySpecService extends XmEntitySpecService {
     private final ApplicationProperties applicationProperties;
     private final TenantContextHolder tenantContextHolder;
 
-    public LocalXmEntitySpecService(TenantConfigRepository tenantConfigRepository,
+    public LocalXmEntitySpecService(@Qualifier("tenantConfigRepository") TenantConfigRepository tenantConfigRepository,
                                     ApplicationProperties applicationProperties,
                                     TenantContextHolder tenantContextHolder,
                                     EntityCustomPrivilegeService entityCustomPrivilegeService,
