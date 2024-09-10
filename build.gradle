@@ -1,15 +1,5 @@
 import org.gradle.internal.os.OperatingSystem
 
-buildscript {
-    repositories {
-        mavenLocal()
-        mavenCentral()
-        gradlePluginPortal()
-    }
-    dependencies {
-    }
-}
-
 plugins {
     id "java"
     id "groovy"
@@ -452,6 +442,56 @@ dependencies {
     testImplementation "org.testcontainers:postgresql:${testcontainersVersion}"
     testImplementation "org.testcontainers:elasticsearch:${testcontainersVersion}"
     testImplementation "co.elastic.clients:elasticsearch-java:${elastic_client_version}"
+
+    // >>> Elasticsearch tests
+    implementation "com.icthh.xm.commons:xm-ee-commons-search-wrapper:1.0.2"
+
+    implementation "org.springframework.data:spring-data-elasticsearch:2.1.10.RELEASE"
+    implementation "co.elastic.clients:elasticsearch-java:${elastic_client_version}"
+    // <<<
+
+    // >>> ticketsystem from stage
+//    implementation 'org.telegram:telegrambots:6.9.7.1'
+//    implementation 'com.sendgrid:sendgrid-java:4.6.8'
+//    implementation 'com.jcraft:jsch:0.1.55'
+//    implementation 'com.microsoft.azure:azure-storage:8.6.6'
+//    implementation 'org.springframework.cloud:spring-cloud-stream-binder-kafka:4.1.3'
+
+    // >>> HR from stage
+//    implementation 'org.telegram:telegrambots:6.9.7.1'
+//    implementation 'com.opencsv:opencsv:5.9'
+
+    // >> SUFORIA
+//    implementation 'org.apache.lucene:lucene-queryparser:8.2.0'
+//    implementation 'org.elasticsearch:elasticsearch:6.4.3'
+////    implementation 'org.elasticsearch.client:elasticsearch-rest-client:8.13.0'
+////    implementation 'co.elastic.clients:elasticsearch-java:8.15.0'
+////    implementation "org.springframework.boot:spring-boot-starter-data-elasticsearch"
+//    implementation "org.springframework.data:spring-data-elasticsearch:2.1.10.RELEASE"
+
+    // >> UNIONORG
+//    implementation 'com.azure:azure-storage-blob:12.27.1'
+//    implementation 'com.microsoft.azure:azure-storage:1.2.0'
+//    implementation 'com.jcraft:jsch:0.1.55'
+//    implementation 'com.sendgrid:sendgrid-java:4.10.2'
+//    implementation 'org.springframework.cloud:spring-cloud-stream-binder-kafka:4.1.3'
+
+    // >> BOCARATONLAB
+    implementation 'io.github.jhipster:jhipster:1.3.1'
+    implementation 'com.stripe:stripe-java:26.9.0'
+    implementation 'com.opencsv:opencsv:5.9'
+    implementation 'org.liquibase:liquibase-core:3.5.2'
+    implementation 'net.sf.jasperreports:jasperreports:7.0.0'
+    implementation 'net.authorize:anet-java-sdk:2.0.6'
+// https://mvnrepository.com/artifact/org.apache.poi/poi
+//    implementation 'org.apache.poi:poi:3.17'
+//    implementation 'org.apache.poi:poi:3.9'
+//    implementation 'org.apache.poi:poi:3.5-beta5'
+    implementation "org.apache.poi:poi:${apache_poi_version}"
+    implementation 'org.springframework.security.oauth:spring-security-oauth2:2.5.2.RELEASE'
+    implementation 'org.apache.pdfbox:pdfbox:3.0.3'
+    implementation 'net.lingala.zip4j:zip4j:2.11.5'
+    implementation 'net.sf.barcode4j:barcode4j-fop-ext:2.1'
 
 }
 
