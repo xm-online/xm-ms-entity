@@ -41,8 +41,6 @@ public class XmEntitySpecContextService {
 
     private final String maxFileSize;
 
-    private final DefinitionSpecProcessor definitionSpecProcessor;
-    private final FormSpecProcessor formSpecProcessor;
     private final SpecInheritanceProcessor specInheritanceProcessor;
     private final DataSpecJsonSchemaService dataSpecJsonSchemaService;
     private final FunctionByTenantService functionByTenantService;
@@ -56,15 +54,13 @@ public class XmEntitySpecContextService {
     private final ConcurrentHashMap<String, Map<String, TypeSpec>> typesByTenant = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, Map<String, String>> typesByTenantByFile = new ConcurrentHashMap<>();
 
-    public XmEntitySpecContextService(DefinitionSpecProcessor definitionSpecProcessor, FormSpecProcessor formSpecProcessor,
+    public XmEntitySpecContextService(DataSpecJsonSchemaService dataSpecJsonSchemaService,
                                       XmEntitySpecCustomizer xmEntitySpecCustomizer,
                                       XmEntityTenantConfigService tenantConfigService,
                                       @Value("${spring.servlet.multipart.max-file-size:1MB}") String maxFileSize) {
-        this.definitionSpecProcessor = definitionSpecProcessor;
-        this.formSpecProcessor = formSpecProcessor;
         this.xmEntitySpecCustomizer = xmEntitySpecCustomizer;
         this.specInheritanceProcessor = new SpecInheritanceProcessor(tenantConfigService);
-        this.dataSpecJsonSchemaService = new DataSpecJsonSchemaService(definitionSpecProcessor, formSpecProcessor);
+        this.dataSpecJsonSchemaService = dataSpecJsonSchemaService;
         this.specFieldsProcessor = new SpecFieldsProcessor();
         this.functionByTenantService = new FunctionByTenantService();
         this.maxFileSize = maxFileSize;
@@ -115,8 +111,7 @@ public class XmEntitySpecContextService {
             xmEntitySpecCustomizer.customize(tenant, tenantEntitySpec);
         }
 
-        definitionSpecProcessor.updateDefinitionStateByTenant(tenant, typesByTenantByFile);
-        formSpecProcessor.updateFormStateByTenant(tenant, typesByTenantByFile);
+        dataSpecJsonSchemaService.updateByTenant(tenant, typesByTenantByFile);
 
         if (tenantEntitySpec.isEmpty()) {
             typesByTenant.remove(tenant);

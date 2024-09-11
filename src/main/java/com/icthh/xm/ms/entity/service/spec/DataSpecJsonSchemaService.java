@@ -8,8 +8,10 @@ import com.icthh.xm.ms.entity.domain.spec.StateSpec;
 import com.icthh.xm.ms.entity.domain.spec.TypeSpec;
 import com.icthh.xm.ms.entity.service.processor.DefinitionSpecProcessor;
 import com.icthh.xm.ms.entity.service.processor.FormSpecProcessor;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.util.Collection;
@@ -17,26 +19,34 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
 
+import static com.icthh.xm.ms.entity.service.processor.DefinitionSpecProcessor.XM_ENTITY_DEFINITION;
+import static com.icthh.xm.ms.entity.service.spec.SpecInheritanceProcessor.XM_ENTITY_INHERITANCE_DEFINITION;
 import static com.icthh.xm.ms.entity.util.CustomCollectionUtils.nullSafe;
 
 @Slf4j
+@Component
+@RequiredArgsConstructor
 public class DataSpecJsonSchemaService {
+
+    public static final String DEFINITIONS = "definitions";
+    public static final Set<String> DEFINITION_PREFIXES = Set.of(DEFINITIONS, XM_ENTITY_DEFINITION, XM_ENTITY_INHERITANCE_DEFINITION);
 
     private final ConcurrentHashMap<String, Map<String, JsonSchema>> dataSpecJsonSchemas = new ConcurrentHashMap<>();
 
     private final DefinitionSpecProcessor definitionSpecProcessor;
     private final FormSpecProcessor formSpecProcessor;
 
-    public DataSpecJsonSchemaService(DefinitionSpecProcessor definitionSpecProcessor, FormSpecProcessor formSpecProcessor) {
-        this.definitionSpecProcessor = definitionSpecProcessor;
-        this.formSpecProcessor = formSpecProcessor;
-    }
-
     public Map<String, JsonSchema> dataSpecJsonSchemas(String tenantKey) {
         return nullSafe(dataSpecJsonSchemas.get(tenantKey));
+    }
+
+    public void updateByTenant(String tenant, Map<String, Map<String, String>> typesByTenantByFile) {
+        definitionSpecProcessor.updateDefinitionStateByTenant(tenant, typesByTenantByFile);
+        formSpecProcessor.updateFormStateByTenant(tenant, typesByTenantByFile);
     }
 
     public void processDataSpec(String tenantKey, LinkedHashMap<String, TypeSpec> tenantEntitySpec) {

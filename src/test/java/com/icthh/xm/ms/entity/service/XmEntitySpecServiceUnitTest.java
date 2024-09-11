@@ -40,6 +40,7 @@ import com.icthh.xm.ms.entity.service.privileges.custom.FunctionCustomPrivileges
 import com.icthh.xm.ms.entity.service.privileges.custom.FunctionWithXmEntityCustomPrivilegesExtractor;
 import com.icthh.xm.ms.entity.service.processor.DefinitionSpecProcessor;
 import com.icthh.xm.ms.entity.service.processor.FormSpecProcessor;
+import com.icthh.xm.ms.entity.service.spec.DataSpecJsonSchemaService;
 import com.icthh.xm.ms.entity.service.spec.XmEntitySpecCustomizer;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -175,8 +176,10 @@ public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
                                             dynamicPermissionCheckService,
                                             tenantConfig,
                                             xmEntitySpecCustomizer,
-                                            new DefinitionSpecProcessor(jsonListenerService),
-                                            new FormSpecProcessor(jsonListenerService), MAX_FILE_SIZE));
+                                            new DataSpecJsonSchemaService(
+                                                new DefinitionSpecProcessor(jsonListenerService),
+                                                new FormSpecProcessor(jsonListenerService)
+                                            ), MAX_FILE_SIZE));
     }
 
     @Test
@@ -626,6 +629,41 @@ public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
         setExtendsFormAndSpec(true);
         TypeSpec extendedEntityWithGlobalExtends = typeSpecs.get("BASE_ENTITY.SEPARATE_FILE_EXTENDS_ENABLED");
         assertTrue(validateByJsonSchema(extendedEntityWithGlobalExtends.getDataSpec(), bothEntityData));
+    }
+
+    @Test
+    public void testExtendsThirdLevel() {
+
+        mockTenant("RESINTTEST");
+
+        var bothEntityData = Map.of(
+            "field1", "field1value",
+            "field3", "field3value",
+            "field7", "field7value",
+            "object1", Map.of(
+                "field2", "field2value",
+                "field8", "field8value",
+                "field4", "field4value"
+            )
+        );
+
+        var bothDataFrom = Map.of(
+            "form", List.of(
+                Map.of("key", "field1"),
+                Map.of("key", "object1.field2"),
+                Map.of("key", "field3"),
+                Map.of("key", "object1.field4"),
+                Map.of("key", "field7"),
+                Map.of("key", "object1.field8")
+            )
+        );
+
+        var typeSpecs = xmEntitySpecService.getTypeSpecs();
+        TypeSpec thirdEntity = typeSpecs.get("BASE_ENTITY.EXTENDS_ENABLED.THIRD_LEVEL");
+
+        System.out.println(thirdEntity.getDataSpec());
+        assertTrue(validateByJsonSchema(thirdEntity.getDataSpec(), bothEntityData));
+        assertEqualsJson(bothDataFrom, thirdEntity.getDataForm());
     }
 
     @Test
