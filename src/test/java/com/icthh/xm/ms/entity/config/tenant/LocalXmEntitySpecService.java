@@ -36,7 +36,7 @@ public class LocalXmEntitySpecService extends XmEntitySpecService {
     private final ApplicationProperties applicationProperties;
     private final TenantContextHolder tenantContextHolder;
 
-    public LocalXmEntitySpecService(@Qualifier("tenantConfigRepository") TenantConfigRepository tenantConfigRepository,
+    public LocalXmEntitySpecService(TenantConfigRepository tenantConfigRepository,
                                     ApplicationProperties applicationProperties,
                                     TenantContextHolder tenantContextHolder,
                                     EntityCustomPrivilegeService entityCustomPrivilegeService,

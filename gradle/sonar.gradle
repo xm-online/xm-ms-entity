@@ -17,16 +17,3 @@ sonarqube {
         property 'sonar.exclusions', "**/com/icthh/xm/ms/entity/domain/*,**/com/icthh/xm/ms/entity/config/*"
     }
 }
-
-//file("sonar-project.properties").withReader { todo: improve the plugin
-//    Properties sonarProperties = new Properties()
-//    sonarProperties.load(it)
-//
-//    sonarProperties.each { key, value ->
-//        sonarqube {
-//            properties {
-//                property key, value
-//            }
-//        }
-//    }
-//}
