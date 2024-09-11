@@ -16,6 +16,8 @@ pluginManagement {
 
         id 'com.github.spotbugs' version "${spotbugsPluginVersion}"
         //jhipster-needle-gradle-plugin-management-plugins - JHipster will add additional entries here
+        id 'io.spring.dependency-management' version "${springDependencyManagement}"
+
     }
 }
 
