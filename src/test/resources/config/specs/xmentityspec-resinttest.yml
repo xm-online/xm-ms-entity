@@ -582,11 +582,11 @@ types:
               "type" : "object",
               "additionalProperties": false,
               "properties" : {
-                  "field7" : {"type" : "string" },
+                  "field7" : {"type": "string"},
                   "object1": {
                       "type" : "object",
                       "properties" : {
-                          "field8" : {"type" : "string" }
+                          "field8" : { "$ref": "#/definitions/string" }
                       }
                   }
               }
@@ -608,13 +608,16 @@ types:
           "type" : "object",
           "additionalProperties": false,
           "properties" : {
-            "field1" : {"type" : "string" },
+            "field1" : {"$ref": "#/xmEntityDefinition/string"},
             "object1": {
               "type" : "object",
               "properties" : {
-                "field2" : {"type" : "string" }
+                "field2" : { "$ref": "#/definitions/string" }
               }
             }
+          },
+          "definitions": {
+            "string": {"type" : "string" }
           }
         }
       # language=JSON
@@ -699,3 +702,9 @@ types:
       isApp: false
       isAbstract: false
       indexAfterSaveEnabled: false
+definitions:
+    - key: string
+      value: |
+          {
+            "type": "string"
+          }
