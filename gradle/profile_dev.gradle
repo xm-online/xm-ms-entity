@@ -1,57 +1,39 @@
-configurations {
-    developmentOnly
-    runtimeClasspath {
-        extendsFrom developmentOnly
-    }
+
+dependencies {
+    implementation "com.h2database:h2"
+    implementation "org.postgresql:postgresql"
+    testImplementation "org.testcontainers:postgresql"
 }
 
 ext {
-    logbackLoglevel = "DEBUG"
-}
-
-dependencies {
-    developmentOnly "org.springframework.boot:spring-boot-devtools"
-    implementation "com.h2database:h2"
-}
-
-def profiles = "dev"
-if (project.hasProperty("no-liquibase")) {
-    profiles += ",no-liquibase"
-}
-if (project.hasProperty("tls")) {
-    profiles += ",tls"
+    springProfiles = "dev"
+    if (project.hasProperty("no-liquibase")) {
+        profiles += ",no-liquibase"
+    }
 }
 
 springBoot {
     buildInfo {
-		properties {
-			time = null
-		}
-	}
+        excludes = ['time']
+    }
 }
 
 bootRun {
-    args = []
+    args = ["--spring.profiles.active=${springProfiles}"]
 }
 
 
 processResources {
     inputs.property('version', version)
-    inputs.property('springProfiles', profiles)
+    inputs.property('springProfiles', springProfiles)
     filesMatching("**/application.yml") {
         filter {
-            it.replace("#project.version#", version)
+            it.replace("@project.version@", version)
         }
     }
     filesMatching("**/bootstrap.yml") {
         filter {
-            it.replace("#spring.profiles.active#", profiles)
-        }
-    }
-    filesMatching('**/logback-spring.xml') {
-        filter {
-            it.replace('#logback.loglevel#', logbackLoglevel)
+            it.replace("@spring.profiles.active@", springProfiles)
         }
     }
 }
-

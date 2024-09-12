@@ -12,16 +12,17 @@
 # Full reference is available at:
 # http://docs.spring.io/spring-boot/docs/current/reference/html/common-application-properties.html
 # ===================================================================
+logging:
+    level:
+        ROOT: INFO
+        io.github.jhipster: INFO
+        com.icthh.xm: DEBUG
+        com.fasterxml.jackson: DEBUG
+        org.springframework.web: DEBUG
 spring:
-    profiles:
-        active: dev
-        include:
-            - swagger
-            # Uncomment to activate TLS for the dev profile
-            #- tls
     devtools:
         restart:
-            enabled: true
+            enabled: false
         livereload:
             enabled: false # we use Webpack dev server + BrowserSync for livereload
     jackson:
@@ -36,39 +37,35 @@ spring:
         stream:
             kafka:
                 binder:
-                    brokers: localhost
-    datasource:
-        type: com.zaxxer.hikari.HikariDataSource
-        url: jdbc:h2:mem:entity;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
-        username: entity
-        password:
+                    brokers: ${spring.kafka.bootstrap-servers}
     h2:
         console:
-            enabled: true
+            enabled: false
     jpa:
         database-platform: io.github.jhipster.domain.util.FixedH2Dialect
         database: H2
         show-sql: true
         properties:
+            hibernate.model.generator_name_as_sequence_name: false
             hibernate.id.new_generator_mappings: true
             hibernate.cache.use_second_level_cache: false
             hibernate.cache.use_query_cache: false
-            hibernate.generate_statistics: true
-            #hibernate.cache.region.factory_class: com.hazelcast.hibernate.HazelcastLocalCacheRegionFactory
-            #hibernate.cache.hazelcast.instance_name: entity
             hibernate.cache.use_minimal_puts: true
-            #hibernate.cache.hazelcast.use_lite_member: true
-    data:
-        elasticsearch:
-            cluster-name:
-            cluster-nodes: localhost:9300
-            properties:
-                http:
-                    enabled: true
-                path:
-                    home: build/elasticsearch
+            hibernate.show_sql: false
+            hibernate.format_sql: false
     kafka:
         bootstrap-servers: localhost:9092
+    security:
+        oauth2:
+            client:
+                provider:
+                    uaa:
+                        token-uri: http://localhost:9999/oauth/token
+                registration:
+                    uaa:
+                        authorization-grant-type: client_credentials
+                        client-id: internal
+                        client-secret: internal
     mail:
         host:
         port:
@@ -90,6 +87,7 @@ spring:
                 enabled: true
     liquibase:
         contexts: dev
+        enabled: true
 
 server:
     port: 8081
@@ -118,16 +116,12 @@ jhipster:
     mail: # specific JHipster mail property, for standard properties see MailProperties
         from: <tenantname>@xm-online.com
         base-url: http://127.0.0.1:8081
-    metrics: # DropWizard Metrics configuration, used by MetricsConfiguration
-        logs: # Reports metrics in the logs
-          enabled: false
-          report-frequency: 60 # in seconds
     logging:
         logstash: # Forward logs to logstash over a socket, used by LoggingConfiguration
             enabled: false
             host: localhost
             port: 5000
-            queue-size: 512
+            ring-buffer-size: 512
 
 # ===================================================================
 # Application specific properties
@@ -139,7 +133,7 @@ jhipster:
 # ===================================================================
 
 application:
-    kafka-enabled: true
+    kafka-enabled: false
     amazon:
         aws:
             endpoint:
@@ -155,5 +149,5 @@ application:
 ##   uncomment to read LEPs from flocal file storage
 ##   filestorage can be created as link to xm-sm-config-repository forlder using command:
 ##   'ln -s <xm-sm-config-repository> ~/xm-online'
-#    lep:
-#        tenant-script-storage: FILE
+    lep:
+        tenant-script-storage: FILE

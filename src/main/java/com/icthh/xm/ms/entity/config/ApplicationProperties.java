@@ -125,6 +125,7 @@ public class ApplicationProperties {
        private int connectionTimeoutTopic;
        List<String> metricTopics;
     }
+
     @Getter
     @Setter
     public static class DomainEvent {
@@ -135,5 +136,4 @@ public class ApplicationProperties {
     public static class Jpa {
         private Integer findOneByIdForUpdateTimeout = 10000;
     }
-
 }

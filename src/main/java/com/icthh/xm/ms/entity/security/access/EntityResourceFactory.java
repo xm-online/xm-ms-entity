@@ -1,6 +1,6 @@
 package com.icthh.xm.ms.entity.security.access;
 
-import com.icthh.xm.commons.permission.access.ResourceFactory;
+import com.icthh.xm.commons.permission.access.AbstractResourceFactory;
 import com.icthh.xm.commons.permission.access.repository.ResourceRepository;
 import com.icthh.xm.ms.entity.repository.AttachmentRepository;
 import com.icthh.xm.ms.entity.repository.CalendarRepository;
@@ -13,17 +13,13 @@ import com.icthh.xm.ms.entity.repository.TagRepository;
 import com.icthh.xm.ms.entity.repository.VoteRepository;
 import com.icthh.xm.ms.entity.service.XmEntityService;
 
-import java.util.HashMap;
 import java.util.Map;
-import javax.annotation.PostConstruct;
 
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
 @Component
-public class EntityResourceFactory implements ResourceFactory {
-
-    private Map<String, ResourceRepository> repositories = new HashMap<>();
+public class EntityResourceFactory extends AbstractResourceFactory {
 
     private final AttachmentRepository attachmentRepository;
     private final CalendarRepository calendarRepository;
@@ -54,27 +50,19 @@ public class EntityResourceFactory implements ResourceFactory {
         this.xmEntityService = xmEntityService;
     }
 
-    @PostConstruct
-    public void init() {
-        repositories.put("attachment", attachmentRepository);
-        repositories.put("calendar", calendarRepository);
-        repositories.put("comment", commentRepository);
-        repositories.put("event", eventRepository);
-        repositories.put("link", linkRepository);
-        repositories.put("location", locationRepository);
-        repositories.put("rating", ratingRepository);
-        repositories.put("tag", tagRepository);
-        repositories.put("vote", voteRepository);
-        repositories.put("xmEntity", xmEntityService);
-    }
-
     @Override
-    public Object getResource(Object resourceId, String objectType) {
-        Object result = null;
-        ResourceRepository resourceRepository = repositories.get(objectType);
-        if (resourceRepository != null) {
-            result = resourceRepository.findResourceById(resourceId);
-        }
-        return result;
+    protected Map<String, ? extends ResourceRepository<?, ?>> getRepositories() {
+        return Map.of(
+            "attachment", attachmentRepository,
+            "calendar", calendarRepository,
+            "comment", commentRepository,
+            "event", eventRepository,
+            "link", linkRepository,
+            "location", locationRepository,
+            "rating", ratingRepository,
+            "tag", tagRepository,
+            "vote", voteRepository,
+           "xmEntity", xmEntityService
+        );
     }
 }

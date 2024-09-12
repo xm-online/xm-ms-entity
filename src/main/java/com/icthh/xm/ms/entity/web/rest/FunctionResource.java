@@ -7,6 +7,8 @@ import com.icthh.xm.ms.entity.domain.FunctionContext;
 import com.icthh.xm.ms.entity.service.FunctionService;
 import com.icthh.xm.ms.entity.service.swagger.DynamicSwaggerFunctionGenerator;
 import com.icthh.xm.ms.entity.web.rest.util.HeaderUtil;
+import io.undertow.util.BadRequestException;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,7 +32,6 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.ModelAndView;
 
-import javax.servlet.http.HttpServletRequest;
 import java.net.URI;
 import java.util.List;
 import java.util.Map;
@@ -377,13 +378,16 @@ public class FunctionResource {
     }
 
     @Timed
-    @PostMapping(value = "/functions/**" + UPLOAD, consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PostMapping(value = "/functions/**", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasPermission({'functionKey': #functionKey}, 'FUNCTION.UPLOAD.CALL')")
     @SneakyThrows
     @PrivilegeDescription("Privilege to call upload function")
     public ResponseEntity<Object> callUploadFunction(HttpServletRequest request,
                                                      @RequestParam(value = "file", required = false) List<MultipartFile> files,
                                                      HttpServletRequest httpServletRequest) {
+        if (!request.getRequestURI().endsWith(UPLOAD)) {
+            return ResponseEntity.badRequest().body("Invalid upload url");
+        }
         Map<String, Object> functionInput = of("httpServletRequest", httpServletRequest, "files", files);
         String functionKey = getFunctionKey(request);
         functionKey = functionKey.substring(0, functionKey.length() - UPLOAD.length());

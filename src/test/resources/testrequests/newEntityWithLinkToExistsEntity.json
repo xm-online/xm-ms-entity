@@ -6,6 +6,7 @@
     {
       "typeKey": "TEST_SAVE_WITH_LINK_LINK_KEY",
       "name": "some link name",
+      "startDate": "2024-07-27T05:17:02.467641997Z",
       "source": {
           "id": %d
       }

@@ -10,8 +10,10 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.springframework.http.MediaType;
+import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
@@ -24,6 +26,9 @@ public class ProfileInfoResourceIntTest extends AbstractSpringBootTest {
 
     @Mock
     private Environment environment;
+
+    @Autowired
+    private MappingJackson2HttpMessageConverter jacksonMessageConverter;
 
     private MockMvc restProfileMockMvc;
 
@@ -39,6 +44,7 @@ public class ProfileInfoResourceIntTest extends AbstractSpringBootTest {
         ProfileInfoResource profileInfoResource = new ProfileInfoResource(environment);
         this.restProfileMockMvc = MockMvcBuilders
             .standaloneSetup(profileInfoResource)
+            .setMessageConverters(jacksonMessageConverter)
             .build();
     }
 
@@ -46,7 +52,7 @@ public class ProfileInfoResourceIntTest extends AbstractSpringBootTest {
     public void getProfileInfo() throws Exception {
         restProfileMockMvc.perform(get("/api/profile-info"))
             .andExpect(status().isOk())
-            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE));
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON));
     }
 
     @Test
@@ -57,6 +63,6 @@ public class ProfileInfoResourceIntTest extends AbstractSpringBootTest {
 
         restProfileMockMvc.perform(get("/api/profile-info"))
             .andExpect(status().isOk())
-            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE));
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON));
     }
 }

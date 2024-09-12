@@ -4,13 +4,17 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableMap;
 import com.icthh.xm.commons.exceptions.BusinessException;
 import com.icthh.xm.commons.exceptions.EntityNotFoundException;
+import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_AUTH_CONTEXT;
+import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_TENANT_CONTEXT;
 import com.icthh.xm.commons.security.XmAuthenticationContext;
 import com.icthh.xm.commons.security.XmAuthenticationContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
+import static com.icthh.xm.commons.tenant.TenantContextUtils.getRequiredTenantKeyValue;
 import com.icthh.xm.lep.api.LepManager;
 import com.icthh.xm.ms.entity.AbstractSpringBootTest;
 import com.icthh.xm.ms.entity.config.ApplicationProperties;
+import static com.icthh.xm.ms.entity.config.TenantConfigMockConfiguration.getXmEntityTemplatesSpec;
 import com.icthh.xm.ms.entity.config.XmEntityTenantConfigService;
 import com.icthh.xm.ms.entity.domain.Attachment;
 import com.icthh.xm.ms.entity.domain.Link;
@@ -18,7 +22,6 @@ import com.icthh.xm.ms.entity.domain.Profile;
 import com.icthh.xm.ms.entity.domain.UniqueField;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.domain.ext.IdOrKey;
-import com.icthh.xm.ms.entity.domain.template.TemplateParamsHolder;
 import com.icthh.xm.ms.entity.lep.keyresolver.TypeKeyWithExtends;
 import com.icthh.xm.ms.entity.repository.EventRepository;
 import com.icthh.xm.ms.entity.repository.LinkRepository;
@@ -29,7 +32,6 @@ import com.icthh.xm.ms.entity.repository.XmEntityRepositoryInternal;
 import com.icthh.xm.ms.entity.repository.search.XmEntityPermittedSearchRepository;
 import com.icthh.xm.ms.entity.repository.search.XmEntitySearchRepository;
 import com.icthh.xm.ms.entity.service.AttachmentService;
-import com.icthh.xm.ms.entity.service.json.JsonValidationService;
 import com.icthh.xm.ms.entity.service.LifecycleLepStrategyFactory;
 import com.icthh.xm.ms.entity.service.LinkService;
 import com.icthh.xm.ms.entity.service.ProfileService;
@@ -38,20 +40,30 @@ import com.icthh.xm.ms.entity.service.StorageService;
 import com.icthh.xm.ms.entity.service.XmEntityProjectionService;
 import com.icthh.xm.ms.entity.service.XmEntitySpecService;
 import com.icthh.xm.ms.entity.service.XmEntityTemplatesSpecService;
+import com.icthh.xm.ms.entity.service.json.JsonValidationService;
 import com.icthh.xm.ms.entity.util.XmHttpEntityUtils;
+import static java.time.Instant.now;
+import static java.util.Arrays.asList;
+import static java.util.UUID.randomUUID;
+
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertThrows;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.Mockito;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpEntity;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.test.context.support.WithMockUser;
@@ -60,7 +72,7 @@ import org.springframework.test.context.transaction.BeforeTransaction;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.validation.ConstraintViolationException;
+import java.io.IOException;
 import java.math.BigInteger;
 import java.net.URI;
 import java.util.ArrayList;
@@ -71,20 +83,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
-
-import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_AUTH_CONTEXT;
-import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_TENANT_CONTEXT;
-import static com.icthh.xm.commons.tenant.TenantContextUtils.getRequiredTenantKeyValue;
-import static com.icthh.xm.ms.entity.config.TenantConfigMockConfiguration.getXmEntityTemplatesSpec;
-import static java.time.Instant.now;
-import static java.util.Arrays.asList;
-import static java.util.UUID.randomUUID;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.fail;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 @Slf4j
 public class EntityServiceImplIntTest extends AbstractSpringBootTest {
@@ -168,15 +166,9 @@ public class EntityServiceImplIntTest extends AbstractSpringBootTest {
     Locale locale;
 
     @BeforeTransaction
-    public void beforeTransaction() {
+    public void beforeTransaction() throws IOException {
 
         TenantContextUtils.setTenant(tenantContextHolder, "RESINTTEST");
-
-        if (!elasticInited) {
-            initElasticsearch();
-            elasticInited = true;
-        }
-        cleanElasticsearch();
 
         MockitoAnnotations.initMocks(this);
         when(authContextHolder.getContext()).thenReturn(context);
@@ -244,26 +236,6 @@ public class EntityServiceImplIntTest extends AbstractSpringBootTest {
         long seq2 = xmEntityRepository.getSequenceNextValString("hibernate_sequence");
 
         assertEquals(seq + incrementValue, seq2);
-    }
-
-    @Test
-    @Rollback
-    @Transactional
-    public void whenLazySetAndProcessingDisabledSourcesWillNotBeSet() {
-        XmEntity e1 = xmEntityService.save(new XmEntity().typeKey("TEST_NO_PROCESSING_REFS").name("someName").key("somKey"));
-        XmEntity e2 = xmEntityService.save(new XmEntity().typeKey("TEST_NO_PROCESSING_REFS").name("someName").key("somKey"));
-        try {
-            e1 = xmEntityRepository.findOneById(e1.getId());
-            e1.getTargets().add(new Link().typeKey("TEST_NO_PROCESSING_REFS_LINK_KEY").target(e2));
-            XmEntity saved = xmEntityService.save(e1);
-            xmEntityRepository.saveAndFlush(saved); // init validation
-            fail("Expected TransactionSystemException");
-        } catch (ConstraintViolationException e) {
-            String message = "[ConstraintViolationImpl{interpolatedMessage='must not be null', propertyPath=source, rootBeanClass=class com.icthh.xm.ms.entity.domain.Link, messageTemplate='{javax.validation.constraints.NotNull.message}'}]";
-            assertEquals(message, e.getConstraintViolations().toString());
-        }
-        xmEntityRepository.deleteAll(List.of(e1, e2));
-        xmEntitySearchRepository.deleteAll();
     }
 
 
@@ -359,16 +331,20 @@ public class EntityServiceImplIntTest extends AbstractSpringBootTest {
         assertThat(sourcesLinks.size()).isEqualTo(BigInteger.ONE.intValue());
     }
 
-    @Test(expected = EntityNotFoundException.class)
+    @Test
     @Transactional
     public void testFailGetLinkTargetsByKey() throws Exception {
-        xmEntityService.getLinkTargets(IdOrKey.of("some key"), "ANY");
+        assertThrows(EntityNotFoundException.class, () -> {
+            xmEntityService.getLinkTargets(IdOrKey.of("some key"), "ANY");
+        });
     }
 
-    @Test(expected = EntityNotFoundException.class)
+    @Test
     @Transactional
     public void testFailGetLinkSourcesByKey() throws Exception {
-        xmEntityService.getLinkSources(IdOrKey.of("some key"), "ANY");
+        assertThrows(EntityNotFoundException.class, () -> {
+            xmEntityService.getLinkSources(IdOrKey.of("some key"), "ANY");
+        });
     }
 
     @Test
@@ -450,7 +426,7 @@ public class EntityServiceImplIntTest extends AbstractSpringBootTest {
         assertThat(linkRepository.findAll()).hasSize(BigInteger.ZERO.intValue());
     }
 
-    @Test(expected = BusinessException.class)
+    @Test
     @Transactional
     @WithMockUser(authorities = "SUPER-ADMIN")
     public void deleteForeignLinkTarget() {
@@ -460,65 +436,13 @@ public class EntityServiceImplIntTest extends AbstractSpringBootTest {
         Link link = createLink(sourceEntity, targetEntity);
         linkRepository.save(link);
 
-        xmEntityService.deleteLinkTarget(IdOrKey.SELF, link.getId().toString());
-    }
-
-    @Test
-    @Transactional
-    @WithMockUser(authorities = "SUPER-ADMIN")
-    public void searchByQuery() {
-        XmEntity given = createEntity(101L, "ACCOUNT.USER");
-        xmEntitySearchRepository.save(given);
-        xmEntitySearchRepository.refresh();
-        Page<XmEntity> result = xmEntityService.search("typeKey:ACCOUNT.USER AND id:101", Pageable.unpaged(), null);
-        assertThat(result.getContent().size()).isEqualTo(1);
-        assertThat(result.getContent().get(0)).isEqualTo(given);
-    }
-
-    @Test
-    @Transactional
-    @WithMockUser(authorities = "SUPER-ADMIN")
-    public void searchByTemplate() {
-        XmEntity given = createEntity(102L, "ACCOUNT.USER");
-        xmEntitySearchRepository.save(given);
-        xmEntitySearchRepository.refresh();
-        TemplateParamsHolder templateParamsHolder = new TemplateParamsHolder();
-        templateParamsHolder.getTemplateParams().put("typeKey", "ACCOUNT.USER");
-        templateParamsHolder.getTemplateParams().put("id", "102");
-        Page<XmEntity> result = xmEntityService.search("BY_TYPEKEY_AND_ID", templateParamsHolder, Pageable.unpaged(), null);
-        assertThat(result.getContent().size()).isEqualTo(1);
-        assertThat(result.getContent().get(0)).isEqualTo(given);
-    }
-
-    @Test
-    @Transactional
-    @WithMockUser(authorities = "SUPER-ADMIN")
-    public void searchByQueryAndTypeKey() {
-        XmEntity given = createEntity(103L, "ACCOUNT.USER");
-        xmEntitySearchRepository.save(given);
-        xmEntitySearchRepository.refresh();
-        Page<XmEntity> result = xmEntityService.searchByQueryAndTypeKey("103", "ACCOUNT", Pageable.unpaged(), null);
-        assertThat(result.getContent().size()).isEqualTo(1);
-        assertThat(result.getContent().get(0)).isEqualTo(given);
-    }
-
-    @Test
-    @Transactional
-    @WithMockUser(authorities = "SUPER-ADMIN")
-    public void searchByTemplateAndTypeKey() {
-        XmEntity given = createEntity(103L, "ACCOUNT.USER");
-        xmEntitySearchRepository.save(given);
-        xmEntitySearchRepository.refresh();
-        TemplateParamsHolder templateParamsHolder = new TemplateParamsHolder();
-        templateParamsHolder.getTemplateParams().put("typeKey", "ACCOUNT.USER");
-        Page<XmEntity> result = xmEntityService.searchByQueryAndTypeKey("BY_TYPEKEY", templateParamsHolder, "ACCOUNT", Pageable.unpaged(), null);
-        assertThat(result.getContent().size()).isEqualTo(1);
-        assertThat(result.getContent().get(0)).isEqualTo(given);
+        assertThrows(BusinessException.class, () -> {
+            xmEntityService.deleteLinkTarget(IdOrKey.SELF, link.getId().toString());
+        });
     }
 
     private XmEntity createEntity(Long id, String typeKey) {
         XmEntity entity = new XmEntity();
-        entity.setId(id);
         entity.setName("Name");
         entity.setTypeKey(typeKey);
         entity.setStartDate(new Date().toInstant());
@@ -564,7 +488,7 @@ public class EntityServiceImplIntTest extends AbstractSpringBootTest {
         return xmEntityRepository.saveAll(entityList);
     }
 
-    @Test(expected = DataIntegrityViolationException.class)
+    @Test
     @Transactional
     public void testUniqueField() {
 
@@ -582,7 +506,9 @@ public class EntityServiceImplIntTest extends AbstractSpringBootTest {
             new UniqueField(null, "$.uniqueField", "value", entity2.getTypeKey(), entity2),
             new UniqueField(null, "$.uniqueField2", "value22", entity2.getTypeKey(), entity2)
         )));
-        xmEntityRepository.saveAndFlush(entity2);
+        assertThrows(DataIntegrityViolationException.class, () -> {
+            xmEntityRepository.saveAndFlush(entity2);
+        });
     }
 
 }

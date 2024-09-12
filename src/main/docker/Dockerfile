@@ -1,4 +1,4 @@
-FROM adoptopenjdk:11-jre-hotspot
+FROM eclipse-temurin:21.0.4_7-jre
 
 ENTRYPOINT ["/entrypoint.sh"]
 
@@ -9,7 +9,7 @@ RUN chmod 755 entrypoint.sh && apt-get update && apt-get install -y locales loca
 ENV SPRING_OUTPUT_ANSI_ENABLED=ALWAYS \
     JHIPSTER_SLEEP=0 \
     XMX=256m \
-		TZ=Europe/Kiev \
+		TZ=Europe/Kyiv \
 		LANG=en_US.UTF-8 \
 		LANGUAGE=en_US:en \
 		TERM=xterm \

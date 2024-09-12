@@ -1,8 +1,8 @@
 package com.icthh.xm.ms.entity.validator;
 
-import javax.validation.Constraint;
-import javax.validation.Payload;
-import java.lang.annotation.Documented;
+import jakarta.validation.Constraint;
+import jakarta.validation.Payload;
+
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Repeatable;
 import java.lang.annotation.Retention;
@@ -19,7 +19,7 @@ public @interface NotNull {
 
     NotNullBySpecField field();
 
-    String message() default "{javax.validation.constraints.NotNull.message}";
+    String message() default "{jakarta.validation.constraints.NotNull.message}";
 
     Class<?>[] groups() default {};
 

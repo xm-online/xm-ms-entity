@@ -47,14 +47,18 @@ management:
             logback: true
             process: true
             system: true
-        export:
-            prometheus:
+    prometheus:
+        metrics:
+            export:
                 enabled: true
                 step: 60
 
 spring:
     application:
         name: entity
+    spring:
+        profiles:
+            include: swagger
     main:
       allow-bean-definition-overriding: true
     cloud:
@@ -88,8 +92,8 @@ spring:
     messages:
         basename: i18n/messages
     mvc:
-        favicon:
-            enabled: false
+        pathmatch:
+            matching-strategy: ANT_PATH_MATCHER
     thymeleaf:
         mode: XHTML
     servlet:
@@ -154,7 +158,7 @@ jhipster:
         #max-age: 1800
     mail:
         from: entity@localhost
-    swagger:
+    api-docs:
         default-include-pattern: /api/.*
         title: entity API
         description: entity API documentation
@@ -201,7 +205,7 @@ application:
     specification-templates-path-pattern: /config/tenants/{tenantName}/entity/${application.specification-templates-name}
     kafka-system-topic: system_topic
     kafka-system-queue: system_queue
-    auto-system-queue-enabled: true
+    auto-system-queue-enabled: false
     kafka-metadata-max-age: 60000 #in milliseconds
     db-schema-suffix:
     retry:
@@ -238,7 +242,8 @@ application:
         connectionTimeoutTopic: 1000
         metricTopics: system_topic
     domain-event:
-        enabled: false
+        enabled: true
+
 # ===================================================================
 # Timeline specific properties
 #

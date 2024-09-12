@@ -10,8 +10,8 @@ import org.springframework.stereotype.Repository;
  */
 @SuppressWarnings("unused")
 @Repository
-public interface ContentRepository extends JpaRepository<Content, Long>, ResourceRepository {
+public interface ContentRepository extends JpaRepository<Content, Long>, ResourceRepository<Content, Long> {
 
     @Override
-    Content findResourceById(Object id);
+    Content findResourceById(Long id);
 }

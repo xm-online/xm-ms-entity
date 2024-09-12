@@ -11,10 +11,10 @@ import org.springframework.stereotype.Repository;
  */
 @SuppressWarnings("unused")
 @Repository
-public interface LocationRepository extends JpaRepository<Location, Long>, ResourceRepository {
+public interface LocationRepository extends JpaRepository<Location, Long>, ResourceRepository<Location, Long> {
 
     @Override
-    Location findResourceById(Object id);
+    Location findResourceById(Long id);
 
     List<Location> findAllByXmEntityTypeKeyAndTypeKeyIn(String entityTypeKey, List<String> typeKeys);
 

@@ -1,15 +1,14 @@
 package com.icthh.xm.ms.entity.config;
 
+import static com.icthh.xm.commons.config.client.config.XmRestTemplateConfiguration.XM_CONFIG_REST_TEMPLATE;
 import static org.mockito.Mockito.mock;
 
-import com.icthh.xm.ms.entity.config.RestTemplateConfiguration.PathTimeoutHttpComponentsClientHttpRequestFactory;
-import javax.annotation.PostConstruct;
+import com.icthh.xm.commons.security.jwt.TokenProvider;
+import jakarta.annotation.PostConstruct;
 import org.springframework.cloud.client.loadbalancer.RestTemplateCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
-import org.springframework.security.oauth2.provider.token.TokenStore;
-import org.springframework.security.oauth2.provider.token.store.JwtAccessTokenConverter;
 import org.springframework.web.client.RestTemplate;
 
 /**
@@ -21,19 +20,18 @@ public class SecurityBeanOverrideConfiguration {
 
     @Bean
     @Primary
-    public TokenStore tokenStore() {
-        return mock(TokenStore.class);
-    }
-
-    @Bean
-    @Primary
-    public JwtAccessTokenConverter jwtAccessTokenConverter() {
-        return mock(JwtAccessTokenConverter.class);
+    public TokenProvider tokenProvider() {
+        return mock(TokenProvider.class);
     }
 
     @Bean
     @Primary
     public RestTemplate loadBalancedRestTemplate(RestTemplateCustomizer customizer) {
+        return mock(RestTemplate.class);
+    }
+
+    @Bean(XM_CONFIG_REST_TEMPLATE)
+    public RestTemplate restTemplate() {
         return mock(RestTemplate.class);
     }
 

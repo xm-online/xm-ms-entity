@@ -1,21 +1,20 @@
 package com.icthh.xm.ms.entity.config;
 
-import static org.apache.http.client.protocol.HttpClientContext.REQUEST_CONFIG;
-
 import java.net.URI;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.function.Consumer;
-import java.util.function.Function;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import org.apache.http.client.config.RequestConfig;
-import org.apache.http.client.protocol.HttpClientContext;
-import org.apache.http.protocol.HttpContext;
-import org.springframework.cloud.client.loadbalancer.RestTemplateCustomizer;
+import org.apache.hc.client5.http.config.RequestConfig;
+import org.apache.hc.client5.http.protocol.HttpClientContext;
+import org.apache.hc.core5.http.protocol.HttpContext;
+import org.apache.hc.core5.util.Timeout;
+import org.springframework.boot.web.client.RestTemplateBuilder;
+import org.springframework.cloud.client.loadbalancer.LoadBalanced;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -29,25 +28,28 @@ import org.springframework.web.client.RestTemplate;
 @Configuration
 public class RestTemplateConfiguration {
 
+    @LoadBalanced
     @Bean
-    public RestTemplate loadBalancedRestTemplate(RestTemplateCustomizer customizer) {
-        RestTemplate restTemplate = new RestTemplate();
-        customizer.customize(restTemplate);
-        return restTemplate;
+    public RestTemplate loadBalancedRestTemplate(RestTemplateBuilder builder) {
+        return builder.build();
     }
 
+    @LoadBalanced
     @Bean
-    public RestTemplate loadBalancedRestTemplateWithTimeout(RestTemplateCustomizer customizer,
+    public RestTemplate loadBalancedRestTemplateWithTimeout(RestTemplateBuilder builder,
                                                             PathTimeoutHttpComponentsClientHttpRequestFactory requestFactory) {
-        RestTemplate restTemplate = new RestTemplate();
+        RestTemplate restTemplate = builder.build();
         restTemplate.setRequestFactory(requestFactory);
-        customizer.customize(restTemplate);
         return restTemplate;
     }
 
+    /**
+     * To propagate traceId across third services with RestTemplate client,
+     * rest template should be created using builder
+     */
     @Bean
-    public RestTemplate plainRestTemplate() {
-        return new RestTemplate();
+    public RestTemplate plainRestTemplate(RestTemplateBuilder builder) {
+        return builder.build();
     }
 
     @Bean
@@ -64,14 +66,14 @@ public class RestTemplateConfiguration {
         protected HttpContext createHttpContext(HttpMethod httpMethod, URI uri) {
             for (PathTimeoutConfig config : pathPatternTimeoutConfigs) {
                 if (httpMethod.equals(config.getHttpMethod()) && matcher.match(config.getPathPattern(), uri.getPath())) {
-                    RequestConfig requestConfig = createRequestConfig(getHttpClient());
-                    RequestConfig.Builder builder = RequestConfig.copy(requestConfig);
-                    setIfNotNull(config.getReadTimeout(),  builder::setSocketTimeout);
+
+                    RequestConfig.Builder builder = RequestConfig.custom();
+                    setIfNotNull(config.getReadTimeout(),  builder::setResponseTimeout);
                     setIfNotNull(config.getConnectionTimeout(),  builder::setConnectTimeout);
                     setIfNotNull(config.getConnectionRequestTimeout(),  builder::setConnectionRequestTimeout);
 
                     HttpClientContext context = HttpClientContext.create();
-                    context.setAttribute(REQUEST_CONFIG, builder.build());
+                    context.setAttribute(HttpClientContext.REQUEST_CONFIG, builder.build());
                     return context;
                 }
             }
@@ -80,11 +82,11 @@ public class RestTemplateConfiguration {
             return null;
         }
 
-        private <T> void setIfNotNull(T value, Consumer<T> setterMethod) {
+        private void setIfNotNull(Integer value, Consumer<Timeout> setterMethod) {
             if (value == null) {
                 return;
             }
-            setterMethod.accept(value);
+            setterMethod.accept(Timeout.ofMilliseconds(value));
         }
 
         public void addPathTimeoutConfig(PathTimeoutConfig pathTimeoutConfig) {

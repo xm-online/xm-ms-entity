@@ -6,6 +6,7 @@ import com.icthh.xm.commons.permission.constants.RoleConstant;
 import com.icthh.xm.commons.permission.domain.Permission;
 import com.icthh.xm.commons.permission.service.PermissionCheckService;
 import com.icthh.xm.commons.permission.service.PermissionService;
+import com.icthh.xm.commons.security.internal.XmAuthentication;
 import com.icthh.xm.commons.tenant.PlainTenant;
 import com.icthh.xm.commons.tenant.Tenant;
 import com.icthh.xm.commons.tenant.TenantContext;
@@ -28,7 +29,6 @@ import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.oauth2.provider.OAuth2Authentication;
 
 import java.util.HashMap;
 import java.util.List;
@@ -57,7 +57,7 @@ public class DynamicPermissionCheckServiceUnitTest extends AbstractUnitTest {
     private static final String DYNAMIC_FUNCTION_PERMISSION_FEATURE = "dynamicPermissionCheckEnabled";
 
     @Mock
-    private OAuth2Authentication auth;
+    private XmAuthentication auth;
     @Mock
     private TenantContextHolder tenantContextHolder;
     @Mock

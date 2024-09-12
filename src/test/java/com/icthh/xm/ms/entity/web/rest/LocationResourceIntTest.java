@@ -23,6 +23,7 @@ import com.icthh.xm.ms.entity.domain.Location;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.repository.LocationRepository;
 import com.icthh.xm.ms.entity.service.LocationService;
+import jakarta.persistence.EntityManager;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -39,7 +40,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.Validator;
 
 import java.util.List;
-import javax.persistence.EntityManager;
 
 /**
  * Test class for the LocationResource REST controller.
@@ -260,7 +260,7 @@ public class LocationResourceIntTest extends AbstractSpringBootTest {
         // Get all the locationList
         restLocationMockMvc.perform(get("/api/locations?sort=id,desc"))
             .andExpect(status().isOk())
-            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
             .andExpect(jsonPath("$.[*].id").value(hasItem(location.getId().intValue())))
             .andExpect(jsonPath("$.[*].typeKey").value(hasItem(DEFAULT_TYPE_KEY.toString())))
             .andExpect(jsonPath("$.[*].countryKey").value(hasItem(DEFAULT_COUNTRY_KEY.toString())))
@@ -283,7 +283,7 @@ public class LocationResourceIntTest extends AbstractSpringBootTest {
         // Get the location
         restLocationMockMvc.perform(get("/api/locations/{id}", location.getId()))
             .andExpect(status().isOk())
-            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
             .andExpect(jsonPath("$.id").value(location.getId().intValue()))
             .andExpect(jsonPath("$.typeKey").value(DEFAULT_TYPE_KEY.toString()))
             .andExpect(jsonPath("$.countryKey").value(DEFAULT_COUNTRY_KEY.toString()))

@@ -1,13 +1,8 @@
 package com.icthh.xm.ms.entity.util;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
 import org.hamcrest.Description;
-import org.hamcrest.Factory;
 import org.hamcrest.Matcher;
 import org.hamcrest.TypeSafeDiagnosingMatcher;
-import org.hamcrest.core.AllOf;
 import org.hamcrest.core.IsEqual;
 
 public class IsCollectionNotContaining<T> extends TypeSafeDiagnosingMatcher<Iterable<? super T>> {
@@ -33,7 +28,6 @@ public class IsCollectionNotContaining<T> extends TypeSafeDiagnosingMatcher<Iter
         description.appendText("a collection not containing ").appendDescriptionOf(this.elementMatcher);
     }
 
-    @Factory
     public static <T> Matcher<Iterable<? super T>> hasNotItem(T item) {
         return new IsCollectionNotContaining<T>(IsEqual.equalTo(item));
     }

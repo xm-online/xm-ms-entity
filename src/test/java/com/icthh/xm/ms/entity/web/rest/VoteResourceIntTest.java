@@ -24,6 +24,7 @@ import com.icthh.xm.ms.entity.repository.VoteRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
 import com.icthh.xm.ms.entity.service.VoteService;
 import com.icthh.xm.ms.entity.service.impl.StartUpdateDateGenerationStrategy;
+import jakarta.persistence.EntityManager;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -43,7 +44,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
-import javax.persistence.EntityManager;
 
 /**
  * Test class for the VoteResource REST controller.
@@ -282,7 +282,7 @@ public class VoteResourceIntTest extends AbstractSpringBootTest {
         // Get all the voteList
         restVoteMockMvc.perform(get("/api/votes?sort=id,desc"))
             .andExpect(status().isOk())
-            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
             .andExpect(jsonPath("$.[*].id").value(hasItem(vote.getId().intValue())))
             .andExpect(jsonPath("$.[*].userKey").value(hasItem(DEFAULT_USER_KEY)))
             .andExpect(jsonPath("$.[*].value").value(hasItem(DEFAULT_VALUE)))
@@ -299,7 +299,7 @@ public class VoteResourceIntTest extends AbstractSpringBootTest {
         // Get the vote
         restVoteMockMvc.perform(get("/api/votes/{id}", vote.getId()))
             .andExpect(status().isOk())
-            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
             .andExpect(jsonPath("$.id").value(vote.getId().intValue()))
             .andExpect(jsonPath("$.userKey").value(DEFAULT_USER_KEY))
             .andExpect(jsonPath("$.value").value(DEFAULT_VALUE))
