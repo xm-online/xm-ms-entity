@@ -4,6 +4,7 @@ import com.codahale.metrics.annotation.Timed;
 import com.icthh.xm.commons.logging.LoggingAspectConfig;
 import com.icthh.xm.commons.permission.annotation.PrivilegeDescription;
 import com.icthh.xm.ms.entity.domain.XmEntity;
+import com.icthh.xm.ms.entity.domain.spec.DataSchema;
 import com.icthh.xm.ms.entity.domain.spec.TypeSpec;
 import com.icthh.xm.ms.entity.service.json.JsonSchemaGenerationService;
 import com.icthh.xm.ms.entity.service.XmEntityGeneratorService;
@@ -81,7 +82,7 @@ public class XmEntitySpecResource {
      */
     @GetMapping("/xm-entity-specs")
     @Timed
-    @PostFilter("hasPermission({'returnObject': filterObject, 'log': false}, 'XMENTITY_SPEC.GET')")
+    @PostFilter("hasPermission({'log': false}, 'XMENTITY_SPEC.GET')")
     @PrivilegeDescription("Privilege to get the xmEntity specification by filter")
     public List<TypeSpec> getTypeSpecs(@ApiParam XmEntitySpecResource.Filter filter) {
         log.debug("REST request to get a list of TypeSpec");
@@ -91,12 +92,20 @@ public class XmEntitySpecResource {
                        .collect(Collectors.toList());
     }
 
-    @GetMapping(value = "/xm-entity-specs/schema", produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+    @GetMapping(value = "/xm-entity-specs/schema", produces = MediaType.APPLICATION_JSON_VALUE)
     @Timed
-    @PostFilter("hasPermission({'log': false}, 'XMENTITY_SPEC.SCHEMA.GET')")
+    @PostAuthorize("hasPermission({'returnObject': returnObject.body}, 'XMENTITY_SPEC.SCHEMA.GET')")
     @PrivilegeDescription("Privilege to get the xmEntity specification json schema")
     public ResponseEntity<String> getSpecSchema() {
         return RespContentUtil.wrapOrNotFound(jsonSchemaGenerationService.generateJsonSchema());
+    }
+
+    @GetMapping(value = "/xm-entity-specs/dataschemas", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Timed
+    @PostAuthorize("hasPermission({'returnObject': returnObject.body}, 'XMENTITY_SPEC.DATA_SCHEMA.GET')")
+    @PrivilegeDescription("Privilege to get the xmEntity specification data schema")
+    public ResponseEntity<List<DataSchema>> getDataSpecSchemas() {
+        return RespContentUtil.wrapOrNotFound(xmEntitySpecService.getDataSchemas());
     }
 
     /**

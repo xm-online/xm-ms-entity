@@ -11,6 +11,7 @@ import com.icthh.xm.ms.entity.service.XmEntitySpecService;
 import com.icthh.xm.ms.entity.service.privileges.custom.EntityCustomPrivilegeService;
 import com.icthh.xm.ms.entity.service.processor.DefinitionSpecProcessor;
 import com.icthh.xm.ms.entity.service.processor.FormSpecProcessor;
+import com.icthh.xm.ms.entity.service.spec.DataSpecJsonSchemaService;
 import com.icthh.xm.ms.entity.service.spec.XmEntitySpecContextService;
 
 import com.icthh.xm.ms.entity.service.spec.XmEntitySpecCustomizer;
@@ -42,11 +43,10 @@ public class LocalXmEntitySpecService extends XmEntitySpecService {
                                     DynamicPermissionCheckService dynamicPermissionCheckService,
                                     XmEntityTenantConfigService tenantConfigService,
                                     XmEntitySpecCustomizer xmEntitySpecCustomizer,
-                                    DefinitionSpecProcessor definitionSpecProcessor,
-                                    FormSpecProcessor formSpecProcessor,
+                                    DataSpecJsonSchemaService dataSpecJsonSchemaService,
                                     @Value("${spring.servlet.multipart.max-file-size:1MB}") String maxFileSize) {
         super(tenantConfigRepository, applicationProperties, tenantContextHolder,
-            buildSpecService(tenantConfigService, xmEntitySpecCustomizer, definitionSpecProcessor, formSpecProcessor, maxFileSize),
+            buildSpecService(tenantConfigService, xmEntitySpecCustomizer, dataSpecJsonSchemaService, maxFileSize),
             List.of(entityCustomPrivilegeService), dynamicPermissionCheckService);
 
         this.applicationProperties = applicationProperties;
@@ -55,10 +55,9 @@ public class LocalXmEntitySpecService extends XmEntitySpecService {
 
     private static XmEntitySpecContextService buildSpecService(XmEntityTenantConfigService tenantConfigService,
                                                                XmEntitySpecCustomizer xmEntitySpecCustomizer,
-                                                               DefinitionSpecProcessor definitionSpecProcessor,
-                                                               FormSpecProcessor formSpecProcessor, String maxFileSize) {
-        XmEntitySpecContextService xmEntitySpecContextService = new XmEntitySpecContextService(definitionSpecProcessor,
-            formSpecProcessor, xmEntitySpecCustomizer, tenantConfigService, maxFileSize);
+                                                               DataSpecJsonSchemaService dataSpecJsonSchemaService, String maxFileSize) {
+        XmEntitySpecContextService xmEntitySpecContextService = new XmEntitySpecContextService(dataSpecJsonSchemaService,
+            xmEntitySpecCustomizer, tenantConfigService, maxFileSize);
         xmEntitySpecContextService.onApplicationEvent(null);
         return xmEntitySpecContextService;
     }

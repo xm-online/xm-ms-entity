@@ -19,18 +19,14 @@ import java.util.Optional;
 import java.util.Set;
 
 import static com.fasterxml.jackson.databind.node.JsonNodeFactory.instance;
-import static com.google.common.collect.Streams.stream;
-import static com.icthh.xm.ms.entity.service.processor.DefinitionSpecProcessor.XM_ENTITY_DEFINITION;
-import static com.icthh.xm.ms.entity.service.spec.SpecInheritanceProcessor.XM_ENTITY_INHERITANCE_DEFINITION;
+import static com.icthh.xm.ms.entity.service.spec.DataSpecJsonSchemaService.DEFINITIONS;
+import static com.icthh.xm.ms.entity.service.spec.DataSpecJsonSchemaService.DEFINITION_PREFIXES;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.capitalize;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 @Slf4j
 public class JsonSchemaToSwaggerSchemaConverter {
-
-    public static final String DEFINITIONS = "definitions";
-    public static final Set<String> DEFINITION_PREFIXES = Set.of(DEFINITIONS, XM_ENTITY_DEFINITION, XM_ENTITY_INHERITANCE_DEFINITION);
 
     private static final Set<String> supportedKeywords = Set.of(
         "$ref", DEFINITIONS,
