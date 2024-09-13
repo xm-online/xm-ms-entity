@@ -82,7 +82,7 @@ public class XmEntitySpecResource {
      */
     @GetMapping("/xm-entity-specs")
     @Timed
-    @PostFilter("hasPermission({'log': false}, 'XMENTITY_SPEC.GET')")
+    @PostFilter("hasPermission({'returnObject': filterObject, 'log': false}, 'XMENTITY_SPEC.GET')")
     @PrivilegeDescription("Privilege to get the xmEntity specification by filter")
     public List<TypeSpec> getTypeSpecs(@ApiParam XmEntitySpecResource.Filter filter) {
         log.debug("REST request to get a list of TypeSpec");
