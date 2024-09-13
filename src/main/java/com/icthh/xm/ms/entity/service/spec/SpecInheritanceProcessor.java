@@ -9,7 +9,6 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.Comparator;
 import java.util.HashMap;
@@ -118,7 +117,6 @@ public class SpecInheritanceProcessor {
         }
     }
 
-    @NotNull
     private Map<String, Object> makeMapMutable(String prefix, Map<String, Object> target) {
         return new HashMap<>((Map<String, Object>)target.getOrDefault(prefix, new HashMap<>()));
     }
