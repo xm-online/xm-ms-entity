@@ -22,6 +22,7 @@ import com.icthh.xm.ms.entity.config.XmEntityTenantConfigService;
 import com.icthh.xm.ms.entity.config.XmEntityTenantConfigService.XmEntityTenantConfig;
 import com.icthh.xm.ms.entity.config.tenant.LocalXmEntitySpecService;
 import com.icthh.xm.ms.entity.domain.spec.AttachmentSpec;
+import com.icthh.xm.ms.entity.domain.spec.DefinitionSpec;
 import com.icthh.xm.ms.entity.domain.spec.FunctionSpec;
 import com.icthh.xm.ms.entity.domain.spec.LinkSpec;
 import com.icthh.xm.ms.entity.domain.spec.LocationSpec;
@@ -661,9 +662,87 @@ public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
         var typeSpecs = xmEntitySpecService.getTypeSpecs();
         TypeSpec thirdEntity = typeSpecs.get("BASE_ENTITY.EXTENDS_ENABLED.THIRD_LEVEL");
 
-        System.out.println(thirdEntity.getDataSpec());
         assertTrue(validateByJsonSchema(thirdEntity.getDataSpec(), bothEntityData));
         assertEqualsJson(bothDataFrom, thirdEntity.getDataForm());
+    }
+
+    @Test
+    public void testRefToEntityFromEntity() {
+
+        Map<String, Object> entity = Map.of(
+            "internalObject", Map.of(
+                "testEntityName", "name",
+                "testObject", Map.of(
+                    "testEntityField", "value"
+                ),
+                "targetObject", Map.of(
+                    "targetName", "value",
+                    "testObject", Map.of(
+                        "targetEntityField", "value"
+                    )
+                )
+            )
+        );
+
+        mockTenant("RESINTTEST");
+
+        var typeSpecs = xmEntitySpecService.getTypeSpecs();
+        TypeSpec thirdEntity = typeSpecs.get("ENTITY_THAT_REF_TO_TARGET");
+        assertTrue(validateByJsonSchema(thirdEntity.getDataSpec(), entity));
+    }
+
+    @Test
+    public void testRefToEntityFromDefinition() {
+
+        Map<String, Object> entity = Map.of(
+            "internalObject", Map.of(
+                "testEntityName", "name",
+                "testObject", Map.of(
+                    "testEntityField", "value"
+                ),
+                "targetObject", Map.of(
+                    "fieldString1", "value",
+                    "fieldRef2", Map.of(
+                        "fieldString2", "value",
+                        "refToEntity", Map.of(
+                            "targetName", "value",
+                            "testObject", Map.of(
+                                "targetEntityField", "value"
+                            )
+                        )
+                    )
+                )
+            )
+        );
+
+        mockTenant("RESINTTEST");
+
+        var typeSpecs = xmEntitySpecService.getTypeSpecs();
+        TypeSpec thirdEntity = typeSpecs.get("ENTITY_THAT_REF_THROUGH_DEF");
+        assertTrue(validateByJsonSchema(thirdEntity.getDataSpec(), entity));
+    }
+
+    @Test
+    public void testProcessingOfDefinitions() {
+        Map<String, Object> entity = Map.of(
+            "fieldRef2", Map.of(
+                "fieldString2", "value",
+                "refToEntity", Map.of(
+                    "targetName", "value",
+                    "testObject", Map.of(
+                        "targetEntityField", "value"
+                    )
+                )
+            ),
+            "fieldString1", "value"
+        );
+
+        mockTenant("RESINTTEST");
+
+        xmEntitySpecService.getTypeSpecs(); // init process by test
+        var definitions = xmEntitySpecService.getDefinitions();
+        DefinitionSpec def = definitions.stream().filter(it -> it.getKey().equals("defWithRefToDefWithEntityRef")).findFirst().get();
+        assertTrue(validateByJsonSchema(def.getValue(), entity));
     }
 
     @Test

@@ -4,6 +4,7 @@ import com.github.fge.jackson.JsonLoader;
 import com.github.fge.jsonschema.core.exceptions.ProcessingException;
 import com.github.fge.jsonschema.main.JsonSchema;
 import com.github.fge.jsonschema.main.JsonSchemaFactory;
+import com.icthh.xm.ms.entity.domain.spec.DefinitionSpec;
 import com.icthh.xm.ms.entity.domain.spec.StateSpec;
 import com.icthh.xm.ms.entity.domain.spec.TypeSpec;
 import com.icthh.xm.ms.entity.service.processor.DefinitionSpecProcessor;
@@ -17,12 +18,14 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
 
+import static com.icthh.xm.ms.entity.service.processor.DefinitionSpecProcessor.XM_ENTITY_DATA_SPEC;
 import static com.icthh.xm.ms.entity.service.processor.DefinitionSpecProcessor.XM_ENTITY_DEFINITION;
 import static com.icthh.xm.ms.entity.service.spec.SpecInheritanceProcessor.XM_ENTITY_INHERITANCE_DEFINITION;
 import static com.icthh.xm.ms.entity.util.CustomCollectionUtils.nullSafe;
@@ -33,7 +36,8 @@ import static com.icthh.xm.ms.entity.util.CustomCollectionUtils.nullSafe;
 public class DataSpecJsonSchemaService {
 
     public static final String DEFINITIONS = "definitions";
-    public static final Set<String> DEFINITION_PREFIXES = Set.of(DEFINITIONS, XM_ENTITY_DEFINITION, XM_ENTITY_INHERITANCE_DEFINITION);
+    public static final Set<String> DEFINITION_PREFIXES = Set.of(DEFINITIONS, XM_ENTITY_DEFINITION,
+        XM_ENTITY_INHERITANCE_DEFINITION, XM_ENTITY_DATA_SPEC);
 
     private final ConcurrentHashMap<String, Map<String, JsonSchema>> dataSpecJsonSchemas = new ConcurrentHashMap<>();
 
@@ -82,6 +86,7 @@ public class DataSpecJsonSchemaService {
                 formSpecProcessor.processTypeSpec(tenant,functionSpec::setInputForm, functionSpec::getInputForm);
                 formSpecProcessor.processTypeSpec(tenant,functionSpec::setContextDataForm, functionSpec::getContextDataForm);
             });
+        definitionSpecProcessor.processDefinitionsItSelf(tenant);
     }
 
     private void addJsonSchema(HashMap<String, com.github.fge.jsonschema.main.JsonSchema> dataSchemas,
@@ -96,4 +101,7 @@ public class DataSpecJsonSchemaService {
         }
     }
 
+    public List<DefinitionSpec> getDefinitions(String tenantKeyValue) {
+        return definitionSpecProcessor.getProcessedDefinitions(tenantKeyValue);
+    }
 }

@@ -702,9 +702,125 @@ types:
       isApp: false
       isAbstract: false
       indexAfterSaveEnabled: false
+    - key: ENTITY_THAT_REF_TO_TARGET
+      isApp: false
+      isAbstract: false
+        # language=JSON
+      dataSpec: |
+          {
+              "type" : "object",
+              "additionalProperties": false,
+              "properties" : {
+                  "internalObject": {
+                      "additionalProperties": false,
+                      "type" : "object",
+                      "properties" : {
+                          "testEntityName" : {"type" : "string" },
+                          "testObject": {
+                              "type" : "object",
+                              "properties" : {
+                                  "testEntityField" : {"type" : "string" }
+                              }
+                          },
+                          "targetObject": {
+                              "$ref": "#/xmEntityDataSpec/ENTITY_TO_TARGET"
+                          }
+                      }
+                  }
+              }
+          }
+    - key: ENTITY_THAT_REF_THROUGH_DEF
+      isApp: false
+      isAbstract: false
+        # language=JSON
+      dataSpec: |
+          {
+              "type" : "object",
+              "additionalProperties": false,
+              "properties" : {
+                  "internalObject": {
+                      "type" : "object",
+                      "additionalProperties": false,
+                      "properties" : {
+                          "testEntityName" : {"type" : "string" },
+                          "testObject": {
+                              "type" : "object",
+                              "additionalProperties": false,
+                              "properties" : {
+                                  "testEntityField" : {"type" : "string" }
+                              }
+                          },
+                          "targetObject": {
+                              "$ref": "#/xmEntityDefinition/defWithRefToDefWithEntityRef"
+                          }
+                      }
+                  }
+              }
+          }
+      # language=JSON
+      dataForm: |
+          {
+              "form": [
+                  {"key": "internalObject.testEntityName"},
+                  {"key": "internalObject.object.testEntityField"}
+              ]
+          }
+    - key: ENTITY_TO_TARGET
+      isApp: false
+      isAbstract: false
+        # language=JSON
+      dataSpec: |
+          {
+              "type" : "object",
+              "additionalProperties": false,
+              "properties" : {
+                  "targetName" : {"type" : "string" },
+                  "testObject": {
+                      "type" : "object",
+                      "properties" : {
+                          "targetEntityField" : {"type" : "string" }
+                      }
+                  }
+              }
+          }
+      # language=JSON
+      dataForm: |
+          {
+              "form": [
+                  {"key": "targetName"},
+                  {"key": "object.targetEntityField"}
+              ]
+          }
 definitions:
     - key: string
       value: |
           {
             "type": "string"
+          }
+    - key: defWithRefToDefWithEntityRef
+      value: |
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "fieldRef2": {
+                "$ref": "#/xmEntityDefinition/defWithEntityRef"
+              },
+              "fieldString1": {
+                "type": "string"
+              }
+            }
+          }
+    - key: defWithEntityRef
+      value: |
+          {
+            "type": "object",
+            "properties": {
+              "fieldString2": {
+                "type": "string"
+              },
+              "refToEntity": {
+                "$ref": "#/xmEntityDataSpec/ENTITY_TO_TARGET"
+              }
+            }
           }

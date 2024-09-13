@@ -6,6 +6,7 @@ import com.github.fge.jsonschema.main.JsonSchema;
 import com.icthh.xm.commons.lep.spring.LepService;
 import com.icthh.xm.commons.logging.aop.IgnoreLogginAspect;
 import com.icthh.xm.ms.entity.config.XmEntityTenantConfigService;
+import com.icthh.xm.ms.entity.domain.spec.DefinitionSpec;
 import com.icthh.xm.ms.entity.domain.spec.FunctionSpec;
 import com.icthh.xm.ms.entity.domain.spec.TypeSpec;
 import com.icthh.xm.ms.entity.domain.spec.XmEntitySpec;
@@ -117,12 +118,13 @@ public class XmEntitySpecContextService {
             typesByTenant.remove(tenant);
         }
 
-        typesByTenant.put(tenant, tenantEntitySpec);
         specInheritanceProcessor.process(tenantEntitySpec, tenant);
         specFieldsProcessor.processUniqueFields(tenantEntitySpec);
 
         functionByTenantService.processFunctionSpec(tenant, tenantEntitySpec);
         dataSpecJsonSchemaService.processDataSpec(tenant, tenantEntitySpec);
+
+        typesByTenant.put(tenant, tenantEntitySpec);
 
         return tenantEntitySpec;
     }
@@ -170,5 +172,9 @@ public class XmEntitySpecContextService {
         if(initialized.compareAndSet(false, true)) {
             tenants().forEach(this::updateByTenantState);
         }
+    }
+
+    public List<DefinitionSpec> getDefinitions(String tenantKeyValue) {
+        return dataSpecJsonSchemaService.getDefinitions(tenantKeyValue);
     }
 }
