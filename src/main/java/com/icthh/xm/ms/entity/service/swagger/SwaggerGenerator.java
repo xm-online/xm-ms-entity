@@ -227,6 +227,7 @@ public class SwaggerGenerator {
             definitions,
             originalDefinitions
         );
+        jsonSchemaConverter.inlineRootRef(jsonNode, definitions);
         Map<String, SwaggerParameter> parameters = new LinkedHashMap<>(pathPrefixParams);
         addPathParameters(swaggerFunction, jsonNode, parameters);
         addQueryParameters(jsonNode, parameters, httpMethod);

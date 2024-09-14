@@ -106,6 +106,15 @@ types:
                     }
                   }
                 }
+          - key: StructureFunction
+            path: folder/{variable}/StructureFunction
+            tags: ["external"]
+            name: {"uk": "Structure"}
+            actionName: {en: "Structure"}
+            inputSpec: |
+                {
+                  "$ref": "#/xmEntityDefinition/structure"
+                }
 definitions:
     - key: nameHolder
       value: |
@@ -116,6 +125,19 @@ definitions:
                 "name": {
                   "type": "string"
                 }
+              }
+            }
+          }
+    - key: structure
+      value: |
+          {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "variable": {
+                "type": "number"
               }
             }
           }
