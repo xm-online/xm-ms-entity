@@ -39,7 +39,7 @@ public class SimpleLinkSerializer extends JsonObjectSerializer<Link> {
         writeInstant(jsonGenerator, provider, "endDate", value.getEndDate());
 
         jsonGenerator.writeObjectFieldStart("target");
-        if (value.getTarget() != null) {
+        if (Hibernate.isInitialized(value.getTarget()) && value.getTarget() != null) {
             write(jsonGenerator, provider, "id", value.getTarget().getId());
             write(jsonGenerator, provider, "key", value.getTarget().getKey());
             write(jsonGenerator, provider, "typeKey", value.getTarget().getTypeKey());
