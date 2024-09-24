@@ -30,6 +30,7 @@ import com.icthh.xm.ms.entity.web.rest.util.PaginationUtil;
 import com.icthh.xm.ms.entity.web.rest.util.RespContentUtil;
 import io.swagger.annotations.ApiParam;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.core.io.Resource;
@@ -67,6 +68,7 @@ import java.util.Set;
 /**
  * REST controller for managing XmEntity.
  */
+@Transactional
 @RestController
 @RequestMapping("/api")
 public class XmEntityResource {

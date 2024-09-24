@@ -11,6 +11,7 @@ import com.icthh.xm.ms.entity.web.rest.util.HeaderUtil;
 import com.icthh.xm.ms.entity.web.rest.util.PaginationUtil;
 import com.icthh.xm.ms.entity.web.rest.util.RespContentUtil;
 import io.swagger.annotations.ApiParam;
+import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -39,6 +40,7 @@ import java.util.Optional;
  * REST controller for managing Link.
  */
 @Slf4j
+@Transactional
 @RestController
 @RequestMapping("/api")
 @RequiredArgsConstructor
