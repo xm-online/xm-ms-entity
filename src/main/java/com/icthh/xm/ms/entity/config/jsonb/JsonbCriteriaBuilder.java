@@ -13,6 +13,11 @@ public class JsonbCriteriaBuilder {
     private final CriteriaBuilder criteriaBuilder;
     private final JsonbExpression jsonbExpression;
 
+    public JsonbCriteriaBuilder(CriteriaBuilder criteriaBuilder) {
+        this.criteriaBuilder = criteriaBuilder;
+        this.jsonbExpression = new JsonbExpression();
+    }
+
     public JsonbCriteriaBuilder(CriteriaBuilder criteriaBuilder, JsonbExpression jsonbExpression) {
         this.criteriaBuilder = criteriaBuilder;
         this.jsonbExpression = jsonbExpression;
