@@ -17,6 +17,7 @@ import com.icthh.xm.ms.entity.service.impl.StartUpdateDateGenerationStrategy;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Page;
@@ -67,7 +68,9 @@ public class LinkService extends TransactionPropagationService<LinkService> {
                                                               Link::getStartDate);
         link.setTarget(xmEntityRepository.getOne(entityId(link.getTarget())));
         link.setSource(xmEntityRepository.getOne(entityId(link.getSource())));
-        return linkRepository.save(link);
+        Link result = linkRepository.save(link);
+        Hibernate.initialize(result.getTarget());
+        return result;
     }
 
     public List<Link> saveAll(List<Link> list) {
