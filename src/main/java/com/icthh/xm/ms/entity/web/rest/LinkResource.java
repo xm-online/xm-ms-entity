@@ -41,7 +41,6 @@ import java.util.Optional;
  * REST controller for managing Link.
  */
 @Slf4j
-@Transactional
 @RestController
 @RequestMapping("/api")
 @RequiredArgsConstructor
@@ -68,7 +67,6 @@ public class LinkResource extends TransactionPropagationService<LinkResource> {
                                         "A new link cannot already have an ID");
         }
         Link result = linkService.save(link);
-        Hibernate.initialize(result.getTarget());
         return ResponseEntity.created(new URI("/api/links/" + result.getId()))
             .headers(HeaderUtil.createEntityCreationAlert(ENTITY_NAME, result.getId().toString()))
             .body(result);
