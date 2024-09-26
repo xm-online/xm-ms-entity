@@ -190,11 +190,17 @@ public class Rating implements Serializable {
     }
 
     @PrePersist
-    @PreUpdate
     private void prePersist() {
-        if (id == null && startDate == null) {
+        if (startDate == null) {
             startDate = Instant.now();
         }
+        if (xmEntity != null) {
+            xmEntity.updateXmEntityReference(this.votes, Vote::setXmEntity);
+        }
+    }
+
+    @PreUpdate
+    private void preUpdate() {
         if (xmEntity != null) {
             xmEntity.updateXmEntityReference(this.votes, Vote::setXmEntity);
         }

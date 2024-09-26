@@ -916,7 +916,7 @@ public class XmEntityResourceExtendedElasticsearchTest extends AbstractElasticSp
 
         xmEntityIncoming.setId((long) id);
 
-        val calendar = new Calendar().name("name").typeKey("TYPEKEY").startDate(Instant.now())
+        val calendar = new Calendar().name("name").typeKey("TYPEKEY")
                                      .xmEntity(xmEntityIncoming);
 
         MvcResult resultSaveCalendar = performPost("/api/calendars", calendar)
@@ -927,7 +927,7 @@ public class XmEntityResourceExtendedElasticsearchTest extends AbstractElasticSp
 
         calendar.setId((long) calendarId);
 
-        val event = new Event().typeKey("TYPEKEY").title("title").startDate(Instant.now())
+        val event = new Event().typeKey("TYPEKEY").title("title")
                                .calendar(calendar).assigned(xmEntityIncoming);
 
         performPost("/api/events", event)

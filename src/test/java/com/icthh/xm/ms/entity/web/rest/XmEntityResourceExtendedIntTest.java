@@ -667,12 +667,12 @@ public class XmEntityResourceExtendedIntTest extends AbstractSpringBootTest {
         XmEntity source2 = xmEntityService.save(createEntity()).name("SOURCE2");
 
         source1.getTargets().clear();
-        source1.getTargets().add(new Link().typeKey("LINK1").source(source1).target(target).startDate(Instant.now()));
+        source1.getTargets().add(new Link().typeKey("LINK1").source(source1).target(target));
 
         source2.getTargets().clear();
-        source2.getTargets().add(new Link().typeKey("LINK1").source(source2).target(target).startDate(Instant.now()));
-        source2.getTargets().add(new Link().typeKey("LINK2").source(source2).target(target).startDate(Instant.now()));
-        source2.getTargets().add(new Link().typeKey("LINK3").source(source2).target(target).startDate(Instant.now()));
+        source2.getTargets().add(new Link().typeKey("LINK1").source(source2).target(target));
+        source2.getTargets().add(new Link().typeKey("LINK2").source(source2).target(target));
+        source2.getTargets().add(new Link().typeKey("LINK3").source(source2).target(target));
 
         assertNotNull(target.getId());
         assertNotNull(source1.getId());
@@ -719,10 +719,10 @@ public class XmEntityResourceExtendedIntTest extends AbstractSpringBootTest {
         XmEntity source2 = xmEntityService.save(createEntity()).name("SOURCE2");
 
         source1.getTargets().clear();
-        source1.getTargets().add(new Link().typeKey("LINK1").source(source1).target(target).startDate(Instant.now()));
+        source1.getTargets().add(new Link().typeKey("LINK1").source(source1).target(target));
 
         source2.getTargets().clear();
-        source2.getTargets().add(new Link().typeKey("LINK2").source(source2).target(target).startDate(Instant.now()));
+        source2.getTargets().add(new Link().typeKey("LINK2").source(source2).target(target));
 
         assertNotNull(target.getId());
         assertNotNull(source1.getId());
@@ -755,10 +755,10 @@ public class XmEntityResourceExtendedIntTest extends AbstractSpringBootTest {
         XmEntity source2 = xmEntityService.save(createEntity()).name("SOURCE2");
 
         source1.getTargets().clear();
-        source1.getTargets().add(new Link().typeKey("LINK1").source(source1).target(target).startDate(Instant.now()));
+        source1.getTargets().add(new Link().typeKey("LINK1").source(source1).target(target));
 
         source2.getTargets().clear();
-        source2.getTargets().add(new Link().typeKey("LINK2").source(source2).target(target).startDate(Instant.now()));
+        source2.getTargets().add(new Link().typeKey("LINK2").source(source2).target(target));
 
         assertNotNull(target.getId());
         assertNotNull(source1.getId());
@@ -1181,7 +1181,7 @@ public class XmEntityResourceExtendedIntTest extends AbstractSpringBootTest {
 
         xmEntityIncoming.setId((long) id);
 
-        val calendar = new Calendar().name("name").typeKey("TYPEKEY").startDate(Instant.now())
+        val calendar = new Calendar().name("name").typeKey("TYPEKEY")
                                      .xmEntity(xmEntityIncoming);
 
         MvcResult resultSaveCalendar = performPost("/api/calendars", calendar)
@@ -1192,7 +1192,7 @@ public class XmEntityResourceExtendedIntTest extends AbstractSpringBootTest {
 
         calendar.setId((long) calendarId);
 
-        val event = new Event().typeKey("TYPEKEY").title("title").startDate(Instant.now())
+        val event = new Event().typeKey("TYPEKEY").title("title")
                                .calendar(calendar).assigned(xmEntityIncoming);
 
         performPost("/api/events", event)
@@ -1398,7 +1398,7 @@ public class XmEntityResourceExtendedIntTest extends AbstractSpringBootTest {
     @Test
     public void testAttachmentStartDate() throws Exception {
 
-        Attachment attachment = new Attachment().typeKey("A").name("1").startDate(Instant.now());
+        Attachment attachment = new Attachment().typeKey("A").name("1");
         XmEntity entity = new XmEntity().name(" ").key(randomUUID()).typeKey("TEST_DELETE").attachments(asSet(
             attachment
         ));

@@ -149,21 +149,21 @@ public class XmEntityServiceElasticsearchTest extends AbstractElasticSpringBootT
         XmEntity xmEntity = new XmEntity().key(randomUUID().toString()).typeKey("TEST_DELETE");
         xmEntity.name("name")
             .functionContexts(asSet(
-                new FunctionContext().key("1").typeKey("A").xmEntity(xmEntity).startDate(Instant.now()),
-                new FunctionContext().key("2").typeKey("A").xmEntity(xmEntity).startDate(Instant.now()),
-                new FunctionContext().key("3").typeKey("A").xmEntity(xmEntity).startDate(Instant.now())
+                new FunctionContext().key("1").typeKey("A").xmEntity(xmEntity),
+                new FunctionContext().key("2").typeKey("A").xmEntity(xmEntity),
+                new FunctionContext().key("3").typeKey("A").xmEntity(xmEntity)
             ))
             .attachments(asSet(
-                new Attachment().typeKey("A").name("1").startDate(Instant.now()),
-                new Attachment().typeKey("A").name("2").startDate(Instant.now()),
-                new Attachment().typeKey("A").name("3").startDate(Instant.now())
+                new Attachment().typeKey("A").name("1"),
+                new Attachment().typeKey("A").name("2"),
+                new Attachment().typeKey("A").name("3")
             ))
             .calendars(asSet(
-                new Calendar().typeKey("A").name("1").startDate(Instant.now()).events(asSet(
+                new Calendar().typeKey("A").name("1").events(asSet(
                     new Event().typeKey("A").title("1"),
                     new Event().typeKey("A").title("2")
                 )),
-                new Calendar().typeKey("A").name("2").startDate(Instant.now()).events(asSet(
+                new Calendar().typeKey("A").name("2").events(asSet(
                     new Event().typeKey("A").title("3"),
                     new Event().typeKey("A").title("4")
                 ))
@@ -173,14 +173,14 @@ public class XmEntityServiceElasticsearchTest extends AbstractElasticSpringBootT
                 new Location().typeKey("A").name("2")
             ))
             .ratings(asSet(
-                new Rating().typeKey("A").startDate(Instant.now()).votes(asSet(
-                    new Vote().message("1").value(1.1).userKey("1").entryDate(Instant.now()),
-                    new Vote().message("2").value(2.1).userKey("2").entryDate(Instant.now())
+                new Rating().typeKey("A").votes(asSet(
+                    new Vote().message("1").value(1.1).userKey("1"),
+                    new Vote().message("2").value(2.1).userKey("2")
                 ))
             ))
             .tags(asSet(
-                new Tag().typeKey("A").name("1").startDate(Instant.now()),
-                new Tag().typeKey("A").name("2").startDate(Instant.now())
+                new Tag().typeKey("A").name("1"),
+                new Tag().typeKey("A").name("2")
             ))
             .comments(asSet(
                 new Comment().message("1").userKey("1"),
