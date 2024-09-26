@@ -221,11 +221,17 @@ public class Calendar implements Serializable {
     }
 
     @PrePersist
-    @PreUpdate
     private void prePersist() {
-        if (id == null && startDate == null) {
+        if (startDate == null) {
             startDate = Instant.now();
         }
+        if (xmEntity != null) {
+            this.xmEntity.updateXmEntityReference(this.events, Event::setAssigned);
+        }
+    }
+
+    @PreUpdate
+    private void preUpdate() {
         if (xmEntity != null) {
             this.xmEntity.updateXmEntityReference(this.events, Event::setAssigned);
         }

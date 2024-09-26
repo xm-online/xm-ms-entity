@@ -146,25 +146,30 @@ public class XmEntityServiceIntTest extends AbstractSpringBootTest {
         lepsForCleanUp.add(pattern + "Save$$" + lepName + "$$around.groovy");
     }
 
+    @Test
+    public void testSave() {
+        xmEntityService.save(createXmEntity());
+    }
+
     private XmEntity createXmEntity() {
         XmEntity xmEntity = new XmEntity().key(randomUUID().toString()).typeKey("TEST_DELETE");
         xmEntity.name("name")
             .functionContexts(asSet(
-                new FunctionContext().key("1").typeKey("A").xmEntity(xmEntity).startDate(Instant.now()),
-                new FunctionContext().key("2").typeKey("A").xmEntity(xmEntity).startDate(Instant.now()),
-                new FunctionContext().key("3").typeKey("A").xmEntity(xmEntity).startDate(Instant.now())
+                new FunctionContext().key("1").typeKey("A").xmEntity(xmEntity),
+                new FunctionContext().key("2").typeKey("A").xmEntity(xmEntity),
+                new FunctionContext().key("3").typeKey("A").xmEntity(xmEntity)
             ))
             .attachments(asSet(
-                new Attachment().typeKey("A").name("1").startDate(Instant.now()),
-                new Attachment().typeKey("A").name("2").startDate(Instant.now()),
-                new Attachment().typeKey("A").name("3").startDate(Instant.now())
+                new Attachment().typeKey("A").name("1"),
+                new Attachment().typeKey("A").name("2"),
+                new Attachment().typeKey("A").name("3")
             ))
             .calendars(asSet(
-                new Calendar().typeKey("A").name("1").startDate(Instant.now()).events(asSet(
+                new Calendar().typeKey("A").name("1").events(asSet(
                     new Event().typeKey("A").title("1"),
                     new Event().typeKey("A").title("2")
                 )),
-                new Calendar().typeKey("A").name("2").startDate(Instant.now()).events(asSet(
+                new Calendar().typeKey("A").name("2").events(asSet(
                     new Event().typeKey("A").title("3"),
                     new Event().typeKey("A").title("4")
                 ))
@@ -174,14 +179,14 @@ public class XmEntityServiceIntTest extends AbstractSpringBootTest {
                 new Location().typeKey("A").name("2")
             ))
             .ratings(asSet(
-                new Rating().typeKey("A").startDate(Instant.now()).votes(asSet(
-                    new Vote().message("1").value(1.1).userKey("1").entryDate(Instant.now()),
-                    new Vote().message("2").value(2.1).userKey("2").entryDate(Instant.now())
+                new Rating().typeKey("A").votes(asSet(
+                    new Vote().message("1").value(1.1).userKey("1"),
+                    new Vote().message("2").value(2.1).userKey("2")
                 ))
             ))
             .tags(asSet(
-                new Tag().typeKey("A").name("1").startDate(Instant.now()),
-                new Tag().typeKey("A").name("2").startDate(Instant.now())
+                new Tag().typeKey("A").name("1"),
+                new Tag().typeKey("A").name("2")
             ))
             .comments(asSet(
                 new Comment().message("1").userKey("1"),
@@ -265,12 +270,10 @@ public class XmEntityServiceIntTest extends AbstractSpringBootTest {
         link.setTypeKey("breakLinks");
         link.setTarget(breakLink);
         link.setSource(entity);
-        link.setStartDate(Instant.now());
 
         Link link2 = new Link();
         link2.setTypeKey("cascadeDeleteLinks");
         link2.setTarget(cascadeDeleteLink);
-        link2.setStartDate(Instant.now());
         entity.addTargets(link2);
 
         xmEntityService.save(entity);
@@ -278,8 +281,8 @@ public class XmEntityServiceIntTest extends AbstractSpringBootTest {
         XmEntity cascadeBreakSubLinks = xmEntityService.save(new XmEntity().name(" ").key(randomUUID()).typeKey("TEST_LIFECYCLE_LINK_SEARCH"));
         XmEntity cascadeDeleteSubLinks = xmEntityService.save(new XmEntity().name(" ").key(randomUUID()).typeKey("TEST_LIFECYCLE_LINK_NEW"));
 
-        cascadeDeleteLink.addTargets(new Link().typeKey("cascadeBreakSubLinks").target(cascadeBreakSubLinks).startDate(Instant.now()));
-        cascadeDeleteLink.addTargets(new Link().typeKey("cascadeDeleteSubLinks").target(cascadeDeleteSubLinks).startDate(Instant.now()));
+        cascadeDeleteLink.addTargets(new Link().typeKey("cascadeBreakSubLinks").target(cascadeBreakSubLinks));
+        cascadeDeleteLink.addTargets(new Link().typeKey("cascadeDeleteSubLinks").target(cascadeDeleteSubLinks));
 
         xmEntityService.save(cascadeDeleteLink);
 
@@ -324,7 +327,6 @@ public class XmEntityServiceIntTest extends AbstractSpringBootTest {
         testLink.setTypeKey("testLink");
         testLink.setTarget(entity);
         testLink.setSource(parentEntity);
-        testLink.setStartDate(Instant.now());
         xmEntityService.save(parentEntity);
 
         Link link = new Link();
@@ -332,12 +334,10 @@ public class XmEntityServiceIntTest extends AbstractSpringBootTest {
 
         link.setTypeKey("breakLinks");
         link.setTarget(breakLink);
-        link.setStartDate(Instant.now());
         link.setSource(entity);
 
         Link link2 = new Link();
         link2.setTypeKey("cascadeDeleteLinks");
-        link2.setStartDate(Instant.now());
         link2.setTarget(cascadeDeleteLink);
         entity.addTargets(link2);
 
@@ -346,8 +346,8 @@ public class XmEntityServiceIntTest extends AbstractSpringBootTest {
         XmEntity cascadeBreakSubLinks = xmEntityService.save(new XmEntity().name(" ").key(randomUUID()).typeKey("TEST_LIFECYCLE_LINK_SEARCH"));
         XmEntity cascadeDeleteSubLinks = xmEntityService.save(new XmEntity().name(" ").key(randomUUID()).typeKey("TEST_LIFECYCLE_LINK_NEW"));
 
-        cascadeDeleteLink.addTargets(new Link().typeKey("cascadeBreakSubLinks").target(cascadeBreakSubLinks).startDate(Instant.now()));
-        cascadeDeleteLink.addTargets(new Link().typeKey("cascadeDeleteSubLinks").target(cascadeDeleteSubLinks).startDate(Instant.now()));
+        cascadeDeleteLink.addTargets(new Link().typeKey("cascadeBreakSubLinks").target(cascadeBreakSubLinks));
+        cascadeDeleteLink.addTargets(new Link().typeKey("cascadeDeleteSubLinks").target(cascadeDeleteSubLinks));
 
         xmEntityService.save(cascadeDeleteLink);
 

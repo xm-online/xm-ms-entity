@@ -135,7 +135,7 @@ public class Tag implements Serializable {
 
     @PrePersist
     private void prePersist() {
-        if (id == null && startDate == null) {
+        if (startDate == null) {
             startDate = Instant.now();
         }
     }
