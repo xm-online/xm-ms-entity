@@ -29,7 +29,7 @@ import org.springframework.http.HttpEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-public interface XmEntityService extends ResourceRepository<XmEntity, Long> {
+public interface XmEntityService extends ResourceRepository<XmEntity, Object> {
 
     XmEntity save(XmEntity xmEntity);
 
@@ -127,7 +127,7 @@ public interface XmEntityService extends ResourceRepository<XmEntity, Long> {
     boolean existsByTypeKeyIgnoreCase(String typeKey, String name);
 
     @Override
-    XmEntity findResourceById(Long id);
+    XmEntity findResourceById(Object id);
 
     /**
      * For backward compatibility in LEPs.
