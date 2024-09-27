@@ -358,6 +358,7 @@ dependencies {
     // XM custom dependencies
     implementation("com.github.java-json-tools:json-schema-validator:${jsonSchemaValidatorVersion}") {
         exclude group: 'javax.mail', module: 'mailapi'
+        exclude group: 'com.sun.mail', module: 'mailapi'
     }
     implementation "com.amazonaws:aws-java-sdk-s3:${amazonawsVersion}"
     implementation "com.amazonaws:aws-java-sdk-core:${amazonawsVersion}"
