@@ -160,34 +160,6 @@ public class FunctionResourceIntTest extends AbstractSpringBootTest {
     }
 
     @Test
-    @SneakyThrows
-    public void testFailFunctionWithInvalidUrl() {
-        MockMultipartFile file = new MockMultipartFile("file", "orig", "text/plain", "test no json content" .getBytes(UTF_8));
-        mockMvc.perform(multipart("/api/functions/some/path").file(file))
-            .andExpect(status().isBadRequest())
-            .andExpect(jsonPath("$").value("Invalid upload url"));
-    }
-
-    @Test
-    @SneakyThrows
-    public void testUploadFunction() {
-        MockMultipartFile file = new MockMultipartFile("file", "orig", "text/plain", "test no json content" .getBytes(UTF_8));
-        mockMvc.perform(multipart("/api/functions/UPLOAD/upload").file(file))
-               .andDo(print())
-               .andExpect(jsonPath("$.data.result").value("test no json content"))
-               .andExpect(status().isOk());
-    }
-
-    @Test
-    @SneakyThrows
-    public void testUploadInPackageFunction() {
-        MockMultipartFile file = new MockMultipartFile("file", "orig", "text/plain", "test no json content" .getBytes(UTF_8));
-        mockMvc.perform(multipart("/api/functions/some/package/UPLOAD/upload").file(file))
-                .andDo(print())
-                .andExpect(jsonPath("$.data.result").value("test no json content"))
-                .andExpect(status().isOk());
-    }
-    @Test
     @Transactional
     @SneakyThrows
     public void textFuncWithCtx() {

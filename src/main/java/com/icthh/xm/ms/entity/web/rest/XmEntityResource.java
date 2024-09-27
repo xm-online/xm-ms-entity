@@ -1,30 +1,24 @@
 package com.icthh.xm.ms.entity.web.rest;
 
-import static com.icthh.xm.ms.entity.web.rest.FunctionResource.getFunctionKey;
-import static com.icthh.xm.ms.entity.web.rest.XmRestApiConstants.XM_HEADER_CONTENT_NAME;
-import static org.apache.commons.collections.CollectionUtils.isEmpty;
-
 import com.codahale.metrics.annotation.Timed;
 import com.google.common.collect.Maps;
 import com.icthh.xm.commons.exceptions.BusinessException;
 import com.icthh.xm.commons.exceptions.ErrorConstants;
 import com.icthh.xm.commons.permission.annotation.PrivilegeDescription;
-import com.icthh.xm.commons.search.dto.ElasticFetchSourceFilterDto;
 import com.icthh.xm.ms.entity.config.Constants;
 import com.icthh.xm.ms.entity.domain.FunctionContext;
 import com.icthh.xm.ms.entity.domain.Link;
 import com.icthh.xm.ms.entity.domain.Profile;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.domain.ext.IdOrKey;
-import com.icthh.xm.ms.entity.domain.template.TemplateParamsHolder;
 import com.icthh.xm.ms.entity.repository.kafka.ProfileEventProducer;
 import com.icthh.xm.ms.entity.service.FunctionService;
 import com.icthh.xm.ms.entity.service.ProfileService;
 import com.icthh.xm.ms.entity.service.TenantService;
 import com.icthh.xm.ms.entity.service.XmEntityService;
 import com.icthh.xm.ms.entity.service.dto.LinkSourceDto;
-import com.icthh.xm.commons.search.dto.SearchDto;
 import com.icthh.xm.ms.entity.util.XmHttpEntityUtils;
+import com.icthh.xm.ms.entity.web.rest.util.FunctionUtils;
 import com.icthh.xm.ms.entity.web.rest.util.HeaderUtil;
 import com.icthh.xm.ms.entity.web.rest.util.PaginationUtil;
 import com.icthh.xm.ms.entity.web.rest.util.RespContentUtil;
@@ -38,7 +32,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PostAuthorize;
 import org.springframework.security.access.prepost.PostFilter;
@@ -63,6 +56,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+
+import static com.icthh.xm.ms.entity.web.rest.XmRestApiConstants.XM_HEADER_CONTENT_NAME;
+import static org.apache.commons.collections.CollectionUtils.isEmpty;
 
 /**
  * REST controller for managing XmEntity.
@@ -272,7 +268,8 @@ public class XmEntityResource {
     public ResponseEntity<Object> executeGetFunction(@PathVariable String idOrKey,
                                                      HttpServletRequest request,
                                                      @RequestParam(required = false) Map<String, Object> functionInput) {
-        return xmEntityResource.executeGetFunction(idOrKey, getFunctionKey(request), functionInput);
+        String functionKey = FunctionUtils.getFunctionKey(request);
+        return xmEntityResource.executeGetFunction(idOrKey, functionKey, functionInput);
     }
 
     @Timed
@@ -280,7 +277,8 @@ public class XmEntityResource {
     public ResponseEntity<Object> executeFunction(@PathVariable String idOrKey,
                                                   HttpServletRequest request,
                                                   @RequestBody(required = false) Map<String, Object> functionInput) {
-        return xmEntityResource.executePostFunction(idOrKey, getFunctionKey(request), functionInput);
+        String functionKey = FunctionUtils.getFunctionKey(request);
+        return xmEntityResource.executePostFunction(idOrKey, functionKey, functionInput);
     }
 
     @GetMapping("/xm-entities/{idOrKey}/links/targets")
