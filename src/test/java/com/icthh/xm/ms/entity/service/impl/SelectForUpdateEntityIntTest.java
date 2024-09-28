@@ -6,6 +6,7 @@ import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_TENANT_
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.when;
 
+import com.icthh.xm.commons.lep.api.LepManagementService;
 import com.icthh.xm.commons.security.XmAuthenticationContext;
 import com.icthh.xm.commons.security.XmAuthenticationContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
@@ -15,6 +16,7 @@ import com.icthh.xm.ms.entity.AbstractSpringBootTest;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.domain.ext.IdOrKey;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.After;
 import org.junit.Before;
@@ -36,7 +38,7 @@ public class SelectForUpdateEntityIntTest extends AbstractSpringBootTest {
     private TenantContextHolder tenantContextHolder;
 
     @Autowired
-    private LepManager lepManager;
+    private LepManagementService lepManager;
 
     @Autowired
     private XmEntityServiceImpl xmEntityService;
@@ -57,15 +59,13 @@ public class SelectForUpdateEntityIntTest extends AbstractSpringBootTest {
         when(authContextHolder.getContext()).thenReturn(context);
         when(context.getRequiredUserKey()).thenReturn("userKey");
 
-        lepManager.beginThreadContext(ctx -> {
-            ctx.setValue(THREAD_CONTEXT_KEY_TENANT_CONTEXT, tenantContextHolder.getContext());
-            ctx.setValue(THREAD_CONTEXT_KEY_AUTH_CONTEXT, authContextHolder.getContext());
-        });
+        lepManager.beginThreadContext();
     }
 
 
     @After
     public void afterTest() {
+        lepManager.endThreadContext();
         tenantContextHolder.getPrivilegedContext().destroyCurrentContext();
     }
 
@@ -87,52 +87,50 @@ public class SelectForUpdateEntityIntTest extends AbstractSpringBootTest {
     @Test
     //@Transactional
     @WithMockUser(authorities = "SUPER-ADMIN")
+    @SneakyThrows
     public void findOneForUpdate() throws InterruptedException {
         XmEntity entity = createEntity(25l, "ACCOUNT");
         XmEntity sourceEntity = xmEntityRepository.save(entity);
         log.info("Saved: {}", IdOrKey.of(sourceEntity.getId()));
         ExecutorService executorService = Executors.newFixedThreadPool(2);
-        executorService.submit(() -> {
+        var future1 = executorService.submit(() -> {
             TenantContextUtils.setTenant(tenantContextHolder, "RESINTTEST");
-            lepManager.beginThreadContext(ctx -> {
-                ctx.setValue(THREAD_CONTEXT_KEY_TENANT_CONTEXT, tenantContextHolder.getContext());
-                ctx.setValue(THREAD_CONTEXT_KEY_AUTH_CONTEXT, authContextHolder.getContext());
-            });
-            XmEntity entity1 = xmEntityService.selectAndUpdate(IdOrKey.of(sourceEntity.getId()), first -> {
-                assertEquals("initial", first.getData().get("AAAAAAAAAA"));
-                assertEquals("Initial", first.getName());
-                first.setData(of("AAAAAAAAAA", "first"));
-                first.setName("First");
-                for (int i = 0; i < 3; i++) {
-                    log.info("Waiting .... {} milliseconds", (i + 1) * 500);
-                    try {
-                        Thread.sleep(500);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
+            try (var context = lepManager.beginThreadContext()) {
+                XmEntity entity1 = xmEntityService.selectAndUpdate(IdOrKey.of(sourceEntity.getId()), first -> {
+                    assertEquals("initial", first.getData().get("AAAAAAAAAA"));
+                    assertEquals("Initial", first.getName());
+                    first.setData(of("AAAAAAAAAA", "first"));
+                    first.setName("First");
+                    for (int i = 0; i < 3; i++) {
+                        log.info("Waiting .... {} milliseconds", (i + 1) * 500);
+                        try {
+                            Thread.sleep(500);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
                     }
-                }
-            });
-            log.info("First: {}", entity1);
+                });
+                log.info("First: {}", entity1);
+            }
         });
 
         Thread.sleep(500);
 
-        executorService.submit(() -> {
+        var future2 = executorService.submit(() -> {
             TenantContextUtils.setTenant(tenantContextHolder, "RESINTTEST");
-            lepManager.beginThreadContext(ctx -> {
-                ctx.setValue(THREAD_CONTEXT_KEY_TENANT_CONTEXT, tenantContextHolder.getContext());
-                ctx.setValue(THREAD_CONTEXT_KEY_AUTH_CONTEXT, authContextHolder.getContext());
-            });
-            XmEntity entity2 = xmEntityService.selectAndUpdate(IdOrKey.of(sourceEntity.getId()), second -> {
-                assertEquals("first", second.getData().get("AAAAAAAAAA"));
-                assertEquals("First", second.getName());
-                second.setData(of("AAAAAAAAAA", "second"));
-                second.setName("Second");
-            });
-            log.info("Second: {}", entity2);
+            try (var context =lepManager.beginThreadContext()) {
+                XmEntity entity2 = xmEntityService.selectAndUpdate(IdOrKey.of(sourceEntity.getId()), second -> {
+                    assertEquals("first", second.getData().get("AAAAAAAAAA"));
+                    assertEquals("First", second.getName());
+                    second.setData(of("AAAAAAAAAA", "second"));
+                    second.setName("Second");
+                });
+                log.info("Second: {}", entity2);
+            }
         });
 
-        executorService.awaitTermination(3000, TimeUnit.MILLISECONDS);
+        future1.get(5000, TimeUnit.MILLISECONDS);
+        future2.get(5000, TimeUnit.MILLISECONDS);
 
         XmEntity after = xmEntityService.findOne(IdOrKey.of(sourceEntity.getId()));
         assertEquals("second", after.getData().get("AAAAAAAAAA"));
