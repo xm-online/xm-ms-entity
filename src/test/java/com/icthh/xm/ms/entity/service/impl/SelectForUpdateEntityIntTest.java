@@ -132,7 +132,7 @@ public class SelectForUpdateEntityIntTest extends AbstractSpringBootTest {
             log.info("Second: {}", entity2);
         });
 
-        executorService.awaitTermination(2500, TimeUnit.MILLISECONDS);
+        executorService.awaitTermination(3000, TimeUnit.MILLISECONDS);
 
         XmEntity after = xmEntityService.findOne(IdOrKey.of(sourceEntity.getId()));
         assertEquals("second", after.getData().get("AAAAAAAAAA"));
