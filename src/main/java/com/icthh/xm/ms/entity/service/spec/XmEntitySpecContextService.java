@@ -6,6 +6,7 @@ import com.github.fge.jsonschema.main.JsonSchema;
 import com.icthh.xm.commons.lep.spring.LepService;
 import com.icthh.xm.commons.logging.aop.IgnoreLogginAspect;
 import com.icthh.xm.ms.entity.config.XmEntityTenantConfigService;
+import com.icthh.xm.ms.entity.domain.spec.DefinitionSpec;
 import com.icthh.xm.ms.entity.domain.spec.FunctionSpec;
 import com.icthh.xm.ms.entity.domain.spec.TypeSpec;
 import com.icthh.xm.ms.entity.domain.spec.XmEntitySpec;
@@ -41,8 +42,6 @@ public class XmEntitySpecContextService {
 
     private final String maxFileSize;
 
-    private final DefinitionSpecProcessor definitionSpecProcessor;
-    private final FormSpecProcessor formSpecProcessor;
     private final SpecInheritanceProcessor specInheritanceProcessor;
     private final DataSpecJsonSchemaService dataSpecJsonSchemaService;
     private final FunctionByTenantService functionByTenantService;
@@ -56,15 +55,13 @@ public class XmEntitySpecContextService {
     private final ConcurrentHashMap<String, Map<String, TypeSpec>> typesByTenant = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, Map<String, String>> typesByTenantByFile = new ConcurrentHashMap<>();
 
-    public XmEntitySpecContextService(DefinitionSpecProcessor definitionSpecProcessor, FormSpecProcessor formSpecProcessor,
+    public XmEntitySpecContextService(DataSpecJsonSchemaService dataSpecJsonSchemaService,
                                       XmEntitySpecCustomizer xmEntitySpecCustomizer,
                                       XmEntityTenantConfigService tenantConfigService,
                                       @Value("${spring.servlet.multipart.max-file-size:1MB}") String maxFileSize) {
-        this.definitionSpecProcessor = definitionSpecProcessor;
-        this.formSpecProcessor = formSpecProcessor;
         this.xmEntitySpecCustomizer = xmEntitySpecCustomizer;
         this.specInheritanceProcessor = new SpecInheritanceProcessor(tenantConfigService);
-        this.dataSpecJsonSchemaService = new DataSpecJsonSchemaService(definitionSpecProcessor, formSpecProcessor);
+        this.dataSpecJsonSchemaService = dataSpecJsonSchemaService;
         this.specFieldsProcessor = new SpecFieldsProcessor();
         this.functionByTenantService = new FunctionByTenantService();
         this.maxFileSize = maxFileSize;
@@ -115,19 +112,19 @@ public class XmEntitySpecContextService {
             xmEntitySpecCustomizer.customize(tenant, tenantEntitySpec);
         }
 
-        definitionSpecProcessor.updateDefinitionStateByTenant(tenant, typesByTenantByFile);
-        formSpecProcessor.updateFormStateByTenant(tenant, typesByTenantByFile);
+        dataSpecJsonSchemaService.updateByTenant(tenant, typesByTenantByFile);
 
         if (tenantEntitySpec.isEmpty()) {
             typesByTenant.remove(tenant);
         }
 
-        typesByTenant.put(tenant, tenantEntitySpec);
         specInheritanceProcessor.process(tenantEntitySpec, tenant);
         specFieldsProcessor.processUniqueFields(tenantEntitySpec);
 
         functionByTenantService.processFunctionSpec(tenant, tenantEntitySpec);
         dataSpecJsonSchemaService.processDataSpec(tenant, tenantEntitySpec);
+
+        typesByTenant.put(tenant, tenantEntitySpec);
 
         return tenantEntitySpec;
     }
@@ -175,5 +172,9 @@ public class XmEntitySpecContextService {
         if(initialized.compareAndSet(false, true)) {
             tenants().forEach(this::updateByTenantState);
         }
+    }
+
+    public List<DefinitionSpec> getDefinitions(String tenantKeyValue) {
+        return dataSpecJsonSchemaService.getDefinitions(tenantKeyValue);
     }
 }
