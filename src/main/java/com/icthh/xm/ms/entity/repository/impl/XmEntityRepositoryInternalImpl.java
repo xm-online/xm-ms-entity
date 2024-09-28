@@ -203,7 +203,7 @@ public class XmEntityRepositoryInternalImpl implements XmEntityRepositoryInterna
      */
     @Override
     public XmEntity getOne(Long id) {
-        return springXmEntityRepository.getOne(id);
+        return springXmEntityRepository.getReferenceById(id);
     }
 
 

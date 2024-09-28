@@ -180,7 +180,7 @@ public class Comment implements Serializable {
 
     @PrePersist
     private void prePersist() {
-        if (id == null && entryDate == null) {
+        if (entryDate == null) {
             entryDate = Instant.now();
         }
     }

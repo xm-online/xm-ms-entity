@@ -784,7 +784,7 @@ public class XmEntityServiceImpl implements XmEntityService {
     }
 
     @Override
-    public XmEntity findResourceById(Long id) {
+    public XmEntity findResourceById(Object id) {
         return findOne(IdOrKey.of(String.valueOf(id)));
     }
 

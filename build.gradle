@@ -98,7 +98,7 @@ if (OperatingSystem.current().isWindows()) {
     tasks.register('classpathJar', Jar) {
         inputs.files sourceSets.main.runtimeClasspath
 
-        archiveName = "runboot-classpath.jar"
+        archiveFileName = "runboot-classpath.jar"
         doFirst {
             manifest {
                 def classpath = sourceSets.main.runtimeClasspath.files
