@@ -107,7 +107,8 @@ public class FunctionSwaggerIntTest extends AbstractSpringBootTest {
                 "/entity/api/functions/check/different/key/with/same/path", List.of("delete", "put"),
                 "/entity/api/functions/NameFromKeyOnlyDataInReturn", List.of("post", "delete"),
                 "/entity/api/functions/relative/path/{pathVariable}/other/{otherPathVariable}/{notDefinedVariable}/etc",
-                List.of("post", "get", "delete", "put")
+                List.of("post", "get", "delete", "put"),
+                "/entity/api/functions/folder/{variable}/StructureFunction", List.of("post", "get")
             ));
         }
 
@@ -134,7 +135,8 @@ public class FunctionSwaggerIntTest extends AbstractSpringBootTest {
             assertPaths(swagger, Map.of(
                 "/entity/api/functions/folder/v1/TestName", List.of("post", "get"),
                 "/entity/api/functions/check/different/key/with/same/path", List.of("delete", "put"),
-                "/entity/api/functions/NameFromKeyOnlyDataInReturn", List.of("post", "delete")
+                "/entity/api/functions/NameFromKeyOnlyDataInReturn", List.of("post", "delete"),
+                "/entity/api/functions/folder/{variable}/StructureFunction", List.of("post", "get")
             ));
         }
 
@@ -174,7 +176,8 @@ public class FunctionSwaggerIntTest extends AbstractSpringBootTest {
             assertPaths(swagger, Map.of(
                 "/entity/api/functions/folder/v1/TestName", List.of("post", "get"),
                 "/entity/api/functions/check/different/key/with/same/path", List.of("put"),
-                "/entity/api/functions/NameFromKeyOnlyDataInReturn", List.of("post", "delete")
+                "/entity/api/functions/NameFromKeyOnlyDataInReturn", List.of("post", "delete"),
+                "/entity/api/functions/folder/{variable}/StructureFunction", List.of("post", "get")
             ));
         }
 
@@ -188,7 +191,8 @@ public class FunctionSwaggerIntTest extends AbstractSpringBootTest {
             var swagger = dynamicSwaggerFunctionGenerator.generateSwagger("https://xm.domain.com:8080");
             assertPaths(swagger, Map.of(
                 "/entity/api/functions/check/different/key/with/same/path", List.of("put"),
-                "/entity/api/functions/NameFromKeyOnlyDataInReturn", List.of("post", "delete")
+                "/entity/api/functions/NameFromKeyOnlyDataInReturn", List.of("post", "delete"),
+                "/entity/api/functions/folder/{variable}/StructureFunction", List.of("post", "get")
             ));
         }
 
