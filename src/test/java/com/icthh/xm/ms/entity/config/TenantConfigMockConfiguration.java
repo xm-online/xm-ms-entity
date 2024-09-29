@@ -20,6 +20,7 @@ import com.icthh.xm.ms.entity.service.processor.DefinitionSpecProcessor;
 import com.icthh.xm.ms.entity.service.privileges.custom.EntityCustomPrivilegeService;
 import com.icthh.xm.ms.entity.service.XmEntitySpecService;
 import com.icthh.xm.ms.entity.service.processor.FormSpecProcessor;
+import com.icthh.xm.ms.entity.service.spec.DataSpecJsonSchemaService;
 import com.icthh.xm.ms.entity.service.spec.XmEntitySpecCustomizer;
 import lombok.SneakyThrows;
 import org.apache.commons.io.IOUtils;
@@ -60,8 +61,7 @@ public class TenantConfigMockConfiguration {
                                                    EntityCustomPrivilegeService entityCustomPrivilegeService,
                                                    DynamicPermissionCheckService dynamicPermissionCheckService,
                                                    XmEntityTenantConfigService xmEntityTenantConfigService,
-                                                   DefinitionSpecProcessor definitionSpecProcessor,
-                                                   FormSpecProcessor formSpecProcessor,
+                                                   DataSpecJsonSchemaService dataSpecJsonSchemaService,
                                                    @Value("${spring.servlet.multipart.max-file-size:1MB}") String maxFileSize) {
         return new LocalXmEntitySpecService(tenantConfigRepository(),
                                             applicationProperties,
@@ -70,8 +70,7 @@ public class TenantConfigMockConfiguration {
                                             dynamicPermissionCheckService,
                                             xmEntityTenantConfigService,
                                             xmEntitySpecCustomizer,
-                                            definitionSpecProcessor,
-                                            formSpecProcessor,
+                                            dataSpecJsonSchemaService,
                                             maxFileSize);
     }
 

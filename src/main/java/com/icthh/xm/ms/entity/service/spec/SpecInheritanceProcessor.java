@@ -11,6 +11,7 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -24,9 +25,11 @@ import static com.icthh.xm.ms.entity.domain.ext.TypeSpecParameter.LOCATIONS;
 import static com.icthh.xm.ms.entity.domain.ext.TypeSpecParameter.RATINGS;
 import static com.icthh.xm.ms.entity.domain.ext.TypeSpecParameter.STATES;
 import static com.icthh.xm.ms.entity.domain.ext.TypeSpecParameter.TAGS;
+import static com.icthh.xm.ms.entity.service.spec.DataSpecJsonSchemaService.DEFINITION_PREFIXES;
 import static com.icthh.xm.ms.entity.util.CustomCollectionUtils.union;
 import static java.lang.Boolean.FALSE;
 import static java.lang.Boolean.TRUE;
+import static org.apache.commons.lang3.ObjectUtils.firstNonNull;
 
 @Slf4j
 public class SpecInheritanceProcessor {
@@ -91,12 +94,21 @@ public class SpecInheritanceProcessor {
         Boolean isInheritanceEnabled = entityTenantConfig.getEntitySpec().getEnableDataSpecInheritance();
         if (isFeatureEnabled(isInheritanceEnabled, type.getDataSpecInheritance()) && hasDataSpec(type, parentType)) {
             ObjectMapper objectMapper = new ObjectMapper();
-            var target = objectMapper.readValue(type.getDataSpec(), Map.class);
-            var parent = objectMapper.readValue(parentType.getDataSpec(), Map.class);
+            Map<String, Object> target = objectMapper.readValue(nullSafeReadJson(type.getDataSpec()), Map.class);
+            Map<String, Object> parent = objectMapper.readValue(nullSafeReadJson(parentType.getDataSpec()), Map.class);
             if (parent.containsKey("additionalProperties")) {
                 parent.put("additionalProperties", true);
             }
-            target.put(XM_ENTITY_INHERITANCE_DEFINITION, Map.of(parentType.getKey(), parent));
+
+            DEFINITION_PREFIXES.forEach(prefix -> target.put(prefix, makeMapMutable(prefix, target)));
+            DEFINITION_PREFIXES.forEach(prefix -> {
+                Map<String, Object> defs = (Map<String, Object>) target.get(prefix);
+                Map<String, Object> parentDefs = (Map<String, Object>) parent.remove(prefix);
+                defs.putAll(firstNonNull(parentDefs, Map.of()));
+            });
+
+            Map<String, Object> inheritanceDefinitions = (Map<String, Object>) target.get(XM_ENTITY_INHERITANCE_DEFINITION);
+            inheritanceDefinitions.put(parentType.getKey(), parent);
             target.put("$ref", "#/" + XM_ENTITY_INHERITANCE_DEFINITION + "/" + parentType.getKey());
             String mergedJson = objectMapper.writeValueAsString(target);
             type.setDataSpec(mergedJson);
@@ -105,15 +117,23 @@ public class SpecInheritanceProcessor {
         }
     }
 
+    private Map<String, Object> makeMapMutable(String prefix, Map<String, Object> target) {
+        return new HashMap<>((Map<String, Object>)target.getOrDefault(prefix, new HashMap<>()));
+    }
+
+    private static String nullSafeReadJson(String dataSpec) {
+        return dataSpec != null ? dataSpec : "{}";
+    }
+
     @SneakyThrows
     private void extendDataForm(TypeSpec type, TypeSpec parentType, String tenant) {
         XmEntityTenantConfigService.XmEntityTenantConfig entityTenantConfig = this.tenantConfigService.getXmEntityTenantConfig(tenant);
         Boolean isInheritanceEnabled = entityTenantConfig.getEntitySpec().getEnableDataFromInheritance();
         if (isFeatureEnabled(isInheritanceEnabled, type.getDataFormInheritance()) && hasDataForm(type, parentType)) {
             ObjectMapper objectMapper = new ObjectMapper();
-            var defaults = objectMapper.readValue(parentType.getDataForm(), Map.class);
+            var defaults = objectMapper.readValue(nullSafeReadJson(parentType.getDataForm()), Map.class);
             ObjectReader updater = objectMapper.readerForUpdating(defaults);
-            Map<String, Object> merged = updater.readValue(type.getDataForm());
+            Map<String, Object> merged = updater.readValue(nullSafeReadJson(type.getDataForm()));
             String mergedJson = objectMapper.writeValueAsString(merged);
             type.setDataForm(mergedJson);
         } else {

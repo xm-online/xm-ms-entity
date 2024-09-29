@@ -19,18 +19,14 @@ import java.util.Optional;
 import java.util.Set;
 
 import static com.fasterxml.jackson.databind.node.JsonNodeFactory.instance;
-import static com.google.common.collect.Streams.stream;
-import static com.icthh.xm.ms.entity.service.processor.DefinitionSpecProcessor.XM_ENTITY_DEFINITION;
-import static com.icthh.xm.ms.entity.service.spec.SpecInheritanceProcessor.XM_ENTITY_INHERITANCE_DEFINITION;
+import static com.icthh.xm.ms.entity.service.spec.DataSpecJsonSchemaService.DEFINITIONS;
+import static com.icthh.xm.ms.entity.service.spec.DataSpecJsonSchemaService.DEFINITION_PREFIXES;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.capitalize;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 @Slf4j
 public class JsonSchemaToSwaggerSchemaConverter {
-
-    public static final String DEFINITIONS = "definitions";
-    public static final Set<String> DEFINITION_PREFIXES = Set.of(DEFINITIONS, XM_ENTITY_DEFINITION, XM_ENTITY_INHERITANCE_DEFINITION);
 
     private static final Set<String> supportedKeywords = Set.of(
         "$ref", DEFINITIONS,
@@ -54,6 +50,7 @@ public class JsonSchemaToSwaggerSchemaConverter {
     private static final Set<String> validTypes = Set.of(
         "null", "boolean", "object", "array", "number", "string", "integer"
     );
+    public static final String COMPONENTS_SCHEMAS = "#/components/schemas/";
     public final ObjectMapper objectMapper = new ObjectMapper();
 
     public String transformToSwaggerJson(String typeName, String jsonSchema,
@@ -76,7 +73,7 @@ public class JsonSchemaToSwaggerSchemaConverter {
         }
 
         ObjectNode json = (ObjectNode) inputJson;
-        if (!json.has("type") && !json.has("properties")) {
+        if (!json.has("type") && !json.has("properties") && !json.has("$ref")) {
             removeEmptyDefinition(json);
             ObjectNode object = object("type", instance.textNode("object"));
             object.set("properties", json);
@@ -243,7 +240,7 @@ public class JsonSchemaToSwaggerSchemaConverter {
                     ObjectNode definitionNode = currentNode.deepCopy();
                     definitions.put(definitionName, definitionNode);
                     originalDefinitions.put(definitionName, definitionNode.deepCopy());
-                    object.put("$ref", "#/components/schemas/" + definitionName);
+                    object.put("$ref", COMPONENTS_SCHEMAS + definitionName);
                     transformToSwaggerJson(definitionName, definitionNode, definitions, originalDefinitions, objectDefinitions);
                 }
             }
@@ -431,4 +428,32 @@ public class JsonSchemaToSwaggerSchemaConverter {
         return objectMapper.readTree(jsonSchema);
     }
 
+    public void inlineRootRef(JsonNode jsonNode, Map<String, Object> definitions) {
+        if (!(jsonNode instanceof ObjectNode)) {
+            return;
+        }
+
+        if (jsonNode.has("$ref")) {
+            inlineRef(jsonNode.get("$ref").asText(), (ObjectNode) jsonNode, definitions);
+        } else if (jsonNode.has("properties") && jsonNode.get("properties").has("$ref")) {
+            inlineRef(jsonNode.get("properties").get("$ref").asText(), (ObjectNode) jsonNode.get("properties"), definitions);
+        }
+    }
+
+    private void inlineRef(String ref, ObjectNode jsonNode, Map<String, Object> definitions) {
+        if (!ref.startsWith(COMPONENTS_SCHEMAS)) {
+            return;
+        }
+        ref = ref.substring(COMPONENTS_SCHEMAS.length());
+
+        var refNode = definitions.get(ref);
+        if (!(refNode instanceof ObjectNode)) {
+            return;
+        }
+
+        var refObject = (ObjectNode) refNode;
+        refObject.fields().forEachRemaining(entry -> {
+            jsonNode.set(entry.getKey(), entry.getValue().deepCopy());
+        });
+    }
 }

@@ -40,6 +40,7 @@ public class MicroserviceSecurityConfiguration {
                 auth.requestMatchers("/api/profile-info").permitAll()
                     .requestMatchers("/api/xm-entities/registration").permitAll()
                     .requestMatchers("/api/functions/anonymous/**").permitAll()
+                    .requestMatchers("/public/**").permitAll()
                     .requestMatchers("/api/functions/api-docs").permitAll()
                     .requestMatchers("/api/xm-entities/registration/activate/*").permitAll()
                     .requestMatchers("/api/**").authenticated()
