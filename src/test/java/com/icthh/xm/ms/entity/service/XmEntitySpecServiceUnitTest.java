@@ -18,6 +18,7 @@ import com.icthh.xm.ms.entity.config.XmEntityTenantConfigService;
 import com.icthh.xm.ms.entity.config.XmEntityTenantConfigService.XmEntityTenantConfig;
 import com.icthh.xm.ms.entity.config.tenant.LocalXmEntitySpecService;
 import com.icthh.xm.ms.entity.domain.spec.AttachmentSpec;
+import com.icthh.xm.ms.entity.domain.spec.DefinitionSpec;
 import com.icthh.xm.ms.entity.domain.spec.FunctionSpec;
 import com.icthh.xm.ms.entity.domain.spec.LinkSpec;
 import com.icthh.xm.ms.entity.domain.spec.LocationSpec;
@@ -36,6 +37,7 @@ import com.icthh.xm.ms.entity.service.privileges.custom.FunctionCustomPrivileges
 import com.icthh.xm.ms.entity.service.privileges.custom.FunctionWithXmEntityCustomPrivilegesExtractor;
 import com.icthh.xm.ms.entity.service.processor.DefinitionSpecProcessor;
 import com.icthh.xm.ms.entity.service.processor.FormSpecProcessor;
+import com.icthh.xm.ms.entity.service.spec.DataSpecJsonSchemaService;
 import com.icthh.xm.ms.entity.service.spec.XmEntitySpecCustomizer;
 import com.networknt.schema.JsonSchema;
 import com.networknt.schema.JsonSchemaFactory;
@@ -175,8 +177,10 @@ public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
                                             dynamicPermissionCheckService,
                                             tenantConfig,
                                             xmEntitySpecCustomizer,
-                                            new DefinitionSpecProcessor(jsonListenerService),
-                                            new FormSpecProcessor(jsonListenerService), MAX_FILE_SIZE));
+                                            new DataSpecJsonSchemaService(
+                                                new DefinitionSpecProcessor(jsonListenerService),
+                                                new FormSpecProcessor(jsonListenerService)
+                                            ), MAX_FILE_SIZE));
     }
 
     @Test
@@ -626,6 +630,119 @@ public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
         setExtendsFormAndSpec(true);
         TypeSpec extendedEntityWithGlobalExtends = typeSpecs.get("BASE_ENTITY.SEPARATE_FILE_EXTENDS_ENABLED");
         assertTrue(validateByJsonSchema(extendedEntityWithGlobalExtends.getDataSpec(), bothEntityData));
+    }
+
+    @Test
+    public void testExtendsThirdLevel() {
+
+        mockTenant("RESINTTEST");
+
+        var bothEntityData = Map.of(
+            "field1", "field1value",
+            "field3", "field3value",
+            "field7", "field7value",
+            "object1", Map.of(
+                "field2", "field2value",
+                "field8", "field8value",
+                "field4", "field4value"
+            )
+        );
+
+        var bothDataFrom = Map.of(
+            "form", List.of(
+                Map.of("key", "field1"),
+                Map.of("key", "object1.field2"),
+                Map.of("key", "field3"),
+                Map.of("key", "object1.field4"),
+                Map.of("key", "field7"),
+                Map.of("key", "object1.field8")
+            )
+        );
+
+        var typeSpecs = xmEntitySpecService.getTypeSpecs();
+        TypeSpec thirdEntity = typeSpecs.get("BASE_ENTITY.EXTENDS_ENABLED.THIRD_LEVEL");
+
+        assertTrue(validateByJsonSchema(thirdEntity.getDataSpec(), bothEntityData));
+        assertEqualsJson(bothDataFrom, thirdEntity.getDataForm());
+    }
+
+    @Test
+    public void testRefToEntityFromEntity() {
+
+        Map<String, Object> entity = Map.of(
+            "internalObject", Map.of(
+                "testEntityName", "name",
+                "testObject", Map.of(
+                    "testEntityField", "value"
+                ),
+                "targetObject", Map.of(
+                    "targetName", "value",
+                    "testObject", Map.of(
+                        "targetEntityField", "value"
+                    )
+                )
+            )
+        );
+
+        mockTenant("RESINTTEST");
+
+        var typeSpecs = xmEntitySpecService.getTypeSpecs();
+        TypeSpec thirdEntity = typeSpecs.get("ENTITY_THAT_REF_TO_TARGET");
+        assertTrue(validateByJsonSchema(thirdEntity.getDataSpec(), entity));
+    }
+
+    @Test
+    public void testRefToEntityFromDefinition() {
+
+        Map<String, Object> entity = Map.of(
+            "internalObject", Map.of(
+                "testEntityName", "name",
+                "testObject", Map.of(
+                    "testEntityField", "value"
+                ),
+                "targetObject", Map.of(
+                    "fieldString1", "value",
+                    "fieldRef2", Map.of(
+                        "fieldString2", "value",
+                        "refToEntity", Map.of(
+                            "targetName", "value",
+                            "testObject", Map.of(
+                                "targetEntityField", "value"
+                            )
+                        )
+                    )
+                )
+            )
+        );
+
+        mockTenant("RESINTTEST");
+
+        var typeSpecs = xmEntitySpecService.getTypeSpecs();
+        TypeSpec thirdEntity = typeSpecs.get("ENTITY_THAT_REF_THROUGH_DEF");
+        assertTrue(validateByJsonSchema(thirdEntity.getDataSpec(), entity));
+    }
+
+    @Test
+    public void testProcessingOfDefinitions() {
+        Map<String, Object> entity = Map.of(
+            "fieldRef2", Map.of(
+                "fieldString2", "value",
+                "refToEntity", Map.of(
+                    "targetName", "value",
+                    "testObject", Map.of(
+                        "targetEntityField", "value"
+                    )
+                )
+            ),
+            "fieldString1", "value"
+        );
+
+        mockTenant("RESINTTEST");
+
+        xmEntitySpecService.getTypeSpecs(); // init process by test
+        var definitions = xmEntitySpecService.getDefinitions();
+        DefinitionSpec def = definitions.stream().filter(it -> it.getKey().equals("defWithRefToDefWithEntityRef")).findFirst().get();
+        assertTrue(validateByJsonSchema(def.getValue(), entity));
     }
 
     @Test

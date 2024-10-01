@@ -570,6 +570,116 @@ paths:
                                                 type: "number"
                                             nameHolder:
                                                 $ref: "#/components/schemas/NameDefinition"
+    /entity/api/functions/folder/{variable}/StructureFunction:
+        get:
+            description: "StructureFunction"
+            operationId: "structureFunctionGet"
+            parameters:
+                - in: "path"
+                  name: "variable"
+                  required: true
+                  schema:
+                      type: "number"
+                - in: "query"
+                  name: "name"
+                  required: true
+                  schema:
+                      type: "string"
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                properties:
+                                    data:
+                                        additionalProperties: true
+                                        type: "object"
+                                    description:
+                                        type: "string"
+                                    endDate:
+                                        type: "number"
+                                    id:
+                                        type: "integer"
+                                    key:
+                                        type: "string"
+                                    startDate:
+                                        type: "number"
+                                    typeKey:
+                                        type: "string"
+                                    updateDate:
+                                        type: "number"
+                                type: "object"
+                    description: "Successful operation"
+                "400":
+                    $ref: "#/components/responses/400"
+                "401":
+                    $ref: "#/components/responses/401"
+                "403":
+                    $ref: "#/components/responses/403"
+                "404":
+                    $ref: "#/components/responses/404"
+                "500":
+                    $ref: "#/components/responses/500"
+            summary: "Structure"
+            tags:
+                - "external"
+        post:
+            description: "StructureFunction"
+            operationId: "structureFunctionPost"
+            parameters:
+                - in: "path"
+                  name: "variable"
+                  required: true
+                  schema:
+                      type: "number"
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: "#/components/schemas/Structure"
+                            properties:
+                                name:
+                                    type: "string"
+                            type: "object"
+                required: true
+            responses:
+                "201":
+                    content:
+                        application/json:
+                            schema:
+                                properties:
+                                    data:
+                                        additionalProperties: true
+                                        type: "object"
+                                    description:
+                                        type: "string"
+                                    endDate:
+                                        type: "number"
+                                    id:
+                                        type: "integer"
+                                    key:
+                                        type: "string"
+                                    startDate:
+                                        type: "number"
+                                    typeKey:
+                                        type: "string"
+                                    updateDate:
+                                        type: "number"
+                                type: "object"
+                    description: "Successful operation"
+                "400":
+                    $ref: "#/components/responses/400"
+                "401":
+                    $ref: "#/components/responses/401"
+                "403":
+                    $ref: "#/components/responses/403"
+                "404":
+                    $ref: "#/components/responses/404"
+                "500":
+                    $ref: "#/components/responses/500"
+            summary: "Structure"
+            tags:
+                - "external"
 components:
     responses:
         400:
@@ -617,6 +727,13 @@ components:
             properties:
                 name:
                     type: "string"
+        Structure:
+            properties:
+                name:
+                    type: "string"
+                variable:
+                    type: "number"
+            type: "object"
     securitySchemes:
         oAuth2Password:
             type: "oauth2"

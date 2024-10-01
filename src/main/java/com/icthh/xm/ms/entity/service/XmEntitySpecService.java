@@ -13,6 +13,8 @@ import com.icthh.xm.ms.entity.config.ApplicationProperties;
 import com.icthh.xm.ms.entity.domain.Calendar;
 import com.icthh.xm.ms.entity.domain.spec.AttachmentSpec;
 import com.icthh.xm.ms.entity.domain.spec.CalendarSpec;
+import com.icthh.xm.ms.entity.domain.spec.DataSchema;
+import com.icthh.xm.ms.entity.domain.spec.DefinitionSpec;
 import com.icthh.xm.ms.entity.domain.spec.EventSpec;
 import com.icthh.xm.ms.entity.domain.spec.FunctionSpec;
 import com.icthh.xm.ms.entity.domain.spec.LinkSpec;
@@ -33,6 +35,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.util.AntPathMatcher;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -177,6 +180,21 @@ public class XmEntitySpecService implements RefreshableConfiguration {
     protected Map<String, TypeSpec> getTypeSpecs() {
         String tenantKeyValue = getTenantKeyValue();
         return xmEntitySpecContextService.typesByTenantStrict(tenantKeyValue);
+    }
+
+    public List<DefinitionSpec> getDefinitions() {
+        String tenantKeyValue = getTenantKeyValue();
+        return xmEntitySpecContextService.getDefinitions(tenantKeyValue);
+    }
+
+    public List<DataSchema> getDataSchemas() {
+        String tenantKeyValue = getTenantKeyValue();
+        List<DefinitionSpec> definitions = xmEntitySpecContextService.getDefinitions(tenantKeyValue);
+        Collection<TypeSpec> types = getAllSpecs();
+        List<DataSchema> dataSchemas = new ArrayList<>();
+        definitions.forEach(it -> dataSchemas.add(new DataSchema(it.getKey(), it.getValue(), "definition")));
+        types.forEach(it -> dataSchemas.add(new DataSchema(it.getKey(), it.getDataSpec(), "entity")));
+        return dataSchemas;
     }
 
     @LoggingAspectConfig(resultDetails = false)
