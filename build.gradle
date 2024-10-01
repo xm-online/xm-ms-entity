@@ -356,9 +356,8 @@ dependencies {
         exclude group: "com.vaadin.external.google", module: "android-json"
     }
     // XM custom dependencies
-    implementation("com.github.java-json-tools:json-schema-validator:${jsonSchemaValidatorVersion}") {
-        exclude group: 'javax.mail', module: 'mailapi'
-    }
+    implementation "com.networknt:json-schema-validator:${jsonSchemaValidatorVersion}"
+
     implementation "com.amazonaws:aws-java-sdk-s3:${amazonawsVersion}"
     implementation "com.amazonaws:aws-java-sdk-core:${amazonawsVersion}"
     implementation "org.jsoup:jsoup:1.18.1" // for LinkedIn LEP

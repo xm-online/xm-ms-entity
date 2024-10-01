@@ -1,20 +1,19 @@
 package com.icthh.xm.ms.entity.service.spec;
 
-import com.github.fge.jackson.JsonLoader;
-import com.github.fge.jsonschema.core.exceptions.ProcessingException;
-import com.github.fge.jsonschema.main.JsonSchema;
-import com.github.fge.jsonschema.main.JsonSchemaFactory;
 import com.icthh.xm.ms.entity.domain.spec.DefinitionSpec;
 import com.icthh.xm.ms.entity.domain.spec.StateSpec;
 import com.icthh.xm.ms.entity.domain.spec.TypeSpec;
 import com.icthh.xm.ms.entity.service.processor.DefinitionSpecProcessor;
 import com.icthh.xm.ms.entity.service.processor.FormSpecProcessor;
 import lombok.RequiredArgsConstructor;
+import com.networknt.schema.JsonSchema;
+import com.networknt.schema.JsonSchemaException;
+import com.networknt.schema.JsonSchemaFactory;
+import com.networknt.schema.SpecVersion;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 
-import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -55,7 +54,7 @@ public class DataSpecJsonSchemaService {
 
     public void processDataSpec(String tenantKey, LinkedHashMap<String, TypeSpec> tenantEntitySpec) {
         var dataSchemas = new HashMap<String, JsonSchema>();
-        JsonSchemaFactory jsonSchemaFactory = JsonSchemaFactory.byDefault();
+        JsonSchemaFactory jsonSchemaFactory = JsonSchemaFactory.getInstance(SpecVersion.VersionFlag.V4);
         for (TypeSpec typeSpec : tenantEntitySpec.values()) {
             processTypeSpec(tenantKey, typeSpec);
             addJsonSchema(dataSchemas, jsonSchemaFactory, typeSpec);
@@ -89,13 +88,13 @@ public class DataSpecJsonSchemaService {
         definitionSpecProcessor.processDefinitionsItSelf(tenant);
     }
 
-    private void addJsonSchema(HashMap<String, com.github.fge.jsonschema.main.JsonSchema> dataSchemas,
+    private void addJsonSchema(HashMap<String, JsonSchema> dataSchemas,
                                JsonSchemaFactory jsonSchemaFactory, TypeSpec typeSpec) {
         if (StringUtils.isNotBlank(typeSpec.getDataSpec())) {
             try {
-                var jsonSchema = jsonSchemaFactory.getJsonSchema(JsonLoader.fromString(typeSpec.getDataSpec()));
+                var jsonSchema = jsonSchemaFactory.getSchema(typeSpec.getDataSpec());
                 dataSchemas.put(typeSpec.getKey(), jsonSchema);
-            } catch (IOException | ProcessingException e) {
+            } catch (JsonSchemaException e) {
                 log.error("Error processing data spec", e);
             }
         }

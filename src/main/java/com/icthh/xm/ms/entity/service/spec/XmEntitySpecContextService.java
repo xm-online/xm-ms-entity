@@ -2,7 +2,6 @@ package com.icthh.xm.ms.entity.service.spec;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-import com.github.fge.jsonschema.main.JsonSchema;
 import com.icthh.xm.commons.lep.spring.LepService;
 import com.icthh.xm.commons.logging.aop.IgnoreLogginAspect;
 import com.icthh.xm.ms.entity.config.XmEntityTenantConfigService;
@@ -12,6 +11,7 @@ import com.icthh.xm.ms.entity.domain.spec.TypeSpec;
 import com.icthh.xm.ms.entity.domain.spec.XmEntitySpec;
 import com.icthh.xm.ms.entity.service.processor.DefinitionSpecProcessor;
 import com.icthh.xm.ms.entity.service.processor.FormSpecProcessor;
+import com.networknt.schema.JsonSchema;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;

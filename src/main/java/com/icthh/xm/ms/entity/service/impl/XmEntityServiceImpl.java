@@ -856,7 +856,7 @@ public class XmEntityServiceImpl implements XmEntityService {
     @Override
     public boolean isValidJsonSchema(XmEntity value) {
         return xmEntitySpecService.getDataJsonSchemaByKey(value.getTypeKey())
-            .map(js -> validator.validateJson(value.getData(), js).isSuccess())
+            .map(js -> validator.validateJson(value.getData(), js).isEmpty())
             .orElse(true);
     }
 

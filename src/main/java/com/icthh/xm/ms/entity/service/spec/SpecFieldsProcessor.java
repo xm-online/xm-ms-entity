@@ -1,7 +1,7 @@
 package com.icthh.xm.ms.entity.service.spec;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.github.fge.jackson.JsonLoader;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Sets;
 import com.icthh.xm.ms.entity.domain.spec.TypeSpec;
 import com.icthh.xm.ms.entity.domain.spec.UniqueFieldSpec;
@@ -13,8 +13,8 @@ import org.apache.commons.lang3.StringUtils;
 import java.util.Map;
 import java.util.Set;
 
-import static com.github.fge.jackson.NodeType.OBJECT;
-import static com.github.fge.jackson.NodeType.getNodeType;
+import static com.icthh.xm.ms.entity.validator.NodeType.OBJECT;
+import static com.icthh.xm.ms.entity.validator.NodeType.getNodeType;
 
 @Slf4j
 public class SpecFieldsProcessor {
@@ -26,7 +26,7 @@ public class SpecFieldsProcessor {
                 continue;
             }
 
-            JsonNode node = JsonLoader.fromString(typeSpec.getDataSpec());
+            JsonNode node = new ObjectMapper().readTree(typeSpec.getDataSpec());
             Set<UniqueFieldSpec> uniqueFields = Sets.newHashSet();
             processNode(node, "$", uniqueFields);
             typeSpec.setUniqueFields(uniqueFields);

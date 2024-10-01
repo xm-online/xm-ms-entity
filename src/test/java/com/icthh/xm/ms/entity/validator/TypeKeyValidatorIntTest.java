@@ -1,17 +1,13 @@
 package com.icthh.xm.ms.entity.validator;
 
 import static com.google.common.collect.ImmutableMap.of;
-import static java.util.Arrays.asList;
-import static java.util.Collections.singletonList;
 import static org.junit.Assert.assertEquals;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
 import com.icthh.xm.ms.entity.AbstractSpringBootTest;
 import com.icthh.xm.ms.entity.domain.Tag;
 import com.icthh.xm.ms.entity.domain.XmEntity;
-import java.util.List;
 
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validator;
@@ -113,37 +109,37 @@ public class TypeKeyValidatorIntTest extends AbstractSpringBootTest {
     }
 
     @SneakyThrows
-    private void testDataValidation(Map data, String actualType, List<String> expected) {
+    private void testDataValidation(Map data, String actualType, String expected) {
         XmEntity entity = new XmEntity().key("TYPE1.SUBTYPE1-1").typeKey("TYPE1.SUBTYPE1").name("Entity name")
             .startDate(Instant.now()).updateDate(Instant.now()).stateKey("STATE1").data(data);
         Set<ConstraintViolation<XmEntity>> constraintViolations = validator.validate(entity);
 
         assertEquals(1, constraintViolations.size());
         String messageTemplate = constraintViolations.iterator().next().getMessageTemplate();
-        Map<?, ?> errorData = (Map<?, ?>) new ObjectMapper().readValue(messageTemplate, List.class).get(0);
-        assertEquals("validation", errorData.get("domain"));
-        assertEquals("type", errorData.get("keyword"));
-        assertEquals(actualType, errorData.get("found"));
-        assertEquals(expected, errorData.get("expected"));
+
+        Object expectedPropertyName = data.keySet().iterator().next();
+        String expectedResult = String.format("[\"$.%s: %s found, %s expected\"]", expectedPropertyName, actualType, expected);
+
+        assertEquals(expectedResult, messageTemplate);
     }
 
     @Test
     public void testXmEntityDataValidationIsInvalidBoolean() {
         Map data = of("booleanProperties", "false");
-        testDataValidation(data, "string", singletonList("boolean"));
+        testDataValidation(data, "string", "boolean");
     }
 
 
     @Test
     public void testXmEntityDataValidationIsInvalidNumber() {
         Map data = of("numberProperties", "57");
-        testDataValidation(data, "string", asList("integer", "number"));
+        testDataValidation(data, "string", "number");
     }
 
     @Test
     public void testXmEntityDataValidationIsInvalidString() {
         Map data = of("stringProperties", 57);
-        testDataValidation(data, "integer", singletonList("string"));
+        testDataValidation(data, "integer", "string");
     }
 
 }

@@ -2,7 +2,6 @@ package com.icthh.xm.ms.entity.service.processor;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-import com.github.fge.jackson.JsonLoader;
 import com.icthh.xm.ms.entity.service.json.JsonListenerService;
 import lombok.SneakyThrows;
 import org.springframework.util.AntPathMatcher;
@@ -30,7 +29,7 @@ public abstract class SpecProcessor {
 
     @SneakyThrows
     protected Set<String> findDataSpecReferencesByPattern(String dataSpec, String refPattern) {
-        return JsonLoader.fromString(dataSpec)
+        return new ObjectMapper().readTree(dataSpec)
             .findValuesAsText(REF)
             .stream()
             .filter(value -> matcher.matchStart(refPattern, value))

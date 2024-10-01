@@ -27,6 +27,7 @@ import com.icthh.xm.ms.entity.domain.spec.TypeSpec;
 import com.icthh.xm.ms.entity.domain.spec.XmEntitySpec;
 import com.icthh.xm.ms.entity.security.access.DynamicPermissionCheckService;
 import com.icthh.xm.ms.entity.service.spec.XmEntitySpecContextService;
+import com.networknt.schema.JsonSchema;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -202,7 +203,7 @@ public class XmEntitySpecService implements RefreshableConfiguration {
     }
 
     @LoggingAspectConfig(resultDetails = false)
-    public Optional<com.github.fge.jsonschema.main.JsonSchema> getDataJsonSchemaByKey(String key) {
+    public Optional<JsonSchema> getDataJsonSchemaByKey(String key) {
         return ofNullable(xmEntitySpecContextService.dataSpecJsonSchemas(getTenantKeyValue())).map(it -> it.get(key));
     }
 

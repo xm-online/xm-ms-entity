@@ -171,7 +171,7 @@ public class MailService {
      * @param rid the request id
      * @param from the from email
      * @param attachmentFilename the name of the attachment as it will appear in the mail
-     * @param dataSource the {@code javax.activation.DataSource} to take the content from, determining the InputStream
+     * @param dataSource the {@code jakarta.activation.DataSource} to take the content from, determining the InputStream
      * and the content type
      */
     @Async
@@ -381,7 +381,7 @@ public class MailService {
      * @param email       the to email
      * @param from        the from email
      * @param attachmentFilename the name of the attachment as it will appear in the mail
-     * @param dataSource the {@code javax.activation.DataSource} to take the content from, determining the InputStream
+     * @param dataSource the {@code jakarta.activation.DataSource} to take the content from, determining the InputStream
      * and the content type
      */
     @Async

@@ -502,7 +502,7 @@ public class FunctionServiceImplUnitTest extends AbstractUnitTest {
     @Test
     public void validationFailOnInvalidFunctionInputWhenValidationEnabled() {
         exception.expect(JsonValidationService.InvalidJsonException.class);
-        String exceptionMessage = "{\"pointer\":\"/numberArgument\"} |     domain: \"validation\" |     keyword: \"type\" |     found: \"string\" |     expected: [\"integer\",\"number\"] | ";
+        String exceptionMessage = "$.numberArgument: string found, number expected";
         exception.expectMessage(exceptionMessage);
 
         FunctionSpec spec = generateFunctionSpec(true);
@@ -515,7 +515,7 @@ public class FunctionServiceImplUnitTest extends AbstractUnitTest {
     @Test
     public void validationFailOnInvalidFunctionWithEntityIdInputWhenValidationEnabled() {
         exception.expect(JsonValidationService.InvalidJsonException.class);
-        String exceptionMessage = "{\"pointer\":\"/numberArgument\"} |     domain: \"validation\" |     keyword: \"type\" |     found: \"string\" |     expected: [\"integer\",\"number\"] | ";
+        String exceptionMessage = "$.numberArgument: string found, number expected";
         exception.expectMessage(exceptionMessage);
 
         FunctionSpec spec = generateFunctionSpec(true);
