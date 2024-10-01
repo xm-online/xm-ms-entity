@@ -510,7 +510,7 @@ public class XmEntityServiceImpl implements XmEntityService {
      */
     @LogicExtensionPoint("Search")
     @Override
-    @Transactional(readOnly = true)
+//    @Transactional(readOnly = true)
     @FindWithPermission("XMENTITY.SEARCH")
     @PrivilegeDescription("Privilege to search for the xmEntity corresponding to the query")
     public Page<XmEntity> search(String query, Pageable pageable, String privilegeKey) {
@@ -519,7 +519,7 @@ public class XmEntityServiceImpl implements XmEntityService {
 
     @LogicExtensionPoint("SearchV2")
     @Override
-    @Transactional(readOnly = true)
+//    @Transactional(readOnly = true)
     @FindWithPermission("XMENTITY.SEARCH")
     @PrivilegeDescription("Privilege to search for the xmEntity corresponding to the query")
     public Page<XmEntity> searchV2(SearchDto searchDto, String privilegeKey) {
@@ -528,7 +528,7 @@ public class XmEntityServiceImpl implements XmEntityService {
 
     @LogicExtensionPoint(value = "SearchByTemplate", resolver = TemplateTypeKeyResolver.class)
     @Override
-    @Transactional(readOnly = true)
+//    @Transactional(readOnly = true)
     @FindWithPermission("XMENTITY.SEARCH")
     @PrivilegeDescription("Privilege to search for the xmEntity corresponding to the query")
     public Page<XmEntity> search(String template,
@@ -541,7 +541,7 @@ public class XmEntityServiceImpl implements XmEntityService {
 
     @LogicExtensionPoint("SearchScroll")
     @Override
-    @Transactional(readOnly = true)
+//    @Transactional(readOnly = true)
     @FindWithPermission("XMENTITY.SEARCH")
     @PrivilegeDescription("Privilege to search for the xmEntity corresponding to the query")
     public Page<XmEntity> search(Long scrollTimeInMillis, String query, Pageable pageable, String privilegeKey) {
@@ -554,7 +554,7 @@ public class XmEntityServiceImpl implements XmEntityService {
 
     @LogicExtensionPoint("SearchXmEntitiesToLink")
     @Override
-    @Transactional(readOnly = true)
+//    @Transactional(readOnly = true)
     @FindWithPermission("XMENTITY.SEARCH")
     @PrivilegeDescription("Privilege to search for the xmEntity corresponding to the query")
     public Page<XmEntity> searchXmEntitiesToLink(IdOrKey idOrKey,
@@ -584,7 +584,7 @@ public class XmEntityServiceImpl implements XmEntityService {
     }
 
     @Override
-    @Transactional(readOnly = true)
+//    @Transactional(readOnly = true)
     @FindWithPermission("XMENTITY.SEARCH")
     @PrivilegeDescription("Privilege to search for the xmEntity corresponding to the query")
     public Page<XmEntity> searchByQueryAndTypeKey(String query,
@@ -595,7 +595,7 @@ public class XmEntityServiceImpl implements XmEntityService {
     }
 
     @Override
-    @Transactional(readOnly = true)
+//    @Transactional(readOnly = true)
     @FindWithPermission("XMENTITY.SEARCH")
     @PrivilegeDescription("Privilege to search for the xmEntity corresponding to the query")
     public Page<XmEntity> searchByQueryAndTypeKey(String template,
