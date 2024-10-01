@@ -3,10 +3,6 @@ package com.icthh.xm.ms.entity.service;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-import com.github.fge.jackson.JsonLoader;
-import com.github.fge.jsonschema.core.report.ProcessingReport;
-import com.github.fge.jsonschema.main.JsonSchema;
-import com.github.fge.jsonschema.main.JsonSchemaFactory;
 import com.icthh.xm.commons.config.client.config.XmConfigProperties;
 import com.icthh.xm.commons.config.client.repository.CommonConfigRepository;
 import com.icthh.xm.commons.config.client.repository.TenantConfigRepository;
@@ -41,6 +37,10 @@ import com.icthh.xm.ms.entity.service.privileges.custom.FunctionWithXmEntityCust
 import com.icthh.xm.ms.entity.service.processor.DefinitionSpecProcessor;
 import com.icthh.xm.ms.entity.service.processor.FormSpecProcessor;
 import com.icthh.xm.ms.entity.service.spec.XmEntitySpecCustomizer;
+import com.networknt.schema.JsonSchema;
+import com.networknt.schema.JsonSchemaFactory;
+import com.networknt.schema.SpecVersion;
+import com.networknt.schema.ValidationMessage;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
@@ -881,12 +881,12 @@ public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
     private boolean validateByJsonSchema(String schema, Map<String, Object> value) {
         ObjectMapper objectMapper = new ObjectMapper();
         JsonNode valueJsonNode = objectMapper.readTree(objectMapper.writeValueAsString(value));
-        JsonNode schemaNode = JsonLoader.fromString(schema);
-        JsonSchemaFactory factory = JsonSchemaFactory.byDefault();
-        JsonSchema jsonSchema = factory.getJsonSchema(schemaNode);
-        ProcessingReport report = jsonSchema.validate(valueJsonNode);
+        JsonNode schemaNode = new ObjectMapper().readTree(schema);
+        JsonSchemaFactory factory = JsonSchemaFactory.getInstance(SpecVersion.VersionFlag.V4);
+        JsonSchema jsonSchema = factory.getSchema(schemaNode);
+        Set<ValidationMessage> report = jsonSchema.validate(valueJsonNode);
         log.info("Validation: {}", report.toString());
-        return report.isSuccess();
+        return report.isEmpty();
     }
 
     private void setExtendsFormAndSpec(Boolean value) {

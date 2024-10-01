@@ -2,19 +2,20 @@ package com.icthh.xm.ms.entity.service.json;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.fge.jackson.JsonLoader;
-import com.github.fge.jsonschema.core.report.ProcessingReport;
-import com.github.fge.jsonschema.main.JsonSchema;
-import com.github.fge.jsonschema.main.JsonSchemaFactory;
+
 import com.icthh.xm.commons.exceptions.BusinessException;
+import com.networknt.schema.JsonSchema;
+import com.networknt.schema.JsonSchemaFactory;
+import com.networknt.schema.SpecVersion;
+import com.networknt.schema.ValidationMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.Map;
-
-import static com.icthh.xm.ms.entity.config.Constants.REGEX_EOL;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -22,33 +23,35 @@ import static com.icthh.xm.ms.entity.config.Constants.REGEX_EOL;
 public class JsonValidationService {
 
     private final ObjectMapper objectMapper;
-    private final JsonSchemaFactory factory = JsonSchemaFactory.byDefault();
+    private final JsonSchemaFactory factory = JsonSchemaFactory.getInstance(SpecVersion.VersionFlag.V4);
 
-    public ProcessingReport validateJson(Map<String, Object> data, JsonSchema schema) {
-        ProcessingReport report = validate(data, schema);
-        if (!report.isSuccess()) {
-            log.error("Validation data report: {}", getReportErrorMessage(report));
+    public Set<ValidationMessage> validateJson(Map<String, Object> data, JsonSchema schema) {
+        Set<ValidationMessage> errors = validate(data, schema);
+        if (!errors.isEmpty()) {
+            log.error("Validation data report: {}", getReportErrorMessage(errors));
         }
-        return report;
+        return errors;
     }
 
     @SneakyThrows
     public void assertJson(Map<String, Object> data, String jsonSchema) {
-        JsonSchema schema = factory.getJsonSchema(JsonLoader.fromString(jsonSchema));
-        ProcessingReport report = validate(data, schema);
-        if (!report.isSuccess()) {
-            String message = getReportErrorMessage(report);
+        JsonSchema schema = factory.getSchema(jsonSchema);
+        Set<ValidationMessage> errors = validate(data, schema);
+        if (!errors.isEmpty()) {
+            String message = getReportErrorMessage(errors);
             log.error("Validation data report: {}", message);
             throw new InvalidJsonException(message);
         }
     }
 
-    private String getReportErrorMessage(ProcessingReport report) {
-        return report.toString().replaceAll(REGEX_EOL, " | ");
+    private String getReportErrorMessage(Set<ValidationMessage> report) {
+        return report.stream()
+            .map(ValidationMessage::getMessage)
+            .collect(Collectors.joining(" | "));
     }
 
     @SneakyThrows
-    private ProcessingReport validate(Map<String, Object> data, JsonSchema jsonSchema) {
+    private Set<ValidationMessage> validate(Map<String, Object> data, JsonSchema jsonSchema) {
         log.debug("Validation data. map: {}", data);
         JsonNode dataNode = objectMapper.valueToTree(data);
         return jsonSchema.validate(dataNode);
