@@ -119,13 +119,17 @@ public class DefinitionSpecProcessor extends SpecProcessor {
         if (isNotBlank(spec)) {
             ObjectMapper objectMapper = new ObjectMapper();
             Map<String, Map<String, Object>> definitions = new LinkedHashMap<>();
-            var target = objectMapper.readValue(spec, Map.class);
+            try {
+                var target = objectMapper.readValue(spec, Map.class);
 
-            processDataSpec(tenant, spec, definitions);
+                processDataSpec(tenant, spec, definitions);
 
-            target.putAll(definitions);
-            String mergedJson = objectMapper.writeValueAsString(target);
-            setter.accept(mergedJson);
+                target.putAll(definitions);
+                String mergedJson = objectMapper.writeValueAsString(target);
+                setter.accept(mergedJson);
+            } catch (Exception e) {
+                log.error("Could not process type spec by tenant {}: {}", tenant, e);
+            }
         }
     }
 

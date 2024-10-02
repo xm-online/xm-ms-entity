@@ -28,6 +28,9 @@ public class JsonListenerService {
     }
 
     public String getSpecificationByTenantRelativePath(String tenant, String relativePath) {
+        if (relativePath == null) {
+            return EMPTY;
+        }
         return ofNullable(getSpecificationByTenant(tenant))
             .map(xm -> xm.get(relativePath))
             .orElse(EMPTY);
