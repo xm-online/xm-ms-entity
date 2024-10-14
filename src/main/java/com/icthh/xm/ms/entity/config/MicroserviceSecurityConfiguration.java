@@ -44,6 +44,7 @@ public class MicroserviceSecurityConfiguration {
                     .requestMatchers("/api/functions/api-docs").permitAll()
                     .requestMatchers("/api/xm-entities/registration/activate/*").permitAll()
                     .requestMatchers("/api/**").authenticated()
+                    .requestMatchers("/tenants/**").authenticated()
                     .requestMatchers("/management/health").permitAll()
                     .requestMatchers("/management/prometheus/**").permitAll()
                     .requestMatchers("/management/**").hasAuthority(RoleConstant.SUPER_ADMIN)
