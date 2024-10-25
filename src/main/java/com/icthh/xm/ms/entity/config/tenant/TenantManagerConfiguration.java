@@ -41,6 +41,7 @@ public class TenantManagerConfiguration {
 
     @Bean
     public TenantManager tenantManager(TenantAbilityCheckerProvisioner abilityCheckerProvisioner,
+                                       TenantEntitySpecLocalProvisioner entitySpecLocalProvisioner,
                                        TenantDatabaseProvisioner databaseProvisioner,
                                        TenantDefaultUserProfileProvisioner profileProvisioner,
                                        TenantConfigProvisioner configProvisioner,
@@ -51,6 +52,7 @@ public class TenantManagerConfiguration {
                                              .service(abilityCheckerProvisioner)
                                              .service(tenantListProvisioner)
                                              .service(databaseProvisioner)
+                                             .service(entitySpecLocalProvisioner)
                                              .service(configProvisioner)
                                              .service(elasticsearchProvisioner)
                                              .service(profileProvisioner)
