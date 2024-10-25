@@ -22,13 +22,18 @@ public class TenantEntitySpecLocalProvisioner implements TenantProvisioner {
 
     @Override
     public void createTenant(Tenant tenant) {
-        log.info("Local refresh {}", configuration.getPath());
+        String path = resolveTenantName(tenant.getTenantKey(), configuration.getPath());
+        log.info("Local refresh {}", path);
         refreshableConfigurations.stream()
-                                  .filter(it -> it.isListeningConfiguration(configuration.getPath()))
-                                  .forEach(it -> {
-                                      log.info("Refresh configuration: {}", configuration.getPath());
-                                      it.onRefresh(configuration.getPath(), configuration.getContent());
-                                  });
+            .filter(it -> it.isListeningConfiguration(path))
+            .forEach(it -> {
+                log.info("Refresh configuration: {}", path);
+                it.onRefresh(path, configuration.getContent());
+            });
+    }
+
+    private String resolveTenantName(String tenantName, String path) {
+        return path.replaceAll("\\{tenantName}", tenantName.toUpperCase());
     }
 
     @Override
