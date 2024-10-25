@@ -6,7 +6,6 @@ import com.icthh.xm.commons.gen.model.Tenant;
 import com.icthh.xm.commons.tenantendpoint.provisioner.TenantProvisioner;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
 
 /**
  * TenantConfigProvisioner upload config to ms config.
