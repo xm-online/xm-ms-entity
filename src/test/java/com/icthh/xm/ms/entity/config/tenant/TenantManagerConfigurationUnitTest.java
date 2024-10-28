@@ -47,6 +47,8 @@ public class TenantManagerConfigurationUnitTest extends AbstractUnitTest {
     @Mock
     private TenantDatabaseProvisioner databaseProvisioner;
     @Mock
+    private TenantEntitySpecLocalProvisioner entitySpecLocalProvisioner;
+    @Mock
     private TenantDefaultUserProfileProvisioner profileProvisioner;
     @Mock
     private TenantListProvisioner tenantListProvisioner;
@@ -70,6 +72,7 @@ public class TenantManagerConfigurationUnitTest extends AbstractUnitTest {
         configProvisioner = spy(configuration.tenantConfigProvisioner(tenantConfigRepository, applicationProperties));
 
         tenantManager = configuration.tenantManager(abilityCheckerProvisioner,
+                                                    entitySpecLocalProvisioner,
                                                     databaseProvisioner,
                                                     profileProvisioner,
                                                     configProvisioner,
@@ -99,6 +102,7 @@ public class TenantManagerConfigurationUnitTest extends AbstractUnitTest {
         InOrder inOrder = Mockito.inOrder(abilityCheckerProvisioner,
                                           tenantListProvisioner,
                                           databaseProvisioner,
+                                            entitySpecLocalProvisioner,
                                           configProvisioner,
                                           elasticsearchProvisioner,
                                           profileProvisioner);
@@ -106,11 +110,13 @@ public class TenantManagerConfigurationUnitTest extends AbstractUnitTest {
         inOrder.verify(abilityCheckerProvisioner).createTenant(any(Tenant.class));
         inOrder.verify(tenantListProvisioner).createTenant(any(Tenant.class));
         inOrder.verify(databaseProvisioner).createTenant(any(Tenant.class));
+        inOrder.verify(entitySpecLocalProvisioner).createTenant(any(Tenant.class));
         inOrder.verify(configProvisioner).createTenant(any(Tenant.class));
         inOrder.verify(elasticsearchProvisioner).createTenant(any(Tenant.class));
         inOrder.verify(profileProvisioner).createTenant(any(Tenant.class));
 
         verifyNoMoreInteractions(abilityCheckerProvisioner,
+                                 entitySpecLocalProvisioner,
                                  tenantListProvisioner,
                                  databaseProvisioner,
                                  configProvisioner,
