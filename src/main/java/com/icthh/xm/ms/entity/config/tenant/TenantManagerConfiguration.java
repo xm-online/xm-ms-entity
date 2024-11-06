@@ -7,6 +7,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import com.icthh.xm.commons.config.client.api.RefreshableConfiguration;
 import com.icthh.xm.commons.config.client.repository.TenantConfigRepository;
 import com.icthh.xm.commons.config.client.service.TenantConfigService;
 import com.icthh.xm.commons.migration.db.tenant.provisioner.TenantDatabaseProvisioner;
@@ -18,6 +19,9 @@ import com.icthh.xm.ms.entity.config.ApplicationProperties;
 import com.icthh.xm.ms.entity.config.Constants;
 import com.icthh.xm.ms.entity.service.tenant.provisioner.TenantDefaultUserProfileProvisioner;
 import com.icthh.xm.ms.entity.service.tenant.provisioner.TenantElasticsearchProvisioner;
+import java.nio.file.Paths;
+import java.util.HashMap;
+import java.util.List;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
@@ -25,9 +29,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ClassPathResource;
-
-import java.nio.file.Paths;
-import java.util.HashMap;
 
 @Slf4j
 @Configuration
@@ -40,6 +41,7 @@ public class TenantManagerConfiguration {
 
     @Bean
     public TenantManager tenantManager(TenantAbilityCheckerProvisioner abilityCheckerProvisioner,
+                                       TenantEntitySpecLocalProvisioner entitySpecLocalProvisioner,
                                        TenantDatabaseProvisioner databaseProvisioner,
                                        TenantDefaultUserProfileProvisioner profileProvisioner,
                                        TenantConfigProvisioner configProvisioner,
@@ -50,6 +52,7 @@ public class TenantManagerConfiguration {
                                              .service(abilityCheckerProvisioner)
                                              .service(tenantListProvisioner)
                                              .service(databaseProvisioner)
+                                             .service(entitySpecLocalProvisioner)
                                              .service(configProvisioner)
                                              .service(elasticsearchProvisioner)
                                              .service(profileProvisioner)
@@ -80,6 +83,16 @@ public class TenantManagerConfiguration {
 
         log.info("Configured tenant config provisioner: {}", provisioner);
         return provisioner;
+    }
+
+    @Bean
+    public TenantEntitySpecLocalProvisioner tenantEntitySpecLocalProvisioner(List<RefreshableConfiguration> refreshableConfigurations,
+                                                                             ApplicationProperties applicationProperties) {
+        return new TenantEntitySpecLocalProvisioner(
+            of()
+                .path(toFullPath(applicationProperties.getSpecificationName()))
+                .content(readResource(Constants.ENTITY_CONFIG_PATH))
+                .build(), refreshableConfigurations);
     }
 
     String getApplicationName() {
