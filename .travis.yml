@@ -34,7 +34,7 @@ script:
   - if [ "$TAG_ARGS" ];
     then
         docker buildx create --name multi-arch --platform "linux/arm64,linux/amd64,linux/arm/v8" --driver "docker-container" --use;
-        docker buildx build --platform linux/amd64,linux/arm64,linux/arm64/v8 $TAG_ARGS --label commit_id="$TRAVIS_COMMIT" --label version="$PROJECT_VERSION" --label build_number="$TRAVIS_BUILD_NUMBER" --label build_url="$TRAVIS_BUILD_WEB_URL" --label git_url="$TRAVIS_REPO_SLUG" --label commit_message="$TRAVIS_COMMIT_MESSAGE" --push -f src/main/docker/Dockerfile .;
+        docker buildx build --platform linux/amd64,linux/arm64,linux/arm/v8 $TAG_ARGS --label commit_id="$TRAVIS_COMMIT" --label version="$PROJECT_VERSION" --label build_number="$TRAVIS_BUILD_NUMBER" --label build_url="$TRAVIS_BUILD_WEB_URL" --label git_url="$TRAVIS_REPO_SLUG" --label commit_message="$TRAVIS_COMMIT_MESSAGE" --push -f src/main/docker/Dockerfile .;
         docker buildx rm multi-arch || true;
     fi
 cache:
