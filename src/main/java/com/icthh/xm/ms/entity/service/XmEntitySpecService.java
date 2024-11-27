@@ -25,7 +25,7 @@ import com.icthh.xm.ms.entity.domain.spec.StateSpec;
 import com.icthh.xm.ms.entity.domain.spec.TagSpec;
 import com.icthh.xm.ms.entity.domain.spec.TypeSpec;
 import com.icthh.xm.ms.entity.domain.spec.XmEntitySpec;
-import com.icthh.xm.ms.entity.security.access.DynamicPermissionCheckService;
+import com.icthh.xm.ms.entity.security.access.XmEntityDynamicPermissionCheckService;
 import com.icthh.xm.ms.entity.service.spec.XmEntitySpecContextService;
 import com.networknt.schema.JsonSchema;
 import lombok.RequiredArgsConstructor;
@@ -70,7 +70,7 @@ public class XmEntitySpecService implements RefreshableConfiguration {
     private final TenantContextHolder tenantContextHolder;
     private final XmEntitySpecContextService xmEntitySpecContextService;
     private final List<EntitySpecUpdateListener> entitySpecUpdateListeners;
-    private final DynamicPermissionCheckService dynamicPermissionCheckService;
+    private final XmEntityDynamicPermissionCheckService dynamicPermissionCheckService;
 
     /**
      * Search of all entity Type specifications.

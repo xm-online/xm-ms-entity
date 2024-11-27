@@ -2,6 +2,7 @@ package com.icthh.xm.ms.entity.domain;
 
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.JsonIdentityReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import com.icthh.xm.ms.entity.domain.converter.MapToStringConverter;
 import com.icthh.xm.ms.entity.domain.idresolver.XmEntityObjectIdResolver;
@@ -275,6 +276,11 @@ public class FunctionContext implements Serializable {
             return null;
         }
         return data.get(binaryDataField);
+    }
+
+    @JsonIgnore
+    public String getBinaryDataField() {
+        return this.binaryDataField;
     }
 
     @Override

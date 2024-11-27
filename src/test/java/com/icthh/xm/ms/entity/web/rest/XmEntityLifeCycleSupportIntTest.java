@@ -25,9 +25,9 @@ import com.icthh.xm.ms.entity.AbstractSpringBootTest;
 import com.icthh.xm.ms.entity.config.XmEntityTenantConfigService;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.repository.kafka.ProfileEventProducer;
-import com.icthh.xm.ms.entity.service.FunctionService;
 import com.icthh.xm.ms.entity.service.ProfileService;
 import com.icthh.xm.ms.entity.service.TenantService;
+import com.icthh.xm.ms.entity.service.impl.XmEntityFunctionServiceFacade;
 import com.icthh.xm.ms.entity.service.impl.XmEntityServiceImpl;
 import java.io.InputStream;
 import java.lang.reflect.Field;
@@ -68,7 +68,7 @@ public class XmEntityLifeCycleSupportIntTest extends AbstractSpringBootTest {
     @Autowired
     private XmEntityServiceImpl xmEntityServiceImpl;
 
-    private FunctionService functionService;
+    private XmEntityFunctionServiceFacade functionService;
 
     @Autowired
     private ProfileService profileService;
