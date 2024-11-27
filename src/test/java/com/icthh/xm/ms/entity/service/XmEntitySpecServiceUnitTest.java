@@ -9,6 +9,7 @@ import com.icthh.xm.commons.config.client.repository.TenantConfigRepository;
 import com.icthh.xm.commons.config.domain.Configuration;
 import com.icthh.xm.commons.permission.domain.Role;
 import com.icthh.xm.commons.permission.service.RoleService;
+import com.icthh.xm.commons.tenant.PrivilegedTenantContext;
 import com.icthh.xm.commons.tenant.TenantContext;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantKey;
@@ -78,9 +79,11 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.ArgumentMatchers.refEq;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
@@ -150,13 +153,25 @@ public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
     public void init() {
         MockitoAnnotations.initMocks(this);
 
-        tenantContextHolder = mock(TenantContextHolder.class);
+        mockTenantContextHolder();
         mockTenant(TENANT);
 
         ApplicationProperties ap = new ApplicationProperties();
         ap.setSpecificationPathPattern(URL);
         ap.setSpecificationFolderPathPattern(SPEC_FOLDER_URL + "/*");
         xmEntitySpecService = createXmEntitySpecService(ap, tenantContextHolder);
+    }
+
+    private void mockTenantContextHolder() {
+        PrivilegedTenantContext context = mock(PrivilegedTenantContext.class);
+        doAnswer(invocation -> {
+            Runnable runnable = invocation.getArgument(1);
+            runnable.run();
+            return null;
+        }).when(context).execute(eq(TENANT), any(Runnable.class));
+
+        tenantContextHolder = mock(TenantContextHolder.class);
+        when(tenantContextHolder.getPrivilegedContext()).thenReturn(context);
     }
 
     private XmEntitySpecService createXmEntitySpecService(ApplicationProperties applicationProperties,
