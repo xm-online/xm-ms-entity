@@ -5,6 +5,7 @@ import com.icthh.xm.commons.lep.XmLepScriptConfigServerResourceLoader;
 import com.icthh.xm.commons.security.XmAuthenticationContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
+import com.icthh.xm.commons.web.rest.FunctionResource;
 import com.icthh.xm.lep.api.LepManager;
 import com.icthh.xm.ms.entity.AbstractSpringBootTest;
 import com.icthh.xm.ms.entity.domain.XmEntity;

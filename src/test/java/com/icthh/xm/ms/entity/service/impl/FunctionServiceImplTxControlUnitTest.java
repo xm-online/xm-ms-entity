@@ -2,18 +2,26 @@ package com.icthh.xm.ms.entity.service.impl;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Maps;
+import com.icthh.xm.commons.domain.FunctionResult;
+import com.icthh.xm.commons.domain.enums.FunctionTxTypes;
+import com.icthh.xm.commons.service.FunctionResultProcessor;
+import com.icthh.xm.commons.service.FunctionTxControl;
+import com.icthh.xm.commons.service.impl.FunctionTxControlImpl;
 import com.icthh.xm.ms.entity.AbstractUnitTest;
 import com.icthh.xm.ms.entity.config.XmEntityTenantConfigService;
 import com.icthh.xm.ms.entity.config.XmEntityTenantConfigService.XmEntityTenantConfig;
 import com.icthh.xm.ms.entity.domain.FunctionContext;
+import com.icthh.xm.ms.entity.domain.FunctionResultContext;
 import com.icthh.xm.ms.entity.domain.ext.IdOrKey;
 import com.icthh.xm.ms.entity.domain.spec.FunctionSpec;
-import com.icthh.xm.ms.entity.security.access.DynamicPermissionCheckService;
+import com.icthh.xm.ms.entity.security.access.XmEntityDynamicPermissionCheckService;
 import com.icthh.xm.ms.entity.service.FunctionContextService;
-import com.icthh.xm.ms.entity.service.FunctionExecutorService;
+import com.icthh.xm.ms.entity.service.XmEntityFunctionExecutorService;
 import com.icthh.xm.ms.entity.service.XmEntityService;
 import com.icthh.xm.ms.entity.service.XmEntitySpecService;
 import com.icthh.xm.ms.entity.service.json.JsonValidationService;
+import com.icthh.xm.ms.entity.service.mapper.FunctionResultMapper;
+import com.icthh.xm.ms.entity.service.mapper.FunctionResultMapperImpl;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -27,6 +35,7 @@ import java.util.function.Function;
 import static com.icthh.xm.ms.entity.domain.ext.IdOrKey.SELF;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
@@ -35,19 +44,22 @@ import static org.mockito.Mockito.when;
 
 public class FunctionServiceImplTxControlUnitTest extends AbstractUnitTest {
 
-    private FunctionServiceImpl functionService;
+    private XmEntityFunctionServiceFacade functionServiceFacade;
 
     @Rule
     public final ExpectedException exception = ExpectedException.none();
 
     private XmEntitySpecService xmEntitySpecService;
     private XmEntityService xmEntityService;
-    private FunctionExecutorService functionExecutorService;
+    private XmEntityFunctionExecutorService functionExecutorServiceImpl;
     private FunctionContextService functionContextService;
-    private DynamicPermissionCheckService dynamicPermissionCheckService;
+    private XmEntityDynamicPermissionCheckService dynamicPermissionCheckService;
     private JsonValidationService jsonValidationService;
     private XmEntityTenantConfigService xmEntityTenantConfigService;
     private XmEntityTenantConfig xmEntityTenantConfig;
+    private FunctionResultProcessorImpl functionResultProcessor;
+    private XmEntityFunctionServiceImpl functionService;
+    private FunctionResultMapper functionResultMapper;
 
     private FunctionTxControl functionTxControl;
 
@@ -59,15 +71,19 @@ public class FunctionServiceImplTxControlUnitTest extends AbstractUnitTest {
     public void setUp() {
         xmEntitySpecService = Mockito.mock(XmEntitySpecService.class);
         xmEntityService = Mockito.mock(XmEntityService.class);
-        functionExecutorService = Mockito.mock(FunctionExecutorService.class);
+        functionExecutorServiceImpl = Mockito.mock(XmEntityFunctionExecutorService.class);
         functionContextService = Mockito.mock(FunctionContextService.class);
-        dynamicPermissionCheckService = Mockito.mock(DynamicPermissionCheckService.class);
+        dynamicPermissionCheckService = Mockito.mock(XmEntityDynamicPermissionCheckService.class);
         xmEntityTenantConfigService = Mockito.mock(XmEntityTenantConfigService.class);
         functionTxControl = spy(new FunctionTxControlImpl());
         jsonValidationService = spy(new JsonValidationService(new ObjectMapper()));
-        functionService = new FunctionServiceImpl(xmEntitySpecService, xmEntityService,
-            functionExecutorService, functionContextService, dynamicPermissionCheckService,
-                jsonValidationService, xmEntityTenantConfigService, functionTxControl);
+        functionResultMapper = spy(new FunctionResultMapperImpl());
+
+        functionResultProcessor = new FunctionResultProcessorImpl(xmEntityService, functionContextService, functionResultMapper);
+        functionService = new XmEntityFunctionServiceImpl(dynamicPermissionCheckService, xmEntitySpecService,
+            xmEntityTenantConfigService, jsonValidationService);
+        functionServiceFacade = new XmEntityFunctionServiceFacade(functionService, functionTxControl, functionExecutorServiceImpl,
+            functionResultProcessor, xmEntityService, xmEntitySpecService);
         xmEntityTenantConfig = new XmEntityTenantConfig();
         when(xmEntityTenantConfigService.getXmEntityTenantConfig()).thenReturn(xmEntityTenantConfig);
     }
@@ -77,7 +93,7 @@ public class FunctionServiceImplTxControlUnitTest extends AbstractUnitTest {
 
         FunctionSpec spec = getFunctionSpec(s -> {
             s.setSaveFunctionContext(Boolean.FALSE);
-            s.setTxType(FunctionSpec.FunctionTxTypes.NO_TX);
+            s.setTxType(FunctionTxTypes.NO_TX);
             return s;
         });
 
@@ -90,7 +106,7 @@ public class FunctionServiceImplTxControlUnitTest extends AbstractUnitTest {
         when(xmEntitySpecService.findFunction(functionName, "POST"))
             .thenReturn(Optional.of(spec));
 
-        when(functionExecutorService.execute(functionName, context, "POST"))
+        when(functionExecutorServiceImpl.execute(functionName, context, "POST"))
             .thenReturn(data);
 
         when(functionContextService.save(any())).thenReturn(new FunctionContext());
@@ -99,7 +115,7 @@ public class FunctionServiceImplTxControlUnitTest extends AbstractUnitTest {
         verify(functionTxControl, never()).executeInTransactionWithRoMode(any());
         verify(functionTxControl, never()).executeInTransaction(any());
 
-        FunctionContext fc = functionService.execute(functionName, context, "POST");
+        FunctionResultContext fc = (FunctionResultContext) functionServiceFacade.execute(functionName, context, "POST");
         assertThat(fc.getTypeKey()).isEqualTo(functionName);
         assertThat(fc.getKey()).contains(functionName);
         assertThat(fc.getData().keySet()).containsSequence(data.keySet().toArray(new String[0]));
@@ -115,7 +131,7 @@ public class FunctionServiceImplTxControlUnitTest extends AbstractUnitTest {
 
         FunctionSpec spec = getFunctionSpec(s -> {
             s.setSaveFunctionContext(Boolean.FALSE);
-            s.setTxType(FunctionSpec.FunctionTxTypes.READ_ONLY);
+            s.setTxType(FunctionTxTypes.READ_ONLY);
             return s;
         });
 
@@ -128,7 +144,7 @@ public class FunctionServiceImplTxControlUnitTest extends AbstractUnitTest {
         when(xmEntitySpecService.findFunction(functionName, "POST"))
             .thenReturn(Optional.of(spec));
 
-        when(functionExecutorService.execute(functionName, context, "POST"))
+        when(functionExecutorServiceImpl.execute(functionName, context, "POST"))
             .thenReturn(data);
 
         when(functionContextService.save(any())).thenReturn(new FunctionContext());
@@ -137,7 +153,7 @@ public class FunctionServiceImplTxControlUnitTest extends AbstractUnitTest {
         verify(functionTxControl, never()).executeInTransactionWithRoMode(any());
         verify(functionTxControl, never()).executeInTransaction(any());
 
-        FunctionContext fc = functionService.execute(functionName, context, "POST");
+        FunctionResultContext fc = (FunctionResultContext) functionServiceFacade.execute(functionName, context, "POST");
         assertThat(fc.getTypeKey()).isEqualTo(functionName);
         assertThat(fc.getKey()).contains(functionName);
         assertThat(fc.getData().keySet()).containsSequence(data.keySet().toArray(new String[0]));
@@ -153,7 +169,7 @@ public class FunctionServiceImplTxControlUnitTest extends AbstractUnitTest {
 
         FunctionSpec spec = getFunctionSpec(s -> {
             s.setSaveFunctionContext(Boolean.FALSE);
-            s.setTxType(FunctionSpec.FunctionTxTypes.TX);
+            s.setTxType(FunctionTxTypes.TX);
             return s;
         });
 
@@ -166,7 +182,7 @@ public class FunctionServiceImplTxControlUnitTest extends AbstractUnitTest {
         when(xmEntitySpecService.findFunction(functionName, "POST"))
             .thenReturn(Optional.of(spec));
 
-        when(functionExecutorService.execute(functionName, context, "POST"))
+        when(functionExecutorServiceImpl.execute(functionName, context, "POST"))
             .thenReturn(data);
 
         when(functionContextService.save(any())).thenReturn(new FunctionContext());
@@ -175,7 +191,7 @@ public class FunctionServiceImplTxControlUnitTest extends AbstractUnitTest {
         verify(functionTxControl, never()).executeInTransactionWithRoMode(any());
         verify(functionTxControl, never()).executeInTransaction(any());
 
-        FunctionContext fc = functionService.execute(functionName, context, "POST");
+        FunctionContext fc = (FunctionContext) functionServiceFacade.execute(functionName, context, "POST");
         assertThat(fc.getTypeKey()).isEqualTo(functionName);
         assertThat(fc.getKey()).contains(functionName);
         assertThat(fc.getData().keySet()).containsSequence(data.keySet().toArray(new String[0]));

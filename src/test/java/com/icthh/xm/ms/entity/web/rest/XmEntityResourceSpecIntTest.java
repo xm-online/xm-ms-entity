@@ -3,6 +3,7 @@ package com.icthh.xm.ms.entity.web.rest;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.icthh.xm.commons.security.XmAuthenticationContext;
 import com.icthh.xm.commons.security.XmAuthenticationContextHolder;
+import com.icthh.xm.commons.service.FunctionServiceFacade;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
 import com.icthh.xm.ms.entity.AbstractSpringBootTest;
@@ -18,7 +19,7 @@ import com.icthh.xm.ms.entity.repository.XmEntityRepositoryInternal;
 import com.icthh.xm.ms.entity.repository.kafka.ProfileEventProducer;
 import com.icthh.xm.ms.entity.repository.search.XmEntityPermittedSearchRepository;
 import com.icthh.xm.ms.entity.service.AttachmentService;
-import com.icthh.xm.ms.entity.service.FunctionService;
+import com.icthh.xm.ms.entity.service.impl.XmEntityFunctionServiceFacade;
 import com.icthh.xm.ms.entity.service.json.JsonValidationService;
 import com.icthh.xm.ms.entity.service.LifecycleLepStrategyFactory;
 import com.icthh.xm.ms.entity.service.LinkService;
@@ -87,7 +88,7 @@ public class XmEntityResourceSpecIntTest extends AbstractSpringBootTest {
     private XmEntityServiceImpl xmEntityServiceImpl;
 
     @Autowired
-    private FunctionService functionService;
+    private XmEntityFunctionServiceFacade functionService;
 
     @Autowired
     private ProfileService profileService;

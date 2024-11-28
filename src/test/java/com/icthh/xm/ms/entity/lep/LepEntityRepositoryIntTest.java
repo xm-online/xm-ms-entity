@@ -6,7 +6,7 @@ import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
 import com.icthh.xm.lep.api.LepManager;
 import com.icthh.xm.ms.entity.AbstractSpringBootTest;
-import com.icthh.xm.ms.entity.service.FunctionExecutorService;
+import com.icthh.xm.ms.entity.service.XmEntityFunctionExecutorService;
 import lombok.SneakyThrows;
 import org.junit.After;
 import org.junit.Before;
@@ -43,7 +43,7 @@ public class LepEntityRepositoryIntTest extends AbstractSpringBootTest  {
     private XmLepScriptConfigServerResourceLoader leps;
 
     @Autowired
-    private FunctionExecutorService functionExecutorService;
+    private XmEntityFunctionExecutorService functionExecutorServiceImpl;
 
     @BeforeTransaction
     public void beforeTransaction() {
@@ -79,7 +79,7 @@ public class LepEntityRepositoryIntTest extends AbstractSpringBootTest  {
         String function = IOUtils.toString(cfgInputStream, UTF_8);
 
         leps.onRefresh(funcKey, function);
-        Map<String, Object> result = functionExecutorService.execute(functionKey, Map.of(), null);
+        Map<String, Object> result = functionExecutorServiceImpl.execute(functionKey, Map.of(), null);
         List<Map<String, Object>> resultEntities = (List) result.get("results");
 
         assertEquals(1, resultEntities.size());
