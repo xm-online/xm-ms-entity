@@ -124,7 +124,8 @@ public class XmEntitySpecService implements RefreshableConfiguration {
         Set<String> tenants = paths.stream().map(this::extractTenantName).collect(Collectors.toSet());
         tenants.forEach(tenantKey -> {
             Map<String, TypeSpec> tenantEntitySpec = xmEntitySpecContextService.typesByTenant(tenantKey);
-            entitySpecUpdateListeners.forEach(it -> it.onEntitySpecUpdate(tenantEntitySpec, tenantKey));
+            tenantContextHolder.getPrivilegedContext().execute(tenantKey, () ->
+                entitySpecUpdateListeners.forEach(it -> it.onEntitySpecUpdate(tenantEntitySpec, tenantKey)));
         });
     }
 
