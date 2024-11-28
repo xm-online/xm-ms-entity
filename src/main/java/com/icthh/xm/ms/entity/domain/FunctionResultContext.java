@@ -21,11 +21,6 @@ public class FunctionResultContext extends FunctionContext implements FunctionRe
     }
 
     @Override
-    public String getRid() {
-        return MdcUtils.getRid();
-    }
-
-    @Override
     public ModelAndView getModelAndView() {
         return (ModelAndView) Optional.ofNullable(getData())
             .map(d -> d.get(MVC_FUNC_RESULT))
