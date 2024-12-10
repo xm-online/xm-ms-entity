@@ -1,5 +1,6 @@
 package com.icthh.xm.ms.entity.service.json;
 
+import com.icthh.xm.commons.listener.JsonListenerService;
 import com.icthh.xm.ms.entity.AbstractUnitTest;
 import org.junit.Before;
 import org.junit.Test;

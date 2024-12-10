@@ -7,6 +7,8 @@ import com.icthh.xm.commons.config.client.config.XmConfigProperties;
 import com.icthh.xm.commons.config.client.repository.CommonConfigRepository;
 import com.icthh.xm.commons.config.client.repository.TenantConfigRepository;
 import com.icthh.xm.commons.config.domain.Configuration;
+import com.icthh.xm.commons.domain.DefinitionSpec;
+import com.icthh.xm.commons.listener.JsonListenerService;
 import com.icthh.xm.commons.permission.domain.Role;
 import com.icthh.xm.commons.permission.service.RoleService;
 import com.icthh.xm.commons.tenant.PrivilegedTenantContext;
@@ -19,7 +21,6 @@ import com.icthh.xm.ms.entity.config.XmEntityTenantConfigService;
 import com.icthh.xm.ms.entity.config.XmEntityTenantConfigService.XmEntityTenantConfig;
 import com.icthh.xm.ms.entity.config.tenant.LocalXmEntitySpecService;
 import com.icthh.xm.ms.entity.domain.spec.AttachmentSpec;
-import com.icthh.xm.ms.entity.domain.spec.DefinitionSpec;
 import com.icthh.xm.ms.entity.domain.spec.FunctionSpec;
 import com.icthh.xm.ms.entity.domain.spec.LinkSpec;
 import com.icthh.xm.ms.entity.domain.spec.LocationSpec;
@@ -31,13 +32,13 @@ import com.icthh.xm.ms.entity.domain.spec.TypeSpec;
 import com.icthh.xm.ms.entity.domain.spec.UniqueFieldSpec;
 import com.icthh.xm.ms.entity.domain.spec.XmEntitySpec;
 import com.icthh.xm.ms.entity.security.access.XmEntityDynamicPermissionCheckService;
-import com.icthh.xm.ms.entity.service.json.JsonListenerService;
 import com.icthh.xm.ms.entity.service.privileges.custom.ApplicationCustomPrivilegesExtractor;
 import com.icthh.xm.ms.entity.service.privileges.custom.EntityCustomPrivilegeService;
 import com.icthh.xm.ms.entity.service.privileges.custom.FunctionCustomPrivilegesExtractor;
 import com.icthh.xm.ms.entity.service.privileges.custom.FunctionWithXmEntityCustomPrivilegesExtractor;
-import com.icthh.xm.ms.entity.service.processor.DefinitionSpecProcessor;
-import com.icthh.xm.ms.entity.service.processor.FormSpecProcessor;
+import com.icthh.xm.ms.entity.service.processor.XmEntityDefinitionSpecProcessor;
+import com.icthh.xm.ms.entity.service.processor.XmEntityDataFormSpecProcessor;
+import com.icthh.xm.ms.entity.service.processor.XmEntityTypeSpecProcessor;
 import com.icthh.xm.ms.entity.service.spec.DataSpecJsonSchemaService;
 import com.icthh.xm.ms.entity.service.spec.XmEntitySpecCustomizer;
 import com.networknt.schema.JsonSchema;
@@ -175,8 +176,9 @@ public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
     }
 
     private XmEntitySpecService createXmEntitySpecService(ApplicationProperties applicationProperties,
-                                                                TenantContextHolder tenantContextHolder) {
+                                                          TenantContextHolder tenantContextHolder) {
 
+        XmEntityTypeSpecProcessor typeSpecProcessor = new XmEntityTypeSpecProcessor(jsonListenerService);
         return spy(new LocalXmEntitySpecService(tenantConfigRepository,
                                             applicationProperties,
                                             tenantContextHolder,
@@ -193,8 +195,9 @@ public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
                                             tenantConfig,
                                             xmEntitySpecCustomizer,
                                             new DataSpecJsonSchemaService(
-                                                new DefinitionSpecProcessor(jsonListenerService),
-                                                new FormSpecProcessor(jsonListenerService)
+                                                new XmEntityDefinitionSpecProcessor(jsonListenerService, typeSpecProcessor),
+                                                new XmEntityDataFormSpecProcessor(jsonListenerService),
+                                                typeSpecProcessor
                                             ), MAX_FILE_SIZE));
     }
 

@@ -73,7 +73,7 @@ public class LepContextCastIntTest extends AbstractSpringBootTest {
         String funcKey = functionPrefix + "Function$$LEP_CONTEXT_TEST$$tenant.groovy";
         String function = "import com.icthh.xm.ms.entity.lep.LepContext;\nLepContext context = lepContext\nreturn ['context':context]";
         leps.onRefresh(funcKey, function);
-        Map<String, Object> result = functionExecutorServiceImpl.execute(functionKey, Map.of(), null);
+        Map<String, Object> result = (Map<String, Object>) functionExecutorServiceImpl.execute(functionKey, Map.of(), null);
         assertTrue(result.get("context") instanceof LepContext);
         leps.onRefresh(funcKey, null);
     }
@@ -87,7 +87,7 @@ public class LepContextCastIntTest extends AbstractSpringBootTest {
         String funcKey = functionPrefix + "Function$$LEP_CONTEXT_TEST$$tenant.groovy";
         String function = "Map<String, Object> context = lepContext\nreturn ['context':context]";
         leps.onRefresh(funcKey, function);
-        Map<String, Object> result = functionExecutorServiceImpl.execute(functionKey, Map.of(), null);
+        Map<String, Object> result = (Map<String, Object>) functionExecutorServiceImpl.execute(functionKey, Map.of(), null);
         Object context = result.get("context");
         assertEquals("GroovyMapLepContextWrapper", context.getClass().getSimpleName());
         assertTrue(context instanceof Map);

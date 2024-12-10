@@ -30,13 +30,13 @@ public class FunctionResultProcessorImpl implements FunctionResultProcessor<Func
     private final FunctionResultMapper mapper;
 
     @Override
-    public FunctionResult processFunctionResult(String functionKey, Map<String, Object> executorResult, FunctionSpec functionSpec) {
+    public FunctionResult wrapFunctionResult(String functionKey, Object executorResult, FunctionSpec functionSpec) {
         return processFunctionResult(functionKey, null, executorResult, functionSpec);
     }
 
     public FunctionResultContext processFunctionResult(String functionKey,
                                                  IdOrKey idOrKey,
-                                                 Map<String, Object> data,
+                                                 Object data,
                                                  FunctionSpec functionSpec) {
         FunctionContext functionContext = toFunctionContext(functionKey, idOrKey, data, functionSpec);
         if (functionSpec.getSaveFunctionContext()) {
@@ -46,14 +46,14 @@ public class FunctionResultProcessorImpl implements FunctionResultProcessor<Func
     }
 
     private FunctionContext toFunctionContext(String functionKey, IdOrKey idOrKey,
-                                              Map<String, Object> data,
+                                              Object data,
                                               FunctionSpec functionSpec) {
 
         FunctionContext functionResult = new FunctionContext();
         // TODO review key & typeKey ...
         functionResult.setKey(functionKey + "-" + UUID.randomUUID().toString());
         functionResult.setTypeKey(functionKey);
-        functionResult.setData(data);
+        functionResult.setData((Map<String, Object>) data);
         functionResult.setStartDate(Instant.now());
         functionResult.setUpdateDate(functionResult.getStartDate());
         if (functionSpec.getSaveFunctionContext()) {

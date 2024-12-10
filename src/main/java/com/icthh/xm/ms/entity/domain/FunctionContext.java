@@ -283,6 +283,11 @@ public class FunctionContext implements Serializable {
         return this.binaryDataField;
     }
 
+    @JsonIgnore
+    public boolean getOnlyData() {
+        return this.onlyData;
+    }
+
     @Override
     public int hashCode() {
         return Objects.hashCode(getId());

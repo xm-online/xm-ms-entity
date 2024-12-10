@@ -23,8 +23,7 @@ import static com.icthh.xm.ms.entity.service.impl.XmEntityFunctionServiceFacade.
 @JsonPropertyOrder({"key", "name", "actionName", "allowedStateKeys", "withEntityId", "isShowFormWithoutData", "inputSpec", "inputForm",
     "contextDataSpec", "contextDataForm", "showResponse", "onlyData", "validateFunctionInput", "txType", "tags", "httpMethods"})
 @Data
-@EqualsAndHashCode(callSuper = true)
-public class FunctionSpec extends IFunctionSpec {
+public class FunctionSpec implements IFunctionSpec {
 
     /**
      * Unique in tenant function key.
@@ -135,5 +134,10 @@ public class FunctionSpec extends IFunctionSpec {
     @NotNull
     public Boolean getAnonymous() {
         return anonymous == null ? false : anonymous;
+    }
+
+    @Override
+    public Boolean getWrapResult() {
+        return !getOnlyData();
     }
 }

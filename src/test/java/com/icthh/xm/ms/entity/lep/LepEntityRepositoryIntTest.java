@@ -1,5 +1,7 @@
 package com.icthh.xm.ms.entity.lep;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.icthh.xm.commons.lep.XmLepScriptConfigServerResourceLoader;
 import com.icthh.xm.commons.security.XmAuthenticationContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
@@ -79,7 +81,7 @@ public class LepEntityRepositoryIntTest extends AbstractSpringBootTest  {
         String function = IOUtils.toString(cfgInputStream, UTF_8);
 
         leps.onRefresh(funcKey, function);
-        Map<String, Object> result = functionExecutorServiceImpl.execute(functionKey, Map.of(), null);
+        Map<String, Object> result = (Map<String, Object>) functionExecutorServiceImpl.execute(functionKey, Map.of(), null);
         List<Map<String, Object>> resultEntities = (List) result.get("results");
 
         assertEquals(1, resultEntities.size());
