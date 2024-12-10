@@ -11,13 +11,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.icthh.xm.commons.i18n.error.web.ExceptionTranslator;
 import com.icthh.xm.commons.i18n.spring.service.LocalizationMessageService;
 import com.icthh.xm.ms.entity.AbstractWebMvcTest;
-import com.icthh.xm.ms.entity.domain.FunctionContext;
+import com.icthh.xm.ms.entity.domain.FunctionResultContext;
 import com.icthh.xm.ms.entity.domain.ext.IdOrKey;
 import com.icthh.xm.ms.entity.repository.kafka.ProfileEventProducer;
-import com.icthh.xm.ms.entity.service.FunctionService;
 import com.icthh.xm.ms.entity.service.ProfileService;
 import com.icthh.xm.ms.entity.service.TenantService;
 import com.icthh.xm.ms.entity.service.XmEntityService;
+import com.icthh.xm.ms.entity.service.impl.XmEntityFunctionServiceFacade;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
 import org.junit.Test;
@@ -36,8 +36,8 @@ public class XmEntityResourceFunctionApiIntTest extends AbstractWebMvcTest {
     @Autowired
     private WebApplicationContext wac;
     private MockMvc mockMvc;
-    @MockBean(name = "functionService")
-    private FunctionService functionService;
+    @MockBean
+    private XmEntityFunctionServiceFacade functionService;
     @MockBean
     private LocalizationMessageService localizationMessageService;
     @MockBean
@@ -61,7 +61,7 @@ public class XmEntityResourceFunctionApiIntTest extends AbstractWebMvcTest {
         IdOrKey id = IdOrKey.of("1");
         when(functionService.execute(functionName,
             id, of("var1", "val1", "var2", "val2")))
-            .thenReturn(new FunctionContext().data(of("test", "result")));
+            .thenReturn((FunctionResultContext) new FunctionResultContext().data(of("test", "result")));
         mockMvc.perform(post("/api/xm-entities/1/functions/" + functionName)
             .contentType(TestUtil.APPLICATION_JSON_UTF8)
             .content("{\"var1\":\"val1\", \"var2\": \"val2\"}"))
@@ -75,7 +75,7 @@ public class XmEntityResourceFunctionApiIntTest extends AbstractWebMvcTest {
         IdOrKey id = IdOrKey.of("1");
         when(functionService.execute(functionName,
             id, of("var1", "val1", "var2", "val2")))
-            .thenReturn(new FunctionContext().data(of("test", "result")));
+            .thenReturn((FunctionResultContext) new FunctionResultContext().data(of("test", "result")));
         mockMvc.perform(get("/api/xm-entities/1/functions/"+functionName+"?var1=val1&var2=val2"))
             .andDo(print())
             .andExpect(jsonPath("$.data.test").value("result"))

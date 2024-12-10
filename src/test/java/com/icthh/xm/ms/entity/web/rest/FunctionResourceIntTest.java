@@ -5,10 +5,12 @@ import com.icthh.xm.commons.lep.XmLepScriptConfigServerResourceLoader;
 import com.icthh.xm.commons.security.XmAuthenticationContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
+import com.icthh.xm.commons.web.rest.FunctionResource;
 import com.icthh.xm.lep.api.LepManager;
 import com.icthh.xm.ms.entity.AbstractSpringBootTest;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.service.impl.XmEntityServiceImpl;
+import com.icthh.xm.ms.entity.service.processor.XmEntityDataFormSpecProcessor;
 import lombok.SneakyThrows;
 import org.apache.commons.io.IOUtils;
 import org.junit.After;
@@ -82,6 +84,9 @@ public class FunctionResourceIntTest extends AbstractSpringBootTest {
 
     @Autowired
     private ExceptionTranslator exceptionTranslator;
+
+    @Autowired
+    private XmEntityDataFormSpecProcessor xmEntityDataFormSpecProcessor;
 
     @Autowired
     private WebApplicationContext webApplicationContext;

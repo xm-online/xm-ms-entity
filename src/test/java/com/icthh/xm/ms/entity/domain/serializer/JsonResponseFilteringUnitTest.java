@@ -15,13 +15,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.icthh.xm.commons.i18n.error.web.ExceptionTranslator;
 import com.icthh.xm.commons.i18n.spring.service.LocalizationMessageService;
+import com.icthh.xm.commons.service.FunctionServiceFacade;
 import com.icthh.xm.ms.entity.AbstractWebMvcTest;
 import com.icthh.xm.ms.entity.config.WebMvcConfiguration;
 import com.icthh.xm.ms.entity.domain.Link;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.domain.ext.IdOrKey;
 import com.icthh.xm.ms.entity.repository.kafka.ProfileEventProducer;
-import com.icthh.xm.ms.entity.service.FunctionService;
 import com.icthh.xm.ms.entity.service.LinkService;
 import com.icthh.xm.ms.entity.service.ProfileService;
 import com.icthh.xm.ms.entity.service.TenantService;
@@ -77,7 +77,7 @@ public class JsonResponseFilteringUnitTest extends AbstractWebMvcTest {
     @MockBean
     private TenantService tenantService;
     @MockBean
-    private FunctionService functionService;
+    private FunctionServiceFacade functionService;
     @MockBean
     private LocalizationMessageService localizationMessageService;
 

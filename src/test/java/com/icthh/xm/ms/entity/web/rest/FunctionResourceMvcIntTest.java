@@ -1,11 +1,14 @@
 package com.icthh.xm.ms.entity.web.rest;
 
+import com.icthh.xm.commons.domain.FunctionResult;
 import com.icthh.xm.commons.i18n.error.web.ExceptionTranslator;
 import com.icthh.xm.commons.i18n.spring.service.LocalizationMessageService;
+import com.icthh.xm.commons.web.rest.FunctionResource;
 import com.icthh.xm.ms.entity.AbstractWebMvcTest;
 import com.icthh.xm.ms.entity.domain.FunctionContext;
-import com.icthh.xm.ms.entity.service.FunctionService;
-import com.icthh.xm.ms.entity.service.swagger.DynamicSwaggerFunctionGenerator;
+import com.icthh.xm.ms.entity.domain.FunctionResultContext;
+import com.icthh.xm.ms.entity.service.impl.XmEntityFunctionServiceFacade;
+import com.icthh.xm.ms.entity.service.swagger.DynamicSwaggerFunctionGeneratorImpl;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
@@ -49,14 +52,14 @@ public class FunctionResourceMvcIntTest extends AbstractWebMvcTest {
 
     private MockMvc mockMvc;
 
-    @MockBean(name = "functionService")
-    private FunctionService functionService;
+    @MockBean
+    private XmEntityFunctionServiceFacade functionService;
 
     @MockBean
     private LocalizationMessageService localizationMessageService;
 
     @MockBean
-    private DynamicSwaggerFunctionGenerator dynamicSwaggerFunctionGenerator;
+    private DynamicSwaggerFunctionGeneratorImpl dynamicSwaggerFunctionGenerator;
 
     @Before
     public void setup() {
@@ -68,7 +71,7 @@ public class FunctionResourceMvcIntTest extends AbstractWebMvcTest {
     @SneakyThrows
     public void testCallGetFunction() {
         when(functionService.execute("SOME-FUNCTION_KEY.TROLOLO", of("var1", "val1", "var2", "val2"), "GET"))
-            .thenReturn(new FunctionContext().data(of("test", "result")));
+            .thenReturn((FunctionResult) new FunctionResultContext().data(of("test", "result")));
         mockMvc.perform(get("/api/functions/SOME-FUNCTION_KEY.TROLOLO?var1=val1&var2=val2"))
             .andDo(print())
             .andExpect(jsonPath("$.data.test").value("result"))
@@ -80,7 +83,7 @@ public class FunctionResourceMvcIntTest extends AbstractWebMvcTest {
     @SneakyThrows
     public void testCallPostAnonymousFunction() {
         when(functionService.executeAnonymous("SOME-ANONYMOUS-FUNCTION_KEY.TROLOLO", of("var1", "val1", "var2", "val2"), "POST"))
-            .thenReturn(new FunctionContext().data(of("test", "result")));
+            .thenReturn((FunctionResult) new FunctionResultContext().data(of("test", "result")));
         mockMvc.perform(post("/api/functions/anonymous/SOME-ANONYMOUS-FUNCTION_KEY.TROLOLO")
             .contentType(TestUtil.APPLICATION_JSON_UTF8)
             .content("{\"var1\":\"val1\", \"var2\": \"val2\"}"))
@@ -94,7 +97,7 @@ public class FunctionResourceMvcIntTest extends AbstractWebMvcTest {
     @SneakyThrows
     public void testCallPostAnonymousFunctionWithUrlEncodedParams() {
         when(functionService.executeAnonymous("SOME-ANONYMOUS-FUNCTION_KEY.TROLOLO", of("var1", "val1", "var2", "val2"), "POST_URLENCODED"))
-            .thenReturn(new FunctionContext().data(of("test", "result")));
+            .thenReturn((FunctionResult) new FunctionResultContext().data(of("test", "result")));
         mockMvc.perform(post("/api/functions/anonymous/SOME-ANONYMOUS-FUNCTION_KEY.TROLOLO")
                 .contentType(MediaType.APPLICATION_FORM_URLENCODED)
                 .param("var1", "val1")
@@ -110,7 +113,7 @@ public class FunctionResourceMvcIntTest extends AbstractWebMvcTest {
     @SneakyThrows
     public void testCallPostAnonymousFunctionWithPathWithUrlEncodedParams() {
         when(functionService.executeAnonymous("SOME-ANONYMOUS-FUNCTION_KEY/TROLOLO", of("var1", "val1", "var2", "val2"), "POST_URLENCODED"))
-            .thenReturn(new FunctionContext().data(of("test", "result")));
+            .thenReturn((FunctionResult) new FunctionResultContext().data(of("test", "result")));
         mockMvc.perform(post("/api/functions/anonymous/SOME-ANONYMOUS-FUNCTION_KEY/TROLOLO")
                 .contentType(MediaType.APPLICATION_FORM_URLENCODED)
                 .param("var1", "val1")
@@ -126,7 +129,7 @@ public class FunctionResourceMvcIntTest extends AbstractWebMvcTest {
     @SneakyThrows
     public void testCallPostFunctionWithUrlEncodedParams() {
         when(functionService.execute("SOME-FUNCTION_KEY.TROLOLO", of("var1", "val1", "var2", "val2"), "POST_URLENCODED"))
-            .thenReturn(new FunctionContext().data(of("test", "result")));
+            .thenReturn((FunctionResult) new FunctionResultContext().data(of("test", "result")));
         mockMvc.perform(post("/api/functions/SOME-FUNCTION_KEY.TROLOLO")
                 .contentType(MediaType.APPLICATION_FORM_URLENCODED)
                 .param("var1", "val1")
@@ -142,7 +145,7 @@ public class FunctionResourceMvcIntTest extends AbstractWebMvcTest {
     @SneakyThrows
     public void testCallMvcAnonymousPostFunctionWithUrlEncodedParams() {
         when(functionService.executeAnonymous("SOME-ANONYMOUS-FUNCTION_KEY.TROLOLO", of("var1", "val1", "var2", "val2"), "POST_URLENCODED"))
-            .thenReturn(new FunctionContext().data( of(MVC_FUNC_RESULT, new ModelAndView("redirect:https://google.com"))));
+            .thenReturn((FunctionResult) new FunctionResultContext().data( of(MVC_FUNC_RESULT, new ModelAndView("redirect:https://google.com"))));
         mockMvc.perform(post("/api/functions/anonymous/mvc/SOME-ANONYMOUS-FUNCTION_KEY.TROLOLO")
                 .contentType(MediaType.APPLICATION_FORM_URLENCODED)
                 .param("var1", "val1")
@@ -158,7 +161,7 @@ public class FunctionResourceMvcIntTest extends AbstractWebMvcTest {
     @SneakyThrows
     public void testCallMvcAnonymousGetFunctionWithUrlEncodedParams() {
         when(functionService.executeAnonymous("SOME-ANONYMOUS-FUNCTION_KEY.TROLOLO", of("var1", "val1", "var2", "val2"), "GET"))
-            .thenReturn(new FunctionContext().data( of(MVC_FUNC_RESULT, new ModelAndView("redirect:https://google.com"))));
+            .thenReturn((FunctionResult) new FunctionResultContext().data( of(MVC_FUNC_RESULT, new ModelAndView("redirect:https://google.com"))));
         mockMvc.perform(get("/api/functions/anonymous/mvc/SOME-ANONYMOUS-FUNCTION_KEY.TROLOLO?var1=val1&var2=val2")
                 .contentType(MediaType.APPLICATION_JSON)
             )
@@ -172,7 +175,7 @@ public class FunctionResourceMvcIntTest extends AbstractWebMvcTest {
     @SneakyThrows
     public void testCallGetAnonymousFunction() {
         when(functionService.executeAnonymous("SOME-ANONYMOUS-FUNCTION_KEY.TROLOLO", of("var1", "val1", "var2", "val2"), "GET"))
-                .thenReturn(new FunctionContext().data(of("test", "result")));
+                .thenReturn((FunctionResult) new FunctionResultContext().data(of("test", "result")));
         mockMvc.perform(get("/api/functions/anonymous/SOME-ANONYMOUS-FUNCTION_KEY.TROLOLO?var1=val1&var2=val2"))
                 .andDo(print())
                 .andExpect(jsonPath("$.data.test").value("result"))
@@ -184,7 +187,7 @@ public class FunctionResourceMvcIntTest extends AbstractWebMvcTest {
     @SneakyThrows
     public void testCallPutFunction() {
         when(functionService.execute("SOME-FUNCTION_KEY.TROLOLO", of("var1", "val1", "var2", "val2"), "PUT"))
-            .thenReturn(new FunctionContext().data(of("test", "result")));
+            .thenReturn((FunctionResult) new FunctionResultContext().data(of("test", "result")));
         mockMvc.perform(put("/api/functions/SOME-FUNCTION_KEY.TROLOLO")
             .contentType(TestUtil.APPLICATION_JSON_UTF8)
             .content("{\"var1\":\"val1\", \"var2\": \"val2\"}"))
@@ -198,7 +201,7 @@ public class FunctionResourceMvcIntTest extends AbstractWebMvcTest {
     @SneakyThrows
     public void testCallPatchFunction() {
         when(functionService.execute("SOME-FUNCTION_KEY.TROLOLO", of("var1", "val1", "var2", "val2"), "PATCH"))
-            .thenReturn(new FunctionContext().data(of("test", "result")));
+            .thenReturn((FunctionResult) new FunctionResultContext().data(of("test", "result")));
         mockMvc.perform(patch("/api/functions/SOME-FUNCTION_KEY.TROLOLO")
             .contentType(TestUtil.APPLICATION_JSON_UTF8)
             .content("{\"var1\":\"val1\", \"var2\": \"val2\"}"))
@@ -212,7 +215,7 @@ public class FunctionResourceMvcIntTest extends AbstractWebMvcTest {
     @SneakyThrows
     public void testCallDeleteFunction() {
         when(functionService.execute("SOME-FUNCTION_KEY.TROLOLO", null, "DELETE"))
-                .thenReturn(new FunctionContext().data(of("test", "result")));
+                .thenReturn((FunctionResult) new FunctionResultContext().data(of("test", "result")));
         mockMvc.perform(delete("/api/functions/SOME-FUNCTION_KEY.TROLOLO")
                                 .contentType(TestUtil.APPLICATION_JSON_UTF8))
                 .andExpect(jsonPath("$.data.test").value("result"))
@@ -223,12 +226,9 @@ public class FunctionResourceMvcIntTest extends AbstractWebMvcTest {
     @Test
     @SneakyThrows
     public void testCallStreamFunction() {
-        when(functionService.execute(eq("SOME-FUNCTION_KEY.TROLOLO"), any(), anyString()))
-            .then((method) -> {
-                FunctionContext data = new FunctionContext().data(of("data", new byte[]{101, 102, 103, 104, 42}));
-                data.setOnlyData(true);
-                return data;
-            });
+        FunctionResultContext result = (FunctionResultContext) new FunctionResultContext().data(of("data", new byte[]{101, 102, 103, 104, 42}));
+        result.setOnlyData(true);
+        when(functionService.execute(eq("SOME-FUNCTION_KEY.TROLOLO"), any(), anyString())).thenReturn(result);
         byte[] response = mockMvc.perform(get("/api/functions/SOME-FUNCTION_KEY.TROLOLO?var1=val1&var2=val2"))
             .andDo(print())
             .andExpect(status().isOk()).andReturn().getResponse().getContentAsByteArray();

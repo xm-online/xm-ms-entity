@@ -1,13 +1,10 @@
 package com.icthh.xm.ms.entity.config;
 
-import com.icthh.xm.commons.config.client.repository.CommonConfigRepository;
-import com.icthh.xm.commons.config.client.repository.TenantListRepository;
-import com.icthh.xm.commons.config.client.service.TenantAliasService;
 import com.icthh.xm.commons.lep.TenantScriptStorage;
 import com.icthh.xm.commons.lep.groovy.GroovyLepEngineConfiguration;
+import com.icthh.xm.commons.lep.keyresolver.FunctionLepKeyResolver;
 import com.icthh.xm.ms.entity.lep.ElasticIndexManager;
 import com.icthh.xm.ms.entity.lep.ElasticIndexManagerService;
-import com.icthh.xm.ms.entity.lep.keyresolver.FunctionLepKeyResolver;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.context.ApplicationContext;

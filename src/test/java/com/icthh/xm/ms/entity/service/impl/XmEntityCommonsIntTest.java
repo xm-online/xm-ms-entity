@@ -6,13 +6,15 @@ import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_TENANT_
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.icthh.xm.commons.lep.XmLepScriptConfigServerResourceLoader;
 import com.icthh.xm.commons.security.XmAuthenticationContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
 import com.icthh.xm.lep.api.LepManager;
 import com.icthh.xm.ms.entity.AbstractSpringBootTest;
-import com.icthh.xm.ms.entity.service.FunctionExecutorService;
+import com.icthh.xm.ms.entity.service.XmEntityFunctionExecutorService;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
@@ -32,7 +34,7 @@ import java.util.Map;
 public class XmEntityCommonsIntTest extends AbstractSpringBootTest {
 
     @Autowired
-    private FunctionExecutorService functionService;
+    private XmEntityFunctionExecutorService functionService;
 
 
     @Autowired
@@ -86,7 +88,8 @@ public class XmEntityCommonsIntTest extends AbstractSpringBootTest {
     @Transactional
     public void testCommons() {
         initLeps();
-        Map<String, Object> name = functionService.execute("NAME", of(), null);
+        Object result = functionService.execute("NAME", of(), null);
+        Map<String, Object> name = new ObjectMapper().convertValue(result, new TypeReference<>() {});
         log.info("RESULT {}", name);
         assertThat(name.get("result")).isEqualTo("RESULT [1, 2, 5] | COMMON_ARGUMENT");
     }

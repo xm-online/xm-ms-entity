@@ -2,15 +2,13 @@ package com.icthh.xm.ms.entity.service.spec;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import com.icthh.xm.commons.domain.DefinitionSpec;
 import com.icthh.xm.commons.lep.spring.LepService;
 import com.icthh.xm.commons.logging.aop.IgnoreLogginAspect;
 import com.icthh.xm.ms.entity.config.XmEntityTenantConfigService;
-import com.icthh.xm.ms.entity.domain.spec.DefinitionSpec;
 import com.icthh.xm.ms.entity.domain.spec.FunctionSpec;
 import com.icthh.xm.ms.entity.domain.spec.TypeSpec;
 import com.icthh.xm.ms.entity.domain.spec.XmEntitySpec;
-import com.icthh.xm.ms.entity.service.processor.DefinitionSpecProcessor;
-import com.icthh.xm.ms.entity.service.processor.FormSpecProcessor;
 import com.networknt.schema.JsonSchema;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -23,6 +21,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -31,6 +30,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import static com.icthh.xm.ms.entity.service.json.JsonConfigurationListener.XM_ENTITY_SPEC_KEY;
 import static com.icthh.xm.ms.entity.util.CustomCollectionUtils.nullSafe;
 import static org.springframework.util.CollectionUtils.isEmpty;
 
@@ -107,12 +107,13 @@ public class XmEntitySpecContextService {
     }
 
     public Map<String, TypeSpec> updateByTenantState(String tenant) {
-        var tenantEntitySpec = readEntitySpec(tenant);
+        Map<XmEntitySpec, LinkedHashMap<String, TypeSpec>> xmEntitySpecTypesMap = readXmEntitySpecTypes(tenant);
+        LinkedHashMap<String, TypeSpec> tenantEntitySpec = getTenantEntitySpecs(xmEntitySpecTypesMap);
         if (initialized.get()) {
             xmEntitySpecCustomizer.customize(tenant, tenantEntitySpec);
         }
 
-        dataSpecJsonSchemaService.updateByTenant(tenant, typesByTenantByFile);
+        dataSpecJsonSchemaService.updateByTenantState(tenant, XM_ENTITY_SPEC_KEY, xmEntitySpecTypesMap.keySet());
 
         if (tenantEntitySpec.isEmpty()) {
             typesByTenant.remove(tenant);
@@ -122,36 +123,50 @@ public class XmEntitySpecContextService {
         specFieldsProcessor.processUniqueFields(tenantEntitySpec);
 
         functionByTenantService.processFunctionSpec(tenant, tenantEntitySpec);
-        dataSpecJsonSchemaService.processDataSpec(tenant, tenantEntitySpec);
+
+        xmEntitySpecTypesMap.keySet()
+            .forEach(spec -> dataSpecJsonSchemaService.processSpecification(tenant, XM_ENTITY_SPEC_KEY, spec));
 
         typesByTenant.put(tenant, tenantEntitySpec);
 
         return tenantEntitySpec;
     }
 
-    private LinkedHashMap<String, TypeSpec> readEntitySpec(String tenant) {
-        var tenantEntitySpec = new LinkedHashMap<String, TypeSpec>();
+    private LinkedHashMap<String, TypeSpec> getTenantEntitySpecs(
+        Map<XmEntitySpec, LinkedHashMap<String, TypeSpec>> xmEntitySpecTypesMap) {
+        return xmEntitySpecTypesMap.values().stream()
+            .flatMap(v -> v.entrySet().stream())
+            .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue,
+                (u, v) -> {
+                    throw new IllegalStateException(String.format("Duplicate key %s", u));
+                }, LinkedHashMap::new));
+    }
+
+    private Map<XmEntitySpec, LinkedHashMap<String, TypeSpec>> readXmEntitySpecTypes(String tenant) {
+        var result = new HashMap<XmEntitySpec, LinkedHashMap<String, TypeSpec>>();
         typesByTenantByFile.get(tenant).values().stream()
-            .map(this::toTypeSpecsMap)
-            .forEach(tenantEntitySpec::putAll);
-        return tenantEntitySpec;
+            .map(this::toXmEntitySpecTypes)
+            .forEach(result::putAll);
+        return result;
     }
 
     @SneakyThrows
-    private Map<String, TypeSpec> toTypeSpecsMap(String config) {
+    private Map<XmEntitySpec, LinkedHashMap<String, TypeSpec>> toXmEntitySpecTypes(String config) {
         XmEntitySpec xmEntitySpec = mapper.readValue(config, XmEntitySpec.class);
         List<TypeSpec> typeSpecs = xmEntitySpec.getTypes();
         if (isEmpty(typeSpecs)) {
             return Collections.emptyMap();
         } else {
+            Map<XmEntitySpec, LinkedHashMap<String, TypeSpec>> xmEntitySpecTypes = new HashMap<>();
             // Convert List<TypeSpec> to Map<key, TypeSpec>
-            Map<String, TypeSpec> result = typeSpecs.stream()
+            LinkedHashMap<String, TypeSpec> result = typeSpecs.stream()
                 .map(this::enrichAttachmentSpec)
                 .collect(Collectors.toMap(TypeSpec::getKey, Function.identity(),
                     (u, v) -> {
                         throw new IllegalStateException(String.format("Duplicate key %s", u));
                     }, LinkedHashMap::new));
-            return result;
+            xmEntitySpecTypes.put(xmEntitySpec, result);
+            return xmEntitySpecTypes;
         }
     }
 
@@ -175,6 +190,6 @@ public class XmEntitySpecContextService {
     }
 
     public List<DefinitionSpec> getDefinitions(String tenantKeyValue) {
-        return dataSpecJsonSchemaService.getDefinitions(tenantKeyValue);
+        return dataSpecJsonSchemaService.getDefinitions(tenantKeyValue, XM_ENTITY_SPEC_KEY);
     }
 }

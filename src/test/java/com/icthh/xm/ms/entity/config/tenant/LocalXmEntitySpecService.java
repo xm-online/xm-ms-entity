@@ -6,20 +6,16 @@ import com.icthh.xm.ms.entity.config.ApplicationProperties;
 import com.icthh.xm.ms.entity.config.XmEntityTenantConfigService;
 import com.icthh.xm.ms.entity.domain.spec.FunctionSpec;
 import com.icthh.xm.ms.entity.domain.spec.TypeSpec;
-import com.icthh.xm.ms.entity.security.access.DynamicPermissionCheckService;
+import com.icthh.xm.ms.entity.security.access.XmEntityDynamicPermissionCheckService;
 import com.icthh.xm.ms.entity.service.XmEntitySpecService;
 import com.icthh.xm.ms.entity.service.privileges.custom.EntityCustomPrivilegeService;
-import com.icthh.xm.ms.entity.service.processor.DefinitionSpecProcessor;
-import com.icthh.xm.ms.entity.service.processor.FormSpecProcessor;
 import com.icthh.xm.ms.entity.service.spec.DataSpecJsonSchemaService;
 import com.icthh.xm.ms.entity.service.spec.XmEntitySpecContextService;
 
 import com.icthh.xm.ms.entity.service.spec.XmEntitySpecCustomizer;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Primary;
-import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -40,7 +36,7 @@ public class LocalXmEntitySpecService extends XmEntitySpecService {
                                     ApplicationProperties applicationProperties,
                                     TenantContextHolder tenantContextHolder,
                                     EntityCustomPrivilegeService entityCustomPrivilegeService,
-                                    DynamicPermissionCheckService dynamicPermissionCheckService,
+                                    XmEntityDynamicPermissionCheckService dynamicPermissionCheckService,
                                     XmEntityTenantConfigService tenantConfigService,
                                     XmEntitySpecCustomizer xmEntitySpecCustomizer,
                                     DataSpecJsonSchemaService dataSpecJsonSchemaService,
