@@ -6,6 +6,8 @@ import com.icthh.xm.commons.lep.spring.LepService;
 import com.icthh.xm.commons.logging.aop.IgnoreLogginAspect;
 import com.icthh.xm.commons.service.impl.FunctionExecutorServiceImpl;
 import com.icthh.xm.ms.entity.domain.ext.IdOrKey;
+import org.springframework.stereotype.Service;
+
 import java.util.Map;
 
 /**
@@ -13,6 +15,7 @@ import java.util.Map;
  */
 @IgnoreLogginAspect
 @LepService(group = "function")
+@Service("functionExecutorService")
 public class XmEntityFunctionExecutorService extends FunctionExecutorServiceImpl {
 
     /**
