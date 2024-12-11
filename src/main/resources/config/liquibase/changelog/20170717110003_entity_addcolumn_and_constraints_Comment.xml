@@ -15,7 +15,7 @@
 
     <changeSet id="20170717110003-2" author="amedvedchuk">
         <dropForeignKeyConstraint baseTableName="comment" constraintName="fk_comment_author_id"/>
-        <renameColumn tableName="comment" oldColumnName="author_id" newColumnName="xm_entity_id"/>
+        <renameColumn tableName="comment" oldColumnName="author_id" newColumnName="xm_entity_id" columnDataType="bigint"/>
         <addNotNullConstraint tableName="comment" columnName="xm_entity_id" columnDataType="bigint"/>
         <addForeignKeyConstraint baseColumnNames="xm_entity_id"
                                  baseTableName="comment"

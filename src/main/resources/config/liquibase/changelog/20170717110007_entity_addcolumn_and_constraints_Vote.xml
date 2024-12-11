@@ -16,7 +16,7 @@
     <changeSet id="20170717110007-2" author="amedvedchuk">
 
         <dropForeignKeyConstraint baseTableName="vote" constraintName="fk_vote_author_id"/>
-        <renameColumn tableName="vote" oldColumnName="author_id" newColumnName="xm_entity_id"/>
+        <renameColumn tableName="vote" oldColumnName="author_id" newColumnName="xm_entity_id" columnDataType="bigint"/>
         <addNotNullConstraint tableName="vote" columnName="xm_entity_id" columnDataType="bigint"/>
 
         <addForeignKeyConstraint baseColumnNames="xm_entity_id"
