@@ -13,6 +13,7 @@ import com.icthh.xm.ms.entity.service.XmEntityService;
 import com.icthh.xm.ms.entity.service.XmEntitySpecService;
 import com.icthh.xm.ms.entity.util.CustomCollectionUtils;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -22,6 +23,7 @@ import java.util.Objects;
 import static com.icthh.xm.ms.entity.security.access.FeatureContext.FUNCTION;
 
 @Slf4j
+@Primary
 @Service
 public class XmEntityFunctionServiceFacade extends FunctionServiceFacadeImpl<FunctionSpec> {
 

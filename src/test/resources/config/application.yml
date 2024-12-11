@@ -158,6 +158,8 @@ application:
     kafka-system-topic: system_topic
     kafka-system-queue: system_queue
     lep:
+        lep-resource-path-pattern: /config/tenants/{tenantName}/entity/lep/resources/**/*
+        tenants-with-lep-warmup: XM
         tenant-script-storage: XM_MS_CONFIG
         warmup-scripts: false
     periodicMetricPoolSize: 1

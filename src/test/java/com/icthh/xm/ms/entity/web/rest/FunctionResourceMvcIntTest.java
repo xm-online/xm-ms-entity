@@ -3,9 +3,11 @@ package com.icthh.xm.ms.entity.web.rest;
 import com.icthh.xm.commons.domain.FunctionResult;
 import com.icthh.xm.commons.i18n.error.web.ExceptionTranslator;
 import com.icthh.xm.commons.i18n.spring.service.LocalizationMessageService;
+import com.icthh.xm.commons.web.rest.FunctionApiDocsResource;
+import com.icthh.xm.commons.web.rest.FunctionMvcResource;
 import com.icthh.xm.commons.web.rest.FunctionResource;
+import com.icthh.xm.commons.web.rest.FunctionUploadResource;
 import com.icthh.xm.ms.entity.AbstractWebMvcTest;
-import com.icthh.xm.ms.entity.domain.FunctionContext;
 import com.icthh.xm.ms.entity.domain.FunctionResultContext;
 import com.icthh.xm.ms.entity.service.impl.XmEntityFunctionServiceFacade;
 import com.icthh.xm.ms.entity.service.swagger.DynamicSwaggerFunctionGeneratorImpl;
@@ -44,7 +46,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @Slf4j
 @WebMvcTest(controllers = FunctionResource.class)
-@ContextConfiguration(classes = {FunctionResource.class, ExceptionTranslator.class})
+@ContextConfiguration(classes = {
+    FunctionResource.class,
+    FunctionApiDocsResource.class,
+    FunctionMvcResource.class,
+    FunctionUploadResource.class,
+    ExceptionTranslator.class
+})
 public class FunctionResourceMvcIntTest extends AbstractWebMvcTest {
 
     @Autowired
