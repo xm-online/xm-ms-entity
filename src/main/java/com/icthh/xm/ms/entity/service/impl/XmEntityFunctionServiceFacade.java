@@ -2,7 +2,7 @@ package com.icthh.xm.ms.entity.service.impl;
 
 import com.icthh.xm.commons.exceptions.EntityNotFoundException;
 import com.icthh.xm.commons.service.FunctionTxControl;
-import com.icthh.xm.commons.service.impl.FunctionServiceFacadeImpl;
+import com.icthh.xm.commons.service.impl.AbstractFunctionServiceFacade;
 import com.icthh.xm.ms.entity.domain.FunctionResultContext;
 import com.icthh.xm.ms.entity.domain.ext.IdOrKey;
 import com.icthh.xm.ms.entity.domain.spec.FunctionSpec;
@@ -13,7 +13,6 @@ import com.icthh.xm.ms.entity.service.XmEntityService;
 import com.icthh.xm.ms.entity.service.XmEntitySpecService;
 import com.icthh.xm.ms.entity.util.CustomCollectionUtils;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -23,9 +22,8 @@ import java.util.Objects;
 import static com.icthh.xm.ms.entity.security.access.FeatureContext.FUNCTION;
 
 @Slf4j
-@Primary
 @Service
-public class XmEntityFunctionServiceFacade extends FunctionServiceFacadeImpl<FunctionSpec> {
+public class XmEntityFunctionServiceFacade extends AbstractFunctionServiceFacade<FunctionSpec> {
 
     public static final String POST_URLENCODED = "POST_URLENCODED";
     //Function is not visible, but could be executed

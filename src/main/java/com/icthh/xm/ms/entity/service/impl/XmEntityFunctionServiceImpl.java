@@ -1,10 +1,10 @@
 package com.icthh.xm.ms.entity.service.impl;
 
-import com.icthh.xm.commons.permission.service.DynamicPermissionCheckService;
 import com.icthh.xm.commons.service.impl.AbstractFunctionService;
 import com.icthh.xm.ms.entity.config.XmEntityTenantConfigService;
 import com.icthh.xm.ms.entity.domain.spec.FunctionSpec;
 import com.icthh.xm.ms.entity.security.access.FeatureContext;
+import com.icthh.xm.ms.entity.security.access.XmEntityDynamicPermissionCheckService;
 import com.icthh.xm.ms.entity.service.XmEntitySpecService;
 import com.icthh.xm.ms.entity.service.json.JsonValidationService;
 import com.icthh.xm.ms.entity.util.CustomCollectionUtils;
@@ -21,7 +21,7 @@ public class XmEntityFunctionServiceImpl extends AbstractFunctionService<Functio
     private final XmEntityTenantConfigService xmEntityTenantConfigService;
     private final JsonValidationService jsonValidationService;
 
-    public XmEntityFunctionServiceImpl(DynamicPermissionCheckService dynamicPermissionCheckService,
+    public XmEntityFunctionServiceImpl(XmEntityDynamicPermissionCheckService dynamicPermissionCheckService,
                                        XmEntitySpecService xmEntitySpecService,
                                        XmEntityTenantConfigService xmEntityTenantConfigService,
                                        JsonValidationService jsonValidationService) {

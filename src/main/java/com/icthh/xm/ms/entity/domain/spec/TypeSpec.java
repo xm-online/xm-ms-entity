@@ -5,7 +5,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.icthh.xm.commons.domain.DataSpec;
-import com.icthh.xm.commons.domain.SpecWithInputDataAndForm;
+import com.icthh.xm.commons.domain.SpecificationItem;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -25,7 +25,7 @@ import java.util.Set;
 @Builder(toBuilder = true)
 @AllArgsConstructor
 @NoArgsConstructor
-public class TypeSpec implements DataSpec, SpecWithInputDataAndForm {
+public class TypeSpec implements DataSpec, SpecificationItem {
 
     @JsonProperty("key")
     private String key;

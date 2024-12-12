@@ -1,7 +1,7 @@
 package com.icthh.xm.ms.entity.service.spec;
 
 import com.icthh.xm.commons.domain.DefinitionSpec;
-import com.icthh.xm.commons.domain.SpecWithInputDataAndForm;
+import com.icthh.xm.commons.domain.SpecificationItem;
 import com.icthh.xm.commons.service.SpecificationProcessingService;
 import com.icthh.xm.ms.entity.domain.spec.StateSpec;
 import com.icthh.xm.ms.entity.domain.spec.TypeSpec;
@@ -17,7 +17,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
-import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -60,7 +59,7 @@ public class DataSpecJsonSchemaService implements SpecificationProcessingService
     }
 
     @Override
-    public <I extends SpecWithInputDataAndForm> Collection<I> processDataSpecification(String tenant, String dataSpecKey, Collection<I> specifications) {
+    public <I extends SpecificationItem> Collection<I> processDataSpecification(String tenant, String dataSpecKey, Collection<I> specifications) {
         var dataSchemas = new HashMap<String, JsonSchema>();
         JsonSchemaFactory jsonSchemaFactory = JsonSchemaFactory.getInstance(SpecVersion.VersionFlag.V4);
         for (I typeSpec : specifications) {
