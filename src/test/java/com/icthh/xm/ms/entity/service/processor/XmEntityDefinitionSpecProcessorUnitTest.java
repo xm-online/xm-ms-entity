@@ -3,12 +3,12 @@ package com.icthh.xm.ms.entity.service.processor;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import com.icthh.xm.commons.domain.DefinitionSpec;
+import com.icthh.xm.commons.domain.FormSpec;
+import com.icthh.xm.commons.listener.JsonListenerService;
 import com.icthh.xm.ms.entity.AbstractUnitTest;
-import com.icthh.xm.ms.entity.domain.spec.DefinitionSpec;
-import com.icthh.xm.ms.entity.domain.spec.FormSpec;
 import com.icthh.xm.ms.entity.domain.spec.TypeSpec;
 import com.icthh.xm.ms.entity.domain.spec.XmEntitySpec;
-import com.icthh.xm.ms.entity.service.json.JsonListenerService;
 import lombok.SneakyThrows;
 import org.junit.Before;
 import org.junit.Test;
@@ -18,23 +18,25 @@ import org.mockito.junit.MockitoJUnitRunner;
 import java.util.List;
 import java.util.Map;
 
+import static com.icthh.xm.ms.entity.service.json.JsonConfigurationListener.XM_ENTITY_SPEC_KEY;
 import static com.icthh.xm.ms.entity.web.rest.XmEntitySaveIntTest.loadFile;
 import static java.util.Collections.singletonList;
 import static org.junit.Assert.assertEquals;
 
 @RunWith(MockitoJUnitRunner.class)
-public class DefinitionSpecProcessorUnitTest extends AbstractUnitTest {
+public class XmEntityDefinitionSpecProcessorUnitTest extends AbstractUnitTest {
 
     private static final String ENTITY_APP_NAME = "entity";
     private static final String TENANT = "XM";
     private static final String RELATIVE_PATH_TO_FILE = "xmentityspec/definitions/specification-definitions.json";
-    private DefinitionSpecProcessor subject;
+    private XmEntityDefinitionSpecProcessor subject;
     private ObjectMapper objectMapper;
 
     @Before
     public void setUp() {
         JsonListenerService jsonListenerService = new JsonListenerService();
-        subject = new DefinitionSpecProcessor(jsonListenerService);
+        XmEntityTypeSpecProcessor typeSpecProcessor = new XmEntityTypeSpecProcessor(jsonListenerService);
+        subject = new XmEntityDefinitionSpecProcessor(jsonListenerService, typeSpecProcessor);
         objectMapper = new ObjectMapper();
         jsonListenerService.processTenantSpecification(TENANT, RELATIVE_PATH_TO_FILE, loadFile("config/specs/definitions/specification-definitions.json"));
     }
@@ -45,8 +47,8 @@ public class DefinitionSpecProcessorUnitTest extends AbstractUnitTest {
         XmEntitySpec expectedXmEntitySpec = loadXmEntitySpecByFileName("xmentityspec-definitions-input-expected");
         TypeSpec typeSpec = inputXmEntitySpec.getTypes().get(0);
 
-        subject.updateDefinitionStateByTenant(TENANT, Map.of(TENANT, Map.of(TENANT, objectMapper.writeValueAsString(inputXmEntitySpec))));
-        subject.processTypeSpec(TENANT, typeSpec::setDataSpec, typeSpec::getDataSpec);
+        subject.updateStateByTenant(TENANT, XM_ENTITY_SPEC_KEY, inputXmEntitySpec.getDefinitions());
+        subject.processDataSpec(TENANT, XM_ENTITY_SPEC_KEY, typeSpec::setDataSpec, typeSpec::getDataSpec);
 
         XmEntitySpec actualXmEntitySpec = createXmEntitySpec(singletonList(typeSpec),
             inputXmEntitySpec.getForms(),
@@ -61,8 +63,8 @@ public class DefinitionSpecProcessorUnitTest extends AbstractUnitTest {
         String expectedXmEntityDataSpec = loadFile("config/specs/definitions/xmentityspec-sub-definitions-input-expected.json");
         TypeSpec typeSpec = inputXmEntitySpec.getTypes().stream().filter(it -> it.getKey().equals("REQUEST.JOIN")).findFirst().get();
 
-        subject.updateDefinitionStateByTenant(TENANT, Map.of(TENANT, Map.of(TENANT, objectMapper.writeValueAsString(inputXmEntitySpec))));
-        subject.processTypeSpec(TENANT, typeSpec::setDataSpec, typeSpec::getDataSpec);
+        subject.updateStateByTenant(TENANT, XM_ENTITY_SPEC_KEY, inputXmEntitySpec.getDefinitions());
+        subject.processDataSpec(TENANT, XM_ENTITY_SPEC_KEY, typeSpec::setDataSpec, typeSpec::getDataSpec);
 
         XmEntitySpec actualXmEntitySpec = createXmEntitySpec(singletonList(typeSpec),
             inputXmEntitySpec.getForms(),
@@ -81,8 +83,8 @@ public class DefinitionSpecProcessorUnitTest extends AbstractUnitTest {
         XmEntitySpec expectedXmEntitySpec = loadXmEntitySpecByFileName("xmentityspec-definitions-recursive-expected");
         TypeSpec typeSpec = inputXmEntitySpec.getTypes().get(0);
 
-        subject.updateDefinitionStateByTenant(TENANT, Map.of(TENANT, Map.of(TENANT, objectMapper.writeValueAsString(inputXmEntitySpec))));
-        subject.processTypeSpec(TENANT, typeSpec::setDataSpec, typeSpec::getDataSpec);
+        subject.updateStateByTenant(TENANT, XM_ENTITY_SPEC_KEY, inputXmEntitySpec.getDefinitions());
+        subject.processDataSpec(TENANT, XM_ENTITY_SPEC_KEY, typeSpec::setDataSpec, typeSpec::getDataSpec);
 
         XmEntitySpec actualXmEntitySpec = createXmEntitySpec(singletonList(typeSpec),
             inputXmEntitySpec.getForms(),
@@ -97,8 +99,8 @@ public class DefinitionSpecProcessorUnitTest extends AbstractUnitTest {
         XmEntitySpec expectedXmEntitySpec = loadXmEntitySpecByFileName("xmentityspec-definitions-multiple-expected");
         TypeSpec typeSpec = inputXmEntitySpec.getTypes().get(0);
 
-        subject.updateDefinitionStateByTenant(TENANT, Map.of(TENANT, Map.of(TENANT, objectMapper.writeValueAsString(inputXmEntitySpec))));
-        subject.processTypeSpec(TENANT, typeSpec::setDataSpec, typeSpec::getDataSpec);
+        subject.updateStateByTenant(TENANT, XM_ENTITY_SPEC_KEY, inputXmEntitySpec.getDefinitions());
+        subject.processDataSpec(TENANT, XM_ENTITY_SPEC_KEY, typeSpec::setDataSpec, typeSpec::getDataSpec);
 
         XmEntitySpec actualXmEntitySpec = createXmEntitySpec(singletonList(typeSpec),
             inputXmEntitySpec.getForms(),

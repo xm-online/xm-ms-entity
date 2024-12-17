@@ -1,6 +1,6 @@
 package com.icthh.xm.ms.entity.web.rest;
 
-import static com.icthh.xm.ms.entity.web.rest.FunctionResource.getFunctionKey;
+import static com.icthh.xm.commons.utils.HttpRequestUtils.getFunctionKey;
 import static com.icthh.xm.ms.entity.web.rest.XmRestApiConstants.XM_HEADER_CONTENT_NAME;
 import static org.apache.commons.collections.CollectionUtils.isEmpty;
 
@@ -9,21 +9,18 @@ import com.google.common.collect.Maps;
 import com.icthh.xm.commons.exceptions.BusinessException;
 import com.icthh.xm.commons.exceptions.ErrorConstants;
 import com.icthh.xm.commons.permission.annotation.PrivilegeDescription;
-import com.icthh.xm.commons.search.dto.ElasticFetchSourceFilterDto;
 import com.icthh.xm.ms.entity.config.Constants;
 import com.icthh.xm.ms.entity.domain.FunctionContext;
 import com.icthh.xm.ms.entity.domain.Link;
 import com.icthh.xm.ms.entity.domain.Profile;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.domain.ext.IdOrKey;
-import com.icthh.xm.ms.entity.domain.template.TemplateParamsHolder;
 import com.icthh.xm.ms.entity.repository.kafka.ProfileEventProducer;
-import com.icthh.xm.ms.entity.service.FunctionService;
 import com.icthh.xm.ms.entity.service.ProfileService;
 import com.icthh.xm.ms.entity.service.TenantService;
 import com.icthh.xm.ms.entity.service.XmEntityService;
 import com.icthh.xm.ms.entity.service.dto.LinkSourceDto;
-import com.icthh.xm.commons.search.dto.SearchDto;
+import com.icthh.xm.ms.entity.service.impl.XmEntityFunctionServiceFacade;
 import com.icthh.xm.ms.entity.util.XmHttpEntityUtils;
 import com.icthh.xm.ms.entity.web.rest.util.HeaderUtil;
 import com.icthh.xm.ms.entity.web.rest.util.PaginationUtil;
@@ -80,7 +77,7 @@ public class XmEntityResource {
 
     private final ProfileEventProducer profileEventProducer;
 
-    private final FunctionService functionService;
+    private final XmEntityFunctionServiceFacade functionService;
 
     private final TenantService tenantService;
 
@@ -90,7 +87,7 @@ public class XmEntityResource {
         XmEntityService xmEntityService,
         ProfileService profileService,
         ProfileEventProducer profileEventProducer,
-        FunctionService functionService,
+        XmEntityFunctionServiceFacade functionService,
         TenantService tenantService,
         @Lazy XmEntityResource xmEntityResource) {
         this.xmEntityService = xmEntityService;

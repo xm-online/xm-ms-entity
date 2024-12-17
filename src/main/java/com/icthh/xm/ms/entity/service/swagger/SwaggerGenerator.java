@@ -31,7 +31,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import static com.icthh.xm.ms.entity.service.impl.FunctionServiceImpl.POST_URLENCODED;
+import static com.icthh.xm.ms.entity.service.impl.XmEntityFunctionServiceFacade.POST_URLENCODED;
 import static java.lang.Boolean.TRUE;
 import static java.lang.String.join;
 import static java.util.Optional.ofNullable;

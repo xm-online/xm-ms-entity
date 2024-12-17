@@ -10,6 +10,8 @@ import com.icthh.xm.commons.i18n.error.web.ExceptionTranslator;
 import com.icthh.xm.commons.gen.api.TenantsApi;
 import com.icthh.xm.commons.gen.api.TenantsApiController;
 import com.icthh.xm.commons.gen.model.Tenant;
+import com.icthh.xm.commons.lep.api.LepEngineSession;
+import com.icthh.xm.commons.lep.api.LepManagementService;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
 import com.icthh.xm.commons.tenantendpoint.TenantManager;
@@ -58,6 +60,9 @@ public class TenantResourceElasticsearchTest extends AbstractElasticSpringBootTe
     @Autowired
     private TenantContextHolder tenantContextHolder;
 
+    @Autowired
+    private LepManagementService lepManager;
+
     private MockMvc mockMvc;
 
     @BeforeTransaction
@@ -91,11 +96,17 @@ public class TenantResourceElasticsearchTest extends AbstractElasticSpringBootTe
         tenant.setTenantKey(TENANT_NEW);
 
         // Create tenant
-        mockMvc
-            .perform(post(API_ENDPOINT)
-                         .contentType(TestUtil.APPLICATION_JSON_UTF8)
-                         .content(TestUtil.convertObjectToJsonBytes(tenant)))
-            .andExpect(status().isOk());
+        tenantContextHolder.getPrivilegedContext().execute(TenantContextUtils.buildTenant(TENANT_SUPER), () -> {
+            try (LepEngineSession context = lepManager.beginThreadContext()) {
+                mockMvc
+                    .perform(post(API_ENDPOINT)
+                        .contentType(TestUtil.APPLICATION_JSON_UTF8)
+                        .content(TestUtil.convertObjectToJsonBytes(tenant)))
+                    .andExpect(status().isOk());
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        });
 
         // Check schema created
         ResultSet schemas = connection.getMetaData().getSchemas();

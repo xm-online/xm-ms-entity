@@ -3,15 +3,18 @@ package com.icthh.xm.ms.entity.domain.spec;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.icthh.xm.commons.domain.enums.FunctionTxTypes;
+import com.icthh.xm.commons.domain.spec.IFunctionSpec;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import static com.icthh.xm.ms.entity.service.impl.FunctionServiceImpl.FUNCTION_CALL_PRIV;
-import static com.icthh.xm.ms.entity.service.impl.FunctionServiceImpl.XM_ENITITY_FUNCTION_CALL_PRIV;
+import static com.icthh.xm.commons.utils.Constants.FUNCTION_CALL_PRIVILEGE;
+import static com.icthh.xm.ms.entity.service.impl.XmEntityFunctionServiceFacade.XM_ENITITY_FUNCTION_CALL_PRIV;
 
 /**
  * The {@link FunctionSpec} class.
@@ -20,11 +23,7 @@ import static com.icthh.xm.ms.entity.service.impl.FunctionServiceImpl.XM_ENITITY
 @JsonPropertyOrder({"key", "name", "actionName", "allowedStateKeys", "withEntityId", "isShowFormWithoutData", "inputSpec", "inputForm",
     "contextDataSpec", "contextDataForm", "showResponse", "onlyData", "validateFunctionInput", "txType", "tags", "httpMethods"})
 @Data
-public class FunctionSpec {
-
-    public enum FunctionTxTypes {
-        NO_TX, READ_ONLY, TX
-    }
+public class FunctionSpec implements IFunctionSpec {
 
     /**
      * Unique in tenant function key.
@@ -129,11 +128,16 @@ public class FunctionSpec {
     public String getDynamicPrivilegeKey() {
         return getWithEntityId() ?
             XM_ENITITY_FUNCTION_CALL_PRIV.concat(".").concat(getKey()) :
-            FUNCTION_CALL_PRIV.concat(".").concat(getKey());
+            FUNCTION_CALL_PRIVILEGE.concat(".").concat(getKey());
     }
 
     @NotNull
     public Boolean getAnonymous() {
         return anonymous == null ? false : anonymous;
+    }
+
+    @Override
+    public Boolean getWrapResult() {
+        return !getOnlyData();
     }
 }

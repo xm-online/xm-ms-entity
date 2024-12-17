@@ -5,10 +5,15 @@ import com.icthh.xm.commons.lep.XmLepScriptConfigServerResourceLoader;
 import com.icthh.xm.commons.security.XmAuthenticationContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
+import com.icthh.xm.commons.web.rest.FunctionApiDocsResource;
+import com.icthh.xm.commons.web.rest.FunctionMvcResource;
+import com.icthh.xm.commons.web.rest.FunctionResource;
+import com.icthh.xm.commons.web.rest.FunctionUploadResource;
 import com.icthh.xm.lep.api.LepManager;
 import com.icthh.xm.ms.entity.AbstractSpringBootTest;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.service.impl.XmEntityServiceImpl;
+import com.icthh.xm.ms.entity.service.processor.XmEntityDataFormSpecProcessor;
 import lombok.SneakyThrows;
 import org.apache.commons.io.IOUtils;
 import org.junit.After;
@@ -69,6 +74,15 @@ public class FunctionResourceIntTest extends AbstractSpringBootTest {
     private FunctionResource functionResource;
 
     @Autowired
+    private FunctionApiDocsResource functionApiDocsResource;
+
+    @Autowired
+    private FunctionMvcResource functionMvcResource;
+
+    @Autowired
+    private FunctionUploadResource functionUploadResource;
+
+    @Autowired
     private XmEntityResource xmEntityResource;
 
     @Autowired
@@ -82,6 +96,9 @@ public class FunctionResourceIntTest extends AbstractSpringBootTest {
 
     @Autowired
     private ExceptionTranslator exceptionTranslator;
+
+    @Autowired
+    private XmEntityDataFormSpecProcessor xmEntityDataFormSpecProcessor;
 
     @Autowired
     private WebApplicationContext webApplicationContext;
@@ -102,7 +119,7 @@ public class FunctionResourceIntTest extends AbstractSpringBootTest {
             ctx.setValue(THREAD_CONTEXT_KEY_AUTH_CONTEXT, authContextHolder.getContext());
         });
 
-        this.mockMvc = MockMvcBuilders.standaloneSetup(functionResource, xmEntityResource)
+        this.mockMvc = MockMvcBuilders.standaloneSetup(functionResource, functionApiDocsResource, functionMvcResource, functionUploadResource, xmEntityResource)
                                                   .setCustomArgumentResolvers(pageableArgumentResolver)
                                                   .setControllerAdvice(exceptionTranslator)
                                                   .setMessageConverters(jacksonMessageConverter, new ByteArrayHttpMessageConverter()).build();

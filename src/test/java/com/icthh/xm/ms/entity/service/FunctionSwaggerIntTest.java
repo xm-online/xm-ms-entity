@@ -6,7 +6,7 @@ import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
 import com.icthh.xm.ms.entity.AbstractSpringBootTest;
 import com.icthh.xm.ms.entity.service.json.JsonConfigurationListener;
-import com.icthh.xm.ms.entity.service.swagger.DynamicSwaggerFunctionGenerator;
+import com.icthh.xm.ms.entity.service.swagger.DynamicSwaggerFunctionGeneratorImpl;
 import com.icthh.xm.ms.entity.service.swagger.DynamicSwaggerRefreshableConfiguration;
 import com.icthh.xm.ms.entity.service.swagger.DynamicSwaggerRefreshableConfiguration.DynamicSwaggerConfiguration;
 import com.icthh.xm.ms.entity.service.swagger.model.SwaggerModel;
@@ -37,7 +37,7 @@ public class FunctionSwaggerIntTest extends AbstractSpringBootTest {
     @Autowired
     private DynamicSwaggerRefreshableConfiguration dynamicSwaggerRefreshableConfiguration;
     @Autowired
-    private DynamicSwaggerFunctionGenerator dynamicSwaggerFunctionGenerator;
+    private DynamicSwaggerFunctionGeneratorImpl dynamicSwaggerFunctionGenerator;
     @Autowired
     private XmEntitySpecService xmEntitySpecService;
     @Autowired

@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -13,8 +14,9 @@ import java.util.Map;
 
 import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
 
+@EqualsAndHashCode(callSuper = true)
 @Data
-public class SwaggerModel {
+public class SwaggerModel extends com.icthh.xm.commons.swagger.model.SwaggerModel {
 
     public static final String SWAGGER_VERSION = "3.0.3";
 
