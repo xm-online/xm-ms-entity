@@ -59,7 +59,7 @@ public class DataSpecJsonSchemaService implements SpecificationProcessingService
     }
 
     @Override
-    public <I extends SpecificationItem> Collection<I> processDataSpecification(String tenant, String dataSpecKey, Collection<I> specifications) {
+    public <I extends SpecificationItem> Collection<I> processDataSpecifications(String tenant, String dataSpecKey, Collection<I> specifications) {
         var dataSchemas = new HashMap<String, JsonSchema>();
         JsonSchemaFactory jsonSchemaFactory = JsonSchemaFactory.getInstance(SpecVersion.VersionFlag.V4);
         for (I typeSpec : specifications) {

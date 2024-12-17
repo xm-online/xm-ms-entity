@@ -2,7 +2,6 @@ package com.icthh.xm.ms.entity.config;
 
 import com.icthh.xm.commons.lep.TenantScriptStorage;
 import com.icthh.xm.commons.lep.groovy.GroovyLepEngineConfiguration;
-import com.icthh.xm.commons.lep.keyresolver.FunctionLepKeyResolver;
 import com.icthh.xm.ms.entity.lep.ElasticIndexManager;
 import com.icthh.xm.ms.entity.lep.ElasticIndexManagerService;
 import org.springframework.beans.factory.annotation.Value;
@@ -30,11 +29,6 @@ public class LepConfiguration extends GroovyLepEngineConfiguration {
     @Override
     protected TenantScriptStorage getTenantScriptStorageType() {
         return tenantScriptStorageType;
-    }
-
-    @Bean
-    public FunctionLepKeyResolver functionLepKeyResolver() {
-        return new FunctionLepKeyResolver();
     }
 
     @Bean
