@@ -11,10 +11,7 @@
     </changeSet>
 
     <changeSet author="ssenko" id="202412021710">
-        <preConditions onFail="MARK_RAN">
-            <tableExists tableName="SAS_MNP_REQUEST"/>
-        </preConditions>
-        <createTable tableName="SAS_MNP_REQUEST" schemaName="XM_ENTITY">
+        <createTable tableName="SAS_MNP_REQUEST">
             <column name="ID" type="bigint" autoIncrement="true">
                 <constraints primaryKey="true" nullable="false"/>
             </column>
@@ -29,7 +26,7 @@
             <column name="LAST_NAME" type="VARCHAR(512)"/>
             <column name="RECIPIENT_RN" type="VARCHAR(10)"/>
             <column name="DONOR_RN" type="VARCHAR(10)"/>
-            <column name="LAST_REQUEST_STATUS" type="VARCHAR(256)"/>
+            <column name="NUMBER_STATUS" type="VARCHAR(256)"/>
             <column name="UPDATE_STATUS_DATE" type="TIMESTAMP"/>
 
             <column name="REJECT_CODE" type="VARCHAR(10)"/>
@@ -40,26 +37,26 @@
             <column name="CANCEL_DATE" type="TIMESTAMP"/>
         </createTable>
 
-        <createTable tableName="SAS_MNP_REQUEST_STATE" schemaName="XM_ENTITY">
+        <createTable tableName="SAS_MNP_REQUEST_STATE">
             <column name="REQUEST_ID" type="bigint"/>
             <column name="STATUS" type="VARCHAR(256)"/>
             <column name="STATUS_DATE" type="TIMESTAMP"/>
         </createTable>
 
-        <createIndex tableName="SAS_MNP_REQUEST" schemaName="XM_ENTITY" indexName="idx_sas_mnp_req_id">
+        <createIndex tableName="SAS_MNP_REQUEST" indexName="idx_sas_mnp_req_id">
             <column name="REQUEST_ID"/>
         </createIndex>
 
-        <createIndex tableName="SAS_MNP_REQUEST" schemaName="XM_ENTITY" indexName="idx_sas_mnp_msisdn">
+        <createIndex tableName="SAS_MNP_REQUEST" indexName="idx_sas_mnp_msisdn">
             <column name="MSISDN"/>
         </createIndex>
 
-        <createIndex tableName="SAS_MNP_REQUEST" schemaName="XM_ENTITY" indexName="idx_sas_mnp_req_id_msisdn">
+        <createIndex tableName="SAS_MNP_REQUEST" indexName="idx_sas_mnp_req_id_msisdn">
             <column name="REQUEST_ID"/>
             <column name="MSISDN"/>
         </createIndex>
 
-        <createIndex tableName="SAS_MNP_REQUEST_STATE" schemaName="XM_ENTITY" indexName="idx_sas_mnp_states_req_id">
+        <createIndex tableName="SAS_MNP_REQUEST_STATE" indexName="idx_sas_mnp_states_req_id">
             <column name="REQUEST_ID"/>
         </createIndex>
 

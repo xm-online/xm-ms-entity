@@ -24,7 +24,14 @@
         "nextState": null,
         "numbers": [
             {
-                "msisdn": "380669416746",
+                "msisdn": "380669111111",
+                "isMaster": null,
+                "statusCode": null,
+                "statusCodeDescription": null,
+                "internalStatus": null
+            },
+            {
+                "msisdn": "380669000000",
                 "isMaster": null,
                 "statusCode": null,
                 "statusCodeDescription": null,
@@ -35,9 +42,9 @@
         "individual": null,
         "organization": null,
         "anonymous": {
-            "firstName": null,
-            "middleName": null,
-            "lastName": null,
+            "firstName": "John",
+            "middleName": "Doe",
+            "lastName": "Smith",
             "addressLine1": null,
             "addressLine2": null,
             "zipCode": null,

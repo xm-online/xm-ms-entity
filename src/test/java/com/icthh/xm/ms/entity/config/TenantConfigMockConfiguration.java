@@ -49,6 +49,7 @@ public class TenantConfigMockConfiguration {
         tenants.add("DEMO");
         tenants.add("TEST");
         tenants.add("RESINTTEST");
+        tenants.add("XM_ENTITY");
         tenants.add("SPECIFICATIONS");
         tenants.add("TEST_TENANT");
         tenants.addAll(lepTestTenants);
