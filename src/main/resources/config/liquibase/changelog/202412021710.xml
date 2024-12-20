@@ -1,0 +1,68 @@
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+    <changeSet id="create-schema-xm_entity" author="ssenko">
+        <sql>
+            CREATE SCHEMA IF NOT EXISTS "XM_ENTITY";
+        </sql>
+    </changeSet>
+
+    <changeSet author="ssenko" id="202412021710">
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="SAS_MNP_REQUEST"/>
+        </preConditions>
+        <createTable tableName="SAS_MNP_REQUEST" schemaName="XM_ENTITY">
+            <column name="ID" type="bigint" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+
+            <column name="CHANNEL" type="VARCHAR(256)"/>
+            <column name="PORT_TYPE" type="VARCHAR(256)"/>
+            <column name="REQUEST_ID" type="bigint"/>
+            <column name="MSISDN" type="VARCHAR(256)"/>
+            <column name="IS_MASTER" type="BOOLEAN"/>
+            <column name="PARTY_TYPE_KEY" type="VARCHAR(256)"/>
+            <column name="FIRST_NAME" type="VARCHAR(512)"/>
+            <column name="LAST_NAME" type="VARCHAR(512)"/>
+            <column name="RECIPIENT_RN" type="VARCHAR(10)"/>
+            <column name="DONOR_RN" type="VARCHAR(10)"/>
+            <column name="LAST_REQUEST_STATUS" type="VARCHAR(256)"/>
+            <column name="UPDATE_STATUS_DATE" type="TIMESTAMP"/>
+
+            <column name="REJECT_CODE" type="VARCHAR(10)"/>
+
+            <column name="RECEIVE_DATE" type="TIMESTAMP"/>
+            <column name="UPDATE_DATE" type="TIMESTAMP"/>
+            <column name="PORTING_DATE" type="TIMESTAMP"/>
+            <column name="CANCEL_DATE" type="TIMESTAMP"/>
+        </createTable>
+
+        <createTable tableName="SAS_MNP_REQUEST_STATE" schemaName="XM_ENTITY">
+            <column name="REQUEST_ID" type="bigint"/>
+            <column name="STATUS" type="VARCHAR(256)"/>
+            <column name="STATUS_DATE" type="TIMESTAMP"/>
+        </createTable>
+
+        <createIndex tableName="SAS_MNP_REQUEST" schemaName="XM_ENTITY" indexName="idx_sas_mnp_req_id">
+            <column name="REQUEST_ID"/>
+        </createIndex>
+
+        <createIndex tableName="SAS_MNP_REQUEST" schemaName="XM_ENTITY" indexName="idx_sas_mnp_msisdn">
+            <column name="MSISDN"/>
+        </createIndex>
+
+        <createIndex tableName="SAS_MNP_REQUEST" schemaName="XM_ENTITY" indexName="idx_sas_mnp_req_id_msisdn">
+            <column name="REQUEST_ID"/>
+            <column name="MSISDN"/>
+        </createIndex>
+
+        <createIndex tableName="SAS_MNP_REQUEST_STATE" schemaName="XM_ENTITY" indexName="idx_sas_mnp_states_req_id">
+            <column name="REQUEST_ID"/>
+        </createIndex>
+
+    </changeSet>
+
+</databaseChangeLog>

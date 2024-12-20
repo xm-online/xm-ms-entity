@@ -24,6 +24,8 @@ public class XmAuthContextHolderDefaultTestConfiguration {
         when(context.hasAuthentication()).thenReturn(true);
         when(context.getLogin()).thenReturn(Optional.of("testLogin"));
         when(context.getUserKey()).thenReturn(Optional.of("ACCOUNT.TEST"));
+        when(context.getTokenType()).thenReturn(Optional.of("Bearer"));
+        when(context.getTokenValue()).thenReturn(Optional.of("testToken"));
 
         XmAuthenticationContextHolder holder = mock(XmAuthenticationContextHolder.class);
         when(holder.getContext()).thenReturn(context);

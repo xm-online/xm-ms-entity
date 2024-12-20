@@ -55,6 +55,7 @@ public class TenantConfigMockConfiguration {
     }
 
     @Bean
+    @Profile("!standard-spec-path")
     public XmEntitySpecService xmEntitySpecService(ApplicationProperties applicationProperties,
                                                    TenantContextHolder tenantContextHolder,
                                                    XmEntitySpecCustomizer xmEntitySpecCustomizer,

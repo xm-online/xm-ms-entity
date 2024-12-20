@@ -31,6 +31,7 @@ import static com.icthh.xm.ms.entity.config.TenantConfigMockConfiguration.getXmE
 @Slf4j
 @Service
 @Primary
+@Profile("!standard-spec-path")
 public class LocalXmEntitySpecService extends XmEntitySpecService {
 
     private final ApplicationProperties applicationProperties;
