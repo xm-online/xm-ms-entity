@@ -1,0 +1,49 @@
+{
+    "typeKey": "BUSINESS-INTERACTION.PORTING-REQUEST.PORTIN",
+    "name": "Ірина Іриновська Іриніївна 380985111111",
+    "startDate": "2024-11-23T10:10:40.416225Z",
+    "updateDate": "2024-11-23T10:19:45.250029Z",
+    "endDate": null,
+    "avatarUrl": null,
+    "description": null,
+    "data": {
+        "langKey": "UK",
+        "individual": {
+            "firstName": "Ірина",
+            "middleName": "Іриніївна",
+            "lastName": "Іриновська",
+            "passport": "pppppppp",
+            "birthday": "1954-12-26T00:00:00",
+            "zipCode": "39803",
+            "addressLine1": "Address Line 1",
+            "addressLine2": "",
+            "documentType": "SBL1",
+            "documentSeriesNo": "КО",
+            "documentNumber": "999999",
+            "contactNumber": "380985111111"
+        },
+        "processId": "508841df-780c-4f09-b027-04965abfe0d0",
+        "channel": "CRM",
+        "recipientRn": "3901",
+        "numbers": [
+            {
+                "msisdn": "380985111111",
+                "isMaster": true
+            },
+            {
+                "msisdn": "380985222222",
+                "isMaster": false
+            },
+            {
+                "msisdn": "380985333333",
+                "isMaster": false
+            }
+        ],
+        "donorRn": "3903",
+        "partyTypeKey": "INDIVIDUAL"
+    },
+    "removed": null,
+    "createdBy": null,
+    "updatedBy": null,
+    "version": "5"
+}
