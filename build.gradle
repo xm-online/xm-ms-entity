@@ -371,6 +371,7 @@ dependencies {
     implementation("com.icthh.xm.commons:xm-commons-ms-web:${xm_commons_version}") {
         exclude group: "io.github.jhipster", module: "jhipster-framework"
     }
+    implementation "com.icthh.xm.commons:xm-commons-function:${xm_commons_version}"
     implementation "com.icthh.xm.commons:xm-commons-client-feign:${xm_commons_version}"
     implementation "com.icthh.xm.commons:xm-commons-lep:${xm_commons_version}"
     implementation "com.icthh.xm.commons:xm-commons-lep-groovy:${xm_commons_version}"

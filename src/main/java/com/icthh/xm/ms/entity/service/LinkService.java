@@ -12,25 +12,21 @@ import com.icthh.xm.ms.entity.projection.LinkProjection;
 import com.icthh.xm.ms.entity.repository.LinkPermittedRepository;
 import com.icthh.xm.ms.entity.repository.LinkRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
-import com.icthh.xm.ms.entity.security.access.DynamicPermissionCheckService;
+import com.icthh.xm.ms.entity.security.access.XmEntityDynamicPermissionCheckService;
 import com.icthh.xm.ms.entity.service.impl.StartUpdateDateGenerationStrategy;
 import lombok.RequiredArgsConstructor;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.Hibernate;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Set;
 
-import static com.icthh.xm.ms.entity.security.access.DynamicPermissionCheckService.FeatureContext.LINK_DELETE;
+import static com.icthh.xm.ms.entity.security.access.FeatureContext.LINK_DELETE;
 
 /**
  * Service Implementation for managing Link.
@@ -50,7 +46,7 @@ public class LinkService extends TransactionPropagationService<LinkService> {
 
     private final XmEntityRepository xmEntityRepository;
 
-    private final DynamicPermissionCheckService permissionCheckService;
+    private final XmEntityDynamicPermissionCheckService permissionCheckService;
 
     /**
      * Save a link.
