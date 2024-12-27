@@ -25,7 +25,7 @@ import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.repository.LinkPermittedRepository;
 import com.icthh.xm.ms.entity.repository.LinkRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
-import com.icthh.xm.ms.entity.security.access.DynamicPermissionCheckService;
+import com.icthh.xm.ms.entity.security.access.XmEntityDynamicPermissionCheckService;
 import com.icthh.xm.ms.entity.service.LinkService;
 import com.icthh.xm.ms.entity.service.impl.StartUpdateDateGenerationStrategy;
 import jakarta.persistence.EntityManager;
@@ -107,7 +107,7 @@ public class LinkResourceIntTest extends AbstractSpringBootTest {
     private LepManager lepManager;
 
     @Autowired
-    private DynamicPermissionCheckService dynamicPermissionCheckService;
+    private XmEntityDynamicPermissionCheckService dynamicPermissionCheckService;
 
     @Spy
     private StartUpdateDateGenerationStrategy startUpdateDateGenerationStrategy;

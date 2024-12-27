@@ -10,7 +10,7 @@ import com.icthh.xm.commons.security.XmAuthenticationContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.lep.api.LepManager;
 import com.icthh.xm.ms.entity.AbstractSpringBootTest;
-import com.icthh.xm.ms.entity.service.FunctionExecutorService;
+import com.icthh.xm.ms.entity.service.XmEntityFunctionExecutorService;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
@@ -29,7 +29,7 @@ import java.util.UUID;
 public class SchedulerIntTest extends AbstractSpringBootTest {
 
     @Autowired
-    private FunctionExecutorService functionService;
+    private XmEntityFunctionExecutorService functionService;
 
 
     @Autowired

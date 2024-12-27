@@ -7,8 +7,11 @@ import com.icthh.xm.commons.config.client.config.XmConfigProperties;
 import com.icthh.xm.commons.config.client.repository.CommonConfigRepository;
 import com.icthh.xm.commons.config.client.repository.TenantConfigRepository;
 import com.icthh.xm.commons.config.domain.Configuration;
+import com.icthh.xm.commons.domain.DefinitionSpec;
+import com.icthh.xm.commons.listener.JsonListenerService;
 import com.icthh.xm.commons.permission.domain.Role;
 import com.icthh.xm.commons.permission.service.RoleService;
+import com.icthh.xm.commons.tenant.PrivilegedTenantContext;
 import com.icthh.xm.commons.tenant.TenantContext;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantKey;
@@ -18,7 +21,6 @@ import com.icthh.xm.ms.entity.config.XmEntityTenantConfigService;
 import com.icthh.xm.ms.entity.config.XmEntityTenantConfigService.XmEntityTenantConfig;
 import com.icthh.xm.ms.entity.config.tenant.LocalXmEntitySpecService;
 import com.icthh.xm.ms.entity.domain.spec.AttachmentSpec;
-import com.icthh.xm.ms.entity.domain.spec.DefinitionSpec;
 import com.icthh.xm.ms.entity.domain.spec.FunctionSpec;
 import com.icthh.xm.ms.entity.domain.spec.LinkSpec;
 import com.icthh.xm.ms.entity.domain.spec.LocationSpec;
@@ -29,14 +31,14 @@ import com.icthh.xm.ms.entity.domain.spec.TagSpec;
 import com.icthh.xm.ms.entity.domain.spec.TypeSpec;
 import com.icthh.xm.ms.entity.domain.spec.UniqueFieldSpec;
 import com.icthh.xm.ms.entity.domain.spec.XmEntitySpec;
-import com.icthh.xm.ms.entity.security.access.DynamicPermissionCheckService;
-import com.icthh.xm.ms.entity.service.json.JsonListenerService;
+import com.icthh.xm.ms.entity.security.access.XmEntityDynamicPermissionCheckService;
 import com.icthh.xm.ms.entity.service.privileges.custom.ApplicationCustomPrivilegesExtractor;
 import com.icthh.xm.ms.entity.service.privileges.custom.EntityCustomPrivilegeService;
 import com.icthh.xm.ms.entity.service.privileges.custom.FunctionCustomPrivilegesExtractor;
 import com.icthh.xm.ms.entity.service.privileges.custom.FunctionWithXmEntityCustomPrivilegesExtractor;
-import com.icthh.xm.ms.entity.service.processor.DefinitionSpecProcessor;
-import com.icthh.xm.ms.entity.service.processor.FormSpecProcessor;
+import com.icthh.xm.ms.entity.service.processor.XmEntityDefinitionSpecProcessor;
+import com.icthh.xm.ms.entity.service.processor.XmEntityDataFormSpecProcessor;
+import com.icthh.xm.ms.entity.service.processor.XmEntityTypeSpecProcessor;
 import com.icthh.xm.ms.entity.service.spec.DataSpecJsonSchemaService;
 import com.icthh.xm.ms.entity.service.spec.XmEntitySpecCustomizer;
 import com.networknt.schema.JsonSchema;
@@ -66,7 +68,7 @@ import java.util.stream.Collectors;
 import static com.google.common.collect.ImmutableMap.of;
 import static com.google.common.collect.Maps.newHashMap;
 import static com.icthh.xm.ms.entity.config.TenantConfigMockConfiguration.getXmEntitySpec;
-import static com.icthh.xm.ms.entity.security.access.DynamicPermissionCheckService.CONFIG_SECTION;
+import static com.icthh.xm.ms.entity.security.access.XmEntityDynamicPermissionCheckService.CONFIG_SECTION;
 import static com.icthh.xm.ms.entity.util.CustomCollectionUtils.nullSafe;
 import static com.icthh.xm.ms.entity.web.rest.XmEntitySaveIntTest.loadFile;
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -78,9 +80,11 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.ArgumentMatchers.refEq;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
@@ -134,7 +138,7 @@ public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
     private JsonListenerService jsonListenerService = new JsonListenerService();
     @InjectMocks
     @Spy
-    private DynamicPermissionCheckService dynamicPermissionCheckService;
+    private XmEntityDynamicPermissionCheckService dynamicPermissionCheckService;
     @Spy
     private XmEntityTenantConfigService tenantConfig = new XmEntityTenantConfigService(new XmConfigProperties(),
                                                                                        tenantContextHolder());
@@ -150,7 +154,7 @@ public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
     public void init() {
         MockitoAnnotations.initMocks(this);
 
-        tenantContextHolder = mock(TenantContextHolder.class);
+        mockTenantContextHolder();
         mockTenant(TENANT);
 
         ApplicationProperties ap = new ApplicationProperties();
@@ -159,9 +163,22 @@ public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
         xmEntitySpecService = createXmEntitySpecService(ap, tenantContextHolder);
     }
 
-    private XmEntitySpecService createXmEntitySpecService(ApplicationProperties applicationProperties,
-                                                                TenantContextHolder tenantContextHolder) {
+    private void mockTenantContextHolder() {
+        PrivilegedTenantContext context = mock(PrivilegedTenantContext.class);
+        doAnswer(invocation -> {
+            Runnable runnable = invocation.getArgument(1);
+            runnable.run();
+            return null;
+        }).when(context).execute(eq(TENANT), any(Runnable.class));
 
+        tenantContextHolder = mock(TenantContextHolder.class);
+        when(tenantContextHolder.getPrivilegedContext()).thenReturn(context);
+    }
+
+    private XmEntitySpecService createXmEntitySpecService(ApplicationProperties applicationProperties,
+                                                          TenantContextHolder tenantContextHolder) {
+
+        XmEntityTypeSpecProcessor typeSpecProcessor = new XmEntityTypeSpecProcessor(jsonListenerService);
         return spy(new LocalXmEntitySpecService(tenantConfigRepository,
                                             applicationProperties,
                                             tenantContextHolder,
@@ -178,8 +195,9 @@ public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
                                             tenantConfig,
                                             xmEntitySpecCustomizer,
                                             new DataSpecJsonSchemaService(
-                                                new DefinitionSpecProcessor(jsonListenerService),
-                                                new FormSpecProcessor(jsonListenerService)
+                                                new XmEntityDefinitionSpecProcessor(jsonListenerService, typeSpecProcessor),
+                                                new XmEntityDataFormSpecProcessor(jsonListenerService),
+                                                typeSpecProcessor
                                             ), MAX_FILE_SIZE));
     }
 

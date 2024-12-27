@@ -22,10 +22,10 @@ import com.icthh.xm.ms.entity.domain.Link;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.domain.ext.IdOrKey;
 import com.icthh.xm.ms.entity.repository.kafka.ProfileEventProducer;
-import com.icthh.xm.ms.entity.service.FunctionService;
 import com.icthh.xm.ms.entity.service.ProfileService;
 import com.icthh.xm.ms.entity.service.TenantService;
 import com.icthh.xm.ms.entity.service.XmEntityService;
+import com.icthh.xm.ms.entity.service.impl.XmEntityFunctionServiceFacade;
 import com.icthh.xm.ms.entity.web.rest.XmEntityResource;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -102,7 +102,7 @@ public class JsonResponseFilteringLepUnitTest extends AbstractWebMvcTest {
     @MockBean
     private TenantService tenantService;
     @MockBean
-    private FunctionService functionService;
+    private XmEntityFunctionServiceFacade functionService;
     @MockBean
     private LocalizationMessageService localizationMessageService;
     @MockBean
