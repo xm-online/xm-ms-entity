@@ -5,6 +5,7 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.google.common.collect.Maps;
 import com.icthh.xm.commons.config.client.api.RefreshableConfiguration;
 import com.icthh.xm.commons.config.client.repository.TenantConfigRepository;
+import com.icthh.xm.commons.domain.DefinitionSpec;
 import com.icthh.xm.commons.logging.LoggingAspectConfig;
 import com.icthh.xm.commons.logging.aop.IgnoreLogginAspect;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
@@ -14,7 +15,6 @@ import com.icthh.xm.ms.entity.domain.Calendar;
 import com.icthh.xm.ms.entity.domain.spec.AttachmentSpec;
 import com.icthh.xm.ms.entity.domain.spec.CalendarSpec;
 import com.icthh.xm.ms.entity.domain.spec.DataSchema;
-import com.icthh.xm.ms.entity.domain.spec.DefinitionSpec;
 import com.icthh.xm.ms.entity.domain.spec.EventSpec;
 import com.icthh.xm.ms.entity.domain.spec.FunctionSpec;
 import com.icthh.xm.ms.entity.domain.spec.LinkSpec;
@@ -25,7 +25,7 @@ import com.icthh.xm.ms.entity.domain.spec.StateSpec;
 import com.icthh.xm.ms.entity.domain.spec.TagSpec;
 import com.icthh.xm.ms.entity.domain.spec.TypeSpec;
 import com.icthh.xm.ms.entity.domain.spec.XmEntitySpec;
-import com.icthh.xm.ms.entity.security.access.DynamicPermissionCheckService;
+import com.icthh.xm.ms.entity.security.access.XmEntityDynamicPermissionCheckService;
 import com.icthh.xm.ms.entity.service.spec.XmEntitySpecContextService;
 import com.networknt.schema.JsonSchema;
 import lombok.RequiredArgsConstructor;
@@ -70,7 +70,7 @@ public class XmEntitySpecService implements RefreshableConfiguration {
     private final TenantContextHolder tenantContextHolder;
     private final XmEntitySpecContextService xmEntitySpecContextService;
     private final List<EntitySpecUpdateListener> entitySpecUpdateListeners;
-    private final DynamicPermissionCheckService dynamicPermissionCheckService;
+    private final XmEntityDynamicPermissionCheckService dynamicPermissionCheckService;
 
     /**
      * Search of all entity Type specifications.
@@ -124,7 +124,8 @@ public class XmEntitySpecService implements RefreshableConfiguration {
         Set<String> tenants = paths.stream().map(this::extractTenantName).collect(Collectors.toSet());
         tenants.forEach(tenantKey -> {
             Map<String, TypeSpec> tenantEntitySpec = xmEntitySpecContextService.typesByTenant(tenantKey);
-            entitySpecUpdateListeners.forEach(it -> it.onEntitySpecUpdate(tenantEntitySpec, tenantKey));
+            tenantContextHolder.getPrivilegedContext().execute(tenantKey, () ->
+                entitySpecUpdateListeners.forEach(it -> it.onEntitySpecUpdate(tenantEntitySpec, tenantKey)));
         });
     }
 

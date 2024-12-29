@@ -40,10 +40,9 @@ import java.util.stream.Collectors;
 import static com.google.common.collect.Maps.newHashMap;
 import static com.google.common.collect.Sets.newHashSet;
 import static com.icthh.xm.commons.permission.constants.RoleConstant.SUPER_ADMIN;
-import static com.icthh.xm.ms.entity.security.access.DynamicPermissionCheckService.CONFIG_SECTION;
-import static com.icthh.xm.ms.entity.security.access.DynamicPermissionCheckService.FeatureContext;
-import static com.icthh.xm.ms.entity.service.impl.FunctionServiceImpl.FUNCTION_CALL_PRIV;
-import static com.icthh.xm.ms.entity.service.impl.FunctionServiceImpl.XM_ENITITY_FUNCTION_CALL_PRIV;
+import static com.icthh.xm.commons.utils.Constants.FUNCTION_CALL_PRIVILEGE;
+import static com.icthh.xm.ms.entity.security.access.XmEntityDynamicPermissionCheckService.CONFIG_SECTION;
+import static com.icthh.xm.ms.entity.service.impl.XmEntityFunctionServiceFacade.XM_ENITITY_FUNCTION_CALL_PRIV;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.util.Lists.newArrayList;
@@ -52,7 +51,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 @RunWith(MockitoJUnitRunner.class)
-public class DynamicPermissionCheckServiceUnitTest extends AbstractUnitTest {
+public class XmEntityDynamicPermissionCheckServiceUnitTest extends AbstractUnitTest {
 
     private static final String DYNAMIC_FUNCTION_PERMISSION_FEATURE = "dynamicPermissionCheckEnabled";
 
@@ -91,7 +90,7 @@ public class DynamicPermissionCheckServiceUnitTest extends AbstractUnitTest {
 
     @InjectMocks
     @Spy
-    private DynamicPermissionCheckService dynamicPermissionCheckService;
+    private XmEntityDynamicPermissionCheckService dynamicPermissionCheckService;
 
     @Before
     public void setUp() {
@@ -208,7 +207,7 @@ public class DynamicPermissionCheckServiceUnitTest extends AbstractUnitTest {
 
         prepareConfig(config);
 
-        Set<String> rolesPrivileges = newHashSet(XM_ENITITY_FUNCTION_CALL_PRIV + ".F1", FUNCTION_CALL_PRIV + ".F3");
+        Set<String> rolesPrivileges = newHashSet(XM_ENITITY_FUNCTION_CALL_PRIV + ".F1", FUNCTION_CALL_PRIVILEGE + ".F3");
         given(dynamicPermissionCheckService.getRoleFunctionPermissions()).willReturn(rolesPrivileges);
 
         List<FunctionSpec> functions = newArrayList(

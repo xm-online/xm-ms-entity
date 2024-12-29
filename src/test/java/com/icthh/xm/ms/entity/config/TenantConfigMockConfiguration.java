@@ -15,21 +15,17 @@ import com.icthh.xm.commons.config.client.service.TenantConfigService;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.web.spring.TenantVerifyInterceptor;
 import com.icthh.xm.ms.entity.config.tenant.LocalXmEntitySpecService;
-import com.icthh.xm.ms.entity.security.access.DynamicPermissionCheckService;
-import com.icthh.xm.ms.entity.service.processor.DefinitionSpecProcessor;
+import com.icthh.xm.ms.entity.security.access.XmEntityDynamicPermissionCheckService;
 import com.icthh.xm.ms.entity.service.privileges.custom.EntityCustomPrivilegeService;
 import com.icthh.xm.ms.entity.service.XmEntitySpecService;
-import com.icthh.xm.ms.entity.service.processor.FormSpecProcessor;
 import com.icthh.xm.ms.entity.service.spec.DataSpecJsonSchemaService;
 import com.icthh.xm.ms.entity.service.spec.XmEntitySpecCustomizer;
 import lombok.SneakyThrows;
 import org.apache.commons.io.IOUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Profile;
 import org.springframework.core.io.ClassPathResource;
 
 import java.io.InputStream;
@@ -59,7 +55,7 @@ public class TenantConfigMockConfiguration {
                                                    TenantContextHolder tenantContextHolder,
                                                    XmEntitySpecCustomizer xmEntitySpecCustomizer,
                                                    EntityCustomPrivilegeService entityCustomPrivilegeService,
-                                                   DynamicPermissionCheckService dynamicPermissionCheckService,
+                                                   XmEntityDynamicPermissionCheckService dynamicPermissionCheckService,
                                                    XmEntityTenantConfigService xmEntityTenantConfigService,
                                                    DataSpecJsonSchemaService dataSpecJsonSchemaService,
                                                    @Value("${spring.servlet.multipart.max-file-size:1MB}") String maxFileSize) {
