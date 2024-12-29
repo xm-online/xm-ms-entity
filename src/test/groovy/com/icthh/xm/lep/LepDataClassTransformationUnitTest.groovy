@@ -29,7 +29,8 @@ class LepDataClassTransformationUnitTest {
         // language=groovy
         String script = """
         import com.icthh.xm.ms.entity.lep.transform.LepDataClass
-        import com.icthh.xm.ms.entity.lep.transform.LepDataClassField
+        import com.icthh.xm.ms.entity.lep.transform.LepDataClassIgnored
+
         import java.time.LocalDate
         import groovy.transform.ToString
         import com.icthh.xm.lep.LepDataClassTransformationUnitTest.Country
@@ -39,9 +40,7 @@ class LepDataClassTransformationUnitTest {
         @ToString(includeNames = true, ignoreNulls = false)
         class Person {
             public String name;
-            @LepDataClassField(Address.class)
-            public Collection addresses;
-            public Collection<Address> addressesWithoutAnnotation;
+            public Collection<Address> addresses;
             public LocalDate birthDate;
             public Status status;
             public UnannotatedSomeClass anyField;
@@ -49,10 +48,20 @@ class LepDataClassTransformationUnitTest {
             Map<String, Address> addressMap;
             Map<String, String> stringMap;
             Map<Address, String> addressStringMap;
-
             int[] numbers;
-
             Address[] addressArray;
+
+            String defaultValue = "someDefaultValue";
+            @LepDataClassIgnored
+            String skippedValue = "skippedValue";
+
+            Status nullEnum;
+            LocalDate nullDate;
+            Address[] nullArray;
+            Collection<Address> nullCollection;
+            int[] nullIntArray;
+
+            public Collection<Collection<Collection<Address>>> innerCollections;
         }
 
         @LepDataClass
@@ -70,12 +79,11 @@ class LepDataClassTransformationUnitTest {
         class UnannotatedSomeClass {
             public String title;
         }
-
-
         """
 
         def inputMap = [
             name     : 'John',
+            skippedValue: 'NOT_SKIPPED',
             addressStringMap: [
                 [street: 'Main St', city: 'NY', country: 'USA']: 'USA',
                 [street: 'Baker St', city: 'London', country: 'UK']: 'UK'
@@ -87,10 +95,6 @@ class LepDataClassTransformationUnitTest {
             addressMap: [
                 'NY': [street: 'Main St', city: 'NY', country: 'USA'],
                 'London': [street: 'Baker St', city: 'London', country: 'UK']
-            ],
-            addressesWithoutAnnotation: [
-                [street: 'Main St', city: 'NY', country: 'USA', ignoredField: 'ignored'],
-                [street: 'Baker St', city: 'London', country: 'UK']
             ],
             addresses: [
                 [street: 'Main St', city: 'NY', country: 'USA', ignoredField: 'ignored'],
@@ -104,63 +108,64 @@ class LepDataClassTransformationUnitTest {
             status   : 'ACTIVE',
             anyField : [title: 'Casted'],
             otherField : [status: 'INACTIVE'],
-            numbers: [1, 2, 3, 4, 5]
+            numbers: [1, 2, 3, 4, 5],
+            innerCollections: [
+                [
+                    [
+                        [street: 'Main St1', city: 'NY', country: 'USA'],
+                        [street: 'Baker St2', city: 'London', country: 'UK']
+                    ],
+                    [
+                        [street: 'Main St3', city: 'NY', country: 'USA'],
+                        [street: 'Baker St4', city: 'London', country: 'UK']
+                    ]
+                ],
+                [
+                    [
+                        [street: 'Main St5', city: 'NY', country: 'USA'],
+                        [street: 'Baker St6', city: 'London', country: 'UK']
+                    ],
+                    [
+                        [street: 'Main St7', city: 'NY', country: 'USA'],
+                        [street: 'Baker St8', city: 'London', country: 'UK']
+                    ]
+                ]
+            ]
         ];
 
-         def person = loader.parseClass(script, "Person.groovy")
-            .getConstructor(Map.class)
-            .newInstance(inputMap);
 
-        // Basic null-check
-        assertNotNull(person);
+        def scriptValue = loader.parseClass(script, "Person.groovy")
+        scriptValue.getConstructor().newInstance();
 
-        // name
+        // check no NPE when map is null
+        loader.parseClass("class Test { Test() { Map map = null; def p = new Person(map); println p;} }", "Test.groovy")
+            .getConstructor().newInstance();
+
+        def person = scriptValue.getConstructor(Map.class).newInstance(inputMap);
+        assertEquals("someDefaultValue", person.defaultValue);
+        assertEquals("skippedValue", person.skippedValue);
         assertEquals("John", person.name);
-
-        // addresses
-        assertNotNull(person.addresses);
         assertTwoAddressCollection(person.addresses);
-
-        // addressesWithoutAnnotation
-        assertNotNull(person.addressesWithoutAnnotation);
-        assertTwoAddressCollection(person.addressesWithoutAnnotation);
-
-        // birthDate
-        assertNotNull(person.birthDate);
         assertEquals(LocalDate.of(2000, 1, 1), person.birthDate);
-
-        // status
-        assertNotNull(person.status);
         assertEquals(Status.ACTIVE, person.status);
-
-        // anyField (UnannotatedSomeClass)
-        assertNotNull(person.anyField);
         assertEquals("Casted", person.anyField.title);
-
-        // otherField (AnnotatedSomeClass)
-        assertNotNull(person.otherField);
-        assertNotNull(person.otherField.status);
         assertEquals(Status.INACTIVE, person.otherField.status);
-
-        // addressMap
-        assertNotNull(person.addressMap);
         assertAddressMap(person.addressMap);
-
-        // stringMap
-        assertNotNull(person.stringMap);
         assertStringMap(person.stringMap);
-
-        // addressStringMap
-        assertNotNull(person.addressStringMap);
         assertAddressStringMap(person.addressStringMap);
-
-        // numbers
-        assertNotNull(person.numbers);
         assertArrayEquals(new int[]{1, 2, 3, 4, 5}, person.numbers);
-
-        // addressArray
-        assertNotNull(person.addressArray);
         assertTwoAddressArray(person.addressArray);
+
+        def expected = inputMap
+        expected.remove('skippedValue')
+        expected.remove('anyField')
+        expected.defaultValue = "someDefaultValue";
+        expected.get('addresses').get(0).remove('ignoredField');
+        expected.get('addressArray').get(0).remove('ignoredField');
+        def actual = person.toMap()
+        actual.remove('anyField')
+        assertEquals(expected.remove("numbers").toList(), actual.remove("numbers").toList());
+        assertEquals(expected, actual);
     }
 
     private void assertTwoAddressCollection(Collection<Object> addresses) {
@@ -190,13 +195,10 @@ class LepDataClassTransformationUnitTest {
 
     private void assertAddressMap(Map<String, Object> addressMap) {
         assertEquals(2, addressMap.size());
-
         Object nyAddr = addressMap.get("NY");
         assertNotNull(nyAddr);
         assertNYUSAAddress(nyAddr);
-
         Object londonAddr = addressMap.get("London");
-        assertNotNull(londonAddr);
         assertBakerLondonAddress(londonAddr);
     }
 

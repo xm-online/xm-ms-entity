@@ -7,7 +7,5 @@ import java.lang.annotation.Target;
 
 @Target(ElementType.FIELD)
 @Retention(RetentionPolicy.RUNTIME)
-public @interface LepDataClassField {
-    Class<?> key() default String.class;
-    Class<?> value();
+public @interface LepDataClassIgnored {
 }

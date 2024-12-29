@@ -2,6 +2,7 @@ package com.icthh.xm.ms.entity.lep.transform;
 
 
 import static org.codehaus.groovy.ast.ClassHelper.STRING_TYPE;
+import static org.codehaus.groovy.ast.ClassHelper.make;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.args;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.assignS;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.block;
@@ -9,10 +10,13 @@ import static org.codehaus.groovy.ast.tools.GeneralUtils.callX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.castX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.closureX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.ctorX;
+import static org.codehaus.groovy.ast.tools.GeneralUtils.declS;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.hasDeclaredMethod;
+import static org.codehaus.groovy.ast.tools.GeneralUtils.ifS;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.isInstanceOfX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.isNullX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.listX;
+import static org.codehaus.groovy.ast.tools.GeneralUtils.notX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.param;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.params;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.propX;
@@ -21,14 +25,13 @@ import static org.codehaus.groovy.ast.tools.GeneralUtils.stmt;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.ternaryX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.varX;
 
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import lombok.SneakyThrows;
-import org.apache.groovy.ast.tools.AnnotatedNodeUtils;
+import org.apache.commons.lang3.function.TriFunction;
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.AnnotationNode;
 import org.codehaus.groovy.ast.ClassHelper;
@@ -43,7 +46,9 @@ import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.PropertyExpression;
 import org.codehaus.groovy.ast.expr.TernaryExpression;
+import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.ast.stmt.BlockStatement;
+import org.codehaus.groovy.ast.stmt.ReturnStatement;
 import org.codehaus.groovy.ast.stmt.Statement;
 import org.codehaus.groovy.control.CompilePhase;
 import org.codehaus.groovy.control.SourceUnit;
@@ -61,6 +66,7 @@ public class LepDataClassTransformation extends AbstractASTTransformation {
     public static final ConstantExpression NULL_VALUE = ConstantExpression.NULL;
 
     private static final Logger log = LoggerFactory.getLogger(LepDataClassTransformation.class);
+    public static final VariableExpression THIS = varX("this");
 
     public void visit(ASTNode[] nodes, SourceUnit source) {
         try {
@@ -85,30 +91,148 @@ public class LepDataClassTransformation extends AbstractASTTransformation {
         }
 
         addMapConstructor(annotatedClass);
+        addToMapMethod(annotatedClass);
+    }
+
+    private void addToMapMethod(ClassNode annotatedClass) {
+        if (annotatedClass.hasMethod("toMap", new Parameter[0])) {
+            log.error("Class {} already has a method toMap", annotatedClass.getName());
+            throw new IllegalStateException("Class " + annotatedClass.getName() + " already has a method toMap");
+        }
+
+        MethodNode method = new MethodNode(
+            "toMap",
+            ACC_PUBLIC,
+            new ClassNode(Map.class),
+            new Parameter[0],
+            ClassNode.EMPTY_ARRAY,
+            new BlockStatement()
+        );
+
+        BlockStatement body = (BlockStatement) method.getCode();
+        body.addStatement(
+            declS(varX("result"), ctorX(new ClassNode(LinkedHashMap.class)))
+        );
+
+        for (FieldNode field : annotatedClass.getFields()) {
+            if (field.isStatic() || field.getName().contains(DOLLAR) || (field.getModifiers() & ACC_TRANSIENT) != 0 || isIgnored(field)) {
+                continue;
+            }
+
+            String fieldName = field.getName();
+            body.addStatement(
+                ifS(notX(isNullX(fieldX(fieldName))),
+                    assignS(
+                        propX(varX("result"), fieldName),
+                        transformFieldInToMap(field.getType(), fieldX(fieldName), 0)
+                    )
+                )
+            );
+        }
+
+        // map parameter
+        if (annotatedClass.hasMethod("toMapCustomization", params(param(make(Map.class), "data")))) {
+            body.addStatement(stmt(callX(THIS, "toMapCustomization")));
+        }
+
+        body.addStatement(returnS(varX("result")));
+
+        annotatedClass.addMethod(method);
+    }
+
+    private Expression transformFieldInToMap(ClassNode fieldType, Expression fieldValue, int level) {
+        return ternaryX(isNullX(fieldValue), NULL_VALUE, transformFieldInToMapInternal(fieldType, fieldValue, level + 1));
+    }
+
+    private Expression transformFieldInToMapInternal(ClassNode fieldType, Expression fieldValue, int level) {
+
+        if (isJavaTimeClass(fieldType)) {
+            return callX(fieldValue, "toString");
+        }
+
+        if (fieldType.isEnum()) {
+            return callX(fieldValue, "name");
+        }
+
+        if (fieldType.isArray() && isLepDataClass(fieldType.getComponentType())) {
+            return transformToMapArray(fieldType, fieldValue, level);
+        }
+
+        ClassNode collection = make(Iterable.class);
+        if ((fieldType.implementsInterface(collection) || fieldType.equals(collection))) {
+            ClassNode componentType = getGenericType(fieldType, 0);
+            if (componentType != null && isLepDataClass(componentType)) {
+                return transformCollectionInToMap(fieldType, fieldValue, componentType, level);
+            }
+        }
+
+        ClassNode map = make(Map.class);
+        if ((fieldType.implementsInterface(map) || fieldType.equals(map))) {
+            ClassNode keyType = getGenericType(fieldType, 0);
+            ClassNode valueType = getGenericType(fieldType, 1);
+            if (keyType != null && isLepDataClass(keyType) || valueType != null && isLepDataClass(valueType)) {
+                return transformMap(fieldType, fieldValue, keyType, valueType, level, this::transformFieldInToMap);
+            }
+        }
+
+        if (isLepDataClass(fieldType)) {
+            return callX(fieldValue, "toMap");
+        }
+
+        return fieldValue;
+    }
+
+    private Expression transformToMapArray(ClassNode fieldType, Expression fieldValue, int level) {
+        Expression mapped = transformToMapIterable(fieldType.getComponentType(), fieldValue, level);
+        return callX(mapped, "toList");
+    }
+
+    private Expression transformToMapIterable(ClassNode componentType, Expression fieldValue, int level) {
+        String varName = "input" + level;
+        return callX(fieldValue, "collect", args(builderClosure(stmt(
+            ternaryX(
+                isNullX(varX(varName)),
+                NULL_VALUE,
+                transformFieldInToMap(componentType, varX(varName), level)
+            )
+        ), varName)));
+    }
+
+    private PropertyExpression fieldX(String fieldName) {
+        return propX(THIS, fieldName);
     }
 
     @SneakyThrows
     private void addMapConstructor(ClassNode classNode) {
         boolean alreadyHasMapConstructor = hasMapTypeConstructor(classNode);
         if (alreadyHasMapConstructor) {
+            log.error("Class {} already has a constructor with Map parameter", classNode.getName());
             throw new IllegalStateException("Class " + classNode.getName() + " already has a constructor with Map parameter");
         }
 
+        if (!hasEmptyConstructor(classNode)) {
+            classNode.addConstructor(MethodNode.ACC_PUBLIC, new Parameter[0], ClassNode.EMPTY_ARRAY, new BlockStatement());
+        }
 
         Parameter mapParam = new Parameter(new ClassNode(Map.class), "data");
         BlockStatement body = new BlockStatement();
 
+        // generate if in data == null then return
+        body.addStatement(
+            ifS(isNullX(varX("data")), new ReturnStatement(NULL_VALUE))
+        );
+
         for (FieldNode field : classNode.getFields()) {
-            if (field.isStatic() || field.getName().contains(DOLLAR) || (field.getModifiers() & ACC_TRANSIENT) != 0) {
+            if (field.isStatic() || field.getName().contains(DOLLAR) || (field.getModifiers() & ACC_TRANSIENT) != 0 || isIgnored(field)) {
                 continue;
             }
 
-            ClassNode fieldType = field.getType();
             String fieldName = field.getName();
             PropertyExpression mapValue = propX(varX(mapParam), fieldName);
-            Expression valueExp = createTransformToTypeExpression(fieldName, field, mapValue, fieldType);
+            Expression transformExp = createTransformToTypeExpression(field.getType(), mapValue, 0);
+            Expression valueExp = ternaryX(isNullX(mapValue), fieldX(fieldName), transformExp); // support default value
             body.addStatement(
-                assignS(propX(varX("this"), fieldName), valueExp)
+                assignS(fieldX(fieldName), valueExp)
             );
         }
 
@@ -122,9 +246,13 @@ public class LepDataClassTransformation extends AbstractASTTransformation {
         );
     }
 
+    private boolean hasEmptyConstructor(ClassNode classNode) {
+        return classNode.getDeclaredConstructors().stream().anyMatch(c -> c.getParameters() == null || c.getParameters().length == 0);
+    }
+
     private void callMapCustomization(ClassNode classNode, Parameter mapParam, BlockStatement body) {
         if (classNode.hasMethod("fromMapCustomization", new Parameter[]{mapParam})) {
-            body.addStatement(stmt(callX(varX("this"), "fromMapCustomization", args("data"))));
+            body.addStatement(stmt(callX(THIS, "fromMapCustomization", args("data"))));
         }
     }
 
@@ -134,50 +262,44 @@ public class LepDataClassTransformation extends AbstractASTTransformation {
             c.getParameters() != null && c.getParameters().length == 1 && mapType.equals(c.getParameters()[0].getType()));
     }
 
+    private Expression createTransformToTypeExpression(ClassNode fieldType, Expression mapValue, int level) {
+        return ternaryX(isNullX(mapValue), mapValue, transformByType(mapValue, fieldType, level + 1));
+    }
 
-    private Expression createTransformToTypeExpression(
-        String fieldName,
-        FieldNode fieldNode,
-        Expression mapValue,
-        ClassNode fieldType
-    ) {
+    private Expression transformByType(Expression mapValue, ClassNode fieldType, int level) {
 
         // Java time
         if (isJavaTimeClass(fieldType)) {
-            return transform(fieldName, fieldType, mapValue, "parse");
+            return transform(fieldType, mapValue, "parse");
         }
 
         if (fieldType.isEnum()) {
-            return transform(fieldName, fieldType, mapValue, "valueOf");
+            return transform(fieldType, mapValue, "valueOf");
         }
 
         if (fieldType.isArray() && isLepDataClass(fieldType.getComponentType())) {
-            return transformArray(fieldName, fieldNode, mapValue, fieldType);
+            return transformArray(mapValue, fieldType.getComponentType(), level);
         }
 
-        ClassNode collection = ClassHelper.make(Iterable.class);
+        ClassNode collection = make(Iterable.class);
         if ((fieldType.implementsInterface(collection) || fieldType.equals(collection))) {
-            ClassNode componentType = getGenericType(fieldNode, fieldType, "value", 0);
+            ClassNode componentType = getGenericType(fieldType, 0);
             if (componentType != null && isLepDataClass(componentType)) {
-                return transformCollection(fieldName, fieldNode, mapValue, fieldType, componentType);
+                return transformCollection(fieldType, mapValue, componentType, level);
             }
         }
 
-        ClassNode map = ClassHelper.make(Map.class);
+        ClassNode map = make(Map.class);
         if ((fieldType.implementsInterface(map) || fieldType.equals(map))) {
-            ClassNode keyType = getGenericType(fieldNode, fieldType, "key", 0);
-            ClassNode valueType = getGenericType(fieldNode, fieldType, "value", 1);
+            ClassNode keyType = getGenericType(fieldType, 0);
+            ClassNode valueType = getGenericType(fieldType, 1);
             if (keyType != null && isLepDataClass(keyType) || valueType != null && isLepDataClass(valueType)) {
-                return transformMap(fieldName, fieldNode, mapValue, fieldType, keyType, valueType);
+                return transformMap(fieldType, mapValue, keyType, valueType, level, this::createTransformToTypeExpression);
             }
         }
 
         if (isLepDataClass(fieldType)) {
-            return ternaryX(isNullX(mapValue), NULL_VALUE, castX(
-                    fieldType,
-                    ctorX(fieldType, args(mapValue))
-                )
-            );
+            return castX(fieldType, ctorX(fieldType, args(mapValue)));
         }
 
         return ternaryX(
@@ -185,35 +307,33 @@ public class LepDataClassTransformation extends AbstractASTTransformation {
             mapValue,
             castX(fieldType, mapValue)
         );
-
     }
 
-    private Expression transformMap(String fieldName, FieldNode fieldNode, Expression mapValue, ClassNode fieldType, ClassNode keyType, ClassNode valueType) {
-        Parameter keyParam = param(ClassHelper.OBJECT_TYPE, "key");
-        Parameter valueParam = param(ClassHelper.OBJECT_TYPE, "value");
+    private Expression transformMap(ClassNode fieldType, Expression mapValue, ClassNode keyType, ClassNode valueType, int level,
+                                    TriFunction<ClassNode, Expression, Integer, Expression> mapper
+                                    ) {
+        String keyVariable = "key" + level;
+        String valueVariable = "value" + level;
 
-        var keyMapper = createTransformToTypeExpression(fieldName, fieldNode, varX("key"), keyType);
-        var valueMapper = createTransformToTypeExpression(fieldName, fieldNode, varX("value"), valueType);
+        Parameter keyParam = param(ClassHelper.OBJECT_TYPE, keyVariable);
+        Parameter valueParam = param(ClassHelper.OBJECT_TYPE, valueVariable);
+
+        var keyMapper = mapper.apply(keyType, varX(keyVariable), level);
+        var valueMapper = mapper.apply(valueType, varX(valueVariable), level);
         BlockStatement closureBody = block(returnS(listX(List.of(keyMapper, valueMapper))));
         closureBody.setVariableScope(new VariableScope());
         ClosureExpression closure = closureX(params(keyParam, valueParam), closureBody);
         closure.setVariableScope(new VariableScope());
         Expression resultMap = callX(mapValue, "collectEntries", args(closure));
 
-        if (fieldType.isInterface() && fieldType.equals(ClassHelper.make(Map.class))) {
-            return ctorX(ClassHelper.make(LinkedHashMap.class), args(resultMap));
+        if (fieldType.isInterface() && fieldType.equals(make(Map.class))) {
+            return ctorX(make(LinkedHashMap.class), args(resultMap));
         }
         return ctorX(fieldType, args(resultMap));
     }
 
     @Nullable
-    private ClassNode getGenericType(FieldNode fieldNode, ClassNode fieldType, String annotationMember, int genericTypeNumber) {
-        var annotated = AnnotatedNodeUtils.hasAnnotation(fieldNode, ClassHelper.make(LepDataClassField.class));
-        if (annotated) {
-            Expression value = fieldNode.getAnnotations(ClassHelper.make(LepDataClassField.class)).getFirst().getMember(annotationMember);
-            return value.getType();
-        }
-
+    private ClassNode getGenericType(ClassNode fieldType, int genericTypeNumber) {
         return Optional.of(fieldType)
             .map(ClassNode::getGenericsTypes)
             .filter(it -> it.length > genericTypeNumber)
@@ -222,10 +342,19 @@ public class LepDataClassTransformation extends AbstractASTTransformation {
             .orElse(null);
     }
 
-    private Expression transformCollection(String fieldName, FieldNode fieldNode, Expression mapValue, ClassNode fieldType, ClassNode componentType) {
-        Expression mapped = mapIterable(fieldName, fieldNode, mapValue, componentType);
+    private Expression transformCollectionInToMap(ClassNode fieldType, Expression mapValue, ClassNode componentType, int level) {
+        Expression mapped = transformToMapIterable(componentType, mapValue, level);
+        return toCollection(fieldType, mapped);
+    }
+
+    private Expression transformCollection(ClassNode fieldType, Expression mapValue, ClassNode itemType, int level) {
+        Expression mapped = mapIterable(mapValue, itemType, level);
+        return toCollection(fieldType, mapped);
+    }
+
+    private static Expression toCollection(ClassNode fieldType, Expression mapped) {
         if (fieldType.isInterface()) {
-            if (fieldType.equals(ClassHelper.make(Set.class))) {
+            if (fieldType.equals(make(Set.class))) {
                 return callX(mapped, "toSet");
             }
             return callX(mapped, "toList");
@@ -233,36 +362,42 @@ public class LepDataClassTransformation extends AbstractASTTransformation {
         return ctorX(fieldType, args(mapped));
     }
 
-    private Expression mapIterable(String fieldName, FieldNode fieldNode, Expression mapValue, ClassNode componentType) {
-        Parameter itParam = param(ClassHelper.OBJECT_TYPE, "input");
+    private Expression mapIterable(Expression fieldValue, ClassNode itemType, int level) {
+        String varName = "input" + level;
         Statement mapper = stmt(
-            createTransformToTypeExpression(fieldName, fieldNode, varX("input"), componentType)
+            createTransformToTypeExpression(itemType, varX(varName), level)
         );
-        BlockStatement closureBody = block(mapper);
+        ClosureExpression closure = builderClosure(mapper, varName);
+        return callX(fieldValue, "collect", args(closure));
+    }
+
+    private ClosureExpression builderClosure(Statement body, String inputName) {
+        Parameter itParam = param(ClassHelper.OBJECT_TYPE, inputName);
+        BlockStatement closureBody = block(body);
         closureBody.setVariableScope(new VariableScope());
         ClosureExpression closure = closureX(params(itParam), closureBody);
         closure.setVariableScope(new VariableScope());
-        return callX(mapValue, "collect", args(closure));
+        return closure;
     }
 
     private static boolean isLepDataClass(ClassNode fieldType) {
-        return !fieldType.getAnnotations(ClassHelper.make(LepDataClass.class)).isEmpty();
+        return !fieldType.getAnnotations(make(LepDataClass.class)).isEmpty();
     }
 
-    private Expression transformArray(String fieldName,
-                                      FieldNode fieldNode,
-                                      Expression mapValue,
-                                      ClassNode fieldType) {
-        Expression mapped = mapIterable(fieldName, fieldNode, mapValue, fieldType.getComponentType());
+    private static boolean isIgnored(FieldNode field) {
+        return !field.getAnnotations(make(LepDataClassIgnored.class)).isEmpty();
+    }
+
+    private Expression transformArray(Expression fieldValue, ClassNode itemType, int level) {
+        Expression mapped = mapIterable(fieldValue, itemType, level);
         return callX(mapped, "toArray");
     }
 
-    private TernaryExpression transform(String fieldName, ClassNode fieldType, Expression mapValue, String builderMethod) {
-        return ternaryX(isNullX(mapValue), propX(varX("this"), fieldName), ternaryX(
+    private TernaryExpression transform(ClassNode fieldType, Expression mapValue, String builderMethod) {
+        return ternaryX(
                 isInstanceOfX(mapValue, STRING_TYPE),
                 callX(fieldType, builderMethod, mapValue),
                 ternaryX(isInstanceOfX(mapValue, fieldType), mapValue, castX(fieldType, mapValue))
-            )
         );
     }
 
