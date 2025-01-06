@@ -94,6 +94,51 @@ public class LepDataClassTransformation extends AbstractASTTransformation {
         addToMapMethod(annotatedClass);
     }
 
+
+    @SneakyThrows
+    private void addMapConstructor(ClassNode classNode) {
+        boolean alreadyHasMapConstructor = hasMapTypeConstructor(classNode);
+        if (alreadyHasMapConstructor) {
+            log.error("Class {} already has a constructor with Map parameter", classNode.getName());
+            throw new IllegalStateException("Class " + classNode.getName() + " already has a constructor with Map parameter");
+        }
+
+        if (!hasEmptyConstructor(classNode)) {
+            classNode.addConstructor(MethodNode.ACC_PUBLIC, new Parameter[0], ClassNode.EMPTY_ARRAY, new BlockStatement());
+        }
+
+        Parameter mapParam = new Parameter(new ClassNode(Map.class), "data");
+        BlockStatement body = new BlockStatement();
+
+        // generate if in data == null then return
+        body.addStatement(
+            ifS(isNullX(varX("data")), new ReturnStatement(NULL_VALUE))
+        );
+
+        classNode.getFields().stream()
+            .filter(this::isDataField)
+            .forEach(field -> addFieldAssigment(field, mapParam, body));
+
+        callMapCustomization(classNode, mapParam, body);
+
+        classNode.addConstructor(
+            MethodNode.ACC_PUBLIC,
+            new Parameter[]{mapParam},
+            ClassNode.EMPTY_ARRAY,
+            body
+        );
+    }
+
+    private void addFieldAssigment(FieldNode field, Parameter mapParam, BlockStatement body) {
+        String fieldName = field.getName();
+        PropertyExpression mapValue = propX(varX(mapParam), fieldName);
+        Expression transformExp = createTransformToTypeExpression(field.getType(), mapValue, 0);
+        Expression valueExp = ternaryX(isNullX(mapValue), fieldX(fieldName), transformExp); // support default value
+        body.addStatement(
+            assignS(fieldX(fieldName), valueExp)
+        );
+    }
+
     private void addToMapMethod(ClassNode annotatedClass) {
         if (annotatedClass.hasMethod("toMap", new Parameter[0])) {
             log.error("Class {} already has a method toMap", annotatedClass.getName());
@@ -114,21 +159,9 @@ public class LepDataClassTransformation extends AbstractASTTransformation {
             declS(varX("result"), ctorX(new ClassNode(LinkedHashMap.class)))
         );
 
-        for (FieldNode field : annotatedClass.getFields()) {
-            if (field.isStatic() || field.getName().contains(DOLLAR) || (field.getModifiers() & ACC_TRANSIENT) != 0 || isIgnored(field)) {
-                continue;
-            }
-
-            String fieldName = field.getName();
-            body.addStatement(
-                ifS(notX(isNullX(fieldX(fieldName))),
-                    assignS(
-                        propX(varX("result"), fieldName),
-                        transformFieldInToMap(field.getType(), fieldX(fieldName), 0)
-                    )
-                )
-            );
-        }
+        annotatedClass.getFields().stream()
+            .filter(this::isDataField)
+            .forEach(field -> addPutFieldToMapStatement(field, body));
 
         // map parameter
         if (annotatedClass.hasMethod("toMapCustomization", params(param(make(Map.class), "data")))) {
@@ -138,6 +171,22 @@ public class LepDataClassTransformation extends AbstractASTTransformation {
         body.addStatement(returnS(varX("result")));
 
         annotatedClass.addMethod(method);
+    }
+
+    private boolean isDataField(FieldNode field) {
+        return !field.isStatic() && !field.getName().contains(DOLLAR) && (field.getModifiers() & ACC_TRANSIENT) == 0 && !isIgnored(field);
+    }
+
+    private void addPutFieldToMapStatement(FieldNode field, BlockStatement body) {
+        String fieldName = field.getName();
+        body.addStatement(
+            ifS(notX(isNullX(fieldX(fieldName))),
+                assignS(
+                    propX(varX("result"), fieldName),
+                    transformFieldInToMap(field.getType(), fieldX(fieldName), 0)
+                )
+            )
+        );
     }
 
     private Expression transformFieldInToMap(ClassNode fieldType, Expression fieldValue, int level) {
@@ -161,7 +210,7 @@ public class LepDataClassTransformation extends AbstractASTTransformation {
         ClassNode collection = make(Iterable.class);
         if ((fieldType.implementsInterface(collection) || fieldType.equals(collection))) {
             ClassNode componentType = getGenericType(fieldType, 0);
-            if (componentType != null && isLepDataClass(componentType)) {
+            if (isLepDataClass(componentType)) {
                 return transformCollectionInToMap(fieldType, fieldValue, componentType, level);
             }
         }
@@ -170,7 +219,7 @@ public class LepDataClassTransformation extends AbstractASTTransformation {
         if ((fieldType.implementsInterface(map) || fieldType.equals(map))) {
             ClassNode keyType = getGenericType(fieldType, 0);
             ClassNode valueType = getGenericType(fieldType, 1);
-            if (keyType != null && isLepDataClass(keyType) || valueType != null && isLepDataClass(valueType)) {
+            if (isLepDataClass(keyType) || isLepDataClass(valueType)) {
                 return transformMap(fieldType, fieldValue, keyType, valueType, level, this::transformFieldInToMap);
             }
         }
@@ -200,50 +249,6 @@ public class LepDataClassTransformation extends AbstractASTTransformation {
 
     private PropertyExpression fieldX(String fieldName) {
         return propX(THIS, fieldName);
-    }
-
-    @SneakyThrows
-    private void addMapConstructor(ClassNode classNode) {
-        boolean alreadyHasMapConstructor = hasMapTypeConstructor(classNode);
-        if (alreadyHasMapConstructor) {
-            log.error("Class {} already has a constructor with Map parameter", classNode.getName());
-            throw new IllegalStateException("Class " + classNode.getName() + " already has a constructor with Map parameter");
-        }
-
-        if (!hasEmptyConstructor(classNode)) {
-            classNode.addConstructor(MethodNode.ACC_PUBLIC, new Parameter[0], ClassNode.EMPTY_ARRAY, new BlockStatement());
-        }
-
-        Parameter mapParam = new Parameter(new ClassNode(Map.class), "data");
-        BlockStatement body = new BlockStatement();
-
-        // generate if in data == null then return
-        body.addStatement(
-            ifS(isNullX(varX("data")), new ReturnStatement(NULL_VALUE))
-        );
-
-        for (FieldNode field : classNode.getFields()) {
-            if (field.isStatic() || field.getName().contains(DOLLAR) || (field.getModifiers() & ACC_TRANSIENT) != 0 || isIgnored(field)) {
-                continue;
-            }
-
-            String fieldName = field.getName();
-            PropertyExpression mapValue = propX(varX(mapParam), fieldName);
-            Expression transformExp = createTransformToTypeExpression(field.getType(), mapValue, 0);
-            Expression valueExp = ternaryX(isNullX(mapValue), fieldX(fieldName), transformExp); // support default value
-            body.addStatement(
-                assignS(fieldX(fieldName), valueExp)
-            );
-        }
-
-        callMapCustomization(classNode, mapParam, body);
-
-        classNode.addConstructor(
-                MethodNode.ACC_PUBLIC,
-                new Parameter[]{mapParam},
-                ClassNode.EMPTY_ARRAY,
-                body
-        );
     }
 
     private boolean hasEmptyConstructor(ClassNode classNode) {
@@ -284,7 +289,7 @@ public class LepDataClassTransformation extends AbstractASTTransformation {
         ClassNode collection = make(Iterable.class);
         if ((fieldType.implementsInterface(collection) || fieldType.equals(collection))) {
             ClassNode componentType = getGenericType(fieldType, 0);
-            if (componentType != null && isLepDataClass(componentType)) {
+            if (isLepDataClass(componentType)) {
                 return transformCollection(fieldType, mapValue, componentType, level);
             }
         }
@@ -293,7 +298,7 @@ public class LepDataClassTransformation extends AbstractASTTransformation {
         if ((fieldType.implementsInterface(map) || fieldType.equals(map))) {
             ClassNode keyType = getGenericType(fieldType, 0);
             ClassNode valueType = getGenericType(fieldType, 1);
-            if (keyType != null && isLepDataClass(keyType) || valueType != null && isLepDataClass(valueType)) {
+            if (isLepDataClass(keyType) || isLepDataClass(valueType)) {
                 return transformMap(fieldType, mapValue, keyType, valueType, level, this::createTransformToTypeExpression);
             }
         }
@@ -381,7 +386,7 @@ public class LepDataClassTransformation extends AbstractASTTransformation {
     }
 
     private static boolean isLepDataClass(ClassNode fieldType) {
-        return !fieldType.getAnnotations(make(LepDataClass.class)).isEmpty();
+        return fieldType != null && !fieldType.getAnnotations(make(LepDataClass.class)).isEmpty();
     }
 
     private static boolean isIgnored(FieldNode field) {
