@@ -118,11 +118,11 @@ public class FunctionSpec implements IFunctionSpec {
     private List<String> httpMethods = new ArrayList<>();
 
     public Boolean getSaveFunctionContext() {
-        return saveFunctionContext == null ? false : saveFunctionContext;
+        return saveFunctionContext != null && saveFunctionContext;
     }
 
     public Boolean getOnlyData() {
-        return onlyData == null ? false : onlyData;
+        return onlyData != null && onlyData;
     }
 
     public String getDynamicPrivilegeKey() {
@@ -133,7 +133,7 @@ public class FunctionSpec implements IFunctionSpec {
 
     @NotNull
     public Boolean getAnonymous() {
-        return anonymous == null ? false : anonymous;
+        return anonymous != null && anonymous;
     }
 
     @Override
