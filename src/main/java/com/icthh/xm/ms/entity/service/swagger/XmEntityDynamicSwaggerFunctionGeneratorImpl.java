@@ -114,6 +114,11 @@ public class XmEntityDynamicSwaggerFunctionGeneratorImpl extends DefaultDynamicS
     }
 
     @Override
+    public String getFunctionDescription(FunctionSpec functionSpec) {
+        return Optional.ofNullable(functionSpec.getDescription()).orElse(functionSpec.getKey());
+    }
+
+    @Override
     public String getFunctionInputJsonSchema(FunctionSpec functionSpec) {
         return functionSpec.getInputSpec();
     }
