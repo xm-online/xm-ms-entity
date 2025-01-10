@@ -46,6 +46,12 @@ public class FunctionSpec implements IFunctionSpec {
     private Map<String, String> name;
 
     /**
+     * Function action description.
+     */
+    @JsonProperty("description")
+    private String description;
+
+    /**
      * Localized action button name via map where key is ISO 639-1 code.
      */
     @JsonProperty("actionName")
