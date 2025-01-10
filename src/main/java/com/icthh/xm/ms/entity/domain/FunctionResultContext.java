@@ -1,7 +1,7 @@
 package com.icthh.xm.ms.entity.domain;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.icthh.xm.commons.domain.FunctionResult;
-import org.springframework.cloud.cloudfoundry.com.fasterxml.jackson.annotation.JsonIgnore;
 import org.springframework.web.servlet.ModelAndView;
 
 import java.time.Duration;
