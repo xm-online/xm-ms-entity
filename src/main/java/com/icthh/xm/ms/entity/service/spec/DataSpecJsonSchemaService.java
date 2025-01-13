@@ -62,11 +62,12 @@ public class DataSpecJsonSchemaService implements SpecificationProcessingService
     @Override
     public <I extends SpecificationItem> Collection<I> processDataSpecifications(String tenant, String dataSpecKey, Collection<I> specifications) {
         var dataSchemas = new HashMap<String, JsonSchema>();
+        JsonSchemaFactory jsonSchemaFactory = JsonSchemaFactory.getInstance(SpecVersion.VersionFlag.V4);
 
         Optional.ofNullable(specifications).orElse(List.of())
             .forEach(typeSpec -> {
                 processDataSpecification(tenant, dataSpecKey, (TypeSpec) typeSpec);
-                addJsonSchema(dataSchemas, (TypeSpec) typeSpec);
+                addJsonSchema(dataSchemas, jsonSchemaFactory, (TypeSpec) typeSpec);
             });
         definitionSpecProcessor.processDefinitionsItSelf(tenant, dataSpecKey);
         dataSpecJsonSchemas.put(tenant, dataSchemas);
@@ -110,9 +111,8 @@ public class DataSpecJsonSchemaService implements SpecificationProcessingService
             });
     }
 
-    private void addJsonSchema(HashMap<String, JsonSchema> dataSchemas, TypeSpec typeSpec) {
-        JsonSchemaFactory jsonSchemaFactory = JsonSchemaFactory.getInstance(SpecVersion.VersionFlag.V4);
-
+    private void addJsonSchema(HashMap<String, JsonSchema> dataSchemas,
+                               JsonSchemaFactory jsonSchemaFactory, TypeSpec typeSpec) {
         if (StringUtils.isNotBlank(typeSpec.getDataSpec())) {
             try {
                 var jsonSchema = jsonSchemaFactory.getSchema(typeSpec.getDataSpec());
