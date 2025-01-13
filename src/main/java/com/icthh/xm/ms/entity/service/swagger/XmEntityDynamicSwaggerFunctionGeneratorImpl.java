@@ -181,4 +181,5 @@ public class XmEntityDynamicSwaggerFunctionGeneratorImpl extends DefaultDynamicS
             pathPatterns.stream().anyMatch(it -> functionSpec.getPath().matches(it)) ||
             keyPatterns.stream().anyMatch(it -> functionSpec.getKey().matches(it));
     }
+
 }
