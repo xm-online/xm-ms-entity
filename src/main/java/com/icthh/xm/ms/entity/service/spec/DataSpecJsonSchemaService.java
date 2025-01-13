@@ -23,6 +23,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
@@ -62,10 +63,13 @@ public class DataSpecJsonSchemaService implements SpecificationProcessingService
     public <I extends SpecificationItem> Collection<I> processDataSpecifications(String tenant, String dataSpecKey, Collection<I> specifications) {
         var dataSchemas = new HashMap<String, JsonSchema>();
         JsonSchemaFactory jsonSchemaFactory = JsonSchemaFactory.getInstance(SpecVersion.VersionFlag.V4);
-        for (I typeSpec : specifications) {
-            processDataSpecification(tenant, dataSpecKey, (TypeSpec) typeSpec);
-            addJsonSchema(dataSchemas, jsonSchemaFactory, (TypeSpec) typeSpec);
-        }
+
+        Optional.ofNullable(specifications).orElse(List.of())
+            .forEach(typeSpec -> {
+                processDataSpecification(tenant, dataSpecKey, (TypeSpec) typeSpec);
+                addJsonSchema(dataSchemas, jsonSchemaFactory, (TypeSpec) typeSpec);
+            });
+        definitionSpecProcessor.processDefinitionsItSelf(tenant, dataSpecKey);
         dataSpecJsonSchemas.put(tenant, dataSchemas);
         log.info("dataSchemas.size={}", dataSchemas.size());
         return specifications;
@@ -105,7 +109,6 @@ public class DataSpecJsonSchemaService implements SpecificationProcessingService
                 formSpecProcessor.processDataSpec(tenant, dataSpecKey, functionSpec::setInputForm, functionSpec::getInputForm);
                 formSpecProcessor.processDataSpec(tenant, dataSpecKey, functionSpec::setContextDataForm, functionSpec::getContextDataForm);
             });
-        definitionSpecProcessor.processDefinitionsItSelf(tenant, dataSpecKey);
     }
 
     private void addJsonSchema(HashMap<String, JsonSchema> dataSchemas,
