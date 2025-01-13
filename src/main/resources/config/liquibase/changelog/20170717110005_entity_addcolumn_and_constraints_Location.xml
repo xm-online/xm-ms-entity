@@ -16,7 +16,7 @@
         <addColumn tableName="location">
             <column name="country_key" type="varchar(255)"/>
         </addColumn>
-        <renameColumn tableName="location" oldColumnName="address_lins_2" newColumnName="address_line_2"/>
+        <renameColumn tableName="location" oldColumnName="address_lins_2" newColumnName="address_line_2" columnDataType="varchar(255)"/>
 
         <dropForeignKeyConstraint baseTableName="location" constraintName="fk_location_country_id" />
         <dropColumn tableName="location" columnName="country_id"/>
