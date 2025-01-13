@@ -20,19 +20,18 @@ import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 import static com.icthh.xm.ms.entity.service.json.JsonConfigurationListener.XM_ENTITY_SPEC_KEY;
 import static com.icthh.xm.ms.entity.util.CustomCollectionUtils.nullSafe;
-import static org.springframework.util.CollectionUtils.isEmpty;
+import static java.util.function.Function.identity;
+import static java.util.stream.Collectors.toMap;
 
 @Slf4j
 @Service
@@ -136,7 +135,7 @@ public class XmEntitySpecContextService {
         Map<XmEntitySpec, LinkedHashMap<String, TypeSpec>> xmEntitySpecTypesMap) {
         return xmEntitySpecTypesMap.values().stream()
             .flatMap(v -> v.entrySet().stream())
-            .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue,
+            .collect(toMap(Map.Entry::getKey, Map.Entry::getValue,
                 (u, v) -> {
                     throw new IllegalStateException(String.format("Duplicate key %s", u));
                 }, LinkedHashMap::new));
@@ -153,21 +152,18 @@ public class XmEntitySpecContextService {
     @SneakyThrows
     private Map<XmEntitySpec, LinkedHashMap<String, TypeSpec>> toXmEntitySpecTypes(String config) {
         XmEntitySpec xmEntitySpec = mapper.readValue(config, XmEntitySpec.class);
-        List<TypeSpec> typeSpecs = xmEntitySpec.getTypes();
-        if (isEmpty(typeSpecs)) {
-            return Collections.emptyMap();
-        } else {
-            Map<XmEntitySpec, LinkedHashMap<String, TypeSpec>> xmEntitySpecTypes = new HashMap<>();
-            // Convert List<TypeSpec> to Map<key, TypeSpec>
-            LinkedHashMap<String, TypeSpec> result = typeSpecs.stream()
-                .map(this::enrichAttachmentSpec)
-                .collect(Collectors.toMap(TypeSpec::getKey, Function.identity(),
-                    (u, v) -> {
-                        throw new IllegalStateException(String.format("Duplicate key %s", u));
-                    }, LinkedHashMap::new));
-            xmEntitySpecTypes.put(xmEntitySpec, result);
-            return xmEntitySpecTypes;
-        }
+        Map<XmEntitySpec, LinkedHashMap<String, TypeSpec>> xmEntitySpecTypes = new HashMap<>();
+        // Convert List<TypeSpec> to Map<key, TypeSpec>
+        LinkedHashMap<String, TypeSpec> result = Optional.ofNullable(xmEntitySpec.getTypes())
+            .orElse(List.of())
+            .stream()
+            .map(this::enrichAttachmentSpec)
+            .collect(toMap(TypeSpec::getKey, identity(),
+                (u, v) -> {
+                    throw new IllegalStateException(String.format("Duplicate key %s", u));
+                }, LinkedHashMap::new));
+        xmEntitySpecTypes.put(xmEntitySpec, result);
+        return xmEntitySpecTypes;
     }
 
     private TypeSpec enrichAttachmentSpec(TypeSpec typeSpec) {

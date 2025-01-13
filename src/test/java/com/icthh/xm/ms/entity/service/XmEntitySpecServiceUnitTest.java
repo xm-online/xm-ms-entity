@@ -73,6 +73,8 @@ import static com.icthh.xm.ms.entity.util.CustomCollectionUtils.nullSafe;
 import static com.icthh.xm.ms.entity.web.rest.XmEntitySaveIntTest.loadFile;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
+import static java.util.function.Function.identity;
+import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.codec.digest.DigestUtils.sha1Hex;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
@@ -136,6 +138,8 @@ public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
     @Mock
     private TenantConfigRepository tenantConfigRepository;
     private JsonListenerService jsonListenerService = new JsonListenerService();
+    private XmEntityDefinitionSpecProcessor definitionSpecProcessor;
+    private XmEntityDataFormSpecProcessor formSpecProcessor;
     @InjectMocks
     @Spy
     private XmEntityDynamicPermissionCheckService dynamicPermissionCheckService;
@@ -179,6 +183,8 @@ public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
                                                           TenantContextHolder tenantContextHolder) {
 
         XmEntityTypeSpecProcessor typeSpecProcessor = new XmEntityTypeSpecProcessor(jsonListenerService);
+        definitionSpecProcessor = new XmEntityDefinitionSpecProcessor(jsonListenerService, typeSpecProcessor);
+        formSpecProcessor = new XmEntityDataFormSpecProcessor(jsonListenerService);
         return spy(new LocalXmEntitySpecService(tenantConfigRepository,
                                             applicationProperties,
                                             tenantContextHolder,
@@ -195,8 +201,8 @@ public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
                                             tenantConfig,
                                             xmEntitySpecCustomizer,
                                             new DataSpecJsonSchemaService(
-                                                new XmEntityDefinitionSpecProcessor(jsonListenerService, typeSpecProcessor),
-                                                new XmEntityDataFormSpecProcessor(jsonListenerService),
+                                                definitionSpecProcessor,
+                                                formSpecProcessor,
                                                 typeSpecProcessor
                                             ), MAX_FILE_SIZE));
     }
@@ -993,6 +999,25 @@ public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
         assertEqualsTypeSpecFields(actualFunctionSpec.getContextDataForm(), expectedFunctionSpec.getContextDataForm());
         assertEqualsTypeSpecFields(actualNextSpec.getInputSpec(), expectedNextSpec.getInputSpec());
         assertEqualsTypeSpecFields(actualNextSpec.getInputForm(), expectedNextSpec.getInputForm());
+    }
+
+    @Test
+    public void testUpdateTenantByStateWithDefinitionsAndFormsWithEmptyTypes() throws Exception {
+        String config = getXmEntitySpec("no-types");
+        String key = SPEC_FOLDER_URL.replace("{tenantName}", "RESINTTEST") + "/file.yml";
+        mockTenant("RESINTTEST");
+        jsonListenerService.processTenantSpecification("RESINTTEST", RELATIVE_FORMS_PATH_TO_FILE, loadFile("config/specs/form-specification-int.json"));
+        jsonListenerService.processTenantSpecification("RESINTTEST", RELATIVE_DEFINITIONS_PATH_TO_FILE, loadFile("config/specs/definition-specification-int.json"));
+        xmEntitySpecService.onRefresh(key, config);
+
+        assertTrue(xmEntitySpecService.getAllSpecs().isEmpty());
+
+        Map<String, DefinitionSpec> processedDefinitions = xmEntitySpecService.getDefinitions().stream()
+            .collect(toMap(DefinitionSpec::getKey, identity()));
+
+        assertEquals(2, processedDefinitions.size());
+        assertTrue(processedDefinitions.containsKey("tenantKey"));
+        assertTrue(processedDefinitions.containsKey("tenantKeyFromFile"));
     }
 
     @SneakyThrows

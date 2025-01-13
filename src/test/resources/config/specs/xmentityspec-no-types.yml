@@ -1,0 +1,14 @@
+---
+definitions:
+    - key: tenantKey
+      value: |
+          {"tenantKey":{"type": "string"}}
+    - key: tenantKeyFromFile
+      ref: xmentityspec/definitions/definition-specification-int.json
+
+forms:
+    - key: tenantKey
+      value: |
+          {"key": "tenantKey", "title": {"en": "Tenant key"}, "type": "string"}
+    - key: tenantKeyFromFile
+      ref: xmentityspec/forms/form-specification-int.json
