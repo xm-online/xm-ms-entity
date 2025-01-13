@@ -1,7 +1,7 @@
 package com.icthh.xm.ms.entity.domain;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.icthh.xm.commons.domain.FunctionResult;
-import com.icthh.xm.commons.logging.util.MdcUtils;
 import org.springframework.web.servlet.ModelAndView;
 
 import java.time.Duration;
@@ -12,6 +12,7 @@ import static com.icthh.xm.commons.utils.ModelAndViewUtils.MVC_FUNC_RESULT;
 
 public class FunctionResultContext extends FunctionContext implements FunctionResult {
 
+    @JsonIgnore
     @Override
     public long getExecuteTime() {
         Instant startDate = getStartDate();
@@ -20,6 +21,7 @@ public class FunctionResultContext extends FunctionContext implements FunctionRe
         return startDate != null && endDate != null ? Duration.between(startDate, endDate).getSeconds() : 0;
     }
 
+    @JsonIgnore
     @Override
     public ModelAndView getModelAndView() {
         return (ModelAndView) Optional.ofNullable(getData())

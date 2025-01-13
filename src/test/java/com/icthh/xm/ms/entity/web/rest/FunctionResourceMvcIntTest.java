@@ -10,7 +10,7 @@ import com.icthh.xm.commons.web.rest.FunctionUploadResource;
 import com.icthh.xm.ms.entity.AbstractWebMvcTest;
 import com.icthh.xm.ms.entity.domain.FunctionResultContext;
 import com.icthh.xm.ms.entity.service.impl.XmEntityFunctionServiceFacade;
-import com.icthh.xm.ms.entity.service.swagger.DynamicSwaggerFunctionGeneratorImpl;
+import com.icthh.xm.ms.entity.service.swagger.XmEntityDynamicSwaggerFunctionGeneratorImpl;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
@@ -67,7 +67,7 @@ public class FunctionResourceMvcIntTest extends AbstractWebMvcTest {
     private LocalizationMessageService localizationMessageService;
 
     @MockBean
-    private DynamicSwaggerFunctionGeneratorImpl dynamicSwaggerFunctionGenerator;
+    private XmEntityDynamicSwaggerFunctionGeneratorImpl dynamicSwaggerFunctionGenerator;
 
     @Before
     public void setup() {

@@ -2,14 +2,14 @@ package com.icthh.xm.ms.entity.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import com.icthh.xm.commons.config.swagger.DynamicSwaggerConfiguration;
+import com.icthh.xm.commons.config.swagger.DynamicSwaggerRefreshableConfiguration;
+import com.icthh.xm.commons.swagger.model.SwaggerModel;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
 import com.icthh.xm.ms.entity.AbstractSpringBootTest;
 import com.icthh.xm.ms.entity.service.json.JsonConfigurationListener;
-import com.icthh.xm.ms.entity.service.swagger.DynamicSwaggerFunctionGeneratorImpl;
-import com.icthh.xm.ms.entity.service.swagger.DynamicSwaggerRefreshableConfiguration;
-import com.icthh.xm.ms.entity.service.swagger.DynamicSwaggerRefreshableConfiguration.DynamicSwaggerConfiguration;
-import com.icthh.xm.ms.entity.service.swagger.model.SwaggerModel;
+import com.icthh.xm.ms.entity.service.swagger.XmEntityDynamicSwaggerFunctionGeneratorImpl;
 import lombok.SneakyThrows;
 import org.apache.commons.io.IOUtils;
 import org.junit.After;
@@ -37,7 +37,7 @@ public class FunctionSwaggerIntTest extends AbstractSpringBootTest {
     @Autowired
     private DynamicSwaggerRefreshableConfiguration dynamicSwaggerRefreshableConfiguration;
     @Autowired
-    private DynamicSwaggerFunctionGeneratorImpl dynamicSwaggerFunctionGenerator;
+    private XmEntityDynamicSwaggerFunctionGeneratorImpl dynamicSwaggerFunctionGenerator;
     @Autowired
     private XmEntitySpecService xmEntitySpecService;
     @Autowired
