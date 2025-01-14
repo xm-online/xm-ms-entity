@@ -11,7 +11,9 @@ import com.icthh.xm.commons.logging.aop.IgnoreLogginAspect;
 import com.icthh.xm.commons.permission.annotation.FindWithPermission;
 import com.icthh.xm.commons.permission.annotation.PrivilegeDescription;
 import com.icthh.xm.commons.security.XmAuthenticationContextHolder;
+import com.icthh.xm.ms.entity.config.ApplicationProperties;
 import com.icthh.xm.ms.entity.config.Constants;
+import com.icthh.xm.ms.entity.config.SearchApiTransactionMode;
 import com.icthh.xm.ms.entity.domain.Attachment;
 import com.icthh.xm.ms.entity.domain.Calendar;
 import com.icthh.xm.ms.entity.domain.Comment;
@@ -48,6 +50,7 @@ import com.icthh.xm.ms.entity.repository.XmEntityPermittedRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityRepositoryInternal;
 import com.icthh.xm.ms.entity.repository.search.XmEntityPermittedSearchRepository;
 import com.icthh.xm.ms.entity.service.AttachmentService;
+import com.icthh.xm.ms.entity.service.impl.tx.XmEntityRepositoryTxControl;
 import com.icthh.xm.ms.entity.service.json.JsonValidationService;
 import com.icthh.xm.ms.entity.service.LifecycleLepStrategy;
 import com.icthh.xm.ms.entity.service.LifecycleLepStrategyFactory;
@@ -63,6 +66,7 @@ import com.icthh.xm.ms.entity.service.dto.LinkSourceDto;
 import com.icthh.xm.ms.entity.service.dto.SearchDto;
 import com.jayway.jsonpath.DocumentContext;
 import com.jayway.jsonpath.JsonPath;
+import java.util.function.Supplier;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -124,6 +128,7 @@ public class XmEntityServiceImpl implements XmEntityService {
     private final XmEntityRepositoryInternal xmEntityRepository;
     private final LifecycleLepStrategyFactory lifecycleLepStrategyFactory;
     private final XmEntityPermittedRepository xmEntityPermittedRepository;
+    private final XmEntityRepositoryTxControl xmEntityRepositoryTxControl;
     private final ProfileService profileService;
     private final LinkService linkService;
     private final StorageService storageService;
@@ -138,6 +143,7 @@ public class XmEntityServiceImpl implements XmEntityService {
     private final SimpleTemplateProcessor simpleTemplateProcessors;
     private final EventRepository eventRepository;
     private final JsonValidationService validator;
+    private final ApplicationProperties applicationProperties;
 
     private final XmEntityProjectionService xmEntityProjectionService;
 
@@ -513,7 +519,9 @@ public class XmEntityServiceImpl implements XmEntityService {
     @FindWithPermission("XMENTITY.SEARCH")
     @PrivilegeDescription("Privilege to search for the xmEntity corresponding to the query")
     public Page<XmEntity> search(String query, Pageable pageable, String privilegeKey) {
-        return xmEntityPermittedSearchRepository.search(query, pageable, XmEntity.class, privilegeKey);
+        return invokeRepositoryWithTransactionControl(() ->
+            xmEntityPermittedSearchRepository.search(query, pageable, XmEntity.class, privilegeKey)
+        );
     }
 
     @LogicExtensionPoint("SearchV2")
@@ -521,7 +529,9 @@ public class XmEntityServiceImpl implements XmEntityService {
     @FindWithPermission("XMENTITY.SEARCH")
     @PrivilegeDescription("Privilege to search for the xmEntity corresponding to the query")
     public Page<XmEntity> searchV2(SearchDto searchDto, String privilegeKey) {
-        return xmEntityPermittedSearchRepository.searchForPage(searchDto, privilegeKey);
+        return invokeRepositoryWithTransactionControl(() ->
+            xmEntityPermittedSearchRepository.searchForPage(searchDto, privilegeKey)
+        );
     }
 
     @LogicExtensionPoint(value = "SearchByTemplate", resolver = TemplateTypeKeyResolver.class)
@@ -533,7 +543,9 @@ public class XmEntityServiceImpl implements XmEntityService {
                                  Pageable pageable,
                                  String privilegeKey) {
         String query = getTemplateQuery(template, templateParamsHolder);
-        return xmEntityPermittedSearchRepository.search(query, pageable, XmEntity.class, privilegeKey);
+        return invokeRepositoryWithTransactionControl(() ->
+            xmEntityPermittedSearchRepository.search(query, pageable, XmEntity.class, privilegeKey)
+        );
     }
 
     @LogicExtensionPoint("SearchScroll")
@@ -541,11 +553,13 @@ public class XmEntityServiceImpl implements XmEntityService {
     @FindWithPermission("XMENTITY.SEARCH")
     @PrivilegeDescription("Privilege to search for the xmEntity corresponding to the query")
     public Page<XmEntity> search(Long scrollTimeInMillis, String query, Pageable pageable, String privilegeKey) {
-        return xmEntityPermittedSearchRepository.search(scrollTimeInMillis,
-                                                        query,
-                                                        pageable,
-                                                        XmEntity.class,
-                                                        privilegeKey);
+        return invokeRepositoryWithTransactionControl(() ->
+            xmEntityPermittedSearchRepository.search(scrollTimeInMillis,
+                query,
+                pageable,
+                XmEntity.class,
+                privilegeKey)
+        );
     }
 
     @LogicExtensionPoint("SearchXmEntitiesToLink")
@@ -586,7 +600,9 @@ public class XmEntityServiceImpl implements XmEntityService {
                                                   String typeKey,
                                                   Pageable pageable,
                                                   String privilegeKey) {
-        return xmEntityPermittedSearchRepository.searchByQueryAndTypeKey(query, typeKey, pageable, privilegeKey);
+        return invokeRepositoryWithTransactionControl(() ->
+            xmEntityPermittedSearchRepository.searchByQueryAndTypeKey(query, typeKey, pageable, privilegeKey)
+        );
     }
 
     @Override
@@ -598,7 +614,9 @@ public class XmEntityServiceImpl implements XmEntityService {
                                                   Pageable pageable,
                                                   String privilegeKey) {
         String query = isBlank(template) ? StringUtils.EMPTY : getTemplateQuery(template, templateParamsHolder);
-        return xmEntityPermittedSearchRepository.searchByQueryAndTypeKey(query, typeKey, pageable, privilegeKey);
+        return invokeRepositoryWithTransactionControl(() ->
+            xmEntityPermittedSearchRepository.searchByQueryAndTypeKey(query, typeKey, pageable, privilegeKey)
+        );
     }
 
     private String getTemplateQuery(String template, TemplateParamsHolder templateParamsHolder) {
@@ -864,4 +882,18 @@ public class XmEntityServiceImpl implements XmEntityService {
         return xmEntityId;
     }
 
+    protected Page<XmEntity> invokeRepositoryWithTransactionControl(Supplier<Page<XmEntity>> logic) {
+        SearchApiTransactionMode searchApiTransactionMode = applicationProperties.getJpa().getSearchApiTransactionMode();
+
+        switch (searchApiTransactionMode) {
+            case READ_ONLY_TRANSACTION:
+                return xmEntityRepositoryTxControl.executeInReadOnlyTransaction(logic);
+            case NO_TRANSACTION:
+                return xmEntityRepositoryTxControl.executeWithNoTransaction(logic);
+            case TRANSACTION:
+                return xmEntityRepositoryTxControl.executeInTransaction(logic);
+            default:
+                throw new IllegalArgumentException("Unsupported value: " + searchApiTransactionMode);
+        }
+    }
 }
