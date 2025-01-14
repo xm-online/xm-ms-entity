@@ -85,4 +85,7 @@
     <include file="classpath:config/liquibase/changelog/20220517000000_increase_entity_name_size.xml" relativeToChangelogFile="false"/>
 
     <include file="classpath:config/liquibase/changelog/20221227000000_added_updatedBy_XmEntity.xml" relativeToChangelogFile="false"/>
+
+    <includeAll path="classpath:config/liquibase/changelog/extended/"/>
+
 </databaseChangeLog>
