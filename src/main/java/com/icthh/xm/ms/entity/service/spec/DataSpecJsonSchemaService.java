@@ -70,7 +70,7 @@ public class DataSpecJsonSchemaService implements SpecificationProcessingService
                 addJsonSchema(dataSchemas, jsonSchemaFactory, (TypeSpec) typeSpec);
             });
         definitionSpecProcessor.processDefinitionsItSelf(tenant, dataSpecKey);
-        dataSpecJsonSchemas.put(tenant, dataSchemas);
+        dataSpecJsonSchemas.computeIfAbsent(tenant, it -> new HashMap<>()).putAll(dataSchemas);
         log.info("dataSchemas.size={}", dataSchemas.size());
         return specifications;
     }
