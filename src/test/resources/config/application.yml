@@ -152,3 +152,6 @@ application:
         warmup-scripts: false
     periodicMetricPoolSize: 1
     elasticBatchSize: 100
+
+    jpa:
+        search-api-transaction-mode: READ_ONLY_TRANSACTION

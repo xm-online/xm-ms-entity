@@ -182,6 +182,7 @@ xm-config:
 application:
     jpa:
         findOneByIdForUpdateTimeout: 10000
+        search-api-transaction-mode: READ_ONLY_TRANSACTION
     timeline-ignored-http-methods:
     scheduler-enabled: false
     tenant-ignored-path-list: /v2/api-docs, /api/profile-info, /swagger-resources/configuration/ui, /management/health

@@ -14,10 +14,12 @@ import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.repository.search.translator.SpelToElasticTranslator;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
+import org.apache.commons.lang3.time.StopWatch;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
+import org.springframework.data.elasticsearch.core.aggregation.AggregatedPage;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQuery;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.stereotype.Repository;
@@ -65,7 +67,11 @@ public class XmEntityPermittedSearchRepository extends PermittedSearchRepository
             .withPageable(pageable == null ? DEFAULT_PAGE : pageable)
             .build();
 
-        return getElasticsearchTemplate().queryForPage(queryBuilder, XmEntity.class);
+        StopWatch stopWatch = StopWatch.createStarted();
+        AggregatedPage<XmEntity> xmEntities = getElasticsearchTemplate().queryForPage(queryBuilder, XmEntity.class);
+        log.trace("searchByQueryAndTypeKey: query: {}, duration: {} ms", esQuery, stopWatch.getTime());
+
+        return xmEntities;
     }
 
     private BoolQueryBuilder typeKeyQuery(String typeKey) {
@@ -95,6 +101,10 @@ public class XmEntityPermittedSearchRepository extends PermittedSearchRepository
             .withPageable(pageable == null ? DEFAULT_PAGE : pageable)
             .build();
 
-        return getElasticsearchTemplate().queryForPage(queryBuilder, XmEntity.class);
+        StopWatch stopWatch = StopWatch.createStarted();
+        AggregatedPage<XmEntity> xmEntities = getElasticsearchTemplate().queryForPage(queryBuilder, XmEntity.class);
+        log.trace("searchWithIdNotIn: query: {}, duration: {} ms", esQuery, stopWatch.getTime());
+
+        return xmEntities;
     }
 }
