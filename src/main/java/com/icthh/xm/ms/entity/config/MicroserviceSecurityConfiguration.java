@@ -47,6 +47,7 @@ public class MicroserviceSecurityConfiguration {
                     .requestMatchers("/management/health").permitAll()
                     .requestMatchers("/management/prometheus/**").permitAll()
                     .requestMatchers("/management/**").hasAuthority(RoleConstant.SUPER_ADMIN)
+                    .requestMatchers("/v3/api-docs/**").hasAuthority(RoleConstant.SUPER_ADMIN)
                     .requestMatchers("/swagger-resources/configuration/ui").permitAll()
             );
         http.with(securityConfigurerAdapter(), Customizer.withDefaults());
