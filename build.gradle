@@ -335,6 +335,8 @@ dependencies {
     implementation "org.springframework.security:spring-security-jwt:${securityJwtVersion}"
     implementation "org.glassfish.jaxb:jaxb-runtime:${jaxb_runtime_version}"
     implementation "io.swagger:swagger-annotations:${swaggerVersion}"
+    implementation "org.springdoc:springdoc-openapi-starter-webmvc-ui:${springdocVersion}"
+
     implementation("io.springfox:springfox-swagger2:${springfoxVersion}") {
         exclude module: "mapstruct"
     }
@@ -393,6 +395,7 @@ dependencies {
     implementation "com.icthh.xm.commons:xm-commons-lep-annotation-processor:${xm_commons_version}"
     implementation "com.icthh.xm.commons:xm-commons-lep-annotation-processor:${xm_commons_version}"
     implementation "com.icthh.xm.commons:xm-commons-search:${xm_commons_version}"
+    implementation "com.icthh.xm.commons:xm-ee-commons-flow:1.1.5"
 
     annotationProcessor "com.icthh.xm.commons:xm-commons-lep-annotation-processor:${xm_commons_version}"
 
