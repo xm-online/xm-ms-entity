@@ -335,6 +335,8 @@ dependencies {
     implementation "org.springframework.security:spring-security-jwt:${securityJwtVersion}"
     implementation "org.glassfish.jaxb:jaxb-runtime:${jaxb_runtime_version}"
     implementation "io.swagger:swagger-annotations:${swaggerVersion}"
+    implementation "org.springdoc:springdoc-openapi-starter-webmvc-ui:${springdocVersion}"
+
     implementation("io.springfox:springfox-swagger2:${springfoxVersion}") {
         exclude module: "mapstruct"
     }
