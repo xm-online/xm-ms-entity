@@ -20,23 +20,24 @@ script:
   - export DOCKER_REPO=$(echo  -n $TRAVIS_REPO_SLUG | sed -e 's/^xm-online\//xmonline\//g')
   - export IMAGE_BRANCH=$(echo -n $TRAVIS_BRANCH | sed -e 's/\//-/g')
   - export PROJECT_VERSION="$IMAGE_BRANCH"
-  - if [ "$TRAVIS_PULL_REQUEST" == "false" ];
-    then
-        PROJECT_VERSION=$(./gradlew -q  getProjectVersion);
-        export SONAR_PK=$(echo  -n $TRAVIS_REPO_SLUG | sed -e 's/\//:/g');
-        TAGS="$PROJECT_VERSION $PROJECT_VERSION-$TRAVIS_BUILD_NUMBER $(echo $PROJECT_VERSION | awk -F '.' '{printf $1"."$2" "$1}') latest";
-    fi
-  - TAG_ARGS=""
-  - for TAG in $TAGS;
-    do
-        TAG_ARGS="$TAG_ARGS -t $DOCKER_REPO:$TAG";
-    done
-  - if [ "$TAG_ARGS" ];
-    then
-        docker buildx create --name multi-arch --platform "linux/arm64,linux/amd64,linux/arm/v8" --driver "docker-container" --use;
-        docker buildx build --platform linux/amd64,linux/arm64,linux/arm/v8 $TAG_ARGS --label commit_id="$TRAVIS_COMMIT" --label version="$PROJECT_VERSION" --label build_number="$TRAVIS_BUILD_NUMBER" --label build_url="$TRAVIS_BUILD_WEB_URL" --label git_url="$TRAVIS_REPO_SLUG" --label commit_message="$TRAVIS_COMMIT_MESSAGE" --push -f src/main/docker/Dockerfile .;
-        docker buildx rm multi-arch || true;
-    fi
+  - docker build -f src/main/docker/Dockerfile .;
+#  - if [ "$TRAVIS_PULL_REQUEST" == "false" ];
+#    then
+#        PROJECT_VERSION=$(./gradlew -q  getProjectVersion);
+#        export SONAR_PK=$(echo  -n $TRAVIS_REPO_SLUG | sed -e 's/\//:/g');
+#        TAGS="$PROJECT_VERSION $PROJECT_VERSION-$TRAVIS_BUILD_NUMBER $(echo $PROJECT_VERSION | awk -F '.' '{printf $1"."$2" "$1}') latest";
+#    fi
+#  - TAG_ARGS=""
+#  - for TAG in $TAGS;
+#    do
+#        TAG_ARGS="$TAG_ARGS -t $DOCKER_REPO:$TAG";
+#    done
+#  - if [ "$TAG_ARGS" ];
+#    then
+#        docker buildx create --name multi-arch --platform "linux/arm64,linux/amd64,linux/arm/v8" --driver "docker-container" --use;
+#        docker buildx build --platform linux/amd64,linux/arm64,linux/arm/v8 $TAG_ARGS --label commit_id="$TRAVIS_COMMIT" --label version="$PROJECT_VERSION" --label build_number="$TRAVIS_BUILD_NUMBER" --label build_url="$TRAVIS_BUILD_WEB_URL" --label git_url="$TRAVIS_REPO_SLUG" --label commit_message="$TRAVIS_COMMIT_MESSAGE" --push -f src/main/docker/Dockerfile .;
+#        docker buildx rm multi-arch || true;
+#    fi
 cache:
   directories:
   - "~/.gradle"
@@ -53,3 +54,4 @@ branches:
    only:
      - master
      - main
+     - updated-docker-image
