@@ -11,6 +11,7 @@ addons:
     branches:
     - master
     - main
+    - updated-docker-image
 
 script:
   - set -e
