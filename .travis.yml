@@ -11,12 +11,11 @@ addons:
     branches:
     - master
     - main
-    - updated-docker-image
 
 script:
   - set -e
-#  - "./gradlew --no-daemon --refresh-dependencies clean check test"
-#  - "./gradlew -x test -Pprod --no-daemon bootWar"
+  - "./gradlew --no-daemon --refresh-dependencies clean check test"
+  - "./gradlew -x test -Pprod --no-daemon bootWar"
   - docker login -u $DOCKER_USER -p $DOCKER_PASS
   - export DOCKER_REPO=$(echo  -n $TRAVIS_REPO_SLUG | sed -e 's/^xm-online\//xmonline\//g')
   - export IMAGE_BRANCH=$(echo -n $TRAVIS_BRANCH | sed -e 's/\//-/g')
@@ -55,4 +54,3 @@ branches:
    only:
      - master
      - main
-     - updated-docker-image
