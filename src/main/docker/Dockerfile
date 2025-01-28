@@ -1,4 +1,4 @@
-FROM amazoncorretto:21.0.6
+FROM amazoncorretto:8u442-alpine3.21-jre
 
 ENTRYPOINT ["/entrypoint.sh"]
 
