@@ -1,6 +1,6 @@
 jib {
     from {
-        image = "eclipse-temurin:21-jre-jammy"
+        image = "eclipse-temurin:21-jre"
         platforms {
             platform {
                 architecture = "${findProperty('jibArchitecture') ?: 'amd64'}"
