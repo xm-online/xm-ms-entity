@@ -42,6 +42,7 @@ import com.icthh.xm.ms.entity.service.AttachmentService;
 import com.icthh.xm.ms.entity.service.CalendarService;
 import com.icthh.xm.ms.entity.service.EventService;
 import com.icthh.xm.ms.entity.service.FunctionService;
+import com.icthh.xm.ms.entity.service.impl.tx.XmEntityRepositoryTxControl;
 import com.icthh.xm.ms.entity.service.json.JsonValidationService;
 import com.icthh.xm.ms.entity.service.LifecycleLepStrategyFactory;
 import com.icthh.xm.ms.entity.service.LinkService;
@@ -70,6 +71,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
 import org.springframework.http.MediaType;
@@ -274,6 +276,9 @@ public class XmEntityResourceExtendedIntTest extends AbstractSpringBootTest {
     @Autowired
     XmEntityPermittedRepository xmEntityPermittedRepository;
 
+    @SpyBean
+    XmEntityRepositoryTxControl xmEntityRepositoryTxControl;
+
     @Autowired
     LinkService linkService;
 
@@ -354,6 +359,7 @@ public class XmEntityResourceExtendedIntTest extends AbstractSpringBootTest {
                                                                       xmEntityRepository,
                                                                       lifeCycleService,
                                                                       xmEntityPermittedRepository,
+                                                                      xmEntityRepositoryTxControl,
                                                                       profileService,
                                                                       linkService,
                                                                       storageService,
@@ -368,6 +374,7 @@ public class XmEntityResourceExtendedIntTest extends AbstractSpringBootTest {
                                                                       new SimpleTemplateProcessor(objectMapper),
                                                                       eventRepository,
                                                                       mock(JsonValidationService.class),
+                                                                      applicationProperties,
                                                                       xmEntityProjectionService);
 
         xmEntityService.setSelf(xmEntityService);

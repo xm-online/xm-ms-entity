@@ -5,17 +5,18 @@ import static org.elasticsearch.index.query.QueryBuilders.queryStringQuery;
 import static org.springframework.data.elasticsearch.core.query.Query.DEFAULT_PAGE;
 
 import com.icthh.xm.commons.permission.service.PermissionCheckService;
-import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.repository.search.translator.SpelToElasticTranslator;
 import com.icthh.xm.ms.entity.service.dto.SearchDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.time.StopWatch;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
 import org.springframework.data.elasticsearch.core.ScrolledPage;
+import org.springframework.data.elasticsearch.core.aggregation.AggregatedPage;
 import org.springframework.data.elasticsearch.core.query.FetchSourceFilter;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.data.elasticsearch.core.query.SearchQuery;
@@ -44,7 +45,14 @@ public class PermittedSearchRepository {
      * @return permitted entities
      */
     public <T> List<T> search(String query, Class<T> entityClass, String privilegeKey) {
-        return getElasticsearchTemplate().queryForList(buildQuery(query, null, privilegeKey, null), entityClass);
+        String permittedQuery = buildPermittedQuery(query, privilegeKey);
+        SearchQuery esQuery = buildQuery(permittedQuery, null, null);
+
+        StopWatch stopWatch = StopWatch.createStarted();
+        List<T> results = getElasticsearchTemplate().queryForList(esQuery, entityClass);
+        log.trace("search: query: {}, duration: {} ms", permittedQuery, stopWatch.getTime());
+
+        return results;
     }
 
     /**
@@ -82,8 +90,12 @@ public class PermittedSearchRepository {
         String scrollId = null;
         List<T> resultList = new ArrayList<>();
         try {
+            String permittedQuery = buildPermittedQuery(query, privilegeKey);
+            SearchQuery searchQuery = buildQuery(permittedQuery, pageable, null);
+            StopWatch stopWatch = StopWatch.createStarted();
+
             ScrolledPage<T> scrollResult = (ScrolledPage<T>) getElasticsearchTemplate()
-                .startScroll(scrollTimeInMillis, buildQuery(query, pageable, privilegeKey, null), entityClass);
+                .startScroll(scrollTimeInMillis, searchQuery, entityClass);
 
             scrollId = scrollResult.getScrollId();
 
@@ -94,6 +106,7 @@ public class PermittedSearchRepository {
                 scrollResult = (ScrolledPage<T>) getElasticsearchTemplate()
                     .continueScroll(scrollId, scrollTimeInMillis, entityClass);
             }
+            log.trace("searchWithScroll: query: {}, duration: {} ms", permittedQuery, stopWatch.getTime());
         } finally {
             if (nonNull(scrollId)) {
                 getElasticsearchTemplate().clearScroll(scrollId);
@@ -102,9 +115,7 @@ public class PermittedSearchRepository {
         return new PageImpl<>(resultList, pageable, resultList.size());
     }
 
-    private SearchQuery buildQuery(String query, Pageable pageable, String privilegeKey, FetchSourceFilter fetchSourceFilter) {
-        String permittedQuery = buildPermittedQuery(query, privilegeKey);
-
+    private SearchQuery buildQuery(String permittedQuery, Pageable pageable, FetchSourceFilter fetchSourceFilter) {
         log.debug("Executing DSL '{}'", permittedQuery);
 
         return new NativeSearchQueryBuilder()
@@ -141,7 +152,13 @@ public class PermittedSearchRepository {
     }
 
     public <T> Page<T> searchForPage(SearchDto searchDto, String privilegeKey) {
-        SearchQuery query = buildQuery(searchDto.getQuery(), searchDto.getPageable(), privilegeKey, searchDto.getFetchSourceFilter());
-        return getElasticsearchTemplate().queryForPage(query, searchDto.getEntityClass());
+        String permittedQuery = buildPermittedQuery(searchDto.getQuery(), privilegeKey);
+        SearchQuery query = buildQuery(permittedQuery, searchDto.getPageable(), searchDto.getFetchSourceFilter());
+
+        StopWatch stopWatch = StopWatch.createStarted();
+        AggregatedPage queryResult = getElasticsearchTemplate().queryForPage(query, searchDto.getEntityClass());
+        log.trace("searchForPage: query: {}, duration: {} ms", permittedQuery, stopWatch.getTime());
+
+        return queryResult;
     }
 }

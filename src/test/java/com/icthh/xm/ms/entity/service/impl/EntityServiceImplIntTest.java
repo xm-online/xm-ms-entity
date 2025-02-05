@@ -29,6 +29,7 @@ import com.icthh.xm.ms.entity.repository.XmEntityRepositoryInternal;
 import com.icthh.xm.ms.entity.repository.search.XmEntityPermittedSearchRepository;
 import com.icthh.xm.ms.entity.repository.search.XmEntitySearchRepository;
 import com.icthh.xm.ms.entity.service.AttachmentService;
+import com.icthh.xm.ms.entity.service.impl.tx.XmEntityRepositoryTxControl;
 import com.icthh.xm.ms.entity.service.json.JsonValidationService;
 import com.icthh.xm.ms.entity.service.LifecycleLepStrategyFactory;
 import com.icthh.xm.ms.entity.service.LinkService;
@@ -48,6 +49,7 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.core.io.Resource;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
@@ -83,8 +85,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.spy;
 
 @Slf4j
 public class EntityServiceImplIntTest extends AbstractSpringBootTest {
@@ -132,6 +138,9 @@ public class EntityServiceImplIntTest extends AbstractSpringBootTest {
 
     @Autowired
     private XmEntityPermittedSearchRepository permittedSearchRepository;
+
+    @SpyBean
+    private XmEntityRepositoryTxControl xmEntityRepositoryTxControl;
 
     @Autowired
     private StartUpdateDateGenerationStrategy startUpdateDateGenerationStrategy;
@@ -189,12 +198,13 @@ public class EntityServiceImplIntTest extends AbstractSpringBootTest {
 
         XmEntityProjectionService xmEntityProjectionService = new XmEntityProjectionServiceImpl(xmEntityProjectionRepository, profileService);
 
-        xmEntityService = new XmEntityServiceImpl(
+        xmEntityService = spy(new XmEntityServiceImpl(
             xmEntitySpecService,
             xmEntityTemplatesSpecService,
             xmEntityRepository,
             lifecycleService,
             null,
+            xmEntityRepositoryTxControl,
             profileService,
             linkService,
             storageService,
@@ -209,8 +219,9 @@ public class EntityServiceImplIntTest extends AbstractSpringBootTest {
             new SimpleTemplateProcessor(objectMapper),
             eventRepository,
             mock(JsonValidationService.class),
+            applicationProperties,
             xmEntityProjectionService
-        );
+        ));
         xmEntityService.setSelf(xmEntityService);
 
         lepManager.beginThreadContext(ctx -> {
@@ -471,6 +482,7 @@ public class EntityServiceImplIntTest extends AbstractSpringBootTest {
         xmEntitySearchRepository.save(given);
         xmEntitySearchRepository.refresh();
         Page<XmEntity> result = xmEntityService.search("typeKey:ACCOUNT.USER AND id:101", Pageable.unpaged(), null);
+        verify(xmEntityRepositoryTxControl, times(1)).executeInReadOnlyTransaction(any());
         assertThat(result.getContent().size()).isEqualTo(1);
         assertThat(result.getContent().get(0)).isEqualTo(given);
     }
@@ -486,6 +498,7 @@ public class EntityServiceImplIntTest extends AbstractSpringBootTest {
         templateParamsHolder.getTemplateParams().put("typeKey", "ACCOUNT.USER");
         templateParamsHolder.getTemplateParams().put("id", "102");
         Page<XmEntity> result = xmEntityService.search("BY_TYPEKEY_AND_ID", templateParamsHolder, Pageable.unpaged(), null);
+        verify(xmEntityRepositoryTxControl, times(1)).executeInReadOnlyTransaction(any());
         assertThat(result.getContent().size()).isEqualTo(1);
         assertThat(result.getContent().get(0)).isEqualTo(given);
     }
@@ -498,6 +511,7 @@ public class EntityServiceImplIntTest extends AbstractSpringBootTest {
         xmEntitySearchRepository.save(given);
         xmEntitySearchRepository.refresh();
         Page<XmEntity> result = xmEntityService.searchByQueryAndTypeKey("103", "ACCOUNT", Pageable.unpaged(), null);
+        verify(xmEntityRepositoryTxControl, times(1)).executeInReadOnlyTransaction(any());
         assertThat(result.getContent().size()).isEqualTo(1);
         assertThat(result.getContent().get(0)).isEqualTo(given);
     }
@@ -512,6 +526,7 @@ public class EntityServiceImplIntTest extends AbstractSpringBootTest {
         TemplateParamsHolder templateParamsHolder = new TemplateParamsHolder();
         templateParamsHolder.getTemplateParams().put("typeKey", "ACCOUNT.USER");
         Page<XmEntity> result = xmEntityService.searchByQueryAndTypeKey("BY_TYPEKEY", templateParamsHolder, "ACCOUNT", Pageable.unpaged(), null);
+        verify(xmEntityRepositoryTxControl, times(1)).executeInReadOnlyTransaction(any());
         assertThat(result.getContent().size()).isEqualTo(1);
         assertThat(result.getContent().get(0)).isEqualTo(given);
     }

@@ -19,6 +19,7 @@ import com.icthh.xm.ms.entity.repository.kafka.ProfileEventProducer;
 import com.icthh.xm.ms.entity.repository.search.XmEntityPermittedSearchRepository;
 import com.icthh.xm.ms.entity.service.AttachmentService;
 import com.icthh.xm.ms.entity.service.FunctionService;
+import com.icthh.xm.ms.entity.service.impl.tx.XmEntityRepositoryTxControl;
 import com.icthh.xm.ms.entity.service.json.JsonValidationService;
 import com.icthh.xm.ms.entity.service.LifecycleLepStrategyFactory;
 import com.icthh.xm.ms.entity.service.LinkService;
@@ -111,6 +112,9 @@ public class XmEntityResourceSpecIntTest extends AbstractSpringBootTest {
     XmEntityPermittedRepository xmEntityPermittedRepository;
 
     @Autowired
+    XmEntityRepositoryTxControl xmEntityRepositoryTxControl;
+
+    @Autowired
     LinkService linkService;
 
     @Autowired
@@ -176,6 +180,7 @@ public class XmEntityResourceSpecIntTest extends AbstractSpringBootTest {
             xmEntityRepository,
             lifeCycleService,
             xmEntityPermittedRepository,
+            xmEntityRepositoryTxControl,
             profileService,
             linkService,
             storageService,
@@ -190,6 +195,7 @@ public class XmEntityResourceSpecIntTest extends AbstractSpringBootTest {
             new SimpleTemplateProcessor(objectMapper),
             eventRepository,
             validationService,
+            applicationProperties,
             xmEntityProjectionService);
 
         xmEntityServiceImpl.setSelf(xmEntityServiceImpl);

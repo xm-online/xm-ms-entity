@@ -87,4 +87,7 @@
     <include file="classpath:config/liquibase/changelog/20221227000000_added_updatedBy_XmEntity.xml" relativeToChangelogFile="false"/>
 
     <include file="classpath:config/liquibase/changelog/202412021710.xml" relativeToChangelogFile="false"/>
+
+    <includeAll path="classpath:config/liquibase/changelog/extended/"/>
+
 </databaseChangeLog>

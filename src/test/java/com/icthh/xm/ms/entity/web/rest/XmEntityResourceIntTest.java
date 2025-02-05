@@ -26,6 +26,7 @@ import com.icthh.xm.ms.entity.repository.search.XmEntityPermittedSearchRepositor
 import com.icthh.xm.ms.entity.repository.search.XmEntitySearchRepository;
 import com.icthh.xm.ms.entity.service.AttachmentService;
 import com.icthh.xm.ms.entity.service.FunctionService;
+import com.icthh.xm.ms.entity.service.impl.tx.XmEntityRepositoryTxControl;
 import com.icthh.xm.ms.entity.service.json.JsonValidationService;
 import com.icthh.xm.ms.entity.service.LifecycleLepStrategyFactory;
 import com.icthh.xm.ms.entity.service.LinkService;
@@ -200,6 +201,9 @@ public class XmEntityResourceIntTest extends AbstractSpringBootTest {
     XmEntityPermittedRepository xmEntityPermittedRepository;
 
     @Autowired
+    XmEntityRepositoryTxControl xmEntityRepositoryTxControl;
+
+    @Autowired
     LinkService linkService;
 
     @Autowired
@@ -281,6 +285,7 @@ public class XmEntityResourceIntTest extends AbstractSpringBootTest {
                                                       xmEntityRepository,
                                                       lifeCycleService,
                                                       xmEntityPermittedRepository,
+                                                      xmEntityRepositoryTxControl,
                                                       profileService,
                                                       linkService,
                                                       storageService,
@@ -295,6 +300,7 @@ public class XmEntityResourceIntTest extends AbstractSpringBootTest {
                                                       new SimpleTemplateProcessor(objectMapper),
                                                       eventRepository,
                                                       mock(JsonValidationService.class),
+                                                      applicationProperties,
                                                       xmEntityProjectionService);
 
         xmEntityServiceImpl.setSelf(xmEntityServiceImpl);
