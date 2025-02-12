@@ -8,6 +8,7 @@
     "description": null,
     "data": {
         "langKey": "UK",
+        "isNewBilling": true,
         "individual": {
             "firstName": "Ірина",
             "middleName": "Іриніївна",
@@ -27,7 +28,6 @@
         "numbers": [
             {
                 "msisdn": "380985111111",
-                "existingMsisdn": "380985111112",
                 "isMaster": true
             },
             {

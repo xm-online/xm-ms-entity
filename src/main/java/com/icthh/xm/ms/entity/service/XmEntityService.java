@@ -136,7 +136,6 @@ public interface XmEntityService extends ResourceRepository {
      * Deprecated: use findOne(IdOrKey idOrKey) instead.
      * </p>
      */
-    @Deprecated
     XmEntity findById(Object id);
 
     byte[] exportEntities(String fileFormat, String typeKey);

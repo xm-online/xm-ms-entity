@@ -54,6 +54,16 @@ spring:
             properties:
                 path:
                   home: build/elasticsearch
+    kafka:
+        consumer:
+            group-id: entity
+            key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+            value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+        listener:
+            concurrency: 16
+        producer:
+            key-serializer: org.apache.kafka.common.serialization.StringSerializer
+            value-serializer: org.apache.kafka.common.serialization.StringSerializer
     mail:
         host: localhost
     messages:

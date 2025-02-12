@@ -1,6 +1,8 @@
 package com.icthh.xm.ms.entity.mnp;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.any;
+import static com.github.tomakehurst.wiremock.client.WireMock.configureFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.containing;
 import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.equalToJson;
@@ -8,16 +10,29 @@ import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.matching;
 import static com.github.tomakehurst.wiremock.client.WireMock.matchingJsonPath;
 import static com.github.tomakehurst.wiremock.client.WireMock.post;
+import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.put;
+import static com.github.tomakehurst.wiremock.client.WireMock.putRequestedFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching;
+import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options;
 import static com.icthh.xm.ms.entity.config.tenant.WebappTenantOverrideConfiguration.WIRE_MOCK;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.stream.Collectors.toList;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.reset;
+import static org.mockito.Mockito.verify;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.github.tomakehurst.wiremock.WireMockServer;
+import com.github.tomakehurst.wiremock.client.WireMock;
+import com.github.tomakehurst.wiremock.http.Fault;
 import com.icthh.xm.commons.config.client.api.RefreshableConfiguration;
 import com.icthh.xm.commons.config.client.service.TenantConfigService;
 import com.icthh.xm.commons.lep.XmLepScriptConfigServerResourceLoader;
@@ -27,13 +42,15 @@ import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
 import com.icthh.xm.commons.topic.domain.TopicConfig;
 import com.icthh.xm.commons.topic.message.MessageService;
+import com.icthh.xm.commons.topic.service.KafkaTemplateService;
 import com.icthh.xm.ms.entity.AbstractSpringBootTest;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.domain.ext.IdOrKey;
 import com.icthh.xm.ms.entity.service.FunctionService;
+import com.icthh.xm.ms.entity.service.SeparateTransactionExecutor;
 import com.icthh.xm.ms.entity.service.XmEntityService;
 import java.io.File;
-import java.nio.charset.StandardCharsets;
+import java.io.IOException;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Base64;
@@ -48,6 +65,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -65,17 +83,14 @@ import org.testcontainers.utility.DockerImageName;
 })
 @ActiveProfiles("standard-spec-path")
 @WithMockUser(authorities = {"SUPER-ADMIN"})
-public class TestMnpProcess extends AbstractSpringBootTest {
+@Category(TestMnpProcessIntTest.class)
+public class TestMnpProcessIntTest extends AbstractSpringBootTest {
 
     public static final String TENANT_CONFIG_YML = "/config/tenants/XM/tenant-config.yml";
-    static KafkaContainer kafkaContainer = new KafkaContainer(DockerImageName.parse("confluentinc/cp-kafka:7.0.1"))
-        ;
+    static KafkaContainer kafkaContainer = new KafkaContainer(DockerImageName.parse("confluentinc/cp-kafka:7.0.1"));
 
     @Autowired
     private TenantContextHolder tenantContextHolder;
-
-    @Autowired
-    private XmAuthenticationContextHolder authContextHolder;
 
     @Autowired
     private LepManagementService lepManager;
@@ -104,6 +119,17 @@ public class TestMnpProcess extends AbstractSpringBootTest {
     @Autowired
     private MessageService messageService;
 
+    @Autowired
+    private SeparateTransactionExecutor separateTransactionExecutor;
+
+    @Autowired
+    private XmAuthenticationContextHolder authContextHolder;
+
+    @MockBean
+    private KafkaTemplateService kafkaTemplateService;
+
+    private WireMockServer wireMockServer;
+
     @BeforeClass
     public static void startContainer() {
         kafkaContainer.start();
@@ -131,6 +157,10 @@ public class TestMnpProcess extends AbstractSpringBootTest {
             refresh(it, tenantConfig, fileCache, basePath);
         });
 
+        WIRE_MOCK.stubFor(any(urlMatching(".*"))
+            .atPriority(10)  // Use a lower priority than your expected stubs.
+            .willReturn(aResponse()
+                .withFault(Fault.MALFORMED_RESPONSE_CHUNK)));
     }
 
     private static void refresh(RefreshableConfiguration it, Collection<File> files, Map<String, String> fileCache, String basePath) {
@@ -166,122 +196,84 @@ public class TestMnpProcess extends AbstractSpringBootTest {
     @Test
     @SneakyThrows
     public void testPortInRequest() {
-        mockPortInCreate();
+        mockServer();
+        XmEntity result = portInProcess(false, "mnp/portInRequest.json");
+        portInActivate(result);
+        finishActivation(result);
+        WireMock.verify(putRequestedFor(urlEqualTo("/crm/api/v1/portingRequest")));
+        wireMockServer.stop();
+    }
 
-        prepareTenantConfig();
+    @Test
+    @SneakyThrows
+    public void testPortInRequestCancel() {
+        mockServer();
+        XmEntity result = portInProcess(false, "mnp/portInRequest.json");
 
-        ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
-        XmEntity portIn = objectMapper.readValue(getClass().getClassLoader().getResourceAsStream("mnp/portInRequest.json"), XmEntity.class);
-
-        XmEntity result = xmEntityService.save(portIn);
-        System.out.println(result);
-        assertNotNull(result.getId());
-        assertSasTables(result, List.of("VERIFICATION-STARTED", "VERIFICATION-STARTED", "VERIFICATION-STARTED"), List.of("VERIFICATION-STARTED"));
-
-        mockLdbCreateRequest(result, objectMapper);
-
-        TopicConfig topicConfig = new TopicConfig();
-        topicConfig.setTopicName("pending-portin-requests-queue");
-        topicConfig.setTypeKey("pending-portin-requests");
-        byte[] value = ("{\"entityId\": " + result.getId() + "}").getBytes(UTF_8);
-        messageService.onMessage(Base64.getEncoder().encodeToString(value), topicConfig);
-        assertSasTables(result, List.of("VERIFICATION-STARTED", "VERIFICATION-STARTED", "VERIFICATION-STARTED"), List.of("VERIFICATION-STARTED"));
-
+        WIRE_MOCK.stubFor(get(urlEqualTo("/api/v1/customer/380985111112"))
+            .willReturn(aResponse().withStatus(200)));
+        WIRE_MOCK.stubFor(put(urlEqualTo("/cdb/api/v1/portingRequest/d9b25a0c-2817-498f-b51b-4ac759fc6445/cancel"))
+            .willReturn(aResponse().withStatus(200)));
+        xmEntityService.updateState(IdOrKey.of(result.getId()), "CANCELED", Map.of());
         functionService.execute("PROCESS-STATUS", new HashMap<>(Map.of(
-            "messageId", "431834d8-1bc7-40e6-a65f-42ebb157d001",
+            "messageId", "431834d8-1bc7-40e6-a65f-42ebb157d666",
             "processId", "d9b25a0c-2817-498f-b51b-4ac759fc6445",
             "messageType", "ValidationResponse",
             "portingDate", "2066-11-26T11:00:00Z",
             "statusCode", "0"
         )), "GET");
 
-        assertSasTables(result, List.of("REGISTERED", "REGISTERED", "REGISTERED"),
-            List.of("VERIFICATION-STARTED", "REGISTERED"));
+        assertSasTables(result, List.of("CANCELED", "CANCELED", "REJECTED"),
+            List.of("VERIFICATION-STARTED", "REGISTERED", "ACCEPTED", "CONFIRMED", "CANCELED"));
+        verifyKafkaEvent(result, "CANCELED");
 
-        xmEntityService.updateState(IdOrKey.of(result.getId()), "ACCEPTED", Map.of(
-            "numbers", List.of(
-                Map.of(
-                    "msisdn", "380985333333",
-                    "statusCode", 406,
-                    "statusCodeDescription", "Numbers in the request do not belong to the same customer. Failed to compare: Surname,Name"
-                )
-            ),
-            "messageId", "431834d8-1bc7-40e6-a65f-42ebb157d002",
-            "numberBlocks", List.of()
-        ));
-        assertSasTables(result, List.of("ACCEPTED", "ACCEPTED", "REJECTED"),
-            List.of("VERIFICATION-STARTED", "REGISTERED", "ACCEPTED"));
+        WireMock.verify(putRequestedFor(urlEqualTo("/crm/api/v1/portingRequest")));
+        wireMockServer.stop();
+    }
 
-        xmEntityService.updateState(IdOrKey.of(result.getId()), "CONFIRMED", Map.of());
-        assertSasTables(result, List.of("ACCEPTED", "ACCEPTED", "REJECTED"),
-            List.of("VERIFICATION-STARTED", "REGISTERED", "ACCEPTED"));
+    @Test
+    @SneakyThrows
+    public void testPortInRequestCancelNewBilling() {
+        XmEntity result = portInProcess(true, "mnp/portInRequestNewBilling.json");
 
+        WIRE_MOCK.stubFor(put(urlEqualTo("/cdb/api/v1/portingRequest/d9b25a0c-2817-498f-b51b-4ac759fc6445/cancel"))
+            .willReturn(aResponse().withStatus(200)));
+        xmEntityService.updateState(IdOrKey.of(result.getId()), "CANCELED", Map.of());
         functionService.execute("PROCESS-STATUS", new HashMap<>(Map.of(
-            "messageType", "ValidationResponse",
-            "statusCode", "0",
-            "statusDescription", "OK",
-            "messageId", "431834d8-1bc7-40e6-a65f-42ebb157d003",
+            "messageId", "431834d8-1bc7-40e6-a65f-42ebb157d666",
             "processId", "d9b25a0c-2817-498f-b51b-4ac759fc6445",
-            "portingDate", "2024-11-26T11:00:00Z"
-        )), "GET");
-        assertSasTables(result, List.of("CONFIRMED", "CONFIRMED", "REJECTED"),
-            List.of("VERIFICATION-STARTED", "REGISTERED", "ACCEPTED", "CONFIRMED"));
-
-        var entity = xmEntityService.findById(result.getId());
-
-        List.of("380985111111", "380985222222").forEach(number -> assertActivateNumber(entity, number));
-        xmEntityService.updateState(IdOrKey.of(result.getId()), "STARTED", Map.of(
-            "numbers", List.of(Map.of("msisdn", "380985111111"), Map.of("msisdn", "380985222222")),
-            "messageId", "431834d8-1bc7-40e6-a65f-42ebb157d004"
-        ));
-        assertSasTables(result, List.of("STARTED", "STARTED", "REJECTED"),
-            List.of("VERIFICATION-STARTED", "REGISTERED", "ACCEPTED", "CONFIRMED", "STARTED"));
-
-        functionService.execute("NOTIFY-NUMBER-PROCESSED", IdOrKey.of(result.getId()), new HashMap<>(Map.of(
-            "msisdn", "380985222222"
-        )));
-        assertSasTables(result,
-            List.of("STARTED", "STARTED", "REJECTED"),
-            List.of("VERIFICATION-STARTED", "REGISTERED", "ACCEPTED", "CONFIRMED", "STARTED"));
-
-        functionService.execute("NOTIFY-NUMBER-PROCESSED", IdOrKey.of(result.getId()), new HashMap<>(Map.of(
-            "msisdn", "380985111111"
-        )));
-
-        functionService.execute("PROCESS-STATUS", new HashMap<>(Map.of(
-            "messageId", "431834d8-1bc7-40e6-a65f-42ebb157d005",
             "messageType", "ValidationResponse",
-            "processId", "d9b25a0c-2817-498f-b51b-4ac759fc6445",
+            "portingDate", "2066-11-26T11:00:00Z",
             "statusCode", "0"
         )), "GET");
-        assertSasTables(result,
-            List.of("ACTIVATED", "ACTIVATED", "REJECTED"),
-            List.of("VERIFICATION-STARTED", "REGISTERED", "ACCEPTED", "CONFIRMED", "STARTED", "ACTIVATED"));
 
+        assertSasTables(result, List.of("CANCELED", "CANCELED", "REJECTED"),
+            List.of("VERIFICATION-STARTED", "REGISTERED", "ACCEPTED", "CONFIRMED", "CANCELED"));
+        verifyKafkaEvent(result, "CANCELED");
 
-        xmEntityService.updateState(IdOrKey.of(result.getId()), "PORTED", Map.of(
-            "msisdn", "380985222222",
-            "messageId", "431834d8-1bc7-40e6-a65f-42ebb157d006"
-        ));
-        assertSasTables(result,
-            List.of("ACTIVATED", "ACTIVATED", "REJECTED"),
-            List.of("VERIFICATION-STARTED", "REGISTERED", "ACCEPTED", "CONFIRMED", "STARTED", "ACTIVATED"));
+        WireMock.verify(0, putRequestedFor(urlEqualTo("/crm/api/v1/portingRequest")));
+        WireMock.verify(0, putRequestedFor(urlEqualTo("/api/v1/customer/380985111112")));
+    }
 
-        xmEntityService.updateState(IdOrKey.of(result.getId()), "PORTED", Map.of(
-            "msisdn", "380985111111",
-            "messageId", "431834d8-1bc7-40e6-a65f-42ebb157d007"
-        ));
-        assertSasTables(result,
-            List.of("PORTED", "PORTED", "REJECTED"),
-            List.of("VERIFICATION-STARTED", "REGISTERED", "ACCEPTED", "CONFIRMED", "STARTED", "ACTIVATED", "PORTED"));
+    @Test
+    @SneakyThrows
+    public void testPortInRequestNewBilling() {
+        XmEntity result = portInProcess(true, "mnp/portInRequestNewBilling.json");
+        portInActivate(result);
+        functionService.execute("BILLING-PORTING-COMPLETED", new HashMap<>(Map.of(
+            "entityId", result.getId()
+        )), "POST");
+        finishActivation(result);
+        WIRE_MOCK.verify(0, postRequestedFor(urlEqualTo("/api/communicationManagement/v2/communicationMessage/send")));
     }
 
     @Test
     @SneakyThrows
     public void testPortOutRequest() {
-        mockPortOutCreate();
+        mockServer();
+        mockPortOutCreate(false);
 
-        prepareTenantConfig();
+        prepareTenantConfig(false);
 
         ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
         XmEntity portOut = objectMapper.readValue(getClass().getClassLoader().getResourceAsStream("mnp/portOutRequest.json"), XmEntity.class);
@@ -301,7 +293,7 @@ public class TestMnpProcess extends AbstractSpringBootTest {
             "processId", "d9b25a0c-2817-498f-b51b-4ac759fc6445",
             "messageType", "ValidationResponse",
             "statusCode", "0"
-            )), "GET");
+        )), "GET");
         assertSasTables(result, List.of("ACCEPTED", "ACCEPTED", "REJECTED"), List.of("NEW", "ACCEPTED"));
 
 
@@ -372,11 +364,197 @@ public class TestMnpProcess extends AbstractSpringBootTest {
         assertSasTables(result,
             List.of("PORTED", "PORTED", "REJECTED"),
             List.of("NEW", "ACCEPTED", "SERVICE-PORT-OUT-ON", "STARTED", "DEACTIVATED", "PORTED"));
+
+        WireMock.verify(putRequestedFor(urlEqualTo("/crm/api/v1/portingRequest")));
+        wireMockServer.stop();
     }
 
-    private void prepareTenantConfig() throws JsonProcessingException {
+
+    private void mockServer() {
+        wireMockServer = new WireMockServer(options().dynamicPort());
+        wireMockServer.start();
+        configureFor("localhost", wireMockServer.port());
+        stubFor(any(urlMatching(".*"))
+            .atPriority(10)  // Use a lower priority than your expected stubs.
+            .willReturn(aResponse()
+                .withFault(Fault.MALFORMED_RESPONSE_CHUNK)));
+    }
+
+    private XmEntity portInProcess(boolean isNewBilling, String name) throws IOException {
+        mockPortInCreate(isNewBilling);
+
+        prepareTenantConfig(isNewBilling);
+
+        ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
+        XmEntity portIn = objectMapper.readValue(getClass().getClassLoader().getResourceAsStream(name), XmEntity.class);
+
+        XmEntity result = xmEntityService.save(portIn);
+        System.out.println(result);
+        assertNotNull(result.getId());
+        verify(kafkaTemplateService).send("pending-portin-requests-queue",
+            Base64.getEncoder().encodeToString(objectMapper.writeValueAsBytes(Map.of("entityId", result.getId())))
+        );
+        assertSasTables(result, List.of("VERIFICATION-STARTED", "VERIFICATION-STARTED", "VERIFICATION-STARTED"), List.of("VERIFICATION-STARTED"));
+
+        mockLdbCreateRequest(result, objectMapper);
+
+        TopicConfig topicConfig = new TopicConfig();
+        topicConfig.setTopicName("pending-portin-requests-queue");
+        topicConfig.setTypeKey("pending-portin-requests");
+        byte[] value = ("{\"entityId\": " + result.getId() + "}").getBytes(UTF_8);
+        messageService.onMessage(Base64.getEncoder().encodeToString(value), topicConfig);
+        assertSasTables(result, List.of("VERIFICATION-STARTED", "VERIFICATION-STARTED", "VERIFICATION-STARTED"), List.of("VERIFICATION-STARTED"));
+
+        functionService.execute("PROCESS-STATUS", new HashMap<>(Map.of(
+            "messageId", "431834d8-1bc7-40e6-a65f-42ebb157d001",
+            "processId", "d9b25a0c-2817-498f-b51b-4ac759fc6445",
+            "messageType", "ValidationResponse",
+            "portingDate", "2066-11-26T11:00:00Z",
+            "statusCode", "0"
+        )), "GET");
+
+        assertSasTables(result, List.of("REGISTERED", "REGISTERED", "REGISTERED"),
+            List.of("VERIFICATION-STARTED", "REGISTERED"));
+        verifyKafkaEvent(result, "REGISTERED");
+
+        xmEntityService.updateState(IdOrKey.of(result.getId()), "ACCEPTED", Map.of(
+            "numbers", List.of(
+                Map.of(
+                    "msisdn", "380985333333",
+                    "statusCode", 406,
+                    "statusCodeDescription", "Numbers in the request do not belong to the same customer. Failed to compare: Surname,Name"
+                )
+            ),
+            "messageId", "431834d8-1bc7-40e6-a65f-42ebb157d002",
+            "numberBlocks", List.of()
+        ));
+
+        verifyKafkaEvent(result, "ACCEPTED");
+        assertSasTables(result, List.of("ACCEPTED", "ACCEPTED", "REJECTED"),
+            List.of("VERIFICATION-STARTED", "REGISTERED", "ACCEPTED"));
+
+        xmEntityService.updateState(IdOrKey.of(result.getId()), "CONFIRMED", Map.of());
+        assertSasTables(result, List.of("ACCEPTED", "ACCEPTED", "REJECTED"),
+            List.of("VERIFICATION-STARTED", "REGISTERED", "ACCEPTED"));
+
+        functionService.execute("PROCESS-STATUS", new HashMap<>(Map.of(
+            "messageType", "ValidationResponse",
+            "statusCode", "0",
+            "statusDescription", "OK",
+            "messageId", "431834d8-1bc7-40e6-a65f-42ebb157d003",
+            "processId", "d9b25a0c-2817-498f-b51b-4ac759fc6445",
+            "portingDate", "2066-11-26T11:00:00Z"
+        )), "GET");
+        assertSasTables(result, List.of("CONFIRMED", "CONFIRMED", "REJECTED"),
+            List.of("VERIFICATION-STARTED", "REGISTERED", "ACCEPTED", "CONFIRMED"));
+        verifyKafkaEvent(result, "CONFIRMED");
+
+        return result;
+    }
+
+    private void verifyKafkaEvent(XmEntity result, String state) {
+        XmEntity expectedEntity = xmEntityService.findOne(IdOrKey.of(result.getId()));
+        var expected = createMessage(expectedEntity, state);
+        verify(kafkaTemplateService).send(eq("LDB-REQUEST-UPDATES"), eq(0), eq(expectedEntity.getData().get("processId").toString()), argThat(it -> {
+            Map<?, ?> actualMap = getMap(it);
+            actualMap.remove("updateDate");
+            assertEquals(expected, actualMap);
+            return true;
+        }));
+        reset(kafkaTemplateService);
+    }
+
+    @SneakyThrows
+    private static Map<?, ?> getMap(String it) {
+        return new ObjectMapper().readValue(it, HashMap.class);
+    }
+
+    @SneakyThrows
+    private Map<String, Object> createMessage(XmEntity portingRequest, String newStateKey) {
+        var map = new HashMap<String, Object>() {
+            {
+                put("id", portingRequest.getId());
+                put("requestType", portingRequest.getTypeKey().substring(portingRequest.getTypeKey().lastIndexOf('.') + 1));
+                put("processId", portingRequest.getData().get("processId"));
+                put("status", newStateKey);
+                Map<String, Object> nextState = (Map<String, Object>) portingRequest.getData().get("nextState");
+                put("statusCode", nextState != null ? nextState.get("statusCode") : null);
+                put("numbers", ((List<Map<String, Object>>) portingRequest.getData().get("numbers")).stream().map(it ->
+                    new HashMap<String, Object>() {{
+                        put("msisdn", it.get("msisdn").toString());
+                        put("statusCode", it.get("statusCode") == null ? null : it.get("statusCode").toString());
+                    }}
+                ).collect(toList()));
+                put("portedDate", portingRequest.getData().get("portingDate"));
+                put("channel", portingRequest.getData().get("channel"));
+                put("isNewBilling", portingRequest.getData().get("isNewBilling"));
+            }};
+
+        return new ObjectMapper().readValue(new ObjectMapper().writeValueAsString(map), HashMap.class);
+    }
+
+    private void portInActivate(XmEntity result) {
+        var entity = xmEntityService.findById(result.getId());
+
+        List.of("380985111111", "380985222222").forEach(number -> assertActivateNumber(entity, number));
+        xmEntityService.updateState(IdOrKey.of(result.getId()), "STARTED", Map.of(
+            "numbers", List.of(Map.of("msisdn", "380985111111"), Map.of("msisdn", "380985222222")),
+            "messageId", "431834d8-1bc7-40e6-a65f-42ebb157d004"
+        ));
+        verifyKafkaEvent(result, "STARTED");
+        assertSasTables(result, List.of("STARTED", "STARTED", "REJECTED"),
+            List.of("VERIFICATION-STARTED", "REGISTERED", "ACCEPTED", "CONFIRMED", "STARTED"));
+
+        functionService.execute("NOTIFY-NUMBER-PROCESSED", IdOrKey.of(result.getId()), new HashMap<>(Map.of(
+            "msisdn", "380985222222"
+        )));
+        assertSasTables(result,
+            List.of("STARTED", "STARTED", "REJECTED"),
+            List.of("VERIFICATION-STARTED", "REGISTERED", "ACCEPTED", "CONFIRMED", "STARTED"));
+
+        functionService.execute("NOTIFY-NUMBER-PROCESSED", IdOrKey.of(result.getId()), new HashMap<>(Map.of(
+            "msisdn", "380985111111"
+        )));
+    }
+
+    private void finishActivation(XmEntity result) {
+        functionService.execute("PROCESS-STATUS", new HashMap<>(Map.of(
+            "messageId", "431834d8-1bc7-40e6-a65f-42ebb157d005",
+            "messageType", "ValidationResponse",
+            "processId", "d9b25a0c-2817-498f-b51b-4ac759fc6445",
+            "statusCode", "0"
+        )), "GET");
+        verifyKafkaEvent(result, "ACTIVATED");
+        assertSasTables(result,
+            List.of("ACTIVATED", "ACTIVATED", "REJECTED"),
+            List.of("VERIFICATION-STARTED", "REGISTERED", "ACCEPTED", "CONFIRMED", "STARTED", "ACTIVATED"));
+
+
+        xmEntityService.updateState(IdOrKey.of(result.getId()), "PORTED", Map.of(
+            "msisdn", "380985222222",
+            "messageId", "431834d8-1bc7-40e6-a65f-42ebb157d006"
+        ));
+        assertSasTables(result,
+            List.of("ACTIVATED", "ACTIVATED", "REJECTED"),
+            List.of("VERIFICATION-STARTED", "REGISTERED", "ACCEPTED", "CONFIRMED", "STARTED", "ACTIVATED"));
+
+        xmEntityService.updateState(IdOrKey.of(result.getId()), "PORTED", Map.of(
+            "msisdn", "380985111111",
+            "messageId", "431834d8-1bc7-40e6-a65f-42ebb157d007"
+        ));
+        verifyKafkaEvent(result, "PORTED");
+        assertSasTables(result,
+            List.of("PORTED", "PORTED", "REJECTED"),
+            List.of("VERIFICATION-STARTED", "REGISTERED", "ACCEPTED", "CONFIRMED", "STARTED", "ACTIVATED", "PORTED"));
+    }
+
+    private void prepareTenantConfig(boolean isNewBilling) throws JsonProcessingException {
         HashMap<String, Object> tenantConfig = new HashMap<>(tenantConfigService.getConfig());
-        tenantConfig.put("disableCrmNotification", true);
+        if (!isNewBilling) {
+            tenantConfig.put("crm", Map.of(
+                "baseUrl", "http://localhost:" + wireMockServer.port()
+            ));
+        }
         Map<String, Map<String, Map<String, Object>>> schedule = new HashMap<>((Map<String, Map<String, Map<String, Object>>>) tenantConfig.get("schedule"));
         Map<String, Map<String, Object>> exceptionScheduler = new HashMap<>(schedule.get("exceptionScheduler"));
         exceptionScheduler.put(LocalDate.now().toString(), Map.of(
@@ -480,8 +658,11 @@ public class TestMnpProcess extends AbstractSpringBootTest {
     }
 
     @SneakyThrows
-    private void mockPortInCreate() {
-        ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
+    private void mockPortInCreate(boolean isNewBilling) {
+        if (!isNewBilling) {
+            stubFor(put(urlEqualTo("/crm/api/v1/portingRequest")).willReturn(aResponse().withStatus(200)));
+        }
+
         WIRE_MOCK.stubFor(post(urlEqualTo("/oauth/token"))
             .withHeader("Authorization", matching("Basic .*"))
             .withHeader("Content-Type", containing("application/x-www-form-urlencoded"))
@@ -490,16 +671,17 @@ public class TestMnpProcess extends AbstractSpringBootTest {
                 .withStatus(200)
                 .withHeader("Content-Type", "application/json")
                 .withBody("{ \"access_token\": \"mock-token\", \"token_type\": \"bearer\", \"expires_in\": 3600 }")));
-        WIRE_MOCK.stubFor(post(urlEqualTo("/api/communicationManagement/v2/communicationMessage/send"))
-            .willReturn(aResponse().withStatus(200)));
+        if (!isNewBilling) {
+            WIRE_MOCK.stubFor(post(urlEqualTo("/api/communicationManagement/v2/communicationMessage/send"))
+                .willReturn(aResponse().withStatus(200)));
+        }
         WIRE_MOCK.stubFor(put(urlEqualTo("/cdb/api/v1/portingRequest/d9b25a0c-2817-498f-b51b-4ac759fc6445/confirm"))
             .willReturn(aResponse().withStatus(200)));
         WIRE_MOCK.stubFor(put(urlEqualTo("/cdb/api/v1/portingRequest/d9b25a0c-2817-498f-b51b-4ac759fc6445/numbersActivated"))
             .willReturn(aResponse().withStatus(200)));
-
     }
 
-    private void mockPortOutCreate() {
+    private void mockPortOutCreate(boolean isNewBilling) {
         WIRE_MOCK.stubFor(post(urlEqualTo("/oauth/token"))
             .withHeader("Authorization", matching("Basic .*"))
             .withHeader("Content-Type", containing("application/x-www-form-urlencoded"))
@@ -512,16 +694,16 @@ public class TestMnpProcess extends AbstractSpringBootTest {
             .withHeader("Authorization", equalTo("bearer mock-token"))
             .withHeader("Content-Type", equalTo("application/json;charset=UTF-8"))
             .withRequestBody(matchingJsonPath("$.typeKey", equalTo("portOutRequestNew")))
-            .withRequestBody(matchingJsonPath("$.createdBy", equalTo("user")))
             .withRequestBody(matchingJsonPath("$.channelType", equalTo("QUEUE")))
             .withRequestBody(matchingJsonPath("$.scheduleType", equalTo("ONE_TIME")))
             .withRequestBody(matchingJsonPath("$.targetMs", equalTo("entity")))
             .withRequestBody(matchingJsonPath("$.ttl", equalTo("259200")))
             .withRequestBody(containing("d9b25a0c-2817-498f-b51b-4ac759fc6445"))
             .willReturn(aResponse().withStatus(201)));
-        WIRE_MOCK.stubFor(post(urlEqualTo("/api/communicationManagement/v2/communicationMessage/send"))
-            .willReturn(aResponse().withStatus(200)));
-
+        if (isNewBilling) {
+            WIRE_MOCK.stubFor(post(urlEqualTo("/api/communicationManagement/v2/communicationMessage/send"))
+                .willReturn(aResponse().withStatus(200)));
+        }
     }
 
     private void mockComparePersonalData(List<String> numbers) {

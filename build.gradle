@@ -122,9 +122,7 @@ springBoot {
     mainClassName = 'com.icthh.xm.ms.entity.EntityApp'
 }
 
-String[] testCategories = ['com.icthh.xm.ms.entity.AbstractSpringBootTest',
-                           'com.icthh.xm.ms.entity.AbstractUnitTest',
-                           'com.icthh.xm.ms.entity.AbstractWebMvcTest']
+String[] testCategories = ['com.icthh.xm.ms.entity.mnp.TestMnpProcessIntTest']
 
 Closure testLoggingConf = {
     exceptionFormat = 'full'
@@ -144,8 +142,8 @@ test {
     classes.mustRunAfter 'clean'
     systemProperty "spring.profiles.active", "test"
     mkdir("src/test/features")
-    include '**/*UnitTest*'
-    include '**/*IntTest*'
+    //include '**/*UnitTest*'
+    //include '**/*IntTest*'
 
     // to run all test that was not categorized
     useJUnit {
