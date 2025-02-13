@@ -6,15 +6,17 @@ import java.net.URI;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.function.Consumer;
-import java.util.function.Function;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.protocol.HttpClientContext;
 import org.apache.http.protocol.HttpContext;
+import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.client.loadbalancer.RestTemplateCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -27,21 +29,35 @@ import org.springframework.web.client.RestTemplate;
  * Configuration for RestTemplate beans.
  */
 @Configuration
+@Slf4j
 public class RestTemplateConfiguration {
 
+    @Value("${ribbon.http.client.enabled:true}")
+    private Boolean ribbonTemplateEnabled;
+
     @Bean
-    public RestTemplate loadBalancedRestTemplate(RestTemplateCustomizer customizer) {
+    public RestTemplate loadBalancedRestTemplate(ObjectProvider<RestTemplateCustomizer> customizerProvider) {
         RestTemplate restTemplate = new RestTemplate();
-        customizer.customize(restTemplate);
+
+        if (ribbonTemplateEnabled) {
+            log.info("loadBalancedRestTemplate: using Ribbon load balancer");
+            customizerProvider.ifAvailable(customizer -> customizer.customize(restTemplate));
+        }
+
         return restTemplate;
     }
 
     @Bean
-    public RestTemplate loadBalancedRestTemplateWithTimeout(RestTemplateCustomizer customizer,
+    public RestTemplate loadBalancedRestTemplateWithTimeout(ObjectProvider<RestTemplateCustomizer> customizerProvider,
                                                             PathTimeoutHttpComponentsClientHttpRequestFactory requestFactory) {
         RestTemplate restTemplate = new RestTemplate();
         restTemplate.setRequestFactory(requestFactory);
-        customizer.customize(restTemplate);
+
+        if (ribbonTemplateEnabled) {
+            log.info("loadBalancedRestTemplateWithTimeout: using Ribbon load balancer");
+            customizerProvider.ifAvailable(customizer -> customizer.customize(restTemplate));
+        }
+
         return restTemplate;
     }
 
@@ -66,9 +82,9 @@ public class RestTemplateConfiguration {
                 if (httpMethod.equals(config.getHttpMethod()) && matcher.match(config.getPathPattern(), uri.getPath())) {
                     RequestConfig requestConfig = createRequestConfig(getHttpClient());
                     RequestConfig.Builder builder = RequestConfig.copy(requestConfig);
-                    setIfNotNull(config.getReadTimeout(),  builder::setSocketTimeout);
-                    setIfNotNull(config.getConnectionTimeout(),  builder::setConnectTimeout);
-                    setIfNotNull(config.getConnectionRequestTimeout(),  builder::setConnectionRequestTimeout);
+                    setIfNotNull(config.getReadTimeout(), builder::setSocketTimeout);
+                    setIfNotNull(config.getConnectionTimeout(), builder::setConnectTimeout);
+                    setIfNotNull(config.getConnectionRequestTimeout(), builder::setConnectionRequestTimeout);
 
                     HttpClientContext context = HttpClientContext.create();
                     context.setAttribute(REQUEST_CONFIG, builder.build());
