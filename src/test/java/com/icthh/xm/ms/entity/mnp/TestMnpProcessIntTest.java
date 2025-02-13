@@ -32,6 +32,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.github.tomakehurst.wiremock.WireMockServer;
+import com.github.tomakehurst.wiremock.client.MappingBuilder;
 import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.http.Fault;
 import com.icthh.xm.commons.config.client.api.RefreshableConfiguration;
@@ -206,7 +207,7 @@ public class TestMnpProcessIntTest extends AbstractSpringBootTest {
         reset(kafkaTemplateService);
         mockServer();
         XmEntity result = portInProcess(false, "mnp/portInRequest.json");
-        portInActivate(result);
+        portInActivate(result, false);
         finishActivation(result);
         WireMock.verify(putRequestedFor(urlEqualTo("/crm/api/v1/portingRequest")));
         wireMockServer.stop();
@@ -270,7 +271,7 @@ public class TestMnpProcessIntTest extends AbstractSpringBootTest {
     public void testPortInRequestNewBilling() {
         reset(kafkaTemplateService);
         XmEntity result = portInProcess(true, "mnp/portInRequestNewBilling.json");
-        portInActivate(result);
+        portInActivate(result, true);
         functionService.execute("BILLING-PORTING-COMPLETED", new HashMap<>(Map.of(
             "entityId", result.getId()
         )), "POST");
@@ -314,7 +315,7 @@ public class TestMnpProcessIntTest extends AbstractSpringBootTest {
             List.of("SERVICE-PORT-OUT-ON", "SERVICE-PORT-OUT-ON", "REJECTED"),
             List.of("NEW", "ACCEPTED", "SERVICE-PORT-OUT-ON"));
 
-        runDeactivateForPortOutRequest(result);
+        runDeactivateForPortOutRequest(result, false);
         finishPortOutRequest(result);
 
         WireMock.verify(putRequestedFor(urlEqualTo("/crm/api/v1/portingRequest")));
@@ -345,6 +346,7 @@ public class TestMnpProcessIntTest extends AbstractSpringBootTest {
         mnpRequests.forEach(it -> {
             assertEquals("2666-12-17 13:00:00.0", it.get("PORTING_DATE").toString());
         });
+        verifyKafkaEvent(result, "DEACTIVATED");
 
         xmEntityService.updateState(IdOrKey.of(result.getId()), "PORTED", Map.of(
             "msisdn", "380669222222",
@@ -363,8 +365,8 @@ public class TestMnpProcessIntTest extends AbstractSpringBootTest {
             List.of("NEW", "ACCEPTED", "SERVICE-PORT-OUT-ON", "STARTED", "DEACTIVATED", "PORTED"));
     }
 
-    private void runDeactivateForPortOutRequest(XmEntity result) {
-        mockPortOutStart(result, List.of("380669222222", "380669111111"));
+    private void runDeactivateForPortOutRequest(XmEntity result, boolean isNewBilling) {
+        mockPortOutStart(result, List.of("380669222222", "380669111111"), isNewBilling);
         xmEntityService.updateState(IdOrKey.of(result.getId()), "STARTED", Map.of(
             "numbers", List.of(Map.of("msisdn", "380669111111"), Map.of("msisdn", "380669222222")),
             "messageId", "9938744f-3f08-440a-9124-6db72d386db1"
@@ -540,10 +542,10 @@ public class TestMnpProcessIntTest extends AbstractSpringBootTest {
         return new ObjectMapper().readValue(new ObjectMapper().writeValueAsString(map), HashMap.class);
     }
 
-    private void portInActivate(XmEntity result) {
+    private void portInActivate(XmEntity result, boolean isNewBilling) {
         var entity = xmEntityService.findById(result.getId());
 
-        List.of("380985111111", "380985222222").forEach(number -> assertActivateNumber(entity, number));
+        List.of("380985111111", "380985222222").forEach(number -> assertActivateNumber(entity, number, isNewBilling));
         xmEntityService.updateState(IdOrKey.of(result.getId()), "STARTED", Map.of(
             "numbers", List.of(Map.of("msisdn", "380985111111"), Map.of("msisdn", "380985222222")),
             "messageId", "431834d8-1bc7-40e6-a65f-42ebb157d004"
@@ -629,14 +631,16 @@ public class TestMnpProcessIntTest extends AbstractSpringBootTest {
             .willReturn(aResponse().withStatus(200)));
     }
 
-    private void mockPortOutStart(XmEntity request, List<String> numbers) {
-        numbers.forEach(number -> assertDeactivateNumber(request, number));
-        WIRE_MOCK.stubFor(post(urlEqualTo("/api/communicationManagement/v2/communicationMessage/send"))
-            .willReturn(aResponse().withStatus(200)));
+    private void mockPortOutStart(XmEntity request, List<String> numbers, boolean isNewBilling) {
+        numbers.forEach(number -> assertDeactivateNumber(request, number, isNewBilling));
+        if (!isNewBilling) {
+            WIRE_MOCK.stubFor(post(urlEqualTo("/api/communicationManagement/v2/communicationMessage/send"))
+                .willReturn(aResponse().withStatus(200)));
+        }
     }
 
-    private static void assertActivateNumber(XmEntity request, String number) {
-        WIRE_MOCK.stubFor(post(urlEqualTo("/DSEntityProvisioning/api/ActivationAndConfiguration/v2/service"))
+    private static void assertActivateNumber(XmEntity request, String number, boolean isNewBilling) {
+        MappingBuilder mapping = post(urlEqualTo("/DSEntityProvisioning/api/ActivationAndConfiguration/v2/service"))
             .withRequestBody(matchingJsonPath("$.type", equalTo("MNP-ACTIVATION")))
             .withRequestBody(matchingJsonPath("$.relatedParty[0].id", equalTo(number)))
             .withRequestBody(matchingJsonPath("$.serviceCharacteristic[?(@.name=='key')].value",
@@ -653,11 +657,16 @@ public class TestMnpProcessIntTest extends AbstractSpringBootTest {
                 equalToJson("[\"CRM\"]")))
             .withRequestBody(matchingJsonPath("$.serviceCharacteristic[?(@.name=='dateFrom')].value",
                 equalToJson("[\"" + request.getData().get("portingDate").toString() + "\"]")))
-            .willReturn(aResponse().withStatus(200)));
+            .willReturn(aResponse().withStatus(200));
+        if (isNewBilling) {
+            mapping = mapping.withRequestBody(matchingJsonPath("$.serviceCharacteristic[?(@.name=='isNewBilling')].value",
+                equalToJson("[\"true\"]")));
+        }
+        WIRE_MOCK.stubFor(mapping);
     }
 
-    private static void assertDeactivateNumber(XmEntity request, String number) {
-        WIRE_MOCK.stubFor(post(urlEqualTo("/DSEntityProvisioning/api/ActivationAndConfiguration/v2/service"))
+    private static void assertDeactivateNumber(XmEntity request, String number, boolean isNewBilling) {
+        MappingBuilder mapping = post(urlEqualTo("/DSEntityProvisioning/api/ActivationAndConfiguration/v2/service"))
             .withRequestBody(matchingJsonPath("$.type", equalTo("MNP-DEACTIVATION")))
             .withRequestBody(matchingJsonPath("$.relatedParty[0].id", equalTo(number)))
             .withRequestBody(matchingJsonPath("$.serviceCharacteristic[?(@.name=='key')].value",
@@ -670,7 +679,12 @@ public class TestMnpProcessIntTest extends AbstractSpringBootTest {
                 equalToJson("[\"3903\"]")))
             .withRequestBody(matchingJsonPath("$.serviceCharacteristic[?(@.name=='dateFrom')].value",
                 equalToJson("[\"" + request.getData().get("portingDate").toString() + "\"]")))
-            .willReturn(aResponse().withStatus(200)));
+            .willReturn(aResponse().withStatus(200));
+        if (isNewBilling) {
+            mapping = mapping.withRequestBody(matchingJsonPath("$.serviceCharacteristic[?(@.name=='isNewBilling')].value",
+                equalToJson("[\"true\"]")));
+        }
+        WIRE_MOCK.stubFor(mapping);
     }
 
     private void mockPortOutAccept() {
