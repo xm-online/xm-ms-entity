@@ -26,6 +26,7 @@ import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -61,6 +62,8 @@ import java.util.Map;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
+import org.jetbrains.annotations.NotNull;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -70,6 +73,7 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
@@ -127,6 +131,9 @@ public class TestMnpProcessIntTest extends AbstractSpringBootTest {
 
     @MockBean
     private KafkaTemplateService kafkaTemplateService;
+
+    @Autowired
+    private KafkaTemplate<String, String> kafkaTemplate;
 
     private WireMockServer wireMockServer;
 
@@ -196,6 +203,7 @@ public class TestMnpProcessIntTest extends AbstractSpringBootTest {
     @Test
     @SneakyThrows
     public void testPortInRequest() {
+        reset(kafkaTemplateService);
         mockServer();
         XmEntity result = portInProcess(false, "mnp/portInRequest.json");
         portInActivate(result);
@@ -207,6 +215,7 @@ public class TestMnpProcessIntTest extends AbstractSpringBootTest {
     @Test
     @SneakyThrows
     public void testPortInRequestCancel() {
+        reset(kafkaTemplateService);
         mockServer();
         XmEntity result = portInProcess(false, "mnp/portInRequest.json");
 
@@ -234,6 +243,7 @@ public class TestMnpProcessIntTest extends AbstractSpringBootTest {
     @Test
     @SneakyThrows
     public void testPortInRequestCancelNewBilling() {
+        reset(kafkaTemplateService);
         XmEntity result = portInProcess(true, "mnp/portInRequestNewBilling.json");
 
         WIRE_MOCK.stubFor(put(urlEqualTo("/cdb/api/v1/portingRequest/d9b25a0c-2817-498f-b51b-4ac759fc6445/cancel"))
@@ -258,6 +268,7 @@ public class TestMnpProcessIntTest extends AbstractSpringBootTest {
     @Test
     @SneakyThrows
     public void testPortInRequestNewBilling() {
+        reset(kafkaTemplateService);
         XmEntity result = portInProcess(true, "mnp/portInRequestNewBilling.json");
         portInActivate(result);
         functionService.execute("BILLING-PORTING-COMPLETED", new HashMap<>(Map.of(
@@ -267,35 +278,34 @@ public class TestMnpProcessIntTest extends AbstractSpringBootTest {
         WIRE_MOCK.verify(0, postRequestedFor(urlEqualTo("/api/communicationManagement/v2/communicationMessage/send")));
     }
 
+    @SneakyThrows
+    @Test
+    public void testBroadcast() {
+        reset(kafkaTemplateService);
+        var content = readFile("mnp/broadcast.json");
+        kafkaTemplate.send("CDB_ERROR_MESSAGES", content);
+        var wrongContent = readFile("mnp/notbroadcast.json");
+        kafkaTemplate.send("CDB_ERROR_MESSAGES", wrongContent);
+        Thread.sleep(1000);
+        verify(kafkaTemplateService).send(eq("LDB-BROADCASTS"), argThat(it -> {
+            var expected = readFile("mnp/expected_broadcast.json").trim();
+            assertEquals(expected, it);
+            return true;
+        }));
+        verifyNoMoreInteractions(kafkaTemplateService);
+    }
+
+    @SneakyThrows
+    private String readFile(String resourcePath) {
+        return IOUtils.toString(getClass().getClassLoader().getResourceAsStream(resourcePath), UTF_8);
+    }
+
     @Test
     @SneakyThrows
     public void testPortOutRequest() {
+        reset(kafkaTemplateService);
         mockServer();
-        mockPortOutCreate(false);
-
-        prepareTenantConfig(false);
-
-        ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
-        XmEntity portOut = objectMapper.readValue(getClass().getClassLoader().getResourceAsStream("mnp/portOutRequest.json"), XmEntity.class);
-
-        XmEntity result = xmEntityService.save(portOut);
-        System.out.println(result);
-        assertNotNull(result.getId());
-        assertSasTables(result, List.of("NEW", "NEW", "NEW"), List.of("NEW"));
-
-        mockComparePersonalData(List.of("380669222222", "380669111111"));
-        functionService.execute("COMPARE-DATA-FROM-CRM", IdOrKey.of(result.getId()), new HashMap<>());
-        assertSasTables(result, List.of("NEW", "NEW", "NEW"), List.of("NEW"));
-
-        mockPortOutAccept();
-        functionService.execute("PROCESS-STATUS", new HashMap<>(Map.of(
-            "messageId", "9938744f-3f08-440a-9124-6db72d386db1",
-            "processId", "d9b25a0c-2817-498f-b51b-4ac759fc6445",
-            "messageType", "ValidationResponse",
-            "statusCode", "0"
-        )), "GET");
-        assertSasTables(result, List.of("ACCEPTED", "ACCEPTED", "REJECTED"), List.of("NEW", "ACCEPTED"));
-
+        XmEntity result = createPortOutRequest();
 
         functionService.execute("UPDATE-STATUS", IdOrKey.of(result.getId()), new HashMap<>(Map.of(
             "stateKey", "SERVICE-PORT-OUT-ON"
@@ -304,27 +314,14 @@ public class TestMnpProcessIntTest extends AbstractSpringBootTest {
             List.of("SERVICE-PORT-OUT-ON", "SERVICE-PORT-OUT-ON", "REJECTED"),
             List.of("NEW", "ACCEPTED", "SERVICE-PORT-OUT-ON"));
 
-        mockPortOutStart(result, List.of("380669222222", "380669111111"));
-        xmEntityService.updateState(IdOrKey.of(result.getId()), "STARTED", Map.of(
-            "numbers", List.of(Map.of("msisdn", "380669111111"), Map.of("msisdn", "380669222222")),
-            "messageId", "9938744f-3f08-440a-9124-6db72d386db1"
-        ));
-        assertSasTables(result,
-            List.of("STARTED", "STARTED", "REJECTED"),
-            List.of("NEW", "ACCEPTED", "SERVICE-PORT-OUT-ON", "STARTED"));
+        runDeactivateForPortOutRequest(result);
+        finishPortOutRequest(result);
 
-        functionService.execute("NOTIFY-NUMBER-PROCESSED", IdOrKey.of(result.getId()), new HashMap<>(Map.of(
-            "msisdn", "380669222222"
-        )));
-        assertSasTables(result,
-            List.of("STARTED", "STARTED", "REJECTED"),
-            List.of("NEW", "ACCEPTED", "SERVICE-PORT-OUT-ON", "STARTED"));
+        WireMock.verify(putRequestedFor(urlEqualTo("/crm/api/v1/portingRequest")));
+        wireMockServer.stop();
+    }
 
-        mockPortOutDeactivated();
-        functionService.execute("NOTIFY-NUMBER-PROCESSED", IdOrKey.of(result.getId()), new HashMap<>(Map.of(
-            "msisdn", "380669111111"
-        )));
-
+    private void finishPortOutRequest(XmEntity result) {
         functionService.execute("PROCESS-STATUS", new HashMap<>(Map.of(
             "messageId", "9938744f-3f08-440a-9124-6db72d386db2",
             "messageType", "ValidationResponse",
@@ -364,9 +361,58 @@ public class TestMnpProcessIntTest extends AbstractSpringBootTest {
         assertSasTables(result,
             List.of("PORTED", "PORTED", "REJECTED"),
             List.of("NEW", "ACCEPTED", "SERVICE-PORT-OUT-ON", "STARTED", "DEACTIVATED", "PORTED"));
+    }
 
-        WireMock.verify(putRequestedFor(urlEqualTo("/crm/api/v1/portingRequest")));
-        wireMockServer.stop();
+    private void runDeactivateForPortOutRequest(XmEntity result) {
+        mockPortOutStart(result, List.of("380669222222", "380669111111"));
+        xmEntityService.updateState(IdOrKey.of(result.getId()), "STARTED", Map.of(
+            "numbers", List.of(Map.of("msisdn", "380669111111"), Map.of("msisdn", "380669222222")),
+            "messageId", "9938744f-3f08-440a-9124-6db72d386db1"
+        ));
+        assertSasTables(result,
+            List.of("STARTED", "STARTED", "REJECTED"),
+            List.of("NEW", "ACCEPTED", "SERVICE-PORT-OUT-ON", "STARTED"));
+
+        functionService.execute("NOTIFY-NUMBER-PROCESSED", IdOrKey.of(result.getId()), new HashMap<>(Map.of(
+            "msisdn", "380669222222"
+        )));
+        assertSasTables(result,
+            List.of("STARTED", "STARTED", "REJECTED"),
+            List.of("NEW", "ACCEPTED", "SERVICE-PORT-OUT-ON", "STARTED"));
+
+        mockPortOutDeactivated();
+        functionService.execute("NOTIFY-NUMBER-PROCESSED", IdOrKey.of(result.getId()), new HashMap<>(Map.of(
+            "msisdn", "380669111111"
+        )));
+    }
+
+    @NotNull
+    private XmEntity createPortOutRequest() throws IOException {
+        mockPortOutCreate(false);
+
+        prepareTenantConfig(false);
+
+        ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
+        XmEntity portOut = objectMapper.readValue(getClass().getClassLoader().getResourceAsStream("mnp/portOutRequest.json"), XmEntity.class);
+
+        XmEntity result = xmEntityService.save(portOut);
+        System.out.println(result);
+        assertNotNull(result.getId());
+        assertSasTables(result, List.of("NEW", "NEW", "NEW"), List.of("NEW"));
+
+        mockComparePersonalData(List.of("380669222222", "380669111111"));
+        functionService.execute("COMPARE-DATA-FROM-CRM", IdOrKey.of(result.getId()), new HashMap<>());
+        assertSasTables(result, List.of("NEW", "NEW", "NEW"), List.of("NEW"));
+
+        mockPortOutAccept();
+        functionService.execute("PROCESS-STATUS", new HashMap<>(Map.of(
+            "messageId", "9938744f-3f08-440a-9124-6db72d386db1",
+            "processId", "d9b25a0c-2817-498f-b51b-4ac759fc6445",
+            "messageType", "ValidationResponse",
+            "statusCode", "0"
+        )), "GET");
+        assertSasTables(result, List.of("ACCEPTED", "ACCEPTED", "REJECTED"), List.of("NEW", "ACCEPTED"));
+        return result;
     }
 
 
@@ -461,6 +507,7 @@ public class TestMnpProcessIntTest extends AbstractSpringBootTest {
             assertEquals(expected, actualMap);
             return true;
         }));
+        verifyNoMoreInteractions(kafkaTemplateService);
         reset(kafkaTemplateService);
     }
 
