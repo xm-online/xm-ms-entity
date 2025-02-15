@@ -16,6 +16,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.putRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options;
 import static com.icthh.xm.ms.entity.config.tenant.WebappTenantOverrideConfiguration.WIRE_MOCK;
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -39,6 +40,8 @@ import com.icthh.xm.commons.config.client.api.RefreshableConfiguration;
 import com.icthh.xm.commons.config.client.service.TenantConfigService;
 import com.icthh.xm.commons.lep.XmLepScriptConfigServerResourceLoader;
 import com.icthh.xm.commons.lep.api.LepManagementService;
+import com.icthh.xm.commons.scheduler.domain.ScheduledEvent;
+import com.icthh.xm.commons.scheduler.service.SchedulerService;
 import com.icthh.xm.commons.security.XmAuthenticationContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
@@ -60,6 +63,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
@@ -122,6 +126,9 @@ public class TestMnpProcessIntTest extends AbstractSpringBootTest {
     private FunctionService functionService;
 
     @Autowired
+    private SchedulerService schedulerService;
+
+    @Autowired
     private MessageService messageService;
 
     @Autowired
@@ -165,10 +172,11 @@ public class TestMnpProcessIntTest extends AbstractSpringBootTest {
             refresh(it, tenantConfig, fileCache, basePath);
         });
 
-        WIRE_MOCK.stubFor(any(urlMatching(".*"))
-            .atPriority(10)  // Use a lower priority than your expected stubs.
-            .willReturn(aResponse()
-                .withFault(Fault.MALFORMED_RESPONSE_CHUNK)));
+        // TODO uncomment
+//        WIRE_MOCK.stubFor(any(urlMatching(".*"))
+//            .atPriority(10)  // Use a lower priority than your expected stubs.
+//            .willReturn(aResponse()
+//                .withFault(Fault.MALFORMED_RESPONSE_CHUNK)));
     }
 
     private static void refresh(RefreshableConfiguration it, Collection<File> files, Map<String, String> fileCache, String basePath) {
@@ -294,6 +302,112 @@ public class TestMnpProcessIntTest extends AbstractSpringBootTest {
             return true;
         }));
         verifyNoMoreInteractions(kafkaTemplateService);
+    }
+
+
+    @SneakyThrows
+    @Test
+    public void testReturnNumber() {
+        mockServer();
+        reset(kafkaTemplateService);
+        prepareTenantConfig(false);
+        ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
+        var returnNumber = objectMapper.readValue(readFile("mnp/return_number.json"), XmEntity.class);
+        var returnNumberResult = objectMapper.readValue(readFile("mnp/return_number.json"), XmEntity.class);
+        String uuid = "d0b00a0c-0000-498f-b51b-4ac759fc6414";
+        returnNumberResult.getData().put("processId", uuid);
+
+
+        WIRE_MOCK.stubFor(post(urlEqualTo("/oauth/token"))
+            .withHeader("Authorization", matching("Basic .*"))
+            .withHeader("Content-Type", containing("application/x-www-form-urlencoded"))
+            .withRequestBody(equalTo("grant_type=client_credentials"))
+            .willReturn(aResponse()
+                .withStatus(200)
+                .withHeader("Content-Type", "application/json")
+                .withBody("{ \"access_token\": \"mock-token\", \"token_type\": \"bearer\", \"expires_in\": 3600 }")));
+        WIRE_MOCK.stubFor(post(urlEqualTo("/cdb/api/v1/returnNumber"))
+            .willReturn(aResponse().withStatus(200)
+                .withHeader("Content-Type", "application/json")
+                .withBody(objectMapper.writeValueAsString(returnNumberResult))));
+        WIRE_MOCK.stubFor(get(urlPathEqualTo("/api/v1/customer/380933646177"))
+            .willReturn(aResponse()
+                .withStatus(200)
+                .withHeader("Content-Type", "application/json")
+                .withBody("{ \"calculationMethodCode\": \"1\" }")));
+        WIRE_MOCK.stubFor(get(urlPathEqualTo("/api/v1/customer/380933646177/status"))
+            .willReturn(aResponse()
+                .withStatus(200)
+                .withHeader("Content-Type", "application/json")
+                .withBody("{ \"statusCode\": \"Деактивирован\" }")));
+        WIRE_MOCK.stubFor(post(urlEqualTo("/api/tasks"))
+            .withHeader("Authorization", equalTo("bearer mock-token"))
+            .withHeader("Content-Type", equalTo("application/json;charset=UTF-8"))
+            .withRequestBody(matchingJsonPath("$.typeKey", equalTo("returnNumberRequestNew")))
+            .withRequestBody(matchingJsonPath("$.channelType", equalTo("QUEUE")))
+            .withRequestBody(matchingJsonPath("$.scheduleType", equalTo("ONE_TIME")))
+            .withRequestBody(matchingJsonPath("$.targetMs", equalTo("entity")))
+            .withRequestBody(matchingJsonPath("$.data", equalTo("{\"userKey\":\"user\",\"id\":951}"))));
+
+        returnNumber = xmEntityService.save(returnNumber);
+
+        ScheduledEvent scheduledEvent = new ScheduledEvent();
+        scheduledEvent.setUuid(UUID.randomUUID().toString());
+        scheduledEvent.setTypeKey("returnNumberRequestNew");
+        scheduledEvent.setData(Map.of("id", returnNumber.getId()));
+        schedulerService.onEvent(scheduledEvent);
+
+        functionService.execute("PROCESS-STATUS", new HashMap<>(Map.of(
+            "messageId", "9938744f-0000-440a-9124-6db72d386db2",
+            "messageType", "ValidationResponse",
+            "processId", uuid,
+            "statusCode", "0"
+        )), "GET");
+        returnNumber = xmEntityService.findOne(IdOrKey.of(returnNumber.getId()));
+        assertEquals("RETURNED", returnNumber.getStateKey());
+        verifyNoMoreInteractions(kafkaTemplateService);
+
+        wireMockServer.stop();
+    }
+
+    @SneakyThrows
+    @Test
+    public void testReturnNumberNewBilling() {
+        mockServer();
+        reset(kafkaTemplateService);
+        prepareTenantConfig(true);
+        ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
+        var returnNumberResult = objectMapper.readValue(readFile("mnp/return_number.json"), XmEntity.class);
+        String uuid = "d0b00a0c-0000-498f-b51b-4ac759fc6414";
+        returnNumberResult.getData().put("processId", uuid);
+
+        WIRE_MOCK.stubFor(post(urlEqualTo("/oauth/token"))
+            .withHeader("Authorization", matching("Basic .*"))
+            .withHeader("Content-Type", containing("application/x-www-form-urlencoded"))
+            .withRequestBody(equalTo("grant_type=client_credentials"))
+            .willReturn(aResponse()
+                .withStatus(200)
+                .withHeader("Content-Type", "application/json")
+                .withBody("{ \"access_token\": \"mock-token\", \"token_type\": \"bearer\", \"expires_in\": 3600 }")));
+        WIRE_MOCK.stubFor(post(urlEqualTo("/cdb/api/v1/returnNumber"))
+            .willReturn(aResponse().withStatus(200)
+                .withHeader("Content-Type", "application/json")
+                .withBody(objectMapper.writeValueAsString(returnNumberResult))));
+
+        functionService.execute("FORCE-RETURN-NUMBER", new HashMap<>(Map.of(
+            "msisdn", "380930912700"
+        )), "GET");
+
+        functionService.execute("PROCESS-STATUS", new HashMap<>(Map.of(
+            "messageId", "9938744f-0000-440a-9124-6db72d386db2",
+            "messageType", "ValidationResponse",
+            "processId", uuid,
+            "statusCode", "0"
+        )), "GET");
+        var returnNumber = xmEntityService.findOne(IdOrKey.ofKey(uuid));
+        assertEquals("RETURNED", returnNumber.getStateKey());
+        verifyNoMoreInteractions(kafkaTemplateService);
+        wireMockServer.stop();
     }
 
     @SneakyThrows

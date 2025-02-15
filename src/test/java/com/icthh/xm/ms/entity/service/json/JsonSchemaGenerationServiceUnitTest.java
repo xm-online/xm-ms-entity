@@ -9,7 +9,10 @@ import com.github.fge.jsonschema.main.JsonSchema;
 import com.github.fge.jsonschema.main.JsonSchemaFactory;
 import com.icthh.xm.ms.entity.AbstractUnitTest;
 import com.icthh.xm.ms.entity.service.spec.JsonSchemaGenerationServiceImpl;
+import java.io.File;
+import java.io.FileOutputStream;
 import lombok.SneakyThrows;
+import org.apache.commons.io.IOUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -32,6 +35,8 @@ public class JsonSchemaGenerationServiceUnitTest extends AbstractUnitTest {
     @SneakyThrows
     public void testXmEntitySpecSchemaGeneration() {
         String jsonSchema = service.generateJsonSchema();
+        var file = new File("/home/ssenko/work/xme.schema.json");
+        IOUtils.write(jsonSchema, new FileOutputStream(file));
         ObjectMapper objectMapper = new ObjectMapper(new YAMLFactory());
         JsonNode xmentityspec = objectMapper.readTree(loadFile("config/specs/xmentityspec-xm.yml"));
 

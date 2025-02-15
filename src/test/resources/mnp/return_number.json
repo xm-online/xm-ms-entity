@@ -1,0 +1,13 @@
+{
+    "typeKey": "BUSINESS-INTERACTION.RETURN-NUMBER-REQUEST",
+    "name": "380933646177",
+    "startDate": "2025-02-14T03:59:11.504069Z",
+    "updateDate": "2025-02-14T03:59:14.997077Z",
+    "data": {
+        "numbers": [
+            {
+                "msisdn": "380933646177"
+            }
+        ]
+    }
+}
