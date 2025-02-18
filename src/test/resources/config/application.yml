@@ -164,3 +164,4 @@ application:
         warmup-scripts: false
     periodicMetricPoolSize: 1
     elasticBatchSize: 100
+    db-schema-suffix:
