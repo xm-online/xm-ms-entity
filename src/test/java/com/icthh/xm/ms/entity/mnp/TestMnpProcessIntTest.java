@@ -28,6 +28,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -80,6 +81,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.web.client.RestTemplate;
@@ -137,6 +139,9 @@ public class TestMnpProcessIntTest extends AbstractSpringBootTest {
     @Autowired
     private XmAuthenticationContextHolder authContextHolder;
 
+    @Autowired
+    private XmLepScriptConfigServerResourceLoader lepLoader;
+
     @MockBean
     private KafkaTemplateService kafkaTemplateService;
 
@@ -165,6 +170,11 @@ public class TestMnpProcessIntTest extends AbstractSpringBootTest {
         refreshableConfigurations.stream().filter(it -> it instanceof XmLepScriptConfigServerResourceLoader).forEach(it -> {
             refresh(it, files, fileCache, basePath);
         });
+        lepLoader.onRefresh("/config/tenants/XM/entity/lep/commons/sftp/Commons$$readSftpFile$$around.groovy",
+            readFile("mnp/readSftpFile.groovy"));
+        lepLoader.refreshFinished(List.of("/config/tenants/XM/entity/lep/commons/sftp/Commons$$readSftpFile$$around.groovy"));
+        Thread.sleep(10000);
+
         lepManager.beginThreadContext();
         Collection<File> tenantConfig = List.of(new File(basePath + TENANT_CONFIG_YML));
         refreshableConfigurations.stream().filter(it -> !(it instanceof XmLepScriptConfigServerResourceLoader)).forEach(it -> {
@@ -211,6 +221,7 @@ public class TestMnpProcessIntTest extends AbstractSpringBootTest {
 
     @Test
     @SneakyThrows
+    @DirtiesContext
     public void testPortInRequest() {
         reset(kafkaTemplateService);
         mockServer();
@@ -223,6 +234,7 @@ public class TestMnpProcessIntTest extends AbstractSpringBootTest {
 
     @Test
     @SneakyThrows
+    @DirtiesContext
     public void testPortInRequestCancel() {
         reset(kafkaTemplateService);
         mockServer();
@@ -251,6 +263,7 @@ public class TestMnpProcessIntTest extends AbstractSpringBootTest {
 
     @Test
     @SneakyThrows
+    @DirtiesContext
     public void testPortInRequestCancelNewBilling() {
         reset(kafkaTemplateService);
         XmEntity result = portInProcess(true, "mnp/portInRequestNewBilling.json");
@@ -276,6 +289,7 @@ public class TestMnpProcessIntTest extends AbstractSpringBootTest {
 
     @Test
     @SneakyThrows
+    @DirtiesContext
     public void testPortInRequestNewBilling() {
         reset(kafkaTemplateService);
         XmEntity result = portInProcess(true, "mnp/portInRequestNewBilling.json");
@@ -289,15 +303,38 @@ public class TestMnpProcessIntTest extends AbstractSpringBootTest {
 
     @SneakyThrows
     @Test
+    @DirtiesContext
     public void testBroadcast() {
+        mockSystemToken();
         reset(kafkaTemplateService);
+
         var content = readFile("mnp/broadcast.json");
         kafkaTemplate.send("CDB_ERROR_MESSAGES", content);
         var wrongContent = readFile("mnp/notbroadcast.json");
         kafkaTemplate.send("CDB_ERROR_MESSAGES", wrongContent);
-        Thread.sleep(1000);
-        verify(kafkaTemplateService).send(eq("LDB-BROADCASTS"), argThat(it -> {
+        Thread.sleep(5000);
+        verify(kafkaTemplateService).send(eq("CROSS-LDB-UPDATE"), argThat(it -> {
             var expected = readFile("mnp/expected_broadcast.json").trim();
+            assertEquals(expected, it);
+            return true;
+        }));
+
+        verifyNoMoreInteractions(kafkaTemplateService);
+        reset(kafkaTemplateService);
+
+        WIRE_MOCK.stubFor(post(urlEqualTo("/api/v1/mobileNumberLocations"))
+            .withHeader("Authorization", equalTo("bearer mock-token"))
+            .withHeader("Content-Type", equalTo("application/json;charset=UTF-8"))
+            .withRequestBody(equalToJson("{\"msisdns\":[\"380959043208\",\"380950666666\"]}"))
+            .willReturn(aResponse().withStatus(200)
+                .withHeader("Content-Type", "application/json")
+                .withBody(new ObjectMapper().writeValueAsString(List.of(
+                    Map.of("msisdn", "380959043208", "routingNumber", "3906", "state", "PORTED"),
+                    Map.of("msisdn", "380950666666", "routingNumber", "3906", "state", "PORTED")
+                )))));
+        functionService.execute("RUN-NUMBER-PORTATION-DIFF", Map.of("date", "2025-02-13"), "GET");
+        verify(kafkaTemplateService).send(eq("CROSS-LDB-UPDATE"), argThat(it -> {
+            var expected = readFile("mnp/expected_broadcast_2.json").trim();
             assertEquals(expected, it);
             return true;
         }));
@@ -307,6 +344,7 @@ public class TestMnpProcessIntTest extends AbstractSpringBootTest {
 
     @SneakyThrows
     @Test
+    @DirtiesContext
     public void testReturnNumber() {
         mockServer();
         reset(kafkaTemplateService);
@@ -318,14 +356,7 @@ public class TestMnpProcessIntTest extends AbstractSpringBootTest {
         returnNumberResult.getData().put("processId", uuid);
 
 
-        WIRE_MOCK.stubFor(post(urlEqualTo("/oauth/token"))
-            .withHeader("Authorization", matching("Basic .*"))
-            .withHeader("Content-Type", containing("application/x-www-form-urlencoded"))
-            .withRequestBody(equalTo("grant_type=client_credentials"))
-            .willReturn(aResponse()
-                .withStatus(200)
-                .withHeader("Content-Type", "application/json")
-                .withBody("{ \"access_token\": \"mock-token\", \"token_type\": \"bearer\", \"expires_in\": 3600 }")));
+        mockSystemToken();
         WIRE_MOCK.stubFor(post(urlEqualTo("/cdb/api/v1/returnNumber"))
             .willReturn(aResponse().withStatus(200)
                 .withHeader("Content-Type", "application/json")
@@ -370,8 +401,20 @@ public class TestMnpProcessIntTest extends AbstractSpringBootTest {
         wireMockServer.stop();
     }
 
+    private static void mockSystemToken() {
+        WIRE_MOCK.stubFor(post(urlEqualTo("/oauth/token"))
+            .withHeader("Authorization", matching("Basic .*"))
+            .withHeader("Content-Type", containing("application/x-www-form-urlencoded"))
+            .withRequestBody(equalTo("grant_type=client_credentials"))
+            .willReturn(aResponse()
+                .withStatus(200)
+                .withHeader("Content-Type", "application/json")
+                .withBody("{ \"access_token\": \"mock-token\", \"token_type\": \"bearer\", \"expires_in\": 3600 }")));
+    }
+
     @SneakyThrows
     @Test
+    @DirtiesContext
     public void testReturnNumberNewBilling() {
         mockServer();
         reset(kafkaTemplateService);
@@ -381,14 +424,7 @@ public class TestMnpProcessIntTest extends AbstractSpringBootTest {
         String uuid = "d0b00a0c-0000-498f-b51b-4ac759fc6414";
         returnNumberResult.getData().put("processId", uuid);
 
-        WIRE_MOCK.stubFor(post(urlEqualTo("/oauth/token"))
-            .withHeader("Authorization", matching("Basic .*"))
-            .withHeader("Content-Type", containing("application/x-www-form-urlencoded"))
-            .withRequestBody(equalTo("grant_type=client_credentials"))
-            .willReturn(aResponse()
-                .withStatus(200)
-                .withHeader("Content-Type", "application/json")
-                .withBody("{ \"access_token\": \"mock-token\", \"token_type\": \"bearer\", \"expires_in\": 3600 }")));
+        mockSystemToken();
         WIRE_MOCK.stubFor(post(urlEqualTo("/cdb/api/v1/returnNumber"))
             .willReturn(aResponse().withStatus(200)
                 .withHeader("Content-Type", "application/json")
@@ -417,6 +453,7 @@ public class TestMnpProcessIntTest extends AbstractSpringBootTest {
 
     @Test
     @SneakyThrows
+    @DirtiesContext
     public void testPortOutRequest() {
         reset(kafkaTemplateService);
         mockServer();
@@ -428,12 +465,15 @@ public class TestMnpProcessIntTest extends AbstractSpringBootTest {
         assertSasTables(result,
             List.of("SERVICE-PORT-OUT-ON", "SERVICE-PORT-OUT-ON", "REJECTED"),
             List.of("NEW", "ACCEPTED", "SERVICE-PORT-OUT-ON"));
+        verifyKafkaEvent(result, "SERVICE-PORT-OUT-ON");
 
         runDeactivateForPortOutRequest(result, false);
         finishPortOutRequest(result);
 
         WireMock.verify(putRequestedFor(urlEqualTo("/crm/api/v1/portingRequest")));
         wireMockServer.stop();
+
+        verifyNoMoreInteractions(kafkaTemplateService);
     }
 
     private void finishPortOutRequest(XmEntity result) {
@@ -447,6 +487,7 @@ public class TestMnpProcessIntTest extends AbstractSpringBootTest {
         assertSasTables(result,
             List.of("DEACTIVATED", "DEACTIVATED", "REJECTED"),
             List.of("NEW", "ACCEPTED", "SERVICE-PORT-OUT-ON", "STARTED", "DEACTIVATED"));
+        verifyKafkaEvent(result, "DEACTIVATED");
 
         functionService.execute("PROCESS-STATUS", new HashMap<>(Map.of(
             "messageId", "2ea40fa1-867d-4039-bff8-5ad164b1f2e6",
@@ -477,6 +518,7 @@ public class TestMnpProcessIntTest extends AbstractSpringBootTest {
         assertSasTables(result,
             List.of("PORTED", "PORTED", "REJECTED"),
             List.of("NEW", "ACCEPTED", "SERVICE-PORT-OUT-ON", "STARTED", "DEACTIVATED", "PORTED"));
+        verifyKafkaEvent(result, "PORTED");
     }
 
     private void runDeactivateForPortOutRequest(XmEntity result, boolean isNewBilling) {
@@ -488,6 +530,7 @@ public class TestMnpProcessIntTest extends AbstractSpringBootTest {
         assertSasTables(result,
             List.of("STARTED", "STARTED", "REJECTED"),
             List.of("NEW", "ACCEPTED", "SERVICE-PORT-OUT-ON", "STARTED"));
+        verifyKafkaEvent(result, "STARTED");
 
         functionService.execute("NOTIFY-NUMBER-PROCESSED", IdOrKey.of(result.getId()), new HashMap<>(Map.of(
             "msisdn", "380669222222"
@@ -528,6 +571,7 @@ public class TestMnpProcessIntTest extends AbstractSpringBootTest {
             "statusCode", "0"
         )), "GET");
         assertSasTables(result, List.of("ACCEPTED", "ACCEPTED", "REJECTED"), List.of("NEW", "ACCEPTED"));
+        verifyKafkaEvent(result, "ACCEPTED");
         return result;
     }
 
@@ -838,14 +882,7 @@ public class TestMnpProcessIntTest extends AbstractSpringBootTest {
             stubFor(put(urlEqualTo("/crm/api/v1/portingRequest")).willReturn(aResponse().withStatus(200)));
         }
 
-        WIRE_MOCK.stubFor(post(urlEqualTo("/oauth/token"))
-            .withHeader("Authorization", matching("Basic .*"))
-            .withHeader("Content-Type", containing("application/x-www-form-urlencoded"))
-            .withRequestBody(equalTo("grant_type=client_credentials"))
-            .willReturn(aResponse()
-                .withStatus(200)
-                .withHeader("Content-Type", "application/json")
-                .withBody("{ \"access_token\": \"mock-token\", \"token_type\": \"bearer\", \"expires_in\": 3600 }")));
+        mockSystemToken();
         if (!isNewBilling) {
             WIRE_MOCK.stubFor(post(urlEqualTo("/api/communicationManagement/v2/communicationMessage/send"))
                 .willReturn(aResponse().withStatus(200)));
@@ -857,14 +894,7 @@ public class TestMnpProcessIntTest extends AbstractSpringBootTest {
     }
 
     private void mockPortOutCreate(boolean isNewBilling) {
-        WIRE_MOCK.stubFor(post(urlEqualTo("/oauth/token"))
-            .withHeader("Authorization", matching("Basic .*"))
-            .withHeader("Content-Type", containing("application/x-www-form-urlencoded"))
-            .withRequestBody(equalTo("grant_type=client_credentials"))
-            .willReturn(aResponse()
-                .withStatus(200)
-                .withHeader("Content-Type", "application/json")
-                .withBody("{ \"access_token\": \"mock-token\", \"token_type\": \"bearer\", \"expires_in\": 3600 }")));
+        mockSystemToken();
         WIRE_MOCK.stubFor(post(urlEqualTo("/api/tasks"))
             .withHeader("Authorization", equalTo("bearer mock-token"))
             .withHeader("Content-Type", equalTo("application/json;charset=UTF-8"))
