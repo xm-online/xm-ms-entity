@@ -87,6 +87,7 @@ eclipse {
     }
 }
 
+
 // See https://virgo47.wordpress.com/2018/09/14/classpath-too-long-with-spring-boot-and-gradle/ for details
 // https://github.com/jhipster/generator-jhipster/issues/9713
 if (OperatingSystem.current().isWindows()) {

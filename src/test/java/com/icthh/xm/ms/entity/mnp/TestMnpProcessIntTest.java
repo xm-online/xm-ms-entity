@@ -661,7 +661,7 @@ public class TestMnpProcessIntTest extends AbstractSpringBootTest {
     private void verifyKafkaEvent(XmEntity result, String state) {
         XmEntity expectedEntity = xmEntityService.findOne(IdOrKey.of(result.getId()));
         var expected = createMessage(expectedEntity, state);
-        verify(kafkaTemplateService).send(eq("LDB-REQUEST-UPDATES"), eq(0), eq(expectedEntity.getData().get("processId").toString()), argThat(it -> {
+        verify(kafkaTemplateService).send(eq("LDB-REQUEST-UPDATES"), eq(0), eq(expectedEntity.getId().toString()), argThat(it -> {
             Map<?, ?> actualMap = getMap(it);
             actualMap.remove("updateDate");
             assertEquals(expected, actualMap);
@@ -684,6 +684,7 @@ public class TestMnpProcessIntTest extends AbstractSpringBootTest {
                 put("requestType", portingRequest.getTypeKey().substring(portingRequest.getTypeKey().lastIndexOf('.') + 1));
                 put("processId", portingRequest.getData().get("processId"));
                 put("status", newStateKey);
+                put("messageType", null);
                 Map<String, Object> nextState = (Map<String, Object>) portingRequest.getData().get("nextState");
                 put("statusCode", nextState != null ? nextState.get("statusCode") : null);
                 put("numbers", ((List<Map<String, Object>>) portingRequest.getData().get("numbers")).stream().map(it ->
