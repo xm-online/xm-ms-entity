@@ -8,6 +8,8 @@ import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 
+import java.util.Collection;
+
 public class JsonbCriteriaBuilder {
 
     private final CriteriaBuilder criteriaBuilder;
@@ -21,6 +23,33 @@ public class JsonbCriteriaBuilder {
     public JsonbCriteriaBuilder(CriteriaBuilder criteriaBuilder, JsonbExpression jsonbExpression) {
         this.criteriaBuilder = criteriaBuilder;
         this.jsonbExpression = jsonbExpression;
+    }
+
+    public Predicate like(Root<XmEntity> root, String jsonPath, String likeValue) {
+        return criteriaBuilder.like(
+            jsonbExpression.jsonbToString(criteriaBuilder, root, XmEntity_.DATA, jsonPath),
+            "%" + likeValue + "%"
+        );
+    }
+
+    public Predicate in(Root<XmEntity> root, String jsonPath, Collection<?> object) {
+        return jsonbExpression.jsonQuery(criteriaBuilder, root, XmEntity_.DATA, jsonPath)
+            .in(jsonbExpression.toJsonbCollection(object, v -> jsonbExpression.toJsonB(criteriaBuilder, v)));
+    }
+
+    public Predicate inTextValues(Root<XmEntity> root, String jsonPath, Collection<?> object) {
+        return jsonbExpression.jsonQuery(criteriaBuilder, root, XmEntity_.DATA, jsonPath)
+            .in(jsonbExpression.toJsonbCollection(object, v -> jsonbExpression.toJsonbText(criteriaBuilder, v)));
+    }
+
+    public Predicate isNotNull(Root<XmEntity> root, String jsonPath) {
+        return criteriaBuilder.isNotNull(
+            jsonbExpression.jsonQuery(criteriaBuilder, root, XmEntity_.DATA, jsonPath));
+    }
+
+    public Predicate isNull(Root<XmEntity> root, String jsonPath) {
+        return criteriaBuilder.isNull(
+            jsonbExpression.jsonQuery(criteriaBuilder, root, XmEntity_.DATA, jsonPath));
     }
 
     public Predicate equal(Root<XmEntity> root, String jsonPath, Object object) {
