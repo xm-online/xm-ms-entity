@@ -27,6 +27,13 @@ public class JsonbCriteriaBuilder {
         this.jsonbExpression = jsonbExpression;
     }
 
+    public Predicate like(Root<XmEntity> root, String jsonPath, String likeValue) {
+        return criteriaBuilder.like(
+            jsonbToString(criteriaBuilder, root, XmEntity_.DATA, jsonPath),
+            "%" + likeValue + "%"
+        );
+    }
+
     public Predicate in(Root<XmEntity> root, String jsonPath, Collection<?> object) {
         return jsonbExpression.jsonQuery(criteriaBuilder, root, XmEntity_.DATA, jsonPath)
             .in(toJsonbCollection(object, v -> jsonbExpression.toJsonB(criteriaBuilder, v)));
@@ -196,5 +203,9 @@ public class JsonbCriteriaBuilder {
         return collection.stream()
             .map(converter)
             .toList();
+    }
+
+    public Expression<String> jsonbToString(CriteriaBuilder cb, Root<?> root, String column, String jsonPath) {
+        return cb.function("jsonb_to_string", String.class, root.get(column), cb.literal(jsonPath));
     }
 }
