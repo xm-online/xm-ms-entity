@@ -222,6 +222,21 @@ public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
     }
 
     @Test
+    public void testJsonSchemaFromSeparateFiles() {
+        mockTenant("RESINTTEST");
+        String configFirstPart = getXmEntitySpec("resinttest");
+        String configSecondPart = getXmEntitySpec("resinttest-part-2");
+        String key = SPEC_FOLDER_URL.replace("{tenantName}", "RESINTTEST") + "/file.yml";
+        xmEntitySpecService.onRefresh(key, configFirstPart);
+        xmEntitySpecService.onRefresh(key, configSecondPart);
+
+        JsonSchema jsonSchemaFromFirstFile = xmEntitySpecService.getDataJsonSchemaByKey("BASE_ENTITY.EXTENDS_ENABLED").orElse(null);
+        JsonSchema jsonSchemaFromSecondFile = xmEntitySpecService.getDataJsonSchemaByKey("BASE_ENTITY.SEPARATE_FILE_EXTENDS_ENABLED").orElse(null);
+        assertNotNull(jsonSchemaFromFirstFile);
+        assertNotNull(jsonSchemaFromSecondFile);
+    }
+
+    @Test
     public void testFindSpecByKey() {
         TypeSpec type = xmEntitySpecService.findTypeByKey(KEY1);
         assertNotNull(type);
