@@ -49,7 +49,7 @@ public class JsonbCriteriaBuilderIntTest extends AbstractJupiterSpringBootTest {
     public static final String SECOND_DATA_VALUE = "secondDataValue";
 
     @Container
-    public static PostgreSQLContainer<?> postgreSQLContainer = new PostgreSQLContainer<>("postgres:12.7")
+    public static PostgreSQLContainer<?> postgreSQLContainer = new PostgreSQLContainer<>("postgres:14.17")
         .withDatabaseName("entity")
         .withUsername("sa")
         .withPassword("sa");
@@ -101,15 +101,11 @@ public class JsonbCriteriaBuilderIntTest extends AbstractJupiterSpringBootTest {
         entityRepository.saveAll(List.of(firstEntity, secondEntity, thirdEntity));
 
         List<XmEntity> entities = entityRepository.findAll(Specification.where((root, query, cb) ->
-                cb.equal(
-                    cb.function(
-                        "jsonb_extract_path_text",
-                        String.class,
-                        root.get(XmEntity_.DATA),
-                        cb.literal(FIRST_DATA_KEY)),
-                    FIRST_DATA_VALUE)
+            cb.equal(
+                jsonbExpression.jsonbToString(cb, root, XmEntity_.DATA, FIRST_DATA_KEY),
+                FIRST_DATA_VALUE
             )
-        );
+        ));
         assertEquals(entities.size(), 1);
         assertEquals(entities.get(0).getData().get(FIRST_DATA_KEY), FIRST_DATA_VALUE);
     }
