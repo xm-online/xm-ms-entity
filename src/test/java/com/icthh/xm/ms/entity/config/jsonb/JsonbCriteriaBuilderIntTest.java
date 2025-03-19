@@ -111,6 +111,21 @@ public class JsonbCriteriaBuilderIntTest extends AbstractJupiterSpringBootTest {
     }
 
     @Test
+    public void searchXmEntityLikeJsonbDataTest() {
+        XmEntity firstEntity = createEntity(Map.of(FIRST_DATA_KEY, Map.of(SECOND_DATA_KEY, FIRST_DATA_VALUE)));
+        XmEntity secondEntity = createEntity(Map.of(FIRST_DATA_KEY, Map.of(SECOND_DATA_KEY, SECOND_DATA_VALUE)));
+        XmEntity thirdEntity = createEntity(Map.of());
+        entityRepository.saveAll(List.of(firstEntity, secondEntity, thirdEntity));
+
+        List<XmEntity> entities = entityRepository.findAll(Specification.where((root, query, cb) -> {
+            JsonbCriteriaBuilder jcb = new JsonbCriteriaBuilder(cb, jsonbExpression);
+            return jcb.like(root, "second", FIRST_DATA_KEY, SECOND_DATA_KEY);
+        }));
+        assertEquals(entities.size(), 1);
+        assertEquals(entities.get(0).getData().get(FIRST_DATA_KEY), Map.of(SECOND_DATA_KEY, SECOND_DATA_VALUE));
+    }
+
+    @Test
     public void equalJsonbObjectTest() {
         XmEntity firstEntity = createEntity(Map.of(FIRST_DATA_KEY, FIRST_DATA_VALUE));
         XmEntity secondEntity = createEntity(Map.of(FIRST_DATA_KEY, SECOND_DATA_VALUE));

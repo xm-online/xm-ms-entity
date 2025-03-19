@@ -25,7 +25,7 @@ public class JsonbCriteriaBuilder {
         this.jsonbExpression = jsonbExpression;
     }
 
-    public Predicate like(Root<XmEntity> root, String jsonPath, String likeValue) {
+    public Predicate like(Root<XmEntity> root, String likeValue, String... jsonPath) {
         return criteriaBuilder.like(
             jsonbExpression.jsonbToString(criteriaBuilder, root, XmEntity_.DATA, jsonPath),
             "%" + likeValue + "%"
