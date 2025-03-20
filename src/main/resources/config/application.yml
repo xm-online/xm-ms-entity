@@ -41,6 +41,13 @@ management:
         elasticsearch:
             enabled: false
     metrics:
+        distribution:
+            percentiles-histogram:
+                http: true
+                jvm: true
+                logback: true
+                process: true
+                system: true
         enable:
             http: true
             jvm: true
