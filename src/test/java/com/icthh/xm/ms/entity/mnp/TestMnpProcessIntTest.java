@@ -23,6 +23,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.stream.Collectors.toList;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.reset;
@@ -30,6 +31,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.LoggerContext;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
@@ -42,6 +45,7 @@ import com.icthh.xm.commons.config.client.service.TenantConfigService;
 import com.icthh.xm.commons.lep.XmLepScriptConfigServerResourceLoader;
 import com.icthh.xm.commons.lep.api.LepManagementService;
 import com.icthh.xm.commons.scheduler.domain.ScheduledEvent;
+import com.icthh.xm.commons.scheduler.service.SchedulerHandler;
 import com.icthh.xm.commons.scheduler.service.SchedulerService;
 import com.icthh.xm.commons.security.XmAuthenticationContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
@@ -52,6 +56,8 @@ import com.icthh.xm.commons.topic.service.KafkaTemplateService;
 import com.icthh.xm.ms.entity.AbstractSpringBootTest;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.domain.ext.IdOrKey;
+import com.icthh.xm.ms.entity.repository.XmEntityRepository;
+import com.icthh.xm.ms.entity.repository.search.XmEntitySearchRepository;
 import com.icthh.xm.ms.entity.service.FunctionService;
 import com.icthh.xm.ms.entity.service.SeparateTransactionExecutor;
 import com.icthh.xm.ms.entity.service.XmEntityService;
@@ -69,6 +75,7 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
+import org.elasticsearch.index.query.QueryBuilders;
 import org.jetbrains.annotations.NotNull;
 import org.junit.After;
 import org.junit.Before;
@@ -76,8 +83,12 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.MockitoAnnotations;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
+import org.springframework.data.elasticsearch.core.query.IndexQueryBuilder;
+import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.security.test.context.support.WithMockUser;
@@ -106,6 +117,15 @@ public class TestMnpProcessIntTest extends AbstractSpringBootTest {
     @Autowired
     private LepManagementService lepManager;
 
+    @Autowired
+    private XmEntitySearchRepository searchRepository;
+
+    @Autowired
+    private ElasticsearchTemplate elasticsearchTemplate;
+
+    @Autowired
+    private SeparateTransactionExecutor separateTransactionExecutor;
+
     @MockBean
     private RestTemplate loadBalancedRestTemplateWithTimeout;
 
@@ -117,6 +137,12 @@ public class TestMnpProcessIntTest extends AbstractSpringBootTest {
 
     @Autowired
     private XmEntityService xmEntityService;
+
+    @Autowired
+    private SchedulerHandler schedulerHandler;
+
+    @Autowired
+    private XmEntityRepository xmEntityRepository;
 
     @Autowired
     private TenantConfigService tenantConfigService;
@@ -132,9 +158,6 @@ public class TestMnpProcessIntTest extends AbstractSpringBootTest {
 
     @Autowired
     private MessageService messageService;
-
-    @Autowired
-    private SeparateTransactionExecutor separateTransactionExecutor;
 
     @Autowired
     private XmAuthenticationContextHolder authContextHolder;
@@ -217,6 +240,71 @@ public class TestMnpProcessIntTest extends AbstractSpringBootTest {
     public void tearDown() {
         lepManager.endThreadContext();
         tenantContextHolder.getPrivilegedContext().destroyCurrentContext();
+    }
+
+    @Test
+    @SneakyThrows
+    @DirtiesContext
+    public void testResendInWorkingTime() {
+        LoggerContext loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
+        ch.qos.logback.classic.Logger rootLogger = loggerContext.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME);
+        rootLogger.setLevel(Level.WARN);
+
+        mockSystemToken();
+//        WIRE_MOCK.stubFor(post(urlEqualTo("/api/communicationManagement/v2/communicationMessage/send"))
+//            .willReturn(aResponse().withStatus(200)));
+
+        List<Long> ids = new ArrayList<>();
+        ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
+        separateTransactionExecutor.doInSeparateTransaction(() -> {
+            for (int i = 0; i < 200; i++) {
+                XmEntity portIn = readPortInRequest(objectMapper);
+                portIn.getData().put("nextState", Map.of("statusCode", "108"));
+                portIn.setId(null);
+                var result = xmEntityRepository.save(portIn);
+
+                elasticsearchTemplate.index(new IndexQueryBuilder()
+                    .withId("" + result.getId())
+                    .withObject(result)
+                    .build());
+                ids.add(result.getId());
+            }
+            return null;
+        });
+
+        elasticsearchTemplate.refresh(XmEntity.class);
+        var result = elasticsearchTemplate.queryForList(
+            new NativeSearchQueryBuilder()
+                .withQuery(QueryBuilders.commonTermsQuery("data.nextState.statusCode", "108")).build(),
+            XmEntity.class);
+        log.info("Found: {}", result.size());
+
+        ScheduledEvent scheduledEvent = new ScheduledEvent();
+        scheduledEvent.setUuid(UUID.randomUUID().toString());
+        scheduledEvent.setTypeKey("resendRequestInWorkingTime");
+        schedulerHandler.onEvent(scheduledEvent, "XM");
+        TenantContextUtils.setTenant(tenantContextHolder, "XM");
+        Thread.sleep(500);
+        ScheduledEvent scheduledEvent2 = new ScheduledEvent();
+        scheduledEvent2.setUuid(UUID.randomUUID().toString());
+        scheduledEvent2.setTypeKey("resendRequestInWorkingTime");
+        schedulerHandler.onEvent(scheduledEvent2, "XM");
+        TenantContextUtils.setTenant(tenantContextHolder, "XM");
+
+        Thread.sleep(5000);
+
+        separateTransactionExecutor.doInSeparateTransaction(() -> {
+            for (XmEntity xmEntity : xmEntityRepository.findAllById(ids)) {
+                Map<String, Object> nextState = (Map<String, Object>) xmEntity.getData().get("nextState");
+                assertNull(nextState.get("statusCode"));
+            }
+            return null;
+        });
+    }
+
+    @SneakyThrows
+    private XmEntity readPortInRequest(ObjectMapper objectMapper) {
+        return objectMapper.readValue(getClass().getClassLoader().getResourceAsStream("mnp/portInRequest.json"), XmEntity.class);
     }
 
     @Test
