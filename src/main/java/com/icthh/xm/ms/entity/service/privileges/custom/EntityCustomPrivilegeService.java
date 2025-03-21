@@ -11,6 +11,8 @@ import com.icthh.xm.ms.entity.config.XmEntityTenantConfigService;
 import com.icthh.xm.ms.entity.config.XmEntityTenantConfigService.XmEntityTenantConfig;
 import com.icthh.xm.ms.entity.domain.spec.TypeSpec;
 import com.icthh.xm.ms.entity.service.XmEntitySpecService.EntitySpecUpdateListener;
+import java.util.ArrayList;
+import java.util.Comparator;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -25,6 +27,7 @@ import java.util.Map;
 
 import static com.icthh.xm.commons.config.client.repository.TenantConfigRepository.PATH_CONFIG_TENANT;
 import static java.util.Arrays.asList;
+import static java.util.Comparator.comparing;
 import static java.util.Optional.ofNullable;
 
 @Slf4j
@@ -99,8 +102,11 @@ public class EntityCustomPrivilegeService implements EntitySpecUpdateListener {
             if (customPrivileges.containsKey(privilegesExtractor.getSectionName())) {
                 customPrivileges.get(privilegesExtractor.getSectionName()).addAll(value);
             } else {
-                customPrivileges.put(privilegesExtractor.getSectionName(), value);
+                customPrivileges.put(privilegesExtractor.getSectionName(), new ArrayList<>(value));
             }
+
+            List<Map<String, Object>> section = customPrivileges.get(privilegesExtractor.getSectionName());
+            section.sort(comparing(it -> String.valueOf(it.get("key"))));
         }
         privileges.putAll(customPrivileges);
     }
