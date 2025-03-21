@@ -105,7 +105,7 @@ public class EntityCustomPrivilegeService implements EntitySpecUpdateListener {
                 customPrivileges.put(privilegesExtractor.getSectionName(), new ArrayList<>(value));
             }
 
-            value.sort(comparing(it -> it.get("key").toString()));
+            value.sort(comparing(it -> String.valueOf(it.get("key"))));
         }
         privileges.putAll(customPrivileges);
     }
