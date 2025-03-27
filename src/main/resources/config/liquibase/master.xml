@@ -88,4 +88,6 @@
 
     <include file="classpath:config/liquibase/changelog/20240802000000_rename_sequence.xml" relativeToChangelogFile="false"/>
 
+    <include file="classpath:config/liquibase/changelog/20250327000000_add_link_order.xml" relativeToChangelogFile="false"/>
+
 </databaseChangeLog>
