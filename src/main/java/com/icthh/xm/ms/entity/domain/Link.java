@@ -92,6 +92,10 @@ public class Link implements Serializable {
     @JoinColumn(name = "source_id", nullable = false)
     private XmEntity source;
 
+    @ApiModelProperty(value = "Order")
+    @Column(name = "link_order")
+    private Integer order;
+
     public Link() {
         super();
     }
