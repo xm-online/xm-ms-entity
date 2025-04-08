@@ -14,6 +14,7 @@ import org.springframework.web.multipart.MultipartFile;
 public class StorageService {
 
     private final S3StorageRepository s3StorageRepository;
+    private final ContentService contentService;
 
     public String store(MultipartFile file, Integer size) {
         return s3StorageRepository.store(file, size);
