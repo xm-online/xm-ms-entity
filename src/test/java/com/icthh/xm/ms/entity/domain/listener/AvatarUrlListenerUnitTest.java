@@ -1,23 +1,29 @@
 package com.icthh.xm.ms.entity.domain.listener;
 
 import static com.icthh.xm.ms.entity.config.Constants.DEFAULT_AVATAR_URL_PREFIX;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
 
-import com.icthh.xm.ms.entity.AbstractSpringBootTest;
+import com.icthh.xm.ms.entity.AbstractJupiterSpringBootTest;
+import com.icthh.xm.ms.entity.config.ApplicationProperties;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 
 @Slf4j
-public class AvatarUrlListenerUnitTest extends AbstractSpringBootTest {
+public class AvatarUrlListenerUnitTest extends AbstractJupiterSpringBootTest {
 
     private AvatarUrlListener target;
 
-    @Before
+    @Autowired
+    ApplicationProperties applicationProperties;
+
+    @BeforeEach
     public void setup() {
         target = new AvatarUrlListener();
+        target.setApplicationProperties(applicationProperties);
+        target.init();
     }
 
     @Test
@@ -26,8 +32,8 @@ public class AvatarUrlListenerUnitTest extends AbstractSpringBootTest {
 
         target.prePersist(entity);
 
-        assertNull(entity.getAvatarUrl());
-        assertNull(entity.getAvatarUrlRelative());
+        Assertions.assertNull(entity.getAvatarUrl());
+        Assertions.assertNull(entity.getAvatarUrlRelative());
     }
 
     @Test
@@ -36,8 +42,8 @@ public class AvatarUrlListenerUnitTest extends AbstractSpringBootTest {
 
         target.prePersist(entity);
 
-        assertEquals("hello.jpg", entity.getAvatarUrl());
-        assertEquals("hello.jpg", entity.getAvatarUrlRelative());
+        Assertions.assertEquals("hello.jpg", entity.getAvatarUrl());
+        Assertions.assertEquals("hello.jpg", entity.getAvatarUrlRelative());
     }
 
     @Test
@@ -46,8 +52,8 @@ public class AvatarUrlListenerUnitTest extends AbstractSpringBootTest {
 
         target.prePersist(entity);
 
-        assertEquals("http://s3.com/hello.jpg", entity.getAvatarUrl());
-        assertEquals("http://s3.com/hello.jpg", entity.getAvatarUrlRelative());
+        Assertions.assertEquals("http://s3.com/hello.jpg", entity.getAvatarUrl());
+        Assertions.assertEquals("http://s3.com/hello.jpg", entity.getAvatarUrlRelative());
     }
 
     @Test
@@ -56,8 +62,8 @@ public class AvatarUrlListenerUnitTest extends AbstractSpringBootTest {
 
         target.prePersist(entity);
 
-        assertEquals("hello.jpg", entity.getAvatarUrlRelative());
-        assertEquals("http://hello.rgw.icthh.test/hello.jpg", entity.getAvatarUrl());
+        Assertions.assertEquals("hello.jpg", entity.getAvatarUrlRelative());
+        Assertions.assertEquals("http://hello.rgw.icthh.test/hello.jpg", entity.getAvatarUrl());
     }
 
     @Test
@@ -66,8 +72,8 @@ public class AvatarUrlListenerUnitTest extends AbstractSpringBootTest {
 
         target.prePersist(entity);
 
-        assertEquals("hello.jpg", entity.getAvatarUrlRelative());
-        assertEquals("https://hello-rgw.icthh.test/hello.jpg", entity.getAvatarUrl());
+        Assertions.assertEquals("hello.jpg", entity.getAvatarUrlRelative());
+        Assertions.assertEquals("https://hello-rgw.icthh.test/hello.jpg", entity.getAvatarUrl());
     }
 
     @Test
@@ -76,8 +82,8 @@ public class AvatarUrlListenerUnitTest extends AbstractSpringBootTest {
 
         target.postLoad(entity);
 
-        assertNull(entity.getAvatarUrl());
-        assertNull(entity.getAvatarUrlRelative());
+        Assertions.assertNull(entity.getAvatarUrl());
+        Assertions.assertNull(entity.getAvatarUrlRelative());
     }
 
     @Test
@@ -86,7 +92,7 @@ public class AvatarUrlListenerUnitTest extends AbstractSpringBootTest {
 
         target.postLoad(entity);
 
-        assertEquals("http://s3.hello.amazonaws.com/hello/hello.jpg", entity.getAvatarUrl());
+        Assertions.assertEquals("http://s3.hello.amazonaws.com/hello/hello.jpg", entity.getAvatarUrl());
     }
 
     @Test
@@ -95,7 +101,7 @@ public class AvatarUrlListenerUnitTest extends AbstractSpringBootTest {
 
         target.postLoad(entity);
 
-        assertEquals(DEFAULT_AVATAR_URL_PREFIX + "/hello.jpg", entity.getAvatarUrl());
+        Assertions.assertEquals(DEFAULT_AVATAR_URL_PREFIX + "/hello.jpg", entity.getAvatarUrl());
     }
 
 }
