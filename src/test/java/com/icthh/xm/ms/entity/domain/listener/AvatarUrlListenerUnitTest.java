@@ -2,6 +2,7 @@ package com.icthh.xm.ms.entity.domain.listener;
 
 import static com.icthh.xm.ms.entity.config.Constants.DEFAULT_AVATAR_URL_PREFIX;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 import com.icthh.xm.ms.entity.AbstractSpringBootTest;
 import com.icthh.xm.ms.entity.domain.XmEntity;
@@ -25,7 +26,8 @@ public class AvatarUrlListenerUnitTest extends AbstractSpringBootTest {
 
         target.prePersist(entity);
 
-        assertEquals(null, entity.getAvatarUrl());
+        assertNull(entity.getAvatarUrl());
+        assertNull(entity.getAvatarUrlRelative());
     }
 
     @Test
@@ -35,6 +37,17 @@ public class AvatarUrlListenerUnitTest extends AbstractSpringBootTest {
         target.prePersist(entity);
 
         assertEquals("hello.jpg", entity.getAvatarUrl());
+        assertEquals("hello.jpg", entity.getAvatarUrlRelative());
+    }
+
+    @Test
+    public void testPrePersistWrongFormatOther() {
+        XmEntity entity = new XmEntity().avatarUrl("http://s3.com/hello.jpg");
+
+        target.prePersist(entity);
+
+        assertEquals("http://s3.com/hello.jpg", entity.getAvatarUrl());
+        assertEquals("http://s3.com/hello.jpg", entity.getAvatarUrlRelative());
     }
 
     @Test
@@ -44,6 +57,7 @@ public class AvatarUrlListenerUnitTest extends AbstractSpringBootTest {
         target.prePersist(entity);
 
         assertEquals("hello.jpg", entity.getAvatarUrlRelative());
+        assertEquals("http://hello.rgw.icthh.test/hello.jpg", entity.getAvatarUrl());
     }
 
     @Test
@@ -53,6 +67,7 @@ public class AvatarUrlListenerUnitTest extends AbstractSpringBootTest {
         target.prePersist(entity);
 
         assertEquals("hello.jpg", entity.getAvatarUrlRelative());
+        assertEquals("https://hello-rgw.icthh.test/hello.jpg", entity.getAvatarUrl());
     }
 
     @Test
@@ -61,7 +76,8 @@ public class AvatarUrlListenerUnitTest extends AbstractSpringBootTest {
 
         target.postLoad(entity);
 
-        assertEquals(null, entity.getAvatarUrl());
+        assertNull(entity.getAvatarUrl());
+        assertNull(entity.getAvatarUrlRelative());
     }
 
     @Test
