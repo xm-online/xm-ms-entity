@@ -21,6 +21,8 @@ import com.icthh.xm.ms.entity.AbstractSpringBootTest;
 import com.icthh.xm.ms.entity.config.ApplicationProperties;
 import com.icthh.xm.ms.entity.config.Constants;
 import com.icthh.xm.ms.entity.config.InternalTransactionService;
+
+import static com.icthh.xm.ms.entity.config.Constants.DEFAULT_AVATAR_URL_PREFIX;
 import static com.icthh.xm.ms.entity.config.TenantConfigMockConfiguration.getXmEntityTemplatesSpec;
 import com.icthh.xm.ms.entity.config.WebMvcConfiguration;
 import com.icthh.xm.ms.entity.config.XmEntityTenantConfigService;
@@ -149,9 +151,7 @@ public class XmEntityResourceExtendedIntTest extends AbstractSpringBootTest {
 
     private static final Instant DEFAULT_END_DATE = Instant.ofEpochMilli(3000L);
 
-    private static final String DEFAULT_AVATAR_URL_PREFIX = "http://xm-avatar.rgw.icthh.test:7480/";
-
-    private static final String DEFAULT_AVATAR_URL = DEFAULT_AVATAR_URL_PREFIX + "aaaaa.jpg";
+    private static final String DEFAULT_AVATAR_URL = DEFAULT_AVATAR_URL_PREFIX + "/aaaaa.jpg";
 
     private static final String DEFAULT_DESCRIPTION = "AAAAAAAAAA";
 
