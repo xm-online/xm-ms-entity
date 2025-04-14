@@ -1,12 +1,12 @@
 package com.icthh.xm.ms.entity.domain.listener;
 
+import static com.icthh.xm.ms.entity.config.Constants.DEFAULT_AVATAR_URL_PREFIX;
 import static org.junit.Assert.assertEquals;
 
 import com.icthh.xm.ms.entity.AbstractSpringBootTest;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 @Slf4j
@@ -73,14 +73,13 @@ public class AvatarUrlListenerUnitTest extends AbstractSpringBootTest {
         assertEquals("http://s3.hello.amazonaws.com/hello/hello.jpg", entity.getAvatarUrl());
     }
 
-    @Ignore
     @Test
     public void testPostLoadSuccess() {
         XmEntity entity = new XmEntity().avatarUrl("hello.jpg");
 
         target.postLoad(entity);
 
-        assertEquals("http://hello.rgw.icthh.test/hello.jpg", entity.getAvatarUrl());
+        assertEquals(DEFAULT_AVATAR_URL_PREFIX + "/hello.jpg", entity.getAvatarUrl());
     }
 
 }

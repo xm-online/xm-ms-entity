@@ -96,6 +96,7 @@ import java.util.Optional;
 import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_AUTH_CONTEXT;
 import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_TENANT_CONTEXT;
 import static com.icthh.xm.commons.tenant.TenantContextUtils.getRequiredTenantKeyValue;
+import static com.icthh.xm.ms.entity.config.Constants.DEFAULT_AVATAR_URL_PREFIX;
 import static com.icthh.xm.ms.entity.config.TenantConfigMockConfiguration.getXmEntityTemplatesSpec;
 import static com.icthh.xm.ms.entity.web.rest.TestUtil.sameInstant;
 import static java.lang.Long.valueOf;
@@ -140,9 +141,7 @@ public class XmEntityResourceExtendedElasticsearchTest extends AbstractElasticSp
 
     private static final Instant DEFAULT_END_DATE = Instant.ofEpochMilli(3000L);
 
-    private static final String DEFAULT_AVATAR_URL_PREFIX = "http://xm-avatar.rgw.icthh.test:7480/";
-
-    private static final String DEFAULT_AVATAR_URL = DEFAULT_AVATAR_URL_PREFIX + "aaaaa.jpg";
+    private static final String DEFAULT_AVATAR_URL = DEFAULT_AVATAR_URL_PREFIX + "/aaaaa.jpg";
 
     private static final String DEFAULT_DESCRIPTION = "AAAAAAAAAA";
 

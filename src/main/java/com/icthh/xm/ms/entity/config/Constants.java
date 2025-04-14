@@ -52,6 +52,8 @@ public final class Constants {
 
     public static final String MVC_FUNC_RESULT = "modelAndView";
 
+    public static final String DEFAULT_AVATAR_URL_PREFIX = "http://xm-avatar.rgw.icthh.test:7480";
+
     private Constants() {
     }
 }
