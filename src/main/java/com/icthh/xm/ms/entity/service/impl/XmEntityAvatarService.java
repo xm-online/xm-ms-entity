@@ -1,6 +1,6 @@
 package com.icthh.xm.ms.entity.service.impl;
 
-import com.icthh.xm.commons.lep.spring.LepService;
+import com.icthh.xm.ms.entity.config.ApplicationProperties;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.domain.ext.IdOrKey;
 import com.icthh.xm.ms.entity.service.ProfileService;
@@ -24,6 +24,7 @@ public class XmEntityAvatarService {
     private final XmEntityService xmEntityService;
     private final StorageService storageService;
     private final ProfileService profileService;
+    private final ApplicationProperties applicationProperties;
 
     @Transactional
     public URI updateAvatar(IdOrKey idOrKey, HttpEntity<Resource> avatarHttpEntity) {
@@ -37,7 +38,9 @@ public class XmEntityAvatarService {
             log.debug("Resolved entity id = {}, typeKet = {}", source.getId(), source.getTypeKey());
         }
 
-        String avatarUrl = storageService.store(avatarHttpEntity, null);
+        String avatarUrl = storageService.storeAvatar(
+            avatarHttpEntity,
+            applicationProperties.getObjectStorage().getAvatar().getMaxImageSize());
         log.info("Avatar {} stored for entity {}", avatarUrl, idOrKey);
 
         source.setAvatarUrl(avatarUrl);

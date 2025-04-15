@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.net.URISyntaxException;
+import java.io.IOException;
 
 /**
  * REST controller for managing Storage objects.
@@ -31,18 +31,34 @@ public class StorageResource {
     private final StorageService storageService;
     private final ApplicationProperties applicationProperties;
 
+
+    /**
+     * Api for uploading data to object storage.
+     * @param size used to resize avatar (legacy)
+     */
     @PostMapping("/objects")
     @Timed
     @PreAuthorize("hasPermission({'size': #size, 'multipartFile': #multipartFile}, 'STORAGE.OBJECT.CREATE')")
     @PrivilegeDescription("Privilege to create object on S3 or other supported storage")
-    public ResponseEntity<String> createContent(@RequestParam(required = false) Integer size,
+    public ResponseEntity<String> createContent(
+        @RequestParam(required = false) Integer size,
+        @RequestParam(required = false, defaultValue = "true") boolean isAvatar,
         @RequestParam("file") MultipartFile multipartFile)
-        throws URISyntaxException {
+        throws IOException {
+
         if (multipartFile.getSize() > applicationProperties.getMaxAvatarSize()) {
             throw new BusinessException(ERR_VALIDATION,
-                                        "Avatar file must not exceed " + applicationProperties.getMaxAvatarSize() + " bytes");
+                "Avatar file must not exceed " + applicationProperties.getMaxAvatarSize() + " bytes");
         }
-        String result = storageService.store(multipartFile, size);
+
+        final String contentType = multipartFile.getContentType();
+        if (isAvatar && contentType != null && "image".equals(contentType.substring(0, 5))) {
+            String result = storageService.storeAvatar(multipartFile, size);
+            return ResponseEntity.ok(result);
+
+        }
+
+        String result = storageService.store(multipartFile, null);
         return ResponseEntity.ok(result);
     }
 

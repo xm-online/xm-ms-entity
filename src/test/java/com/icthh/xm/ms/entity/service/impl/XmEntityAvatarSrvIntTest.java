@@ -2,7 +2,8 @@ package com.icthh.xm.ms.entity.service.impl;
 
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
-import com.icthh.xm.ms.entity.AbstractSpringBootTest;
+import com.icthh.xm.ms.entity.AbstractJupiterSpringBootTest;
+import com.icthh.xm.ms.entity.config.ApplicationProperties;
 import com.icthh.xm.ms.entity.domain.Profile;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.domain.ext.IdOrKey;
@@ -12,8 +13,8 @@ import com.icthh.xm.ms.entity.service.StorageService;
 import com.icthh.xm.ms.entity.util.EntityUtils;
 import com.icthh.xm.ms.entity.util.XmHttpEntityUtils;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
@@ -36,7 +37,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
 @Slf4j
-public class XmEntityAvatarSrvIntTest extends AbstractSpringBootTest {
+public class XmEntityAvatarSrvIntTest extends AbstractJupiterSpringBootTest {
 
     private static final String FILE_NAME = "test.jpg";
 
@@ -57,6 +58,9 @@ public class XmEntityAvatarSrvIntTest extends AbstractSpringBootTest {
     @Autowired
     private XmEntityRepositoryInternal xmEntityRepository;
 
+    @Autowired
+    private ApplicationProperties applicationProperties;
+
     private AutoCloseable mockito;
 
     private Profile self;
@@ -70,7 +74,7 @@ public class XmEntityAvatarSrvIntTest extends AbstractSpringBootTest {
         TenantContextUtils.setTenant(tenantContextHolder, "RESINTTEST");
 
         mockito = MockitoAnnotations.openMocks(this);
-        xmEntityAvatarService = new XmEntityAvatarService(xmEntityService, storageService, profileService);
+        xmEntityAvatarService = new XmEntityAvatarService(xmEntityService, storageService, profileService, applicationProperties);
     }
 
     @AfterTransaction
@@ -82,7 +86,7 @@ public class XmEntityAvatarSrvIntTest extends AbstractSpringBootTest {
         }
     }
 
-    @Before
+    @BeforeEach
     public void before() {
 
         //Create SELF profile
@@ -116,7 +120,7 @@ public class XmEntityAvatarSrvIntTest extends AbstractSpringBootTest {
     @Transactional
     @WithMockUser(authorities = "SUPER-ADMIN")
     public void updateSelfAvatarTest() throws Exception {
-        when(storageService.store(Mockito.any(HttpEntity.class), Mockito.any())).thenReturn(FILE_NAME);
+        when(storageService.storeAvatar(Mockito.any(HttpEntity.class), Mockito.any())).thenReturn(FILE_NAME);
 
         MockMultipartFile file =
             new MockMultipartFile("file", FILE_NAME, "image/jpg", "TEST".getBytes());
@@ -133,7 +137,7 @@ public class XmEntityAvatarSrvIntTest extends AbstractSpringBootTest {
     @Transactional
     @WithMockUser(authorities = "SUPER-ADMIN")
     public void updateEntityAvatarTest() throws Exception {
-        when(storageService.store(Mockito.any(HttpEntity.class), Mockito.any())).thenReturn(FILE_NAME);
+        when(storageService.storeAvatar(Mockito.any(HttpEntity.class), Mockito.any())).thenReturn(FILE_NAME);
         XmEntity storedEntity = xmEntityRepository.findOne(otherId);
         assertThat(storedEntity.getAvatarUrl()).isNull();
 
