@@ -33,6 +33,7 @@ import com.icthh.xm.ms.entity.domain.spec.UniqueFieldSpec;
 import com.icthh.xm.ms.entity.domain.spec.XmEntitySpec;
 import com.icthh.xm.ms.entity.security.access.XmEntityDynamicPermissionCheckService;
 import com.icthh.xm.ms.entity.service.privileges.custom.ApplicationCustomPrivilegesExtractor;
+import com.icthh.xm.ms.entity.service.privileges.custom.DynamicXmEntityPrivilegesExtractor;
 import com.icthh.xm.ms.entity.service.privileges.custom.EntityCustomPrivilegeService;
 import com.icthh.xm.ms.entity.service.privileges.custom.FunctionCustomPrivilegesExtractor;
 import com.icthh.xm.ms.entity.service.privileges.custom.FunctionWithXmEntityCustomPrivilegesExtractor;
@@ -193,7 +194,8 @@ public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
                                                 asList(
                                                     new ApplicationCustomPrivilegesExtractor(),
                                                     new FunctionCustomPrivilegesExtractor(tenantConfig),
-                                                    new FunctionWithXmEntityCustomPrivilegesExtractor(tenantConfig)
+                                                    new FunctionWithXmEntityCustomPrivilegesExtractor(tenantConfig),
+                                                    new DynamicXmEntityPrivilegesExtractor(tenantConfig)
                                                 ),
                                                 tenantConfig
                                             ),
@@ -518,6 +520,18 @@ public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
 
         String customPrivileges = readFile("config/privileges/custom-privileges-with-function.yml");
         String expectedCustomPrivileges = readFile("config/privileges/expected-custom-privileges-with-function.yml");
+
+        testUpdateCustomerPrivileges(customPrivileges, expectedCustomPrivileges);
+    }
+
+    @Test
+    @SneakyThrows
+    public void testUpdateCustomXmEntityDeletePrivileges() {
+        Map<String, Object> configMap = Map.of("dynamicTypeKeyPermission", Map.of("entityDeletion", Boolean.TRUE.toString()));
+        tenantConfig.onRefresh("/config/tenants/XM/tenant-config.yml", new ObjectMapper().writeValueAsString(configMap));
+
+        String customPrivileges = readFile("config/privileges/custom-privileges.yml");
+        String expectedCustomPrivileges = readFile("config/privileges/expected-custom-privileges-with-xm-entity.yml");
 
         testUpdateCustomerPrivileges(customPrivileges, expectedCustomPrivileges);
     }
