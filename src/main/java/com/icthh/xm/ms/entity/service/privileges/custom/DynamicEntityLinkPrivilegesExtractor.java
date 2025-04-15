@@ -16,7 +16,7 @@ import static java.util.stream.Collectors.toList;
  */
 @Slf4j
 @Component
-public class DynamicEntityPrivilegesExtractor implements CustomPrivilegesExtractor {
+public class DynamicEntityLinkPrivilegesExtractor implements CustomPrivilegesExtractor {
 
     private static final String DYNAMIC_ENTITY_PRIVILEGES_SECTION_NAME = "entity-dynamic-privileges";
     private static final String LINK_PRIVILEGE_PREFIX = "LINK.DELETE.";
