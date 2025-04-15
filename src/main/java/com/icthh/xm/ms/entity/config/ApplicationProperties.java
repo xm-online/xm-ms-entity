@@ -20,17 +20,21 @@ import java.util.List;
 @Setter
 public class ApplicationProperties {
 
+    public static final Integer DEFAULT_MAX_AVATAR_SIZE = 1024 * 1024;
+    public static final Integer DEFAULT_MAX_IMAGE_SIZE = 100;
+
     private final Amazon amazon = new Amazon();
     private final Retry retry = new Retry();
     private final Lep lep = new Lep();
     private final Jpa jpa = new Jpa();
+    private final ObjectStorage objectStorage = new ObjectStorage();
 
     private List<String> tenantIgnoredPathList = Collections.emptyList();
     private List<String> timelineIgnoredHttpMethods = Collections.emptyList();
     /**
      * Default max avatar size 1Mb
      */
-    private long maxAvatarSize = 1024 * 1024;
+    private long maxAvatarSize = DEFAULT_MAX_AVATAR_SIZE;
     private boolean timelinesEnabled;
     private boolean kafkaEnabled;
     private boolean schedulerEnabled;
@@ -137,4 +141,31 @@ public class ApplicationProperties {
     public static class Jpa {
         private Integer findOneByIdForUpdateTimeout = 10000;
     }
+
+    @Getter
+    @Setter
+    public static class ObjectStorage {
+        private AvatarStorage avatar = new AvatarStorage();
+    }
+
+    @Setter
+    public static class AvatarStorage {
+        @Getter
+        private StorageType storageType = StorageType.S3;
+        private Integer maxImageSize = DEFAULT_MAX_IMAGE_SIZE;
+        private Integer maxSize = DEFAULT_MAX_AVATAR_SIZE;
+
+        public Integer getMaxImageSize() {
+            return (maxImageSize == null || maxImageSize <= 0) ? DEFAULT_MAX_IMAGE_SIZE : maxImageSize;
+        }
+
+        public Integer getMaxSize() {
+            return (maxSize == null || maxSize <= 0) ? DEFAULT_MAX_AVATAR_SIZE : maxSize;
+        }
+    }
+
+    public enum StorageType {
+        DB, S3, FILE
+    }
+
 }

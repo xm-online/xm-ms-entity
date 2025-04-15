@@ -137,6 +137,14 @@ application:
     scheduler-enabled: false
     tenant-ignored-path-list: /v2/api-docs, /api/profile-info, /swagger-resources/configuration/ui, /management/health
     kafka-enabled: false
+    objectStorage:
+        avatar:
+            # DB, S3, FILE
+            storageType: DB
+            # Max width
+            maxImageSize: 100
+            # Max file size 1024 * 32
+            max-size: 32767
     amazon:
         avatar:
             pre-persist-url-full-pattern: ^http(s)?:\/\/[a-zA-Z0-9-.]+[.]icthh[.][a-z]+(:\d+)?/[a-zA-Z0-9-.]+$

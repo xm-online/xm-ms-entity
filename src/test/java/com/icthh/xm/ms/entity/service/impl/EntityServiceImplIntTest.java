@@ -377,7 +377,7 @@ public class EntityServiceImplIntTest extends AbstractSpringBootTest {
     @Test
     @Transactional
     @WithMockUser(authorities = "SUPER-ADMIN")
-    public void addFileAttachment() {
+    public void addFileAttachment() throws IOException {
         when(storageService.store(Mockito.any(MultipartFile.class), Mockito.any())).thenReturn("test.txt");
 
         XmEntity targetEntity = xmEntityRepository.save(createEntity(2l, TARGET_TYPE_KEY));

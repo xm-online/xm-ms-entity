@@ -664,6 +664,7 @@ public class XmEntityServiceImpl implements XmEntityService {
     }
 
     @Override
+    @SneakyThrows
     public XmEntity addFileAttachment(XmEntity entity, MultipartFile file) {
         //save multipart file to storage
         String storedFileName = storageService.store(file, null);
