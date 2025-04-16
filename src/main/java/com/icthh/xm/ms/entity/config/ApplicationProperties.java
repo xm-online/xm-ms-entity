@@ -3,6 +3,7 @@ package com.icthh.xm.ms.entity.config;
 import com.icthh.xm.commons.lep.TenantScriptStorage;
 import lombok.Getter;
 import lombok.Setter;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
@@ -22,6 +23,8 @@ public class ApplicationProperties {
 
     public static final Integer DEFAULT_MAX_AVATAR_SIZE = 1024 * 1024;
     public static final Integer DEFAULT_MAX_IMAGE_SIZE = 100;
+    public static final String DEFAULT_DB_FILE_PREFIX = "xme-%id%-";
+    public static final String DEFAULT_DB_URL_TMPLT = "https://%s.xm-online.com/entity/api/storage/object";
 
     private final Amazon amazon = new Amazon();
     private final Retry retry = new Retry();
@@ -154,6 +157,8 @@ public class ApplicationProperties {
         private StorageType storageType = StorageType.S3;
         private Integer maxImageSize = DEFAULT_MAX_IMAGE_SIZE;
         private Integer maxSize = DEFAULT_MAX_AVATAR_SIZE;
+        private String dbFilePrefix;
+        private String dbUrlTemplate;
 
         public Integer getMaxImageSize() {
             return (maxImageSize == null || maxImageSize <= 0) ? DEFAULT_MAX_IMAGE_SIZE : maxImageSize;
@@ -161,6 +166,14 @@ public class ApplicationProperties {
 
         public Integer getMaxSize() {
             return (maxSize == null || maxSize <= 0) ? DEFAULT_MAX_AVATAR_SIZE : maxSize;
+        }
+
+        public String getDbFilePrefix() {
+            return StringUtils.isEmpty(dbFilePrefix) ? DEFAULT_DB_FILE_PREFIX : dbFilePrefix;
+        }
+
+        public String getDbUrlTemplate() {
+            return StringUtils.isEmpty(dbUrlTemplate) ? DEFAULT_DB_URL_TMPLT : dbUrlTemplate;
         }
     }
 

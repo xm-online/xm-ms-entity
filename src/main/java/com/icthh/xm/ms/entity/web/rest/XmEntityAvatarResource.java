@@ -3,7 +3,6 @@ package com.icthh.xm.ms.entity.web.rest;
 import com.codahale.metrics.annotation.Timed;
 import com.icthh.xm.commons.permission.annotation.PrivilegeDescription;
 import com.icthh.xm.ms.entity.domain.ext.IdOrKey;
-import com.icthh.xm.ms.entity.service.XmEntityService;
 import com.icthh.xm.ms.entity.service.impl.XmEntityAvatarService;
 import com.icthh.xm.ms.entity.util.XmHttpEntityUtils;
 import jakarta.servlet.http.HttpServletRequest;
@@ -42,9 +41,7 @@ public class XmEntityAvatarResource {
     @PreAuthorize("hasPermission({'idOrKey':#idOrKey, 'multipartFile':#multipartFile}, 'XMENTITY.AVATAR.UPDATE')")
     @PrivilegeDescription("Privilege to update avatar")
     public ResponseEntity<Void> updateAvatar(@PathVariable String idOrKey,
-                                             @RequestParam("file") MultipartFile multipartFile)
-        throws IOException {
-
+                                             @RequestParam("file") MultipartFile multipartFile) throws IOException {
         HttpEntity<Resource> avatarEntity = XmHttpEntityUtils.buildAvatarHttpEntity(multipartFile);
         URI uri = xmEntityAvatarService.updateAvatar(IdOrKey.of(idOrKey), avatarEntity);
         return buildAvatarUpdateResponse(uri);

@@ -104,4 +104,14 @@ public class AvatarUrlListenerUnitTest extends AbstractJupiterSpringBootTest {
         Assertions.assertEquals(DEFAULT_AVATAR_URL_PREFIX + "/hello.jpg", entity.getAvatarUrl());
     }
 
+    @Test
+    public void testPostLoadXmeStoreSuccess() {
+        XmEntity entity = new XmEntity().avatarUrl(applicationProperties.getObjectStorage().getAvatar().getDbFilePrefix() + "hello.jpg");
+
+        target.postLoad(entity);
+
+        Assertions.assertEquals(applicationProperties.getObjectStorage().getAvatar().getDbUrlTemplate() + "/" + entity.getAvatarUrlRelative(), entity.getAvatarUrl());
+    }
+
+
 }

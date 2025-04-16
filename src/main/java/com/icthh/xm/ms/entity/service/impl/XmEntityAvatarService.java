@@ -13,6 +13,7 @@ import org.springframework.http.HttpEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.IOException;
 import java.net.URI;
 import java.util.List;
 
@@ -27,7 +28,7 @@ public class XmEntityAvatarService {
     private final ApplicationProperties applicationProperties;
 
     @Transactional
-    public URI updateAvatar(IdOrKey idOrKey, HttpEntity<Resource> avatarHttpEntity) {
+    public URI updateAvatar(IdOrKey idOrKey, HttpEntity<Resource> avatarHttpEntity) throws IOException {
         XmEntity source;
 
         if (idOrKey.isSelf()) {

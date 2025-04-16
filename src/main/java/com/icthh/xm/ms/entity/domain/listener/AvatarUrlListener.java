@@ -25,6 +25,9 @@ public class AvatarUrlListener {
     private String prefix;
     private String patternFull;
     private String patternPart;
+    private ApplicationProperties.StorageType avatarStorageType;
+    private String dbAvatarPrefix;
+    private String dbUrlTemplate;
 
     private ApplicationProperties applicationProperties;
 
@@ -42,6 +45,9 @@ public class AvatarUrlListener {
         log.debug("Initializing AvatarUrlListener patternFull={}", patternFull);
         patternPart = applicationProperties.getAmazon().getAvatar().getPostLoadUrlPartPattern();
         log.debug("Initializing AvatarUrlListener patternPart={}", patternPart);
+        avatarStorageType = applicationProperties.getObjectStorage().getAvatar().getStorageType();
+        dbAvatarPrefix = applicationProperties.getObjectStorage().getAvatar().getDbFilePrefix();
+        dbUrlTemplate = applicationProperties.getObjectStorage().getAvatar().getDbUrlTemplate();
     }
 
     @PrePersist
@@ -63,6 +69,14 @@ public class AvatarUrlListener {
     public void postLoad(XmEntity obj) {
         String avatarUrl = obj.getAvatarUrlRelative();
         if (StringUtils.isNoneBlank(avatarUrl)) {
+
+            if (ApplicationProperties.StorageType.DB == avatarStorageType) {
+                if (StringUtils.startsWith(avatarUrl, dbAvatarPrefix)) {
+                    obj.setAvatarUrlFull(dbUrlTemplate + "/" + avatarUrl);
+                    return;
+                }
+            }
+
             if (isUrlMatchesPattern(avatarUrl, patternPart)) {
                 obj.setAvatarUrlFull(prefix + avatarUrl);
             } else {
