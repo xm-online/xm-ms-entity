@@ -16,7 +16,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
@@ -46,7 +45,7 @@ public class XmEntityAvatarSrvIntTest extends AbstractJupiterSpringBootTest {
     @Mock
     private ProfileService profileService;
 
-    @Mock
+    @Autowired
     private StorageService storageService;
 
     @Mock
@@ -120,24 +119,25 @@ public class XmEntityAvatarSrvIntTest extends AbstractJupiterSpringBootTest {
     @Transactional
     @WithMockUser(authorities = "SUPER-ADMIN")
     public void updateSelfAvatarTest() throws Exception {
-        when(storageService.storeAvatar(Mockito.any(HttpEntity.class), Mockito.any())).thenReturn(FILE_NAME);
-
         MockMultipartFile file =
             new MockMultipartFile("file", FILE_NAME, "image/jpg", "TEST".getBytes());
         HttpEntity<Resource> avatarEntity = XmHttpEntityUtils.buildAvatarHttpEntity(file);
 
         URI uri = xmEntityAvatarService.updateAvatar(IdOrKey.SELF, avatarEntity);
-        assertThat(uri.getPath()).isEqualTo(FILE_NAME);
+        assertThat(uri.getPath()).contains(FILE_NAME);
 
         XmEntity storedEntity = xmEntityRepository.findOne(self.getXmentity().getId());
-        assertThat(storedEntity.getAvatarUrl()).isEqualTo(FILE_NAME);
+        assertThat(storedEntity.getAvatarUrl()).contains(FILE_NAME);
+
+        if (applicationProperties.getObjectStorage().getAvatar().getStorageType() == ApplicationProperties.StorageType.DB) {
+            assertThat(storedEntity.getAvatarUrl()).startsWith(applicationProperties.getObjectStorage().getAvatar().getDbFilePrefix());
+        }
     }
 
     @Test
     @Transactional
     @WithMockUser(authorities = "SUPER-ADMIN")
     public void updateEntityAvatarTest() throws Exception {
-        when(storageService.storeAvatar(Mockito.any(HttpEntity.class), Mockito.any())).thenReturn(FILE_NAME);
         XmEntity storedEntity = xmEntityRepository.findOne(otherId);
         assertThat(storedEntity.getAvatarUrl()).isNull();
 
@@ -146,10 +146,14 @@ public class XmEntityAvatarSrvIntTest extends AbstractJupiterSpringBootTest {
         HttpEntity<Resource> avatarEntity = XmHttpEntityUtils.buildAvatarHttpEntity(file);
 
         URI uri = xmEntityAvatarService.updateAvatar(IdOrKey.of(otherId), avatarEntity);
-        assertThat(uri.getPath()).isEqualTo(FILE_NAME);
+        assertThat(uri.getPath()).contains(FILE_NAME);
 
         storedEntity = xmEntityRepository.findOne(otherId);
-        assertThat(storedEntity.getAvatarUrl()).isEqualTo(FILE_NAME);
+        assertThat(storedEntity.getAvatarUrl()).contains(FILE_NAME);
+
+        if (applicationProperties.getObjectStorage().getAvatar().getStorageType() == ApplicationProperties.StorageType.DB) {
+            assertThat(storedEntity.getAvatarUrl()).startsWith(applicationProperties.getObjectStorage().getAvatar().getDbFilePrefix());
+        }
     }
 
 }
