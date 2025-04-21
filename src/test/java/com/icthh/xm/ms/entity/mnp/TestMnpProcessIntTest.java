@@ -24,6 +24,7 @@ import static java.util.stream.Collectors.toList;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
@@ -305,9 +306,9 @@ public class TestMnpProcessIntTest extends AbstractSpringBootTest {
         scheduledEvent.setTypeKey("resendRequestInWorkingTime");
         schedulerHandler.onEvent(scheduledEvent, "XM");
         TenantContextUtils.setTenant(tenantContextHolder, "XM");
-        Thread.sleep(500);
+        Thread.sleep(5000);
 
-        Instant.now();
+        var timeWhenCorrectExecuted = Instant.now();
 
         ScheduledEvent scheduledEvent2 = new ScheduledEvent();
         scheduledEvent2.setUuid(UUID.randomUUID().toString());
@@ -324,6 +325,9 @@ public class TestMnpProcessIntTest extends AbstractSpringBootTest {
             }
             return null;
         });
+        var timeOptLock = xmEntityRepository.findOneByKeyAndTypeKey("MNP_RESEND_IN_WORKING_TIME", "MNP_RESEND_IN_WORKING_TIME");
+        assertTrue(timeOptLock.getUpdateDate().isBefore(timeWhenCorrectExecuted));
+
     }
 
     @SneakyThrows
