@@ -1,7 +1,11 @@
 package com.icthh.xm.ms.entity.config.tenant;
 
+import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options;
+
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import com.icthh.xm.commons.config.client.repository.TenantConfigRepository;
+import com.icthh.xm.ms.entity.mnp.TestMnpProcessIntTest;
+import com.icthh.xm.ms.entity.mnp.TestMnpProcessIntTest.CallFunctionTransformer;
 import com.netflix.loadbalancer.Server;
 import com.netflix.loadbalancer.ServerList;
 import org.mockito.Mockito;
@@ -13,7 +17,10 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class WebappTenantOverrideConfiguration {
 
-    public static WireMockRule WIRE_MOCK = new WireMockRule();
+    public static WireMockRule WIRE_MOCK = new WireMockRule(options()
+        .dynamicPort()
+        .extensions(new CallFunctionTransformer())
+    );
 
     @Bean
     @Qualifier("webappTenantConfigRepository")

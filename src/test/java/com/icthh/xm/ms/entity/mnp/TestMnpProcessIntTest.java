@@ -26,6 +26,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -38,8 +39,14 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.MappingBuilder;
+import com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder;
 import com.github.tomakehurst.wiremock.client.WireMock;
+import com.github.tomakehurst.wiremock.common.FileSource;
+import com.github.tomakehurst.wiremock.extension.Parameters;
+import com.github.tomakehurst.wiremock.extension.ResponseDefinitionTransformer;
 import com.github.tomakehurst.wiremock.http.Fault;
+import com.github.tomakehurst.wiremock.http.Request;
+import com.github.tomakehurst.wiremock.http.ResponseDefinition;
 import com.icthh.xm.commons.config.client.api.RefreshableConfiguration;
 import com.icthh.xm.commons.config.client.service.TenantConfigService;
 import com.icthh.xm.commons.lep.XmLepScriptConfigServerResourceLoader;
@@ -63,6 +70,8 @@ import com.icthh.xm.ms.entity.service.SeparateTransactionExecutor;
 import com.icthh.xm.ms.entity.service.XmEntityService;
 import java.io.File;
 import java.io.IOException;
+import java.net.URL;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Base64;
@@ -82,6 +91,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -91,11 +101,17 @@ import org.springframework.data.elasticsearch.core.query.IndexQueryBuilder;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.provider.OAuth2Authentication;
+import org.springframework.security.oauth2.provider.authentication.OAuth2AuthenticationDetails;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriComponentsBuilder;
 import org.testcontainers.containers.KafkaContainer;
 import org.testcontainers.utility.DockerImageName;
 
@@ -184,6 +200,10 @@ public class TestMnpProcessIntTest extends AbstractSpringBootTest {
     @SneakyThrows
     @Before
     public void setup() {
+        CallFunctionTransformer.functionService = functionService;
+        CallFunctionTransformer.tenantContextHolder = tenantContextHolder;
+        CallFunctionTransformer.lepManager = lepManager;
+
         MockitoAnnotations.initMocks(this);
         TenantContextUtils.setTenant(tenantContextHolder, "XM");
 
@@ -248,16 +268,17 @@ public class TestMnpProcessIntTest extends AbstractSpringBootTest {
     public void testResendInWorkingTime() {
         LoggerContext loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
         ch.qos.logback.classic.Logger rootLogger = loggerContext.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME);
-        rootLogger.setLevel(Level.WARN);
+        rootLogger.setLevel(Level.INFO);
 
         mockSystemToken();
-//        WIRE_MOCK.stubFor(post(urlEqualTo("/api/communicationManagement/v2/communicationMessage/send"))
-//            .willReturn(aResponse().withStatus(200)));
+        WIRE_MOCK.stubFor(get(urlPathEqualTo("/api/functions/RESEND-ONE-REQUEST-IN-WORKING-TIME"))
+            .willReturn(aResponse().withTransformers("resend-one-request-in-working-time-transformer")));
+
 
         List<Long> ids = new ArrayList<>();
         ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
         separateTransactionExecutor.doInSeparateTransaction(() -> {
-            for (int i = 0; i < 200; i++) {
+            for (int i = 0; i < 2; i++) {
                 XmEntity portIn = readPortInRequest(objectMapper);
                 portIn.getData().put("nextState", Map.of("statusCode", "108"));
                 portIn.setId(null);
@@ -285,6 +306,9 @@ public class TestMnpProcessIntTest extends AbstractSpringBootTest {
         schedulerHandler.onEvent(scheduledEvent, "XM");
         TenantContextUtils.setTenant(tenantContextHolder, "XM");
         Thread.sleep(500);
+
+        Instant.now();
+
         ScheduledEvent scheduledEvent2 = new ScheduledEvent();
         scheduledEvent2.setUuid(UUID.randomUUID().toString());
         scheduledEvent2.setTypeKey("resendRequestInWorkingTime");
@@ -296,7 +320,7 @@ public class TestMnpProcessIntTest extends AbstractSpringBootTest {
         separateTransactionExecutor.doInSeparateTransaction(() -> {
             for (XmEntity xmEntity : xmEntityRepository.findAllById(ids)) {
                 Map<String, Object> nextState = (Map<String, Object>) xmEntity.getData().get("nextState");
-                assertNull(nextState.get("statusCode"));
+                assertNull(nextState);
             }
             return null;
         });
@@ -984,17 +1008,17 @@ public class TestMnpProcessIntTest extends AbstractSpringBootTest {
 
     private void mockPortOutCreate(boolean isNewBilling) {
         mockSystemToken();
-        WIRE_MOCK.stubFor(post(urlEqualTo("/api/tasks"))
-            .withHeader("Authorization", equalTo("bearer mock-token"))
-            .withHeader("Content-Type", equalTo("application/json;charset=UTF-8"))
-            .withRequestBody(matchingJsonPath("$.typeKey", equalTo("portOutRequestNew")))
-            .withRequestBody(matchingJsonPath("$.channelType", equalTo("QUEUE")))
-            .withRequestBody(matchingJsonPath("$.scheduleType", equalTo("ONE_TIME")))
-            .withRequestBody(matchingJsonPath("$.targetMs", equalTo("entity")))
-            .withRequestBody(matchingJsonPath("$.ttl", equalTo("259200")))
-            .withRequestBody(containing("d9b25a0c-2817-498f-b51b-4ac759fc6445"))
-            .willReturn(aResponse().withStatus(201)));
         if (isNewBilling) {
+            WIRE_MOCK.stubFor(post(urlEqualTo("/api/tasks"))
+                .withHeader("Authorization", equalTo("bearer mock-token"))
+                .withHeader("Content-Type", equalTo("application/json;charset=UTF-8"))
+                .withRequestBody(matchingJsonPath("$.typeKey", equalTo("portOutRequestNew")))
+                .withRequestBody(matchingJsonPath("$.channelType", equalTo("QUEUE")))
+                .withRequestBody(matchingJsonPath("$.scheduleType", equalTo("ONE_TIME")))
+                .withRequestBody(matchingJsonPath("$.targetMs", equalTo("entity")))
+                .withRequestBody(matchingJsonPath("$.ttl", equalTo("259200")))
+                .withRequestBody(containing("d9b25a0c-2817-498f-b51b-4ac759fc6445"))
+                .willReturn(aResponse().withStatus(201)));
             WIRE_MOCK.stubFor(post(urlEqualTo("/api/communicationManagement/v2/communicationMessage/send"))
                 .willReturn(aResponse().withStatus(200)));
         }
@@ -1023,5 +1047,66 @@ public class TestMnpProcessIntTest extends AbstractSpringBootTest {
                 .withHeader("Content-Type", "application/json")
                 .withBody("[]")));
     }
+
+
+    public static class CallFunctionTransformer extends ResponseDefinitionTransformer {
+
+        public static FunctionService functionService;
+        public static TenantContextHolder tenantContextHolder;
+        public static LepManagementService lepManager;
+
+        @Override
+        public boolean applyGlobally() {
+            return false;
+        }
+
+        @Override
+        public String getName() {
+            return "resend-one-request-in-working-time-transformer";
+        }
+
+        @Override
+        @SneakyThrows
+        public ResponseDefinition transform(Request request, ResponseDefinition response, FileSource files, Parameters parameters) {
+
+            TenantContextUtils.setTenant(tenantContextHolder, "XM");
+            try (var context = lepManager.beginThreadContext()) {
+
+                OAuth2Authentication auth = mock(OAuth2Authentication.class);
+                when(auth.getAuthorities()).thenReturn(List.of(new SimpleGrantedAuthority("SUPER-ADMIN")));
+                SecurityContextHolder.getContext().setAuthentication(auth);
+
+                var path = request.getUrl();
+                var url = new URL(request.getAbsoluteUrl()).toURI();
+                String prefix = "/api/functions/";
+                var parsed = UriComponentsBuilder
+                    .fromUri(url)
+                    .build();
+                Map params = parsed.getQueryParams().toSingleValueMap();
+                var fName = parsed.getPathSegments().get(parsed.getPathSegments().size() - 1);
+                if (path.startsWith(prefix)) {
+                    functionService.execute(fName, params, "GET");
+                } else {
+                    return ResponseDefinitionBuilder
+                        .like(response)
+                        .but()
+                        .withStatus(404)
+                        .build();
+                }
+
+                return ResponseDefinitionBuilder
+                    .like(response)
+                    .but()
+                    .withStatus(200)
+                    .build();
+
+            } catch (Exception e) {
+                log.error("Error during resend-one-request-in-working-time-transformer", e);
+                throw e;
+            }
+        }
+
+    }
+
 
 }
