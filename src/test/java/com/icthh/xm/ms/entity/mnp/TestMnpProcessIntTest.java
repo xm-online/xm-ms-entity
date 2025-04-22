@@ -600,12 +600,6 @@ public class TestMnpProcessIntTest extends AbstractSpringBootTest {
     @SneakyThrows
     @DirtiesContext
     public void testPortOutRequestIndividual() {
-        // TODO individual test
-        // TODO individual test
-        // TODO individual test
-        // TODO individual test
-        // TODO individual test
-        // TODO individual test
 
         reset(kafkaTemplateService);
         mockServer();
@@ -615,7 +609,7 @@ public class TestMnpProcessIntTest extends AbstractSpringBootTest {
             "stateKey", "SERVICE-PORT-OUT-ON"
         )));
         assertSasTables(result,
-            List.of("SERVICE-PORT-OUT-ON", "SERVICE-PORT-OUT-ON", "REJECTED"),
+            List.of("REJECTED", "SERVICE-PORT-OUT-ON", "SERVICE-PORT-OUT-ON", "REJECTED"),
             List.of("NEW", "ACCEPTED", "SERVICE-PORT-OUT-ON"));
         verifyKafkaEvent(result, "SERVICE-PORT-OUT-ON");
 
@@ -714,8 +708,14 @@ public class TestMnpProcessIntTest extends AbstractSpringBootTest {
 
         // event (uuid=d0349bb3-8be3-423a-96d4-4cd1ea3e30df, id=14228938, key=null, name=null, typeKey=portOutRequestNew, stateKey=null, createdBy=middleware, startDate=2025-04-10T17:58:22.874629Z, endDate=2025-04-13T17:58:22.874629Z, handlingTime=2025-04-10T17:58:22.874760Z, channelType=QUEUE, data={processId=e3bb2655-0afa-4525-8093-1048d0930046, userKey=middleware, id=108820670})
 
+        // functionService.execute("COMPARE-DATA-FROM-CRM", IdOrKey.of(result.getId()), new HashMap<>());
+        ScheduledEvent scheduledEvent = new ScheduledEvent();
+        scheduledEvent.setUuid(UUID.randomUUID().toString());
+        scheduledEvent.setTypeKey("portOutRequestNew");
+        scheduledEvent.setData(Map.of("id", result.getId(), "processId", result.getKey()));
+        schedulerService.onEvent(scheduledEvent);
+        TenantContextUtils.setTenant(tenantContextHolder, "XM");
 
-        functionService.execute("COMPARE-DATA-FROM-CRM", IdOrKey.of(result.getId()), new HashMap<>()); // TODO replace to event
         assertSasTables(result, List.of("NEW", "NEW", "NEW", "NEW"), List.of("NEW"));
 
         mockPortOutAccept();
@@ -1107,12 +1107,17 @@ public class TestMnpProcessIntTest extends AbstractSpringBootTest {
             "{\"id\":380669222222,\"givenName\":\"John\",\"familyName\":\"Doe\",\"middleName\":\"Smith\",\"itn\":\"\",\"registeredOwner\":true,\"individualIdentification\":[{\"type\":\"passport\",\"identificationId\":\"TEST\"}]}," +
             "{\"id\":380669333333,\"givenName\":\"John\",\"familyName\":\"Doe\",\"middleName\":\"Smith\",\"itn\":\"\",\"registeredOwner\":true,\"individualIdentification\":[{\"type\":\"passport\",\"identificationId\":\"TEST\"}]}" +
             "]";
-        stubFor(get(urlEqualTo("/crm/partyManagement/v1/individual"))
+        stubFor(get(urlPathEqualTo("/crm/partyManagement/v1/individual"))
             .willReturn(aResponse()
                 .withStatus(200)
                 .withHeader("Content-Type", "application/json")
                 .withBody(json)
             ));
+        WIRE_MOCK.stubFor(get(urlEqualTo("/api/v1/customer/380669000000/blockedServiceList"))
+            .willReturn(aResponse()
+                .withStatus(200)
+                .withHeader("Content-Type", "application/json")
+                .withBody("[]")));
         WIRE_MOCK.stubFor(get(urlEqualTo("/api/v1/customer/380669111111/blockedServiceList"))
             .willReturn(aResponse()
                 .withStatus(200)
