@@ -1,0 +1,76 @@
+{
+    "id": null,
+    "key": "d9b25a0c-2817-498f-b51b-4ac759fc6445",
+    "typeKey": "BUSINESS-INTERACTION.PORTING-REQUEST.PORTOUT",
+    "name": null,
+    "description": null,
+    "stateKey": null,
+    "startDate": null,
+    "endDate": null,
+    "updateDate": null,
+    "createdBy": null,
+    "version": null,
+    "data": {
+        "verifiedRegistrationData": null,
+        "verificationMethod": null,
+        "processId": "d9b25a0c-2817-498f-b51b-4ac759fc6445",
+        "rootMessageId": null,
+        "recipientRn": "3903",
+        "donorRn": "3901",
+        "partyTypeKey": "ANONYMOUS",
+        "channel": "CDB",
+        "langKey": null,
+        "portingDate": "2034-12-17T11:00:00Z",
+        "nextState": null,
+        "numbers": [
+            {
+                "msisdn": "380669333333",
+                "isMaster": null,
+                "statusCode": null,
+                "statusCodeDescription": null,
+                "internalStatus": null
+            },
+            {
+                "msisdn": "380669222222",
+                "isMaster": null,
+                "statusCode": null,
+                "statusCodeDescription": null,
+                "internalStatus": null
+            },
+            {
+                "msisdn": "380669111111",
+                "isMaster": null,
+                "statusCode": null,
+                "statusCodeDescription": null,
+                "internalStatus": null
+            },
+            {
+                "msisdn": "380669000000",
+                "isMaster": null,
+                "statusCode": null,
+                "statusCodeDescription": null,
+                "internalStatus": null
+            }
+        ],
+        "numberBlocks": null,
+        "individual": null,
+        "organization": null,
+        "anonymous": {
+            "firstName": "John",
+            "middleName": "Doe",
+            "lastName": "Smith",
+            "addressLine1": null,
+            "addressLine2": null,
+            "zipCode": null,
+            "city": null,
+            "passport": null,
+            "birthday": null,
+            "email": null,
+            "contactNumber": null,
+            "documentType": null,
+            "documentNumber": null,
+            "documentSeriesNo": null
+        },
+        "fop": null
+    }
+}

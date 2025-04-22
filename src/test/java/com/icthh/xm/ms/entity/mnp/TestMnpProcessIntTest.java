@@ -92,7 +92,6 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -105,12 +104,10 @@ import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.provider.OAuth2Authentication;
-import org.springframework.security.oauth2.provider.authentication.OAuth2AuthenticationDetails;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 import org.testcontainers.containers.KafkaContainer;
@@ -382,6 +379,7 @@ public class TestMnpProcessIntTest extends AbstractSpringBootTest {
     @DirtiesContext
     public void testPortInRequestCancelNewBilling() {
         reset(kafkaTemplateService);
+        mockServer();
         XmEntity result = portInProcess(true, "mnp/portInRequestNewBilling.json");
 
         WIRE_MOCK.stubFor(put(urlEqualTo("/cdb/api/v1/portingRequest/d9b25a0c-2817-498f-b51b-4ac759fc6445/cancel"))
@@ -401,6 +399,7 @@ public class TestMnpProcessIntTest extends AbstractSpringBootTest {
 
         WireMock.verify(0, putRequestedFor(urlEqualTo("/crm/api/v1/portingRequest")));
         WireMock.verify(0, putRequestedFor(urlEqualTo("/api/v1/customer/380985111112")));
+        wireMockServer.stop();
     }
 
     @Test
@@ -570,10 +569,47 @@ public class TestMnpProcessIntTest extends AbstractSpringBootTest {
     @Test
     @SneakyThrows
     @DirtiesContext
-    public void testPortOutRequest() {
+    public void testPortOutRequestAnonymous() {
         reset(kafkaTemplateService);
         mockServer();
-        XmEntity result = createPortOutRequest();
+        XmEntity result = createPortOutRequest("Anonymous", this::mockComparePersonalDataAnonymous);
+
+        functionService.execute("UPDATE-STATUS", IdOrKey.of(result.getId()), new HashMap<>(Map.of(
+            "stateKey", "SERVICE-PORT-OUT-ON"
+        )));
+        assertSasTables(result,
+            List.of("REJECTED", "SERVICE-PORT-OUT-ON", "SERVICE-PORT-OUT-ON", "REJECTED"),
+            List.of("NEW", "ACCEPTED", "SERVICE-PORT-OUT-ON"));
+        verifyKafkaEvent(result, "SERVICE-PORT-OUT-ON");
+
+        runDeactivateForPortOutRequest(result, false);
+        finishPortOutRequest(result);
+
+        WireMock.verify(putRequestedFor(urlEqualTo("/crm/api/v1/portingRequest")));
+        wireMockServer.stop();
+
+        WIRE_MOCK.verify(1, postRequestedFor(urlEqualTo("/api/tasks"))
+                .withHeader("Authorization", equalTo("bearer mock-token"))
+                .withHeader("Content-Type", equalTo("application/json;charset=UTF-8"))
+                .withRequestBody(matchingJsonPath("$.typeKey", equalTo("portOutRequestNew"))));
+
+        verifyNoMoreInteractions(kafkaTemplateService);
+    }
+
+    @Test
+    @SneakyThrows
+    @DirtiesContext
+    public void testPortOutRequestIndividual() {
+        // TODO individual test
+        // TODO individual test
+        // TODO individual test
+        // TODO individual test
+        // TODO individual test
+        // TODO individual test
+
+        reset(kafkaTemplateService);
+        mockServer();
+        XmEntity result = createPortOutRequest("Individual", this::mockComparePersonalDataIndividual);
 
         functionService.execute("UPDATE-STATUS", IdOrKey.of(result.getId()), new HashMap<>(Map.of(
             "stateKey", "SERVICE-PORT-OUT-ON"
@@ -592,6 +628,7 @@ public class TestMnpProcessIntTest extends AbstractSpringBootTest {
         verifyNoMoreInteractions(kafkaTemplateService);
     }
 
+
     private void finishPortOutRequest(XmEntity result) {
         functionService.execute("PROCESS-STATUS", new HashMap<>(Map.of(
             "messageId", "9938744f-3f08-440a-9124-6db72d386db2",
@@ -601,7 +638,7 @@ public class TestMnpProcessIntTest extends AbstractSpringBootTest {
         )), "GET");
 
         assertSasTables(result,
-            List.of("DEACTIVATED", "DEACTIVATED", "REJECTED"),
+            List.of("REJECTED", "DEACTIVATED", "DEACTIVATED", "REJECTED"),
             List.of("NEW", "ACCEPTED", "SERVICE-PORT-OUT-ON", "STARTED", "DEACTIVATED"));
         verifyKafkaEvent(result, "DEACTIVATED");
 
@@ -624,7 +661,7 @@ public class TestMnpProcessIntTest extends AbstractSpringBootTest {
             "messageId", "431834d8-1bc7-40e6-a65f-42ebb157d901"
         ));
         assertSasTables(result,
-            List.of("DEACTIVATED", "DEACTIVATED", "REJECTED"),
+            List.of("REJECTED", "DEACTIVATED", "DEACTIVATED", "REJECTED"),
             List.of("NEW", "ACCEPTED", "SERVICE-PORT-OUT-ON", "STARTED", "DEACTIVATED"));
 
         xmEntityService.updateState(IdOrKey.of(result.getId()), "PORTED", Map.of(
@@ -632,7 +669,7 @@ public class TestMnpProcessIntTest extends AbstractSpringBootTest {
             "messageId", "431834d8-1bc7-40e6-a65f-42ebb157d902"
         ));
         assertSasTables(result,
-            List.of("PORTED", "PORTED", "REJECTED"),
+            List.of("REJECTED", "PORTED", "PORTED", "REJECTED"),
             List.of("NEW", "ACCEPTED", "SERVICE-PORT-OUT-ON", "STARTED", "DEACTIVATED", "PORTED"));
         verifyKafkaEvent(result, "PORTED");
     }
@@ -644,7 +681,7 @@ public class TestMnpProcessIntTest extends AbstractSpringBootTest {
             "messageId", "9938744f-3f08-440a-9124-6db72d386db1"
         ));
         assertSasTables(result,
-            List.of("STARTED", "STARTED", "REJECTED"),
+            List.of("REJECTED", "STARTED", "STARTED", "REJECTED"),
             List.of("NEW", "ACCEPTED", "SERVICE-PORT-OUT-ON", "STARTED"));
         verifyKafkaEvent(result, "STARTED");
 
@@ -652,7 +689,7 @@ public class TestMnpProcessIntTest extends AbstractSpringBootTest {
             "msisdn", "380669222222"
         )));
         assertSasTables(result,
-            List.of("STARTED", "STARTED", "REJECTED"),
+            List.of("REJECTED", "STARTED", "STARTED", "REJECTED"),
             List.of("NEW", "ACCEPTED", "SERVICE-PORT-OUT-ON", "STARTED"));
 
         mockPortOutDeactivated();
@@ -662,22 +699,24 @@ public class TestMnpProcessIntTest extends AbstractSpringBootTest {
     }
 
     @NotNull
-    private XmEntity createPortOutRequest() throws IOException {
+    private XmEntity createPortOutRequest(String partyType, Runnable mockComparePersonalData) throws IOException {
         mockPortOutCreate(false);
-
+        mockComparePersonalData.run();
         prepareTenantConfig(false);
 
         ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
-        XmEntity portOut = objectMapper.readValue(getClass().getClassLoader().getResourceAsStream("mnp/portOutRequest.json"), XmEntity.class);
+        XmEntity portOut = objectMapper.readValue(getClass().getClassLoader().getResourceAsStream("mnp/portOutRequest" + partyType + ".json"), XmEntity.class);
 
         XmEntity result = xmEntityService.save(portOut);
         System.out.println(result);
         assertNotNull(result.getId());
-        assertSasTables(result, List.of("NEW", "NEW", "NEW"), List.of("NEW"));
+        assertSasTables(result, List.of("NEW", "NEW", "NEW", "NEW"), List.of("NEW"));
 
-        mockComparePersonalData(List.of("380669222222", "380669111111"));
-        functionService.execute("COMPARE-DATA-FROM-CRM", IdOrKey.of(result.getId()), new HashMap<>());
-        assertSasTables(result, List.of("NEW", "NEW", "NEW"), List.of("NEW"));
+        // event (uuid=d0349bb3-8be3-423a-96d4-4cd1ea3e30df, id=14228938, key=null, name=null, typeKey=portOutRequestNew, stateKey=null, createdBy=middleware, startDate=2025-04-10T17:58:22.874629Z, endDate=2025-04-13T17:58:22.874629Z, handlingTime=2025-04-10T17:58:22.874760Z, channelType=QUEUE, data={processId=e3bb2655-0afa-4525-8093-1048d0930046, userKey=middleware, id=108820670})
+
+
+        functionService.execute("COMPARE-DATA-FROM-CRM", IdOrKey.of(result.getId()), new HashMap<>()); // TODO replace to event
+        assertSasTables(result, List.of("NEW", "NEW", "NEW", "NEW"), List.of("NEW"));
 
         mockPortOutAccept();
         functionService.execute("PROCESS-STATUS", new HashMap<>(Map.of(
@@ -686,7 +725,7 @@ public class TestMnpProcessIntTest extends AbstractSpringBootTest {
             "messageType", "ValidationResponse",
             "statusCode", "0"
         )), "GET");
-        assertSasTables(result, List.of("ACCEPTED", "ACCEPTED", "REJECTED"), List.of("NEW", "ACCEPTED"));
+        assertSasTables(result, List.of("REJECTED", "ACCEPTED", "ACCEPTED", "REJECTED"), List.of("NEW", "ACCEPTED"));
         verifyKafkaEvent(result, "ACCEPTED");
         return result;
     }
@@ -695,16 +734,18 @@ public class TestMnpProcessIntTest extends AbstractSpringBootTest {
     private void mockServer() {
         wireMockServer = new WireMockServer(options().dynamicPort());
         wireMockServer.start();
-        configureFor("localhost", wireMockServer.port());
+        int port = wireMockServer.port();
+        configureFor("localhost", port);
         stubFor(any(urlMatching(".*"))
-            .atPriority(10)  // Use a lower priority than your expected stubs.
+            .atPriority(100)  // Use a lower priority than your expected stubs.
             .willReturn(aResponse()
-                .withFault(Fault.MALFORMED_RESPONSE_CHUNK)));
+                .withStatus(500)
+                .withBody("{\"error\":\"Error\"}")
+            ));
     }
 
     private XmEntity portInProcess(boolean isNewBilling, String name) throws IOException {
         mockPortInCreate(isNewBilling);
-
         prepareTenantConfig(isNewBilling);
 
         ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
@@ -889,6 +930,8 @@ public class TestMnpProcessIntTest extends AbstractSpringBootTest {
         schedule.put("exceptionScheduler", exceptionScheduler);
         tenantConfig.put("schedule", schedule);
         tenantConfig.put("rtm", Map.of("kafka", kafkaContainer.getBootstrapServers()));
+        // TODO enable new billing for individual and anonymous
+
         tenantConfigService.onRefresh(TENANT_CONFIG_YML, new ObjectMapper().writeValueAsString(tenantConfig));
     }
 
@@ -996,7 +1039,7 @@ public class TestMnpProcessIntTest extends AbstractSpringBootTest {
     @SneakyThrows
     private void mockPortInCreate(boolean isNewBilling) {
         if (!isNewBilling) {
-            stubFor(put(urlEqualTo("/crm/api/v1/portingRequest")).willReturn(aResponse().withStatus(200)));
+            stubFor(put(urlEqualTo("/crm/api/v1/portingRequest")).atPriority(1).willReturn(aResponse().withStatus(200)));
         }
 
         mockSystemToken();
@@ -1012,7 +1055,9 @@ public class TestMnpProcessIntTest extends AbstractSpringBootTest {
 
     private void mockPortOutCreate(boolean isNewBilling) {
         mockSystemToken();
-        if (isNewBilling) {
+        // TODO mock call check in new Billing
+        if (!isNewBilling) {
+            stubFor(put(urlEqualTo("/crm/api/v1/portingRequest")).atPriority(1).willReturn(aResponse().withStatus(200)));
             WIRE_MOCK.stubFor(post(urlEqualTo("/api/tasks"))
                 .withHeader("Authorization", equalTo("bearer mock-token"))
                 .withHeader("Content-Type", equalTo("application/json;charset=UTF-8"))
@@ -1025,18 +1070,70 @@ public class TestMnpProcessIntTest extends AbstractSpringBootTest {
                 .willReturn(aResponse().withStatus(201)));
             WIRE_MOCK.stubFor(post(urlEqualTo("/api/communicationManagement/v2/communicationMessage/send"))
                 .willReturn(aResponse().withStatus(200)));
+        } else {
+            // TODO mock call create flow and verify it
         }
     }
 
-    private void mockComparePersonalData(List<String> numbers) {
-        numbers.forEach(this::assertCompareNumbers);
+    private void mockComparePersonalDataAnonymous() {
+        assertCompareNumbers("380669111111");
+        assertCompareNumbers("380669222222");
         WIRE_MOCK.stubFor(get(urlEqualTo("/api/v1/customer/380669000000"))
             .willReturn(aResponse()
                 .withStatus(200)
                 .withHeader("Content-Type", "application/json")
                 .withBody("{ \"calculationMethodCode\": \"2\" }")));
+        WIRE_MOCK.stubFor(get(urlEqualTo("/api/v1/customer/380669333333"))
+            .willReturn(aResponse()
+                .withStatus(200)
+                .withHeader("Content-Type", "application/json")
+                .withBody("{ \"calculationMethodCode\": \"1\" }")));
+
+        stubFor(get(urlPathEqualTo("/crm/partyManagement/v1/individual"))
+            .atPriority(1)
+            .willReturn(aResponse()
+                .withStatus(200)
+                .withHeader("Content-Type", "application/json")
+                .withBody("[{\"id\":\"380669333333\", \"registeredOwner\":\"true\"}]")
+            ));
+
         WIRE_MOCK.stubFor(put(urlEqualTo("/cdb/api/v1/portingRequest/d9b25a0c-2817-498f-b51b-4ac759fc6445/donorExclude"))
             .willReturn(aResponse().withStatus(200)));
+    }
+
+    private void mockComparePersonalDataIndividual() {
+        String json = "[" +
+            "{\"id\":380669111111,\"givenName\":\"John\",\"familyName\":\"Doe\",\"middleName\":\"Smith\",\"itn\":\"\",\"registeredOwner\":true,\"individualIdentification\":[{\"type\":\"passport\",\"identificationId\":\"TEST\"}]}," +
+            "{\"id\":380669222222,\"givenName\":\"John\",\"familyName\":\"Doe\",\"middleName\":\"Smith\",\"itn\":\"\",\"registeredOwner\":true,\"individualIdentification\":[{\"type\":\"passport\",\"identificationId\":\"TEST\"}]}," +
+            "{\"id\":380669333333,\"givenName\":\"John\",\"familyName\":\"Doe\",\"middleName\":\"Smith\",\"itn\":\"\",\"registeredOwner\":true,\"individualIdentification\":[{\"type\":\"passport\",\"identificationId\":\"TEST\"}]}" +
+            "]";
+        stubFor(get(urlEqualTo("/crm/partyManagement/v1/individual"))
+            .willReturn(aResponse()
+                .withStatus(200)
+                .withHeader("Content-Type", "application/json")
+                .withBody(json)
+            ));
+        WIRE_MOCK.stubFor(get(urlEqualTo("/api/v1/customer/380669111111/blockedServiceList"))
+            .willReturn(aResponse()
+                .withStatus(200)
+                .withHeader("Content-Type", "application/json")
+                .withBody("[]")));
+        WIRE_MOCK.stubFor(get(urlEqualTo("/api/v1/customer/380669222222/blockedServiceList"))
+            .willReturn(aResponse()
+                .withStatus(200)
+                .withHeader("Content-Type", "application/json")
+                .withBody("[]")));
+
+        String blocking = "[{\"serviceName\":\"Збереження номера (тех. блокування)\",\"serviceCode\":\"FRBLKMNP\",\"dateFrom\":\"2021-11-08T18:02:53Z\"}]";
+        WIRE_MOCK.stubFor(get(urlEqualTo("/api/v1/customer/380669333333/blockedServiceList"))
+            .willReturn(aResponse()
+                .withStatus(200)
+                .withHeader("Content-Type", "application/json")
+                .withBody(blocking)));
+
+        WIRE_MOCK.stubFor(put(urlEqualTo("/cdb/api/v1/portingRequest/d9b25a0c-2817-498f-b51b-4ac759fc6445/donorExclude"))
+            .willReturn(aResponse().withStatus(200)));
+
     }
 
     private void assertCompareNumbers(String number) {
