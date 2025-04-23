@@ -572,6 +572,19 @@ public class TestMnpProcessIntTest extends AbstractSpringBootTest {
     public void testPortOutRequestAnonymous() {
         reset(kafkaTemplateService);
         mockServer();
+
+        LoggerContext loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
+        ch.qos.logback.classic.Logger rootLogger = loggerContext.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME);
+        rootLogger.setLevel(Level.INFO);
+
+        rejectNotMockedRequests();
+        WIRE_MOCK.stubFor(get(urlPathEqualTo("/api/customerManagement/v3/customer/380669333333"))
+            .withHeader("Profile", equalTo("CUSTOMER-STATUS"))
+            .willReturn(aResponse().withStatus(200)
+                .withHeader("Content-Type", "application/json")
+                .withBody("{\"id\": \"SXID380662582086\",\"characteristic\": [{\"name\": \"status\",\"value\": \"NOT_FOUND\"}]}"))
+        );
+
         XmEntity result = createPortOutRequest("Anonymous", this::mockComparePersonalDataAnonymous);
 
         functionService.execute("UPDATE-STATUS", IdOrKey.of(result.getId()), new HashMap<>(Map.of(
@@ -600,6 +613,17 @@ public class TestMnpProcessIntTest extends AbstractSpringBootTest {
     @SneakyThrows
     @DirtiesContext
     public void testPortOutRequestIndividual() {
+        LoggerContext loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
+        ch.qos.logback.classic.Logger rootLogger = loggerContext.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME);
+        rootLogger.setLevel(Level.INFO);
+
+        rejectNotMockedRequests();
+        WIRE_MOCK.stubFor(get(urlPathEqualTo("/api/customerManagement/v3/customer/380669333333"))
+                .withHeader("Profile", equalTo("CUSTOMER-STATUS"))
+        .willReturn(aResponse().withStatus(200)
+            .withHeader("Content-Type", "application/json")
+            .withBody("{\"id\": \"SXID380662582086\",\"characteristic\": [{\"name\": \"status\",\"value\": \"NOT_FOUND\"}]}"))
+        );
 
         reset(kafkaTemplateService);
         mockServer();
@@ -620,6 +644,58 @@ public class TestMnpProcessIntTest extends AbstractSpringBootTest {
         wireMockServer.stop();
 
         verifyNoMoreInteractions(kafkaTemplateService);
+    }
+
+    @Test
+    @SneakyThrows
+    @DirtiesContext
+    public void testPortOutRequestIndividualNewBilling() {
+        LoggerContext loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
+        ch.qos.logback.classic.Logger rootLogger = loggerContext.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME);
+        rootLogger.setLevel(Level.INFO);
+
+        rejectNotMockedRequests();
+        WIRE_MOCK.stubFor(get(urlPathEqualTo("/api/customerManagement/v3/customer/380669333333"))
+            .withHeader("Profile", equalTo("CUSTOMER-STATUS"))
+            .willReturn(aResponse().withStatus(200)
+                .withHeader("Content-Type", "application/json")
+                .withBody("{\"id\": \"380669333333\",\"characteristic\": [{\"name\": \"status\",\"value\": \"MIGRATED\"},{\"name\": \"dateMigrated\",\"value\": \"2023-08-04T18:51:44.732Z\"}]}"))
+        );
+        WIRE_MOCK.stubFor(post(urlPathEqualTo("/tmf-api/processFlowManagement/v4/processFlow"))
+            .willReturn(aResponse().withStatus(200)));
+
+        reset(kafkaTemplateService);
+        mockServer();
+        XmEntity result = createPortOutRequest("Individual", this::mockComparePersonalDataIndividualNewBilling);
+
+        functionService.execute("UPDATE-STATUS", IdOrKey.of(result.getId()), new HashMap<>(Map.of(
+            "stateKey", "SERVICE-PORT-OUT-ON"
+        )));
+        assertSasTables(result,
+            List.of("REJECTED", "SERVICE-PORT-OUT-ON", "SERVICE-PORT-OUT-ON", "REJECTED"),
+            List.of("NEW", "ACCEPTED", "SERVICE-PORT-OUT-ON"));
+        verifyKafkaEvent(result, "SERVICE-PORT-OUT-ON");
+
+        runDeactivateForPortOutRequest(result, true);
+        functionService.execute("BILLING-PORTING-COMPLETED", new HashMap<>(Map.of(
+            "entityId", result.getId()
+        )), "POST");
+        finishPortOutRequest(result);
+
+        WireMock.verify(0, putRequestedFor(urlEqualTo("/crm/api/v1/portingRequest")));
+        wireMockServer.stop();
+
+        verifyNoMoreInteractions(kafkaTemplateService);
+    }
+
+
+    private static void rejectNotMockedRequests() {
+        WIRE_MOCK.stubFor(any(urlMatching(".*"))
+            .atPriority(100)
+            .willReturn(aResponse()
+                .withStatus(500)
+                .withBody("{\"error\":\"Not mocked url\"}")
+            ));
     }
 
 
@@ -690,9 +766,12 @@ public class TestMnpProcessIntTest extends AbstractSpringBootTest {
         functionService.execute("NOTIFY-NUMBER-PROCESSED", IdOrKey.of(result.getId()), new HashMap<>(Map.of(
             "msisdn", "380669111111"
         )));
+
+
     }
 
     @NotNull
+    @SneakyThrows
     private XmEntity createPortOutRequest(String partyType, Runnable mockComparePersonalData) throws IOException {
         mockPortOutCreate(false);
         mockComparePersonalData.run();
@@ -715,6 +794,14 @@ public class TestMnpProcessIntTest extends AbstractSpringBootTest {
         scheduledEvent.setData(Map.of("id", result.getId(), "processId", result.getKey()));
         schedulerService.onEvent(scheduledEvent);
         TenantContextUtils.setTenant(tenantContextHolder, "XM");
+        Thread.sleep(5000);
+        ScheduledEvent scheduledEvent2 = new ScheduledEvent();
+        scheduledEvent2.setUuid(UUID.randomUUID().toString());
+        scheduledEvent2.setTypeKey("mnpComparePersonalData");
+        scheduledEvent2.setData(Map.of());
+        schedulerService.onEvent(scheduledEvent2);
+        TenantContextUtils.setTenant(tenantContextHolder, "XM");
+        Thread.sleep(5000);
 
         assertSasTables(result, List.of("NEW", "NEW", "NEW", "NEW"), List.of("NEW"));
 
@@ -740,7 +827,7 @@ public class TestMnpProcessIntTest extends AbstractSpringBootTest {
             .atPriority(100)  // Use a lower priority than your expected stubs.
             .willReturn(aResponse()
                 .withStatus(500)
-                .withBody("{\"error\":\"Error\"}")
+                .withBody("{\"error\":\"Not mocked url\"}")
             ));
     }
 
@@ -930,7 +1017,11 @@ public class TestMnpProcessIntTest extends AbstractSpringBootTest {
         schedule.put("exceptionScheduler", exceptionScheduler);
         tenantConfig.put("schedule", schedule);
         tenantConfig.put("rtm", Map.of("kafka", kafkaContainer.getBootstrapServers()));
-        // TODO enable new billing for individual and anonymous
+        tenantConfig.put("ldb", new HashMap<>((Map<?, ?>) tenantConfig.get("ldb")));
+        var newBillingCheck = (Map<String, Map<String, Boolean>>)tenantConfig.get("ldb");
+        newBillingCheck.put("newBillingCheckEnabledFor", new HashMap<>(newBillingCheck.get("newBillingCheckEnabledFor")));
+        newBillingCheck.get("newBillingCheckEnabledFor").put("INDIVIDUAL", true);
+        newBillingCheck.get("newBillingCheckEnabledFor").put("ANONYMOUS", true);
 
         tenantConfigService.onRefresh(TENANT_CONFIG_YML, new ObjectMapper().writeValueAsString(tenantConfig));
     }
@@ -1099,6 +1190,61 @@ public class TestMnpProcessIntTest extends AbstractSpringBootTest {
 
         WIRE_MOCK.stubFor(put(urlEqualTo("/cdb/api/v1/portingRequest/d9b25a0c-2817-498f-b51b-4ac759fc6445/donorExclude"))
             .willReturn(aResponse().withStatus(200)));
+    }
+
+    private void mockComparePersonalDataIndividualNewBilling() {
+        String jsonBody = "[{\"id\":\"952\",\"relatedParty\":[{\"id\":\"1002\",\"role\":\"Owner\",\"partyId\":\"29002\",\"@type\":\"BssIndividual\"}],\"@type\":\"wirelessProduct\"}]";
+        WIRE_MOCK.stubFor(get(urlEqualTo("/api/product?@type=wirelessProduct&msisdn=380669111111"))
+            .willReturn(aResponse()
+                .withStatus(200)
+                .withHeader("Content-Type", "application/json")
+                .withBody(jsonBody)));
+        WIRE_MOCK.stubFor(get(urlEqualTo("/api/product?@type=wirelessProduct&msisdn=380669222222"))
+            .willReturn(aResponse()
+                .withStatus(200)
+                .withHeader("Content-Type", "application/json")
+                .withBody(jsonBody)));
+        WIRE_MOCK.stubFor(get(urlEqualTo("/api/product?@type=wirelessProduct&msisdn=380669333333"))
+            .willReturn(aResponse()
+                .withStatus(200)
+                .withHeader("Content-Type", "application/json")
+                .withBody(jsonBody)));
+        WIRE_MOCK.stubFor(get(urlEqualTo("/api/product?@type=wirelessProduct&msisdn=380669000000"))
+            .willReturn(aResponse()
+                .withStatus(200)
+                .withHeader("Content-Type", "application/json")
+                .withBody("[]")));
+
+        WIRE_MOCK.stubFor(get(urlPathEqualTo("/tmf-api/party/v4/individual/29002"))
+            .willReturn(aResponse()
+            .withStatus(200)
+            .withHeader("Content-Type", "application/json")
+            .withBody("{\"givenName\":\"John\",\"familyName\":\"Doe\"}")));
+
+        WIRE_MOCK.stubFor(put(urlEqualTo("/cdb/api/v1/portingRequest/d9b25a0c-2817-498f-b51b-4ac759fc6445/donorExclude"))
+            .willReturn(aResponse().withStatus(200)));
+
+        var noBlocking = "{\"id\": \"380662582086\",\"characteristics\": {\"barringList\": []}}";
+        var blocking = "{\"id\": \"380662582086\",\"characteristics\": {\"barringList\": [{\"code\": \"FRBLKMNP\"}]}}\n";
+
+        WIRE_MOCK.stubFor(get(urlPathEqualTo("/api/customerManagement/v3/customer/380669333333"))
+            .withHeader("Profile", equalTo("PRODUCT-BASED-DATA"))
+            .willReturn(aResponse().withStatus(200)
+                .withHeader("Content-Type", "application/json")
+                .withBody(blocking))
+        );
+        WIRE_MOCK.stubFor(get(urlPathEqualTo("/api/customerManagement/v3/customer/380669222222"))
+            .withHeader("Profile", equalTo("PRODUCT-BASED-DATA"))
+            .willReturn(aResponse().withStatus(200)
+                .withHeader("Content-Type", "application/json")
+                .withBody(noBlocking))
+        );
+        WIRE_MOCK.stubFor(get(urlPathEqualTo("/api/customerManagement/v3/customer/380669111111"))
+            .withHeader("Profile", equalTo("PRODUCT-BASED-DATA"))
+            .willReturn(aResponse().withStatus(200)
+                .withHeader("Content-Type", "application/json")
+                .withBody(noBlocking))
+        );
     }
 
     private void mockComparePersonalDataIndividual() {
