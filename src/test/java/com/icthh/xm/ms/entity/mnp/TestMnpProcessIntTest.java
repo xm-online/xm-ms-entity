@@ -45,7 +45,6 @@ import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.common.FileSource;
 import com.github.tomakehurst.wiremock.extension.Parameters;
 import com.github.tomakehurst.wiremock.extension.ResponseDefinitionTransformer;
-import com.github.tomakehurst.wiremock.http.Fault;
 import com.github.tomakehurst.wiremock.http.Request;
 import com.github.tomakehurst.wiremock.http.ResponseDefinition;
 import com.icthh.xm.commons.config.client.api.RefreshableConfiguration;
@@ -573,19 +572,9 @@ public class TestMnpProcessIntTest extends AbstractSpringBootTest {
         reset(kafkaTemplateService);
         mockServer();
 
-        LoggerContext loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
-        ch.qos.logback.classic.Logger rootLogger = loggerContext.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME);
-        rootLogger.setLevel(Level.INFO);
+        mockCheckIsNewBilling("{\"id\": \"SXID380662582086\",\"characteristic\": [{\"name\": \"status\",\"value\": \"NOT_FOUND\"}]}");
 
-        rejectNotMockedRequests();
-        WIRE_MOCK.stubFor(get(urlPathEqualTo("/api/customerManagement/v3/customer/380669333333"))
-            .withHeader("Profile", equalTo("CUSTOMER-STATUS"))
-            .willReturn(aResponse().withStatus(200)
-                .withHeader("Content-Type", "application/json")
-                .withBody("{\"id\": \"SXID380662582086\",\"characteristic\": [{\"name\": \"status\",\"value\": \"NOT_FOUND\"}]}"))
-        );
-
-        XmEntity result = createPortOutRequest("Anonymous", this::mockComparePersonalDataAnonymous);
+        XmEntity result = createPortOutRequest("Anonymous", this::mockComparePersonalDataAnonymous, false, "ACCEPTED");
 
         functionService.execute("UPDATE-STATUS", IdOrKey.of(result.getId()), new HashMap<>(Map.of(
             "stateKey", "SERVICE-PORT-OUT-ON"
@@ -613,21 +602,11 @@ public class TestMnpProcessIntTest extends AbstractSpringBootTest {
     @SneakyThrows
     @DirtiesContext
     public void testPortOutRequestIndividual() {
-        LoggerContext loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
-        ch.qos.logback.classic.Logger rootLogger = loggerContext.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME);
-        rootLogger.setLevel(Level.INFO);
-
-        rejectNotMockedRequests();
-        WIRE_MOCK.stubFor(get(urlPathEqualTo("/api/customerManagement/v3/customer/380669333333"))
-                .withHeader("Profile", equalTo("CUSTOMER-STATUS"))
-        .willReturn(aResponse().withStatus(200)
-            .withHeader("Content-Type", "application/json")
-            .withBody("{\"id\": \"SXID380662582086\",\"characteristic\": [{\"name\": \"status\",\"value\": \"NOT_FOUND\"}]}"))
-        );
+        mockCheckIsNewBilling("{\"id\": \"SXID380662582086\",\"characteristic\": [{\"name\": \"status\",\"value\": \"NOT_FOUND\"}]}");
 
         reset(kafkaTemplateService);
         mockServer();
-        XmEntity result = createPortOutRequest("Individual", this::mockComparePersonalDataIndividual);
+        XmEntity result = createPortOutRequest("Individual", this::mockComparePersonalDataIndividual, false, "ACCEPTED");
 
         functionService.execute("UPDATE-STATUS", IdOrKey.of(result.getId()), new HashMap<>(Map.of(
             "stateKey", "SERVICE-PORT-OUT-ON"
@@ -646,10 +625,96 @@ public class TestMnpProcessIntTest extends AbstractSpringBootTest {
         verifyNoMoreInteractions(kafkaTemplateService);
     }
 
+
     @Test
     @SneakyThrows
     @DirtiesContext
-    public void testPortOutRequestIndividualNewBilling() {
+    public void testPortOutRequestAnonymousNewBilling() {
+        reset(kafkaTemplateService);
+        mockServer();
+
+        mockCheckIsNewBilling("{\"id\": \"380669333333\",\"characteristic\": [{\"name\": \"status\",\"value\": \"MIGRATED\"},{\"name\": \"dateMigrated\",\"value\": \"2023-08-04T18:51:44.732Z\"}]}");
+        WIRE_MOCK.stubFor(post(urlPathEqualTo("/tmf-api/processFlowManagement/v4/processFlow"))
+            .willReturn(aResponse().withStatus(200)));
+
+        XmEntity result = createPortOutRequest("Anonymous", this::mockComparePersonalDataAnonymousNewBilling, true, "ACCEPTED");
+
+        functionService.execute("UPDATE-STATUS", IdOrKey.of(result.getId()), new HashMap<>(Map.of(
+            "stateKey", "SERVICE-PORT-OUT-ON"
+        )));
+        assertSasTables(result,
+            List.of("REJECTED", "SERVICE-PORT-OUT-ON", "SERVICE-PORT-OUT-ON", "REJECTED"),
+            List.of("NEW", "ACCEPTED", "SERVICE-PORT-OUT-ON"));
+        verifyKafkaEvent(result, "SERVICE-PORT-OUT-ON");
+
+        runDeactivateForPortOutRequest(result, true);
+        functionService.execute("BILLING-PORTING-COMPLETED", new HashMap<>(Map.of(
+            "entityId", result.getId()
+        )), "POST");
+        finishPortOutRequest(result);
+
+        WireMock.verify(0, putRequestedFor(urlEqualTo("/crm/api/v1/portingRequest")));
+        wireMockServer.stop();
+
+        WIRE_MOCK.verify(0, postRequestedFor(urlEqualTo("/api/tasks"))
+            .withHeader("Authorization", equalTo("bearer mock-token"))
+            .withHeader("Content-Type", equalTo("application/json;charset=UTF-8"))
+            .withRequestBody(matchingJsonPath("$.typeKey", equalTo("portOutRequestNew"))));
+
+        verifyNoMoreInteractions(kafkaTemplateService);
+    }
+
+    @Test
+    @SneakyThrows
+    @DirtiesContext
+    public void testPortOutRejectAcceptAfterRejectBilling() {
+        mockCheckIsNewBilling("{\"id\": \"380669333333\",\"characteristic\": [{\"name\": \"status\",\"value\": \"MIGRATED\"},{\"name\": \"dateMigrated\",\"value\": \"2023-08-04T18:51:44.732Z\"}]}");
+        WIRE_MOCK.stubFor(post(urlPathEqualTo("/tmf-api/processFlowManagement/v4/processFlow"))
+            .willReturn(aResponse().withStatus(200)));
+
+        reset(kafkaTemplateService);
+        mockServer();
+        XmEntity result = createPortOutRequest("Individual", this::mockIndividualRejectNewBilling, true, "REJECTED");
+
+        assertSasTables(result,
+            List.of("REJECTED", "REJECTED", "REJECTED", "REJECTED"),
+            List.of("NEW", "REJECTED"));
+
+        xmEntityService.updateState(IdOrKey.of(result.getId()), "ACCEPTED", Map.of(
+            "messageId", UUID.randomUUID().toString(),
+            "messageType", "AutoAccept",
+            "statusCode", "252"
+        ));
+    }
+
+    private void mockIndividualRejectNewBilling() {
+        WIRE_MOCK.stubFor(get(urlEqualTo("/api/product?@type=wirelessProduct&msisdn=380669111111"))
+            .willReturn(aResponse()
+                .withStatus(200)
+                .withHeader("Content-Type", "application/json")
+                .withBody("[]")));
+        WIRE_MOCK.stubFor(get(urlEqualTo("/api/product?@type=wirelessProduct&msisdn=380669222222"))
+            .willReturn(aResponse()
+                .withStatus(200)
+                .withHeader("Content-Type", "application/json")
+                .withBody("[]")));
+        WIRE_MOCK.stubFor(get(urlEqualTo("/api/product?@type=wirelessProduct&msisdn=380669333333"))
+            .willReturn(aResponse()
+                .withStatus(200)
+                .withHeader("Content-Type", "application/json")
+                .withBody("[]")));
+        WIRE_MOCK.stubFor(get(urlEqualTo("/api/product?@type=wirelessProduct&msisdn=380669000000"))
+            .willReturn(aResponse()
+                .withStatus(200)
+                .withHeader("Content-Type", "application/json")
+                .withBody("[]")));
+
+
+        WIRE_MOCK.stubFor(put(urlEqualTo("/cdb/api/v1/portingRequest/d9b25a0c-2817-498f-b51b-4ac759fc6445/reject"))
+            .willReturn(aResponse().withStatus(200)));
+    }
+
+    private void mockCheckIsNewBilling(String body) {
         LoggerContext loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
         ch.qos.logback.classic.Logger rootLogger = loggerContext.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME);
         rootLogger.setLevel(Level.INFO);
@@ -659,14 +724,70 @@ public class TestMnpProcessIntTest extends AbstractSpringBootTest {
             .withHeader("Profile", equalTo("CUSTOMER-STATUS"))
             .willReturn(aResponse().withStatus(200)
                 .withHeader("Content-Type", "application/json")
-                .withBody("{\"id\": \"380669333333\",\"characteristic\": [{\"name\": \"status\",\"value\": \"MIGRATED\"},{\"name\": \"dateMigrated\",\"value\": \"2023-08-04T18:51:44.732Z\"}]}"))
+                .withBody(body))
         );
+    }
+
+    private void mockComparePersonalDataAnonymousNewBilling() {
+
+        String jsonBody = "[{\"id\":\"952\",\"relatedParty\":[{\"id\":\"1002\",\"role\":\"Owner\",\"partyId\":\"29002\",\"@type\":\"BssIndividual\"}],\"@type\":\"wirelessProduct\"}]";
+        WIRE_MOCK.stubFor(get(urlEqualTo("/api/product?@type=wirelessProduct&msisdn=380669111111"))
+            .willReturn(aResponse()
+                .withStatus(200)
+                .withHeader("Content-Type", "application/json")
+                .withBody("[]")));
+        WIRE_MOCK.stubFor(get(urlEqualTo("/api/product?@type=wirelessProduct&msisdn=380669222222"))
+            .willReturn(aResponse()
+                .withStatus(200)
+                .withHeader("Content-Type", "application/json")
+                .withBody("[]")));
+        WIRE_MOCK.stubFor(get(urlEqualTo("/api/product?@type=wirelessProduct&msisdn=380669333333"))
+            .willReturn(aResponse()
+                .withStatus(200)
+                .withHeader("Content-Type", "application/json")
+                .withBody(jsonBody)));
+
+        mockBarring();
+
+        WIRE_MOCK.stubFor(get(urlEqualTo("/api/customerManagement/v3/customer/380669000000"))
+            .willReturn(aResponse()
+                .withStatus(200)
+                .withHeader("Content-Type", "application/json")
+                .withBody("[{\"characteristic\":[{\"name\":\"msisdn\",\"value\":\"380669000000\"},{\"name\":\"schemaType\",\"value\":\"POP\"}]}]")));
+
+        WIRE_MOCK.stubFor(get(urlEqualTo("/api/customerManagement/v3/customer/380669111111"))
+            .willReturn(aResponse()
+                .withStatus(200)
+                .withHeader("Content-Type", "application/json")
+                .withBody("[{\"characteristic\":[{\"name\":\"msisdn\",\"value\":\"380669111111\"},{\"name\":\"schemaType\",\"value\":\"PRP\"}]}]")));
+
+        WIRE_MOCK.stubFor(get(urlEqualTo("/api/customerManagement/v3/customer/380669222222"))
+            .willReturn(aResponse()
+                .withStatus(200)
+                .withHeader("Content-Type", "application/json")
+                .withBody("[{\"characteristic\":[{\"name\":\"msisdn\",\"value\":\"380669222222\"},{\"name\":\"schemaType\",\"value\":\"PRP\"}]}]")));
+
+        WIRE_MOCK.stubFor(get(urlEqualTo("/api/customerManagement/v3/customer/380669333333"))
+            .willReturn(aResponse()
+                .withStatus(200)
+                .withHeader("Content-Type", "application/json")
+                .withBody("[{\"characteristic\":[{\"name\":\"msisdn\",\"value\":\"380669333333\"},{\"name\":\"schemaType\",\"value\":\"PRP\"}]}]")));
+
+        WIRE_MOCK.stubFor(put(urlEqualTo("/cdb/api/v1/portingRequest/d9b25a0c-2817-498f-b51b-4ac759fc6445/donorExclude"))
+            .willReturn(aResponse().withStatus(200)));
+    }
+
+    @Test
+    @SneakyThrows
+    @DirtiesContext
+    public void testPortOutRequestIndividualNewBilling() {
+        mockCheckIsNewBilling("{\"id\": \"380669333333\",\"characteristic\": [{\"name\": \"status\",\"value\": \"MIGRATED\"},{\"name\": \"dateMigrated\",\"value\": \"2023-08-04T18:51:44.732Z\"}]}");
         WIRE_MOCK.stubFor(post(urlPathEqualTo("/tmf-api/processFlowManagement/v4/processFlow"))
             .willReturn(aResponse().withStatus(200)));
 
         reset(kafkaTemplateService);
         mockServer();
-        XmEntity result = createPortOutRequest("Individual", this::mockComparePersonalDataIndividualNewBilling);
+        XmEntity result = createPortOutRequest("Individual", this::mockComparePersonalDataIndividualNewBilling, true, "ACCEPTED");
 
         functionService.execute("UPDATE-STATUS", IdOrKey.of(result.getId()), new HashMap<>(Map.of(
             "stateKey", "SERVICE-PORT-OUT-ON"
@@ -772,10 +893,10 @@ public class TestMnpProcessIntTest extends AbstractSpringBootTest {
 
     @NotNull
     @SneakyThrows
-    private XmEntity createPortOutRequest(String partyType, Runnable mockComparePersonalData) throws IOException {
-        mockPortOutCreate(false);
+    private XmEntity createPortOutRequest(String partyType, Runnable mockComparePersonalData, boolean isNewBilling, String nextStatus) throws IOException {
+        mockPortOutCreate(isNewBilling);
         mockComparePersonalData.run();
-        prepareTenantConfig(false);
+        prepareTenantConfig(isNewBilling);
 
         ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
         XmEntity portOut = objectMapper.readValue(getClass().getClassLoader().getResourceAsStream("mnp/portOutRequest" + partyType + ".json"), XmEntity.class);
@@ -812,8 +933,8 @@ public class TestMnpProcessIntTest extends AbstractSpringBootTest {
             "messageType", "ValidationResponse",
             "statusCode", "0"
         )), "GET");
-        assertSasTables(result, List.of("REJECTED", "ACCEPTED", "ACCEPTED", "REJECTED"), List.of("NEW", "ACCEPTED"));
-        verifyKafkaEvent(result, "ACCEPTED");
+        assertSasTables(result, List.of("REJECTED", nextStatus, nextStatus, "REJECTED"), List.of("NEW", nextStatus));
+        verifyKafkaEvent(result, nextStatus);
         return result;
     }
 
@@ -1146,7 +1267,6 @@ public class TestMnpProcessIntTest extends AbstractSpringBootTest {
 
     private void mockPortOutCreate(boolean isNewBilling) {
         mockSystemToken();
-        // TODO mock call check in new Billing
         if (!isNewBilling) {
             stubFor(put(urlEqualTo("/crm/api/v1/portingRequest")).atPriority(1).willReturn(aResponse().withStatus(200)));
             WIRE_MOCK.stubFor(post(urlEqualTo("/api/tasks"))
@@ -1161,8 +1281,6 @@ public class TestMnpProcessIntTest extends AbstractSpringBootTest {
                 .willReturn(aResponse().withStatus(201)));
             WIRE_MOCK.stubFor(post(urlEqualTo("/api/communicationManagement/v2/communicationMessage/send"))
                 .willReturn(aResponse().withStatus(200)));
-        } else {
-            // TODO mock call create flow and verify it
         }
     }
 
@@ -1224,6 +1342,10 @@ public class TestMnpProcessIntTest extends AbstractSpringBootTest {
         WIRE_MOCK.stubFor(put(urlEqualTo("/cdb/api/v1/portingRequest/d9b25a0c-2817-498f-b51b-4ac759fc6445/donorExclude"))
             .willReturn(aResponse().withStatus(200)));
 
+        mockBarring();
+    }
+
+    private static void mockBarring() {
         var noBlocking = "{\"id\": \"380662582086\",\"characteristics\": {\"barringList\": []}}";
         var blocking = "{\"id\": \"380662582086\",\"characteristics\": {\"barringList\": [{\"code\": \"FRBLKMNP\"}]}}\n";
 
