@@ -20,6 +20,7 @@ import com.icthh.xm.ms.entity.service.XmEntitySpecService;
 import com.icthh.xm.ms.entity.service.json.JsonValidationService;
 import com.icthh.xm.ms.entity.service.mapper.FunctionResultMapper;
 import com.icthh.xm.ms.entity.service.mapper.FunctionResultMapperImpl;
+import java.util.Locale;
 import org.assertj.core.util.Lists;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Assert;
@@ -511,6 +512,8 @@ public class FunctionServiceImplUnitTest extends AbstractUnitTest {
 
     @Test
     public void validationFailOnInvalidFunctionInputWhenValidationEnabled() {
+        Locale.setDefault(Locale.US);
+
         exception.expect(JsonValidationService.InvalidJsonException.class);
         String exceptionMessage = "$.numberArgument: string found, number expected";
         exception.expectMessage(exceptionMessage);
@@ -524,6 +527,7 @@ public class FunctionServiceImplUnitTest extends AbstractUnitTest {
 
     @Test
     public void validationFailOnInvalidFunctionWithEntityIdInputWhenValidationEnabled() {
+        Locale.setDefault(Locale.US);
         exception.expect(JsonValidationService.InvalidJsonException.class);
         String exceptionMessage = "$.numberArgument: string found, number expected";
         exception.expectMessage(exceptionMessage);
