@@ -4,14 +4,17 @@ import com.codahale.metrics.annotation.Timed;
 import com.icthh.xm.commons.permission.annotation.PrivilegeDescription;
 import com.icthh.xm.ms.entity.domain.ext.IdOrKey;
 import com.icthh.xm.ms.entity.service.impl.XmEntityAvatarService;
+import com.icthh.xm.ms.entity.service.storage.AvatarStorageResponse;
 import com.icthh.xm.ms.entity.util.XmHttpEntityUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -91,6 +94,49 @@ public class XmEntityAvatarResource {
         HttpEntity<Resource> avatarEntity = XmHttpEntityUtils.buildAvatarHttpEntity(request, fileName);
         URI uri = xmEntityAvatarService.updateAvatar(IdOrKey.SELF, avatarEntity);
         return buildAvatarUpdateResponse(uri);
+    }
+
+    @Timed
+    @GetMapping(path = "/xm-entities/self/avatar", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
+    @PreAuthorize("hasPermission('XMENTITY.SELF.AVATAR.GET')")
+    @PrivilegeDescription("Privilege to get avatar of current user")
+    public @ResponseBody ResponseEntity<?> getSelfAvatar() throws IOException {
+        AvatarStorageResponse avatarStorageResponse = xmEntityAvatarService.getAvatar(IdOrKey.SELF);
+        return avatarOrRedirect(avatarStorageResponse);
+    }
+
+    @Timed
+    @GetMapping(path = "/xm-entities/{idOrKey}/avatar", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
+    @PreAuthorize("hasPermission('XMENTITY.AVATAR.GET')")
+    @PrivilegeDescription("Privilege to get avatar of current user")
+    public @ResponseBody ResponseEntity<?>  getSelfAvatar(@PathVariable String idOrKey) throws IOException {
+        AvatarStorageResponse avatarStorageResponse = xmEntityAvatarService.getAvatar(IdOrKey.of(idOrKey));
+        return avatarOrRedirect(avatarStorageResponse);
+    }
+
+    private static ResponseEntity<?> avatarOrRedirect(AvatarStorageResponse response) {
+        Resource resource = response.avatarResource();
+        if (resource != null) {
+            return ResponseEntity.ok()
+                .contentType(byAvatarType(response)).body(resource);
+        }
+        return ResponseEntity.status(HttpStatus.FOUND)
+            .location(response.uri())
+            .build();
+    }
+
+    private static MediaType byAvatarType(AvatarStorageResponse avatarStorageResponse) {
+        String path = avatarStorageResponse.uri().toString().toLowerCase();
+        if (StringUtils.containsAny(path, ".jpg", ".jpeg")) {
+            return MediaType.IMAGE_JPEG;
+        }
+        if (StringUtils.containsAny(path, ".png")) {
+            return MediaType.IMAGE_PNG;
+        }
+        if (StringUtils.containsAny(path, ".gif")) {
+            return MediaType.IMAGE_GIF;
+        }
+        return MediaType.APPLICATION_OCTET_STREAM;
     }
 
     private static ResponseEntity<Void> buildAvatarUpdateResponse(URI uri) {

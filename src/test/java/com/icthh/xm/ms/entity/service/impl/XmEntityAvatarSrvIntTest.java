@@ -10,6 +10,7 @@ import com.icthh.xm.ms.entity.domain.ext.IdOrKey;
 import com.icthh.xm.ms.entity.repository.XmEntityRepositoryInternal;
 import com.icthh.xm.ms.entity.service.ProfileService;
 import com.icthh.xm.ms.entity.service.StorageService;
+import com.icthh.xm.ms.entity.service.storage.AvatarStorageServiceImpl;
 import com.icthh.xm.ms.entity.util.EntityUtils;
 import com.icthh.xm.ms.entity.util.XmHttpEntityUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -60,6 +61,9 @@ public class XmEntityAvatarSrvIntTest extends AbstractJupiterSpringBootTest {
     @Autowired
     private ApplicationProperties applicationProperties;
 
+    @Autowired
+    private AvatarStorageServiceImpl avatarStorageService;
+
     private AutoCloseable mockito;
 
     private Profile self;
@@ -73,7 +77,7 @@ public class XmEntityAvatarSrvIntTest extends AbstractJupiterSpringBootTest {
         TenantContextUtils.setTenant(tenantContextHolder, "RESINTTEST");
 
         mockito = MockitoAnnotations.openMocks(this);
-        xmEntityAvatarService = new XmEntityAvatarService(xmEntityService, storageService, profileService, applicationProperties);
+        xmEntityAvatarService = new XmEntityAvatarService(xmEntityService, storageService, profileService, applicationProperties, avatarStorageService);
     }
 
     @AfterTransaction
