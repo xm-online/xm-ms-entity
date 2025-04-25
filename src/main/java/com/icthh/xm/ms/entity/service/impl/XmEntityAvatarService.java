@@ -6,6 +6,8 @@ import com.icthh.xm.ms.entity.domain.ext.IdOrKey;
 import com.icthh.xm.ms.entity.service.ProfileService;
 import com.icthh.xm.ms.entity.service.StorageService;
 import com.icthh.xm.ms.entity.service.XmEntityService;
+import com.icthh.xm.ms.entity.service.storage.AvatarStorageResponse;
+import com.icthh.xm.ms.entity.service.storage.AvatarStorageServiceImpl;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.Resource;
@@ -16,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.io.IOException;
 import java.net.URI;
 import java.util.List;
+import java.util.function.Supplier;
 
 @Slf4j
 @Service
@@ -27,17 +30,11 @@ public class XmEntityAvatarService {
     private final ProfileService profileService;
     private final ApplicationProperties applicationProperties;
 
+    private final AvatarStorageServiceImpl avatarStorageService;
+
     @Transactional
     public URI updateAvatar(IdOrKey idOrKey, HttpEntity<Resource> avatarHttpEntity) throws IOException {
-        XmEntity source;
-
-        if (idOrKey.isSelf()) {
-            source = profileService.getSelfProfile().getXmentity();
-            log.debug("Self resolved entity id = {}, typeKet = {}", source.getId(), source.getTypeKey());
-        } else {
-            source = xmEntityService.findOne(idOrKey, List.of());
-            log.debug("Resolved entity id = {}, typeKet = {}", source.getId(), source.getTypeKey());
-        }
+        XmEntity source = getEntity(idOrKey);
 
         String avatarUrl = storageService.storeAvatar(
             avatarHttpEntity,
@@ -46,6 +43,25 @@ public class XmEntityAvatarService {
 
         source.setAvatarUrl(avatarUrl);
         return URI.create(avatarUrl);
+    }
+
+    @Transactional(readOnly = true)
+    public AvatarStorageResponse getAvatar(IdOrKey idOrKey) {
+        XmEntity source = getEntity(idOrKey);
+        Supplier<ApplicationProperties.StorageType> storage = () -> applicationProperties.getObjectStorage().getAvatar().getStorageType();
+        return avatarStorageService.getAvatar(source, storage);
+    }
+
+    private XmEntity getEntity(IdOrKey idOrKey) {
+        XmEntity source;
+        if (idOrKey.isSelf()) {
+            source = profileService.getSelfProfile().getXmentity();
+            log.debug("Self resolved entity id = {}, typeKet = {}", source.getId(), source.getTypeKey());
+            return source;
+        }
+        source = xmEntityService.findOne(idOrKey, List.of());
+        log.debug("Resolved entity id = {}, typeKet = {}", source.getId(), source.getTypeKey());
+        return source;
     }
 
 }
