@@ -7,6 +7,7 @@ import com.icthh.xm.commons.lep.api.BaseLepContext;
 import com.icthh.xm.commons.lep.api.LepContextFactory;
 import com.icthh.xm.commons.messaging.communication.service.CommunicationService;
 import com.icthh.xm.commons.permission.service.PermissionCheckService;
+import com.icthh.xm.commons.permission.service.PermissionContextService;
 import com.icthh.xm.commons.search.ElasticsearchOperations;
 import com.icthh.xm.commons.topic.service.KafkaTemplateService;
 import com.icthh.xm.lep.api.LepMethod;
@@ -56,6 +57,7 @@ public class LepContextFactoryImpl implements LepContextFactory {
     private final ProfileEventProducer profileEventProducer;
     private final CommentService commentService;
     private final PermissionCheckService permissionCheckService;
+    private final PermissionContextService permissionContextService;
     private final EventService eventService;
     private final CalendarService calendarService;
     private final TenantLepResource tenantLepResource;
@@ -88,6 +90,7 @@ public class LepContextFactoryImpl implements LepContextFactory {
                                  ProfileEventProducer profileEventProducer,
                                  CommentService commentService,
                                  PermissionCheckService permissionCheckService,
+                                 PermissionContextService permissionContextService,
                                  EventService eventService,
                                  CalendarService calendarService,
                                  TenantLepResource tenantLepResource,
@@ -118,6 +121,7 @@ public class LepContextFactoryImpl implements LepContextFactory {
         this.profileEventProducer = profileEventProducer;
         this.commentService = commentService;
         this.permissionCheckService = permissionCheckService;
+        this.permissionContextService = permissionContextService;
         this.eventService = eventService;
         this.calendarService = calendarService;
         this.tenantLepResource = tenantLepResource;
@@ -155,6 +159,7 @@ public class LepContextFactoryImpl implements LepContextFactory {
         lepContext.services.profileEventProducer = profileEventProducer;
         lepContext.services.commentService = commentService;
         lepContext.services.permissionService = permissionCheckService;
+        lepContext.services.permissionContextService = permissionContextService;
         lepContext.services.elasticsearchIndexService = elasticsearchIndexService;
         lepContext.services.separateTransactionExecutor = transactionExecutor;
         lepContext.services.metricsAdapter = metricsAdapter;

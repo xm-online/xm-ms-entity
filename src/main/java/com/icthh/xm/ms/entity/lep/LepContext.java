@@ -8,6 +8,7 @@ import com.icthh.xm.commons.lep.api.BaseLepContext;
 import com.icthh.xm.commons.lep.processor.GroovyMap;
 import com.icthh.xm.commons.messaging.communication.service.CommunicationService;
 import com.icthh.xm.commons.permission.service.PermissionCheckService;
+import com.icthh.xm.commons.permission.service.PermissionContextService;
 import com.icthh.xm.commons.search.ElasticsearchOperations;
 import com.icthh.xm.commons.topic.service.KafkaTemplateService;
 import com.icthh.xm.ms.entity.config.RestTemplateConfiguration;
@@ -52,6 +53,7 @@ public class LepContext extends BaseLepContext implements OutboxTransportService
         public ProfileEventProducer profileEventProducer;
         public CommentService commentService;
         public PermissionCheckService permissionService;
+        public PermissionContextService permissionContextService;
         public EventService eventService;
         public CalendarService calendarService;
         public TenantLepResource lepResource;
