@@ -24,7 +24,7 @@ public class XmEntityElasticSearchListener {
 
     private static XmEntitySpecService xmEntitySpecService;
 
-    @Autowired(required = false)
+    @Autowired
     public void setElasticIndexManagerService(ElasticIndexManagerService elasticIndexManagerService) {
         this.elasticIndexManagerService = elasticIndexManagerService;
     }
@@ -57,7 +57,7 @@ public class XmEntityElasticSearchListener {
     }
 
     private boolean isFeatureEnabled(XmEntity entity, Function<TypeSpec, Boolean> flag) {
-        return elasticIndexManagerService != null && xmEntitySpecService.getTypeSpecByKeyWithoutFunctionFilter(entity.getTypeKey())
+        return xmEntitySpecService.getTypeSpecByKeyWithoutFunctionFilter(entity.getTypeKey())
                                   .map(flag)
                                   .orElse(false);
     }

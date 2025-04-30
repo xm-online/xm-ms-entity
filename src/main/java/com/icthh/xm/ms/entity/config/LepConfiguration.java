@@ -6,7 +6,6 @@ import com.icthh.xm.ms.entity.lep.ElasticIndexManager;
 import com.icthh.xm.ms.entity.lep.ElasticIndexManagerService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -33,7 +32,6 @@ public class LepConfiguration extends GroovyLepEngineConfiguration {
     }
 
     @Bean
-    @ConditionalOnProperty(value = "application.elastic-disable", havingValue = "false", matchIfMissing = true)
     public ElasticIndexManagerService elasticIndexManagerService(ApplicationContext context) {
         return new ElasticIndexManagerService() {
             @Override

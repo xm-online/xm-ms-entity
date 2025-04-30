@@ -16,6 +16,3 @@ spring:
             hibernate.dialect: com.icthh.xm.commons.migration.db.jsonb.CustomPostgreSQLDialect
     liquibase:
         change-log: config/liquibase/master.xml
-
-application:
-    elastic-disable: true
