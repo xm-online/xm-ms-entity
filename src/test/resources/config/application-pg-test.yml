@@ -17,3 +17,5 @@ spring:
     liquibase:
         change-log: config/liquibase/master.xml
 
+application:
+    elastic-disable: true

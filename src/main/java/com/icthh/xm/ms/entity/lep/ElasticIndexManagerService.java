@@ -8,7 +8,6 @@ import org.springframework.stereotype.Service;
 
 @Slf4j
 @RequiredArgsConstructor
-@Service
 @Scope
 public abstract class ElasticIndexManagerService {
 
