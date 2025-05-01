@@ -204,6 +204,7 @@ application:
     tenant-client-read-timeout: 40000
     email-path-pattern: /config/tenants/{tenantName}/entity/emails/{langKey}/{fileName}.ftl
     webapp-name: webapp
+    permission-context-uri: uaa/api/account
     specification-webapp-name: settings-public.yml
     specification-name: xmentityspec.yml
     specification-folder-path-pattern: /config/tenants/{tenantName}/entity/xmentityspec/*.yml
