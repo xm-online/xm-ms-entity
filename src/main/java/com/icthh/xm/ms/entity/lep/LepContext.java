@@ -31,8 +31,10 @@ import com.icthh.xm.ms.entity.service.metrics.CustomMetricsContext;
 import com.icthh.xm.ms.entity.service.metrics.MetricsAdapter;
 import org.springframework.web.client.RestTemplate;
 
+import static com.icthh.xm.commons.permission.service.PermissionContextCheckService.PermissionContextCheckServiceField;
+
 @GroovyMap
-public class LepContext extends BaseLepContext implements OutboxTransportServiceField {
+public class LepContext extends BaseLepContext implements OutboxTransportServiceField, PermissionContextCheckServiceField {
 
     public LepServices services;
     public LepRepositories repositories;
