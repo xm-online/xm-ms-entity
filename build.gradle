@@ -146,7 +146,7 @@ test {
 
     exclude '**/CucumberTest*'
     exclude '**/*ElasticsearchTest*'
-//    exclude '**/JsonbCriteriaBuilderIntTest*'// todo: excluded until pipeline problem fixed
+    exclude '**/JsonbCriteriaBuilderIntTest.class'// todo: excluded until pipeline problem fixed
     dependsOn 'clean', 'runCategorizedTests'
     classes.mustRunAfter 'clean'
     systemProperty "spring.profiles.active", "test"
@@ -173,7 +173,7 @@ test {
 
 tasks.register('runCategorizedTests', Test) {
 
-//    exclude '**/JsonbCriteriaBuilderIntTest.class'
+    exclude '**/JsonbCriteriaBuilderIntTest.class'// todo: excluded until pipeline problem fixed
 
     useJUnitPlatform {
         includeTags(testCategories)
