@@ -3,6 +3,7 @@ package com.icthh.xm.ms.entity.config;
 import com.icthh.xm.commons.config.client.repository.CommonConfigRepository;
 import com.icthh.xm.commons.config.client.repository.TenantListRepository;
 import com.icthh.xm.commons.config.client.service.TenantAliasService;
+import com.icthh.xm.commons.config.client.service.TenantAliasServiceImpl;
 import com.icthh.xm.commons.lep.spring.LepUpdateMode;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -20,7 +21,7 @@ public class TestLepUpdateModeConfiguration {
 
     @Bean
     public TenantAliasService tenantAliasService() {
-        return new TenantAliasService(mock(CommonConfigRepository.class), mock(TenantListRepository.class));
+        return new TenantAliasServiceImpl(mock(CommonConfigRepository.class), mock(TenantListRepository.class));
     }
 
 }
