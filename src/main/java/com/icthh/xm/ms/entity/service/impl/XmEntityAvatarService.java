@@ -7,7 +7,7 @@ import com.icthh.xm.ms.entity.service.ProfileService;
 import com.icthh.xm.ms.entity.service.StorageService;
 import com.icthh.xm.ms.entity.service.XmEntityService;
 import com.icthh.xm.ms.entity.service.storage.AvatarStorageResponse;
-import com.icthh.xm.ms.entity.service.storage.AvatarStorageServiceImpl;
+import com.icthh.xm.ms.entity.service.storage.AvatarStorageService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.Resource;
@@ -29,7 +29,7 @@ public class XmEntityAvatarService {
     private final ProfileService profileService;
     private final ApplicationProperties applicationProperties;
 
-    private final AvatarStorageServiceImpl avatarStorageService;
+    private final AvatarStorageService avatarStorageService;
 
     @Transactional
     public URI updateAvatar(IdOrKey idOrKey, HttpEntity<Resource> avatarHttpEntity) throws IOException {
