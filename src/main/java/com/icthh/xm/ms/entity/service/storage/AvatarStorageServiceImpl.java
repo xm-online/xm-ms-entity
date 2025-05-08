@@ -14,18 +14,20 @@ import java.util.function.Supplier;
 
 @Service
 @RequiredArgsConstructor
-public class AvatarStorageServiceImpl {
+public class AvatarStorageServiceImpl implements AvatarStorageService {
 
     private final ContentRepository contentRepository;
+    private final ApplicationProperties applicationProperties;
 
-    public AvatarStorageResponse getAvatar(XmEntity xmEntity, Supplier<ApplicationProperties.StorageType> avatarStorageSupplier) {
+    @Override
+    public AvatarStorageResponse getAvatarResource(XmEntity xmEntity) {
         final String avatarUrl = xmEntity.getAvatarUrl();
         final String avatarFileUrl = xmEntity.getAvatarUrlRelative();
         if (xmEntity.isRemoved() || xmEntity.getAvatarUrl() == null) {
             throw new RuntimeException("Here should transfer to default url in webapp");
         }
 
-        ApplicationProperties.StorageType storageType = avatarStorageSupplier.get();
+        ApplicationProperties.StorageType storageType = applicationProperties.getObjectStorage().getAvatar().getStorageType();
 
         return switch (storageType) {
             case DB -> AvatarStorageResponse.withResource(getResourceFromDB(avatarFileUrl), URI.create(avatarFileUrl));

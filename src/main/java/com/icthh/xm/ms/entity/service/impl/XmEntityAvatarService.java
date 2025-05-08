@@ -18,7 +18,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.io.IOException;
 import java.net.URI;
 import java.util.List;
-import java.util.function.Supplier;
 
 @Slf4j
 @Service
@@ -48,8 +47,7 @@ public class XmEntityAvatarService {
     @Transactional(readOnly = true)
     public AvatarStorageResponse getAvatar(IdOrKey idOrKey) {
         XmEntity source = getEntity(idOrKey);
-        Supplier<ApplicationProperties.StorageType> storage = () -> applicationProperties.getObjectStorage().getAvatar().getStorageType();
-        return avatarStorageService.getAvatar(source, storage);
+        return avatarStorageService.getAvatarResource(source);
     }
 
     private XmEntity getEntity(IdOrKey idOrKey) {
