@@ -6,9 +6,9 @@ import com.icthh.xm.ms.entity.domain.ext.IdOrKey;
 import com.icthh.xm.ms.entity.service.impl.XmEntityAvatarService;
 import com.icthh.xm.ms.entity.service.storage.AvatarStorageResponse;
 import com.icthh.xm.ms.entity.util.XmHttpEntityUtils;
+import com.icthh.xm.ms.entity.web.rest.util.HeaderUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -117,27 +117,15 @@ public class XmEntityAvatarResource {
     private static ResponseEntity<?> avatarOrRedirect(AvatarStorageResponse response) {
         Resource resource = response.avatarResource();
         if (resource != null) {
+            final String path = response.uri().toString().toLowerCase();
             return ResponseEntity.ok()
-                .contentType(byAvatarType(response)).body(resource);
+                .contentType(HeaderUtil.mediaTypeHeader(path)).body(resource);
         }
         return ResponseEntity.status(HttpStatus.FOUND)
             .location(response.uri())
             .build();
     }
 
-    private static MediaType byAvatarType(AvatarStorageResponse avatarStorageResponse) {
-        String path = avatarStorageResponse.uri().toString().toLowerCase();
-        if (StringUtils.containsAny(path, ".jpg", ".jpeg")) {
-            return MediaType.IMAGE_JPEG;
-        }
-        if (StringUtils.containsAny(path, ".png")) {
-            return MediaType.IMAGE_PNG;
-        }
-        if (StringUtils.containsAny(path, ".gif")) {
-            return MediaType.IMAGE_GIF;
-        }
-        return MediaType.APPLICATION_OCTET_STREAM;
-    }
 
     private static ResponseEntity<Void> buildAvatarUpdateResponse(URI uri) {
         HttpHeaders headers = new HttpHeaders();
