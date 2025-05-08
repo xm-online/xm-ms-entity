@@ -30,6 +30,8 @@ public final class Constants {
     public static final String UPDATE_ROLE = "UPDATE_ROLE";
     public static final String AUTH_ADDITIONAL_DETAILS = "additionalDetails";
 
+    public static final String XM_ENTITY_TYPE = "xmEntity";
+
     //System event data properties
     public static final String ID = "id";
     public static final String FIRST_NAME = "firstName";
@@ -53,6 +55,8 @@ public final class Constants {
     public static final String MVC_FUNC_RESULT = "modelAndView";
 
     public static final String DEFAULT_AVATAR_URL_PREFIX = "http://xm-avatar.rgw.icthh.test:7480";
+
+    public static final String DEFAULT_AVATAR_URL = "/assets/img/anonymous.png";
 
     private Constants() {
     }

@@ -8,6 +8,7 @@ import com.icthh.xm.ms.entity.service.storage.AvatarStorageResponse;
 import com.icthh.xm.ms.entity.util.XmHttpEntityUtils;
 import com.icthh.xm.ms.entity.web.rest.util.HeaderUtil;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpEntity;
@@ -20,6 +21,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.io.OutputStream;
 import java.net.URI;
 
 import static com.icthh.xm.ms.entity.web.rest.XmRestApiConstants.XM_HEADER_CONTENT_NAME;
@@ -100,32 +102,44 @@ public class XmEntityAvatarResource {
     @GetMapping(path = "/xm-entities/self/avatar", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
     @PreAuthorize("hasPermission('XMENTITY.SELF.AVATAR.GET')")
     @PrivilegeDescription("Privilege to get avatar of current user")
-    public @ResponseBody ResponseEntity<?> getSelfAvatar() throws IOException {
+    public void getSelfAvatar(HttpServletResponse response) throws IOException {
         AvatarStorageResponse avatarStorageResponse = xmEntityAvatarService.getAvatar(IdOrKey.SELF);
-        return avatarOrRedirect(avatarStorageResponse);
+        if (avatarStorageResponse.avatarResource() != null) {
+            writeDataResponse(response, avatarStorageResponse);
+            return;
+        }
+        writeRedirectResponse(response, avatarStorageResponse);
     }
 
     @Timed
-    @GetMapping(path = "/xm-entities/{idOrKey}/avatar", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
+    @GetMapping(path = "/xm-entities/{idOrKey}/avatar")
     @PreAuthorize("hasPermission('XMENTITY.AVATAR.GET')")
     @PrivilegeDescription("Privilege to get avatar of current user")
-    public @ResponseBody ResponseEntity<?>  getSelfAvatar(@PathVariable String idOrKey) throws IOException {
+    public void  getSelfAvatar(@PathVariable String idOrKey, HttpServletResponse response) throws IOException {
         AvatarStorageResponse avatarStorageResponse = xmEntityAvatarService.getAvatar(IdOrKey.of(idOrKey));
-        return avatarOrRedirect(avatarStorageResponse);
-    }
-
-    private static ResponseEntity<?> avatarOrRedirect(AvatarStorageResponse response) {
-        Resource resource = response.avatarResource();
-        if (resource != null) {
-            final String path = response.uri().toString().toLowerCase();
-            return ResponseEntity.ok()
-                .contentType(HeaderUtil.mediaTypeHeader(path)).body(resource);
+        if (avatarStorageResponse.avatarResource() != null) {
+            writeDataResponse(response, avatarStorageResponse);
+            return;
         }
-        return ResponseEntity.status(HttpStatus.FOUND)
-            .location(response.uri())
-            .build();
+        writeRedirectResponse(response, avatarStorageResponse);
     }
 
+    private void writeRedirectResponse(HttpServletResponse response, AvatarStorageResponse avatarStorageResponse) throws IOException {
+        response.sendRedirect(avatarStorageResponse.uri().toString());
+    }
+
+    private void writeDataResponse(HttpServletResponse response, AvatarStorageResponse avatarStorageResponse) throws IOException {
+        byte[] imageBytes = avatarStorageResponse.avatarResource().getContentAsByteArray();
+        final String path = avatarStorageResponse.uri().toString().toLowerCase();
+        MediaType mediaType = HeaderUtil.mediaTypeHeader(path);
+        response.setContentType(mediaType.toString());
+        response.setContentLength(imageBytes.length);
+
+        try (OutputStream os = response.getOutputStream()) {
+            os.write(imageBytes);
+            os.flush();
+        }
+    }
 
     private static ResponseEntity<Void> buildAvatarUpdateResponse(URI uri) {
         HttpHeaders headers = new HttpHeaders();
