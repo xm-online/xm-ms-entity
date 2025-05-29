@@ -1,0 +1,38 @@
+{
+    "key": "d9b25a0c-2817-498f-b51b-4ac759fc6445",
+    "typeKey": "BUSINESS-INTERACTION.PORTING-REQUEST.PORTOUT",
+    "stateKey": "NEW",
+    "name": "00130926 ",
+    "startDate": "2025-05-28T14:02:00.605440Z",
+    "updateDate": "2025-05-29T07:43:31.962730Z",
+    "data": {
+        "channel": "CDB",
+        "numbers": [
+            {
+                "msisdn": "380669333333",
+                "statusCode": 0
+            },
+            {
+                "msisdn": "380669222222",
+                "statusCode": 0
+            },
+            {
+                "msisdn": "380669111111",
+                "statusCode": 0
+            },
+            {
+                "msisdn": "380669000000",
+                "statusCode": 0
+            }
+        ],
+        "processId": "d9b25a0c-2817-498f-b51b-4ac759fc6445",
+        "organization": {
+            "code": "00130926"
+        },
+        "recipientRn": "3903",
+        "portingDate": "2025-05-30T09:00:00Z",
+        "donorRn": "3901",
+        "partyTypeKey": "ORGANIZATION"
+    }
+}
+

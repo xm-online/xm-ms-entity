@@ -809,6 +809,71 @@ public class TestMnpProcessIntTest extends AbstractSpringBootTest {
         verifyNoMoreInteractions(kafkaTemplateService);
     }
 
+    @Test
+    @SneakyThrows
+    @DirtiesContext
+    public void testPortOutRequestOrganizationNewBilling() {
+        mockCheckIsNewBilling("{\"id\": \"380669333333\",\"characteristic\": [{\"name\": \"status\",\"value\": \"MIGRATED\"},{\"name\": \"dateMigrated\",\"value\": \"2023-08-04T18:51:44.732Z\"}]}");
+        WIRE_MOCK.stubFor(post(urlPathEqualTo("/tmf-api/processFlowManagement/v4/processFlow"))
+            .willReturn(aResponse().withStatus(200)));
+
+        reset(kafkaTemplateService);
+        mockServer();
+        XmEntity result = createPortOutRequest("Organization",
+            () -> mockComparePersonalDataOrganizationNewBilling("Organization"), true, "ACCEPTED");
+
+        functionService.execute("UPDATE-STATUS", IdOrKey.of(result.getId()), new HashMap<>(Map.of(
+            "stateKey", "SERVICE-PORT-OUT-ON"
+        )));
+        assertSasTables(result,
+            List.of("REJECTED", "SERVICE-PORT-OUT-ON", "SERVICE-PORT-OUT-ON", "REJECTED"),
+            List.of("NEW", "ACCEPTED", "SERVICE-PORT-OUT-ON"));
+        verifyKafkaEvent(result, "SERVICE-PORT-OUT-ON");
+
+        runDeactivateForPortOutRequest(result, true);
+        functionService.execute("BILLING-PORTING-COMPLETED", new HashMap<>(Map.of(
+            "entityId", result.getId()
+        )), "POST");
+        finishPortOutRequest(result);
+
+        WireMock.verify(0, putRequestedFor(urlEqualTo("/crm/api/v1/portingRequest")));
+        wireMockServer.stop();
+
+        verifyNoMoreInteractions(kafkaTemplateService);
+    }
+
+    @Test
+    @SneakyThrows
+    @DirtiesContext
+    public void testPortOutRequestFopNewBilling() {
+        mockCheckIsNewBilling("{\"id\": \"380669333333\",\"characteristic\": [{\"name\": \"status\",\"value\": \"MIGRATED\"},{\"name\": \"dateMigrated\",\"value\": \"2023-08-04T18:51:44.732Z\"}]}");
+        WIRE_MOCK.stubFor(post(urlPathEqualTo("/tmf-api/processFlowManagement/v4/processFlow"))
+            .willReturn(aResponse().withStatus(200)));
+
+        reset(kafkaTemplateService);
+        mockServer();
+        XmEntity result = createPortOutRequest("Fop",
+            () -> mockComparePersonalDataOrganizationNewBilling("Fop"), true, "ACCEPTED");
+
+        functionService.execute("UPDATE-STATUS", IdOrKey.of(result.getId()), new HashMap<>(Map.of(
+            "stateKey", "SERVICE-PORT-OUT-ON"
+        )));
+        assertSasTables(result,
+            List.of("REJECTED", "SERVICE-PORT-OUT-ON", "SERVICE-PORT-OUT-ON", "REJECTED"),
+            List.of("NEW", "ACCEPTED", "SERVICE-PORT-OUT-ON"));
+        verifyKafkaEvent(result, "SERVICE-PORT-OUT-ON");
+
+        runDeactivateForPortOutRequest(result, true);
+        functionService.execute("BILLING-PORTING-COMPLETED", new HashMap<>(Map.of(
+            "entityId", result.getId()
+        )), "POST");
+        finishPortOutRequest(result);
+
+        WireMock.verify(0, putRequestedFor(urlEqualTo("/crm/api/v1/portingRequest")));
+        wireMockServer.stop();
+
+        verifyNoMoreInteractions(kafkaTemplateService);
+    }
 
     private static void rejectNotMockedRequests() {
         WIRE_MOCK.stubFor(any(urlMatching(".*"))
@@ -1143,6 +1208,8 @@ public class TestMnpProcessIntTest extends AbstractSpringBootTest {
         newBillingCheck.put("newBillingCheckEnabledFor", new HashMap<>(newBillingCheck.get("newBillingCheckEnabledFor")));
         newBillingCheck.get("newBillingCheckEnabledFor").put("INDIVIDUAL", true);
         newBillingCheck.get("newBillingCheckEnabledFor").put("ANONYMOUS", true);
+        newBillingCheck.get("newBillingCheckEnabledFor").put("ORGANIZATION", true);
+        newBillingCheck.get("newBillingCheckEnabledFor").put("FOP", true);
 
         tenantConfigService.onRefresh(TENANT_CONFIG_YML, new ObjectMapper().writeValueAsString(tenantConfig));
     }
@@ -1338,6 +1405,37 @@ public class TestMnpProcessIntTest extends AbstractSpringBootTest {
             .withStatus(200)
             .withHeader("Content-Type", "application/json")
             .withBody("{\"givenName\":\"John\",\"familyName\":\"Doe\"}")));
+
+        WIRE_MOCK.stubFor(put(urlEqualTo("/cdb/api/v1/portingRequest/d9b25a0c-2817-498f-b51b-4ac759fc6445/donorExclude"))
+            .willReturn(aResponse().withStatus(200)));
+
+        mockBarring();
+    }
+
+    @SneakyThrows
+    private void mockComparePersonalDataOrganizationNewBilling(String type) {
+        String value = readFile("mnp/portOutRequest" + type + "_accounts_info.json");
+        ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
+        String account = readFile("mnp/portOutRequest" + type + "_account.json");
+        String customer = readFile("mnp/portOutRequest" + type + "_customer.json");
+
+        XmEntity accountEntity = objectMapper.readValue(account, XmEntity.class);
+        XmEntity customerEntity = objectMapper.readValue(customer, XmEntity.class);
+
+        customerEntity = xmEntityRepository.save(customerEntity);
+        Object data = accountEntity.getData();
+        Map<String, Map<String, Map<String, String>>> customerRef = (Map<String, Map<String, Map<String, String>>>) data;
+        customerRef.get("relatedParty").get("customer").put("id", customerEntity.getId().toString());
+        accountEntity = xmEntityRepository.save(accountEntity);
+
+        reset(kafkaTemplateService);
+
+        WIRE_MOCK.stubFor(get(urlPathEqualTo("/api/customerManagement/v3/customer"))
+                .withQueryParam("msisdn", equalTo("380669333333,380669222222,380669111111,380669000000"))
+            .willReturn(aResponse()
+                .withStatus(200)
+                .withHeader("Content-Type", "application/json")
+                .withBody(value)));
 
         WIRE_MOCK.stubFor(put(urlEqualTo("/cdb/api/v1/portingRequest/d9b25a0c-2817-498f-b51b-4ac759fc6445/donorExclude"))
             .willReturn(aResponse().withStatus(200)));

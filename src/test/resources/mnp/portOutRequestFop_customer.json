@@ -1,0 +1,20 @@
+{
+    "id": 2893376,
+    "key": "ORG-00130926",
+    "typeKey": "ORGANIZATION",
+    "name": "---",
+    "startDate": "2020-10-22T20:31:55.088497Z",
+    "updateDate": "2025-05-29T01:01:02.112284Z",
+    "data": {
+        "name": "---",
+        "isLegalEntity": true,
+        "organizationIdentification": {
+            "passport": {
+                "identificationId": "КН333529"
+            }
+        }
+    },
+    "createdBy": "xm_uaa",
+    "updatedBy": "xm_uaa",
+    "version": 3311
+}

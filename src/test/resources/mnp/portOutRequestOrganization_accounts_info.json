@@ -1,0 +1,38 @@
+[
+    {
+        "id": "295379964566",
+        "type": "@BillingAccount",
+        "account": {
+            "id": "295379964566"
+        },
+        "relatedParty": [
+            {
+                "id": "380669111111"
+            }
+        ]
+    },
+    {
+        "id": "295379964566",
+        "type": "@BillingAccount",
+        "account": {
+            "id": "295379964566"
+        },
+        "relatedParty": [
+            {
+                "id": "380669222222"
+            }
+        ]
+    },
+    {
+        "id": "295379964566",
+        "type": "@BillingAccount",
+        "account": {
+            "id": "295379964566"
+        },
+        "relatedParty": [
+            {
+                "id": "380669333333"
+            }
+        ]
+    }
+]
