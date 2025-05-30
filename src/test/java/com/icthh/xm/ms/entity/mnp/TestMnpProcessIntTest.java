@@ -19,6 +19,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options;
 import static com.icthh.xm.ms.entity.config.tenant.WebappTenantOverrideConfiguration.WIRE_MOCK;
+import static com.icthh.xm.ms.entity.mnp.TestMnpProcessIntTest.Event.event;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.stream.Collectors.toList;
 import static org.junit.Assert.assertEquals;
@@ -29,6 +30,7 @@ import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.reset;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
@@ -80,6 +82,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import lombok.AllArgsConstructor;
+import lombok.Data;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
@@ -91,6 +95,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.mockito.ArgumentCaptor;
 import org.mockito.MockitoAnnotations;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -337,7 +342,7 @@ public class TestMnpProcessIntTest extends AbstractSpringBootTest {
     public void testPortInRequest() {
         reset(kafkaTemplateService);
         mockServer();
-        XmEntity result = portInProcess(false, "mnp/portInRequest.json");
+        XmEntity result = portInProcess(false, "mnp/portInRequest.json", false);
         portInActivate(result, false);
         finishActivation(result);
         WireMock.verify(putRequestedFor(urlEqualTo("/crm/api/v1/portingRequest")));
@@ -350,7 +355,7 @@ public class TestMnpProcessIntTest extends AbstractSpringBootTest {
     public void testPortInRequestCancel() {
         reset(kafkaTemplateService);
         mockServer();
-        XmEntity result = portInProcess(false, "mnp/portInRequest.json");
+        XmEntity result = portInProcess(false, "mnp/portInRequest.json", false);
 
         WIRE_MOCK.stubFor(get(urlEqualTo("/api/v1/customer/380985111112"))
             .willReturn(aResponse().withStatus(200)));
@@ -379,7 +384,7 @@ public class TestMnpProcessIntTest extends AbstractSpringBootTest {
     public void testPortInRequestCancelNewBilling() {
         reset(kafkaTemplateService);
         mockServer();
-        XmEntity result = portInProcess(true, "mnp/portInRequestNewBilling.json");
+        XmEntity result = portInProcess(true, "mnp/portInRequestNewBilling.json", false);
 
         WIRE_MOCK.stubFor(put(urlEqualTo("/cdb/api/v1/portingRequest/d9b25a0c-2817-498f-b51b-4ac759fc6445/cancel"))
             .willReturn(aResponse().withStatus(200)));
@@ -406,7 +411,7 @@ public class TestMnpProcessIntTest extends AbstractSpringBootTest {
     @DirtiesContext
     public void testPortInRequestNewBilling() {
         reset(kafkaTemplateService);
-        XmEntity result = portInProcess(true, "mnp/portInRequestNewBilling.json");
+        XmEntity result = portInProcess(true, "mnp/portInRequestNewBilling.json", false);
         portInActivate(result, true);
         functionService.execute("BILLING-PORTING-COMPLETED", new HashMap<>(Map.of(
             "entityId", result.getId()
@@ -1017,7 +1022,7 @@ public class TestMnpProcessIntTest extends AbstractSpringBootTest {
             ));
     }
 
-    private XmEntity portInProcess(boolean isNewBilling, String name) throws IOException {
+    private XmEntity portInProcess(boolean isNewBilling, String name, boolean isAnonymous) throws IOException {
         mockPortInCreate(isNewBilling);
         prepareTenantConfig(isNewBilling);
 
@@ -1051,7 +1056,10 @@ public class TestMnpProcessIntTest extends AbstractSpringBootTest {
 
         assertSasTables(result, List.of("REGISTERED", "REGISTERED", "REGISTERED"),
             List.of("VERIFICATION-STARTED", "REGISTERED"));
-        verifyKafkaEvent(result, "REGISTERED");
+        verifyKafkaEvent(result, List.of(
+            event("VERIFICATION-STARTED", true),
+            event("REGISTERED", false))
+        );
 
         xmEntityService.updateState(IdOrKey.of(result.getId()), "ACCEPTED", Map.of(
             "numbers", List.of(
@@ -1089,14 +1097,31 @@ public class TestMnpProcessIntTest extends AbstractSpringBootTest {
     }
 
     private void verifyKafkaEvent(XmEntity result, String state) {
+        verifyKafkaEvent(result, List.of(event(state, false)));
+    }
+
+    @Data
+    @AllArgsConstructor
+    public static class Event {
+        public String state;
+        public boolean resetPortedDate;
+        public static Event event(String state, boolean resetPortedDate) {
+            return new Event(state, resetPortedDate);
+        }
+    }
+
+    private void verifyKafkaEvent(XmEntity result, List<Event> events) {
         XmEntity expectedEntity = xmEntityService.findOne(IdOrKey.of(result.getId()));
-        var expected = createMessage(expectedEntity, state);
-        verify(kafkaTemplateService).send(eq("LDB-REQUEST-UPDATES"), eq(0), eq(expectedEntity.getId().toString()), argThat(it -> {
-            Map<?, ?> actualMap = getMap(it);
-            actualMap.remove("updateDate");
-            assertEquals(expected, actualMap);
-            return true;
-        }));
+        ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
+        verify(kafkaTemplateService, times(events.size())).send(eq("LDB-REQUEST-UPDATES"), eq(0), eq(expectedEntity.getId().toString()), captor.capture());
+        List<String> allValues = captor.getAllValues();
+        for (int i = 0; i < allValues.size(); i++) {
+            Event event = events.get(i);
+            Map<?, ?> map = getMap(allValues.get(i));
+            var expected = createMessage(expectedEntity, event.state, event.resetPortedDate);
+            map.remove("updateDate");
+            assertEquals(expected, map);
+        }
         verifyNoMoreInteractions(kafkaTemplateService);
         reset(kafkaTemplateService);
     }
@@ -1107,7 +1132,7 @@ public class TestMnpProcessIntTest extends AbstractSpringBootTest {
     }
 
     @SneakyThrows
-    private Map<String, Object> createMessage(XmEntity portingRequest, String newStateKey) {
+    private Map<String, Object> createMessage(XmEntity portingRequest, String newStateKey, final boolean resetPortedDate) {
         var map = new HashMap<String, Object>() {
             {
                 put("id", portingRequest.getId());
@@ -1123,7 +1148,7 @@ public class TestMnpProcessIntTest extends AbstractSpringBootTest {
                         put("statusCode", it.get("statusCode") == null ? null : it.get("statusCode").toString());
                     }}
                 ).collect(toList()));
-                put("portedDate", portingRequest.getData().get("portingDate"));
+                put("portedDate", resetPortedDate ? null : portingRequest.getData().get("portingDate"));
                 put("channel", portingRequest.getData().get("channel"));
                 put("isNewBilling", portingRequest.getData().get("isNewBilling"));
             }};
