@@ -25,6 +25,7 @@ import static java.util.stream.Collectors.toList;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
@@ -51,6 +52,7 @@ import com.github.tomakehurst.wiremock.http.Request;
 import com.github.tomakehurst.wiremock.http.ResponseDefinition;
 import com.icthh.xm.commons.config.client.api.RefreshableConfiguration;
 import com.icthh.xm.commons.config.client.service.TenantConfigService;
+import com.icthh.xm.commons.exceptions.BusinessException;
 import com.icthh.xm.commons.lep.XmLepScriptConfigServerResourceLoader;
 import com.icthh.xm.commons.lep.api.LepManagementService;
 import com.icthh.xm.commons.scheduler.domain.ScheduledEvent;
@@ -685,11 +687,21 @@ public class TestMnpProcessIntTest extends AbstractSpringBootTest {
             List.of("REJECTED", "REJECTED", "REJECTED", "REJECTED"),
             List.of("NEW", "REJECTED"));
 
-        xmEntityService.updateState(IdOrKey.of(result.getId()), "ACCEPTED", Map.of(
-            "messageId", UUID.randomUUID().toString(),
-            "messageType", "AutoAccept",
-            "statusCode", "252"
-        ));
+
+        BusinessException ex = assertThrows(
+            BusinessException.class,
+            () -> xmEntityService.updateState(
+                IdOrKey.of(result.getId()),
+                "ACCEPTED",
+                Map.of(
+                    "messageId",   UUID.randomUUID().toString(),
+                    "messageType", "AutoAccept",
+                    "statusCode",  "252"
+                )
+            )
+        );
+
+        assertTrue(ex.getMessage().contains("can not go from [REJECTED] to [ACCEPTED]"));
     }
 
     private void mockIndividualRejectNewBilling() {
