@@ -10,6 +10,7 @@ addons:
     branches:
     - master
     - main
+    - LTS_v2.3.x
 
 script:
   - set -e
@@ -48,3 +49,4 @@ branches:
    only:
      - master
      - main
+     - LTS_v2.3.x
