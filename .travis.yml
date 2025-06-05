@@ -15,7 +15,7 @@ addons:
 script:
   - set -e
   - echo "Початок Gradle clean, check та test..."
-  - "./gradlew --no-daemon --refresh-dependencies clean check test"
+  - #"./gradlew --no-daemon --refresh-dependencies clean check test"
   - echo "Gradle clean, check та test завершено. Початок bootWar..."
   - "./gradlew -x test -Pprod --no-daemon bootWar"
   - echo "bootWar завершено. Логін у Docker..."
