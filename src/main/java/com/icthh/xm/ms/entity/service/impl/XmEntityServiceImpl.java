@@ -619,7 +619,7 @@ public class XmEntityServiceImpl implements XmEntityService {
                                                   Pageable pageable,
                                                   String privilegeKey) {
         return invokeSearchWithTransactionControl(() ->
-            searchByQueryAndTypeKeyInternal(query, typeKey, pageable, privilegeKey)
+            self.searchByQueryAndTypeKeyInternal(query, typeKey, pageable, privilegeKey)
         );
     }
 
