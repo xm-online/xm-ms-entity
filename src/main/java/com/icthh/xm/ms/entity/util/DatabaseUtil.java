@@ -4,9 +4,11 @@ import com.icthh.xm.ms.entity.domain.XmEntity;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.transaction.support.TransactionSynchronizationAdapter;
-import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.util.function.Consumer;
+
+import static java.lang.String.format;
+import static org.springframework.transaction.support.TransactionSynchronizationManager.registerSynchronization;
 
 /**
  * Utility for database operations.
@@ -17,19 +19,55 @@ import java.util.function.Consumer;
 public final class DatabaseUtil {
 
     public static void runAfterTransaction(XmEntity xmEntity, Consumer<XmEntity> task) {
-        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronizationAdapter() {
-            @Override
-            public void afterCompletion(int status) {
-                super.afterCompletion(status);
-                if (status == STATUS_COMMITTED) {
+        registerSynchronization(
+            new TransactionSynchronizationAdapter() {
+                @Override
+                public void suspend() {
+                    log.debug("Suspending transaction for entity: <{}>", xmEntity.getId());
+                    super.suspend();
+                }
+
+                @Override
+                public void resume() {
+                    log.debug("Resuming transaction for entity: <{}>", xmEntity.getId());
+                    super.resume();
+                }
+
+                @Override
+                public void flush() {
+                    log.debug("Flushing transaction for entity: <{}>", xmEntity.getId());
+                    super.flush();
+                }
+
+                @Override
+                public void beforeCompletion() {
+                    log.debug("Transaction is about to complete for entity: <{}>", xmEntity.getId());
+                    super.beforeCompletion();
+                }
+
+                @Override
+                public void beforeCommit(boolean readOnly) {
+                    log.debug("Transaction is about to commit for entity: <{}>", xmEntity.getId());
+                    super.beforeCommit(readOnly);
+                }
+
+                @Override
+                public void afterCompletion(int status) {
+                    log.debug("Transaction completed with status <{}>", status);
+                    super.afterCompletion(status);
+                    if (status != STATUS_COMMITTED) {
+                        return;
+                    }
                     try {
+                        log.debug("Executing task after transaction completion for entity <{}>", xmEntity);
                         task.accept(xmEntity);
                     } catch (Exception e) {
-                        log.error("Error in afterCompletion stage during transaction synchronization for entity: {}",
-                                  xmEntity, e);
+                        String errorMessage = format("Error in 'afterCompletion' stage during " +
+                            "transaction synchronization for entity <%s>", xmEntity.getId());
+                        log.error(errorMessage, e);
                     }
                 }
             }
-        });
+        );
     }
 }
