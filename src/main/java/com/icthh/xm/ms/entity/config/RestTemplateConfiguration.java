@@ -17,6 +17,7 @@ import org.apache.http.client.protocol.HttpClientContext;
 import org.apache.http.protocol.HttpContext;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.cloud.client.loadbalancer.RestTemplateCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -36,8 +37,9 @@ public class RestTemplateConfiguration {
     private Boolean ribbonTemplateEnabled;
 
     @Bean
-    public RestTemplate loadBalancedRestTemplate(ObjectProvider<RestTemplateCustomizer> customizerProvider) {
-        RestTemplate restTemplate = new RestTemplate();
+    public RestTemplate loadBalancedRestTemplate(ObjectProvider<RestTemplateCustomizer> customizerProvider,
+        RestTemplateBuilder restTemplateBuilder) {
+        RestTemplate restTemplate = restTemplateBuilder.build();
 
         if (ribbonTemplateEnabled) {
             log.info("loadBalancedRestTemplate: using Ribbon load balancer");
@@ -49,8 +51,10 @@ public class RestTemplateConfiguration {
 
     @Bean
     public RestTemplate loadBalancedRestTemplateWithTimeout(ObjectProvider<RestTemplateCustomizer> customizerProvider,
-                                                            PathTimeoutHttpComponentsClientHttpRequestFactory requestFactory) {
-        RestTemplate restTemplate = new RestTemplate();
+        PathTimeoutHttpComponentsClientHttpRequestFactory requestFactory,
+        RestTemplateBuilder restTemplateBuilder) {
+        RestTemplate restTemplate = restTemplateBuilder
+            .build();
         restTemplate.setRequestFactory(requestFactory);
 
         if (ribbonTemplateEnabled) {
@@ -71,7 +75,9 @@ public class RestTemplateConfiguration {
         return new PathTimeoutHttpComponentsClientHttpRequestFactory();
     }
 
-    public static class PathTimeoutHttpComponentsClientHttpRequestFactory extends HttpComponentsClientHttpRequestFactory {
+    public static class PathTimeoutHttpComponentsClientHttpRequestFactory extends
+        HttpComponentsClientHttpRequestFactory {
+
         @Getter
         private final Set<PathTimeoutConfig> pathPatternTimeoutConfigs = new HashSet<>();
         private final AntPathMatcher matcher = new AntPathMatcher();
@@ -79,7 +85,8 @@ public class RestTemplateConfiguration {
         @Override
         protected HttpContext createHttpContext(HttpMethod httpMethod, URI uri) {
             for (PathTimeoutConfig config : pathPatternTimeoutConfigs) {
-                if (httpMethod.equals(config.getHttpMethod()) && matcher.match(config.getPathPattern(), uri.getPath())) {
+                if (httpMethod.equals(config.getHttpMethod()) && matcher.match(config.getPathPattern(),
+                    uri.getPath())) {
                     RequestConfig requestConfig = createRequestConfig(getHttpClient());
                     RequestConfig.Builder builder = RequestConfig.copy(requestConfig);
                     setIfNotNull(config.getReadTimeout(), builder::setSocketTimeout);
@@ -112,6 +119,7 @@ public class RestTemplateConfiguration {
         @AllArgsConstructor
         @EqualsAndHashCode(of = {"httpMethod", "pathPattern"})
         public static class PathTimeoutConfig {
+
             private HttpMethod httpMethod;
             private String pathPattern;
             private Integer connectionTimeout;
