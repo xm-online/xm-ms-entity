@@ -384,6 +384,8 @@ dependencies {
 
     implementation 'commons-fileupload:commons-fileupload'
 
+    implementation 'org.springframework.cloud:spring-cloud-sleuth-core'
+
     // test dependencies
     testCompileOnly "com.icthh.xm.commons:xm-commons-lep-annotation-processor:${xm_commons_version}"
     testAnnotationProcessor "com.icthh.xm.commons:xm-commons-lep-annotation-processor:${xm_commons_version}"
