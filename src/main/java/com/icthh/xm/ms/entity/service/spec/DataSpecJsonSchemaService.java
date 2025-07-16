@@ -79,17 +79,17 @@ public class DataSpecJsonSchemaService implements SpecificationProcessingService
     @Override
     public void updateByTenantState(String tenant, String dataSpecKey, Collection<XmEntitySpec> specifications) {
         final List<DefinitionSpec> definitionSpecs = specifications.stream()
-            .filter(Objects::nonNull)
+            .filter(spec -> Objects.nonNull(spec) && Objects.nonNull(spec.getDefinitions()))
             .flatMap(spec -> spec.getDefinitions().stream())
             .toList();
 
         final List<TypeSpec> specTypes = specifications.stream()
-            .filter(Objects::nonNull)
+            .filter(spec -> Objects.nonNull(spec) && Objects.nonNull(spec.getTypes()))
             .flatMap(spec -> spec.getTypes().stream())
             .toList();
 
         final List<FormSpec> specForms = specifications.stream()
-            .filter(Objects::nonNull)
+            .filter(spec -> Objects.nonNull(spec) && Objects.nonNull(spec.getForms()))
             .flatMap(spec -> spec.getForms().stream())
             .toList();
 
