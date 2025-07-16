@@ -1,6 +1,7 @@
 package com.icthh.xm.ms.entity.service.spec;
 
 import com.icthh.xm.commons.domain.DefinitionSpec;
+import com.icthh.xm.commons.domain.FormSpec;
 import com.icthh.xm.commons.domain.SpecificationItem;
 import com.icthh.xm.commons.service.SpecificationProcessingService;
 import com.icthh.xm.ms.entity.domain.spec.StateSpec;
@@ -77,13 +78,24 @@ public class DataSpecJsonSchemaService implements SpecificationProcessingService
 
     @Override
     public void updateByTenantState(String tenant, String dataSpecKey, Collection<XmEntitySpec> specifications) {
-        specifications.stream()
+        final List<DefinitionSpec> definitionSpecs = specifications.stream()
             .filter(Objects::nonNull)
-            .forEach(spec -> {
-                definitionSpecProcessor.updateStateByTenant(tenant, dataSpecKey, spec.getDefinitions());
-                typeSpecProcessor.updateStateByTenant(tenant, dataSpecKey, spec.getTypes());
-                formSpecProcessor.updateStateByTenant(tenant, dataSpecKey, spec.getForms());
-            });
+            .flatMap(spec -> spec.getDefinitions().stream())
+            .toList();
+
+        final List<TypeSpec> specTypes = specifications.stream()
+            .filter(Objects::nonNull)
+            .flatMap(spec -> spec.getTypes().stream())
+            .toList();
+
+        final List<FormSpec> specForms = specifications.stream()
+            .filter(Objects::nonNull)
+            .flatMap(spec -> spec.getForms().stream())
+            .toList();
+
+        definitionSpecProcessor.fullUpdateStateByTenant(tenant, dataSpecKey, definitionSpecs);
+        typeSpecProcessor.fullUpdateStateByTenant(tenant, dataSpecKey, specTypes);
+        formSpecProcessor.fullUpdateStateByTenant(tenant, dataSpecKey, specForms);
     }
 
     public void processDataSpecification(String tenant, String dataSpecKey, TypeSpec typeSpec) {
