@@ -5,7 +5,6 @@ import com.icthh.xm.commons.domainevent.service.EventPublisher;
 import com.icthh.xm.commons.domainevent.service.builder.DomainEventFactory;
 import com.icthh.xm.commons.lep.api.BaseLepContext;
 import com.icthh.xm.commons.lep.api.LepContextFactory;
-import com.icthh.xm.commons.lep.commons.CommonsService;
 import com.icthh.xm.commons.messaging.communication.service.CommunicationService;
 import com.icthh.xm.commons.permission.service.PermissionCheckService;
 import com.icthh.xm.commons.topic.service.KafkaTemplateService;
@@ -79,7 +78,7 @@ public class LepContextFactoryImpl implements LepContextFactory {
                                  MailService mailService,
                                  TenantConfigService tenantConfigService,
                                  AttachmentService attachmentService,
-                                 @Qualifier("loadBalancedRestTemplateWithTimeout")
+                                 @Qualifier("loadBalancedRestTemplateWithTimeoutByPath")
                                  RestTemplate restTemplate,
                                  @Qualifier("plainRestTemplate")
                                  RestTemplate plainRestTemplate,

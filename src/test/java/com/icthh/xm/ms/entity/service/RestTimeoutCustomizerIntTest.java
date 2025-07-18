@@ -23,7 +23,7 @@ import org.springframework.web.client.RestTemplate;
 @Slf4j
 public class RestTimeoutCustomizerIntTest extends AbstractSpringBootTest {
 
-    @Qualifier("loadBalancedRestTemplateWithTimeout")
+    @Qualifier("loadBalancedRestTemplateWithTimeoutByPath")
     @Autowired
     RestTemplate restTemplate;
 
