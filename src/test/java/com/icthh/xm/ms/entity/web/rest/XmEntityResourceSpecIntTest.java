@@ -32,6 +32,7 @@ import com.icthh.xm.ms.entity.service.XmEntitySpecService;
 import com.icthh.xm.ms.entity.service.XmEntityTemplatesSpecService;
 import com.icthh.xm.ms.entity.service.impl.StartUpdateDateGenerationStrategy;
 import com.icthh.xm.ms.entity.service.impl.XmEntityServiceImpl;
+import com.icthh.xm.ms.entity.service.storage.AvatarStorageService;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.After;
@@ -121,6 +122,9 @@ public class XmEntityResourceSpecIntTest extends AbstractSpringBootTest {
     AttachmentService attachmentService;
 
     @Autowired
+    AvatarStorageService avatarStorageService;
+
+    @Autowired
     XmEntityPermittedSearchRepository xmEntityPermittedSearchRepository;
 
     @Autowired
@@ -181,6 +185,7 @@ public class XmEntityResourceSpecIntTest extends AbstractSpringBootTest {
             linkService,
             storageService,
             attachmentService,
+            avatarStorageService,
             xmEntityPermittedSearchRepository,
             startUpdateDateGenerationStrategy,
             authContextHolder,

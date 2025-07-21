@@ -42,6 +42,7 @@ import com.icthh.xm.ms.entity.service.impl.StartUpdateDateGenerationStrategy;
 import com.icthh.xm.ms.entity.service.impl.XmEntityFunctionServiceFacade;
 import com.icthh.xm.ms.entity.service.impl.XmEntityServiceImpl;
 import com.icthh.xm.ms.entity.service.json.JsonValidationService;
+import com.icthh.xm.ms.entity.service.storage.AvatarStorageService;
 import jakarta.persistence.EntityManager;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -194,6 +195,9 @@ public class XmEntityResourceIntTest extends AbstractSpringBootTest {
     AttachmentService attachmentService;
 
     @Autowired
+    AvatarStorageService avatarStorageService;
+
+    @Autowired
     XmEntityPermittedSearchRepository xmEntityPermittedSearchRepository;
 
     @Autowired
@@ -264,6 +268,7 @@ public class XmEntityResourceIntTest extends AbstractSpringBootTest {
                                                       linkService,
                                                       storageService,
                                                       attachmentService,
+                                                      avatarStorageService,
                                                       xmEntityPermittedSearchRepository,
                                                       startUpdateDateGenerationStrategy,
                                                       authContextHolder,

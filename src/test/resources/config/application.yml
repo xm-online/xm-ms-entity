@@ -146,7 +146,7 @@ application:
             # Max file size 1024 * 32
             max-size: 32767
             # File name db-pattern
-            db-file-prefix: xme-ava-
+            db-file-prefix: db://xme/entity/obj/
             # File name db-pattern
             db-url-template: https://%s.xm-online.com/entity/api/storage/object
     amazon:

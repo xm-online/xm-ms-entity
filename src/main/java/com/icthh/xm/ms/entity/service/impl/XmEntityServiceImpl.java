@@ -61,6 +61,7 @@ import com.icthh.xm.ms.entity.service.XmEntitySpecService;
 import com.icthh.xm.ms.entity.service.XmEntityTemplatesSpecService;
 import com.icthh.xm.ms.entity.service.dto.LinkSourceDto;
 import com.icthh.xm.commons.search.dto.SearchDto;
+import com.icthh.xm.ms.entity.service.storage.AvatarStorageService;
 import com.jayway.jsonpath.DocumentContext;
 import com.jayway.jsonpath.JsonPath;
 import jakarta.annotation.Nullable;
@@ -129,6 +130,7 @@ public class XmEntityServiceImpl implements XmEntityService {
     private final LinkService linkService;
     private final StorageService storageService;
     private final AttachmentService attachmentService;
+    private final AvatarStorageService avatarStorageService;
     private final XmEntityPermittedSearchRepository xmEntityPermittedSearchRepository;
     private final StartUpdateDateGenerationStrategy startUpdateDateGenerationStrategy;
     private final XmAuthenticationContextHolder authContextHolder;
@@ -775,7 +777,7 @@ public class XmEntityServiceImpl implements XmEntityService {
     public URI updateAvatar(IdOrKey idOrKey, HttpEntity<Resource> avatarHttpEntity) {
         XmEntity source = toSourceXmEntity(idOrKey);
 
-        String avatarUrl = storageService.store(avatarHttpEntity, null);
+        String avatarUrl = avatarStorageService.storeAvatar(avatarHttpEntity, null);
         log.info("Avatar {} stored for entity {}", avatarUrl, idOrKey);
 
         source.setAvatarUrl(avatarUrl);

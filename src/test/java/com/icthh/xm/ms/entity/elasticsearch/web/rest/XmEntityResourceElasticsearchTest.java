@@ -37,6 +37,7 @@ import com.icthh.xm.ms.entity.service.impl.StartUpdateDateGenerationStrategy;
 import com.icthh.xm.ms.entity.service.impl.XmEntityFunctionServiceFacade;
 import com.icthh.xm.ms.entity.service.impl.XmEntityServiceImpl;
 import com.icthh.xm.ms.entity.service.json.JsonValidationService;
+import com.icthh.xm.ms.entity.service.storage.AvatarStorageService;
 import com.icthh.xm.ms.entity.web.rest.TestUtil;
 import com.icthh.xm.ms.entity.web.rest.XmEntityResource;
 import com.icthh.xm.ms.entity.web.rest.XmEntitySearchResource;
@@ -202,6 +203,9 @@ public class XmEntityResourceElasticsearchTest extends AbstractElasticSpringBoot
     AttachmentService attachmentService;
 
     @Autowired
+    AvatarStorageService avatarStorageService;
+
+    @Autowired
     XmEntityPermittedSearchRepository xmEntityPermittedSearchRepository;
 
     @Autowired
@@ -279,6 +283,7 @@ public class XmEntityResourceElasticsearchTest extends AbstractElasticSpringBoot
                                                       linkService,
                                                       storageService,
                                                       attachmentService,
+                                                      avatarStorageService,
                                                       xmEntityPermittedSearchRepository,
                                                       startUpdateDateGenerationStrategy,
                                                       authContextHolder,

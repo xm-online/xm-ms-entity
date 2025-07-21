@@ -10,6 +10,7 @@ import com.icthh.xm.ms.entity.domain.ext.IdOrKey;
 import com.icthh.xm.ms.entity.repository.XmEntityRepositoryInternal;
 import com.icthh.xm.ms.entity.service.ProfileService;
 import com.icthh.xm.ms.entity.service.StorageService;
+import com.icthh.xm.ms.entity.service.storage.AvatarStorageResponse;
 import com.icthh.xm.ms.entity.service.storage.AvatarStorageServiceImpl;
 import com.icthh.xm.ms.entity.util.EntityUtils;
 import com.icthh.xm.ms.entity.util.XmHttpEntityUtils;
@@ -29,6 +30,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 import java.net.URI;
+import java.time.Instant;
 import java.util.List;
 import java.util.Locale;
 
@@ -72,12 +74,15 @@ public class XmEntityAvatarSrvIntTest extends AbstractJupiterSpringBootTest {
 
     Locale locale;
 
+    private static final String KEY1 = "KEY-" + 1L;
+    private static final String KEY2 = "KEY-" + 2L;
+
     @BeforeTransaction
     public void beforeTransaction() throws IOException {
         TenantContextUtils.setTenant(tenantContextHolder, "RESINTTEST");
 
         mockito = MockitoAnnotations.openMocks(this);
-        xmEntityAvatarService = new XmEntityAvatarService(xmEntityService, storageService, profileService, applicationProperties, avatarStorageService);
+        xmEntityAvatarService = new XmEntityAvatarService(xmEntityService, profileService, applicationProperties, avatarStorageService);
     }
 
     @AfterTransaction
@@ -95,9 +100,13 @@ public class XmEntityAvatarSrvIntTest extends AbstractJupiterSpringBootTest {
         //Create SELF profile
         XmEntity sourceEntity = xmEntityRepository.save(
             EntityUtils.newEntity(entity -> {
-              entity.setKey("KEY-" + 1L);
+              entity.setKey(KEY1);
               entity.setTypeKey("ACCOUNT.USER");
               entity.setStateKey("STATE1");
+              entity.setName(KEY1);
+              entity.getData().put("AAAAAAAAAA","AAAAAAAAAA");
+              entity.startDate(Instant.now());
+              entity.updateDate(Instant.now());
             }));
         self = new Profile();
         self.setXmentity(sourceEntity);
@@ -107,9 +116,13 @@ public class XmEntityAvatarSrvIntTest extends AbstractJupiterSpringBootTest {
         //Create other entity
         XmEntity otherEntity = xmEntityRepository.save(
             EntityUtils.newEntity(entity -> {
-                entity.setKey("KEY-" + 2L);
+                entity.setKey(KEY2);
                 entity.setTypeKey("ACCOUNT.USER");
                 entity.setStateKey("STATE1");
+                entity.setName(KEY2);
+                entity.getData().put("AAAAAAAAAA","AAAAAAAAAA");
+                entity.startDate(Instant.now());
+                entity.updateDate(Instant.now());
             }));
 
         otherId = otherEntity.getId();
@@ -117,6 +130,48 @@ public class XmEntityAvatarSrvIntTest extends AbstractJupiterSpringBootTest {
 
         locale = Locale.getDefault();
         Locale.setDefault(Locale.US);
+    }
+
+    @Test
+    @Transactional
+    @WithMockUser(authorities = "SUPER-ADMIN")
+    public void getSelfAvatarTest() throws Exception {
+        AvatarStorageResponse selfAvatar = xmEntityAvatarService.getAvatar(IdOrKey.SELF);
+        assertThat(selfAvatar).isNotNull();
+        assertThat(selfAvatar.uri().toString()).isEqualTo("http://xm-avatar.rgw.icthh.test:7480/assets/img/anonymous.png");
+        assertThat(selfAvatar.avatarResource()).isNull();
+        //update avatar
+        MockMultipartFile file =
+            new MockMultipartFile("file", FILE_NAME, "image/jpg", "TEST".getBytes());
+        HttpEntity<Resource> avatarEntity = XmHttpEntityUtils.buildAvatarHttpEntity(file);
+
+        URI uri = xmEntityAvatarService.updateAvatar(IdOrKey.SELF, avatarEntity);
+        //
+        selfAvatar = xmEntityAvatarService.getAvatar(IdOrKey.SELF);
+        assertThat(selfAvatar).isNotNull();
+        assertThat(selfAvatar.uri()).isNotNull();
+        assertThat(selfAvatar.avatarResource()).isNotNull();
+    }
+
+    @Test
+    @Transactional
+    @WithMockUser(authorities = "SUPER-ADMIN")
+    public void getAvatarForEntityTest() throws Exception {
+        AvatarStorageResponse selfAvatar = xmEntityAvatarService.getAvatar(IdOrKey.of(otherId));
+        assertThat(selfAvatar).isNotNull();
+        assertThat(selfAvatar.uri().toString()).isEqualTo("http://xm-avatar.rgw.icthh.test:7480/assets/img/anonymous.png");
+        assertThat(selfAvatar.avatarResource()).isNull();
+        //update avatar
+        MockMultipartFile file =
+            new MockMultipartFile("file", FILE_NAME, "image/jpg", "TEST".getBytes());
+        HttpEntity<Resource> avatarEntity = XmHttpEntityUtils.buildAvatarHttpEntity(file);
+
+        URI uri = xmEntityAvatarService.updateAvatar(IdOrKey.of(otherId), avatarEntity);
+        //
+        selfAvatar = xmEntityAvatarService.getAvatar(IdOrKey.of(otherId));
+        assertThat(selfAvatar).isNotNull();
+        assertThat(selfAvatar.uri()).isNotNull();
+        assertThat(selfAvatar.avatarResource()).isNotNull();
     }
 
     @Test

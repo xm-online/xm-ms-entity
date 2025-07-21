@@ -37,6 +37,7 @@ import com.icthh.xm.ms.entity.service.impl.StartUpdateDateGenerationStrategy;
 import com.icthh.xm.ms.entity.service.impl.XmEntityProjectionServiceImpl;
 import com.icthh.xm.ms.entity.service.impl.XmEntityServiceImpl;
 import com.icthh.xm.ms.entity.service.json.JsonValidationService;
+import com.icthh.xm.ms.entity.service.storage.AvatarStorageService;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.AfterEach;
@@ -107,6 +108,9 @@ public class EntityServiceImplElasticsearchTest extends AbstractElasticSpringBoo
 
     @Autowired
     private AttachmentService attachmentService;
+
+    @Autowired
+    private AvatarStorageService avatarStorageService;
 
     @Autowired
     private TenantContextHolder tenantContextHolder;
@@ -183,6 +187,7 @@ public class EntityServiceImplElasticsearchTest extends AbstractElasticSpringBoo
             linkService,
             storageService,
             attachmentService,
+            avatarStorageService,
             permittedSearchRepository,
             startUpdateDateGenerationStrategy,
             authContextHolder,

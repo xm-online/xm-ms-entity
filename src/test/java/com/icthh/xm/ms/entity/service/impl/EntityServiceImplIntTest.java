@@ -41,6 +41,7 @@ import com.icthh.xm.ms.entity.service.XmEntityProjectionService;
 import com.icthh.xm.ms.entity.service.XmEntitySpecService;
 import com.icthh.xm.ms.entity.service.XmEntityTemplatesSpecService;
 import com.icthh.xm.ms.entity.service.json.JsonValidationService;
+import com.icthh.xm.ms.entity.service.storage.AvatarStorageService;
 import com.icthh.xm.ms.entity.util.XmHttpEntityUtils;
 import static java.time.Instant.now;
 import static java.util.Arrays.asList;
@@ -144,6 +145,9 @@ public class EntityServiceImplIntTest extends AbstractSpringBootTest {
     private StorageService storageService;
 
     @Mock
+    private AvatarStorageService avatarStorageService;
+
+    @Mock
     private XmAuthenticationContextHolder authContextHolder;
 
     @Mock
@@ -191,6 +195,7 @@ public class EntityServiceImplIntTest extends AbstractSpringBootTest {
             linkService,
             storageService,
             attachmentService,
+            avatarStorageService,
             permittedSearchRepository,
             startUpdateDateGenerationStrategy,
             authContextHolder,
@@ -399,7 +404,7 @@ public class EntityServiceImplIntTest extends AbstractSpringBootTest {
     @SneakyThrows
     @SuppressWarnings("unchecked")
     public void updateAvatar() throws Exception {
-        when(storageService.store(Mockito.any(HttpEntity.class), Mockito.any())).thenReturn("test.txt");
+        when(avatarStorageService.storeAvatar(Mockito.any(HttpEntity.class), Mockito.any())).thenReturn("test.txt");
         MockMultipartFile file =
             new MockMultipartFile("file", "test.jpg", "image/jpg", "TEST".getBytes());
         HttpEntity<Resource> avatarEntity = XmHttpEntityUtils.buildAvatarHttpEntity(file);

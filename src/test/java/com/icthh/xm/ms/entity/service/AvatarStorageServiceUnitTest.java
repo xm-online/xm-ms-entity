@@ -4,13 +4,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 
+import com.icthh.xm.commons.config.client.service.TenantConfigService;
 import com.icthh.xm.ms.entity.AbstractJupiterUnitTest;
 import com.icthh.xm.ms.entity.config.ApplicationProperties;
 import com.icthh.xm.ms.entity.domain.Content;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.repository.ContentRepository;
+import com.icthh.xm.ms.entity.repository.backend.S3StorageRepository;
 import com.icthh.xm.ms.entity.service.storage.AvatarStorageResponse;
-import com.icthh.xm.ms.entity.service.storage.AvatarStorageService;
 import com.icthh.xm.ms.entity.service.storage.AvatarStorageServiceImpl;
 import com.icthh.xm.ms.entity.util.EntityUtils;
 import org.junit.jupiter.api.Assertions;
@@ -22,12 +23,15 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.io.IOException;
 import java.net.URI;
+import java.util.Map;
 
 
 @ExtendWith(MockitoExtension.class)
 public class AvatarStorageServiceUnitTest extends AbstractJupiterUnitTest {
 
-    public AvatarStorageService avatarStorageService;
+    private static final String DB_PREFIX = "db://xme/entity/obj";
+
+    public AvatarStorageServiceImpl avatarStorageService;
 
     @Mock
     private ContentRepository contentRepository;
@@ -36,8 +40,13 @@ public class AvatarStorageServiceUnitTest extends AbstractJupiterUnitTest {
     private ApplicationProperties applicationProperties;
 
     @Mock
-    private ApplicationProperties.AvatarStorage avatar;
+    private TenantConfigService tenantConfigService;
 
+    @Mock
+    private ApplicationProperties.AvatarStorage avatarStorage;
+
+    @Mock
+    private S3StorageRepository s3StorageRepository;
 
     @Mock
     private ApplicationProperties.ObjectStorage objectStorage;
@@ -45,34 +54,37 @@ public class AvatarStorageServiceUnitTest extends AbstractJupiterUnitTest {
     @BeforeEach
     void setUp() {
         lenient().when(applicationProperties.getObjectStorage()).thenReturn(objectStorage);
-        lenient().when(objectStorage.getAvatar()).thenReturn(avatar);
-        avatarStorageService = new AvatarStorageServiceImpl(contentRepository, applicationProperties);
+        lenient().when(objectStorage.getAvatar()).thenReturn(avatarStorage);
+        lenient().when(tenantConfigService.getConfig()).thenReturn(Map.of("baseUrl", "http://tst"));
+        lenient().when(objectStorage.getAvatar().getStorageType()).thenReturn(ApplicationProperties.StorageType.DB);
+        lenient().when(objectStorage.getAvatar().getDbFilePrefix()).thenReturn(DB_PREFIX);
+        avatarStorageService = new AvatarStorageServiceImpl(contentRepository, applicationProperties, tenantConfigService, s3StorageRepository);
+        avatarStorageService.init();
     }
 
     @Test
-    public void shouldThrowExceptionIfFileISRemoved() {
+    public void shouldReturnDefaultAvatarIfEntityIsRemoved() throws IOException {
         XmEntity xmEntity = EntityUtils.newEntity(entity -> {
             entity.setRemoved(true);
         });
 
-        RuntimeException thrown = Assertions.assertThrows(RuntimeException.class, () -> {
-            avatarStorageService.getAvatarResource(xmEntity);
-        }, "Here should transfer to default url in webapp");
-
-        Assertions.assertEquals("Here should transfer to default url in webapp", thrown.getMessage());
+        AvatarStorageResponse avatarResource = avatarStorageService.getAvatarResource(xmEntity);
+        assertThat(avatarResource).isNotNull();
+        assertThat(avatarResource.uri().toString()).isEqualTo("http://tst/assets/img/anonymous.png");
     }
 
     @Test
-    public void shouldThrowExceptionIfFileUrlIsMissing() throws IOException {
+    public void shouldReturnDefaultAvatarIfAvatarUrlIsMissing() throws IOException {
         XmEntity xmEntity = EntityUtils.newEntity(entity -> {
             entity.setRemoved(false);
         });
 
-        RuntimeException thrown = Assertions.assertThrows(RuntimeException.class, () -> {
-            avatarStorageService.getAvatarResource(xmEntity);
-        }, "Here should transfer to default url in webapp");
+        avatarStorageService.getAvatarResource(xmEntity);
 
-        Assertions.assertEquals("Here should transfer to default url in webapp", thrown.getMessage());
+        AvatarStorageResponse avatarResource = avatarStorageService.getAvatarResource(xmEntity);
+        assertThat(avatarResource).isNotNull();
+        assertThat(avatarResource.avatarResource()).isNull();
+        assertThat(avatarResource.uri().toString()).isEqualTo("http://tst/assets/img/anonymous.png");
     }
 
     @Test
@@ -83,7 +95,6 @@ public class AvatarStorageServiceUnitTest extends AbstractJupiterUnitTest {
         Content content = new Content();
         content.setValue(contentBytes);
 
-        when(avatar.getStorageType()).thenReturn(ApplicationProperties.StorageType.DB);
         when(contentRepository.findResourceById(123L)).thenReturn(content);
 
         XmEntity xmEntity = EntityUtils.newEntity(entity -> {
@@ -107,7 +118,9 @@ public class AvatarStorageServiceUnitTest extends AbstractJupiterUnitTest {
         String dbFileName = "wer-ert-rty";
         String dbFileUrl = "https://aws/wer-ert-rty";
 
-        when(avatar.getStorageType()).thenReturn(ApplicationProperties.StorageType.S3);
+        when(avatarStorage.getStorageType()).thenReturn(ApplicationProperties.StorageType.S3);
+        avatarStorageService = new AvatarStorageServiceImpl(contentRepository, applicationProperties, tenantConfigService, s3StorageRepository);
+        avatarStorageService.init();
 
         XmEntity xmEntity = EntityUtils.newEntity(entity -> {
             entity.setRemoved(false);
@@ -134,12 +147,35 @@ public class AvatarStorageServiceUnitTest extends AbstractJupiterUnitTest {
             entity.setAvatarUrlRelative(dbFileName);
         });
 
-        when(avatar.getStorageType()).thenReturn(ApplicationProperties.StorageType.FILE);
+        when(avatarStorage.getStorageType()).thenReturn(ApplicationProperties.StorageType.FILE);
+        avatarStorageService = new AvatarStorageServiceImpl(contentRepository, applicationProperties, tenantConfigService, s3StorageRepository);
+        avatarStorageService.init();
+
         RuntimeException thrown = Assertions.assertThrows(RuntimeException.class, () -> {
             avatarStorageService.getAvatarResource(xmEntity);
         }, "Not implemented");
 
         Assertions.assertEquals("Unsupported storage type: " + ApplicationProperties.StorageType.FILE, thrown.getMessage());
     }
+
+    @Test
+    public void shouldReturnAvatarResourceFromDbStorage() throws IOException {
+        String dbFileName = "/123/test.jpg";
+
+        XmEntity xmEntity = EntityUtils.newEntity(entity -> {
+            entity.setRemoved(false);
+            entity.avatarUrl(DB_PREFIX + dbFileName);
+            entity.setAvatarUrlRelative(dbFileName);
+        });
+
+        Content content = new Content();
+        content.setValue("test content".getBytes());
+        when(contentRepository.findResourceById(123L)).thenReturn(content);
+
+        AvatarStorageResponse response = avatarStorageService.getAvatarResource(xmEntity);
+        assertThat(response.avatarResource()).isNotNull();
+        assertThat(response.uri()).isEqualTo(URI.create(dbFileName));
+    }
+
 
 }

@@ -62,6 +62,8 @@ import com.icthh.xm.ms.entity.service.impl.XmEntityFunctionServiceFacade;
 import com.icthh.xm.ms.entity.service.impl.XmEntityServiceImpl;
 import com.icthh.xm.ms.entity.service.json.JsonValidationService;
 import static com.icthh.xm.ms.entity.web.rest.TestUtil.sameInstant;
+
+import com.icthh.xm.ms.entity.service.storage.AvatarStorageService;
 import com.jayway.jsonpath.JsonPath;
 import static java.time.Instant.now;
 import static java.util.Collections.emptyMap;
@@ -281,6 +283,9 @@ public class XmEntityResourceExtendedIntTest extends AbstractSpringBootTest {
     AttachmentService attachmentService;
 
     @Autowired
+    AvatarStorageService avatarStorageService;
+
+    @Autowired
     ObjectMapper objectMapper;
 
     @Autowired
@@ -346,6 +351,7 @@ public class XmEntityResourceExtendedIntTest extends AbstractSpringBootTest {
                                                                       linkService,
                                                                       storageService,
                                                                       attachmentService,
+                                                                      avatarStorageService,
                                                                       xmEntityPermittedSearchRepository,
                                                                       startUpdateDateGenerationStrategy,
                                                                       authContextHolder,
