@@ -3,6 +3,8 @@ package com.icthh.xm.ms.entity.config;
 import static com.icthh.xm.ms.entity.config.SearchApiTransactionMode.READ_ONLY_TRANSACTION;
 
 import com.icthh.xm.commons.lep.TenantScriptStorage;
+import java.time.Duration;
+import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -67,6 +69,8 @@ public class ApplicationProperties {
     private KafkaMetric kafkaMetric;
 
     private DomainEvent domainEvent;
+
+    private GlobalEntityTimeoutProperties globalEntityTimeouts;
 
     @Getter
     @Setter
@@ -137,6 +141,13 @@ public class ApplicationProperties {
     public static class Jpa {
         private Integer findOneByIdForUpdateTimeout = 10000;
         private SearchApiTransactionMode searchApiTransactionMode = READ_ONLY_TRANSACTION;
+    }
+
+    @Data
+    public static class GlobalEntityTimeoutProperties {
+
+        private Duration readTimeout;
+        private Duration connectionTimeout;
     }
 
 }
