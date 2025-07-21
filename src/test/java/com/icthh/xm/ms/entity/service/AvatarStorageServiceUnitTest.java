@@ -63,7 +63,7 @@ public class AvatarStorageServiceUnitTest extends AbstractJupiterUnitTest {
     }
 
     @Test
-    public void shouldReturnDefaultAvatarIfEntityIsRemoved() throws IOException {
+    public void shouldReturnDefaultAvatarIfEntityIsRemoved() {
         XmEntity xmEntity = EntityUtils.newEntity(entity -> {
             entity.setRemoved(true);
         });
@@ -74,7 +74,7 @@ public class AvatarStorageServiceUnitTest extends AbstractJupiterUnitTest {
     }
 
     @Test
-    public void shouldReturnDefaultAvatarIfAvatarUrlIsMissing() throws IOException {
+    public void shouldReturnDefaultAvatarIfAvatarUrlIsMissing() {
         XmEntity xmEntity = EntityUtils.newEntity(entity -> {
             entity.setRemoved(false);
         });
@@ -159,7 +159,7 @@ public class AvatarStorageServiceUnitTest extends AbstractJupiterUnitTest {
     }
 
     @Test
-    public void shouldReturnAvatarResourceFromDbStorage() throws IOException {
+    public void shouldReturnAvatarResourceFromDbStorage() {
         String dbFileName = "/123/test.jpg";
 
         XmEntity xmEntity = EntityUtils.newEntity(entity -> {

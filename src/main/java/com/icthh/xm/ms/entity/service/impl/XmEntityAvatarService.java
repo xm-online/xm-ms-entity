@@ -4,7 +4,6 @@ import com.icthh.xm.ms.entity.config.ApplicationProperties;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.domain.ext.IdOrKey;
 import com.icthh.xm.ms.entity.service.ProfileService;
-import com.icthh.xm.ms.entity.service.StorageService;
 import com.icthh.xm.ms.entity.service.XmEntityService;
 import com.icthh.xm.ms.entity.service.storage.AvatarStorageResponse;
 import com.icthh.xm.ms.entity.service.storage.AvatarStorageService;
@@ -31,7 +30,7 @@ public class XmEntityAvatarService {
     private final AvatarStorageService avatarStorageService;
 
     @Transactional
-    public URI updateAvatar(IdOrKey idOrKey, HttpEntity<Resource> avatarHttpEntity) throws IOException {
+    public URI updateAvatar(IdOrKey idOrKey, HttpEntity<Resource> avatarHttpEntity) {
         XmEntity source = getEntity(idOrKey);
 
         String avatarUrl = avatarStorageService.storeAvatar(
