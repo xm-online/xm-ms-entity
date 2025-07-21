@@ -41,8 +41,6 @@ public class StorageResource {
     @PreAuthorize("hasPermission({'size': #size, 'multipartFile': #multipartFile}, 'STORAGE.OBJECT.CREATE')")
     @PrivilegeDescription("Privilege to create object on S3 or other supported storage")
     public ResponseEntity<String> createContent(
-        @RequestParam(required = false) Integer size,
-        @RequestParam(required = false, defaultValue = "true") boolean isAvatar,
         @RequestParam("file") MultipartFile multipartFile)
         throws IOException {
 
