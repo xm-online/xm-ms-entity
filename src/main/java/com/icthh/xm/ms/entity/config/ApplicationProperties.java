@@ -23,7 +23,7 @@ public class ApplicationProperties {
 
     public static final Integer DEFAULT_MAX_AVATAR_SIZE = 1024 * 1024;
     public static final Integer DEFAULT_MAX_IMAGE_SIZE = 100;
-    public static final String DEFAULT_DB_FILE_PREFIX = "xme-%id%-";
+    public static final String DEFAULT_DB_FILE_PREFIX = "db://xme/entity/obj/";
     public static final String DEFAULT_DB_URL_TMPLT = "https://%s.xm-online.com/entity/api/storage/object";
 
     private final Amazon amazon = new Amazon();

@@ -41,6 +41,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.Map;
 
 import static com.icthh.xm.commons.tenant.TenantContextUtils.setTenant;
+import static com.icthh.xm.ms.entity.config.Constants.DEFAULT_AVATAR_URL;
+import static com.icthh.xm.ms.entity.config.Constants.DEFAULT_AVATAR_URL_PREFIX;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -114,7 +116,7 @@ public class XmEntityAvatarResourceIntTest extends AbstractJupiterSpringBootTest
 
         lenient().when(profileService.getSelfProfile()).thenReturn(profile);
 
-        avatarService = new XmEntityAvatarService(xmEntityService, storageService, profileService, applicationProperties, avatarStorageService);
+        avatarService = new XmEntityAvatarService(xmEntityService, profileService, applicationProperties, avatarStorageService);
 
         XmEntityAvatarResource xmEntityAvatarResource = new XmEntityAvatarResource(avatarService);
         this.avatarResourceMockMvc = MockMvcBuilders.standaloneSetup(xmEntityAvatarResource)
@@ -139,7 +141,7 @@ public class XmEntityAvatarResourceIntTest extends AbstractJupiterSpringBootTest
         ResultActions result = avatarResourceMockMvc.perform(MockMvcRequestBuilders.get("/api/xm-entities/self/avatar"));
 
         result.andExpect(status().is3xxRedirection())
-            .andExpect(redirectedUrl(Constants.DEFAULT_AVATAR_URL));
+            .andExpect(redirectedUrl(DEFAULT_AVATAR_URL_PREFIX + DEFAULT_AVATAR_URL));
 
     }
 

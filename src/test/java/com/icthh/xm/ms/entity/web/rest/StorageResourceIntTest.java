@@ -103,15 +103,14 @@ public class StorageResourceIntTest extends AbstractJupiterSpringBootTest {
     public void storeImageSuccess() throws Exception {
         MockMultipartFile file =
             new MockMultipartFile("file", "test.txt", "image/plain", "TE".getBytes());
-        Integer size = 100;
-        when(storageService.storeAvatar(eq(file), eq(size))).thenReturn(file.getName());
-        MvcResult result = restStorageMockMvc.perform(multipart("/api/storage/objects?size="+size)
+        when(storageService.store(eq(file), eq(null))).thenReturn(file.getName());
+        MvcResult result = restStorageMockMvc.perform(multipart("/api/storage/objects")
             .file(file))
             .andDo(MockMvcResultHandlers.log())
             .andExpect(status().isOk())
             .andReturn();
         assertThat(result.getResponse().getContentAsString()).contains(file.getName());
-        verify(storageService, times(1)).storeAvatar(eq(file), eq(size));
+        verify(storageService, times(1)).store(eq(file), eq(null));
     }
 
     @Test

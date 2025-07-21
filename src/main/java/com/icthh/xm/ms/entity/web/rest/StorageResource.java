@@ -51,13 +51,6 @@ public class StorageResource {
                 "Avatar file must not exceed " + applicationProperties.getMaxAvatarSize() + " bytes");
         }
 
-        final String contentType = multipartFile.getContentType();
-        if (isAvatar && contentType != null && "image".equals(contentType.substring(0, 5))) {
-            String result = storageService.storeAvatar(multipartFile, size);
-            return ResponseEntity.ok(result);
-
-        }
-
         String result = storageService.store(multipartFile, null);
         return ResponseEntity.ok(result);
     }

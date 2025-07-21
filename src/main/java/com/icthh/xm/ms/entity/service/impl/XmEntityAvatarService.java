@@ -18,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.io.IOException;
 import java.net.URI;
 import java.util.List;
+import java.util.Objects;
 
 @Slf4j
 @Service
@@ -25,17 +26,15 @@ import java.util.List;
 public class XmEntityAvatarService {
 
     private final XmEntityService xmEntityService;
-    private final StorageService storageService;
     private final ProfileService profileService;
     private final ApplicationProperties applicationProperties;
-
     private final AvatarStorageService avatarStorageService;
 
     @Transactional
     public URI updateAvatar(IdOrKey idOrKey, HttpEntity<Resource> avatarHttpEntity) throws IOException {
         XmEntity source = getEntity(idOrKey);
 
-        String avatarUrl = storageService.storeAvatar(
+        String avatarUrl = avatarStorageService.storeAvatar(
             avatarHttpEntity,
             applicationProperties.getObjectStorage().getAvatar().getMaxImageSize());
         log.info("Avatar {} stored for entity {}", avatarUrl, idOrKey);
@@ -58,6 +57,7 @@ public class XmEntityAvatarService {
             return source;
         }
         source = xmEntityService.findOne(idOrKey, List.of());
+        Objects.requireNonNull(source, "Entity not found by idOrKey=" + idOrKey);
         log.debug("Resolved entity id = {}, typeKet = {}", source.getId(), source.getTypeKey());
         return source;
     }
