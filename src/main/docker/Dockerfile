@@ -1,4 +1,4 @@
-FROM adoptopenjdk:11-jre-hotspot
+FROM registry.dc/jdk/adoptopenjdk:11-jre-hotspot
 
 ENTRYPOINT ["/entrypoint.sh"]
 
