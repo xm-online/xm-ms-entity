@@ -41,6 +41,7 @@ import com.icthh.xm.ms.entity.service.XmEntityTemplatesSpecService;
 import com.icthh.xm.ms.entity.service.impl.StartUpdateDateGenerationStrategy;
 import com.icthh.xm.ms.entity.service.impl.XmEntityFunctionServiceFacade;
 import com.icthh.xm.ms.entity.service.impl.XmEntityServiceImpl;
+import com.icthh.xm.ms.entity.service.impl.XmeStorageServiceFacadeImpl;
 import com.icthh.xm.ms.entity.service.json.JsonValidationService;
 import com.icthh.xm.ms.entity.service.storage.AvatarStorageService;
 import jakarta.persistence.EntityManager;
@@ -259,6 +260,8 @@ public class XmEntityResourceIntTest extends AbstractSpringBootTest {
         xmEntityTemplatesSpecService.onRefresh(key, config);
         xmEntityTemplatesSpecService.refreshFinished(List.of(key));
 
+        XmeStorageServiceFacadeImpl storageServiceFacade = new XmeStorageServiceFacadeImpl(storageService, avatarStorageService, attachmentService);
+
         XmEntityServiceImpl xmEntityServiceImpl = new XmEntityServiceImpl(xmEntitySpecService,
                                                       xmEntityTemplatesSpecService,
                                                       xmEntityRepository,
@@ -266,9 +269,7 @@ public class XmEntityResourceIntTest extends AbstractSpringBootTest {
                                                       xmEntityPermittedRepository,
                                                       profileService,
                                                       linkService,
-                                                      storageService,
-                                                      attachmentService,
-                                                      avatarStorageService,
+                                                      storageServiceFacade,
                                                       xmEntityPermittedSearchRepository,
                                                       startUpdateDateGenerationStrategy,
                                                       authContextHolder,

@@ -185,6 +185,8 @@ public class EntityServiceImplIntTest extends AbstractSpringBootTest {
 
         XmEntityProjectionService xmEntityProjectionService = new XmEntityProjectionServiceImpl(xmEntityProjectionRepository, profileService);
 
+        XmeStorageServiceFacadeImpl storageServiceFacade = new XmeStorageServiceFacadeImpl(storageService, avatarStorageService, attachmentService);
+
         xmEntityService = new XmEntityServiceImpl(
             xmEntitySpecService,
             xmEntityTemplatesSpecService,
@@ -193,9 +195,7 @@ public class EntityServiceImplIntTest extends AbstractSpringBootTest {
             null,
             profileService,
             linkService,
-            storageService,
-            attachmentService,
-            avatarStorageService,
+            storageServiceFacade,
             permittedSearchRepository,
             startUpdateDateGenerationStrategy,
             authContextHolder,
@@ -356,7 +356,7 @@ public class EntityServiceImplIntTest extends AbstractSpringBootTest {
     @Transactional
     @WithMockUser(authorities = "SUPER-ADMIN")
     public void saveSelfLinkTarget() throws Exception {
-        when(storageService.store(Mockito.any(MultipartFile.class), Mockito.any())).thenReturn("test.txt");
+        when(storageService.store(Mockito.any(HttpEntity.class), Mockito.any())).thenReturn("test.txt");
         int databaseSizeBeforeCreate = linkRepository.findAll().size();
 
         XmEntity targetEntity = xmEntityRepository.save(createEntity(2l, TARGET_TYPE_KEY));
@@ -383,7 +383,7 @@ public class EntityServiceImplIntTest extends AbstractSpringBootTest {
     @Transactional
     @WithMockUser(authorities = "SUPER-ADMIN")
     public void addFileAttachment() throws IOException {
-        when(storageService.store(Mockito.any(MultipartFile.class), Mockito.any())).thenReturn("test.txt");
+        when(storageService.store(Mockito.any(HttpEntity.class), Mockito.any())).thenReturn("test.txt");
 
         XmEntity targetEntity = xmEntityRepository.save(createEntity(2l, TARGET_TYPE_KEY));
         MockMultipartFile file =
