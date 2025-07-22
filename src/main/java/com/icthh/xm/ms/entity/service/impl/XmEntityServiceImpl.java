@@ -51,7 +51,6 @@ import com.icthh.xm.ms.entity.service.*;
 import com.icthh.xm.ms.entity.service.json.JsonValidationService;
 import com.icthh.xm.ms.entity.service.dto.LinkSourceDto;
 import com.icthh.xm.commons.search.dto.SearchDto;
-import com.icthh.xm.ms.entity.service.storage.AvatarStorageService;
 import com.jayway.jsonpath.DocumentContext;
 import com.jayway.jsonpath.JsonPath;
 import jakarta.annotation.Nullable;
