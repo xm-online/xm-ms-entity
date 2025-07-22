@@ -19,6 +19,7 @@ import com.icthh.xm.ms.entity.repository.kafka.ProfileEventProducer;
 import com.icthh.xm.ms.entity.repository.search.XmEntityPermittedSearchRepository;
 import com.icthh.xm.ms.entity.service.AttachmentService;
 import com.icthh.xm.ms.entity.service.impl.XmEntityFunctionServiceFacade;
+import com.icthh.xm.ms.entity.service.impl.XmeStorageServiceFacadeImpl;
 import com.icthh.xm.ms.entity.service.json.JsonValidationService;
 import com.icthh.xm.ms.entity.service.LifecycleLepStrategyFactory;
 import com.icthh.xm.ms.entity.service.LinkService;
@@ -175,6 +176,8 @@ public class XmEntityResourceSpecIntTest extends AbstractSpringBootTest {
         String key = applicationProperties.getSpecificationTemplatesPathPattern().replace("{tenantName}", tenantName);
         xmEntityTemplatesSpecService.onRefresh(key, config);
 
+        XmeStorageServiceFacadeImpl storageServiceFacade = new XmeStorageServiceFacadeImpl(storageService, avatarStorageService, attachmentService);
+
         XmEntityServiceImpl xmEntityServiceImpl = new XmEntityServiceImpl(xmEntitySpecService,
             xmEntityTemplatesSpecService,
             xmEntityRepository,
@@ -182,9 +185,7 @@ public class XmEntityResourceSpecIntTest extends AbstractSpringBootTest {
             xmEntityPermittedRepository,
             profileService,
             linkService,
-            storageService,
-            attachmentService,
-            avatarStorageService,
+            storageServiceFacade,
             xmEntityPermittedSearchRepository,
             startUpdateDateGenerationStrategy,
             authContextHolder,

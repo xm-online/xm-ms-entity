@@ -60,6 +60,7 @@ import com.icthh.xm.ms.entity.service.XmEntityTemplatesSpecService;
 import com.icthh.xm.ms.entity.service.impl.StartUpdateDateGenerationStrategy;
 import com.icthh.xm.ms.entity.service.impl.XmEntityFunctionServiceFacade;
 import com.icthh.xm.ms.entity.service.impl.XmEntityServiceImpl;
+import com.icthh.xm.ms.entity.service.impl.XmeStorageServiceFacadeImpl;
 import com.icthh.xm.ms.entity.service.json.JsonValidationService;
 import static com.icthh.xm.ms.entity.web.rest.TestUtil.sameInstant;
 
@@ -342,6 +343,8 @@ public class XmEntityResourceExtendedIntTest extends AbstractSpringBootTest {
         String key = applicationProperties.getSpecificationTemplatesPathPattern().replace("{tenantName}", tenantName);
         xmEntityTemplatesSpecService.onRefresh(key, config);
 
+        XmeStorageServiceFacadeImpl storageServiceFacade = new XmeStorageServiceFacadeImpl(storageService, avatarStorageService, attachmentService);
+
         XmEntityServiceImpl xmEntityService = new XmEntityServiceImpl(xmEntitySpecService,
                                                                       xmEntityTemplatesSpecService,
                                                                       xmEntityRepository,
@@ -349,9 +352,7 @@ public class XmEntityResourceExtendedIntTest extends AbstractSpringBootTest {
                                                                       xmEntityPermittedRepository,
                                                                       profileService,
                                                                       linkService,
-                                                                      storageService,
-                                                                      attachmentService,
-                                                                      avatarStorageService,
+                                                                      storageServiceFacade,
                                                                       xmEntityPermittedSearchRepository,
                                                                       startUpdateDateGenerationStrategy,
                                                                       authContextHolder,
