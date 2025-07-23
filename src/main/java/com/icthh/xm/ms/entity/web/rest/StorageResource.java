@@ -6,7 +6,7 @@ import com.codahale.metrics.annotation.Timed;
 import com.icthh.xm.commons.exceptions.BusinessException;
 import com.icthh.xm.commons.permission.annotation.PrivilegeDescription;
 import com.icthh.xm.ms.entity.config.ApplicationProperties;
-import com.icthh.xm.ms.entity.service.StorageService;
+import com.icthh.xm.ms.entity.service.XmeStorageServiceFacade;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -28,7 +28,7 @@ import java.io.IOException;
 @RequestMapping("/api/storage")
 public class StorageResource {
 
-    private final StorageService storageService;
+    private final XmeStorageServiceFacade xmeStorageServiceFacade;
     private final ApplicationProperties applicationProperties;
 
 
@@ -40,7 +40,7 @@ public class StorageResource {
     @Timed
     @PreAuthorize("hasPermission({'size': #size, 'multipartFile': #multipartFile}, 'STORAGE.OBJECT.CREATE')")
     @PrivilegeDescription("Privilege to create object on S3 or other supported storage")
-    public ResponseEntity<String> createContent(
+    public ResponseEntity<String> createContent(@RequestParam(required = false) Integer size,
         @RequestParam("file") MultipartFile multipartFile)
         throws IOException {
 
@@ -48,8 +48,7 @@ public class StorageResource {
             throw new BusinessException(ERR_VALIDATION,
                 "Avatar file must not exceed " + applicationProperties.getMaxAvatarSize() + " bytes");
         }
-
-        String result = storageService.store(multipartFile, null);
+        String result = xmeStorageServiceFacade.store(multipartFile, size);
         return ResponseEntity.ok(result);
     }
 

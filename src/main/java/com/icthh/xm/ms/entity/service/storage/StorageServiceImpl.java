@@ -9,6 +9,8 @@ import org.springframework.core.io.Resource;
 import org.springframework.http.HttpEntity;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
+
 @Service
 @RequiredArgsConstructor
 public class StorageServiceImpl implements StorageService {
@@ -16,11 +18,14 @@ public class StorageServiceImpl implements StorageService {
     private final S3StorageRepository s3StorageRepository;
     private final ApplicationProperties applicationProperties;
 
-    private ApplicationProperties.StorageType storageType;
+    private ApplicationProperties.StorageType storageType = ApplicationProperties.StorageType.S3;
 
     @PostConstruct
     public void init() {
-        storageType = applicationProperties.getObjectStorage().getAvatar().getStorageType();
+        Optional.ofNullable(applicationProperties.getObjectStorage())
+            .map(ApplicationProperties.ObjectStorage::getFile)
+            .map(ApplicationProperties.FileStorage::getStorageType)
+            .ifPresent(this::setStorageType);
     }
 
     public String store(HttpEntity<Resource> httpEntity, Integer size) {
@@ -28,6 +33,10 @@ public class StorageServiceImpl implements StorageService {
             return s3StorageRepository.store(httpEntity, size);
         }
         throw new RuntimeException("Not implemented " + storageType);
+    }
+
+    protected void setStorageType(ApplicationProperties.StorageType storageType) {
+        this.storageType = storageType;
     }
 
 }

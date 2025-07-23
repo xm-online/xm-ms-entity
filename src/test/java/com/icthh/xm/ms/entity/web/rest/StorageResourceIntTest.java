@@ -11,13 +11,18 @@ import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
 import com.icthh.xm.ms.entity.AbstractJupiterSpringBootTest;
 import com.icthh.xm.ms.entity.config.ApplicationProperties;
+import com.icthh.xm.ms.entity.repository.backend.S3StorageRepository;
 import com.icthh.xm.ms.entity.service.StorageService;
+import com.icthh.xm.ms.entity.service.XmeStorageServiceFacade;
+import com.icthh.xm.ms.entity.service.impl.XmeStorageServiceFacadeImpl;
+import com.icthh.xm.ms.entity.service.storage.StorageServiceImpl;
 import com.icthh.xm.ms.entity.util.XmHttpEntityUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
@@ -41,7 +46,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class StorageResourceIntTest extends AbstractJupiterSpringBootTest {
 
     @Mock
-    private StorageService storageService;
+    private S3StorageRepository s3StorageRepository;
 
     @Autowired
     private ApplicationProperties applicationProperties;
@@ -70,7 +75,9 @@ public class StorageResourceIntTest extends AbstractJupiterSpringBootTest {
     @BeforeEach
     public void setup() {
         mocks = MockitoAnnotations.openMocks(this);
-        StorageResource storageResource = new StorageResource(storageService, applicationProperties);
+        StorageService storageService = new StorageServiceImpl(s3StorageRepository, applicationProperties);
+        XmeStorageServiceFacade storageServiceFacade = new XmeStorageServiceFacadeImpl(storageService, null, null);
+        StorageResource storageResource = new StorageResource(storageServiceFacade, applicationProperties);
         this.restStorageMockMvc = MockMvcBuilders.standaloneSetup(storageResource)
             .setCustomArgumentResolvers(pageableArgumentResolver)
             .setControllerAdvice(exceptionTranslator)
@@ -88,14 +95,14 @@ public class StorageResourceIntTest extends AbstractJupiterSpringBootTest {
     public void storeObjectSuccess() throws Exception {
         MockMultipartFile file =
             new MockMultipartFile("file", "test.txt", "text/plain", "TE".getBytes());
-        when(storageService.store(eq(file), eq(null))).thenReturn(file.getName());
+        when(s3StorageRepository.store(Mockito.any(HttpEntity.class), eq(null))).thenReturn(file.getName());
         MvcResult result = restStorageMockMvc.perform(multipart("/api/storage/objects")
             .file(file))
             .andDo(MockMvcResultHandlers.log())
             .andExpect(status().isOk())
             .andReturn();
         assertThat(result.getResponse().getContentAsString()).contains(file.getName());
-        verify(storageService, times(1)).store(eq(file), eq(null));
+        verify(s3StorageRepository, times(1)).store(Mockito.any(HttpEntity.class), eq(null));
     }
 
     @Test
@@ -103,14 +110,15 @@ public class StorageResourceIntTest extends AbstractJupiterSpringBootTest {
     public void storeImageSuccess() throws Exception {
         MockMultipartFile file =
             new MockMultipartFile("file", "test.txt", "image/plain", "TE".getBytes());
-        when(storageService.store(eq(file), eq(null))).thenReturn(file.getName());
+        HttpEntity<Resource> httpResource = XmHttpEntityUtils.buildAvatarHttpEntity(file);
+        when(s3StorageRepository.store(Mockito.any(HttpEntity.class), eq(null))).thenReturn(file.getName());
         MvcResult result = restStorageMockMvc.perform(multipart("/api/storage/objects")
             .file(file))
             .andDo(MockMvcResultHandlers.log())
             .andExpect(status().isOk())
             .andReturn();
         assertThat(result.getResponse().getContentAsString()).contains(file.getName());
-        verify(storageService, times(1)).store(eq(file), eq(null));
+        verify(s3StorageRepository, times(1)).store(Mockito.any(HttpEntity.class), eq(null));
     }
 
     @Test
@@ -123,7 +131,7 @@ public class StorageResourceIntTest extends AbstractJupiterSpringBootTest {
             .file(file))
             .andDo(result -> System.out.println(result.getResponse().getContentAsString()))
             .andExpect(status().isBadRequest());
-        verify(storageService, times(0)).store(eq(storageResource), eq(null));
+        verify(s3StorageRepository, times(0)).store(Mockito.any(HttpEntity.class), eq(null));
     }
 
 }

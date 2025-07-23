@@ -149,6 +149,13 @@ public class ApplicationProperties {
     @Setter
     public static class ObjectStorage {
         private AvatarStorage avatar = new AvatarStorage();
+        private FileStorage file = new FileStorage();
+    }
+
+    @Setter
+    public static class FileStorage {
+        @Getter
+        private StorageType storageType = StorageType.S3;
     }
 
     @Setter
