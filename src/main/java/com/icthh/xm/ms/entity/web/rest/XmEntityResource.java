@@ -1,7 +1,6 @@
 package com.icthh.xm.ms.entity.web.rest;
 
 import static com.icthh.xm.commons.utils.HttpRequestUtils.getFunctionKey;
-import static com.icthh.xm.ms.entity.web.rest.XmRestApiConstants.XM_HEADER_CONTENT_NAME;
 import static org.apache.commons.collections.CollectionUtils.isEmpty;
 
 import com.codahale.metrics.annotation.Timed;
@@ -21,7 +20,6 @@ import com.icthh.xm.ms.entity.service.TenantService;
 import com.icthh.xm.ms.entity.service.XmEntityService;
 import com.icthh.xm.ms.entity.service.dto.LinkSourceDto;
 import com.icthh.xm.ms.entity.service.impl.XmEntityFunctionServiceFacade;
-import com.icthh.xm.ms.entity.util.XmHttpEntityUtils;
 import com.icthh.xm.ms.entity.web.rest.util.HeaderUtil;
 import com.icthh.xm.ms.entity.web.rest.util.PaginationUtil;
 import com.icthh.xm.ms.entity.web.rest.util.RespContentUtil;
@@ -29,13 +27,10 @@ import io.swagger.annotations.ApiParam;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.context.annotation.Lazy;
-import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PostAuthorize;
 import org.springframework.security.access.prepost.PostFilter;
@@ -46,7 +41,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
@@ -374,80 +368,7 @@ public class XmEntityResource {
         return ResponseEntity.ok().body(xmEntity);
     }
 
-    /**
-     * Multipart update avatar.
-     *
-     * @param idOrKey       id or key of XmEntity
-     * @param multipartFile multipart file with avatar
-     * @return HTTP response
-     * @throws IOException when IO error
-     */
-    @Timed
-    @PostMapping("/xm-entities/{idOrKey}/avatar")
-    @PreAuthorize("hasPermission({'idOrKey':#idOrKey, 'multipartFile':#multipartFile}, 'XMENTITY.AVATAR.UPDATE')")
-    @PrivilegeDescription("Privilege to update avatar")
-    public ResponseEntity<Void> updateAvatar(@PathVariable String idOrKey,
-                                             @RequestParam("file") MultipartFile multipartFile)
-        throws IOException {
 
-        HttpEntity<Resource> avatarEntity = XmHttpEntityUtils.buildAvatarHttpEntity(multipartFile);
-        URI uri = xmEntityService.updateAvatar(IdOrKey.of(idOrKey), avatarEntity);
-        return buildAvatarUpdateResponse(uri);
-    }
-
-    // TODO remove this method after deal with hasPermission check for self
-    @Timed
-    @PostMapping("/xm-entities/self/avatar")
-    @PreAuthorize("hasPermission({'multipartFile': #multipartFile}, 'XMENTITY.SELF.AVATAR.UPDATE')")
-    @PrivilegeDescription("Privilege to update avatar of current user")
-    public ResponseEntity<Void> updateSelfAvatar(@RequestParam("file") MultipartFile multipartFile) throws IOException {
-        HttpEntity<Resource> avatarEntity = XmHttpEntityUtils.buildAvatarHttpEntity(multipartFile);
-        URI uri = xmEntityService.updateAvatar(IdOrKey.SELF, avatarEntity);
-        return buildAvatarUpdateResponse(uri);
-    }
-
-    /**
-     * Update avatar with simple PUT HTTP request.
-     *
-     * @param idOrKey  id or key of XmEntity
-     * @param fileName avatar file name
-     * @param request  HTTP servlet request
-     * @return HTTP response
-     * @throws IOException when IO error
-     */
-    @Timed
-    @PutMapping(path = "/xm-entities/{idOrKey}/avatar", consumes = "image/*")
-    @PreAuthorize("hasPermission({'idOrKey':#idOrKey, 'fileName':#fileName, 'request':#request}, 'XMENTITY.AVATAR.UPDATE')")
-    @PrivilegeDescription("Privilege to update avatar")
-    public ResponseEntity<Void> updateAvatar(@PathVariable String idOrKey,
-                                             @RequestHeader(value = XM_HEADER_CONTENT_NAME, required = false)
-                                                 String fileName,
-                                             HttpServletRequest request) throws IOException {
-        HttpEntity<Resource> avatarEntity = XmHttpEntityUtils.buildAvatarHttpEntity(request, fileName);
-        URI uri = xmEntityService.updateAvatar(IdOrKey.of(idOrKey), avatarEntity);
-        return buildAvatarUpdateResponse(uri);
-    }
-
-    // TODO remove this method after deal with hasPermission check for self
-    @Timed
-    @PutMapping(path = "/xm-entities/self/avatar", consumes = "image/*")
-    @PreAuthorize("hasPermission({'fileName':#fileName, 'request':#request}, 'XMENTITY.SELF.AVATAR.UPDATE')")
-    @PrivilegeDescription("Privilege to update avatar of current user")
-    public ResponseEntity<Void> updateSelfAvatar(@RequestHeader(value = XM_HEADER_CONTENT_NAME, required = false)
-                                                     String fileName,
-                                                 HttpServletRequest request) throws IOException {
-        HttpEntity<Resource> avatarEntity = XmHttpEntityUtils.buildAvatarHttpEntity(request, fileName);
-        URI uri = xmEntityService.updateAvatar(IdOrKey.SELF, avatarEntity);
-        return buildAvatarUpdateResponse(uri);
-    }
-
-    private static ResponseEntity<Void> buildAvatarUpdateResponse(URI uri) {
-        HttpHeaders headers = new HttpHeaders();
-        if (uri != null) {
-            headers.setLocation(uri);
-        }
-        return new ResponseEntity<>(headers, HttpStatus.CREATED);
-    }
 
     /**
      * GET  /xm-entities/export : export all xmEntities by typeKey in specific file format.

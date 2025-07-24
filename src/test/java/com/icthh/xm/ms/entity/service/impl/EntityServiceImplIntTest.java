@@ -41,6 +41,7 @@ import com.icthh.xm.ms.entity.service.XmEntityProjectionService;
 import com.icthh.xm.ms.entity.service.XmEntitySpecService;
 import com.icthh.xm.ms.entity.service.XmEntityTemplatesSpecService;
 import com.icthh.xm.ms.entity.service.json.JsonValidationService;
+import com.icthh.xm.ms.entity.service.storage.AvatarStorageService;
 import com.icthh.xm.ms.entity.util.XmHttpEntityUtils;
 import static java.time.Instant.now;
 import static java.util.Arrays.asList;
@@ -144,6 +145,9 @@ public class EntityServiceImplIntTest extends AbstractSpringBootTest {
     private StorageService storageService;
 
     @Mock
+    private AvatarStorageService avatarStorageService;
+
+    @Mock
     private XmAuthenticationContextHolder authContextHolder;
 
     @Mock
@@ -181,6 +185,8 @@ public class EntityServiceImplIntTest extends AbstractSpringBootTest {
 
         XmEntityProjectionService xmEntityProjectionService = new XmEntityProjectionServiceImpl(xmEntityProjectionRepository, profileService);
 
+        XmeStorageServiceFacadeImpl storageServiceFacade = new XmeStorageServiceFacadeImpl(storageService, avatarStorageService, attachmentService);
+
         xmEntityService = new XmEntityServiceImpl(
             xmEntitySpecService,
             xmEntityTemplatesSpecService,
@@ -189,8 +195,7 @@ public class EntityServiceImplIntTest extends AbstractSpringBootTest {
             null,
             profileService,
             linkService,
-            storageService,
-            attachmentService,
+            storageServiceFacade,
             permittedSearchRepository,
             startUpdateDateGenerationStrategy,
             authContextHolder,
@@ -351,7 +356,7 @@ public class EntityServiceImplIntTest extends AbstractSpringBootTest {
     @Transactional
     @WithMockUser(authorities = "SUPER-ADMIN")
     public void saveSelfLinkTarget() throws Exception {
-        when(storageService.store(Mockito.any(MultipartFile.class), Mockito.any())).thenReturn("test.txt");
+        when(storageService.store(Mockito.any(HttpEntity.class), Mockito.any())).thenReturn("test.txt");
         int databaseSizeBeforeCreate = linkRepository.findAll().size();
 
         XmEntity targetEntity = xmEntityRepository.save(createEntity(2l, TARGET_TYPE_KEY));
@@ -377,8 +382,8 @@ public class EntityServiceImplIntTest extends AbstractSpringBootTest {
     @Test
     @Transactional
     @WithMockUser(authorities = "SUPER-ADMIN")
-    public void addFileAttachment() {
-        when(storageService.store(Mockito.any(MultipartFile.class), Mockito.any())).thenReturn("test.txt");
+    public void addFileAttachment() throws IOException {
+        when(storageService.store(Mockito.any(HttpEntity.class), Mockito.any())).thenReturn("test.txt");
 
         XmEntity targetEntity = xmEntityRepository.save(createEntity(2l, TARGET_TYPE_KEY));
         MockMultipartFile file =
@@ -399,7 +404,7 @@ public class EntityServiceImplIntTest extends AbstractSpringBootTest {
     @SneakyThrows
     @SuppressWarnings("unchecked")
     public void updateAvatar() throws Exception {
-        when(storageService.store(Mockito.any(HttpEntity.class), Mockito.any())).thenReturn("test.txt");
+        when(avatarStorageService.storeAvatar(Mockito.any(HttpEntity.class), Mockito.any())).thenReturn("test.txt");
         MockMultipartFile file =
             new MockMultipartFile("file", "test.jpg", "image/jpg", "TEST".getBytes());
         HttpEntity<Resource> avatarEntity = XmHttpEntityUtils.buildAvatarHttpEntity(file);
