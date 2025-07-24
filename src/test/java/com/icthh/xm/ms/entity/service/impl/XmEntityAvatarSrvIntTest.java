@@ -8,8 +8,8 @@ import com.icthh.xm.ms.entity.domain.Profile;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.domain.ext.IdOrKey;
 import com.icthh.xm.ms.entity.repository.XmEntityRepositoryInternal;
-import com.icthh.xm.ms.entity.service.ProfileService;
 import com.icthh.xm.ms.entity.service.StorageService;
+import com.icthh.xm.ms.entity.service.XmeStorageServiceFacade;
 import com.icthh.xm.ms.entity.service.storage.AvatarStorageResponse;
 import com.icthh.xm.ms.entity.service.storage.AvatarStorageServiceImpl;
 import com.icthh.xm.ms.entity.util.EntityUtils;
@@ -45,9 +45,6 @@ public class XmEntityAvatarSrvIntTest extends AbstractJupiterSpringBootTest {
 
     private XmEntityAvatarService xmEntityAvatarService;
 
-    @Mock
-    private ProfileService profileService;
-
     @Autowired
     private StorageService storageService;
 
@@ -82,7 +79,8 @@ public class XmEntityAvatarSrvIntTest extends AbstractJupiterSpringBootTest {
         TenantContextUtils.setTenant(tenantContextHolder, "RESINTTEST");
 
         mockito = MockitoAnnotations.openMocks(this);
-        xmEntityAvatarService = new XmEntityAvatarService(xmEntityService, profileService, applicationProperties, avatarStorageService);
+        XmeStorageServiceFacade facade = new XmeStorageServiceFacadeImpl(storageService, avatarStorageService, null);
+        xmEntityAvatarService = new XmEntityAvatarService(xmEntityService, applicationProperties, facade);
     }
 
     @AfterTransaction
@@ -111,7 +109,8 @@ public class XmEntityAvatarSrvIntTest extends AbstractJupiterSpringBootTest {
         self = new Profile();
         self.setXmentity(sourceEntity);
 
-        when(profileService.getSelfProfile()).thenReturn(self);
+        //when(profileService.getSelfProfile()).thenReturn(self);
+        when(xmEntityService.findOne(eq(IdOrKey.SELF), eq(List.of()))).thenReturn(sourceEntity);
 
         //Create other entity
         XmEntity otherEntity = xmEntityRepository.save(

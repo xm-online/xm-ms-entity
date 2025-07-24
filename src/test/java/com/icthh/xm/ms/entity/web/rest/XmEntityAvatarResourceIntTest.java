@@ -8,14 +8,12 @@ import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
 import com.icthh.xm.ms.entity.AbstractJupiterSpringBootTest;
 import com.icthh.xm.ms.entity.config.ApplicationProperties;
-import com.icthh.xm.ms.entity.config.Constants;
 import com.icthh.xm.ms.entity.domain.Profile;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.domain.ext.IdOrKey;
-import com.icthh.xm.ms.entity.service.ProfileService;
-import com.icthh.xm.ms.entity.service.StorageService;
-import com.icthh.xm.ms.entity.service.XmEntityService;
+import com.icthh.xm.ms.entity.service.*;
 import com.icthh.xm.ms.entity.service.impl.XmEntityAvatarService;
+import com.icthh.xm.ms.entity.service.impl.XmeStorageServiceFacadeImpl;
 import com.icthh.xm.ms.entity.service.storage.AvatarStorageService;
 import com.icthh.xm.ms.entity.util.EntityUtils;
 import jakarta.persistence.EntityManager;
@@ -38,6 +36,7 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Map;
 
 import static com.icthh.xm.commons.tenant.TenantContextUtils.setTenant;
@@ -106,6 +105,9 @@ public class XmEntityAvatarResourceIntTest extends AbstractJupiterSpringBootTest
     @Mock
     Profile profile;
 
+    @Mock
+    XmEntityProjectionService xmEntityProjectionService;
+
     @BeforeEach
     public void setup() {
         mocks = MockitoAnnotations.openMocks(this);
@@ -116,7 +118,8 @@ public class XmEntityAvatarResourceIntTest extends AbstractJupiterSpringBootTest
 
         lenient().when(profileService.getSelfProfile()).thenReturn(profile);
 
-        avatarService = new XmEntityAvatarService(xmEntityService, profileService, applicationProperties, avatarStorageService);
+        XmeStorageServiceFacade storage = new XmeStorageServiceFacadeImpl(null, avatarStorageService, null);
+        avatarService = new XmEntityAvatarService(xmEntityService, applicationProperties, storage);
 
         XmEntityAvatarResource xmEntityAvatarResource = new XmEntityAvatarResource(avatarService);
         this.avatarResourceMockMvc = MockMvcBuilders.standaloneSetup(xmEntityAvatarResource)
