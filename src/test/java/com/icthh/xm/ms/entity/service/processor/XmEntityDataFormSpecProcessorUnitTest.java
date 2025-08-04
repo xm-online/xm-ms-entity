@@ -46,7 +46,7 @@ public class XmEntityDataFormSpecProcessorUnitTest extends AbstractUnitTest {
         TypeSpec typeSpec = inputXmEntitySpec.getTypes().get(0);
         jsonListenerService.processTenantSpecification(TENANT, RELATIVE_PATH_TO_FILE, loadFile("config/specs/forms/specification-forms.json"));
 
-        subject.updateStateByTenant(TENANT, XM_ENTITY_SPEC_KEY, inputXmEntitySpec.getForms());
+        subject.fullUpdateStateByTenant(TENANT, XM_ENTITY_SPEC_KEY, inputXmEntitySpec.getForms());
         subject.processDataSpec(TENANT, XM_ENTITY_SPEC_KEY, typeSpec::setDataForm, typeSpec::getDataForm);
 
         XmEntitySpec actualXmEntitySpec = createXmEntitySpec(singletonList(typeSpec),
@@ -62,7 +62,7 @@ public class XmEntityDataFormSpecProcessorUnitTest extends AbstractUnitTest {
         TypeSpec typeSpec = inputXmEntitySpec.getTypes().get(0);
         jsonListenerService.processTenantSpecification(TENANT, RELATIVE_PATH_TO_FILE, loadFile("config/specs/forms/specification-forms.json"));
 
-        subject.updateStateByTenant(TENANT, XM_ENTITY_SPEC_KEY, inputXmEntitySpec.getForms());
+        subject.fullUpdateStateByTenant(TENANT, XM_ENTITY_SPEC_KEY, inputXmEntitySpec.getForms());
         subject.processDataSpec(TENANT, XM_ENTITY_SPEC_KEY, typeSpec::setDataForm, typeSpec::getDataForm);
 
         assertEquals(inputXmEntitySpec.getTypes().get(0).getDataForm(), typeSpec.getDataForm());
@@ -75,7 +75,7 @@ public class XmEntityDataFormSpecProcessorUnitTest extends AbstractUnitTest {
         TypeSpec typeSpec = inputXmEntitySpec.getTypes().get(0);
         jsonListenerService.processTenantSpecification(TENANT, RELATIVE_PATH_TO_FILE, loadFile("config/specs/forms/specification-forms.json"));
 
-        subject.updateStateByTenant(TENANT, XM_ENTITY_SPEC_KEY, inputXmEntitySpec.getForms());
+        subject.fullUpdateStateByTenant(TENANT, XM_ENTITY_SPEC_KEY, inputXmEntitySpec.getForms());
         subject.processDataSpec(TENANT, XM_ENTITY_SPEC_KEY, typeSpec::setDataForm, typeSpec::getDataForm);
 
         XmEntitySpec actualXmEntitySpec = createXmEntitySpec(singletonList(typeSpec),
@@ -91,7 +91,7 @@ public class XmEntityDataFormSpecProcessorUnitTest extends AbstractUnitTest {
         TypeSpec typeSpec = inputXmEntitySpec.getTypes().get(0);
         jsonListenerService.processTenantSpecification(TENANT, RELATIVE_PATH_TO_FILE, "{,}");
 
-        subject.updateStateByTenant(TENANT, XM_ENTITY_SPEC_KEY, inputXmEntitySpec.getForms());
+        subject.fullUpdateStateByTenant(TENANT, XM_ENTITY_SPEC_KEY, inputXmEntitySpec.getForms());
         subject.processDataSpec(TENANT, XM_ENTITY_SPEC_KEY, typeSpec::setDataForm, typeSpec::getDataForm);
     }
 
