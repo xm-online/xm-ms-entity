@@ -15,12 +15,15 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.junit.MockitoJUnitRunner;
 
+import java.lang.reflect.Field;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
 import static com.icthh.xm.ms.entity.service.json.JsonConfigurationListener.XM_ENTITY_SPEC_KEY;
 import static com.icthh.xm.ms.entity.web.rest.XmEntitySaveIntTest.loadFile;
 import static java.util.Collections.singletonList;
+import static org.apache.tools.ant.util.ReflectUtil.getField;
 import static org.junit.Assert.assertEquals;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -47,7 +50,7 @@ public class XmEntityDefinitionSpecProcessorUnitTest extends AbstractUnitTest {
         XmEntitySpec expectedXmEntitySpec = loadXmEntitySpecByFileName("xmentityspec-definitions-input-expected");
         TypeSpec typeSpec = inputXmEntitySpec.getTypes().get(0);
 
-        subject.updateStateByTenant(TENANT, XM_ENTITY_SPEC_KEY, inputXmEntitySpec.getDefinitions());
+        subject.fullUpdateStateByTenant(TENANT, XM_ENTITY_SPEC_KEY, inputXmEntitySpec.getDefinitions());
         subject.processDataSpec(TENANT, XM_ENTITY_SPEC_KEY, typeSpec::setDataSpec, typeSpec::getDataSpec);
 
         XmEntitySpec actualXmEntitySpec = createXmEntitySpec(singletonList(typeSpec),
@@ -63,7 +66,7 @@ public class XmEntityDefinitionSpecProcessorUnitTest extends AbstractUnitTest {
         String expectedXmEntityDataSpec = loadFile("config/specs/definitions/xmentityspec-sub-definitions-input-expected.json");
         TypeSpec typeSpec = inputXmEntitySpec.getTypes().stream().filter(it -> it.getKey().equals("REQUEST.JOIN")).findFirst().get();
 
-        subject.updateStateByTenant(TENANT, XM_ENTITY_SPEC_KEY, inputXmEntitySpec.getDefinitions());
+        subject.fullUpdateStateByTenant(TENANT, XM_ENTITY_SPEC_KEY, inputXmEntitySpec.getDefinitions());
         subject.processDataSpec(TENANT, XM_ENTITY_SPEC_KEY, typeSpec::setDataSpec, typeSpec::getDataSpec);
 
         XmEntitySpec actualXmEntitySpec = createXmEntitySpec(singletonList(typeSpec),
@@ -83,7 +86,7 @@ public class XmEntityDefinitionSpecProcessorUnitTest extends AbstractUnitTest {
         XmEntitySpec expectedXmEntitySpec = loadXmEntitySpecByFileName("xmentityspec-definitions-recursive-expected");
         TypeSpec typeSpec = inputXmEntitySpec.getTypes().get(0);
 
-        subject.updateStateByTenant(TENANT, XM_ENTITY_SPEC_KEY, inputXmEntitySpec.getDefinitions());
+        subject.fullUpdateStateByTenant(TENANT, XM_ENTITY_SPEC_KEY, inputXmEntitySpec.getDefinitions());
         subject.processDataSpec(TENANT, XM_ENTITY_SPEC_KEY, typeSpec::setDataSpec, typeSpec::getDataSpec);
 
         XmEntitySpec actualXmEntitySpec = createXmEntitySpec(singletonList(typeSpec),
@@ -99,7 +102,7 @@ public class XmEntityDefinitionSpecProcessorUnitTest extends AbstractUnitTest {
         XmEntitySpec expectedXmEntitySpec = loadXmEntitySpecByFileName("xmentityspec-definitions-multiple-expected");
         TypeSpec typeSpec = inputXmEntitySpec.getTypes().get(0);
 
-        subject.updateStateByTenant(TENANT, XM_ENTITY_SPEC_KEY, inputXmEntitySpec.getDefinitions());
+        subject.fullUpdateStateByTenant(TENANT, XM_ENTITY_SPEC_KEY, inputXmEntitySpec.getDefinitions());
         subject.processDataSpec(TENANT, XM_ENTITY_SPEC_KEY, typeSpec::setDataSpec, typeSpec::getDataSpec);
 
         XmEntitySpec actualXmEntitySpec = createXmEntitySpec(singletonList(typeSpec),
@@ -107,6 +110,37 @@ public class XmEntityDefinitionSpecProcessorUnitTest extends AbstractUnitTest {
             inputXmEntitySpec.getDefinitions());
 
         assertEqualsEntities(expectedXmEntitySpec, actualXmEntitySpec);
+    }
+
+    @Test
+    public void shouldProcessTypeSpecAndAfterRemoveDefGetCorrectDefinitions() {
+        XmEntitySpec inputXmEntitySpec = loadXmEntitySpecByFileName("xmentityspec-definitions-multiple");
+        XmEntitySpec expectedXmEntitySpec = loadXmEntitySpecByFileName("xmentityspec-definitions-multiple-expected");
+        TypeSpec typeSpec = inputXmEntitySpec.getTypes().get(0);
+
+        subject.fullUpdateStateByTenant(TENANT, XM_ENTITY_SPEC_KEY, inputXmEntitySpec.getDefinitions());
+        subject.processDataSpec(TENANT, XM_ENTITY_SPEC_KEY, typeSpec::setDataSpec, typeSpec::getDataSpec);
+        subject.processDefinitionsItSelf(TENANT, XM_ENTITY_SPEC_KEY);
+
+        XmEntitySpec actualXmEntitySpec = createXmEntitySpec(singletonList(typeSpec),
+            inputXmEntitySpec.getForms(),
+            inputXmEntitySpec.getDefinitions());
+
+        assertEqualsEntities(expectedXmEntitySpec, actualXmEntitySpec);
+
+        Collection<DefinitionSpec> specDefinitions = subject.getProcessedSpecsCopy(TENANT, XM_ENTITY_SPEC_KEY);
+        assertEquals(2, specDefinitions.size());
+
+        inputXmEntitySpec.getDefinitions().removeLast(); //remove last definition
+        TypeSpec updateTypeSpec = inputXmEntitySpec.getTypes().get(0);
+
+        subject.fullUpdateStateByTenant(TENANT, XM_ENTITY_SPEC_KEY, inputXmEntitySpec.getDefinitions());
+        subject.processDataSpec(TENANT, XM_ENTITY_SPEC_KEY, updateTypeSpec::setDataSpec, updateTypeSpec::getDataSpec);
+        subject.processDefinitionsItSelf(TENANT, XM_ENTITY_SPEC_KEY);
+
+        List<DefinitionSpec> updatedSpecDefinitions = subject.getProcessedSpecsCopy(TENANT, XM_ENTITY_SPEC_KEY).stream().toList();
+
+        assertEquals(1, updatedSpecDefinitions.size());
     }
 
     @SneakyThrows

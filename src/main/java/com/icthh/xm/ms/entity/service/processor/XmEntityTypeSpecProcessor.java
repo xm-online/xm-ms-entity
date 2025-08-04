@@ -41,14 +41,13 @@ public class XmEntityTypeSpecProcessor extends DataSpecProcessor<TypeSpec> {
     }
 
     @Override
-    public void updateStateByTenant(String tenant, String dataSpecKey, Collection<TypeSpec> typeSpecs) {
-        Map<String, TypeSpec> addedTypeSpecs = toKeyMapOverrideDuplicates(typeSpecs);
-        if (!addedTypeSpecs.isEmpty()) {
-            log.info("added {} type specs to tenant: {}", addedTypeSpecs.size(), tenant);
+    public void fullUpdateStateByTenant(String tenant, String dataSpecKey, Collection<TypeSpec> typeSpecs) {
+        Map<String, TypeSpec> allTypeSpecs = toKeyMapOverrideDuplicates(typeSpecs);
+        if (!allTypeSpecs.isEmpty()) {
+            log.info("added {} type specs to tenant: {}", allTypeSpecs.size(), tenant);
             originalTypeSpecs
                 .computeIfAbsent(tenant, s -> new HashMap<>())
-                .computeIfAbsent(dataSpecKey, s -> new HashMap<>())
-                .putAll(addedTypeSpecs);
+                .put(dataSpecKey, allTypeSpecs);
         }
     }
 
