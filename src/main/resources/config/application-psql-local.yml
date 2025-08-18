@@ -16,7 +16,7 @@ spring:
       hibernate.cache.use_second_level_cache: false
       hibernate.cache.use_query_cache: false
       hibernate.cache.use_minimal_puts: true
-      hibernate.hbm2ddl.auto: create-drop
+      hibernate.hbm2ddl.auto: none
       hibernate.show_sql: true
       hibernate.format_sql: true
       hibernate.interceptor: com.icthh.xm.commons.domainevent.db.service.DatabaseSourceInterceptor
