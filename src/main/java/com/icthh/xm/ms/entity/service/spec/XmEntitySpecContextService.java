@@ -2,6 +2,7 @@ package com.icthh.xm.ms.entity.service.spec;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import com.icthh.xm.commons.config.domain.Configuration;
 import com.icthh.xm.commons.domain.DefinitionSpec;
 import com.icthh.xm.commons.lep.spring.LepService;
 import com.icthh.xm.commons.logging.aop.IgnoreLogginAspect;
@@ -30,6 +31,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import static com.icthh.xm.ms.entity.service.json.JsonConfigurationListener.XM_ENTITY_SPEC_KEY;
 import static com.icthh.xm.ms.entity.util.CustomCollectionUtils.nullSafe;
+import static java.util.Objects.nonNull;
+import static java.util.Optional.ofNullable;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toMap;
 
@@ -52,7 +55,10 @@ public class XmEntitySpecContextService {
 
     private final ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
     private final ConcurrentHashMap<String, Map<String, TypeSpec>> typesByTenant = new ConcurrentHashMap<>();
+    // tenant -> filePath -> fileContent
     private final ConcurrentHashMap<String, Map<String, String>> typesByTenantByFile = new ConcurrentHashMap<>();
+    // tenant -> entity typeKey -> filePath
+    private final ConcurrentHashMap<String, Map<String, String>> tenantToTypeToFile = new ConcurrentHashMap<>();
 
     public XmEntitySpecContextService(DataSpecJsonSchemaService dataSpecJsonSchemaService,
                                       XmEntitySpecCustomizer xmEntitySpecCustomizer,
@@ -82,6 +88,10 @@ public class XmEntitySpecContextService {
         return dataSpecJsonSchemaService.dataSpecJsonSchemas(tenantKey);
     }
 
+    public List<FunctionMetaInfo> functionsMetaInfoByTenant(String tenantKey) {
+        return functionByTenantService.functionsMetaInfoByTenant(tenantKey);
+    }
+
     public Map<String, FunctionSpec> functionsByTenant(String tenantKey) {
         return functionByTenantService.functionsByTenant(tenantKey);
     }
@@ -106,13 +116,15 @@ public class XmEntitySpecContextService {
     }
 
     public Map<String, TypeSpec> updateByTenantState(String tenant) {
-        Map<XmEntitySpec, LinkedHashMap<String, TypeSpec>> xmEntitySpecTypesMap = readXmEntitySpecTypes(tenant);
-        LinkedHashMap<String, TypeSpec> tenantEntitySpec = getTenantEntitySpecs(xmEntitySpecTypesMap);
+        Map<String, XmEntitySpecification> xmEntitySpecificationByFiles = readXmEntitySpecTypes(tenant);
+        LinkedHashMap<String, TypeSpec> tenantEntitySpec = getTenantEntitySpecs(xmEntitySpecificationByFiles);
+        Map<String, String> entityKeyToFile = entityKeyToFile(xmEntitySpecificationByFiles);
         if (initialized.get()) {
             xmEntitySpecCustomizer.customize(tenant, tenantEntitySpec);
         }
 
-        dataSpecJsonSchemaService.updateByTenantState(tenant, XM_ENTITY_SPEC_KEY, xmEntitySpecTypesMap.keySet());
+        var xmEntitySpecs = xmEntitySpecificationByFiles.values().stream().map(XmEntitySpecification::spec).toList();
+        dataSpecJsonSchemaService.updateByTenantState(tenant, XM_ENTITY_SPEC_KEY, xmEntitySpecs);
 
         if (tenantEntitySpec.isEmpty()) {
             typesByTenant.remove(tenant);
@@ -121,40 +133,56 @@ public class XmEntitySpecContextService {
         specInheritanceProcessor.process(tenantEntitySpec, tenant);
         specFieldsProcessor.processUniqueFields(tenantEntitySpec);
 
-        functionByTenantService.processFunctionSpec(tenant, tenantEntitySpec);
+        functionByTenantService.processFunctionSpec(tenant, xmEntitySpecificationByFiles);
 
-        xmEntitySpecTypesMap.keySet()
-            .forEach(spec -> dataSpecJsonSchemaService.processSpecification(tenant, XM_ENTITY_SPEC_KEY, spec));
+        xmEntitySpecs.forEach(spec -> dataSpecJsonSchemaService.processSpecification(tenant, XM_ENTITY_SPEC_KEY, spec));
 
         typesByTenant.put(tenant, tenantEntitySpec);
+        tenantToTypeToFile.put(tenant, entityKeyToFile);
 
         return tenantEntitySpec;
     }
 
+    public Optional<Configuration> getFileContextByEntityTypeKey(String tenant, String typeKey) {
+        return ofNullable(tenantToTypeToFile.get(tenant))
+            .map(it -> it.get(typeKey))
+            .flatMap(filePath -> ofNullable(typesByTenantByFile.get(tenant))
+                .map(it -> it.get(filePath))
+                .map(content -> new Configuration(filePath, content)));
+    }
+
+    private Map<String, String> entityKeyToFile(Map<String, XmEntitySpecification> xmEntitySpecificationByFiles) {
+        Map<String, String> entityKeyToFile = new HashMap<>();
+        xmEntitySpecificationByFiles.values().stream()
+            .filter(it -> nonNull(it.types()))
+            .forEach(spec -> spec.types().values().forEach(type ->
+                entityKeyToFile.put(type.getKey(), spec.filePath())
+            ));
+        return entityKeyToFile;
+    }
+
     private LinkedHashMap<String, TypeSpec> getTenantEntitySpecs(
-        Map<XmEntitySpec, LinkedHashMap<String, TypeSpec>> xmEntitySpecTypesMap) {
+        Map<String, XmEntitySpecification> xmEntitySpecTypesMap) {
         return xmEntitySpecTypesMap.values().stream()
-            .flatMap(v -> v.entrySet().stream())
+            .filter(it -> nonNull(it.types()))
+            .flatMap(it -> it.types().entrySet().stream())
             .collect(toMap(Map.Entry::getKey, Map.Entry::getValue,
                 (u, v) -> {
                     throw new IllegalStateException(String.format("Duplicate key %s", u));
                 }, LinkedHashMap::new));
     }
 
-    private Map<XmEntitySpec, LinkedHashMap<String, TypeSpec>> readXmEntitySpecTypes(String tenant) {
-        var result = new HashMap<XmEntitySpec, LinkedHashMap<String, TypeSpec>>();
-        typesByTenantByFile.get(tenant).values().stream()
-            .map(this::toXmEntitySpecTypes)
-            .forEach(result::putAll);
-        return result;
+    private Map<String, XmEntitySpecification> readXmEntitySpecTypes(String tenant) {
+        return typesByTenantByFile.get(tenant).entrySet().stream()
+            .map(it -> toXmEntitySpecTypes(it.getKey(), it.getValue()))
+            .collect(toMap(XmEntitySpecification::filePath, identity()));
     }
 
     @SneakyThrows
-    private Map<XmEntitySpec, LinkedHashMap<String, TypeSpec>> toXmEntitySpecTypes(String config) {
+    private XmEntitySpecification toXmEntitySpecTypes(String path, String config) {
         XmEntitySpec xmEntitySpec = mapper.readValue(config, XmEntitySpec.class);
-        Map<XmEntitySpec, LinkedHashMap<String, TypeSpec>> xmEntitySpecTypes = new HashMap<>();
         // Convert List<TypeSpec> to Map<key, TypeSpec>
-        LinkedHashMap<String, TypeSpec> result = Optional.ofNullable(xmEntitySpec.getTypes())
+        LinkedHashMap<String, TypeSpec> result = ofNullable(xmEntitySpec.getTypes())
             .orElse(List.of())
             .stream()
             .map(this::enrichAttachmentSpec)
@@ -162,8 +190,7 @@ public class XmEntitySpecContextService {
                 (u, v) -> {
                     throw new IllegalStateException(String.format("Duplicate key %s", u));
                 }, LinkedHashMap::new));
-        xmEntitySpecTypes.put(xmEntitySpec, result);
-        return xmEntitySpecTypes;
+        return new XmEntitySpecification(path, xmEntitySpec, result);
     }
 
     private TypeSpec enrichAttachmentSpec(TypeSpec typeSpec) {
