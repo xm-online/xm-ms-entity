@@ -1,0 +1,69 @@
+---
+types:
+      # NO FIELD functions in TEST_TYPE, important!,in file with ending with work expected.yml function field it`s ok
+    - key: TEST_TYPE
+      name: { en: "Test type" }
+      isApp: true
+      isAbstract: true
+    - key: TEST_TYPE_WITH_FUNCTIONS
+      name: { en: "Test type" }
+      isApp: true
+      isAbstract: true
+      functions:
+    - key: TEST_TYPE_WITH_EXISTS_FUNCTIONS
+      name: { en: "Test type" }
+      isApp: true
+      isAbstract: true
+      functions:
+          - key: FUNC1
+            name: { en: "Test", ru: "Тест" }
+            inputSpec: |
+                {
+                    "type": "object",
+                    "properties": {
+                        "tenantKey": {"$ref": "#/xmEntityDefinition/tenantKeyFromFile/tenantKey"}},
+                    "required": ["tenantKey"]
+                }
+            inputForm: |
+                {
+                    "form": [
+                        {"$ref": "#/xmEntityForm/tenantKey"}]
+                }
+            contextDataSpec: |
+                {
+                    "type": "object",
+                    "properties": {
+                        "tenantKey": {"$ref": "#/xmEntityDefinition/tenantKeyFromFile/tenantKey"}},
+                    "required": ["tenantKey"]
+                }
+            contextDataForm: |
+                {
+                    "form": [
+                        {"$ref": "#/xmEntityForm/tenantKey"}]
+                }
+          - key: FUNC2
+            name: { en: "Test", ru: "Тест" }
+            inputSpec: |
+                {
+                    "type": "object",
+                    "properties": {
+                        "tenantKey": {"$ref": "#/xmEntityDefinition/tenantKeyFromFile/tenantKey"}},
+                    "required": ["tenantKey"]
+                }
+            inputForm: |
+                {
+                    "form": [
+                        {"$ref": "#/xmEntityForm/tenantKey"}]
+                }
+            contextDataSpec: |
+                {
+                    "type": "object",
+                    "properties": {
+                        "tenantKey": {"$ref": "#/xmEntityDefinition/tenantKeyFromFile/tenantKey"}},
+                    "required": ["tenantKey"]
+                }
+            contextDataForm: |
+                {
+                    "form": [
+                        {"$ref": "#/xmEntityForm/tenantKey"}]
+                }

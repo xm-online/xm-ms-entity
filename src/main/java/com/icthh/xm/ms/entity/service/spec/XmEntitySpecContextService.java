@@ -11,6 +11,7 @@ import com.icthh.xm.ms.entity.domain.spec.FunctionSpec;
 import com.icthh.xm.ms.entity.domain.spec.TypeSpec;
 import com.icthh.xm.ms.entity.domain.spec.XmEntitySpec;
 import com.networknt.schema.JsonSchema;
+import java.util.Collection;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
@@ -214,5 +215,9 @@ public class XmEntitySpecContextService {
 
     public List<DefinitionSpec> getDefinitions(String tenantKeyValue) {
         return dataSpecJsonSchemaService.getDefinitions(tenantKeyValue, XM_ENTITY_SPEC_KEY);
+    }
+
+    public Collection<String> getAllFileNames(String tenantKeyValue) {
+        return typesByTenantByFile.getOrDefault(tenantKeyValue, Map.of()).keySet();
     }
 }

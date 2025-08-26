@@ -28,10 +28,8 @@ import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
 
 @Slf4j
-@Component
 @RequiredArgsConstructor
 public class XmEntityFunctionManagementService implements FunctionManageService<FunctionSpec, FunctionSpecDto> {
 

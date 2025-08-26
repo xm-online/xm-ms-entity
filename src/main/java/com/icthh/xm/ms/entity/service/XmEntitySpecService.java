@@ -109,7 +109,7 @@ public class XmEntitySpecService implements RefreshableConfiguration {
     @Override
     @SneakyThrows
     @IgnoreLogginAspect
-    public void onRefresh(String updatedKey, String config) {
+    public void  onRefresh(String updatedKey, String config) {
 
         try {
             String tenant = extractTenantName(updatedKey);
@@ -326,6 +326,10 @@ public class XmEntitySpecService implements RefreshableConfiguration {
             .filter(f -> f.functionKey().equals(functionKey)).toList();
     }
 
+    public List<FunctionMetaInfo> findAllFunctionMetaInfo() {
+        return xmEntitySpecContextService.functionsMetaInfoByTenant(getTenantKeyValue());
+    }
+
     public Configuration getFileContextByEntityTypeKey(String typeKey) {
         String tenant = getTenantKeyValue();
         return xmEntitySpecContextService.getFileContextByEntityTypeKey(tenant, typeKey).orElseThrow(
@@ -504,6 +508,10 @@ public class XmEntitySpecService implements RefreshableConfiguration {
             clone::getFunctions,
             clone::setFunctions,
             FunctionSpec::getDynamicPrivilegeKey);
+    }
+
+    public Collection<String> getAllFileNames() {
+        return xmEntitySpecContextService.getAllFileNames(getTenantKeyValue());
     }
 
     public interface EntitySpecUpdateListener {
