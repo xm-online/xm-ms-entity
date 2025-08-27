@@ -13,6 +13,7 @@ import com.icthh.xm.ms.entity.service.spec.DataSpecJsonSchemaService;
 import com.icthh.xm.ms.entity.service.spec.XmEntitySpecContextService;
 
 import com.icthh.xm.ms.entity.service.spec.XmEntitySpecCustomizer;
+import java.util.Objects;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Primary;
@@ -64,6 +65,11 @@ public class LocalXmEntitySpecService extends XmEntitySpecService {
         try {
             String config = getXmEntitySpec(tenantName);
             String key = applicationProperties.getSpecificationPathPattern().replace("{tenantName}", tenantName);
+
+            if (Objects.equals(getFileContentByPath(key), config)) {
+                return super.getTypeSpecs();
+            }
+
             this.onRefresh(key, config);
             this.refreshFinished(List.of(key));
         } catch (Exception e) {

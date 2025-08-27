@@ -337,6 +337,11 @@ public class XmEntitySpecService implements RefreshableConfiguration {
         );
     }
 
+    public String getFileContentByPath(String path) {
+        String tenant = getTenantKeyValue();
+        return xmEntitySpecContextService.getFileContentByPath(tenant, path);
+    }
+
     @IgnoreLogginAspect
     public Optional<FunctionSpec> findFunction(String functionKey, String httpMethod) {
         String tenantKey = getTenantKeyValue();

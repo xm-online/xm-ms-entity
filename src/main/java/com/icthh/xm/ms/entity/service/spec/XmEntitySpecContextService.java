@@ -144,6 +144,10 @@ public class XmEntitySpecContextService {
         return tenantEntitySpec;
     }
 
+    public String getFileContentByPath(String tenant, String filePath) {
+        return typesByTenantByFile.getOrDefault(tenant, Map.of()).get(filePath);
+    }
+
     public Optional<Configuration> getFileContextByEntityTypeKey(String tenant, String typeKey) {
         return ofNullable(tenantToTypeToFile.get(tenant))
             .map(it -> it.get(typeKey))
