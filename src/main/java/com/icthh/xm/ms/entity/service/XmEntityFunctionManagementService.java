@@ -128,7 +128,7 @@ public class XmEntityFunctionManagementService implements FunctionManageService<
     }
 
     private void assertKeyExists(FunctionSpecWithFileName<FunctionSpec> updatedFunction) {
-        if (xmEntitySpecService.findFunctionByKey(updatedFunction.getItem().getKey()) != null) {
+        if (xmEntitySpecService.findFunctionByKey(updatedFunction.getItem().getKey()) == null) {
             throw functionNotFound(updatedFunction.getItem().getKey());
         }
     }
