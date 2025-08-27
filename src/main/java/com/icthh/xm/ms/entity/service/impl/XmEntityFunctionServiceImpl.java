@@ -1,13 +1,21 @@
 package com.icthh.xm.ms.entity.service.impl;
 
+import static com.icthh.xm.ms.entity.util.CustomCollectionUtils.nullSafe;
+
+import com.icthh.xm.commons.domain.FunctionSpecWithFileName;
 import com.icthh.xm.commons.service.impl.AbstractFunctionService;
 import com.icthh.xm.ms.entity.config.XmEntityTenantConfigService;
+import com.icthh.xm.ms.entity.domain.function.FunctionSpecDto;
 import com.icthh.xm.ms.entity.domain.spec.FunctionSpec;
 import com.icthh.xm.ms.entity.security.access.FeatureContext;
 import com.icthh.xm.ms.entity.security.access.XmEntityDynamicPermissionCheckService;
 import com.icthh.xm.ms.entity.service.XmEntitySpecService;
 import com.icthh.xm.ms.entity.service.json.JsonValidationService;
+import com.icthh.xm.ms.entity.service.spec.FunctionMetaInfo;
 import com.icthh.xm.ms.entity.util.CustomCollectionUtils;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -38,6 +46,22 @@ public class XmEntityFunctionServiceImpl extends AbstractFunctionService<Functio
     }
 
     @Override
+    public Collection<FunctionSpecWithFileName<FunctionSpec>> getAllFunctionSpecs() {
+        List<FunctionSpecWithFileName<FunctionSpec>> functionSpecs = new ArrayList<>();
+        List<FunctionMetaInfo> allFunctionMetaInfo = xmEntitySpecService.findAllFunctionMetaInfo();
+        for (FunctionMetaInfo metaInfo : allFunctionMetaInfo) {
+            FunctionSpec functionByKey = xmEntitySpecService.findFunctionByKey(metaInfo.functionKey());
+            if (functionByKey != null) {
+                FunctionSpecDto functionSpecDto = new FunctionSpecDto();
+                functionSpecDto.setEntityTypeKey(metaInfo.entityTypeKey());
+                functionSpecDto.setItem(functionByKey);
+                functionSpecs.add(functionSpecDto);
+            }
+        }
+        return functionSpecs;
+    }
+
+    @Override
     public void checkPermissions(String basePermission, String functionKey) {
         super.checkPermissions(FeatureContext.FUNCTION, basePermission, functionKey);
     }
@@ -57,5 +81,10 @@ public class XmEntityFunctionServiceImpl extends AbstractFunctionService<Functio
             }
         }
         return vInput;
+    }
+
+    @Override
+    public Collection<String> getAllFileNames() {
+        return xmEntitySpecService.getAllFileNames();
     }
 }

@@ -1,44 +1,55 @@
 package com.icthh.xm.ms.entity.service.spec;
 
 import static com.icthh.xm.ms.entity.util.CustomCollectionUtils.nullSafe;
+import static java.util.Objects.nonNull;
 
 import com.icthh.xm.ms.entity.domain.spec.FunctionSpec;
-import com.icthh.xm.ms.entity.domain.spec.TypeSpec;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.util.AntPathMatcher;
-
-import java.util.Collection;
+import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.LinkedHashMap;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.util.AntPathMatcher;
 
 @Slf4j
 public class FunctionByTenantService {
 
     private final ConcurrentHashMap<String, Map<String, FunctionSpec>> functionsByTenant = new ConcurrentHashMap<>();
-
     private final ConcurrentHashMap<String, List<FunctionSpec>> orderedFunctionsByTenant = new ConcurrentHashMap<>();
+    private final Map<String, List<FunctionMetaInfo>> functionsByTenantByFile = new ConcurrentHashMap<>();
 
-    public void processFunctionSpec(String tenantKey, LinkedHashMap<String, TypeSpec> tenantEntitySpec) {
-        var functionSpec = tenantEntitySpec.values().stream()
-            .map(TypeSpec::getFunctions)
-            .filter(Objects::nonNull)
-            .flatMap(Collection::stream)
-            .collect(Collectors.toMap(FunctionSpec::getKey, fs -> fs, (t, t2) -> t));
-        if (functionSpec.isEmpty()) {
+    public void processFunctionSpec(String tenantKey, Map<String, XmEntitySpecification> entitySpecs) {
+        Map<String, FunctionSpec> functionByKey = new HashMap<>();
+        List<FunctionMetaInfo> functionMetaInfos = new ArrayList<>();
+
+        entitySpecs.values().stream().filter(it -> nonNull(it.types()))
+            .flatMap(spec -> spec.types().values().stream())
+            .filter(it -> nonNull(it.getFunctions())).forEach(type ->
+                type.getFunctions().forEach(fs -> {
+                    functionByKey.put(fs.getKey(), fs);
+                    functionMetaInfos.add(new FunctionMetaInfo(type.getKey(), fs.getKey()));
+                })
+            );
+
+        if (functionByKey.isEmpty()) {
             functionsByTenant.remove(tenantKey);
             orderedFunctionsByTenant.remove(tenantKey);
+            functionsByTenantByFile.remove(tenantKey);
         }
-        functionsByTenant.put(tenantKey, functionSpec);
-        orderedFunctionsByTenant.put(tenantKey, functionSpec.values()
+        functionsByTenantByFile.put(tenantKey, functionMetaInfos);
+        functionsByTenant.put(tenantKey, functionByKey);
+        orderedFunctionsByTenant.put(tenantKey, functionByKey.values()
                                                             .stream()
                                                             .sorted(new PatternComparator())
                                                             .collect(Collectors.toList()));
-        log.info("functionSpec.size={}", functionSpec.size());
+        log.info("functionByKey.size={}", functionByKey.size());
+    }
+
+    public List<FunctionMetaInfo> functionsMetaInfoByTenant(String tenantKey) {
+        return nullSafe(functionsByTenantByFile.get(tenantKey));
     }
 
     public Map<String, FunctionSpec> functionsByTenant(String tenantKey) {

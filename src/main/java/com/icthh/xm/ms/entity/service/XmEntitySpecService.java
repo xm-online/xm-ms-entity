@@ -5,6 +5,7 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.google.common.collect.Maps;
 import com.icthh.xm.commons.config.client.api.RefreshableConfiguration;
 import com.icthh.xm.commons.config.client.repository.TenantConfigRepository;
+import com.icthh.xm.commons.config.domain.Configuration;
 import com.icthh.xm.commons.domain.DefinitionSpec;
 import com.icthh.xm.commons.logging.LoggingAspectConfig;
 import com.icthh.xm.commons.logging.aop.IgnoreLogginAspect;
@@ -26,6 +27,7 @@ import com.icthh.xm.ms.entity.domain.spec.TagSpec;
 import com.icthh.xm.ms.entity.domain.spec.TypeSpec;
 import com.icthh.xm.ms.entity.domain.spec.XmEntitySpec;
 import com.icthh.xm.ms.entity.security.access.XmEntityDynamicPermissionCheckService;
+import com.icthh.xm.ms.entity.service.spec.FunctionMetaInfo;
 import com.icthh.xm.ms.entity.service.spec.XmEntitySpecContextService;
 import com.networknt.schema.JsonSchema;
 import lombok.RequiredArgsConstructor;
@@ -107,7 +109,7 @@ public class XmEntitySpecService implements RefreshableConfiguration {
     @Override
     @SneakyThrows
     @IgnoreLogginAspect
-    public void onRefresh(String updatedKey, String config) {
+    public void  onRefresh(String updatedKey, String config) {
 
         try {
             String tenant = extractTenantName(updatedKey);
@@ -315,10 +317,36 @@ public class XmEntitySpecService implements RefreshableConfiguration {
     }
 
     @IgnoreLogginAspect
+    public FunctionSpec findFunctionByKey(String functionKey) {
+        return xmEntitySpecContextService.functionsByTenant(getTenantKeyValue()).get(functionKey);
+    }
+
+    public List<FunctionMetaInfo> findFunctionMetaInfoByKey(String functionKey) {
+        return xmEntitySpecContextService.functionsMetaInfoByTenant(getTenantKeyValue()).stream()
+            .filter(f -> f.functionKey().equals(functionKey)).toList();
+    }
+
+    public List<FunctionMetaInfo> findAllFunctionMetaInfo() {
+        return xmEntitySpecContextService.functionsMetaInfoByTenant(getTenantKeyValue());
+    }
+
+    public Configuration getFileContextByEntityTypeKey(String typeKey) {
+        String tenant = getTenantKeyValue();
+        return xmEntitySpecContextService.getFileContextByEntityTypeKey(tenant, typeKey).orElseThrow(
+            () -> new IllegalArgumentException("Type with key " + typeKey + " not found for tenant " + tenant)
+        );
+    }
+
+    public String getFileContentByPath(String path) {
+        String tenant = getTenantKeyValue();
+        return xmEntitySpecContextService.getFileContentByPath(tenant, path);
+    }
+
+    @IgnoreLogginAspect
     public Optional<FunctionSpec> findFunction(String functionKey, String httpMethod) {
         String tenantKey = getTenantKeyValue();
         Map<String, FunctionSpec> functions = xmEntitySpecContextService.functionsByTenant(tenantKey);
-        return Optional.of(functions)
+        return Optional.ofNullable(functions)
             .map(fs -> fs.get(functionKey))
             .filter(fs -> filterAndLogByHttpMethod(httpMethod, fs))
                 .or(() -> xmEntitySpecContextService.functionsByTenantOrdered(tenantKey).stream()
@@ -485,6 +513,10 @@ public class XmEntitySpecService implements RefreshableConfiguration {
             clone::getFunctions,
             clone::setFunctions,
             FunctionSpec::getDynamicPrivilegeKey);
+    }
+
+    public Collection<String> getAllFileNames() {
+        return xmEntitySpecContextService.getAllFileNames(getTenantKeyValue());
     }
 
     public interface EntitySpecUpdateListener {
