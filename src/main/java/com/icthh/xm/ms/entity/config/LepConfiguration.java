@@ -19,6 +19,7 @@ import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 import org.springframework.transaction.support.SimpleTransactionScope;
 
 /**
@@ -62,7 +63,8 @@ public class LepConfiguration extends GroovyLepEngineConfiguration {
     }
 
     @Bean
-    public AbstractFunctionService<?> functionService(XmEntityDynamicPermissionCheckService dynamicPermissionCheckService,
+    @Primary
+    public XmEntityFunctionServiceImpl functionService(XmEntityDynamicPermissionCheckService dynamicPermissionCheckService,
                                                       XmEntitySpecService xmEntitySpecService,
                                                       XmEntityTenantConfigService xmEntityTenantConfigService,
                                                       JsonValidationService jsonValidationService) {
