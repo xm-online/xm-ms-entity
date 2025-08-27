@@ -27,6 +27,7 @@ import com.icthh.xm.commons.listener.JsonListenerService;
 import com.icthh.xm.commons.service.impl.FunctionManageServiceImpl;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
+import com.icthh.xm.commons.web.rest.FunctionSpecResource;
 import com.icthh.xm.ms.entity.AbstractSpringBootTest;
 import com.icthh.xm.ms.entity.domain.function.FunctionSpecDto;
 import com.icthh.xm.ms.entity.domain.spec.FunctionSpec;
@@ -55,6 +56,8 @@ public class XmEntityFunctionManagementServiceIntTest extends AbstractSpringBoot
     @Autowired
     XmEntitySpecService xmEntitySpecService;
     @Autowired XmEntityFunctionManagementService managementService;
+    @Autowired
+    FunctionSpecResource functionSpecResource;
 
     @Before
     public void setUp() {
@@ -74,6 +77,7 @@ public class XmEntityFunctionManagementServiceIntTest extends AbstractSpringBoot
         xmEntitySpecService.onRefresh(path, loadFile("config/specs/test-spec.yml"));
         xmEntitySpecService.refreshFinished(List.of(path));
 
+        System.out.println(functionSpecResource);
         Mockito.reset(commonConfigRepository);
 
         FunctionSpecDto functionSpecDto = new FunctionSpecDto();

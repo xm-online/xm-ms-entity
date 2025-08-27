@@ -6,15 +6,20 @@ import com.icthh.xm.commons.domain.FunctionSpecWithFileName;
 import com.icthh.xm.commons.lep.TenantScriptStorage;
 import com.icthh.xm.commons.lep.groovy.GroovyLepEngineConfiguration;
 import com.icthh.xm.commons.service.FunctionManageService;
+import com.icthh.xm.commons.service.impl.AbstractFunctionService;
 import com.icthh.xm.ms.entity.lep.ElasticIndexManager;
 import com.icthh.xm.ms.entity.lep.ElasticIndexManagerService;
+import com.icthh.xm.ms.entity.security.access.XmEntityDynamicPermissionCheckService;
 import com.icthh.xm.ms.entity.service.XmEntityFunctionManagementService;
 import com.icthh.xm.ms.entity.service.XmEntitySpecService;
+import com.icthh.xm.ms.entity.service.impl.XmEntityFunctionServiceImpl;
+import com.icthh.xm.ms.entity.service.json.JsonValidationService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 import org.springframework.transaction.support.SimpleTransactionScope;
 
 /**
@@ -54,6 +59,20 @@ public class LepConfiguration extends GroovyLepEngineConfiguration {
                                                                                                  CommonConfigService commonConfigService) {
         return new XmEntityFunctionManagementService(
             xmEntitySpecService, commonConfigRepository, commonConfigService
+        );
+    }
+
+    @Bean
+    @Primary
+    public XmEntityFunctionServiceImpl functionService(XmEntityDynamicPermissionCheckService dynamicPermissionCheckService,
+                                                      XmEntitySpecService xmEntitySpecService,
+                                                      XmEntityTenantConfigService xmEntityTenantConfigService,
+                                                      JsonValidationService jsonValidationService) {
+        return new XmEntityFunctionServiceImpl(
+            dynamicPermissionCheckService,
+            xmEntitySpecService,
+            xmEntityTenantConfigService,
+            jsonValidationService
         );
     }
 

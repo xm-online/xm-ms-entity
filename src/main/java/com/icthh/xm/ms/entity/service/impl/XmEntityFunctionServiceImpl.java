@@ -22,7 +22,6 @@ import org.springframework.stereotype.Service;
 import java.util.Map;
 
 @Slf4j
-@Service
 public class XmEntityFunctionServiceImpl extends AbstractFunctionService<FunctionSpec> {
 
     private final XmEntitySpecService xmEntitySpecService;
