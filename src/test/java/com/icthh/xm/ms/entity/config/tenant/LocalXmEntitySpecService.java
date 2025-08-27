@@ -60,7 +60,7 @@ public class LocalXmEntitySpecService extends XmEntitySpecService {
     }
 
     @Override
-    protected Map<String, TypeSpec> getTypeSpecs() {
+    public Map<String, TypeSpec> getTypeSpecs() {
         String tenantName = tenantContextHolder.getTenantKey();
         try {
             String config = getXmEntitySpec(tenantName);
@@ -70,13 +70,20 @@ public class LocalXmEntitySpecService extends XmEntitySpecService {
                 return super.getTypeSpecs();
             }
 
-            this.onRefresh(key, config);
-            this.refreshFinished(List.of(key));
+            refreshConfig();
         } catch (Exception e) {
             // For case when entity spec refreshed manually or using XmEntitySpecTestUtils
             log.error("Error during read spec for tenant {} {}", tenantName, e);
         }
         return super.getTypeSpecs();
+    }
+
+    public void refreshConfig() {
+        String tenantName = tenantContextHolder.getTenantKey();
+        String config = getXmEntitySpec(tenantName);
+        String key = applicationProperties.getSpecificationPathPattern().replace("{tenantName}", tenantName);
+        this.onRefresh(key, config);
+        this.refreshFinished(List.of(key));
     }
 
     @Override

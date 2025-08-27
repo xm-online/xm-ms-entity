@@ -126,7 +126,7 @@ public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
 
     private static final String MAX_FILE_SIZE = "1Mb";
 
-    private XmEntitySpecService xmEntitySpecService;
+    private LocalXmEntitySpecService xmEntitySpecService;
 
     private TenantContextHolder tenantContextHolder;
 
@@ -180,7 +180,7 @@ public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
         when(tenantContextHolder.getPrivilegedContext()).thenReturn(context);
     }
 
-    private XmEntitySpecService createXmEntitySpecService(ApplicationProperties applicationProperties,
+    private LocalXmEntitySpecService createXmEntitySpecService(ApplicationProperties applicationProperties,
                                                           TenantContextHolder tenantContextHolder) {
 
         XmEntityTypeSpecProcessor typeSpecProcessor = new XmEntityTypeSpecProcessor(jsonListenerService);
@@ -824,6 +824,8 @@ public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
                 )
         );
 
+
+        xmEntitySpecService.refreshConfig();
         var typeSpecs = xmEntitySpecService.getTypeSpecs();
         TypeSpec baseEntity = typeSpecs.get("BASE_ENTITY");
         TypeSpec extendedEntity = typeSpecs.get("BASE_ENTITY.EXTENDS");
@@ -839,6 +841,7 @@ public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
 
         setExtendsFormAndSpec(true);
 
+        xmEntitySpecService.refreshConfig();
         var typeSpecsWithExtends = xmEntitySpecService.getTypeSpecs();
         TypeSpec baseEntityWithExtends = typeSpecsWithExtends.get("BASE_ENTITY");
         TypeSpec extendedEntityWithExtends = typeSpecsWithExtends.get("BASE_ENTITY.EXTENDS");
@@ -877,6 +880,7 @@ public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
                 )
         );
 
+        xmEntitySpecService.refreshConfig();
         var typeSpecs = xmEntitySpecService.getTypeSpecs();
         TypeSpec baseEntity = typeSpecs.get("BASE_ENTITY");
         TypeSpec extendedEntity = typeSpecs.get("BASE_ENTITY.EXTENDS");
@@ -887,6 +891,7 @@ public class XmEntitySpecServiceUnitTest extends AbstractUnitTest {
 
         setExtendsFormAndSpec(true);
 
+        xmEntitySpecService.refreshConfig();
         var typeSpecsWithExtends = xmEntitySpecService.getTypeSpecs();
         TypeSpec baseEntityWithExtends = typeSpecsWithExtends.get("BASE_ENTITY");
         TypeSpec extendedEntityWithExtends = typeSpecsWithExtends.get("BASE_ENTITY.EXTENDS");
