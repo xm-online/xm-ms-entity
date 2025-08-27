@@ -183,8 +183,7 @@ public class XmEntitySpecContextService {
     private XmEntitySpecification toXmEntitySpecTypes(String path, String config) {
         XmEntitySpec xmEntitySpec = mapper.readValue(config, XmEntitySpec.class);
         // Convert List<TypeSpec> to Map<key, TypeSpec>
-        LinkedHashMap<String, TypeSpec> result = ofNullable(xmEntitySpec.getTypes())
-            .orElse(List.of())
+        LinkedHashMap<String, TypeSpec> result = nullSafe(xmEntitySpec.getTypes())
             .stream()
             .map(this::enrichAttachmentSpec)
             .collect(toMap(TypeSpec::getKey, identity(),

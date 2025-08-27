@@ -46,6 +46,14 @@ public class XmEntityFunctionManagementService implements FunctionManageService<
         FunctionSpec item = newFunction.getItem();
         String yaml = config.getContent();
 
+        yaml = addToYaml(yaml, entityTypeKey, item);
+
+        Configuration updatedConfig = new Configuration(config.getPath(), yaml);
+        commonConfigRepository.updateConfigFullPath(updatedConfig, null);
+        commonConfigService.notifyUpdated(updatedConfig);
+    }
+
+    private String addToYaml(String yaml, String entityTypeKey, FunctionSpec item) {
         if (!jsonPathExists(yaml, "$.types[?(@.key=='" + entityTypeKey + "')].functions")) {
             yaml = addObject(yaml,
                 Map.of("functions", List.of(item)),
@@ -53,10 +61,7 @@ public class XmEntityFunctionManagementService implements FunctionManageService<
         } else {
             yaml = addSequenceItem(yaml, item, addPath(entityTypeKey));
         }
-
-        Configuration updatedConfig = new Configuration(config.getPath(), yaml);
-        commonConfigRepository.updateConfigFullPath(updatedConfig, null);
-        commonConfigService.notifyUpdated(updatedConfig);
+        return yaml;
     }
 
     private List<YamlPatchPattern> addPath(String entityTypeKey) {

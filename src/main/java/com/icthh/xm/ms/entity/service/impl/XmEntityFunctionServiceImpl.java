@@ -49,7 +49,7 @@ public class XmEntityFunctionServiceImpl extends AbstractFunctionService<Functio
     public Collection<FunctionSpecWithFileName<FunctionSpec>> getAllFunctionSpecs() {
         List<FunctionSpecWithFileName<FunctionSpec>> functionSpecs = new ArrayList<>();
         List<FunctionMetaInfo> allFunctionMetaInfo = xmEntitySpecService.findAllFunctionMetaInfo();
-        for (FunctionMetaInfo metaInfo : nullSafe(allFunctionMetaInfo)) {
+        for (FunctionMetaInfo metaInfo : allFunctionMetaInfo) {
             FunctionSpec functionByKey = xmEntitySpecService.findFunctionByKey(metaInfo.functionKey());
             if (functionByKey != null) {
                 FunctionSpecDto functionSpecDto = new FunctionSpecDto();
