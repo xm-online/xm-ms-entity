@@ -67,3 +67,4 @@ types:
                     "form": [
                         {"$ref": "#/xmEntityForm/tenantKey"}]
                 }
+definitions: []
