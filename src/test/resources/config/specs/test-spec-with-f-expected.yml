@@ -84,3 +84,4 @@ types:
             description: "Update phone number resource"
             saveFunctionContext: false
             anonymous: false
+definitions: []
