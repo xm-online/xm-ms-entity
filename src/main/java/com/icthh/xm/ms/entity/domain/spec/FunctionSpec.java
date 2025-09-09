@@ -1,5 +1,6 @@
 package com.icthh.xm.ms.entity.domain.spec;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
@@ -131,6 +132,7 @@ public class FunctionSpec implements IFunctionSpec {
         return onlyData != null && onlyData;
     }
 
+    @JsonIgnore
     public String getDynamicPrivilegeKey() {
         return getWithEntityId() ?
             XM_ENITITY_FUNCTION_CALL_PRIV.concat(".").concat(getKey()) :
