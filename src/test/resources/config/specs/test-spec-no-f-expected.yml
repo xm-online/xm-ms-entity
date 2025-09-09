@@ -12,17 +12,13 @@ types:
         withEntityId: false
         inputSpec: "{\"$ref\":\"#/xmDefinition/PhoneNumberDto\"}"
         contextDataSpec: "{\"$ref\":\"#/xmDefinition/PhoneNumberDto\"}"
-        onlyData: false
         txType: "NO_TX"
         tags:
         - "resource"
         httpMethods:
         - "PUT"
-        dynamicPrivilegeKey: "FUNCTION.CALL.flow/http/flow-http-trigger-PUT-UPDATE_PHONE_NUMBER_RESOURCE"
         path: "resource/{orgRef}/phoneNumber/{phoneNumber}"
         description: "Update phone number resource"
-        saveFunctionContext: false
-        anonymous: false
     - key: TEST_TYPE_WITH_FUNCTIONS
       name: { en: "Test type" }
       isApp: true
