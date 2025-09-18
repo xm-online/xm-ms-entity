@@ -11,6 +11,7 @@ import com.icthh.xm.ms.entity.domain.XmEntity;
 
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validator;
+import java.util.Locale;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.After;
@@ -110,6 +111,7 @@ public class TypeKeyValidatorIntTest extends AbstractSpringBootTest {
 
     @SneakyThrows
     private void testDataValidation(Map data, String actualType, String expected) {
+        Locale.setDefault(Locale.US);
         XmEntity entity = new XmEntity().key("TYPE1.SUBTYPE1-1").typeKey("TYPE1.SUBTYPE1").name("Entity name")
             .startDate(Instant.now()).updateDate(Instant.now()).stateKey("STATE1").data(data);
         Set<ConstraintViolation<XmEntity>> constraintViolations = validator.validate(entity);
