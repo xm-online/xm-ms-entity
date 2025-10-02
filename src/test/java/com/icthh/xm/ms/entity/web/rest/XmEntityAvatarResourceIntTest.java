@@ -6,7 +6,7 @@ import com.icthh.xm.commons.lep.api.LepManagementService;
 import com.icthh.xm.commons.security.XmAuthenticationContext;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
-import com.icthh.xm.ms.entity.AbstractJupiterSpringBootTest;
+import com.icthh.xm.ms.entity.AbstractSpringBootTest;
 import com.icthh.xm.ms.entity.config.ApplicationProperties;
 import com.icthh.xm.ms.entity.domain.Profile;
 import com.icthh.xm.ms.entity.domain.XmEntity;
@@ -19,10 +19,10 @@ import com.icthh.xm.ms.entity.service.storage.AvatarStorageService;
 import com.icthh.xm.ms.entity.util.EntityUtils;
 import jakarta.persistence.EntityManager;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -38,7 +38,6 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -56,7 +55,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  */
 @Slf4j
 @WithMockUser(authorities = "SUPER-ADMIN")
-public class XmEntityAvatarResourceIntTest extends AbstractJupiterSpringBootTest {
+public class XmEntityAvatarResourceIntTest extends AbstractSpringBootTest {
 
     @Mock
     private XmEntityAvatarService avatarService;
@@ -110,7 +109,7 @@ public class XmEntityAvatarResourceIntTest extends AbstractJupiterSpringBootTest
     @MockBean
     XmEntityProjectionService xmEntityProjectionService;
 
-    @BeforeEach
+    @Before
     public void setup() {
         mocks = MockitoAnnotations.openMocks(this);
         session =  lepManagementService.beginThreadContext();
@@ -130,7 +129,7 @@ public class XmEntityAvatarResourceIntTest extends AbstractJupiterSpringBootTest
             .setMessageConverters(jacksonMessageConverter).build();
     }
 
-    @AfterEach
+    @After
     public void tearDown() throws Exception {
         session.close();
         tenantContextHolder.getPrivilegedContext().destroyCurrentContext();
