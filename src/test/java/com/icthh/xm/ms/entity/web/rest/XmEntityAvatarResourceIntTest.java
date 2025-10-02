@@ -25,6 +25,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
@@ -100,13 +101,13 @@ public class XmEntityAvatarResourceIntTest extends AbstractJupiterSpringBootTest
     @Mock
     private XmAuthenticationContext context;
 
-    @Mock
+    @MockBean
     ProfileService profileService;
 
     @Mock
     Profile profile;
 
-    @Mock
+    @MockBean
     XmEntityProjectionService xmEntityProjectionService;
 
     @BeforeEach
