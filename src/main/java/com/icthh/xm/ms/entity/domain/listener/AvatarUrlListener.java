@@ -2,16 +2,12 @@ package com.icthh.xm.ms.entity.domain.listener;
 
 import com.icthh.xm.ms.entity.config.ApplicationProperties;
 import com.icthh.xm.ms.entity.domain.XmEntity;
-import com.icthh.xm.ms.entity.lep.ElasticIndexManagerService;
-import com.icthh.xm.ms.entity.util.AutowireHelper;
-import groovyjarjarpicocli.CommandLine;
 import jakarta.annotation.PostConstruct;
 import jakarta.persistence.PostLoad;
 import jakarta.persistence.PostPersist;
 import jakarta.persistence.PostUpdate;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
