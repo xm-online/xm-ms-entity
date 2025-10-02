@@ -11,6 +11,7 @@ import com.icthh.xm.ms.entity.config.ApplicationProperties;
 import com.icthh.xm.ms.entity.domain.Profile;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.domain.ext.IdOrKey;
+import com.icthh.xm.ms.entity.projection.XmEntityIdKeyTypeKey;
 import com.icthh.xm.ms.entity.service.*;
 import com.icthh.xm.ms.entity.service.impl.XmEntityAvatarService;
 import com.icthh.xm.ms.entity.service.impl.XmeStorageServiceFacadeImpl;
@@ -38,6 +39,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import static com.icthh.xm.commons.tenant.TenantContextUtils.setTenant;
 import static com.icthh.xm.ms.entity.config.Constants.DEFAULT_AVATAR_URL;
@@ -83,8 +85,7 @@ public class XmEntityAvatarResourceIntTest extends AbstractJupiterSpringBootTest
 
     @Autowired
     private XmEntityService xmEntityService;
-    @Autowired
-    private StorageService storageService;
+
     @Autowired
     private AvatarStorageService avatarStorageService;
 
@@ -139,7 +140,31 @@ public class XmEntityAvatarResourceIntTest extends AbstractJupiterSpringBootTest
     @Transactional
     public void shouldReturnDefaultRelativeUrl() throws Exception {
 
+        XmEntity entity = xmEntityService.save(EntityUtils.newEntity(e -> {
+            e.setTypeKey("ACCOUNT.ADMIN");
+            e.setVersion(1);
+            e.setKey("K:123");
+            e.setName("Name");
+            e.setData(Map.of("AAAAAAAAAA", "BBBBBBBBBB"));
+        }));
+
         when(profile.getXmentity()).thenReturn(EntityUtils.newEntity(e -> e.setId(123L)));
+        when(xmEntityProjectionService.findXmEntityIdKeyTypeKey(IdOrKey.SELF)).thenReturn(Optional.of(new XmEntityIdKeyTypeKey() {
+            @Override
+            public Long getId() {
+                return entity.getId();
+            }
+
+            @Override
+            public String getKey() {
+                return entity.getKey();
+            }
+
+            @Override
+            public String getTypeKey() {
+                return entity.getTypeKey();
+            }
+        }));
 
         ResultActions result = avatarResourceMockMvc.perform(MockMvcRequestBuilders.get("/api/xm-entities/self/avatar"));
 
