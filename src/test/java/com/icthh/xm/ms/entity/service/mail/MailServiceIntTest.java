@@ -15,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.test.context.ActiveProfiles;
 
 import java.util.Map;
@@ -46,6 +47,12 @@ public class MailServiceIntTest extends AbstractSpringBootTest {
 
     @MockBean
     private JavaMailSender javaMailSender;
+
+    /**
+     * periodicMetricsTaskScheduler configures in @Profile("!non-async"), needed for test passing
+     */
+    @MockBean
+    ThreadPoolTaskScheduler periodicMetricsTaskScheduler;
 
     @Autowired
     private TenantContextHolder tenantContextHolder;

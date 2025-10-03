@@ -13,6 +13,7 @@ import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.SchedulingConfigurer;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.scheduling.config.ScheduledTaskRegistrar;
 import tech.jhipster.async.ExceptionHandlingAsyncTaskExecutor;
 import tech.jhipster.config.JHipsterProperties;
@@ -55,5 +56,16 @@ public class AsyncConfiguration implements AsyncConfigurer, SchedulingConfigurer
     @Bean
     public Executor scheduledTaskExecutor() {
         return Executors.newScheduledThreadPool(jHipsterProperties.getAsync().getCorePoolSize());
+    }
+
+    @Bean(name = "periodicMetricsTaskScheduler")
+    public ThreadPoolTaskScheduler periodicMetricsTaskScheduler(ApplicationProperties applicationProperties) {
+        ThreadPoolTaskScheduler taskScheduler = new ThreadPoolTaskScheduler();
+        taskScheduler.setPoolSize(applicationProperties.getPeriodicMetricPoolSize());
+        taskScheduler.setThreadNamePrefix("pmetrics-executor-");
+        taskScheduler.setWaitForTasksToCompleteOnShutdown(false);
+        taskScheduler.setAwaitTerminationSeconds(1);
+        taskScheduler.initialize();
+        return taskScheduler;
     }
 }
