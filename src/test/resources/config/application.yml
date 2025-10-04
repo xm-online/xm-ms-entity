@@ -72,6 +72,10 @@ spring:
     liquibase:
         contexts: test
         change-log: classpath:config/liquibase/master.xml
+    autoconfigure:
+        exclude:
+        - org.springframework.boot.autoconfigure.elasticsearch.ElasticsearchClientAutoConfiguration
+        - org.springframework.boot.autoconfigure.elasticsearch.ElasticsearchRestClientAutoConfiguration
 
 server:
     port: 10344
