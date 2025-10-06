@@ -1,7 +1,8 @@
 package com.icthh.xm.ms.entity.service.metrics;
 
-import com.icthh.xm.ms.entity.config.ApplicationProperties;
 import com.icthh.xm.ms.entity.service.metrics.CustomMetricsConfiguration.CustomMetric;
+
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -16,13 +17,12 @@ import org.springframework.stereotype.Component;
 public class PeriodicMetricsService {
 
     private final Map<String, Map<String, ScheduledFuture>> metricsTasksByTenant = new ConcurrentHashMap<>();
-    private final ThreadPoolTaskScheduler taskScheduler = new ThreadPoolTaskScheduler();
+    private final ThreadPoolTaskScheduler periodicMetricsTaskScheduler;
     private final CustomMetricsService customMetricsService;
 
-    public PeriodicMetricsService(CustomMetricsService customMetricsService, ApplicationProperties applicationProperties) {
+    public PeriodicMetricsService(CustomMetricsService customMetricsService, ThreadPoolTaskScheduler periodicMetricsTaskScheduler) {
         this.customMetricsService = customMetricsService;
-        taskScheduler.initialize();
-        taskScheduler.setPoolSize(applicationProperties.getPeriodicMetricPoolSize());
+        this.periodicMetricsTaskScheduler = periodicMetricsTaskScheduler;
     }
 
     public void scheduleCustomMetric(List<CustomMetric> customMetrics, String tenantKey) {
@@ -41,7 +41,7 @@ public class PeriodicMetricsService {
                                        CustomMetric customMetric) {
         Runnable task = () -> customMetricsService.updateMetric(customMetric.getName(), tenantKey);
         Integer period = customMetric.getUpdatePeriodSeconds();
-        ScheduledFuture<?> future = taskScheduler.scheduleAtFixedRate(task, period * 1000);
+        ScheduledFuture<?> future = periodicMetricsTaskScheduler.scheduleAtFixedRate(task, Duration.ofMillis(period * 1000));
         tasks.put(customMetric.getName(), future);
     }
 
