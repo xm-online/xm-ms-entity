@@ -1,47 +1,42 @@
 package com.icthh.xm.ms.entity.web.rest;
 
 import com.icthh.xm.commons.i18n.error.web.ExceptionTranslator;
-import com.icthh.xm.commons.lep.api.LepEngineSession;
 import com.icthh.xm.commons.lep.api.LepManagementService;
-import com.icthh.xm.commons.security.XmAuthenticationContext;
+import com.icthh.xm.commons.security.XmAuthenticationConstants;
+import com.icthh.xm.commons.security.internal.XmAuthenticationDetails;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
-import com.icthh.xm.ms.entity.AbstractSpringBootTest;
+import com.icthh.xm.ms.entity.AbstractJupiterSpringBootTest;
 import com.icthh.xm.ms.entity.config.ApplicationProperties;
-import com.icthh.xm.ms.entity.domain.Profile;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.domain.ext.IdOrKey;
-import com.icthh.xm.ms.entity.projection.XmEntityIdKeyTypeKey;
 import com.icthh.xm.ms.entity.service.*;
 import com.icthh.xm.ms.entity.service.impl.XmEntityAvatarService;
 import com.icthh.xm.ms.entity.service.impl.XmeStorageServiceFacadeImpl;
 import com.icthh.xm.ms.entity.service.storage.AvatarStorageService;
+import com.icthh.xm.ms.entity.util.AuthTokenUtils;
 import com.icthh.xm.ms.entity.util.EntityUtils;
+import com.icthh.xm.ms.entity.util.ProfileUtils;
 import jakarta.persistence.EntityManager;
 import lombok.extern.slf4j.Slf4j;
-import org.mockito.Mock;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.mockito.MockitoAnnotations;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.mock.web.MockMultipartFile;
-import org.springframework.security.test.context.support.WithMockUser;
-import org.springframework.test.context.transaction.BeforeTransaction;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 
-import static com.icthh.xm.commons.tenant.TenantContextUtils.setTenant;
 import static com.icthh.xm.ms.entity.config.Constants.DEFAULT_AVATAR_URL;
 import static com.icthh.xm.ms.entity.config.Constants.DEFAULT_AVATAR_URL_PREFIX;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -54,10 +49,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * @see StorageResource
  */
 @Slf4j
-@WithMockUser(authorities = "SUPER-ADMIN")
-public class XmEntityAvatarResourceIntTest extends AbstractSpringBootTest {
+public class XmEntityAvatarResourceIntTest extends AbstractJupiterSpringBootTest {
 
-    @Mock
     private XmEntityAvatarService avatarService;
 
     @Autowired
@@ -89,35 +82,13 @@ public class XmEntityAvatarResourceIntTest extends AbstractSpringBootTest {
     @Autowired
     private AvatarStorageService avatarStorageService;
 
-    @BeforeTransaction
-    public void beforeTransaction() {
-        TenantContextUtils.setTenant(tenantContextHolder, "RESINTTEST");
-    }
+    @Autowired
+    private ProfileService profileService;
 
-    private AutoCloseable mocks;
-
-    private LepEngineSession session;
-    @Mock
-    private XmAuthenticationContext context;
-
-    @MockBean
-    ProfileService profileService;
-
-    @Mock
-    Profile profile;
-
-    @MockBean
-    XmEntityProjectionService xmEntityProjectionService;
-
-    @Before
+    @BeforeAll
     public void setup() {
-        mocks = MockitoAnnotations.openMocks(this);
-        session =  lepManagementService.beginThreadContext();
-
-        when(context.getRequiredUserKey()).thenReturn("userKey");
-        setTenant(tenantContextHolder, "RESINTTEST");
-
-        lenient().when(profileService.getSelfProfile()).thenReturn(profile);
+        TenantContextUtils.setTenant(tenantContextHolder, "RESINTTEST");
+        lepManagementService.beginThreadContext();
 
         XmeStorageServiceFacade storage = new XmeStorageServiceFacadeImpl(null, avatarStorageService, null);
         avatarService = new XmEntityAvatarService(xmEntityService, applicationProperties, storage);
@@ -129,17 +100,15 @@ public class XmEntityAvatarResourceIntTest extends AbstractSpringBootTest {
             .setMessageConverters(jacksonMessageConverter).build();
     }
 
-    @After
+    @AfterAll
     public void tearDown() throws Exception {
-        session.close();
+        lepManagementService.endThreadContext();
         tenantContextHolder.getPrivilegedContext().destroyCurrentContext();
-        mocks.close();
     }
 
     @Test
     @Transactional
     public void shouldReturnDefaultRelativeUrl() throws Exception {
-
         XmEntity entity = xmEntityService.save(EntityUtils.newEntity(e -> {
             e.setTypeKey("ACCOUNT.ADMIN");
             e.setVersion(1);
@@ -148,31 +117,23 @@ public class XmEntityAvatarResourceIntTest extends AbstractSpringBootTest {
             e.setData(Map.of("AAAAAAAAAA", "BBBBBBBBBB"));
         }));
 
-        when(profile.getXmentity()).thenReturn(EntityUtils.newEntity(e -> e.setId(123L)));
-        when(xmEntityProjectionService.findXmEntityIdKeyTypeKey(IdOrKey.SELF)).thenReturn(Optional.of(new XmEntityIdKeyTypeKey() {
-            @Override
-            public Long getId() {
-                return entity.getId();
-            }
+        profileService.save(ProfileUtils.newProfile(p -> {
+            p.setUserKey(entity.getKey());
+            p.setXmentity(entity);
+        }));
 
-            @Override
-            public String getKey() {
-                return entity.getKey();
-            }
+        var auth = mock(XmAuthenticationDetails.class);
+        when(auth.getDecodedDetails()).thenReturn(new HashMap<>(Map.of(XmAuthenticationConstants.AUTH_DETAILS_USER_KEY, entity.getKey())));
 
-            @Override
-            public String getTypeKey() {
-                return entity.getTypeKey();
-            }
+        SecurityContextHolder.getContext().setAuthentication(AuthTokenUtils.newToken(t -> {
+            t.setDetails(auth);
         }));
 
         ResultActions result = avatarResourceMockMvc.perform(MockMvcRequestBuilders.get("/api/xm-entities/self/avatar"));
 
         result.andExpect(status().is3xxRedirection())
             .andExpect(redirectedUrl(DEFAULT_AVATAR_URL_PREFIX + DEFAULT_AVATAR_URL));
-
     }
-
 
     @Test
     @Transactional
@@ -207,8 +168,5 @@ public class XmEntityAvatarResourceIntTest extends AbstractSpringBootTest {
         result.andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.IMAGE_JPEG))
             .andExpect(content().bytes("BEBEBE".getBytes()));
-
     }
-
-
 }
