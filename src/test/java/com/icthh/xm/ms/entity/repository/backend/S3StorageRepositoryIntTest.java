@@ -14,7 +14,7 @@ import com.icthh.xm.commons.security.XmAuthenticationContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
 import com.icthh.xm.lep.api.LepManager;
-import com.icthh.xm.ms.entity.AbstractSpringBootTest;
+import com.icthh.xm.ms.entity.AbstractJupiterSpringBootTest;
 import com.icthh.xm.ms.entity.config.ApplicationProperties;
 import com.icthh.xm.ms.entity.config.amazon.AmazonS3BucketNameFactory;
 import com.icthh.xm.ms.entity.config.amazon.AmazonS3Template;
@@ -27,13 +27,14 @@ import org.apache.commons.io.IOUtils;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URLEncodedUtils;
 import org.apache.http.message.BasicNameValuePair;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.testcontainers.containers.GenericContainer;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.io.InputStream;
 import java.net.URL;
@@ -47,7 +48,8 @@ import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_TENANT_
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertNotNull;
 
-public class S3StorageRepositoryIntTest extends AbstractSpringBootTest {
+@Testcontainers
+public class S3StorageRepositoryIntTest extends AbstractJupiterSpringBootTest {
 
     @Autowired
     private ApplicationProperties applicationProperties;
@@ -63,9 +65,10 @@ public class S3StorageRepositoryIntTest extends AbstractSpringBootTest {
 
     private S3StorageRepository s3StorageRepository;
 
-    @ClassRule
-    public static GenericContainer mockS3 = new GenericContainer("adobe/s3mock")
-        .withCreateContainerCmdModifier(getContainerModifier()).withExposedPorts(9090);
+    @Container
+    public static GenericContainer<?> mockS3 = new GenericContainer<>("adobe/s3mock")
+        .withCreateContainerCmdModifier(getContainerModifier())
+        .withExposedPorts(9090);
 
     private static Consumer<CreateContainerCmd> getContainerModifier() {
         return containerCmd -> containerCmd
@@ -86,7 +89,7 @@ public class S3StorageRepositoryIntTest extends AbstractSpringBootTest {
                 )).build();
     }
 
-    @Before
+    @BeforeEach
     public void setup() {
 
         TenantContextUtils.setTenant(tenantContextHolder, "TEST_TENANT");
@@ -100,7 +103,7 @@ public class S3StorageRepositoryIntTest extends AbstractSpringBootTest {
         });
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         tenantContextHolder.getPrivilegedContext().destroyCurrentContext();
     }

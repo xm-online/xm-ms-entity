@@ -1,13 +1,11 @@
 package com.icthh.xm.ms.entity.service;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-
-import com.icthh.xm.ms.entity.AbstractUnitTest;
-import org.junit.Test;
+import com.icthh.xm.ms.entity.AbstractJupiterUnitTest;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.springframework.util.AntPathMatcher;
 
-public class PathMatcherUnitTest extends AbstractUnitTest {
+public class PathMatcherUnitTest extends AbstractJupiterUnitTest {
 
     @Test
     public void testMatcher() {
@@ -15,8 +13,8 @@ public class PathMatcherUnitTest extends AbstractUnitTest {
         String url = "/config/tenants/XM/entity/specs/xmentityspecs.yml";
         String pattern = "/config/tenants/{tenantName}/entity/specs/xmentityspecs.yml";
 
-        assertTrue(matcher.match(pattern, url));
-        assertEquals("XM", matcher.extractUriTemplateVariables(pattern, url).get("tenantName"));
+        Assertions.assertTrue(matcher.match(pattern, url));
+        Assertions.assertEquals("XM", matcher.extractUriTemplateVariables(pattern, url).get("tenantName"));
     }
 
 }

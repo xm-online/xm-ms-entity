@@ -26,6 +26,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 })
 @Category(AbstractSpringBootTest.class)
 @Slf4j
+@Deprecated
 public abstract class AbstractSpringBootTest {
 
 }

@@ -12,7 +12,7 @@ import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
 import static com.icthh.xm.commons.tenant.TenantContextUtils.getRequiredTenantKeyValue;
 import com.icthh.xm.lep.api.LepManager;
-import com.icthh.xm.ms.entity.AbstractSpringBootTest;
+import com.icthh.xm.ms.entity.AbstractJupiterSpringBootTest;
 import com.icthh.xm.ms.entity.config.ApplicationProperties;
 import static com.icthh.xm.ms.entity.config.TenantConfigMockConfiguration.getXmEntityTemplatesSpec;
 import com.icthh.xm.ms.entity.config.XmEntityTenantConfigService;
@@ -52,10 +52,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThrows;
-
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import static org.mockito.Mockito.mock;
@@ -85,7 +84,7 @@ import java.util.Map;
 import java.util.Set;
 
 @Slf4j
-public class EntityServiceImplIntTest extends AbstractSpringBootTest {
+public class EntityServiceImplIntTest extends AbstractJupiterSpringBootTest {
 
     private XmEntityServiceImpl xmEntityService;
 
@@ -211,7 +210,7 @@ public class EntityServiceImplIntTest extends AbstractSpringBootTest {
         });
     }
 
-    @Before
+    @BeforeEach
     public void before() {
         XmEntity sourceEntity = xmEntityRepository.save(createEntity(1l, TARGET_TYPE_KEY));
         self = new Profile();
@@ -221,7 +220,7 @@ public class EntityServiceImplIntTest extends AbstractSpringBootTest {
         Locale.setDefault(Locale.US);
     }
 
-    @After
+    @AfterEach
     public void afterTest() {
         tenantContextHolder.getPrivilegedContext().destroyCurrentContext();
         Locale.setDefault(locale);

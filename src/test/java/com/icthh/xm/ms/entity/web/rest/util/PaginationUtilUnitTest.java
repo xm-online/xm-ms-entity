@@ -1,13 +1,11 @@
 package com.icthh.xm.ms.entity.web.rest.util;
 
 import static com.google.common.collect.ImmutableSet.of;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
-import com.icthh.xm.ms.entity.AbstractUnitTest;
+import com.icthh.xm.ms.entity.AbstractJupiterUnitTest;
 import com.icthh.xm.ms.entity.domain.template.TemplateParamsHolder;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -22,7 +20,7 @@ import java.util.Set;
  *
  * @see PaginationUtil
  */
-public class PaginationUtilUnitTest extends AbstractUnitTest {
+public class PaginationUtilUnitTest extends AbstractJupiterUnitTest {
 
     @Test
     public void generatePaginationHttpHeadersTest() {

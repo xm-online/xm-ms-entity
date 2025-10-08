@@ -21,7 +21,7 @@ import com.icthh.xm.commons.security.XmAuthenticationContext;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
 import com.icthh.xm.lep.api.LepManager;
-import com.icthh.xm.ms.entity.AbstractSpringBootTest;
+import com.icthh.xm.ms.entity.AbstractJupiterSpringBootTest;
 import com.icthh.xm.ms.entity.domain.Calendar;
 import com.icthh.xm.ms.entity.domain.Event;
 import com.icthh.xm.ms.entity.domain.XmEntity;
@@ -38,10 +38,10 @@ import java.util.List;
 import java.util.Optional;
 
 import jakarta.persistence.EntityManager;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
@@ -63,7 +63,7 @@ import org.springframework.validation.Validator;
  * @see CalendarResource
  */
 @WithMockUser(authorities = {"SUPER-ADMIN"})
-public class CalendarResourceIntTest extends AbstractSpringBootTest {
+public class CalendarResourceIntTest extends AbstractJupiterSpringBootTest {
 
     public static final String DEFAULT_TYPE_KEY = "AAAAAAAAAA";
     private static final String UPDATED_TYPE_KEY = "BBBBBBBBBB";
@@ -139,7 +139,7 @@ public class CalendarResourceIntTest extends AbstractSpringBootTest {
         TenantContextUtils.setTenant(tenantContextHolder, "RESINTTEST");
     }
 
-    @Before
+    @BeforeEach
     public void setup() {
         MockitoAnnotations.initMocks(this);
         when(startUpdateDateGenerationStrategy.generateStartDate()).thenReturn(DEFAULT_START_DATE);
@@ -168,7 +168,7 @@ public class CalendarResourceIntTest extends AbstractSpringBootTest {
 
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         tenantContextHolder.getPrivilegedContext().destroyCurrentContext();
     }
@@ -195,7 +195,7 @@ public class CalendarResourceIntTest extends AbstractSpringBootTest {
             .timeZoneId(DEFAULT_TIMEZONE_ID);
     }
 
-    @Before
+    @BeforeEach
     public void initTest() {
         //  calendarSearchRepository.deleteAll();
     }
@@ -333,7 +333,7 @@ public class CalendarResourceIntTest extends AbstractSpringBootTest {
 
     @Test
     @Transactional
-    @Ignore("see CalendarResourceExtendedIntTest.checkStartDateIsNotRequired instead")
+    @Disabled("see CalendarResourceExtendedIntTest.checkStartDateIsNotRequired instead")
     public void checkStartDateIsRequired() throws Exception {
         int databaseSizeBeforeTest = calendarRepository.findAll().size();
         // set the field null

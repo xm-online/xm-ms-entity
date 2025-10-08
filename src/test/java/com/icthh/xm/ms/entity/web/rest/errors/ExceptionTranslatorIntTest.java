@@ -8,11 +8,11 @@ import com.icthh.xm.commons.security.XmAuthenticationContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
 import com.icthh.xm.lep.api.LepManager;
-import com.icthh.xm.ms.entity.AbstractSpringBootTest;
+import com.icthh.xm.ms.entity.AbstractJupiterSpringBootTest;
 import com.icthh.xm.ms.entity.web.rest.error.EntityExceptionTranslator;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,7 +39,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  *
  * @see ExceptionTranslator
  */
-public class ExceptionTranslatorIntTest extends AbstractSpringBootTest {
+public class ExceptionTranslatorIntTest extends AbstractJupiterSpringBootTest {
 
     @Autowired
     private ExceptionTranslatorTestController controller;
@@ -76,7 +76,7 @@ public class ExceptionTranslatorIntTest extends AbstractSpringBootTest {
     }
 
 
-    @Before
+    @BeforeEach
     public void setup() {
         MockitoAnnotations.initMocks(this);
 
@@ -98,7 +98,7 @@ public class ExceptionTranslatorIntTest extends AbstractSpringBootTest {
         });
     }
 
-    @After
+    @AfterEach
     public void destroy() {
         lepManager.endThreadContext();
         tenantContextHolder.getPrivilegedContext().destroyCurrentContext();

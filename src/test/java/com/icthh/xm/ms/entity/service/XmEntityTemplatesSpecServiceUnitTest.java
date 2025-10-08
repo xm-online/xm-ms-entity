@@ -9,18 +9,18 @@ import static org.mockito.Mockito.when;
 import com.icthh.xm.commons.tenant.TenantContext;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantKey;
-import com.icthh.xm.ms.entity.AbstractUnitTest;
+import com.icthh.xm.ms.entity.AbstractJupiterUnitTest;
 import com.icthh.xm.ms.entity.config.ApplicationProperties;
 import java.util.Optional;
 import lombok.SneakyThrows;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 
-@RunWith(MockitoJUnitRunner.class)
-public class XmEntityTemplatesSpecServiceUnitTest extends AbstractUnitTest {
+@ExtendWith(MockitoExtension.class)
+public class XmEntityTemplatesSpecServiceUnitTest extends AbstractJupiterUnitTest {
 
     private static final String TENANT = "TEST";
 
@@ -34,7 +34,7 @@ public class XmEntityTemplatesSpecServiceUnitTest extends AbstractUnitTest {
     private TenantContext tenantContext;
 
 
-    @Before
+    @BeforeEach
     @SneakyThrows
     public void init() {
         when(tenantContext.getTenantKey()).thenReturn(Optional.of(TenantKey.valueOf(TENANT)));

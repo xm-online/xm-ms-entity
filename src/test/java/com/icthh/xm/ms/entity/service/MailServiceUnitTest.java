@@ -10,7 +10,7 @@ import com.icthh.xm.commons.tenant.PrivilegedTenantContext;
 import com.icthh.xm.commons.tenant.TenantContext;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantKey;
-import com.icthh.xm.ms.entity.AbstractUnitTest;
+import com.icthh.xm.ms.entity.AbstractJupiterUnitTest;
 import com.icthh.xm.ms.entity.config.XmEntityTenantConfigService;
 import com.icthh.xm.ms.entity.service.mail.MailService;
 import com.icthh.xm.ms.entity.service.mail.TenantEmailTemplateService;
@@ -23,8 +23,8 @@ import jakarta.mail.internet.InternetAddress;
 import jakarta.mail.internet.MimeMessage;
 import lombok.SneakyThrows;
 import org.apache.commons.io.IOUtils;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.*;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.InputStreamSource;
@@ -40,14 +40,12 @@ import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonList;
 import static java.util.Locale.ENGLISH;
 import static java.util.Locale.FRANCE;
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @SuppressWarnings("unused")
-public class MailServiceUnitTest extends AbstractUnitTest {
+public class MailServiceUnitTest extends AbstractJupiterUnitTest {
 
     private static final String MAIL_SETTINGS = "mailSettings";
     private static final String TEMPLATE_NAME = "templateName";
@@ -83,7 +81,7 @@ public class MailServiceUnitTest extends AbstractUnitTest {
     @Spy
     private XmEntityTenantConfigService tenantConfigService;
 
-    @Before
+    @BeforeEach
     public void before() {
         tenantConfigService = new XmEntityTenantConfigService(new XmConfigProperties(), tenantContextHolder);
         MockitoAnnotations.initMocks(this);

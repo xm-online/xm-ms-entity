@@ -5,16 +5,16 @@ import com.icthh.xm.commons.security.XmAuthenticationContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
 import com.icthh.xm.lep.api.LepManager;
-import com.icthh.xm.ms.entity.AbstractSpringBootTest;
+import com.icthh.xm.ms.entity.AbstractJupiterSpringBootTest;
 import com.icthh.xm.ms.entity.domain.Link;
 import com.icthh.xm.ms.entity.domain.Link_;
 import com.icthh.xm.ms.entity.security.access.XmEntityDynamicPermissionCheckService;
 import com.icthh.xm.ms.entity.web.rest.LinkResourceIntTest;
 import jakarta.persistence.EntityManager;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.data.domain.Page;
@@ -31,13 +31,14 @@ import java.util.List;
 import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_AUTH_CONTEXT;
 import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_TENANT_CONTEXT;
 import static com.icthh.xm.ms.entity.security.access.FeatureContext.LINK_DELETE;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-public class LinkServiceIntTest extends AbstractSpringBootTest {
+public class LinkServiceIntTest extends AbstractJupiterSpringBootTest {
 
     @Autowired
     private LinkService linkService;
@@ -54,7 +55,7 @@ public class LinkServiceIntTest extends AbstractSpringBootTest {
 
     private List<Link> expected;
 
-    @Before
+    @BeforeEach
     public void setup() {
 
         lepManager.beginThreadContext(ctx -> {
@@ -65,7 +66,7 @@ public class LinkServiceIntTest extends AbstractSpringBootTest {
         expected = initLinks();
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         tenantContextHolder.getPrivilegedContext().destroyCurrentContext();
     }
@@ -75,9 +76,9 @@ public class LinkServiceIntTest extends AbstractSpringBootTest {
     public void findAllTest() {
         Page<Link> actual = linkService.findAll(Specification.where((root, query, criteriaBuilder)
             -> criteriaBuilder.isNotNull(root.get(Link_.id))), PageRequest.of(0, expected.size()));
-        Assert.assertNotNull(actual);
-        Assert.assertEquals(expected.size(), actual.getContent().size());
-        Assert.assertTrue(actual.getContent().containsAll(expected));
+        Assertions.assertNotNull(actual);
+        Assertions.assertEquals(expected.size(), actual.getContent().size());
+        Assertions.assertTrue(actual.getContent().containsAll(expected));
     }
 
     @Test
@@ -99,12 +100,14 @@ public class LinkServiceIntTest extends AbstractSpringBootTest {
         verify(dynamicPermissionCheckService).checkContextPermission(LINK_DELETE, "LINK.DELETE", expected.get(0).getTypeKey());
     }
 
-    @Test(expected = AccessDeniedException.class)
+    @Test
     @Transactional
     @WithMockUser(authorities = "ROLE_ANONYMOUS")
     public void testDeleteWherePermissionDenied() {
-        when(dynamicPermissionCheckService.isDynamicLinkDeletePermissionEnabled()).thenReturn(true);
-        linkService.delete(expected.get(0).getId());
+        assertThrows(AccessDeniedException.class, () -> {
+            when(dynamicPermissionCheckService.isDynamicLinkDeletePermissionEnabled()).thenReturn(true);
+            linkService.delete(expected.get(0).getId());
+        });
     }
 
 

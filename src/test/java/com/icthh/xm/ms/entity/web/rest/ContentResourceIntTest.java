@@ -14,14 +14,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.icthh.xm.commons.i18n.error.web.ExceptionTranslator;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
-import com.icthh.xm.ms.entity.AbstractSpringBootTest;
+import com.icthh.xm.ms.entity.AbstractJupiterSpringBootTest;
 import com.icthh.xm.ms.entity.domain.Content;
 import com.icthh.xm.ms.entity.repository.ContentRepository;
 import com.icthh.xm.ms.entity.service.ContentService;
 import jakarta.persistence.EntityManager;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
@@ -42,7 +42,7 @@ import java.util.List;
  * @see ContentResource
  */
 @WithMockUser(authorities = {"SUPER-ADMIN"})
-public class ContentResourceIntTest extends AbstractSpringBootTest {
+public class ContentResourceIntTest extends AbstractJupiterSpringBootTest {
 
     private static final byte[] DEFAULT_VALUE = TestUtil.createByteArray(1, "0");
     private static final byte[] UPDATED_VALUE = TestUtil.createByteArray(2, "1");
@@ -80,7 +80,7 @@ public class ContentResourceIntTest extends AbstractSpringBootTest {
         TenantContextUtils.setTenant(tenantContextHolder, "RESINTTEST");
     }
 
-    @Before
+    @BeforeEach
     public void setup() {
         MockitoAnnotations.initMocks(this);
         ContentResource contentResourceMock = new ContentResource(contentRepository, contentService, contentResource);
@@ -90,7 +90,7 @@ public class ContentResourceIntTest extends AbstractSpringBootTest {
             .setMessageConverters(jacksonMessageConverter).build();
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         tenantContextHolder.getPrivilegedContext().destroyCurrentContext();
     }
@@ -107,7 +107,7 @@ public class ContentResourceIntTest extends AbstractSpringBootTest {
         return content;
     }
 
-    @Before
+    @BeforeEach
     public void initTest() {
         content = createEntity(em);
     }

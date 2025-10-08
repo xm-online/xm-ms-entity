@@ -20,7 +20,7 @@ import com.icthh.xm.commons.permission.repository.PermittedRepository;
 import com.icthh.xm.commons.security.XmAuthenticationContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
-import com.icthh.xm.ms.entity.AbstractSpringBootTest;
+import com.icthh.xm.ms.entity.AbstractJupiterSpringBootTest;
 import com.icthh.xm.ms.entity.domain.Attachment;
 import com.icthh.xm.ms.entity.domain.Content;
 import com.icthh.xm.ms.entity.domain.XmEntity;
@@ -31,10 +31,10 @@ import com.icthh.xm.ms.entity.service.ContentService;
 import com.icthh.xm.ms.entity.service.XmEntitySpecService;
 import com.icthh.xm.ms.entity.service.impl.StartUpdateDateGenerationStrategy;
 import jakarta.persistence.EntityManager;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -59,7 +59,7 @@ import java.util.List;
  * @see AttachmentResource
  */
 @WithMockUser(authorities = {"SUPER-ADMIN"})
-public class AttachmentResourceIntTest extends AbstractSpringBootTest {
+public class AttachmentResourceIntTest extends AbstractJupiterSpringBootTest {
 
     public static final String DEFAULT_TYPE_KEY = "AAAAAAAAAA";
     public static final String UPDATED_TYPE_KEY = "BBBBBBBBBB";
@@ -141,7 +141,7 @@ public class AttachmentResourceIntTest extends AbstractSpringBootTest {
         TenantContextUtils.setTenant(tenantContextHolder, "RESINTTEST");
     }
 
-    @Before
+    @BeforeEach
     public void setup() throws URISyntaxException {
 
         lepManager.beginThreadContext(ctx -> {
@@ -170,12 +170,12 @@ public class AttachmentResourceIntTest extends AbstractSpringBootTest {
         attachment = createEntity(em, DEFAULT_TYPE_KEY);
     }
 
-    @Before
+    @BeforeEach
     public void initTest() {
         //  attachmentSearchRepository.deleteAll();
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         lepManager.endThreadContext();
         tenantContextHolder.getPrivilegedContext().destroyCurrentContext();
@@ -366,7 +366,7 @@ public class AttachmentResourceIntTest extends AbstractSpringBootTest {
 
     @Test
     @Transactional
-    @Ignore("Content url not required temporary")
+    @Disabled("Content url not required temporary")
     public void checkContentUrlIsRequired() throws Exception {
         int databaseSizeBeforeTest = attachmentRepository.findAll().size();
         // set the field null
@@ -391,7 +391,7 @@ public class AttachmentResourceIntTest extends AbstractSpringBootTest {
 
     @Test
     @Transactional
-    @Ignore("see AttachmentResourceExtendedIntTest.checkStartDateIsNotRequired instead")
+    @Disabled("see AttachmentResourceExtendedIntTest.checkStartDateIsNotRequired instead")
     public void checkStartDateIsRequired() throws Exception {
         int databaseSizeBeforeTest = attachmentRepository.findAll().size();
         // set the field null

@@ -17,7 +17,7 @@ import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
 import static com.icthh.xm.commons.tenant.TenantContextUtils.getRequiredTenantKeyValue;
 import com.icthh.xm.lep.api.LepManager;
-import com.icthh.xm.ms.entity.AbstractSpringBootTest;
+import com.icthh.xm.ms.entity.AbstractJupiterSpringBootTest;
 import com.icthh.xm.ms.entity.config.ApplicationProperties;
 import com.icthh.xm.ms.entity.config.Constants;
 import com.icthh.xm.ms.entity.config.InternalTransactionService;
@@ -86,10 +86,10 @@ import static org.hibernate.validator.internal.util.CollectionHelper.asSet;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -132,7 +132,7 @@ import java.util.Optional;
  */
 @Slf4j
 @Transactional
-public class XmEntityResourceExtendedIntTest extends AbstractSpringBootTest {
+public class XmEntityResourceExtendedIntTest extends AbstractJupiterSpringBootTest {
 
     private static final String DEFAULT_KEY = "AAAAAAAAAA";
 
@@ -318,7 +318,7 @@ public class XmEntityResourceExtendedIntTest extends AbstractSpringBootTest {
         TenantContextUtils.setTenant(tenantContextHolder, "RESINTTEST");
     }
 
-    @Before
+    @BeforeEach
     public void setup() {
         log.info("Init setup");
 
@@ -398,7 +398,7 @@ public class XmEntityResourceExtendedIntTest extends AbstractSpringBootTest {
         objectMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         lepManager.endThreadContext();
         tenantContextHolder.getPrivilegedContext().destroyCurrentContext();
@@ -1665,7 +1665,7 @@ public class XmEntityResourceExtendedIntTest extends AbstractSpringBootTest {
     @Test
     @Transactional
     @SneakyThrows
-    @Ignore("XM-MIG enable when filtered serialization will be implemented again")
+    @Disabled("XM-MIG enable when filtered serialization will be implemented again")
     public void testGetLinkTargetsFilteredSerialization() {
 
         String tgtTypeKey = "ACCOUNT.USER";
@@ -1767,7 +1767,7 @@ public class XmEntityResourceExtendedIntTest extends AbstractSpringBootTest {
     @SneakyThrows
     @WithMockUser(authorities = "SUPER-ADMIN")
     @Transactional
-    @Ignore("XM-MIG enable when filtered serialization will be implemented again")
+    @Disabled("XM-MIG enable when filtered serialization will be implemented again")
     public void testSaveXmEntityToElasticNoCycleJsonAndFilteredSerialization() {
 
         String createdBy = "admin";

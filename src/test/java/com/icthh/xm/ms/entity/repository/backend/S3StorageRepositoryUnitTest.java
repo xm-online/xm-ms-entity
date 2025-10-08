@@ -7,17 +7,18 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import com.icthh.xm.commons.tenant.TenantContextHolder;
-import com.icthh.xm.ms.entity.AbstractUnitTest;
+import com.icthh.xm.ms.entity.AbstractJupiterUnitTest;
 import com.icthh.xm.ms.entity.config.ApplicationProperties;
 import com.icthh.xm.ms.entity.config.amazon.AmazonS3Template;
 import java.io.IOException;
-import org.junit.Before;
-import org.junit.Test;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.mock.web.MockMultipartFile;
 
-public class S3StorageRepositoryUnitTest extends AbstractUnitTest {
+public class S3StorageRepositoryUnitTest extends AbstractJupiterUnitTest {
 
     private S3StorageRepository s3StorageRepository;
     @Mock
@@ -34,7 +35,7 @@ public class S3StorageRepositoryUnitTest extends AbstractUnitTest {
     @Mock
     private TenantContextHolder tenantContextHolder;
 
-    @Before
+    @BeforeEach
     public void before() {
         MockitoAnnotations.initMocks(this);
         s3StorageRepository = new S3StorageRepository(applicationProperties, amazonS3Template, tenantContextHolder);

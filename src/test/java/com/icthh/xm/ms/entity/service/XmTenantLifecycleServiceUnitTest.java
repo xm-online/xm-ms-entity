@@ -3,7 +3,7 @@ package com.icthh.xm.ms.entity.service;
 import com.icthh.xm.commons.gen.model.Tenant;
 import com.icthh.xm.commons.tenant.TenantContext;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
-import com.icthh.xm.ms.entity.AbstractUnitTest;
+import com.icthh.xm.ms.entity.AbstractJupiterUnitTest;
 import com.icthh.xm.ms.entity.config.ApplicationProperties;
 import com.icthh.xm.ms.entity.domain.EntityState;
 import com.icthh.xm.ms.entity.domain.XmEntity;
@@ -11,8 +11,8 @@ import com.icthh.xm.ms.entity.service.XmTenantLifecycleService.ServiceInfo;
 import com.icthh.xm.ms.entity.web.client.tenant.TenantClient;
 import lombok.SneakyThrows;
 import lombok.val;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
@@ -28,7 +28,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.mockito.Mockito.when;
 
-public class XmTenantLifecycleServiceUnitTest extends AbstractUnitTest {
+public class XmTenantLifecycleServiceUnitTest extends AbstractJupiterUnitTest {
 
     private static final String ENTITY_TYPE_KEY = "RESOURCE.XM-TENANT";
     private static final String SERVICE_NAME = "test";
@@ -53,7 +53,7 @@ public class XmTenantLifecycleServiceUnitTest extends AbstractUnitTest {
     @Mock
     TenantContextHolder tenantContextHolder;
 
-    @Before
+    @BeforeEach
     public void before() {
         MockitoAnnotations.initMocks(this);
 

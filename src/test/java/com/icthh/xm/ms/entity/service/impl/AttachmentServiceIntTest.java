@@ -4,7 +4,7 @@ import com.icthh.xm.commons.security.XmAuthenticationContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
 import com.icthh.xm.lep.api.LepManager;
-import com.icthh.xm.ms.entity.AbstractSpringBootTest;
+import com.icthh.xm.ms.entity.AbstractJupiterSpringBootTest;
 import com.icthh.xm.ms.entity.domain.Attachment;
 import com.icthh.xm.ms.entity.domain.Attachment_;
 import com.icthh.xm.ms.entity.repository.AttachmentRepository;
@@ -12,9 +12,9 @@ import com.icthh.xm.ms.entity.service.AttachmentService;
 import jakarta.persistence.EntityManager;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
@@ -22,16 +22,13 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.test.context.transaction.BeforeTransaction;
 import org.springframework.transaction.annotation.Transactional;
 
-
-import static com.google.common.collect.ImmutableMap.of;
 import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_AUTH_CONTEXT;
 import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_TENANT_CONTEXT;
 import static com.icthh.xm.ms.entity.web.rest.AttachmentResourceExtendedIntTest.createEntity;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @Slf4j
-public class AttachmentServiceIntTest extends AbstractSpringBootTest {
+public class AttachmentServiceIntTest extends AbstractJupiterSpringBootTest {
 
     public static final String TEST_ATTACHMENT = "A3";
 
@@ -59,7 +56,8 @@ public class AttachmentServiceIntTest extends AbstractSpringBootTest {
     }
 
     @SneakyThrows
-    @Before
+
+    @BeforeEach
     public void setup() {
         MockitoAnnotations.initMocks(this);
 
@@ -70,7 +68,7 @@ public class AttachmentServiceIntTest extends AbstractSpringBootTest {
 
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         lepManager.endThreadContext();
         tenantContextHolder.getPrivilegedContext().destroyCurrentContext();

@@ -1,6 +1,6 @@
 package com.icthh.xm.ms.entity.web.client;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.when;
 
 import com.google.common.base.Charsets;
@@ -8,10 +8,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
-import com.icthh.xm.ms.entity.AbstractUnitTest;
+import com.icthh.xm.ms.entity.AbstractJupiterUnitTest;
 import org.apache.commons.io.IOUtils;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.http.HttpHeaders;
@@ -21,7 +21,7 @@ import org.springframework.http.MediaType;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 
-public class MutipartMixedConverterUnitTest extends AbstractUnitTest {
+public class MutipartMixedConverterUnitTest extends AbstractJupiterUnitTest {
 
     private MultipartMixedConverter multipartMixedConverter;
 
@@ -36,7 +36,7 @@ public class MutipartMixedConverterUnitTest extends AbstractUnitTest {
     @Mock
     private InputStream inputStream;
 
-    @Before
+    @BeforeEach
     public void before() throws IOException {
         MockitoAnnotations.initMocks(this);
         multipartMixedConverter = new MultipartMixedConverter();

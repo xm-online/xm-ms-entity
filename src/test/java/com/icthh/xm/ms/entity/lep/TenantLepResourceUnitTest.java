@@ -1,25 +1,26 @@
 package com.icthh.xm.ms.entity.lep;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import com.icthh.xm.commons.tenant.TenantContext;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantKey;
-import com.icthh.xm.ms.entity.AbstractUnitTest;
+import com.icthh.xm.ms.entity.AbstractJupiterUnitTest;
 import com.icthh.xm.ms.entity.config.ApplicationProperties;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
+
 import java.util.Optional;
 
 @Slf4j
-@RunWith(MockitoJUnitRunner.class)
-public class TenantLepResourceUnitTest extends AbstractUnitTest {
+@ExtendWith(MockitoExtension.class)
+public class TenantLepResourceUnitTest extends AbstractJupiterUnitTest {
 
     @Mock
     private TenantContextHolder tenantContextHolder;

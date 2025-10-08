@@ -8,14 +8,14 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching;
 import static com.github.tomakehurst.wiremock.client.WireMock.verify;
 
-import com.github.tomakehurst.wiremock.junit.WireMockRule;
-import com.icthh.xm.ms.entity.AbstractSpringBootTest;
+import com.github.tomakehurst.wiremock.junit5.WireMockTest;
+import com.icthh.xm.ms.entity.AbstractJupiterSpringBootTest;
 import com.icthh.xm.ms.entity.config.LoadBalancerConfiguration;
 import com.icthh.xm.ms.entity.config.RestTemplateConfiguration.PathTimeoutHttpComponentsClientHttpRequestFactory;
 import com.icthh.xm.ms.entity.config.RestTemplateConfiguration.PathTimeoutHttpComponentsClientHttpRequestFactory.PathTimeoutConfig;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpMethod;
@@ -25,7 +25,8 @@ import org.springframework.web.client.RestTemplate;
 
 @Slf4j
 @ContextConfiguration(classes = {LoadBalancerConfiguration.class})
-public class RestTimeoutCustomizerIntTest extends AbstractSpringBootTest {
+@WireMockTest(httpPort = 8081)
+public class RestTimeoutCustomizerIntTest extends AbstractJupiterSpringBootTest {
 
     @Qualifier("loadBalancedRestTemplateWithTimeout")
     @Autowired
@@ -34,19 +35,19 @@ public class RestTimeoutCustomizerIntTest extends AbstractSpringBootTest {
     @Autowired
     PathTimeoutHttpComponentsClientHttpRequestFactory requestFactory;
 
-    @Rule
-    public WireMockRule wireMockRule = new WireMockRule(8081);
+    @Test
+    public void testCallWithTimeout() {
+        Assertions.assertThrows(ResourceAccessException.class, () -> {
+            String expectedUri = "http://entity/test/sleep";
 
-    @Test(expected = ResourceAccessException.class)
-    public void testCallWithTimeout() throws Exception {
-        String expectedUri = "http://entity/test/sleep";
+            stubFor(get(urlEqualTo("/test/sleep")).willReturn(aResponse().withFixedDelay(100).withStatus(200)));
+            requestFactory.addPathTimeoutConfig(PathTimeoutConfig.builder()
+                .httpMethod(HttpMethod.GET)
+                .pathPattern("/test/sleep")
+                .readTimeout(50).build());
+            restTemplate.getForObject(expectedUri, Void.class);
+        });
 
-        stubFor(get(urlEqualTo("/test/sleep")).willReturn(aResponse().withFixedDelay(100).withStatus(200)));
-        requestFactory.addPathTimeoutConfig(PathTimeoutConfig.builder()
-                                                             .httpMethod(HttpMethod.GET)
-                                                             .pathPattern("/test/sleep")
-                                                             .readTimeout(50).build());
-        restTemplate.getForObject(expectedUri, Void.class);
     }
 
     @Test

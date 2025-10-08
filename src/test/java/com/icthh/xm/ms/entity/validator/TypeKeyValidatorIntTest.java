@@ -5,7 +5,7 @@ import static org.junit.Assert.assertEquals;
 
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
-import com.icthh.xm.ms.entity.AbstractSpringBootTest;
+import com.icthh.xm.ms.entity.AbstractJupiterSpringBootTest;
 import com.icthh.xm.ms.entity.domain.Tag;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 
@@ -13,9 +13,9 @@ import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validator;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.time.Instant;
@@ -23,19 +23,19 @@ import java.util.Map;
 import java.util.Set;
 
 @Slf4j
-public class TypeKeyValidatorIntTest extends AbstractSpringBootTest {
+public class TypeKeyValidatorIntTest extends AbstractJupiterSpringBootTest {
 
     @Autowired
     private Validator validator;
     @Autowired
     private TenantContextHolder tenantContextHolder;
 
-    @Before
+    @BeforeEach
     public void setup() {
         TenantContextUtils.setTenant(tenantContextHolder, "TEST");
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         tenantContextHolder.getPrivilegedContext().destroyCurrentContext();
     }

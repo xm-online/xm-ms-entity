@@ -7,17 +7,17 @@ import com.icthh.xm.commons.gen.model.Tenant;
 import com.icthh.xm.commons.search.ElasticsearchOperations;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.internal.DefaultTenantContextHolder;
-import com.icthh.xm.ms.entity.AbstractUnitTest;
+import com.icthh.xm.ms.entity.AbstractJupiterUnitTest;
 import com.icthh.xm.ms.entity.domain.XmEntity;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
 
-public class TenantElasticsearchProvisionerUnitTest extends AbstractUnitTest {
+public class TenantElasticsearchProvisionerUnitTest extends AbstractJupiterUnitTest {
 
     public static final String TENANT_NAME = "NEWTENANT";
     public static final String INDEX_NAME = TENANT_NAME.toLowerCase() + "_xmentity";
@@ -29,7 +29,7 @@ public class TenantElasticsearchProvisionerUnitTest extends AbstractUnitTest {
 
     private TenantElasticsearchProvisioner provisioner;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         MockitoAnnotations.initMocks(this);
 

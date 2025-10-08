@@ -5,9 +5,9 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.icthh.xm.ms.entity.AbstractSpringBootTest;
-import org.junit.Before;
-import org.junit.Test;
+import com.icthh.xm.ms.entity.AbstractJupiterSpringBootTest;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,7 +22,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
  *
  * @see ProfileInfoResource
  **/
-public class ProfileInfoResourceIntTest extends AbstractSpringBootTest {
+public class ProfileInfoResourceIntTest extends AbstractJupiterSpringBootTest {
 
     @Mock
     private Environment environment;
@@ -32,7 +32,7 @@ public class ProfileInfoResourceIntTest extends AbstractSpringBootTest {
 
     private MockMvc restProfileMockMvc;
 
-    @Before
+    @BeforeEach
     public void setup() {
         MockitoAnnotations.initMocks(this);
         String mockProfile[] = {"test"};

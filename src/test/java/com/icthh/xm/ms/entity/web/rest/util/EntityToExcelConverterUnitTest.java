@@ -1,14 +1,12 @@
 package com.icthh.xm.ms.entity.web.rest.util;
 
-import com.icthh.xm.ms.entity.AbstractUnitTest;
+import com.icthh.xm.ms.entity.AbstractJupiterUnitTest;
 import com.icthh.xm.ms.entity.domain.SimpleExportXmEntityDto;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 
 import com.icthh.xm.ms.entity.domain.converter.EntityToExcelConverterUtils;
-import org.hamcrest.Matchers;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.modelmapper.ModelMapper;
 
 import java.time.Instant;
@@ -17,18 +15,20 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import static org.junit.jupiter.api.Assertions.*;
+
 /**
  * Tests excel converter.
  * @see EntityToCsvConverterUnitTest
  */
-public class EntityToExcelConverterUnitTest extends AbstractUnitTest {
+public class EntityToExcelConverterUnitTest extends AbstractJupiterUnitTest {
 
     private static final Long DEFAULT_LONG_VALUE = 1L;
     private static final String DEFAULT_STRING_VALUE = "FOO";
 
     private List<XmEntity> xmEntities = new LinkedList<>();
 
-    @Before
+    @BeforeEach
     public void init() {
         xmEntities.clear();
         IntStream.range(0, 10).forEach(i -> xmEntities.add(buildXmEntity()));
@@ -40,15 +40,15 @@ public class EntityToExcelConverterUnitTest extends AbstractUnitTest {
         byte[] media = EntityToExcelConverterUtils.toExcel(
                         xmEntities.stream().map(entity -> modelMapper.map(entity, SimpleExportXmEntityDto.class))
                                         .collect(Collectors.toList()), "defaultSheetName");
-        Assert.assertNotNull(media);
-        Assert.assertThat(media.length, Matchers.greaterThan(1));
+        assertNotNull(media);
+        assertTrue(media.length > 1);
     }
 
     @Test
     public void convertEmptyEntitiesToExcel() throws Exception {
         byte[] media = EntityToExcelConverterUtils.toExcel(null, null);
-        Assert.assertNotNull(media);
-        Assert.assertThat(media.length, Matchers.is(0));
+        assertNotNull(media);
+        assertEquals(0, media.length);
     }
 
     private XmEntity buildXmEntity() {
