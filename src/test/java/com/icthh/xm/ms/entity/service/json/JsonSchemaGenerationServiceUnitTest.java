@@ -3,29 +3,29 @@ package com.icthh.xm.ms.entity.service.json;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-import com.icthh.xm.ms.entity.AbstractUnitTest;
+import com.icthh.xm.ms.entity.AbstractJupiterUnitTest;
 import com.icthh.xm.ms.entity.service.spec.JsonSchemaGenerationServiceImpl;
 import com.networknt.schema.JsonSchema;
 import com.networknt.schema.JsonSchemaFactory;
 import com.networknt.schema.SpecVersion;
 import com.networknt.schema.ValidationMessage;
 import lombok.SneakyThrows;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Set;
 
 import static com.icthh.xm.ms.entity.web.rest.XmEntitySaveIntTest.loadFile;
 import static org.junit.Assert.assertTrue;
 
-@RunWith(MockitoJUnitRunner.class)
-public class JsonSchemaGenerationServiceUnitTest extends AbstractUnitTest {
+@ExtendWith(MockitoExtension.class)
+public class JsonSchemaGenerationServiceUnitTest extends AbstractJupiterUnitTest {
 
     JsonSchemaGenerationService service;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         service = new JsonSchemaGenerationServiceImpl();
     }

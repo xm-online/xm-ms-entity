@@ -65,12 +65,12 @@ public class StorageResourceIntTest extends AbstractJupiterSpringBootTest {
 
     private MockMvc restStorageMockMvc;
 
+    private AutoCloseable mocks;
+
     @BeforeTransaction
     public void beforeTransaction() {
         TenantContextUtils.setTenant(tenantContextHolder, "RESINTTEST");
     }
-
-    private AutoCloseable mocks;
 
     @BeforeEach
     public void setup() {

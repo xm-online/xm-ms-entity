@@ -19,7 +19,7 @@ import com.icthh.xm.commons.i18n.error.web.ExceptionTranslator;
 import com.icthh.xm.commons.security.XmAuthenticationContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
-import com.icthh.xm.ms.entity.AbstractSpringBootTest;
+import com.icthh.xm.ms.entity.AbstractJupiterSpringBootTest;
 import com.icthh.xm.ms.entity.domain.Link;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.repository.LinkPermittedRepository;
@@ -30,10 +30,10 @@ import com.icthh.xm.ms.entity.service.LinkService;
 import com.icthh.xm.ms.entity.service.impl.StartUpdateDateGenerationStrategy;
 import jakarta.persistence.EntityManager;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -59,7 +59,7 @@ import java.util.List;
  */
 @Slf4j
 @WithMockUser(authorities = {"SUPER-ADMIN"})
-public class LinkResourceIntTest extends AbstractSpringBootTest {
+public class LinkResourceIntTest extends AbstractJupiterSpringBootTest {
 
     public static final String DEFAULT_TYPE_KEY = "AAAAAAAAAA";
     private static final String UPDATED_TYPE_KEY = "BBBBBBBBBB";
@@ -123,7 +123,7 @@ public class LinkResourceIntTest extends AbstractSpringBootTest {
         TenantContextUtils.setTenant(tenantContextHolder, "RESINTTEST");
     }
 
-    @Before
+    @BeforeEach
     public void setup() {
         lepManager.beginThreadContext(ctx -> {
             ctx.setValue(THREAD_CONTEXT_KEY_TENANT_CONTEXT, tenantContextHolder.getContext());
@@ -153,7 +153,7 @@ public class LinkResourceIntTest extends AbstractSpringBootTest {
 
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         lepManager.endThreadContext();
         tenantContextHolder.getPrivilegedContext().destroyCurrentContext();
@@ -257,7 +257,7 @@ public class LinkResourceIntTest extends AbstractSpringBootTest {
 
     @Test
     @Transactional
-    @Ignore("see LinkResourceExtendedIntTest.checkStartDateIsNotRequired instead")
+    @Disabled("see LinkResourceExtendedIntTest.checkStartDateIsNotRequired instead")
     public void checkStartDateIsRequired() throws Exception {
         int databaseSizeBeforeTest = linkRepository.findAll().size();
         // set the field null

@@ -12,20 +12,22 @@ import com.icthh.xm.commons.tenant.Tenant;
 import com.icthh.xm.commons.tenant.TenantContext;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantKey;
-import com.icthh.xm.ms.entity.AbstractUnitTest;
+import com.icthh.xm.ms.entity.AbstractJupiterUnitTest;
 import com.icthh.xm.ms.entity.config.XmEntityTenantConfigService;
 import com.icthh.xm.ms.entity.domain.spec.FunctionSpec;
 import com.icthh.xm.ms.entity.domain.spec.TypeSpec;
 import lombok.SneakyThrows;
 import org.assertj.core.api.Assertions;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -50,8 +52,9 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-@RunWith(MockitoJUnitRunner.class)
-public class XmEntityDynamicPermissionCheckServiceUnitTest extends AbstractUnitTest {
+@ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
+public class XmEntityDynamicPermissionCheckServiceUnitTest extends AbstractJupiterUnitTest {
 
     private static final String DYNAMIC_FUNCTION_PERMISSION_FEATURE = "dynamicPermissionCheckEnabled";
 
@@ -92,13 +95,13 @@ public class XmEntityDynamicPermissionCheckServiceUnitTest extends AbstractUnitT
     @Spy
     private XmEntityDynamicPermissionCheckService dynamicPermissionCheckService;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         when(permissionService.getPermissions("XM")).thenReturn(new HashMap<>());
         applyMock(tenantContextHolder);
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
     }
 

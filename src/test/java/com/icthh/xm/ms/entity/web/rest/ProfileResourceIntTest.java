@@ -16,17 +16,17 @@ import com.icthh.xm.commons.security.XmAuthenticationContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
 import com.icthh.xm.lep.api.LepManager;
-import com.icthh.xm.ms.entity.AbstractSpringBootTest;
+import com.icthh.xm.ms.entity.AbstractJupiterSpringBootTest;
 import com.icthh.xm.ms.entity.domain.Profile;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.repository.ProfileRepository;
 import com.icthh.xm.ms.entity.repository.search.XmEntitySearchRepository;
 import com.icthh.xm.ms.entity.service.ProfileService;
 import jakarta.persistence.EntityManager;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -45,7 +45,7 @@ import java.util.Optional;
  *
  * @see ProfileResource
  */
-public class ProfileResourceIntTest extends AbstractSpringBootTest {
+public class ProfileResourceIntTest extends AbstractJupiterSpringBootTest {
 
     private static final String DEFAULT_USER_KEY = "AAAAAAAAAA";
 
@@ -90,7 +90,7 @@ public class ProfileResourceIntTest extends AbstractSpringBootTest {
         TenantContextUtils.setTenant(tenantContextHolder, "RESINTTEST");
     }
 
-    @Before
+    @BeforeEach
     public void setup() {
         MockitoAnnotations.initMocks(this);
 
@@ -121,7 +121,7 @@ public class ProfileResourceIntTest extends AbstractSpringBootTest {
         profile = createEntity(em, entity);
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         tenantContextHolder.getPrivilegedContext().destroyCurrentContext();
         lepManager.endThreadContext();
@@ -170,9 +170,9 @@ public class ProfileResourceIntTest extends AbstractSpringBootTest {
         profileService.save(profile);
 
         Profile profileByEntityId = profileService.getByXmEntityId(profile.getXmentity().getId());
-        Assert.assertNotNull(profileByEntityId);
-        Assert.assertEquals(profile.getId(), profileByEntityId.getId());
-        Assert.assertEquals(profile.getXmentity().getId(), profileByEntityId.getXmentity().getId());
+        Assertions.assertNotNull(profileByEntityId);
+        Assertions.assertEquals(profile.getId(), profileByEntityId.getId());
+        Assertions.assertEquals(profile.getXmentity().getId(), profileByEntityId.getXmentity().getId());
     }
 
     @Test

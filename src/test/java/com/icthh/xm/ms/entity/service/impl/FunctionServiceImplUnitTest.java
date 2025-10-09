@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Maps;
 import com.icthh.xm.commons.service.FunctionTxControl;
 import com.icthh.xm.commons.service.impl.FunctionTxControlImpl;
-import com.icthh.xm.ms.entity.AbstractUnitTest;
+import com.icthh.xm.ms.entity.AbstractJupiterUnitTest;
 import com.icthh.xm.ms.entity.config.XmEntityTenantConfigService;
 import com.icthh.xm.ms.entity.config.XmEntityTenantConfigService.XmEntityTenantConfig;
 import com.icthh.xm.ms.entity.domain.FunctionContext;
@@ -22,12 +22,9 @@ import com.icthh.xm.ms.entity.service.mapper.FunctionResultMapper;
 import com.icthh.xm.ms.entity.service.mapper.FunctionResultMapperImpl;
 import org.assertj.core.util.Lists;
 import org.jetbrains.annotations.NotNull;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 import org.mockito.AdditionalAnswers;
 import org.mockito.Mockito;
 import org.mockito.stubbing.Answer;
@@ -38,6 +35,7 @@ import java.util.Optional;
 
 import static com.icthh.xm.ms.entity.domain.ext.IdOrKey.SELF;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.never;
@@ -47,15 +45,12 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
-public class FunctionServiceImplUnitTest extends AbstractUnitTest {
+public class FunctionServiceImplUnitTest extends AbstractJupiterUnitTest {
 
     public static final String UNKNOWN_KEY = "UNKNOWN_KEY";
     public static final String VALIDATION_FUNCTION = "VALIDATION_FUNCTION";
 
     private XmEntityFunctionServiceFacade functionServiceFacade;
-
-    @Rule
-    public final ExpectedException exception = ExpectedException.none();
 
     private XmEntitySpecService xmEntitySpecService;
     private XmEntityService xmEntityService;
@@ -78,7 +73,7 @@ public class FunctionServiceImplUnitTest extends AbstractUnitTest {
     final String xmEntityTypeKey = "DUMMY";
 
 
-    @Before
+    @BeforeEach
     public void setUp() {
         xmEntitySpecService = Mockito.mock(XmEntitySpecService.class);
         xmEntityService = Mockito.mock(XmEntityService.class);
@@ -99,18 +94,23 @@ public class FunctionServiceImplUnitTest extends AbstractUnitTest {
 
     @Test
     public void executeKeyNotNullCheck() {
-        exception.expect(NullPointerException.class);
-        exception.expectMessage("functionKey can't be null");
-        functionServiceFacade.execute(null, Maps.newHashMap(), null);
+        NullPointerException exception = assertThrows(NullPointerException.class, () -> {
+            functionServiceFacade.execute(null, Maps.newHashMap(), null);
+        });
+        assertEquals("functionKey can't be null", exception.getMessage());
     }
 
     @Test
     public void executeSpecNotFoundCheck() {
-        exception.expect(IllegalArgumentException.class);
-        exception.expectMessage("Function not found, function key: " + UNKNOWN_KEY);
+
         when(xmEntitySpecService.findFunction(UNKNOWN_KEY, "POST"))
             .thenReturn(Optional.empty());
-        functionServiceFacade.execute(UNKNOWN_KEY, Maps.newHashMap(), null);
+
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+            functionServiceFacade.execute(UNKNOWN_KEY, Maps.newHashMap(), null);
+        });
+
+        assertEquals("Function not found, function key: " + UNKNOWN_KEY, exception.getMessage());
     }
 
     @Test
@@ -177,9 +177,10 @@ public class FunctionServiceImplUnitTest extends AbstractUnitTest {
      */
     @Test
     public void executeWithNullFunctionKeyAndNullId() {
-        exception.expect(NullPointerException.class);
-        exception.expectMessage("functionKey can't be null");
-        functionServiceFacade.execute(null, null, Maps.newHashMap());
+        NullPointerException exception = assertThrows(NullPointerException.class, () -> {
+            functionServiceFacade.execute(null, null, Maps.newHashMap());
+        });
+        assertEquals("functionKey can't be null", exception.getMessage());
     }
 
     /**
@@ -187,9 +188,10 @@ public class FunctionServiceImplUnitTest extends AbstractUnitTest {
      */
     @Test
     public void executeWithFunctionKeyAndNullId() {
-        exception.expect(NullPointerException.class);
-        exception.expectMessage("idOrKey can't be null");
-        functionServiceFacade.execute("Any key", null, Maps.newHashMap());
+        NullPointerException exception = assertThrows(NullPointerException.class, () -> {
+            functionServiceFacade.execute("Any key", null, Maps.newHashMap());
+        });
+        assertEquals("idOrKey can't be null", exception.getMessage());
     }
 
     @Test
@@ -201,14 +203,16 @@ public class FunctionServiceImplUnitTest extends AbstractUnitTest {
         when(xmEntitySpecService.findEntityFunction(xmEntityTypeKey, functionKey))
             .thenReturn(Optional.empty());
 
-        exception.expect(IllegalArgumentException.class);
-        exception.expectMessage("Function not found for entity type key " + xmEntityTypeKey
-            + " and function key: " + functionKey);
-        functionServiceFacade.execute(functionKey, key, Maps.newHashMap());
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+            functionServiceFacade.execute(functionKey, key, Maps.newHashMap());
+        });
+        assertEquals("Function not found for entity type key " + xmEntityTypeKey
+            + " and function key: " + functionKey, exception.getMessage());
+
     }
 
     @Test
-    @Ignore("Ignored until state mapping behaviour will be agreed")
+    @Disabled("Ignored until state mapping behaviour will be agreed")
     public void executeFailsIfStatesNotMatched() {
         FunctionSpec spec = getFunctionSpec(Boolean.FALSE);
         spec.setAllowedStateKeys(Lists.newArrayList("SOME-STATE"));
@@ -224,9 +228,10 @@ public class FunctionServiceImplUnitTest extends AbstractUnitTest {
         when(xmEntitySpecService.findEntityFunction(xmEntityTypeKey, functionName))
             .thenReturn(Optional.of(spec));
 
-        exception.expect(IllegalStateException.class);
-        exception.expectMessage("Function call forbidden for current state");
-        functionServiceFacade.execute(functionName, key, Maps.newHashMap());
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+            functionServiceFacade.execute(functionName, key, Maps.newHashMap());
+        });
+        assertEquals("Function call forbidden for current state", exception.getMessage());
 
     }
 
@@ -369,8 +374,8 @@ public class FunctionServiceImplUnitTest extends AbstractUnitTest {
         FunctionContext result = functionServiceFacade.execute("FUNCTION_WITH_BINARY_RESULT", key, context);
 
         //THEN
-        Assert.assertTrue(result.isBinaryData());
-        Assert.assertArrayEquals("kind_of_pdf_content".getBytes(), (byte[]) result.functionResult());
+        assertTrue(result.isBinaryData());
+        assertArrayEquals("kind_of_pdf_content".getBytes(), (byte[]) result.functionResult());
     }
 
     @Test
@@ -390,9 +395,9 @@ public class FunctionServiceImplUnitTest extends AbstractUnitTest {
         FunctionResultContext result = (FunctionResultContext) functionServiceFacade.execute("my/api-path/with/101/and/value2", null, "POST");
 
         //THEN
-        Assert.assertEquals(2, result.getData().size());
-        Assert.assertEquals("101", result.getData().get("param1"));
-        Assert.assertEquals("value2", result.getData().get("param2"));
+        assertEquals(2, result.getData().size());
+        assertEquals("101", result.getData().get("param1"));
+        assertEquals("value2", result.getData().get("param2"));
 
         //WHEN input not null
         HashMap<String, Object> input = new HashMap<>();
@@ -400,10 +405,10 @@ public class FunctionServiceImplUnitTest extends AbstractUnitTest {
         result = (FunctionResultContext) functionServiceFacade.execute("my/api-path/with/101/and/value2", input, "POST");
 
         //THEN
-        Assert.assertEquals(3, result.getData().size());
-        Assert.assertEquals("value", result.getData().get("key"));
-        Assert.assertEquals("101", result.getData().get("param1"));
-        Assert.assertEquals("value2", result.getData().get("param2"));
+        assertEquals(3, result.getData().size());
+        assertEquals("value", result.getData().get("key"));
+        assertEquals("101", result.getData().get("param1"));
+        assertEquals("value2", result.getData().get("param2"));
     }
 
     @Test
@@ -424,9 +429,9 @@ public class FunctionServiceImplUnitTest extends AbstractUnitTest {
         FunctionContext result = (FunctionContext) functionServiceFacade.executeAnonymous("my/api-path/with/101/and/value2", new HashMap<>(), "POST");
 
         //THEN
-        Assert.assertEquals(2, result.getData().size());
-        Assert.assertEquals("101", result.getData().get("param1"));
-        Assert.assertEquals("value2", result.getData().get("param2"));
+        assertEquals(2, result.getData().size());
+        assertEquals("101", result.getData().get("param1"));
+        assertEquals("value2", result.getData().get("param2"));
     }
 
     private FunctionSpec getFunctionSpec(Boolean saveContext) {
@@ -511,29 +516,34 @@ public class FunctionServiceImplUnitTest extends AbstractUnitTest {
 
     @Test
     public void validationFailOnInvalidFunctionInputWhenValidationEnabled() {
-        exception.expect(JsonValidationService.InvalidJsonException.class);
         String exceptionMessage = "$.numberArgument: string found, number expected";
-        exception.expectMessage(exceptionMessage);
 
         FunctionSpec spec = generateFunctionSpec(true);
         when(xmEntitySpecService.findFunction(VALIDATION_FUNCTION, "POST")).thenReturn(Optional.of(spec));
         Map<String, Object> functionInput = Map.of("numberArgument", "stringValue");
-        functionServiceFacade.execute(VALIDATION_FUNCTION, functionInput, "POST");
+
+        JsonValidationService.InvalidJsonException exception = assertThrows(JsonValidationService.InvalidJsonException.class, () -> {
+            functionServiceFacade.execute(VALIDATION_FUNCTION, functionInput, "POST");
+        });
+        assertEquals(exceptionMessage, exception.getMessage());
         verify(jsonValidationService).assertJson(eq(functionInput), eq(spec.getInputSpec()));
+
     }
 
     @Test
     public void validationFailOnInvalidFunctionWithEntityIdInputWhenValidationEnabled() {
-        exception.expect(JsonValidationService.InvalidJsonException.class);
         String exceptionMessage = "$.numberArgument: string found, number expected";
-        exception.expectMessage(exceptionMessage);
 
         FunctionSpec spec = generateFunctionSpec(true);
         Map<String, Object> functionInput = Map.of("numberArgument", "stringValue");
         spec.setWithEntityId(true);
         when(xmEntitySpecService.findEntityFunction(xmEntityTypeKey, VALIDATION_FUNCTION)).thenReturn(Optional.of(spec));
         when(xmEntityService.findStateProjectionById(SELF)).thenReturn(getProjection(SELF));
-        functionServiceFacade.execute(VALIDATION_FUNCTION, SELF, functionInput);
+
+        JsonValidationService.InvalidJsonException exception = assertThrows(JsonValidationService.InvalidJsonException.class, () -> {
+            functionServiceFacade.execute(VALIDATION_FUNCTION, SELF, functionInput);
+        });
+        assertEquals(exceptionMessage, exception.getMessage());
         verify(jsonValidationService).assertJson(eq(functionInput), eq(spec.getInputSpec()));
     }
 

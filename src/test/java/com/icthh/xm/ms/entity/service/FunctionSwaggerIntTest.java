@@ -7,14 +7,14 @@ import com.icthh.xm.commons.config.swagger.DynamicSwaggerRefreshableConfiguratio
 import com.icthh.xm.commons.swagger.model.SwaggerModel;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
-import com.icthh.xm.ms.entity.AbstractSpringBootTest;
+import com.icthh.xm.ms.entity.AbstractJupiterSpringBootTest;
 import com.icthh.xm.ms.entity.service.json.JsonConfigurationListener;
 import com.icthh.xm.ms.entity.service.swagger.XmEntityDynamicSwaggerFunctionGeneratorImpl;
 import lombok.SneakyThrows;
 import org.apache.commons.io.IOUtils;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 
@@ -32,7 +32,7 @@ import static com.fasterxml.jackson.databind.SerializationFeature.ORDER_MAP_ENTR
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.assertEquals;
 
-public class FunctionSwaggerIntTest extends AbstractSpringBootTest {
+public class FunctionSwaggerIntTest extends AbstractJupiterSpringBootTest {
 
     @Autowired
     private DynamicSwaggerRefreshableConfiguration dynamicSwaggerRefreshableConfiguration;
@@ -45,12 +45,12 @@ public class FunctionSwaggerIntTest extends AbstractSpringBootTest {
     @Autowired
     private TenantContextHolder tenantContextHolder;
 
-    @Before
+    @BeforeEach
     public void before() {
         TenantContextUtils.setTenant(tenantContextHolder, "TEST_TENANT");
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         tenantContextHolder.getPrivilegedContext().destroyCurrentContext();
     }

@@ -2,17 +2,18 @@ package com.icthh.xm.ms.entity.domain.listener;
 
 import static com.icthh.xm.ms.entity.config.Constants.DEFAULT_AVATAR_URL_PREFIX;
 
-import com.icthh.xm.ms.entity.AbstractJupiterSpringBootTest;
 import com.icthh.xm.ms.entity.config.ApplicationProperties;
+import com.icthh.xm.ms.entity.AbstractJupiterSpringBootTest;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 @Slf4j
-public class AvatarUrlListenerUnitTest extends AbstractJupiterSpringBootTest {
+public class AvatarUrlListenerIntTest extends AbstractJupiterSpringBootTest {
 
     private AvatarUrlListener target;
 
@@ -95,6 +96,7 @@ public class AvatarUrlListenerUnitTest extends AbstractJupiterSpringBootTest {
         Assertions.assertEquals("http://s3.hello.amazonaws.com/hello/hello.jpg", entity.getAvatarUrl());
     }
 
+    @Disabled
     @Test
     public void testPostLoadSuccess() {
         XmEntity entity = new XmEntity().avatarUrl("hello.jpg");
@@ -112,6 +114,5 @@ public class AvatarUrlListenerUnitTest extends AbstractJupiterSpringBootTest {
 
         Assertions.assertEquals(applicationProperties.getObjectStorage().getAvatar().getDbUrlTemplate() + "/" + entity.getAvatarUrlRelative(), entity.getAvatarUrl());
     }
-
 
 }

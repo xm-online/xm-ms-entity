@@ -9,21 +9,21 @@ import static org.mockito.Mockito.when;
 import com.icthh.xm.commons.security.XmAuthenticationContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
-import com.icthh.xm.ms.entity.AbstractSpringBootTest;
+import com.icthh.xm.ms.entity.AbstractJupiterSpringBootTest;
 import com.icthh.xm.ms.entity.domain.Profile;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.repository.ProfileRepository;
 import com.icthh.xm.ms.entity.repository.search.XmEntitySearchRepository;
 import com.icthh.xm.ms.entity.web.rest.XmEntityResourceIntTest;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.transaction.BeforeTransaction;
 import org.springframework.transaction.annotation.Transactional;
 
 @Transactional
-public class ProfileServiceIntTest extends AbstractSpringBootTest {
+public class ProfileServiceIntTest extends AbstractJupiterSpringBootTest {
 
     private static final Long ID = 1L;
     private static final String USER_KEY = "test";
@@ -41,7 +41,7 @@ public class ProfileServiceIntTest extends AbstractSpringBootTest {
     @Autowired
     private XmAuthenticationContextHolder authContextHolder;
 
-    @Before
+    @BeforeEach
     public void init() {
         TenantContextUtils.setTenant(tenantContextHolder, "TEST");
 
@@ -54,7 +54,7 @@ public class ProfileServiceIntTest extends AbstractSpringBootTest {
         TenantContextUtils.setTenant(tenantContextHolder, "TEST");
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         tenantContextHolder.getPrivilegedContext().destroyCurrentContext();
     }

@@ -13,14 +13,14 @@ import com.icthh.xm.commons.security.XmAuthenticationContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
 import com.icthh.xm.lep.api.LepManager;
-import com.icthh.xm.ms.entity.AbstractSpringBootTest;
+import com.icthh.xm.ms.entity.AbstractJupiterSpringBootTest;
 import com.icthh.xm.ms.entity.service.XmEntityFunctionExecutorService;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
@@ -31,7 +31,7 @@ import java.io.InputStream;
 import java.util.Map;
 
 @Slf4j
-public class XmEntityCommonsIntTest extends AbstractSpringBootTest {
+public class XmEntityCommonsIntTest extends AbstractJupiterSpringBootTest {
 
     @Autowired
     private XmEntityFunctionExecutorService functionService;
@@ -55,7 +55,7 @@ public class XmEntityCommonsIntTest extends AbstractSpringBootTest {
     }
 
     @SneakyThrows
-    @Before
+    @BeforeEach
     public void setup() {
         MockitoAnnotations.initMocks(this);
 
@@ -77,7 +77,7 @@ public class XmEntityCommonsIntTest extends AbstractSpringBootTest {
         return IOUtils.toString(cfgInputStream, UTF_8);
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         lepManager.endThreadContext();
         tenantContextHolder.getPrivilegedContext().destroyCurrentContext();

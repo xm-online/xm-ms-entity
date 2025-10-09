@@ -7,7 +7,6 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.google.common.collect.ImmutableMap;
 import com.icthh.xm.commons.i18n.error.web.ExceptionTranslator;
 import com.icthh.xm.commons.security.XmAuthenticationContext;
 import com.icthh.xm.commons.security.internal.XmAuthentication;
@@ -16,11 +15,11 @@ import com.icthh.xm.commons.tenant.TenantContext;
 import com.icthh.xm.commons.tenant.TenantKey;
 import com.icthh.xm.commons.web.spring.TenantInterceptor;
 import com.icthh.xm.lep.api.LepManager;
-import com.icthh.xm.ms.entity.AbstractSpringBootTest;
+import com.icthh.xm.ms.entity.AbstractJupiterSpringBootTest;
 import com.icthh.xm.ms.entity.web.rest.XmEntityResource;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,7 +38,7 @@ import java.util.Optional;
  *
  * @see XmEntityResource
  */
-public class TenantInterceptorIntTest extends AbstractSpringBootTest {
+public class TenantInterceptorIntTest extends AbstractJupiterSpringBootTest {
 
     @Autowired
     private XmEntityResource xmEntityResource;
@@ -67,7 +66,7 @@ public class TenantInterceptorIntTest extends AbstractSpringBootTest {
 
     private MockMvc restXmEntityMockMvc;
 
-    @Before
+    @BeforeEach
     public void setup() {
         MockitoAnnotations.initMocks(this);
         SecurityContextHolder.getContext().setAuthentication(auth);
@@ -103,7 +102,7 @@ public class TenantInterceptorIntTest extends AbstractSpringBootTest {
     }
 
     @Test
-    @Ignore //TODO fix when security test will be implemented
+    @Disabled //TODO fix when security test will be implemented
     public void testSuccess() throws Exception {
         when(auth.getDetails()).thenReturn(details);
         when(details.getDecodedDetails()).thenReturn(Map.of("tenant", "xm"));

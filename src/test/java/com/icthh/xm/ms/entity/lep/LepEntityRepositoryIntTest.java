@@ -1,18 +1,16 @@
 package com.icthh.xm.ms.entity.lep;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.icthh.xm.commons.lep.XmLepScriptConfigServerResourceLoader;
 import com.icthh.xm.commons.security.XmAuthenticationContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
 import com.icthh.xm.lep.api.LepManager;
-import com.icthh.xm.ms.entity.AbstractSpringBootTest;
+import com.icthh.xm.ms.entity.AbstractJupiterSpringBootTest;
 import com.icthh.xm.ms.entity.service.XmEntityFunctionExecutorService;
 import lombok.SneakyThrows;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
@@ -27,11 +25,10 @@ import java.util.Map;
 import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_AUTH_CONTEXT;
 import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_TENANT_CONTEXT;
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 @Transactional
-public class LepEntityRepositoryIntTest extends AbstractSpringBootTest  {
+public class LepEntityRepositoryIntTest extends AbstractJupiterSpringBootTest {
     @Autowired
     private TenantContextHolder tenantContextHolder;
 
@@ -53,7 +50,7 @@ public class LepEntityRepositoryIntTest extends AbstractSpringBootTest  {
     }
 
     @SneakyThrows
-    @Before
+    @BeforeEach
     public void setup() {
         MockitoAnnotations.initMocks(this);
 
@@ -63,7 +60,7 @@ public class LepEntityRepositoryIntTest extends AbstractSpringBootTest  {
         });
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         lepManager.endThreadContext();
         tenantContextHolder.getPrivilegedContext().destroyCurrentContext();
@@ -86,8 +83,8 @@ public class LepEntityRepositoryIntTest extends AbstractSpringBootTest  {
 
         assertEquals(1, resultEntities.size());
         assertEquals(2, resultEntities.get(0).size());
-        assertEquals("TEST_EXPORT_2", resultEntities.get(0).get("typeKey"));
-        assertTrue(resultEntities.get(0).get("id") instanceof Long);
+        assertEquals("TEST_EXPORT_2", resultEntities.getFirst().get("typeKey"));
+        assertInstanceOf(Long.class, resultEntities.getFirst().get("id"));
 
         leps.onRefresh(funcKey, null);
     }

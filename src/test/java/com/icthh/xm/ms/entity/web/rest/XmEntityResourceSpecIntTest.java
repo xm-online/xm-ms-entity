@@ -5,7 +5,7 @@ import com.icthh.xm.commons.security.XmAuthenticationContext;
 import com.icthh.xm.commons.security.XmAuthenticationContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
-import com.icthh.xm.ms.entity.AbstractSpringBootTest;
+import com.icthh.xm.ms.entity.AbstractJupiterSpringBootTest;
 import com.icthh.xm.ms.entity.config.ApplicationProperties;
 import com.icthh.xm.ms.entity.config.XmEntityTenantConfigService;
 import com.icthh.xm.ms.entity.domain.XmEntity;
@@ -35,9 +35,9 @@ import com.icthh.xm.ms.entity.service.impl.XmEntityServiceImpl;
 import com.icthh.xm.ms.entity.service.storage.AvatarStorageService;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
@@ -67,7 +67,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @Slf4j
 @WithMockUser(authorities = {"SUPER-ADMIN"})
-public class XmEntityResourceSpecIntTest extends AbstractSpringBootTest {
+public class XmEntityResourceSpecIntTest extends AbstractJupiterSpringBootTest {
 
     private static final String DEFAULT_TYPE_KEY = "DEMO.TEST";
     private static final String DEFAULT_KEY = "KEY";
@@ -162,7 +162,7 @@ public class XmEntityResourceSpecIntTest extends AbstractSpringBootTest {
     }
 
     @SneakyThrows
-    @Before
+    @BeforeEach
     public void setup() {
 
         TenantContextUtils.setTenant(tenantContextHolder, "SPECIFICATIONS");
@@ -216,7 +216,7 @@ public class XmEntityResourceSpecIntTest extends AbstractSpringBootTest {
             .build();
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         tenantContextHolder.getPrivilegedContext().destroyCurrentContext();
     }
@@ -244,7 +244,7 @@ public class XmEntityResourceSpecIntTest extends AbstractSpringBootTest {
 
         List<XmEntity> xmEntityList = xmEntityRepository.findAll();
         assertThat(xmEntityList).hasSize(databaseSizeBeforeCreate + 1);
-        XmEntity testXmEntity = xmEntityList.get(xmEntityList.size() - 1);
+        XmEntity testXmEntity = xmEntityList.getLast();
         assertThat(testXmEntity.getKey()).isEqualTo(DEFAULT_KEY);
         assertThat(testXmEntity.getTypeKey()).isEqualTo(DEFAULT_TYPE_KEY);
         assertThat(testXmEntity.getStateKey()).isEqualTo(NEW_STATE);

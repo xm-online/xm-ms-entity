@@ -10,15 +10,15 @@ import com.icthh.xm.commons.web.rest.FunctionMvcResource;
 import com.icthh.xm.commons.web.rest.FunctionResource;
 import com.icthh.xm.commons.web.rest.FunctionUploadResource;
 import com.icthh.xm.lep.api.LepManager;
-import com.icthh.xm.ms.entity.AbstractSpringBootTest;
+import com.icthh.xm.ms.entity.AbstractJupiterSpringBootTest;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.service.impl.XmEntityServiceImpl;
 import com.icthh.xm.ms.entity.service.processor.XmEntityDataFormSpecProcessor;
 import lombok.SneakyThrows;
 import org.apache.commons.io.IOUtils;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
@@ -55,7 +55,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @WithMockUser(authorities = {"SUPER-ADMIN"})
 @Transactional
-public class FunctionResourceIntTest extends AbstractSpringBootTest {
+public class FunctionResourceIntTest extends AbstractJupiterSpringBootTest {
 
     private MockMvc mockMvc;
 
@@ -109,7 +109,7 @@ public class FunctionResourceIntTest extends AbstractSpringBootTest {
     }
 
     @SneakyThrows
-    @Before
+    @BeforeEach
     public void setup() {
         MockitoAnnotations.initMocks(this);
 
@@ -127,7 +127,7 @@ public class FunctionResourceIntTest extends AbstractSpringBootTest {
         initLeps(true);
     }
 
-    @After
+    @AfterEach
     public void destroy(){
         initLeps(false);
         lepManager.endThreadContext();
@@ -161,7 +161,7 @@ public class FunctionResourceIntTest extends AbstractSpringBootTest {
         return IOUtils.toString(cfgInputStream, UTF_8);
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         lepManager.endThreadContext();
         tenantContextHolder.getPrivilegedContext().destroyCurrentContext();
