@@ -238,7 +238,7 @@ public class XmEntityResourceSpecIntTest extends AbstractJupiterSpringBootTest {
 
         List<XmEntity> xmEntityList = xmEntityRepository.findAll();
         assertThat(xmEntityList).hasSize(databaseSizeBeforeCreate + 1);
-        XmEntity testXmEntity = xmEntityList.get(xmEntityList.size() - 1);
+        XmEntity testXmEntity = xmEntityList.getLast();
         assertThat(testXmEntity.getKey()).isEqualTo(DEFAULT_KEY);
         assertThat(testXmEntity.getTypeKey()).isEqualTo(DEFAULT_TYPE_KEY);
         assertThat(testXmEntity.getStateKey()).isEqualTo(NEW_STATE);

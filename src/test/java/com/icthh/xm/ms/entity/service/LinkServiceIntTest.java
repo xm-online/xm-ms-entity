@@ -97,7 +97,7 @@ public class LinkServiceIntTest extends AbstractJupiterSpringBootTest {
         when(dynamicPermissionCheckService.isDynamicLinkDeletePermissionEnabled()).thenReturn(true);
         linkService.delete(expected.getFirst().getId());
         verify(dynamicPermissionCheckService, times(2)).isDynamicLinkDeletePermissionEnabled();
-        verify(dynamicPermissionCheckService).checkContextPermission(LINK_DELETE, "LINK.DELETE", expected.get(0).getTypeKey());
+        verify(dynamicPermissionCheckService).checkContextPermission(LINK_DELETE, "LINK.DELETE", expected.getFirst().getTypeKey());
     }
 
     @Test

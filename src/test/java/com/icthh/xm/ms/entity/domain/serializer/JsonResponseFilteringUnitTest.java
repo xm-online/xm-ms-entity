@@ -52,7 +52,6 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import java.io.UnsupportedEncodingException;
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 @Slf4j

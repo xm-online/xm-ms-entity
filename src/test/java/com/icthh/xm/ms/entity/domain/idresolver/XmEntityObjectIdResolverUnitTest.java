@@ -76,8 +76,8 @@ public class XmEntityObjectIdResolverUnitTest extends AbstractJupiterWebMvcTest 
         XmEntity source = createRef(1L);
         XmEntity target = createRef(2L);
 
-        when(entityRepository.findById(1L)).thenReturn(Optional.ofNullable(source));
-        when(entityRepository.findById(2L)).thenReturn(Optional.ofNullable(target));
+        when(entityRepository.findById(1L)).thenReturn(Optional.of(source));
+        when(entityRepository.findById(2L)).thenReturn(Optional.of(target));
 
         Link link = new Link().typeKey(DEFAULT_TYPE_KEY)
             .startDate(Instant.now())

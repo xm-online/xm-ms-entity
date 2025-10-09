@@ -25,8 +25,7 @@ import java.util.Map;
 import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_AUTH_CONTEXT;
 import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_TENANT_CONTEXT;
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 @Transactional
 public class LepEntityRepositoryIntTest extends AbstractJupiterSpringBootTest {
@@ -84,8 +83,8 @@ public class LepEntityRepositoryIntTest extends AbstractJupiterSpringBootTest {
 
         assertEquals(1, resultEntities.size());
         assertEquals(2, resultEntities.get(0).size());
-        assertEquals("TEST_EXPORT_2", resultEntities.get(0).get("typeKey"));
-        assertTrue(resultEntities.get(0).get("id") instanceof Long);
+        assertEquals("TEST_EXPORT_2", resultEntities.getFirst().get("typeKey"));
+        assertInstanceOf(Long.class, resultEntities.getFirst().get("id"));
 
         leps.onRefresh(funcKey, null);
     }
