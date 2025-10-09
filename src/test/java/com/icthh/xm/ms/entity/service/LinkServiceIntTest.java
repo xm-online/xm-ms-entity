@@ -85,7 +85,7 @@ public class LinkServiceIntTest extends AbstractJupiterSpringBootTest {
     @Transactional
     public void testSimpleDelete() {
         when(dynamicPermissionCheckService.isDynamicLinkDeletePermissionEnabled()).thenReturn(false);
-        linkService.delete(expected.get(0).getId());
+        linkService.delete(expected.getFirst().getId());
         verify(dynamicPermissionCheckService).isDynamicLinkDeletePermissionEnabled();
         verify(dynamicPermissionCheckService, never()).checkContextPermission(any(), any(), any());
     }
@@ -95,7 +95,7 @@ public class LinkServiceIntTest extends AbstractJupiterSpringBootTest {
     @WithMockUser(authorities = "SUPER-ADMIN")
     public void testDeleteWithPermissionAssertion() {
         when(dynamicPermissionCheckService.isDynamicLinkDeletePermissionEnabled()).thenReturn(true);
-        linkService.delete(expected.get(0).getId());
+        linkService.delete(expected.getFirst().getId());
         verify(dynamicPermissionCheckService, times(2)).isDynamicLinkDeletePermissionEnabled();
         verify(dynamicPermissionCheckService).checkContextPermission(LINK_DELETE, "LINK.DELETE", expected.get(0).getTypeKey());
     }
@@ -106,7 +106,7 @@ public class LinkServiceIntTest extends AbstractJupiterSpringBootTest {
     public void testDeleteWherePermissionDenied() {
         assertThrows(AccessDeniedException.class, () -> {
             when(dynamicPermissionCheckService.isDynamicLinkDeletePermissionEnabled()).thenReturn(true);
-            linkService.delete(expected.get(0).getId());
+            linkService.delete(expected.getFirst().getId());
         });
     }
 
