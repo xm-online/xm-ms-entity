@@ -13,7 +13,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.icthh.xm.ms.entity.AbstractUnitTest;
+import com.icthh.xm.ms.entity.AbstractJupiterSpringBootTest;
 import io.undertow.Undertow;
 import io.undertow.Undertow.Builder;
 import io.undertow.UndertowOptions;
@@ -35,8 +35,8 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.ServletRegistration;
 import jakarta.servlet.ServletSecurityElement;
 import org.h2.server.web.JakartaWebServlet;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.web.ServerProperties;
 import org.springframework.boot.web.embedded.undertow.UndertowServletWebServerFactory;
 import org.springframework.http.HttpHeaders;
@@ -54,7 +54,7 @@ import tech.jhipster.config.JHipsterProperties;
  *
  * @see WebConfigurer
  */
-public class WebConfigurerIntTest extends AbstractUnitTest {
+public class WebConfigurerIntTest extends AbstractJupiterSpringBootTest {
 
     private WebConfigurer webConfigurer;
 
@@ -66,7 +66,7 @@ public class WebConfigurerIntTest extends AbstractUnitTest {
 
     private ServerProperties serverProperties;
 
-    @Before
+    @BeforeEach
     public void setup() {
         servletContext = spy(new MockServletContext());
         doReturn(new MockFilterRegistration())

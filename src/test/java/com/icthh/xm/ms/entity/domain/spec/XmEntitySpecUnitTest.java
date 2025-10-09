@@ -1,20 +1,14 @@
 package com.icthh.xm.ms.entity.domain.spec;
 
 import static com.icthh.xm.ms.entity.web.rest.XmEntitySaveIntTest.loadFile;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -23,12 +17,12 @@ import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
 
-import com.icthh.xm.ms.entity.AbstractUnitTest;
+import com.icthh.xm.ms.entity.AbstractJupiterUnitTest;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.apache.commons.lang3.mutable.MutableInt;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.mockito.internal.util.Primitives;
 import org.reflections.Reflections;
 import org.reflections.scanners.ResourcesScanner;
@@ -38,7 +32,7 @@ import org.springframework.cglib.proxy.MethodProxy;
 import org.springframework.core.io.ClassPathResource;
 
 @Slf4j
-public class XmEntitySpecUnitTest extends AbstractUnitTest {
+public class XmEntitySpecUnitTest extends AbstractJupiterUnitTest {
 
     private static final Set<String> SPEC_MAIN_FILES = loadListSpecificationFiles();
 

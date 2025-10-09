@@ -3,11 +3,11 @@ package com.icthh.xm.ms.entity.repository.kafka;
 import static junit.framework.TestCase.assertTrue;
 import static org.junit.Assert.assertFalse;
 
-import com.icthh.xm.ms.entity.AbstractUnitTest;
+import com.icthh.xm.ms.entity.AbstractJupiterUnitTest;
 import com.icthh.xm.ms.entity.domain.kafka.SystemEvent;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-public class SystemEventUnitTest extends AbstractUnitTest {
+public class SystemEventUnitTest extends AbstractJupiterUnitTest {
 
     @Test
     public void testToString() {

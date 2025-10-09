@@ -21,7 +21,7 @@ import com.icthh.xm.commons.security.XmAuthenticationContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
 import com.icthh.xm.lep.api.LepManager;
-import com.icthh.xm.ms.entity.AbstractSpringBootTest;
+import com.icthh.xm.ms.entity.AbstractJupiterSpringBootTest;
 import com.icthh.xm.ms.entity.config.XmEntityTenantConfigService;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.repository.kafka.ProfileEventProducer;
@@ -30,21 +30,19 @@ import com.icthh.xm.ms.entity.service.TenantService;
 import com.icthh.xm.ms.entity.service.impl.XmEntityFunctionServiceFacade;
 import com.icthh.xm.ms.entity.service.impl.XmEntityServiceImpl;
 import java.io.InputStream;
-import java.lang.reflect.Field;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.mutable.MutableLong;
 import org.apache.commons.lang.text.StrSubstitutor;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
@@ -56,12 +54,11 @@ import org.springframework.test.context.transaction.BeforeTransaction;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.ReflectionUtils;
 import org.springframework.validation.Validator;
 
 @Slf4j
 @WithMockUser(authorities = {"SUPER-ADMIN"})
-public class XmEntityLifeCycleSupportIntTest extends AbstractSpringBootTest {
+public class XmEntityLifeCycleSupportIntTest extends AbstractJupiterSpringBootTest {
 
     private final String PATTERN = "/config/tenants/RESINTTEST/entity/lep/lifecycle/";
 
@@ -119,7 +116,7 @@ public class XmEntityLifeCycleSupportIntTest extends AbstractSpringBootTest {
     private int updateState, updateByEntity, updateByTargetState, updateByTransition;
 
     @SneakyThrows
-    @Before
+    @BeforeEach
     public void setup() {
         MockitoAnnotations.initMocks(this);
 
@@ -193,7 +190,7 @@ public class XmEntityLifeCycleSupportIntTest extends AbstractSpringBootTest {
         return IOUtils.toString(cfgInputStream, UTF_8);
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         uninitLeps();
         lepsForCleanUp.forEach(it -> leps.onRefresh(it, null));

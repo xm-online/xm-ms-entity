@@ -4,17 +4,17 @@ import com.icthh.xm.commons.security.XmAuthenticationContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
 import com.icthh.xm.lep.api.LepManager;
-import com.icthh.xm.ms.entity.AbstractSpringBootTest;
+import com.icthh.xm.ms.entity.AbstractJupiterSpringBootTest;
 import com.icthh.xm.ms.entity.domain.Event;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.service.query.filter.EventFilter;
 
 import jakarta.persistence.EntityManager;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.Assert;
 
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.transaction.BeforeTransaction;
 import org.springframework.transaction.annotation.Transactional;
@@ -32,7 +32,7 @@ import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_TENANT_
 import static java.time.Instant.now;
 import static java.util.UUID.randomUUID;
 
-public class EventQueryServiceIntTest extends AbstractSpringBootTest {
+public class EventQueryServiceIntTest extends AbstractJupiterSpringBootTest {
 
     @Autowired
     private EventService eventService;
@@ -47,7 +47,7 @@ public class EventQueryServiceIntTest extends AbstractSpringBootTest {
 
     private List<Event> expected;
 
-    @Before
+    @BeforeEach
     public void setup() {
 
         lepManager.beginThreadContext(ctx -> {
@@ -69,8 +69,8 @@ public class EventQueryServiceIntTest extends AbstractSpringBootTest {
         eventFilter.setStartDate(instantFilter);
         List<Event> actual = eventService.findAllByFilter(eventFilter);
 
-        Assert.assertNotNull(actual);
-        Assert.assertEquals(expected.size() - 1, actual.size());
+        Assertions.assertNotNull(actual);
+        Assertions.assertEquals(expected.size() - 1, actual.size());
     }
 
     @Test
@@ -85,9 +85,9 @@ public class EventQueryServiceIntTest extends AbstractSpringBootTest {
         eventFilter.setAssignedId(longFilter);
         List<Event> actual = eventService.findAllByFilter(eventFilter);
 
-        Assert.assertNotNull(actual);
-        Assert.assertEquals(1, actual.size());
-        Assert.assertEquals(assignedId, actual.stream().findFirst().orElseThrow().getAssigned().getId());
+        Assertions.assertNotNull(actual);
+        Assertions.assertEquals(1, actual.size());
+        Assertions.assertEquals(assignedId, actual.stream().findFirst().orElseThrow().getAssigned().getId());
     }
 
     @BeforeTransaction
@@ -95,7 +95,7 @@ public class EventQueryServiceIntTest extends AbstractSpringBootTest {
         TenantContextUtils.setTenant(tenantContextHolder, "TEST");
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         tenantContextHolder.getPrivilegedContext().destroyCurrentContext();
     }

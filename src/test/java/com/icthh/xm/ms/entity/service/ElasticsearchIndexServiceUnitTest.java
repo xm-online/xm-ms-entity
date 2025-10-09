@@ -11,7 +11,7 @@ import com.icthh.xm.commons.search.ElasticsearchOperations;
 import com.icthh.xm.commons.tenant.TenantContext;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantKey;
-import com.icthh.xm.ms.entity.AbstractUnitTest;
+import com.icthh.xm.ms.entity.AbstractJupiterUnitTest;
 import com.icthh.xm.ms.entity.config.ApplicationProperties;
 import com.icthh.xm.ms.entity.config.IndexConfiguration;
 import com.icthh.xm.ms.entity.config.MappingConfiguration;
@@ -20,14 +20,14 @@ import com.icthh.xm.ms.entity.repository.XmEntityRepositoryInternal;
 import com.icthh.xm.ms.entity.repository.search.XmEntitySearchRepository;
 import jakarta.persistence.EntityManager;
 import lombok.SneakyThrows;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.util.ReflectionUtils;
@@ -37,8 +37,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-@RunWith(MockitoJUnitRunner.class)
-public class ElasticsearchIndexServiceUnitTest extends AbstractUnitTest {
+@ExtendWith(MockitoExtension.class)
+public class ElasticsearchIndexServiceUnitTest extends AbstractJupiterUnitTest {
 
     private static final String TENANT_KEY = "XM";
     public static final String INDEX_KEY = TENANT_KEY.toLowerCase() + "_xmentity";
@@ -68,7 +68,7 @@ public class ElasticsearchIndexServiceUnitTest extends AbstractUnitTest {
     @Mock
     XmEntitySpecService xmEntitySpecService;
 
-    @Before
+    @BeforeEach
     public void before() {
         MockitoAnnotations.initMocks(this);
         when(applicationProperties.getElasticBatchSize()).thenReturn(100);

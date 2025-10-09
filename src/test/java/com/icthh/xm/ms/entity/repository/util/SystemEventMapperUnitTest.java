@@ -1,21 +1,21 @@
 package com.icthh.xm.ms.entity.repository.util;
 
-import com.icthh.xm.ms.entity.AbstractUnitTest;
+import com.icthh.xm.ms.entity.AbstractJupiterUnitTest;
 import com.icthh.xm.ms.entity.config.Constants;
 import com.icthh.xm.ms.entity.domain.EntityState;
 import com.icthh.xm.ms.entity.domain.Profile;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.domain.kafka.SystemEvent;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-public class SystemEventMapperUnitTest extends AbstractUnitTest {
+public class SystemEventMapperUnitTest extends AbstractJupiterUnitTest {
 
     private static final String DEFAULT_ID = "id";
     private static final String DEFAULT_FIRST_NAME = "firstName";

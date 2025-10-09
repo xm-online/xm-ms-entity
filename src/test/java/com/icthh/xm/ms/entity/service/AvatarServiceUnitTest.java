@@ -2,7 +2,6 @@ package com.icthh.xm.ms.entity.service;
 
 import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_AUTH_CONTEXT;
 import static java.util.UUID.randomUUID;
-import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.when;
 
 import com.icthh.xm.commons.lep.XmLepConstants;
@@ -11,13 +10,14 @@ import com.icthh.xm.commons.security.XmAuthenticationContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
 import com.icthh.xm.lep.api.LepManager;
-import com.icthh.xm.ms.entity.AbstractSpringBootTest;
+import com.icthh.xm.ms.entity.AbstractJupiterSpringBootTest;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.domain.ext.IdOrKey;
 import com.icthh.xm.ms.entity.service.impl.XmEntityServiceImpl;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.After;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,7 +26,7 @@ import org.springframework.test.context.transaction.BeforeTransaction;
 import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
-public class AvatarServiceUnitTest extends AbstractSpringBootTest {
+public class AvatarServiceUnitTest extends AbstractJupiterSpringBootTest {
 
     @Autowired
     private TenantContextHolder tenantContextHolder;
@@ -65,7 +65,7 @@ public class AvatarServiceUnitTest extends AbstractSpringBootTest {
         entityId = xmEntityService.save(entity1).getId();
     }
 
-    @After
+    @AfterEach
     public void afterTest() {
         tenantContextHolder.getPrivilegedContext().destroyCurrentContext();
     }
@@ -78,7 +78,7 @@ public class AvatarServiceUnitTest extends AbstractSpringBootTest {
         Integer firstVersion = xmEntityService.findOne(IdOrKey.of(entityId)).getVersion();
         Integer secondVersion = xmEntityService.findOne(IdOrKey.of(entityId)).getVersion();
 
-        assertEquals(firstVersion, secondVersion);
+        Assertions.assertEquals(firstVersion, secondVersion);
 
     }
 

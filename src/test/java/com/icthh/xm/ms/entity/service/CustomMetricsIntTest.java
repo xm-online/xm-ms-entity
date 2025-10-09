@@ -18,7 +18,7 @@ import com.icthh.xm.commons.security.XmAuthenticationContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
 import com.icthh.xm.lep.api.LepManager;
-import com.icthh.xm.ms.entity.AbstractSpringBootTest;
+import com.icthh.xm.ms.entity.AbstractJupiterSpringBootTest;
 import com.icthh.xm.ms.entity.service.metrics.CustomMetricsConfiguration;
 import com.icthh.xm.ms.entity.web.rest.XmEntityResource;
 import java.io.InputStream;
@@ -26,9 +26,9 @@ import java.util.Optional;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,7 +43,7 @@ import org.springframework.test.context.transaction.BeforeTransaction;
  */
 @Slf4j
 @WithMockUser(authorities = {"SUPER-ADMIN"})
-public class CustomMetricsIntTest extends AbstractSpringBootTest {
+public class CustomMetricsIntTest extends AbstractJupiterSpringBootTest {
 
     @Autowired
     private TenantContextHolder tenantContextHolder;
@@ -72,7 +72,7 @@ public class CustomMetricsIntTest extends AbstractSpringBootTest {
     }
 
     @SneakyThrows
-    @Before
+    @BeforeEach
     public void setup() {
 
         TenantContextUtils.setTenant(tenantContextHolder, "RESINTTEST");
@@ -88,7 +88,7 @@ public class CustomMetricsIntTest extends AbstractSpringBootTest {
 
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         lepManager.endThreadContext();
         tenantContextHolder.getPrivilegedContext().destroyCurrentContext();

@@ -7,16 +7,15 @@ import com.icthh.xm.commons.lep.api.LepManagementService;
 import com.icthh.xm.commons.security.XmAuthenticationContext;
 import com.icthh.xm.commons.security.XmAuthenticationContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
-import com.icthh.xm.ms.entity.AbstractSpringBootTest;
+import com.icthh.xm.ms.entity.AbstractJupiterSpringBootTest;
 import com.icthh.xm.ms.entity.service.json.JsonSchemaGenerationService;
 import com.icthh.xm.ms.entity.service.XmEntityGeneratorService;
 import com.icthh.xm.ms.entity.service.XmEntitySpecService;
 import com.icthh.xm.ms.entity.service.impl.XmEntityServiceImpl;
 import lombok.SneakyThrows;
-import org.json.JSONObject;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,8 +31,7 @@ import static com.icthh.xm.ms.entity.service.impl.XmEntityCommonsIntTest.loadFil
 import static com.icthh.xm.ms.entity.util.IsCollectionNotContaining.hasNotItem;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.hasSize;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -47,7 +45,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  *
  * @see XmEntitySpecResource
  */
-public class XmEntitySpecResourceIntTest extends AbstractSpringBootTest {
+public class XmEntitySpecResourceIntTest extends AbstractJupiterSpringBootTest {
 
     private static final String KEY1 = "ACCOUNT";
 
@@ -99,7 +97,7 @@ public class XmEntitySpecResourceIntTest extends AbstractSpringBootTest {
 
     private MockMvc restXmEntitySpecMockMvc;
 
-    @Before
+    @BeforeEach
     @SneakyThrows
     public void setup() {
         MockitoAnnotations.initMocks(this);
@@ -119,7 +117,7 @@ public class XmEntitySpecResourceIntTest extends AbstractSpringBootTest {
             .setControllerAdvice(exceptionTranslator).build();
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         lepManager.endThreadContext();
         tenantContextHolder.getPrivilegedContext().destroyCurrentContext();

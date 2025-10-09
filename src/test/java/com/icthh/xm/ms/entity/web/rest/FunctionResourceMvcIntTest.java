@@ -7,14 +7,14 @@ import com.icthh.xm.commons.web.rest.FunctionApiDocsResource;
 import com.icthh.xm.commons.web.rest.FunctionMvcResource;
 import com.icthh.xm.commons.web.rest.FunctionResource;
 import com.icthh.xm.commons.web.rest.FunctionUploadResource;
-import com.icthh.xm.ms.entity.AbstractWebMvcTest;
+import com.icthh.xm.ms.entity.AbstractJupiterWebMvcTest;
 import com.icthh.xm.ms.entity.domain.FunctionResultContext;
 import com.icthh.xm.ms.entity.service.impl.XmEntityFunctionServiceFacade;
 import com.icthh.xm.ms.entity.service.swagger.XmEntityDynamicSwaggerFunctionGeneratorImpl;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -27,7 +27,7 @@ import org.springframework.web.servlet.ModelAndView;
 
 import static com.google.common.collect.ImmutableMap.of;
 import static com.icthh.xm.ms.entity.config.Constants.MVC_FUNC_RESULT;
-import static org.junit.Assert.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -53,7 +53,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
     FunctionUploadResource.class,
     ExceptionTranslator.class
 })
-public class FunctionResourceMvcIntTest extends AbstractWebMvcTest {
+public class FunctionResourceMvcIntTest extends AbstractJupiterWebMvcTest {
 
     @Autowired
     private WebApplicationContext wac;
@@ -69,7 +69,7 @@ public class FunctionResourceMvcIntTest extends AbstractWebMvcTest {
     @MockBean
     private XmEntityDynamicSwaggerFunctionGeneratorImpl dynamicSwaggerFunctionGenerator;
 
-    @Before
+    @BeforeEach
     public void setup() {
         // Setup MockMVC to use our Spring Configuration
         this.mockMvc = MockMvcBuilders.webAppContextSetup(this.wac).build();

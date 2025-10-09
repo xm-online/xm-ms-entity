@@ -5,14 +5,14 @@ import com.icthh.xm.commons.security.XmAuthenticationContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
 import com.icthh.xm.lep.api.LepManager;
-import com.icthh.xm.ms.entity.AbstractSpringBootTest;
+import com.icthh.xm.ms.entity.AbstractJupiterSpringBootTest;
 import com.icthh.xm.ms.entity.domain.Location;
 import com.icthh.xm.ms.entity.web.rest.LocationResourceIntTest;
 import jakarta.persistence.EntityManager;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.transaction.BeforeTransaction;
@@ -25,7 +25,7 @@ import java.util.stream.Collectors;
 import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_AUTH_CONTEXT;
 import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_TENANT_CONTEXT;
 
-public class LocationServiceIntTest extends AbstractSpringBootTest {
+public class LocationServiceIntTest extends AbstractJupiterSpringBootTest {
 
     @Autowired
     private LocationService locationService;
@@ -40,7 +40,7 @@ public class LocationServiceIntTest extends AbstractSpringBootTest {
 
     private List<Location> expected;
 
-    @Before
+    @BeforeEach
     public void setup() {
 
         lepManager.beginThreadContext(ctx -> {
@@ -55,7 +55,7 @@ public class LocationServiceIntTest extends AbstractSpringBootTest {
     @Transactional
     public void findByIdsTest() {
         List<Location> actual = locationService.findByIds(expected.stream().map(Location::getId).collect(Collectors.toList()));
-        Assert.assertEquals(expected, actual);
+        Assertions.assertEquals(expected, actual);
     }
 
     @Test
@@ -63,7 +63,7 @@ public class LocationServiceIntTest extends AbstractSpringBootTest {
     public void findByEntityIdsTest() {
         List<Location> actual = locationService.findByEntityIds(expected.stream().map(location -> location.getXmEntity().getId())
             .collect(Collectors.toList()));
-        Assert.assertEquals(expected, actual);
+        Assertions.assertEquals(expected, actual);
     }
 
     @BeforeTransaction
@@ -71,7 +71,7 @@ public class LocationServiceIntTest extends AbstractSpringBootTest {
         TenantContextUtils.setTenant(tenantContextHolder, "RESINTTEST");
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         tenantContextHolder.getPrivilegedContext().destroyCurrentContext();
     }

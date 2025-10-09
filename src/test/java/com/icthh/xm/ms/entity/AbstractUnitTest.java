@@ -7,5 +7,6 @@ import org.junit.experimental.categories.Category;
  * Marks test with junit @Category
  */
 @Category(AbstractUnitTest.class)
+@Deprecated
 public abstract class AbstractUnitTest {
 }

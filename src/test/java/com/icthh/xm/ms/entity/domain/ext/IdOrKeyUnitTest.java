@@ -1,14 +1,10 @@
 package com.icthh.xm.ms.entity.domain.ext;
-import com.icthh.xm.ms.entity.AbstractUnitTest;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import com.icthh.xm.ms.entity.AbstractJupiterUnitTest;
+import org.junit.jupiter.api.Test;
 import static org.assertj.core.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
-public class IdOrKeyUnitTest extends AbstractUnitTest {
-
-    @Rule
-    public final ExpectedException exception = ExpectedException.none();
+public class IdOrKeyUnitTest extends AbstractJupiterUnitTest {
 
     @Test
     public void of() {
@@ -93,22 +89,25 @@ public class IdOrKeyUnitTest extends AbstractUnitTest {
     @Test
     public void errorOfKeyNull() {
         //TODO may be IllegalArgumentException should be raised????
-        exception.expect(NullPointerException.class);
-        IdOrKey.ofKey(null);
+        assertThrows(NullPointerException.class, () -> {
+            IdOrKey.ofKey(null);
+        });
     }
 
     @Test
     public void errorOfNullString() {
         //TODO may be IllegalArgumentException  should be raised????
-        exception.expect(NullPointerException.class);
-        IdOrKey.of((String) null);
+        assertThrows(NullPointerException.class, () -> {
+            IdOrKey.of((String) null);
+        });
     }
 
     @Test
     public void errorOfNullNumber() {
         //TODO may be IllegalArgumentException  should be raised????
-        exception.expect(NullPointerException.class);
-        IdOrKey.of((Long) null);
+        assertThrows(NullPointerException.class, () -> {
+            IdOrKey.of((Long) null);
+        });
     }
 
 }

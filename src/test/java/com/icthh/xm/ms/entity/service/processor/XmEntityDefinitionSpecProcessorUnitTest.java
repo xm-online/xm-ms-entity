@@ -6,16 +6,15 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.icthh.xm.commons.domain.DefinitionSpec;
 import com.icthh.xm.commons.domain.FormSpec;
 import com.icthh.xm.commons.listener.JsonListenerService;
-import com.icthh.xm.ms.entity.AbstractUnitTest;
+import com.icthh.xm.ms.entity.AbstractJupiterUnitTest;
 import com.icthh.xm.ms.entity.domain.spec.TypeSpec;
 import com.icthh.xm.ms.entity.domain.spec.XmEntitySpec;
 import lombok.SneakyThrows;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.lang.reflect.Field;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -23,11 +22,10 @@ import java.util.Map;
 import static com.icthh.xm.ms.entity.service.json.JsonConfigurationListener.XM_ENTITY_SPEC_KEY;
 import static com.icthh.xm.ms.entity.web.rest.XmEntitySaveIntTest.loadFile;
 import static java.util.Collections.singletonList;
-import static org.apache.tools.ant.util.ReflectUtil.getField;
 import static org.junit.Assert.assertEquals;
 
-@RunWith(MockitoJUnitRunner.class)
-public class XmEntityDefinitionSpecProcessorUnitTest extends AbstractUnitTest {
+@ExtendWith(MockitoExtension.class)
+public class XmEntityDefinitionSpecProcessorUnitTest extends AbstractJupiterUnitTest {
 
     private static final String ENTITY_APP_NAME = "entity";
     private static final String TENANT = "XM";
@@ -35,7 +33,7 @@ public class XmEntityDefinitionSpecProcessorUnitTest extends AbstractUnitTest {
     private XmEntityDefinitionSpecProcessor subject;
     private ObjectMapper objectMapper;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         JsonListenerService jsonListenerService = new JsonListenerService();
         XmEntityTypeSpecProcessor typeSpecProcessor = new XmEntityTypeSpecProcessor(jsonListenerService);

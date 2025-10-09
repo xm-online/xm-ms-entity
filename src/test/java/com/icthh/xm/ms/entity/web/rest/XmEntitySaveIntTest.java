@@ -10,16 +10,16 @@ import com.icthh.xm.commons.security.XmAuthenticationContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
 import com.icthh.xm.lep.api.LepManager;
-import com.icthh.xm.ms.entity.AbstractSpringBootTest;
+import com.icthh.xm.ms.entity.AbstractJupiterSpringBootTest;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.service.impl.XmEntityServiceImpl;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.apache.commons.io.IOUtils;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
@@ -34,7 +34,7 @@ import java.util.UUID;
 
 @Slf4j
 @WithMockUser(authorities = {"SUPER-ADMIN"})
-public class XmEntitySaveIntTest extends AbstractSpringBootTest {
+public class XmEntitySaveIntTest extends AbstractJupiterSpringBootTest {
 
     @Autowired
     private XmEntityServiceImpl xmEntityServiceImpl;
@@ -56,7 +56,7 @@ public class XmEntitySaveIntTest extends AbstractSpringBootTest {
     }
 
     @SneakyThrows
-    @Before
+    @BeforeEach
     public void setup() {
         MockitoAnnotations.initMocks(this);
         TenantContextUtils.setTenant(tenantContextHolder, "RESINTTEST");
@@ -66,7 +66,7 @@ public class XmEntitySaveIntTest extends AbstractSpringBootTest {
         });
     }
 
-    @After
+    @AfterEach
     public void destroy(){
         initLeps(false);
         lepManager.endThreadContext();
@@ -100,7 +100,7 @@ public class XmEntitySaveIntTest extends AbstractSpringBootTest {
         return IOUtils.toString(cfgInputStream, UTF_8);
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         lepManager.endThreadContext();
         tenantContextHolder.getPrivilegedContext().destroyCurrentContext();

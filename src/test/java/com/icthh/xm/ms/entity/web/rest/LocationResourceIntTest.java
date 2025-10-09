@@ -18,15 +18,15 @@ import com.icthh.xm.commons.security.XmAuthenticationContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
 import com.icthh.xm.lep.api.LepManager;
-import com.icthh.xm.ms.entity.AbstractSpringBootTest;
+import com.icthh.xm.ms.entity.AbstractJupiterSpringBootTest;
 import com.icthh.xm.ms.entity.domain.Location;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.repository.LocationRepository;
 import com.icthh.xm.ms.entity.service.LocationService;
 import jakarta.persistence.EntityManager;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
@@ -47,7 +47,7 @@ import java.util.List;
  * @see LocationResource
  */
 @WithMockUser(authorities = {"SUPER-ADMIN"})
-public class LocationResourceIntTest extends AbstractSpringBootTest {
+public class LocationResourceIntTest extends AbstractJupiterSpringBootTest {
 
     private static final String DEFAULT_TYPE_KEY = "AAAAAAAAAA";
     private static final String UPDATED_TYPE_KEY = "BBBBBBBBBB";
@@ -121,7 +121,7 @@ public class LocationResourceIntTest extends AbstractSpringBootTest {
         TenantContextUtils.setTenant(tenantContextHolder, "RESINTTEST");
     }
 
-    @Before
+    @BeforeEach
     public void setup() {
 
         lepManager.beginThreadContext(ctx -> {
@@ -141,7 +141,7 @@ public class LocationResourceIntTest extends AbstractSpringBootTest {
 
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         tenantContextHolder.getPrivilegedContext().destroyCurrentContext();
     }
@@ -172,7 +172,7 @@ public class LocationResourceIntTest extends AbstractSpringBootTest {
         return location;
     }
 
-    @Before
+    @BeforeEach
     public void initTest() {
    //     locationSearchRepository.deleteAll();
     }

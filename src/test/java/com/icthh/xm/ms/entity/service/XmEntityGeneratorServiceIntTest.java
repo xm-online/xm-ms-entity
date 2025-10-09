@@ -15,7 +15,7 @@ import com.icthh.xm.commons.security.XmAuthenticationContext;
 import com.icthh.xm.commons.security.XmAuthenticationContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
-import com.icthh.xm.ms.entity.AbstractSpringBootTest;
+import com.icthh.xm.ms.entity.AbstractJupiterSpringBootTest;
 import com.icthh.xm.ms.entity.domain.Location;
 import com.icthh.xm.ms.entity.domain.Tag;
 import com.icthh.xm.ms.entity.domain.XmEntity;
@@ -28,9 +28,9 @@ import jakarta.validation.Validator;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -38,7 +38,7 @@ import java.util.List;
 import java.util.Set;
 
 @Slf4j
-public class XmEntityGeneratorServiceIntTest extends AbstractSpringBootTest {
+public class XmEntityGeneratorServiceIntTest extends AbstractJupiterSpringBootTest {
 
     private static final String ENTITY_TYPE_WITH_TAGS_AND_LOCATIONS_KEY = "TYPE1.SUBTYPE1";
 
@@ -63,7 +63,7 @@ public class XmEntityGeneratorServiceIntTest extends AbstractSpringBootTest {
     @Mock
     private XmAuthenticationContext context;
 
-    @Before
+    @BeforeEach
     public void init() {
         TenantContextUtils.setTenant(tenantContextHolder, "TEST");
 
@@ -75,7 +75,7 @@ public class XmEntityGeneratorServiceIntTest extends AbstractSpringBootTest {
             xmEntitySpecService, authContextHolder, objectMapper);
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         tenantContextHolder.getPrivilegedContext().destroyCurrentContext();
     }

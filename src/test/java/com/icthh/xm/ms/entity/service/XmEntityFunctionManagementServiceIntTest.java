@@ -13,19 +13,19 @@ import com.icthh.xm.commons.lep.api.LepManagementService;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
 import com.icthh.xm.commons.web.rest.FunctionSpecResource;
-import com.icthh.xm.ms.entity.AbstractSpringBootTest;
+import com.icthh.xm.ms.entity.AbstractJupiterSpringBootTest;
 import com.icthh.xm.ms.entity.domain.function.FunctionSpecDto;
 import com.icthh.xm.ms.entity.domain.spec.FunctionSpec;
 import java.util.List;
 import java.util.Map;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
 
-public class XmEntityFunctionManagementServiceIntTest extends AbstractSpringBootTest {
+public class XmEntityFunctionManagementServiceIntTest extends AbstractJupiterSpringBootTest {
 
     @MockBean
     private CommonConfigRepository commonConfigRepository;
@@ -42,13 +42,13 @@ public class XmEntityFunctionManagementServiceIntTest extends AbstractSpringBoot
     @Autowired
     FunctionSpecResource functionSpecResource;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         TenantContextUtils.setTenant(tenantContextHolder, "RESINTTEST");
         lepManagementService.beginThreadContext();
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         lepManagementService.endThreadContext();
         tenantContextHolder.getPrivilegedContext().destroyCurrentContext();

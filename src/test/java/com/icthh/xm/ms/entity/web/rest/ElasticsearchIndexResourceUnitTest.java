@@ -4,10 +4,10 @@ import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.icthh.xm.ms.entity.AbstractWebMvcTest;
+import com.icthh.xm.ms.entity.AbstractJupiterWebMvcTest;
 import com.icthh.xm.ms.entity.service.ElasticsearchIndexService;
 import lombok.SneakyThrows;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -18,7 +18,7 @@ import org.springframework.test.web.servlet.MockMvc;
 @WebMvcTest(controllers = ElasticsearchIndexResource.class)
 @AutoConfigureMockMvc(addFilters = false)
 @ContextConfiguration(classes={ElasticsearchIndexResource.class})
-public class ElasticsearchIndexResourceUnitTest extends AbstractWebMvcTest {
+public class ElasticsearchIndexResourceUnitTest extends AbstractJupiterWebMvcTest {
 
     @Autowired
     private MockMvc mockMvc;
