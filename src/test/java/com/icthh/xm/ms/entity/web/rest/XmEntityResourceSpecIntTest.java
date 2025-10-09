@@ -19,6 +19,7 @@ import com.icthh.xm.ms.entity.repository.kafka.ProfileEventProducer;
 import com.icthh.xm.ms.entity.repository.search.XmEntityPermittedSearchRepository;
 import com.icthh.xm.ms.entity.service.AttachmentService;
 import com.icthh.xm.ms.entity.service.impl.XmEntityFunctionServiceFacade;
+import com.icthh.xm.ms.entity.service.impl.XmeStorageServiceFacadeImpl;
 import com.icthh.xm.ms.entity.service.json.JsonValidationService;
 import com.icthh.xm.ms.entity.service.LifecycleLepStrategyFactory;
 import com.icthh.xm.ms.entity.service.LinkService;
@@ -31,6 +32,7 @@ import com.icthh.xm.ms.entity.service.XmEntitySpecService;
 import com.icthh.xm.ms.entity.service.XmEntityTemplatesSpecService;
 import com.icthh.xm.ms.entity.service.impl.StartUpdateDateGenerationStrategy;
 import com.icthh.xm.ms.entity.service.impl.XmEntityServiceImpl;
+import com.icthh.xm.ms.entity.service.storage.AvatarStorageService;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.AfterEach;
@@ -120,6 +122,9 @@ public class XmEntityResourceSpecIntTest extends AbstractJupiterSpringBootTest {
     AttachmentService attachmentService;
 
     @Autowired
+    AvatarStorageService avatarStorageService;
+
+    @Autowired
     XmEntityPermittedSearchRepository xmEntityPermittedSearchRepository;
 
     @Autowired
@@ -171,6 +176,8 @@ public class XmEntityResourceSpecIntTest extends AbstractJupiterSpringBootTest {
         String key = applicationProperties.getSpecificationTemplatesPathPattern().replace("{tenantName}", tenantName);
         xmEntityTemplatesSpecService.onRefresh(key, config);
 
+        XmeStorageServiceFacadeImpl storageServiceFacade = new XmeStorageServiceFacadeImpl(storageService, avatarStorageService, attachmentService);
+
         XmEntityServiceImpl xmEntityServiceImpl = new XmEntityServiceImpl(xmEntitySpecService,
             xmEntityTemplatesSpecService,
             xmEntityRepository,
@@ -178,8 +185,7 @@ public class XmEntityResourceSpecIntTest extends AbstractJupiterSpringBootTest {
             xmEntityPermittedRepository,
             profileService,
             linkService,
-            storageService,
-            attachmentService,
+            storageServiceFacade,
             xmEntityPermittedSearchRepository,
             startUpdateDateGenerationStrategy,
             authContextHolder,

@@ -54,7 +54,9 @@ import com.icthh.xm.ms.entity.service.XmEntityTemplatesSpecService;
 import com.icthh.xm.ms.entity.service.impl.StartUpdateDateGenerationStrategy;
 import com.icthh.xm.ms.entity.service.impl.XmEntityFunctionServiceFacade;
 import com.icthh.xm.ms.entity.service.impl.XmEntityServiceImpl;
+import com.icthh.xm.ms.entity.service.impl.XmeStorageServiceFacadeImpl;
 import com.icthh.xm.ms.entity.service.json.JsonValidationService;
+import com.icthh.xm.ms.entity.service.storage.AvatarStorageService;
 import com.icthh.xm.ms.entity.web.rest.CalendarResource;
 import com.icthh.xm.ms.entity.web.rest.EventResource;
 import com.icthh.xm.ms.entity.web.rest.TestUtil;
@@ -96,6 +98,7 @@ import java.util.Optional;
 import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_AUTH_CONTEXT;
 import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_TENANT_CONTEXT;
 import static com.icthh.xm.commons.tenant.TenantContextUtils.getRequiredTenantKeyValue;
+import static com.icthh.xm.ms.entity.config.Constants.DEFAULT_AVATAR_URL_PREFIX;
 import static com.icthh.xm.ms.entity.config.TenantConfigMockConfiguration.getXmEntityTemplatesSpec;
 import static com.icthh.xm.ms.entity.web.rest.TestUtil.sameInstant;
 import static java.lang.Long.valueOf;
@@ -140,9 +143,7 @@ public class XmEntityResourceExtendedElasticsearchTest extends AbstractElasticSp
 
     private static final Instant DEFAULT_END_DATE = Instant.ofEpochMilli(3000L);
 
-    private static final String DEFAULT_AVATAR_URL_PREFIX = "http://xm-avatar.rgw.icthh.test:7480/";
-
-    private static final String DEFAULT_AVATAR_URL = DEFAULT_AVATAR_URL_PREFIX + "aaaaa.jpg";
+    private static final String DEFAULT_AVATAR_URL = DEFAULT_AVATAR_URL_PREFIX + "/aaaaa.jpg";
 
     private static final String DEFAULT_DESCRIPTION = "AAAAAAAAAA";
 
@@ -272,6 +273,9 @@ public class XmEntityResourceExtendedElasticsearchTest extends AbstractElasticSp
     AttachmentService attachmentService;
 
     @Autowired
+    AvatarStorageService avatarStorageService;
+
+    @Autowired
     ObjectMapper objectMapper;
 
     @Autowired
@@ -336,6 +340,8 @@ public class XmEntityResourceExtendedElasticsearchTest extends AbstractElasticSp
         String key = applicationProperties.getSpecificationTemplatesPathPattern().replace("{tenantName}", tenantName);
         xmEntityTemplatesSpecService.onRefresh(key, config);
 
+        XmeStorageServiceFacadeImpl storageServiceFacade = new XmeStorageServiceFacadeImpl(storageService, avatarStorageService, attachmentService);
+
         XmEntityServiceImpl xmEntityService = new XmEntityServiceImpl(xmEntitySpecService,
                                                                       xmEntityTemplatesSpecService,
                                                                       xmEntityRepository,
@@ -343,8 +349,7 @@ public class XmEntityResourceExtendedElasticsearchTest extends AbstractElasticSp
                                                                       xmEntityPermittedRepository,
                                                                       profileService,
                                                                       linkService,
-                                                                      storageService,
-                                                                      attachmentService,
+                                                                      storageServiceFacade,
                                                                       xmEntityPermittedSearchRepository,
                                                                       startUpdateDateGenerationStrategy,
                                                                       authContextHolder,
