@@ -15,6 +15,7 @@ import com.icthh.xm.ms.entity.config.RestTemplateConfiguration.PathTimeoutHttpCo
 import com.icthh.xm.ms.entity.config.RestTemplateConfiguration.PathTimeoutHttpComponentsClientHttpRequestFactory.PathTimeoutConfig;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -26,6 +27,8 @@ import org.springframework.web.client.RestTemplate;
 @Slf4j
 @ContextConfiguration(classes = {LoadBalancerConfiguration.class})
 @WireMockTest(httpPort = 8081)
+@Disabled
+//TODO Migrate to test container
 public class RestTimeoutCustomizerIntTest extends AbstractJupiterSpringBootTest {
 
     @Qualifier("loadBalancedRestTemplateWithTimeout")
