@@ -13,7 +13,7 @@ import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
 import com.icthh.xm.commons.tenant.spring.config.TenantContextConfiguration;
 import com.icthh.xm.lep.api.LepManager;
-import com.icthh.xm.ms.entity.AbstractWebMvcTest;
+import com.icthh.xm.ms.entity.AbstractJupiterWebMvcTest;
 import com.icthh.xm.ms.entity.config.LepConfiguration;
 import com.icthh.xm.ms.entity.config.TestLepContextFactory;
 import com.icthh.xm.ms.entity.config.TestLepUpdateModeConfiguration;
@@ -31,11 +31,10 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.apache.commons.io.IOUtils;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -68,6 +67,7 @@ import static com.icthh.xm.ms.entity.domain.serializer.JsonResponseFilteringUnit
 import static com.icthh.xm.ms.entity.domain.serializer.JsonResponseFilteringUnitTest.createMockResultEntity;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.hamcrest.Matchers.hasSize;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.isA;
 import static org.mockito.Mockito.when;
@@ -89,8 +89,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 })
 @EnableAspectJAutoProxy
 @EnableSpringDataWebSupport
-@Ignore("Update tests after request customization fix")
-public class JsonResponseFilteringLepUnitTest extends AbstractWebMvcTest {
+@Disabled("Update tests after request customization fix")
+public class JsonResponseFilteringLepUnitTest extends AbstractJupiterWebMvcTest {
 
     // XmEntityResource config
     @MockBean
@@ -139,7 +139,7 @@ public class JsonResponseFilteringLepUnitTest extends AbstractWebMvcTest {
     @Autowired
     private XmLepScriptConfigServerResourceLoader leps;
 
-    @Before
+    @BeforeEach
     @SneakyThrows
     public void setup() {
 
@@ -163,7 +163,7 @@ public class JsonResponseFilteringLepUnitTest extends AbstractWebMvcTest {
         });
     }
 
-    @After
+    @AfterEach
     public void destroy() {
         initLeps(false);
         lepManager.endThreadContext();
@@ -204,7 +204,7 @@ public class JsonResponseFilteringLepUnitTest extends AbstractWebMvcTest {
 
         List<Link> result = new ArrayList<>(source.getTargets());
 
-        Assert.assertNotNull(source.getId());
+        assertNotNull(source.getId());
         Integer srcId = source.getId().intValue();
 
         when(xmEntityService.getLinkTargets(IdOrKey.of(source.getId()), targetTypeKey)).thenReturn(result);

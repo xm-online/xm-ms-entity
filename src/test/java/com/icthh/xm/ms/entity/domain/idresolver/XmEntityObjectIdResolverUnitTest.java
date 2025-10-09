@@ -10,7 +10,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.icthh.xm.commons.i18n.error.web.ExceptionTranslator;
 import com.icthh.xm.commons.i18n.spring.service.LocalizationMessageService;
-import com.icthh.xm.ms.entity.AbstractWebMvcTest;
+import com.icthh.xm.ms.entity.AbstractJupiterWebMvcTest;
 import com.icthh.xm.ms.entity.domain.Link;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.repository.CalendarRepository;
@@ -20,8 +20,8 @@ import com.icthh.xm.ms.entity.web.rest.LinkResource;
 import com.icthh.xm.ms.entity.web.rest.TestUtil;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -36,7 +36,7 @@ import java.util.Optional;
 @Slf4j
 @WebMvcTest(controllers = LinkResource.class)
 @ContextConfiguration(classes = {LinkResource.class, ExceptionTranslator.class})
-public class XmEntityObjectIdResolverUnitTest extends AbstractWebMvcTest {
+public class XmEntityObjectIdResolverUnitTest extends AbstractJupiterWebMvcTest {
 
     private static final String DEFAULT_TYPE_KEY = "ACCOUNT.ADMIN";
 
@@ -63,7 +63,7 @@ public class XmEntityObjectIdResolverUnitTest extends AbstractWebMvcTest {
 
     private MockMvc mockMvc;
 
-    @Before
+    @BeforeEach
     public void setup() {
         this.mockMvc = MockMvcBuilders.standaloneSetup(linkResource)
                                       .setControllerAdvice(exceptionTranslator)
