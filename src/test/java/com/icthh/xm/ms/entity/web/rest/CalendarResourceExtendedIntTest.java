@@ -15,7 +15,7 @@ import com.icthh.xm.commons.security.XmAuthenticationContext;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
 import com.icthh.xm.lep.api.LepManager;
-import com.icthh.xm.ms.entity.AbstractSpringBootTest;
+import com.icthh.xm.ms.entity.AbstractJupiterSpringBootTest;
 import com.icthh.xm.ms.entity.domain.Calendar;
 import com.icthh.xm.ms.entity.repository.CalendarRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
@@ -27,9 +27,9 @@ import java.time.Instant;
 import java.util.List;
 
 import jakarta.persistence.EntityManager;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
@@ -50,7 +50,7 @@ import org.springframework.validation.Validator;
  * @see CalendarResource
  */
 @WithMockUser(authorities = {"SUPER-ADMIN"})
-public class CalendarResourceExtendedIntTest extends AbstractSpringBootTest {
+public class CalendarResourceExtendedIntTest extends AbstractJupiterSpringBootTest {
 
     private static final Instant MOCKED_START_DATE = Instant.ofEpochMilli(42L);
 
@@ -110,7 +110,7 @@ public class CalendarResourceExtendedIntTest extends AbstractSpringBootTest {
         TenantContextUtils.setTenant(tenantContextHolder, "RESINTTEST");
     }
 
-    @Before
+    @BeforeEach
     public void setup() {
         MockitoAnnotations.initMocks(this);
 
@@ -140,7 +140,7 @@ public class CalendarResourceExtendedIntTest extends AbstractSpringBootTest {
 
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         tenantContextHolder.getPrivilegedContext().destroyCurrentContext();
     }

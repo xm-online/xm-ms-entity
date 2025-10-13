@@ -1,13 +1,14 @@
 package com.icthh.xm.ms.entity.service.privileges.custom;
 
+import com.icthh.xm.commons.permission.service.custom.CustomPrivilegesExtractor;
 import com.icthh.xm.ms.entity.config.XmEntityTenantConfigService;
 import com.icthh.xm.ms.entity.domain.spec.TypeSpec;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
+import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 
 import static java.util.stream.Collectors.toList;
@@ -18,7 +19,7 @@ import static java.util.stream.Collectors.toList;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class DynamicXmEntityPrivilegesExtractor implements CustomPrivilegesExtractor {
+public class DynamicXmEntityPrivilegesExtractor implements CustomPrivilegesExtractor<TypeSpec> {
 
     private static final String DYNAMIC_ENTITY_PRIVILEGES_SECTION_NAME = "entity-dynamic-privileges";
     private static final String XM_ENTITY_PRIVILEGE_PREFIX = "XMENTITY.DELETE.";
@@ -36,8 +37,8 @@ public class DynamicXmEntityPrivilegesExtractor implements CustomPrivilegesExtra
     }
 
     @Override
-    public List<String> toPrivilegesList(Map<String, TypeSpec> specs) {
-        return specs.values().stream()
+    public List<String> toPrivilegesList(Collection<TypeSpec> specs) {
+        return specs.stream()
             .filter(it -> Objects.nonNull(it.getKey()))
             .map(it -> XM_ENTITY_PRIVILEGE_PREFIX + it.getKey())
             .collect(toList());

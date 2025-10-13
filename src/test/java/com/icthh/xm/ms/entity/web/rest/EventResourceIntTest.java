@@ -7,7 +7,7 @@ import com.icthh.xm.commons.security.XmAuthenticationContext;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
 import com.icthh.xm.lep.api.LepManager;
-import com.icthh.xm.ms.entity.AbstractSpringBootTest;
+import com.icthh.xm.ms.entity.AbstractJupiterSpringBootTest;
 import com.icthh.xm.ms.entity.domain.Calendar;
 import com.icthh.xm.ms.entity.domain.Event;
 import com.icthh.xm.ms.entity.domain.XmEntity;
@@ -15,7 +15,6 @@ import com.icthh.xm.ms.entity.domain.spec.CalendarSpec;
 import com.icthh.xm.ms.entity.repository.CalendarRepository;
 import com.icthh.xm.ms.entity.repository.EventRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
-import com.icthh.xm.ms.entity.repository.search.PermittedSearchRepository;
 import com.icthh.xm.ms.entity.service.CalendarService;
 import com.icthh.xm.ms.entity.service.EventService;
 import com.icthh.xm.ms.entity.service.XmEntityService;
@@ -23,9 +22,9 @@ import com.icthh.xm.ms.entity.service.XmEntitySpecService;
 import com.icthh.xm.ms.entity.service.impl.StartUpdateDateGenerationStrategy;
 import com.icthh.xm.ms.entity.service.query.EventQueryService;
 import jakarta.persistence.EntityManager;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -56,6 +55,7 @@ import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
@@ -72,7 +72,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * @see EventResource
  */
 @WithMockUser(authorities = {"SUPER-ADMIN"})
-public class EventResourceIntTest extends AbstractSpringBootTest {
+public class EventResourceIntTest extends AbstractJupiterSpringBootTest {
 
     private static final String DEFAULT_TYPE_KEY = "TEST_EVENT_TYPEKEY_1";
     private static final String UPDATED_TYPE_KEY = "TEST_EVENT_TYPEKEY_2";
@@ -167,7 +167,7 @@ public class EventResourceIntTest extends AbstractSpringBootTest {
         TenantContextUtils.setTenant(tenantContextHolder, "RESINTTEST");
     }
 
-    @Before
+    @BeforeEach
     public void setup() {
         MockitoAnnotations.initMocks(this);
 
@@ -199,7 +199,7 @@ public class EventResourceIntTest extends AbstractSpringBootTest {
         });
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         tenantContextHolder.getPrivilegedContext().destroyCurrentContext();
     }
@@ -238,7 +238,7 @@ public class EventResourceIntTest extends AbstractSpringBootTest {
             .eventDataRef(eventDataRef);
     }
 
-    @Before
+    @BeforeEach
     public void initTest() {
         event = createEntity(em);
     }
@@ -429,19 +429,21 @@ public class EventResourceIntTest extends AbstractSpringBootTest {
                 .value("Specified event data ref type key not matched with configured"));
     }
 
-    @Test(expected = DataIntegrityViolationException.class)
+    @Test
     @Transactional
-    public void createEventWithAlreadyAssignedEventDataRef() throws Exception {
-        eventRepository.saveAndFlush(event);
-        em.clear();
+    public void createEventWithAlreadyAssignedEventDataRef() {
+        assertThrows(DataIntegrityViolationException.class, () -> {
+            eventRepository.saveAndFlush(event);
+            em.clear();
 
-        Event eventWithAlreadyAssignedEventDataRef = event;
-        eventWithAlreadyAssignedEventDataRef.setId(null);
+            Event eventWithAlreadyAssignedEventDataRef = event;
+            eventWithAlreadyAssignedEventDataRef.setId(null);
 
-        restEventMockMvc.perform(post("/api/events")
-            .contentType(TestUtil.APPLICATION_JSON_UTF8)
-            .content(TestUtil.convertObjectToJsonBytes(eventWithAlreadyAssignedEventDataRef)));
-        eventRepository.flush();// New event with already assigned event data ref must fail by unique constraint
+            restEventMockMvc.perform(post("/api/events")
+                .contentType(TestUtil.APPLICATION_JSON_UTF8)
+                .content(TestUtil.convertObjectToJsonBytes(eventWithAlreadyAssignedEventDataRef)));
+            eventRepository.flush();// New event with already assigned event data ref must fail by unique constraint
+        });
     }
 
     @Test

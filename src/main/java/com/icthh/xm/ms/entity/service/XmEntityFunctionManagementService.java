@@ -1,5 +1,6 @@
 package com.icthh.xm.ms.entity.service;
 
+import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.NONE;
 import static com.icthh.xm.commons.utils.YamlPatchUtils.addObject;
 import static com.icthh.xm.commons.utils.YamlPatchUtils.addSequenceItem;
 import static com.icthh.xm.commons.utils.YamlPatchUtils.arrayByField;
@@ -7,6 +8,7 @@ import static com.icthh.xm.commons.utils.YamlPatchUtils.delete;
 import static com.icthh.xm.commons.utils.YamlPatchUtils.key;
 import static com.icthh.xm.commons.utils.YamlPatchUtils.updateSequenceItem;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
@@ -28,6 +30,7 @@ import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.NotNull;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -36,14 +39,28 @@ public class XmEntityFunctionManagementService implements FunctionManageService<
     private final XmEntitySpecService xmEntitySpecService;
     private final CommonConfigRepository commonConfigRepository;
     private final CommonConfigService commonConfigService;
-    private final ObjectMapper objectMapper = new ObjectMapper(new YAMLFactory());
+    private final ObjectMapper objectMapper = initMapper();
+
+    private static ObjectMapper initMapper() {
+        ObjectMapper objectMapper = new ObjectMapper(new YAMLFactory());
+        objectMapper.setVisibility(
+        objectMapper.getSerializationConfig()
+            .getDefaultVisibilityChecker()
+            .withFieldVisibility(JsonAutoDetect.Visibility.ANY)
+            .withGetterVisibility(NONE)
+            .withIsGetterVisibility(NONE)
+            .withSetterVisibility(NONE)
+            .withCreatorVisibility(NONE)
+        );
+        return objectMapper;
+    }
 
     @Override
     public void addFunction(FunctionSpecDto newFunction) {
         assertKeyUnique(newFunction);
         String entityTypeKey = newFunction.getEntityTypeKey();
         Configuration config = xmEntitySpecService.getFileContextByEntityTypeKey(entityTypeKey);
-        FunctionSpec item = newFunction.getItem();
+        Object item = convertToMap(newFunction);
         String yaml = config.getContent();
 
         yaml = addToYaml(yaml, entityTypeKey, item);
@@ -53,7 +70,7 @@ public class XmEntityFunctionManagementService implements FunctionManageService<
         commonConfigService.notifyUpdated(updatedConfig);
     }
 
-    private String addToYaml(String yaml, String entityTypeKey, FunctionSpec item) {
+    private String addToYaml(String yaml, String entityTypeKey, Object item) {
         if (!jsonPathExists(yaml, "$.types[?(@.key=='" + entityTypeKey + "')].functions")) {
             yaml = addObject(yaml,
                 Map.of("functions", List.of(item)),
@@ -83,7 +100,7 @@ public class XmEntityFunctionManagementService implements FunctionManageService<
 
         if (entityTypeKeys.size() == 1 && Objects.equals(entityTypeKey, updatedFunction.getEntityTypeKey())) {
             Configuration config = xmEntitySpecService.getFileContextByEntityTypeKey(entityTypeKey);
-            String updatedYaml = updateSequenceItem(config.getContent(), updatedFunction.getItem(), deletePath(entityTypeKey, functionKey));
+            String updatedYaml = updateSequenceItem(config.getContent(), convertToMap(updatedFunction), deletePath(entityTypeKey, functionKey));
             Configuration updatedConfig = new Configuration(config.getPath(), updatedYaml);
             commonConfigRepository.updateConfigFullPath(updatedConfig, null);
             commonConfigService.notifyUpdated(updatedConfig);
@@ -91,6 +108,10 @@ public class XmEntityFunctionManagementService implements FunctionManageService<
             removeFunction(functionKey);
             addFunction(updatedFunction);
         }
+    }
+
+    private Map<String, Object> convertToMap(FunctionSpecDto updatedFunction) {
+        return objectMapper.convertValue(updatedFunction.getItem(), Map.class);
     }
 
     @Override

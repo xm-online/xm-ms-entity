@@ -11,7 +11,7 @@ import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
 import static com.icthh.xm.commons.tenant.TenantContextUtils.getRequiredTenantKeyValue;
 import com.icthh.xm.lep.api.LepManager;
-import com.icthh.xm.ms.entity.AbstractSpringBootTest;
+import com.icthh.xm.ms.entity.AbstractJupiterSpringBootTest;
 import com.icthh.xm.ms.entity.config.ApplicationProperties;
 import com.icthh.xm.ms.entity.config.Constants;
 import com.icthh.xm.ms.entity.config.InternalTransactionService;
@@ -56,11 +56,10 @@ import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.nullValue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import static org.mockito.Mockito.mock;
@@ -88,7 +87,6 @@ import org.springframework.validation.Validator;
 
 import java.net.URI;
 import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -103,7 +101,7 @@ import static software.amazon.awssdk.utils.StringUtils.repeat;
  */
 @Slf4j
 @WithMockUser(authorities = {"SUPER-ADMIN"})
-public class XmEntityResourceIntTest extends AbstractSpringBootTest {
+public class XmEntityResourceIntTest extends AbstractJupiterSpringBootTest {
 
     private static final String DEFAULT_KEY = "AAAAAAAAAA";
 
@@ -237,7 +235,7 @@ public class XmEntityResourceIntTest extends AbstractSpringBootTest {
     }
 
     @SneakyThrows
-    @Before
+    @BeforeEach
     public void setup() {
 
         TenantContextUtils.setTenant(tenantContextHolder, "RESINTTEST");
@@ -308,7 +306,7 @@ public class XmEntityResourceIntTest extends AbstractSpringBootTest {
         xmEntity = createEntity();
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         lepManager.endThreadContext();
         tenantContextHolder.getPrivilegedContext().destroyCurrentContext();
@@ -335,7 +333,7 @@ public class XmEntityResourceIntTest extends AbstractSpringBootTest {
             .removed(DEFAULT_REMOVED);
     }
 
-    @Before
+    @BeforeEach
     public void initTest() {
         //    xmEntitySearchRepository.deleteAll();
     }
@@ -459,7 +457,7 @@ public class XmEntityResourceIntTest extends AbstractSpringBootTest {
 
     @Test
     @Transactional
-    @Ignore("see XmEntityResourceExtendedIntTest.checkStartDateIsNotRequired instead")
+    @Disabled("see XmEntityResourceExtendedIntTest.checkStartDateIsNotRequired instead")
     public void checkStartDateIsRequired() throws Exception {
         int databaseSizeBeforeTest = xmEntityRepository.findAll().size();
         // set the field null
@@ -484,7 +482,7 @@ public class XmEntityResourceIntTest extends AbstractSpringBootTest {
 
     @Test
     @Transactional
-    @Ignore("see XmEntityResourceExtendedIntTest.checkUpdateDateIsNotRequired instead")
+    @Disabled("see XmEntityResourceExtendedIntTest.checkUpdateDateIsNotRequired instead")
     public void checkUpdateDateIsRequired() throws Exception {
         int databaseSizeBeforeTest = xmEntityRepository.findAll().size();
         // set the field null

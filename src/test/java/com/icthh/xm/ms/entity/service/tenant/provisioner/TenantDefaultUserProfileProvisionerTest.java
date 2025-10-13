@@ -5,18 +5,18 @@ import static org.mockito.ArgumentMatchers.any;
 import com.icthh.xm.commons.gen.model.Tenant;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.internal.DefaultTenantContextHolder;
-import com.icthh.xm.ms.entity.AbstractUnitTest;
+import com.icthh.xm.ms.entity.AbstractJupiterUnitTest;
 import com.icthh.xm.ms.entity.domain.Profile;
 import com.icthh.xm.ms.entity.service.ProfileService;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
 
-public class TenantDefaultUserProfileProvisionerTest extends AbstractUnitTest {
+public class TenantDefaultUserProfileProvisionerTest extends AbstractJupiterUnitTest {
 
     @Mock
     private ProfileService profileService;
@@ -25,7 +25,7 @@ public class TenantDefaultUserProfileProvisionerTest extends AbstractUnitTest {
 
     private TenantDefaultUserProfileProvisioner provisioner;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         MockitoAnnotations.initMocks(this);
         provisioner = new TenantDefaultUserProfileProvisioner(profileService, tenantContextHolder);

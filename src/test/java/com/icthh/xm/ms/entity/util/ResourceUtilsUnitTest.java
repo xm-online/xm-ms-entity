@@ -1,25 +1,22 @@
 package com.icthh.xm.ms.entity.util;
 
-import static org.hamcrest.Matchers.isEmptyString;
-import static org.hamcrest.core.IsNot.not;
-import static org.junit.Assert.assertThat;
+import static org.junit.jupiter.api.Assertions.*;
 
-import com.icthh.xm.ms.entity.AbstractUnitTest;
-import org.junit.Test;
+import com.icthh.xm.ms.entity.AbstractJupiterUnitTest;
+import org.junit.jupiter.api.Test;
 
-public class ResourceUtilsUnitTest extends AbstractUnitTest {
+public class ResourceUtilsUnitTest extends AbstractJupiterUnitTest {
 
     @Test
     public void testResourceExists() {
         String result = ResourceUtils.getResourceAsStr("config/application.yml");
-
-        assertThat(result, not(isEmptyString()));
+        assertFalse(result.isEmpty());
     }
 
-    @Test(expected = IllegalStateException.class)
+    @Test
     public void testResourceNotExists() {
-        String result = ResourceUtils.getResourceAsStr("config/bad.yml");
-
-        assertThat(result, isEmptyString());
+        assertThrows(IllegalStateException.class, () -> {
+            String result = ResourceUtils.getResourceAsStr("config/bad.yml");
+        });
     }
 }

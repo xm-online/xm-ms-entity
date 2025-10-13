@@ -1,13 +1,12 @@
 package com.icthh.xm.ms.entity.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.icthh.xm.commons.config.client.service.TenantConfigService;
 import com.icthh.xm.commons.exceptions.BusinessException;
 import com.icthh.xm.commons.security.XmAuthenticationContext;
 import com.icthh.xm.commons.security.XmAuthenticationContextHolder;
-import com.icthh.xm.ms.entity.AbstractUnitTest;
+import com.icthh.xm.ms.entity.AbstractJupiterUnitTest;
 import com.icthh.xm.ms.entity.domain.Comment;
 import com.icthh.xm.ms.entity.domain.FunctionContext;
 import com.icthh.xm.ms.entity.domain.Link;
@@ -27,14 +26,15 @@ import com.icthh.xm.ms.entity.service.impl.XmEntityServiceImpl;
 import com.icthh.xm.ms.entity.util.EntityUtils;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
@@ -52,8 +52,8 @@ import static com.icthh.xm.ms.entity.util.EntityUtils.TEST_KEY;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.eq;
@@ -61,8 +61,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @Slf4j
-@RunWith(MockitoJUnitRunner.class)
-public class XmEntityServiceImplUnitTest extends AbstractUnitTest {
+@ExtendWith(MockitoExtension.class)
+public class XmEntityServiceImplUnitTest extends AbstractJupiterUnitTest {
 
     public static final String TEST_TYPE_KEY = "TEST_TYPE_KEY";
     @InjectMocks
@@ -94,7 +94,7 @@ public class XmEntityServiceImplUnitTest extends AbstractUnitTest {
     @Spy
     private SimpleTemplateProcessor templateProcessor = new SimpleTemplateProcessor(mapper);
 
-    @Before
+    @BeforeEach
     public void before(){
         mapper.registerModule(new JavaTimeModule());
         xmEntityService.setSelf(xmEntityService);
@@ -143,31 +143,41 @@ public class XmEntityServiceImplUnitTest extends AbstractUnitTest {
         Set<UniqueField> uniqueFields = argument.getValue().getUniqueFields();
         assertEquals(6, uniqueFields.size());
         log.info("{}", uniqueFields.stream().map(uf -> uf.getFieldJsonPath() + "|" + uf.getFieldValue()).collect(toList()));
-        assertTrue(uniqueFields.contains(new UniqueField(null, "$.uniqueObject", "{\"notUniqueField\":\"value2\"}", TEST_TYPE_KEY, xmEntity)));
-        assertTrue(uniqueFields.contains(new UniqueField(null, "$.uniqueExistsField", "50", TEST_TYPE_KEY, xmEntity)));
-        assertTrue(uniqueFields.contains(new UniqueField(null, "$.uniqueObjectWithUniqueField", "{\"uniqueField\":\"value3\"}", TEST_TYPE_KEY, xmEntity)));
-        assertTrue(uniqueFields.contains(new UniqueField(null, "$.uniqueObjectWithUniqueField.uniqueField", "value3", TEST_TYPE_KEY, xmEntity)));
-        assertTrue(uniqueFields.contains(new UniqueField(null, "$.otherUniqueExistsField", "25", TEST_TYPE_KEY, xmEntity)));
-        assertTrue(uniqueFields.contains(new UniqueField(null, "$.simpleObject.uniqueSubField", "value1", TEST_TYPE_KEY, xmEntity)));
+        Assertions.assertTrue(uniqueFields.contains(new UniqueField(null, "$.uniqueObject", "{\"notUniqueField\":\"value2\"}", TEST_TYPE_KEY, xmEntity)));
+        Assertions.assertTrue(uniqueFields.contains(new UniqueField(null, "$.uniqueExistsField", "50", TEST_TYPE_KEY, xmEntity)));
+        Assertions.assertTrue(uniqueFields.contains(new UniqueField(null, "$.uniqueObjectWithUniqueField", "{\"uniqueField\":\"value3\"}", TEST_TYPE_KEY, xmEntity)));
+        Assertions.assertTrue(uniqueFields.contains(new UniqueField(null, "$.uniqueObjectWithUniqueField.uniqueField", "value3", TEST_TYPE_KEY, xmEntity)));
+        Assertions.assertTrue(uniqueFields.contains(new UniqueField(null, "$.otherUniqueExistsField", "25", TEST_TYPE_KEY, xmEntity)));
+        Assertions.assertTrue(uniqueFields.contains(new UniqueField(null, "$.simpleObject.uniqueSubField", "value1", TEST_TYPE_KEY, xmEntity)));
     }
 
-    @Test(expected = BusinessException.class)
+    @Test
     public void testFailTransitionIfLastStateAssertChangeState() {
+
         when(xmEntitySpecService.nextStates("TEST_TYPE_KEY", "CURRENT_STATE")).thenReturn(null);
-        xmEntityService.assertStateTransition("NEXT_STATE", mockEntityProjection());
+
+        assertThrows(BusinessException.class, () -> {
+            xmEntityService.assertStateTransition("NEXT_STATE", mockEntityProjection());
+        });
+
     }
 
-    @Test(expected = BusinessException.class)
+    @Test
     public void testFailTransitionIfNoNextStatesAssertChangeState() {
         when(xmEntitySpecService.nextStates("TEST_TYPE_KEY", "CURRENT_STATE")).thenReturn(emptyList());
-        xmEntityService.assertStateTransition("NEXT_STATE",  mockEntityProjection());
+        assertThrows(BusinessException.class, () -> {
+            xmEntityService.assertStateTransition("NEXT_STATE",  mockEntityProjection());
+        });
+
     }
 
-    @Test(expected = BusinessException.class)
+    @Test
     public void testFailTransitionIfNoMathesStates() {
         List<StateSpec> states = asList(new StateSpec().key("NEXT_STATE_BUT_OTHER"), new StateSpec().key("ORHTER_STATE"));
         when(xmEntitySpecService.nextStates("TEST_TYPE_KEY", "CURRENT_STATE")).thenReturn(states);
-        xmEntityService.assertStateTransition("NEXT_STATE",  mockEntityProjection());
+        assertThrows(BusinessException.class, () -> {
+            xmEntityService.assertStateTransition("NEXT_STATE",  mockEntityProjection());
+        });
     }
 
     @Test

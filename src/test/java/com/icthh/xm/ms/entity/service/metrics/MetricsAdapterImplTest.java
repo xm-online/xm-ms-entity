@@ -1,15 +1,15 @@
 package com.icthh.xm.ms.entity.service.metrics;
 
-import com.icthh.xm.ms.entity.AbstractSpringBootTest;
+import com.icthh.xm.ms.entity.AbstractJupiterSpringBootTest;
 import io.micrometer.core.instrument.MeterRegistry;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import static org.junit.Assert.assertEquals;
 
 @Slf4j
-public class MetricsAdapterImplTest extends AbstractSpringBootTest {
+public class MetricsAdapterImplTest extends AbstractJupiterSpringBootTest {
 
     @Autowired
     private MeterRegistry meterRegistry;

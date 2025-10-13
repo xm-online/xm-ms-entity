@@ -2,19 +2,19 @@ package com.icthh.xm.ms.entity.domain.listener;
 
 import static org.junit.Assert.assertEquals;
 
-import com.icthh.xm.ms.entity.AbstractSpringBootTest;
+import com.icthh.xm.ms.entity.AbstractJupiterSpringBootTest;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
 @Slf4j
-public class AvatarUrlListenerUnitTest extends AbstractSpringBootTest {
+public class AvatarUrlListenerIntTest extends AbstractJupiterSpringBootTest {
 
     private AvatarUrlListener target;
 
-    @Before
+    @BeforeEach
     public void setup() {
         target = new AvatarUrlListener();
     }
@@ -73,7 +73,7 @@ public class AvatarUrlListenerUnitTest extends AbstractSpringBootTest {
         assertEquals("http://s3.hello.amazonaws.com/hello/hello.jpg", entity.getAvatarUrl());
     }
 
-    @Ignore
+    @Disabled
     @Test
     public void testPostLoadSuccess() {
         XmEntity entity = new XmEntity().avatarUrl("hello.jpg");

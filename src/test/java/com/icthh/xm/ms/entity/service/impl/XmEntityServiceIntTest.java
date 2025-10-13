@@ -17,7 +17,7 @@ import com.icthh.xm.commons.security.XmAuthenticationContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
 import com.icthh.xm.lep.api.LepManager;
-import com.icthh.xm.ms.entity.AbstractSpringBootTest;
+import com.icthh.xm.ms.entity.AbstractJupiterSpringBootTest;
 import com.icthh.xm.ms.entity.config.IndexConfiguration;
 import com.icthh.xm.ms.entity.config.MappingConfiguration;
 import com.icthh.xm.ms.entity.config.XmEntityTenantConfigService;
@@ -57,9 +57,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.text.StrSubstitutor;
 import org.apache.commons.lang3.mutable.MutableInt;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -68,7 +68,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.security.test.context.support.WithMockUser;
 
 @Slf4j
-public class XmEntityServiceIntTest extends AbstractSpringBootTest {
+public class XmEntityServiceIntTest extends AbstractJupiterSpringBootTest {
 
     @Autowired
     private TenantContextHolder tenantContextHolder;
@@ -111,7 +111,7 @@ public class XmEntityServiceIntTest extends AbstractSpringBootTest {
 
     private List<String> lepsForCleanUp = new ArrayList<>();
 
-    @Before
+    @BeforeEach
     public void before() {
         TenantContextUtils.setTenant(tenantContextHolder, "RESINTTEST");
         MockitoAnnotations.initMocks(this);
@@ -132,7 +132,7 @@ public class XmEntityServiceIntTest extends AbstractSpringBootTest {
     }
 
 
-    @After
+    @AfterEach
     public void afterTest() {
         lepsForCleanUp.forEach(it -> leps.onRefresh(it, null));
         tenantContextHolder.getPrivilegedContext().destroyCurrentContext();

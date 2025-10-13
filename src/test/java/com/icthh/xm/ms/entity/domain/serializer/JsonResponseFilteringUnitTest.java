@@ -3,6 +3,7 @@ package com.icthh.xm.ms.entity.domain.serializer;
 import static com.icthh.xm.ms.entity.web.rest.XmEntityResourceExtendedIntTest.createEntityComplexIncoming;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.hasSize;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -16,7 +17,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.icthh.xm.commons.i18n.error.web.ExceptionTranslator;
 import com.icthh.xm.commons.i18n.spring.service.LocalizationMessageService;
 import com.icthh.xm.commons.service.FunctionServiceFacade;
-import com.icthh.xm.ms.entity.AbstractWebMvcTest;
+import com.icthh.xm.ms.entity.AbstractJupiterWebMvcTest;
 import com.icthh.xm.ms.entity.config.WebMvcConfiguration;
 import com.icthh.xm.ms.entity.domain.Link;
 import com.icthh.xm.ms.entity.domain.XmEntity;
@@ -30,10 +31,9 @@ import com.icthh.xm.ms.entity.web.rest.LinkResource;
 import com.icthh.xm.ms.entity.web.rest.XmEntityResource;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -52,7 +52,6 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import java.io.UnsupportedEncodingException;
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 @Slf4j
@@ -63,8 +62,8 @@ import java.util.List;
     ExceptionTranslator.class,
     PageableHandlerMethodArgumentResolver.class
 })
-@Ignore("Update tests after request customization fix")
-public class JsonResponseFilteringUnitTest extends AbstractWebMvcTest {
+@Disabled("Update tests after request customization fix")
+public class JsonResponseFilteringUnitTest extends AbstractJupiterWebMvcTest {
 
     private static long SEQUENCE = 0L;
 
@@ -104,7 +103,7 @@ public class JsonResponseFilteringUnitTest extends AbstractWebMvcTest {
     @Autowired
     private ObjectMapper objectMapper;
 
-    @Before
+    @BeforeEach
     @SneakyThrows
     public void setup() {
 
@@ -192,7 +191,7 @@ public class JsonResponseFilteringUnitTest extends AbstractWebMvcTest {
 
         List<Link> result = new ArrayList<>(source.getTargets());
 
-        Assert.assertNotNull(source.getId());
+        assertNotNull(source.getId());
         Integer srcId = source.getId().intValue();
 
         when(xmEntityService.getLinkTargets(IdOrKey.of(source.getId()), targetTypeKey)).thenReturn(result);
@@ -223,7 +222,7 @@ public class JsonResponseFilteringUnitTest extends AbstractWebMvcTest {
 
         List<Link> result = new ArrayList<>(source.getTargets());
 
-        Assert.assertNotNull(source.getId());
+        assertNotNull(source.getId());
         Long srcId = source.getId();
 
         when(xmEntityService.getLinkTargets(IdOrKey.of(srcId), targetTypeKey)).thenReturn(result);

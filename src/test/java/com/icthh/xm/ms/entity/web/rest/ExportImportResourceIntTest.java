@@ -15,7 +15,7 @@ import com.icthh.xm.commons.security.XmAuthenticationContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
 import com.icthh.xm.lep.api.LepManager;
-import com.icthh.xm.ms.entity.AbstractSpringBootTest;
+import com.icthh.xm.ms.entity.AbstractJupiterSpringBootTest;
 import com.icthh.xm.ms.entity.domain.Attachment;
 import com.icthh.xm.ms.entity.domain.Calendar;
 import com.icthh.xm.ms.entity.domain.Comment;
@@ -65,9 +65,9 @@ import java.util.Set;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
@@ -88,7 +88,7 @@ import org.springframework.transaction.annotation.Transactional;
  */
 @Slf4j
 @WithMockUser(authorities = {"SUPER-ADMIN"})
-public class ExportImportResourceIntTest extends AbstractSpringBootTest {
+public class ExportImportResourceIntTest extends AbstractJupiterSpringBootTest {
 
     private static final String TEST_EXPORT_1 = "TEST_EXPORT_1";
     private static final String TEST_EXPORT_2 = "TEST_EXPORT_2";
@@ -173,7 +173,7 @@ public class ExportImportResourceIntTest extends AbstractSpringBootTest {
         TenantContextUtils.setTenant(tenantContextHolder, "RESINTTEST");
     }
 
-    @Before
+    @BeforeEach
     public void setup() {
         lepManager.beginThreadContext(ctx -> {
             ctx.setValue(THREAD_CONTEXT_KEY_TENANT_CONTEXT, tenantContextHolder.getContext());
@@ -187,7 +187,7 @@ public class ExportImportResourceIntTest extends AbstractSpringBootTest {
                 .setMessageConverters(jacksonMessageConverter, new ByteArrayHttpMessageConverter()).build();
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         lepManager.endThreadContext();
         tenantContextHolder.getPrivilegedContext().destroyCurrentContext();

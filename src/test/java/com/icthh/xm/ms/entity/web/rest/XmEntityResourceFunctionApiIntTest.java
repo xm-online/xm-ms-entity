@@ -10,7 +10,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.icthh.xm.commons.i18n.error.web.ExceptionTranslator;
 import com.icthh.xm.commons.i18n.spring.service.LocalizationMessageService;
-import com.icthh.xm.ms.entity.AbstractWebMvcTest;
+import com.icthh.xm.ms.entity.AbstractJupiterWebMvcTest;
 import com.icthh.xm.ms.entity.domain.FunctionResultContext;
 import com.icthh.xm.ms.entity.domain.ext.IdOrKey;
 import com.icthh.xm.ms.entity.repository.kafka.ProfileEventProducer;
@@ -19,8 +19,8 @@ import com.icthh.xm.ms.entity.service.TenantService;
 import com.icthh.xm.ms.entity.service.XmEntityService;
 import com.icthh.xm.ms.entity.service.impl.XmEntityFunctionServiceFacade;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -32,7 +32,7 @@ import org.springframework.web.context.WebApplicationContext;
 @Slf4j
 @WebMvcTest(controllers = XmEntityResource.class)
 @ContextConfiguration(classes = {XmEntityResource.class, ExceptionTranslator.class})
-public class XmEntityResourceFunctionApiIntTest extends AbstractWebMvcTest {
+public class XmEntityResourceFunctionApiIntTest extends AbstractJupiterWebMvcTest {
     @Autowired
     private WebApplicationContext wac;
     private MockMvc mockMvc;
@@ -51,7 +51,7 @@ public class XmEntityResourceFunctionApiIntTest extends AbstractWebMvcTest {
 
     private String functionName = "SOME-FUNCTION_KEY.TROLOLO";
 
-    @Before
+    @BeforeEach
     public void setup() {
         this.mockMvc = MockMvcBuilders.webAppContextSetup(this.wac).build();
     }

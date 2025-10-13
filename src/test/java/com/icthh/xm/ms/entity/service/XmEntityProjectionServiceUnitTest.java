@@ -1,7 +1,7 @@
 package com.icthh.xm.ms.entity.service;
 
 import com.icthh.xm.commons.exceptions.EntityNotFoundException;
-import com.icthh.xm.ms.entity.AbstractUnitTest;
+import com.icthh.xm.ms.entity.AbstractJupiterUnitTest;
 import com.icthh.xm.ms.entity.domain.Profile;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.domain.ext.IdOrKey;
@@ -9,11 +9,11 @@ import com.icthh.xm.ms.entity.projection.XmEntityIdKeyTypeKey;
 import com.icthh.xm.ms.entity.projection.XmEntityStateProjection;
 import com.icthh.xm.ms.entity.repository.XmEntityProjectionRepository;
 import com.icthh.xm.ms.entity.service.impl.XmEntityProjectionServiceImpl;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Optional;
 
@@ -22,15 +22,15 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
-@RunWith(MockitoJUnitRunner.class)
-public class XmEntityProjectionServiceUnitTest extends AbstractUnitTest {
+@ExtendWith(MockitoExtension.class)
+public class XmEntityProjectionServiceUnitTest extends AbstractJupiterUnitTest {
     @Mock
     XmEntityProjectionRepository xmEntityProjectionRepository;
     @Mock
     ProfileService profileService;
     XmEntityProjectionService xmEntityProjectionService;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         xmEntityProjectionService = new XmEntityProjectionServiceImpl(xmEntityProjectionRepository, profileService);
     }

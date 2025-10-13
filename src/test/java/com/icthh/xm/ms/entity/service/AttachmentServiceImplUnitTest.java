@@ -4,7 +4,7 @@ import com.google.common.collect.Lists;
 import com.icthh.xm.commons.exceptions.BusinessException;
 import com.icthh.xm.commons.exceptions.EntityNotFoundException;
 import com.icthh.xm.commons.permission.repository.PermittedRepository;
-import com.icthh.xm.ms.entity.AbstractUnitTest;
+import com.icthh.xm.ms.entity.AbstractJupiterUnitTest;
 import com.icthh.xm.ms.entity.domain.Attachment;
 import com.icthh.xm.ms.entity.domain.Content;
 import com.icthh.xm.ms.entity.domain.XmEntity;
@@ -13,24 +13,20 @@ import com.icthh.xm.ms.entity.repository.AttachmentRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
 import com.icthh.xm.ms.entity.repository.backend.S3StorageRepository;
 import com.icthh.xm.ms.entity.service.impl.StartUpdateDateGenerationStrategy;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.hamcrest.CoreMatchers.containsString;
-import static org.hamcrest.CoreMatchers.is;
-
-import static org.hamcrest.Matchers.hasProperty;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-public class AttachmentServiceImplUnitTest  extends AbstractUnitTest {
+public class AttachmentServiceImplUnitTest  extends AbstractJupiterUnitTest {
 
     private AttachmentService attachmentService;
 
@@ -41,10 +37,7 @@ public class AttachmentServiceImplUnitTest  extends AbstractUnitTest {
     private XmEntitySpecService xmEntitySpecService;
     private ContentService contentService;
 
-    @Rule
-    public final ExpectedException exception = ExpectedException.none();
-
-    @Before
+    @BeforeEach
     public void setUp() {
         attachmentRepository = Mockito.mock(AttachmentRepository.class);
         permittedRepository = Mockito.mock(PermittedRepository.class);
@@ -60,50 +53,75 @@ public class AttachmentServiceImplUnitTest  extends AbstractUnitTest {
 
     @Test
     public void shouldFailIfMaxSizeIsZero() {
-        AttachmentSpec spec = new AttachmentSpec();
-        spec.setMax(0);
-        exception.expect(BusinessException.class);
-        exception.expect(hasProperty("code", is(AttachmentService.ZERO_RESTRICTION)));
-        attachmentService.assertZeroRestriction(spec);
+
+        BusinessException thrown = assertThrows(BusinessException.class, () -> {
+                AttachmentSpec spec = new AttachmentSpec();
+                spec.setMax(0);
+                attachmentService.assertZeroRestriction(spec);
+            }
+        );
+
+        assertInstanceOf(BusinessException.class, thrown);
+        assertThat(thrown.getCode()).isEqualTo(AttachmentService.ZERO_RESTRICTION);
+        //thrown.expect(BusinessException.class);
+        //thrown.expect(hasProperty("code", is(AttachmentService.ZERO_RESTRICTION)));
     }
 
     @Test
     public void shouldFailIfAttachmentSizeBiggerOrEqualsSpecValue() {
-        AttachmentSpec spec = new AttachmentSpec();
-        spec.setMax(1);
-        spec.setKey("KEY1");
-        XmEntity e = new XmEntity();
-        e.setId(1L);
+
         when(attachmentRepository.countByXmEntityIdAndTypeKey(1L, "KEY1")).thenReturn(1);
-        exception.expect(BusinessException.class);
-        exception.expect(hasProperty("code", is(AttachmentService.MAX_RESTRICTION)));
-        attachmentService.assertLimitRestriction(spec, e);
+
+        BusinessException thrown = assertThrows(BusinessException.class, () -> {
+            AttachmentSpec spec = new AttachmentSpec();
+            spec.setMax(1);
+            spec.setKey("KEY1");
+            XmEntity e = new XmEntity();
+            e.setId(1L);
+            attachmentService.assertLimitRestriction(spec, e);
+        });
+
+        assertInstanceOf(BusinessException.class, thrown);
+        assertThat(thrown.getCode()).isEqualTo(AttachmentService.MAX_RESTRICTION);
     }
 
     @Test
     public void shouldFailIfAttachmentContentSizeBiggerOfSpecValue() {
-        AttachmentSpec spec = new AttachmentSpec();
-        spec.setKey("KEY1");
-        spec.setSize("1");
-
-       Content c = new Content();
-       c.setValue("Hello world!".getBytes());
 
         when(attachmentRepository.countByXmEntityIdAndTypeKey(1L, "KEY1")).thenReturn(1);
-        exception.expect(BusinessException.class);
-        exception.expect(hasProperty("code", is(AttachmentService.SIZE_RESTRICTION)));
-        attachmentService.assertFileSize(spec, c);
+
+        BusinessException thrown = assertThrows(BusinessException.class, () -> {
+            AttachmentSpec spec = new AttachmentSpec();
+            spec.setKey("KEY1");
+            spec.setSize("1");
+
+            Content c = new Content();
+            c.setValue("Hello world!".getBytes());
+            attachmentService.assertFileSize(spec, c);
+        });
+
+        assertInstanceOf(BusinessException.class, thrown);
+        assertThat(thrown.getCode()).isEqualTo(AttachmentService.SIZE_RESTRICTION);
+
     }
 
     @Test
     public void shouldFailIfSpecNotFound() {
-        XmEntity e = new XmEntity();
-        e.setTypeKey("TYPE");
-        Attachment a = new Attachment();
-        a.setTypeKey("TYPE.A");
-        exception.expect(EntityNotFoundException.class);
-        exception.expectMessage(containsString("Spec.Attachment"));
-        attachmentService.getSpec(e, a);
+
+        EntityNotFoundException thrown = assertThrows(EntityNotFoundException.class, () -> {
+            XmEntity e = new XmEntity();
+            e.setTypeKey("TYPE");
+            Attachment a = new Attachment();
+            a.setTypeKey("TYPE.A");
+            attachmentService.getSpec(e, a);
+        });
+
+
+        assertInstanceOf(EntityNotFoundException.class, thrown);
+        assertThat(thrown.getMessage().contains("Spec.Attachment")).isTrue();
+        //exception.expect(EntityNotFoundException.class);
+        //exception.expectMessage(containsString("Spec.Attachment"));
+
     }
 
     @Test
@@ -185,9 +203,16 @@ public class AttachmentServiceImplUnitTest  extends AbstractUnitTest {
         when(attachmentRepository.save(any())).thenReturn(result);
         when(attachmentRepository.countByXmEntityIdAndTypeKey(1L, "A.T")).thenReturn(1);
 
-        exception.expect(BusinessException.class);
-        exception.expect(hasProperty("code", is(AttachmentService.MAX_RESTRICTION)));
-        attachmentService.save(a);
+        BusinessException thrown = assertThrows(BusinessException.class, () -> {
+            attachmentService.save(a);
+        });
+
+        assertInstanceOf(BusinessException.class, thrown);
+        assertThat(thrown.getCode()).isEqualTo(AttachmentService.MAX_RESTRICTION);
+
+        //exception.expect(BusinessException.class);
+        //exception.expect(hasProperty("code", is(AttachmentService.MAX_RESTRICTION)));
+
     }
 
     @Test
@@ -224,9 +249,17 @@ public class AttachmentServiceImplUnitTest  extends AbstractUnitTest {
         when(attachmentRepository.save(any())).thenReturn(result);
         when(attachmentRepository.countByXmEntityIdAndTypeKey(1L, "A.T")).thenReturn(1);
 
-        exception.expect(BusinessException.class);
+
+        BusinessException thrown = assertThrows(BusinessException.class, () -> {
+            attachmentService.save(a);
+        });
+
+        assertInstanceOf(BusinessException.class, thrown);
+        assertThat(thrown.getCode()).isEqualTo(AttachmentService.SIZE_RESTRICTION);
+
+        /*exception.expect(BusinessException.class);
         exception.expect(hasProperty("code", is(AttachmentService.SIZE_RESTRICTION)));
-        attachmentService.save(a);
+        attachmentService.save(a);*/
     }
 
     @Test

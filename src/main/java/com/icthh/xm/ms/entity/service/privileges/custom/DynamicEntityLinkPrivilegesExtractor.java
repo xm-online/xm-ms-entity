@@ -1,12 +1,12 @@
 package com.icthh.xm.ms.entity.service.privileges.custom;
 
+import com.icthh.xm.commons.permission.service.custom.CustomPrivilegesExtractor;
 import com.icthh.xm.ms.entity.domain.spec.TypeSpec;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.toList;
@@ -16,7 +16,7 @@ import static java.util.stream.Collectors.toList;
  */
 @Slf4j
 @Component
-public class DynamicEntityLinkPrivilegesExtractor implements CustomPrivilegesExtractor {
+public class DynamicEntityLinkPrivilegesExtractor implements CustomPrivilegesExtractor<TypeSpec> {
 
     private static final String DYNAMIC_ENTITY_PRIVILEGES_SECTION_NAME = "entity-dynamic-privileges";
     private static final String LINK_PRIVILEGE_PREFIX = "LINK.DELETE.";
@@ -32,8 +32,8 @@ public class DynamicEntityLinkPrivilegesExtractor implements CustomPrivilegesExt
     }
 
     @Override
-    public List<String> toPrivilegesList(Map<String, TypeSpec> specs) {
-        return specs.values().stream()
+    public List<String> toPrivilegesList(Collection<TypeSpec> specs) {
+        return specs.stream()
                 .flatMap(it -> Stream.ofNullable(it.getLinks()))
                 .flatMap(Collection::stream)
                 .map(it -> LINK_PRIVILEGE_PREFIX + it.getTypeKey())

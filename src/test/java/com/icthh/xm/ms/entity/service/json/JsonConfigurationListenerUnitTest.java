@@ -1,13 +1,13 @@
 package com.icthh.xm.ms.entity.service.json;
 
 import com.icthh.xm.commons.listener.JsonListenerService;
-import com.icthh.xm.ms.entity.AbstractUnitTest;
+import com.icthh.xm.ms.entity.AbstractJupiterUnitTest;
 import com.icthh.xm.ms.entity.service.spec.XmEntitySpecContextService;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Collections;
 
@@ -16,8 +16,8 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 
-@RunWith(MockitoJUnitRunner.class)
-public class JsonConfigurationListenerUnitTest extends AbstractUnitTest {
+@ExtendWith(MockitoExtension.class)
+public class JsonConfigurationListenerUnitTest extends AbstractJupiterUnitTest {
 
     private static final String ENTITY_APP_NAME = "entity";
     private static final String TENANT_NAME = "XM";
@@ -30,7 +30,7 @@ public class JsonConfigurationListenerUnitTest extends AbstractUnitTest {
     @Mock
     private XmEntitySpecContextService xmEntitySpecContextService;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         subject = new JsonConfigurationListener(ENTITY_APP_NAME, xmEntitySpecContextService, jsonListenerService);
     }

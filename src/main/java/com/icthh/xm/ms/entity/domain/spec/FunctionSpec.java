@@ -7,7 +7,6 @@ import com.icthh.xm.commons.domain.enums.FunctionTxTypes;
 import com.icthh.xm.commons.domain.spec.IFunctionSpec;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 
 import java.util.ArrayList;
 import java.util.List;

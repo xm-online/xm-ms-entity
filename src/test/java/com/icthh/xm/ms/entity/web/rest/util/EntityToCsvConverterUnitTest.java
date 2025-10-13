@@ -2,28 +2,29 @@ package com.icthh.xm.ms.entity.web.rest.util;
 
 import com.fasterxml.jackson.dataformat.csv.CsvSchema;
 import com.google.common.collect.ImmutableMap;
-import com.icthh.xm.ms.entity.AbstractUnitTest;
+import com.icthh.xm.ms.entity.AbstractJupiterUnitTest;
 import com.icthh.xm.ms.entity.domain.converter.EntityToCsvConverterUtils;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import org.hamcrest.Matchers;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.Map;
+
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Tests csv converter.
  *
  * @see EntityToCsvConverterUnitTest
  */
-public class EntityToCsvConverterUnitTest extends AbstractUnitTest {
+public class EntityToCsvConverterUnitTest extends AbstractJupiterUnitTest {
 
     @Test
     public void convertWithBasedOnSchema() throws Exception {
         byte[] media = EntityToCsvConverterUtils.toCsv(new HumanTestModel("Foo", 228), HumanTestModel.class);
-        Assert.assertNotNull(media);
-        Assert.assertThat(media.length, Matchers.greaterThan(1));
+        assertNotNull(media);
+        assertTrue(media.length > 1);
     }
 
     @Test
@@ -39,8 +40,8 @@ public class EntityToCsvConverterUnitTest extends AbstractUnitTest {
         // init headers
         data.keySet().forEach(key -> schemaBuilder.addColumn(key));
         byte[] media = EntityToCsvConverterUtils.toCsv(data, schemaBuilder.build());
-        Assert.assertNotNull(media);
-        Assert.assertThat(media.length, Matchers.greaterThan(1));
+        assertNotNull(media);
+        assertTrue(media.length > 1);
     }
 
     @Getter

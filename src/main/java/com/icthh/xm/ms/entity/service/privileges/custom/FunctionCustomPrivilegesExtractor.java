@@ -1,5 +1,6 @@
 package com.icthh.xm.ms.entity.service.privileges.custom;
 
+import com.icthh.xm.commons.permission.service.custom.CustomPrivilegesExtractor;
 import com.icthh.xm.ms.entity.config.XmEntityTenantConfigService;
 import com.icthh.xm.ms.entity.config.XmEntityTenantConfigService.XmEntityTenantConfig;
 import com.icthh.xm.ms.entity.domain.spec.FunctionSpec;
@@ -8,8 +9,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
+import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 
 import static java.util.stream.Collectors.toList;
@@ -17,7 +18,7 @@ import static java.util.stream.Collectors.toList;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class FunctionCustomPrivilegesExtractor implements CustomPrivilegesExtractor {
+public class FunctionCustomPrivilegesExtractor implements CustomPrivilegesExtractor<TypeSpec> {
 
     private static final String SECTION_NAME = "entity-functions";
     private static final String PRIVILEGE_PREFIX = "FUNCTION.CALL.";
@@ -35,8 +36,8 @@ public class FunctionCustomPrivilegesExtractor implements CustomPrivilegesExtrac
     }
 
     @Override
-    public List<String> toPrivilegesList(Map<String, TypeSpec> specs) {
-        return specs.values().stream()
+    public List<String> toPrivilegesList(Collection<TypeSpec> specs) {
+        return specs.stream()
                              .map(TypeSpec::getFunctions)
                              .filter(Objects::nonNull)
                              .flatMap(List::stream)

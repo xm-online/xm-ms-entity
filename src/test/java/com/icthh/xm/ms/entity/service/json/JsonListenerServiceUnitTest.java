@@ -1,19 +1,19 @@
 package com.icthh.xm.ms.entity.service.json;
 
 import com.icthh.xm.commons.listener.JsonListenerService;
-import com.icthh.xm.ms.entity.AbstractUnitTest;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.junit.MockitoJUnitRunner;
+import com.icthh.xm.ms.entity.AbstractJupiterUnitTest;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 
-@RunWith(MockitoJUnitRunner.class)
-public class JsonListenerServiceUnitTest extends AbstractUnitTest {
+@ExtendWith(MockitoExtension.class)
+public class JsonListenerServiceUnitTest extends AbstractJupiterUnitTest {
 
     private static final String TENANT_NAME = "XM";
     private static final String RELATIVE_PATH_TO_FILE = "xmentityspec/definitions/user.json";
@@ -21,7 +21,7 @@ public class JsonListenerServiceUnitTest extends AbstractUnitTest {
 
     private JsonListenerService subject;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         subject = new JsonListenerService();
     }

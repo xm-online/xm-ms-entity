@@ -16,7 +16,7 @@ import com.icthh.xm.commons.i18n.error.web.ExceptionTranslator;
 import com.icthh.xm.commons.permission.repository.PermittedRepository;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
-import com.icthh.xm.ms.entity.AbstractSpringBootTest;
+import com.icthh.xm.ms.entity.AbstractJupiterSpringBootTest;
 import com.icthh.xm.ms.entity.domain.Rating;
 import com.icthh.xm.ms.entity.domain.Vote;
 import com.icthh.xm.ms.entity.domain.XmEntity;
@@ -25,10 +25,10 @@ import com.icthh.xm.ms.entity.repository.XmEntityRepository;
 import com.icthh.xm.ms.entity.service.VoteService;
 import com.icthh.xm.ms.entity.service.impl.StartUpdateDateGenerationStrategy;
 import jakarta.persistence.EntityManager;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -51,7 +51,7 @@ import java.util.List;
  * @see VoteResource
  */
 @WithMockUser(authorities = {"SUPER-ADMIN"})
-public class VoteResourceIntTest extends AbstractSpringBootTest {
+public class VoteResourceIntTest extends AbstractJupiterSpringBootTest {
 
     private static final String DEFAULT_USER_KEY = "AAAAAAAAAA";
     private static final String UPDATED_USER_KEY = "BBBBBBBBBB";
@@ -106,7 +106,7 @@ public class VoteResourceIntTest extends AbstractSpringBootTest {
         TenantContextUtils.setTenant(tenantContextHolder, "RESINTTEST");
     }
 
-    @Before
+    @BeforeEach
     public void setup() {
         MockitoAnnotations.initMocks(this);
 
@@ -127,7 +127,7 @@ public class VoteResourceIntTest extends AbstractSpringBootTest {
 
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         tenantContextHolder.getPrivilegedContext().destroyCurrentContext();
     }
@@ -157,7 +157,7 @@ public class VoteResourceIntTest extends AbstractSpringBootTest {
         return vote;
     }
 
-    @Before
+    @BeforeEach
     public void initTest() {
     //    voteSearchRepository.deleteAll();
     }
@@ -249,7 +249,7 @@ public class VoteResourceIntTest extends AbstractSpringBootTest {
 
     @Test
     @Transactional
-    @Ignore("see TagResourceExtendedIntTest.checkStartDateIsNotRequired instead")
+    @Disabled("see TagResourceExtendedIntTest.checkStartDateIsNotRequired instead")
     public void checkEntryDateIsRequired() throws Exception {
         int databaseSizeBeforeTest = voteRepository.findAll().size();
         // set the field null

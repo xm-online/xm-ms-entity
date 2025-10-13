@@ -5,16 +5,18 @@ import com.icthh.xm.commons.security.XmAuthenticationContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
 import com.icthh.xm.commons.tenant.TenantKey;
-import com.icthh.xm.ms.entity.AbstractSpringBootTest;
+import com.icthh.xm.ms.entity.AbstractJupiterSpringBootTest;
 import lombok.SneakyThrows;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.test.context.ActiveProfiles;
 
 import java.util.Map;
@@ -28,7 +30,7 @@ import static org.mockito.Mockito.when;
 
 @SuppressWarnings("unused")
 @ActiveProfiles(profiles = "non-async")
-public class MailServiceIntTest extends AbstractSpringBootTest {
+public class MailServiceIntTest extends AbstractJupiterSpringBootTest {
 
     private static final String MAIL_SETTINGS = "mailSettings";
     private static final String TEMPLATE_NAME = "templateName";
@@ -47,6 +49,12 @@ public class MailServiceIntTest extends AbstractSpringBootTest {
     @MockBean
     private JavaMailSender javaMailSender;
 
+    /**
+     * periodicMetricsTaskScheduler configures in @Profile("!non-async"), needed for test passing
+     */
+    @MockBean
+    ThreadPoolTaskScheduler periodicMetricsTaskScheduler;
+
     @Autowired
     private TenantContextHolder tenantContextHolder;
 
@@ -57,12 +65,17 @@ public class MailServiceIntTest extends AbstractSpringBootTest {
     private XmAuthenticationContext context;
 
     @SneakyThrows
-    @Before
+    @BeforeEach
     public void setup() {
         TenantContextUtils.setTenant(tenantContextHolder, TENANT_NAME);
         MockitoAnnotations.initMocks(this);
         when(authContextHolder.getContext()).thenReturn(context);
         when(context.getUserKey()).thenReturn(Optional.of("userKey"));
+    }
+
+    @AfterEach
+    public void tearDown() {
+        tenantContextHolder.getPrivilegedContext().destroyCurrentContext();
     }
 
     @Test

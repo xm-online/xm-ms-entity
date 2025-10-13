@@ -2,12 +2,10 @@ package com.icthh.xm.ms.entity.service.impl;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Maps;
-import com.icthh.xm.commons.domain.FunctionResult;
 import com.icthh.xm.commons.domain.enums.FunctionTxTypes;
-import com.icthh.xm.commons.service.FunctionResultProcessor;
 import com.icthh.xm.commons.service.FunctionTxControl;
 import com.icthh.xm.commons.service.impl.FunctionTxControlImpl;
-import com.icthh.xm.ms.entity.AbstractUnitTest;
+import com.icthh.xm.ms.entity.AbstractJupiterUnitTest;
 import com.icthh.xm.ms.entity.config.XmEntityTenantConfigService;
 import com.icthh.xm.ms.entity.config.XmEntityTenantConfigService.XmEntityTenantConfig;
 import com.icthh.xm.ms.entity.domain.FunctionContext;
@@ -22,10 +20,8 @@ import com.icthh.xm.ms.entity.service.XmEntitySpecService;
 import com.icthh.xm.ms.entity.service.json.JsonValidationService;
 import com.icthh.xm.ms.entity.service.mapper.FunctionResultMapper;
 import com.icthh.xm.ms.entity.service.mapper.FunctionResultMapperImpl;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import java.util.Map;
@@ -35,19 +31,15 @@ import java.util.function.Function;
 import static com.icthh.xm.ms.entity.domain.ext.IdOrKey.SELF;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-public class FunctionServiceImplTxControlUnitTest extends AbstractUnitTest {
+public class FunctionServiceImplTxControlUnitTest extends AbstractJupiterUnitTest {
 
     private XmEntityFunctionServiceFacade functionServiceFacade;
-
-    @Rule
-    public final ExpectedException exception = ExpectedException.none();
 
     private XmEntitySpecService xmEntitySpecService;
     private XmEntityService xmEntityService;
@@ -67,7 +59,7 @@ public class FunctionServiceImplTxControlUnitTest extends AbstractUnitTest {
 
     private IdOrKey key = SELF;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         xmEntitySpecService = Mockito.mock(XmEntitySpecService.class);
         xmEntityService = Mockito.mock(XmEntityService.class);

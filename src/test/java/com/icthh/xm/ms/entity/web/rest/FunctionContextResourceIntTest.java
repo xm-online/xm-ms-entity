@@ -18,7 +18,7 @@ import com.icthh.xm.commons.i18n.error.web.ExceptionTranslator;
 import com.icthh.xm.commons.permission.repository.PermittedRepository;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
-import com.icthh.xm.ms.entity.AbstractSpringBootTest;
+import com.icthh.xm.ms.entity.AbstractJupiterSpringBootTest;
 import com.icthh.xm.ms.entity.domain.FunctionContext;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.repository.FunctionContextRepository;
@@ -27,10 +27,10 @@ import com.icthh.xm.ms.entity.service.FunctionContextService;
 import com.icthh.xm.ms.entity.service.impl.FunctionContextServiceImpl;
 import com.icthh.xm.ms.entity.service.impl.StartUpdateDateGenerationStrategy;
 import jakarta.persistence.EntityManager;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -54,7 +54,7 @@ import java.util.Map;
  * @see FunctionContextResource
  */
 @WithMockUser(authorities = {"SUPER-ADMIN"})
-public class FunctionContextResourceIntTest extends AbstractSpringBootTest {
+public class FunctionContextResourceIntTest extends AbstractJupiterSpringBootTest {
 
     private static final String DEFAULT_KEY = "AAAAAAAAAA";
     private static final String UPDATED_KEY = "BBBBBBBBBB";
@@ -126,7 +126,7 @@ public class FunctionContextResourceIntTest extends AbstractSpringBootTest {
         });
     }
 
-    @Before
+    @BeforeEach
     public void setup() {
         MockitoAnnotations.initMocks(this);
 
@@ -169,13 +169,13 @@ public class FunctionContextResourceIntTest extends AbstractSpringBootTest {
         return functionContext;
     }
 
-    @Before
+    @BeforeEach
     public void initTest() {
         // functionContextSearchRepository.deleteAll();
         functionContext = createEntity(em);
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         lepManager.endThreadContext();
         tenantContextHolder.getPrivilegedContext().destroyCurrentContext();
@@ -262,7 +262,7 @@ public class FunctionContextResourceIntTest extends AbstractSpringBootTest {
 
     @Test
     @Transactional
-    @Ignore("see FunctionContextResourceExtendedIntTest.checkStartDateIsNotRequired instead")
+    @Disabled("see FunctionContextResourceExtendedIntTest.checkStartDateIsNotRequired instead")
     public void checkStartDateIsRequired() throws Exception {
         int databaseSizeBeforeTest = functionContextRepository.findAll().size();
         // set the field null

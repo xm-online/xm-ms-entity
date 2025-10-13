@@ -5,7 +5,7 @@ import com.icthh.xm.commons.security.XmAuthenticationContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
 import com.icthh.xm.lep.api.LepManager;
-import com.icthh.xm.ms.entity.AbstractSpringBootTest;
+import com.icthh.xm.ms.entity.AbstractJupiterSpringBootTest;
 import com.icthh.xm.ms.entity.config.ApplicationProperties;
 import com.icthh.xm.ms.entity.config.amazon.AmazonS3Template;
 import com.icthh.xm.ms.entity.domain.Attachment;
@@ -21,9 +21,9 @@ import com.icthh.xm.ms.entity.service.dto.UploadResultDto;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.digest.DigestUtils;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
@@ -42,7 +42,7 @@ import static org.mockito.ArgumentMatchers.contains;
 import static org.mockito.ArgumentMatchers.eq;
 
 @Slf4j
-public class ContentServiceIntTest extends AbstractSpringBootTest {
+public class ContentServiceIntTest extends AbstractJupiterSpringBootTest {
 
     private static final String PREFIX = "prefix";
     private static final String TENANT_KEY = "RESINTTEST";
@@ -80,7 +80,7 @@ public class ContentServiceIntTest extends AbstractSpringBootTest {
     }
 
     @SneakyThrows
-    @Before
+    @BeforeEach
     public void setup() {
         MockitoAnnotations.initMocks(this);
 
@@ -99,7 +99,7 @@ public class ContentServiceIntTest extends AbstractSpringBootTest {
         amazon.getS3().setBucketPrefix(PREFIX);
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         lepManager.endThreadContext();
         tenantContextHolder.getPrivilegedContext().destroyCurrentContext();

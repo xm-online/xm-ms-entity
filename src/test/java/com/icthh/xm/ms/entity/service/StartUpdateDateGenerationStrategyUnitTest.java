@@ -1,17 +1,18 @@
 package com.icthh.xm.ms.entity.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.fail;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.icthh.xm.ms.entity.AbstractUnitTest;
+import com.icthh.xm.ms.entity.AbstractJupiterUnitTest;
 import com.icthh.xm.ms.entity.domain.FunctionContext;
 import com.icthh.xm.ms.entity.repository.FunctionContextRepository;
 import com.icthh.xm.ms.entity.service.impl.StartUpdateDateGenerationStrategy;
 import java.util.Optional;
-import org.junit.Before;
-import org.junit.Test;
+
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
@@ -21,7 +22,7 @@ import java.time.Instant;
 /**
  * Unit test for StartUpdateDateGenerationStrategy.
  */
-public class StartUpdateDateGenerationStrategyUnitTest extends AbstractUnitTest {
+public class StartUpdateDateGenerationStrategyUnitTest extends AbstractJupiterUnitTest {
 
     private static final Instant MOCK_START_DATE = Instant.ofEpochMilli(100);
     private static final Instant MOCK_UPDATE_DATE = Instant.ofEpochMilli(200);
@@ -35,7 +36,7 @@ public class StartUpdateDateGenerationStrategyUnitTest extends AbstractUnitTest 
     @Mock
     FunctionContextRepository repository;
 
-    @Before
+    @BeforeEach
     public void init() {
         MockitoAnnotations.initMocks(this);
 
@@ -179,7 +180,7 @@ public class StartUpdateDateGenerationStrategyUnitTest extends AbstractUnitTest 
         Instant updateDate = Instant.now();
 
         when(strategy.generateUpdateDate()).thenReturn(updateDate);
-        when(repository.findById(1L)).thenReturn(Optional.ofNullable(oldContext));
+        when(repository.findById(1L)).thenReturn(Optional.of(oldContext));
 
         FunctionContext newContext = new FunctionContext();
         // set ID to trigger findOne from repo.
@@ -207,7 +208,7 @@ public class StartUpdateDateGenerationStrategyUnitTest extends AbstractUnitTest 
 
         try {
             r.run();
-            fail("expected NullPointerException!");
+            Assertions.fail("expected NullPointerException!");
         } catch (NullPointerException e) {
             assertThat(e.getMessage()).contains(exMessage);
         }

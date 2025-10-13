@@ -9,13 +9,13 @@ import com.icthh.xm.commons.scheduler.service.SchedulerHandler;
 import com.icthh.xm.commons.security.XmAuthenticationContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.lep.api.LepManager;
-import com.icthh.xm.ms.entity.AbstractSpringBootTest;
+import com.icthh.xm.ms.entity.AbstractJupiterSpringBootTest;
 import com.icthh.xm.ms.entity.service.XmEntityFunctionExecutorService;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
@@ -26,7 +26,7 @@ import java.util.Map;
 import java.util.UUID;
 
 @Slf4j
-public class SchedulerIntTest extends AbstractSpringBootTest {
+public class SchedulerIntTest extends AbstractJupiterSpringBootTest {
 
     @Autowired
     private XmEntityFunctionExecutorService functionService;
@@ -48,7 +48,7 @@ public class SchedulerIntTest extends AbstractSpringBootTest {
     private SchedulerHandler schedulerHandler;
 
     @SneakyThrows
-    @Before
+    @BeforeEach
     public void setup() {
         MockitoAnnotations.initMocks(this);
     }

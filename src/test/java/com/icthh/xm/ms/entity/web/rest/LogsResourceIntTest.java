@@ -7,9 +7,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.icthh.xm.commons.logging.web.rest.LogsResource;
 import com.icthh.xm.commons.logging.web.rest.vm.LoggerVm;
-import com.icthh.xm.ms.entity.AbstractSpringBootTest;
-import org.junit.Before;
-import org.junit.Test;
+import com.icthh.xm.ms.entity.AbstractJupiterSpringBootTest;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
@@ -21,20 +21,14 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
  *
  * @see LogsResource
  */
-//@RunWith(SpringRunner.class)
-//@SpringBootTest(classes = {
-//    EntityApp.class,
-//    SecurityBeanOverrideConfiguration.class,
-//    WebappTenantOverrideConfiguration.class,
-//})
-public class LogsResourceIntTest extends AbstractSpringBootTest {
+public class LogsResourceIntTest extends AbstractJupiterSpringBootTest {
 
     @Autowired
     private MappingJackson2HttpMessageConverter jacksonMessageConverter;
 
     private MockMvc restLogsMockMvc;
 
-    @Before
+    @BeforeEach
     public void setup() {
         LogsResource logsResource = new LogsResource();
         this.restLogsMockMvc = MockMvcBuilders

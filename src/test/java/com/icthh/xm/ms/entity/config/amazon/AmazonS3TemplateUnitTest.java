@@ -10,7 +10,7 @@ import com.github.dockerjava.api.command.CreateContainerCmd;
 import com.github.dockerjava.api.model.ExposedPort;
 import com.github.dockerjava.api.model.PortBinding;
 import com.github.dockerjava.api.model.Ports;
-import com.icthh.xm.ms.entity.AbstractUnitTest;
+import com.icthh.xm.ms.entity.AbstractJupiterUnitTest;
 import com.icthh.xm.ms.entity.config.ApplicationProperties;
 
 import java.io.FileNotFoundException;
@@ -26,16 +26,19 @@ import com.icthh.xm.ms.entity.service.dto.UploadResultDto;
 import com.icthh.xm.ms.entity.util.FileUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
-import org.junit.Assert;
-import org.junit.ClassRule;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.testcontainers.containers.GenericContainer;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @Slf4j
-public class AmazonS3TemplateUnitTest extends AbstractUnitTest {
+@Testcontainers
+public class AmazonS3TemplateUnitTest extends AbstractJupiterUnitTest {
 
     private static final String PREFIX = "test";
     private static final String BUCKET = "bucket_for_TEST";
@@ -44,9 +47,9 @@ public class AmazonS3TemplateUnitTest extends AbstractUnitTest {
     private final ApplicationProperties applicationProperties = new ApplicationProperties();
     private final AmazonS3Template s3Template = new AmazonS3Template(applicationProperties, this::createS3Client, new AmazonS3BucketNameFactory());
 
-    @ClassRule
+    @Container
     public static GenericContainer mockS3 = new GenericContainer("adobe/s3mock")
-        .withCreateContainerCmdModifier(getContainerModifier()).withExposedPorts(9090);
+        .withCreateContainerCmdModifier(getContainerModifier()).withExposedPorts(9090);;
 
     private static Consumer<CreateContainerCmd> getContainerModifier() {
         return containerCmd -> containerCmd
@@ -67,11 +70,13 @@ public class AmazonS3TemplateUnitTest extends AbstractUnitTest {
                                         )).build();
     }
 
-    @Test(expected = IOException.class)
+    @Test
     public void saveWithException() throws Exception {
-        String content = "content string";
-        InputStream stream = IOUtils.toInputStream(content, StandardCharsets.UTF_8);
-        s3Template.save("test-bucket-for-test-with-exception", "testkey", stream, content .getBytes().length, "filename");
+        Assertions.assertThrows(IOException.class, () -> {
+            String content = "content string";
+            InputStream stream = IOUtils.toInputStream(content, StandardCharsets.UTF_8);
+            s3Template.save("test-bucket-for-test-with-exception", "testkey", stream, content .getBytes().length, "filename");
+        });
     }
 
     @Test
@@ -88,7 +93,7 @@ public class AmazonS3TemplateUnitTest extends AbstractUnitTest {
         URL expirableLink = s3Template.createExpirableLink(attachment, 100500L);
         log.info("link: {}", expirableLink);
         String value = IOUtils.toString(expirableLink, StandardCharsets.UTF_8);
-        Assert.assertEquals(content, value);
+        assertEquals(content, value);
     }
 
     @Test
@@ -109,7 +114,7 @@ public class AmazonS3TemplateUnitTest extends AbstractUnitTest {
             IOUtils.toString(expirableLink, StandardCharsets.UTF_8);
         });
 
-        Assert.assertEquals(FileNotFoundException.class, exception.getClass());
+        assertEquals(FileNotFoundException.class, exception.getClass());
     }
 
     private UploadResultDto uploadFileToS3(String strContent) {
