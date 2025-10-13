@@ -49,6 +49,9 @@ import java.util.List;
 @WithMockUser(authorities = {"SUPER-ADMIN"})
 public class LocationResourceIntTest extends AbstractJupiterSpringBootTest {
 
+    private static final String DEFAULT_KEY = "DEFAULT_LOCATION_KEY";
+    private static final String UPDATED_KEY = "UPDATED_LOCATION_KEY";
+
     private static final String DEFAULT_TYPE_KEY = "AAAAAAAAAA";
     private static final String UPDATED_TYPE_KEY = "BBBBBBBBBB";
 
@@ -155,6 +158,7 @@ public class LocationResourceIntTest extends AbstractJupiterSpringBootTest {
     public static Location createEntity(EntityManager em) {
         Location location = new Location()
             .typeKey(DEFAULT_TYPE_KEY)
+            .key(DEFAULT_KEY)
             .countryKey(DEFAULT_COUNTRY_KEY)
             .longitude(DEFAULT_LONGITUDE)
             .latitude(DEFAULT_LATITUDE)
@@ -193,6 +197,7 @@ public class LocationResourceIntTest extends AbstractJupiterSpringBootTest {
         assertThat(locationList).hasSize(databaseSizeBeforeCreate + 1);
         Location testLocation = locationList.get(locationList.size() - 1);
         assertThat(testLocation.getTypeKey()).isEqualTo(DEFAULT_TYPE_KEY);
+        assertThat(testLocation.getKey()).isEqualTo(DEFAULT_KEY);
         assertThat(testLocation.getCountryKey()).isEqualTo(DEFAULT_COUNTRY_KEY);
         assertThat(testLocation.getLongitude()).isEqualTo(DEFAULT_LONGITUDE);
         assertThat(testLocation.getLatitude()).isEqualTo(DEFAULT_LATITUDE);
@@ -262,6 +267,7 @@ public class LocationResourceIntTest extends AbstractJupiterSpringBootTest {
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON))
             .andExpect(jsonPath("$.[*].id").value(hasItem(location.getId().intValue())))
+            .andExpect(jsonPath("$.[*].key").value(hasItem(DEFAULT_KEY.toString())))
             .andExpect(jsonPath("$.[*].typeKey").value(hasItem(DEFAULT_TYPE_KEY.toString())))
             .andExpect(jsonPath("$.[*].countryKey").value(hasItem(DEFAULT_COUNTRY_KEY.toString())))
             .andExpect(jsonPath("$.[*].longitude").value(hasItem(DEFAULT_LONGITUDE.doubleValue())))
@@ -285,6 +291,7 @@ public class LocationResourceIntTest extends AbstractJupiterSpringBootTest {
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON))
             .andExpect(jsonPath("$.id").value(location.getId().intValue()))
+            .andExpect(jsonPath("$.key").value(DEFAULT_KEY.toString()))
             .andExpect(jsonPath("$.typeKey").value(DEFAULT_TYPE_KEY.toString()))
             .andExpect(jsonPath("$.countryKey").value(DEFAULT_COUNTRY_KEY.toString()))
             .andExpect(jsonPath("$.longitude").value(DEFAULT_LONGITUDE.doubleValue()))
@@ -319,6 +326,7 @@ public class LocationResourceIntTest extends AbstractJupiterSpringBootTest {
         Location updatedLocation = locationRepository.findById(location.getId())
             .orElseThrow(NullPointerException::new);
         updatedLocation
+            .key(UPDATED_KEY)
             .typeKey(UPDATED_TYPE_KEY)
             .countryKey(UPDATED_COUNTRY_KEY)
             .longitude(UPDATED_LONGITUDE)
@@ -340,6 +348,7 @@ public class LocationResourceIntTest extends AbstractJupiterSpringBootTest {
         assertThat(locationList).hasSize(databaseSizeBeforeUpdate);
         Location testLocation = locationList.get(locationList.size() - 1);
         assertThat(testLocation.getTypeKey()).isEqualTo(UPDATED_TYPE_KEY);
+        assertThat(testLocation.getKey()).isEqualTo(UPDATED_KEY);
         assertThat(testLocation.getCountryKey()).isEqualTo(UPDATED_COUNTRY_KEY);
         assertThat(testLocation.getLongitude()).isEqualTo(UPDATED_LONGITUDE);
         assertThat(testLocation.getLatitude()).isEqualTo(UPDATED_LATITUDE);
