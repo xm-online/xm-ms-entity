@@ -43,7 +43,7 @@ public class Location implements Serializable {
      * Additional lateral identification for this location, could be used as reference to the external system
      */
     @ApiModelProperty(value = "Additional lateral identification for this location, could be used as reference to the external system")
-    @Column(name = "jhi_key", nullable = false)
+    @Column(name = "jhi_key")
     private String key;
 
     /**
