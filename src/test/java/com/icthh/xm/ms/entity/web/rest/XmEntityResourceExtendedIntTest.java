@@ -21,6 +21,8 @@ import com.icthh.xm.ms.entity.AbstractJupiterSpringBootTest;
 import com.icthh.xm.ms.entity.config.ApplicationProperties;
 import com.icthh.xm.ms.entity.config.Constants;
 import com.icthh.xm.ms.entity.config.InternalTransactionService;
+
+import static com.icthh.xm.ms.entity.config.Constants.DEFAULT_AVATAR_URL_PREFIX;
 import static com.icthh.xm.ms.entity.config.TenantConfigMockConfiguration.getXmEntityTemplatesSpec;
 import com.icthh.xm.ms.entity.config.WebMvcConfiguration;
 import com.icthh.xm.ms.entity.config.XmEntityTenantConfigService;
@@ -58,8 +60,11 @@ import com.icthh.xm.ms.entity.service.XmEntityTemplatesSpecService;
 import com.icthh.xm.ms.entity.service.impl.StartUpdateDateGenerationStrategy;
 import com.icthh.xm.ms.entity.service.impl.XmEntityFunctionServiceFacade;
 import com.icthh.xm.ms.entity.service.impl.XmEntityServiceImpl;
+import com.icthh.xm.ms.entity.service.impl.XmeStorageServiceFacadeImpl;
 import com.icthh.xm.ms.entity.service.json.JsonValidationService;
 import static com.icthh.xm.ms.entity.web.rest.TestUtil.sameInstant;
+
+import com.icthh.xm.ms.entity.service.storage.AvatarStorageService;
 import com.jayway.jsonpath.JsonPath;
 import static java.time.Instant.now;
 import static java.util.Collections.emptyMap;
@@ -149,9 +154,7 @@ public class XmEntityResourceExtendedIntTest extends AbstractJupiterSpringBootTe
 
     private static final Instant DEFAULT_END_DATE = Instant.ofEpochMilli(3000L);
 
-    private static final String DEFAULT_AVATAR_URL_PREFIX = "http://xm-avatar.rgw.icthh.test:7480/";
-
-    private static final String DEFAULT_AVATAR_URL = DEFAULT_AVATAR_URL_PREFIX + "aaaaa.jpg";
+    private static final String DEFAULT_AVATAR_URL = DEFAULT_AVATAR_URL_PREFIX + "/aaaaa.jpg";
 
     private static final String DEFAULT_DESCRIPTION = "AAAAAAAAAA";
 
@@ -281,6 +284,9 @@ public class XmEntityResourceExtendedIntTest extends AbstractJupiterSpringBootTe
     AttachmentService attachmentService;
 
     @Autowired
+    AvatarStorageService avatarStorageService;
+
+    @Autowired
     ObjectMapper objectMapper;
 
     @Autowired
@@ -337,6 +343,8 @@ public class XmEntityResourceExtendedIntTest extends AbstractJupiterSpringBootTe
         String key = applicationProperties.getSpecificationTemplatesPathPattern().replace("{tenantName}", tenantName);
         xmEntityTemplatesSpecService.onRefresh(key, config);
 
+        XmeStorageServiceFacadeImpl storageServiceFacade = new XmeStorageServiceFacadeImpl(storageService, avatarStorageService, attachmentService);
+
         XmEntityServiceImpl xmEntityService = new XmEntityServiceImpl(xmEntitySpecService,
                                                                       xmEntityTemplatesSpecService,
                                                                       xmEntityRepository,
@@ -344,8 +352,7 @@ public class XmEntityResourceExtendedIntTest extends AbstractJupiterSpringBootTe
                                                                       xmEntityPermittedRepository,
                                                                       profileService,
                                                                       linkService,
-                                                                      storageService,
-                                                                      attachmentService,
+                                                                      storageServiceFacade,
                                                                       xmEntityPermittedSearchRepository,
                                                                       startUpdateDateGenerationStrategy,
                                                                       authContextHolder,

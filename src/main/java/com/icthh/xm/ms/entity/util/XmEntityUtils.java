@@ -18,7 +18,7 @@ public class XmEntityUtils {
 
     public static XmEntity getRequiredLinkedTarget(XmEntity xmEntity, String linkTypeKey, String linkTargetTypeKey) {
         Optional<Link> firstLink = findFirstLink(xmEntity, linkTypeKey);
-        if (!firstLink.isPresent()) {
+        if (firstLink.isEmpty()) {
             throw new IllegalArgumentException("Link with type key '" + linkTypeKey + "' are required");
         }
         Link link = firstLink.get();
@@ -46,7 +46,7 @@ public class XmEntityUtils {
 
     public static XmEntity getRequiredTargetByLink(XmEntity xmEntity, String linkTypeKey) {
         Optional<Link> firstLink = findFirstLink(xmEntity, linkTypeKey);
-        if (!firstLink.isPresent()) {
+        if (firstLink.isEmpty()) {
             throw new IllegalArgumentException("Link with type key '" + linkTypeKey + "' are required");
         }
         Link link = firstLink.get();
@@ -55,7 +55,7 @@ public class XmEntityUtils {
 
     public static Link findFirstRequiredLink(XmEntity xmEntity, String linkTypeKey) {
         Optional<Link> firstLink = findFirstLink(xmEntity, linkTypeKey);
-        if (!firstLink.isPresent()) {
+        if (firstLink.isEmpty()) {
             throw new IllegalArgumentException("Link with type key '" + linkTypeKey + "' are required");
         }
         return firstLink.get();
@@ -73,7 +73,7 @@ public class XmEntityUtils {
 
     public static Optional<XmEntity> getLinkedTarget(XmEntity xmEntity, String targetTypeKey) {
         Optional<Link> linkOpt = getLink(xmEntity, targetTypeKey);
-        return linkOpt.isPresent() ? Optional.ofNullable(linkOpt.get().getTarget()) : Optional.empty();
+        return linkOpt.map(Link::getTarget);
     }
 
     // XmEntity -> link's -> (filter by: target.typeKey) -> target

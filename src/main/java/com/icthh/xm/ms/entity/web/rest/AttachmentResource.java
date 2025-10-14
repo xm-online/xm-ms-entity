@@ -114,8 +114,8 @@ public class AttachmentResource {
     @PostAuthorize("hasPermission({'returnObject': returnObject.body}, 'ATTACHMENT.GET_LIST.ITEM')")
     @PrivilegeDescription("Privilege to get attachment by id")
     public ResponseEntity<Attachment> getAttachment(@PathVariable Long id) {
-        Attachment attachment = attachmentService.findOneWithContent(id);
-        return RespContentUtil.wrapOrNotFound(Optional.ofNullable(attachment));
+        Optional<Attachment> attachment = attachmentService.getOneWithContent(id);
+        return RespContentUtil.wrapOrNotFound(attachment);
     }
 
     /**
