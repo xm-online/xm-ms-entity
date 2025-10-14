@@ -40,6 +40,13 @@ public class Location implements Serializable {
     private Long id;
 
     /**
+     * Additional lateral identification for this location, could be used as reference to the external system
+     */
+    @ApiModelProperty(value = "Additional lateral identification for this location, could be used as reference to the external system")
+    @Column(name = "jhi_key")
+    private String key;
+
+    /**
      * String typeKey with tree-like structure.
      */
     @NotNull
@@ -124,6 +131,19 @@ public class Location implements Serializable {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public String getKey() {
+        return key;
+    }
+
+    public void setKey(String key) {
+        this.key = key;
+    }
+
+    public Location key(String key) {
+        this.key = key;
+        return this;
     }
 
     public String getTypeKey() {
@@ -293,6 +313,7 @@ public class Location implements Serializable {
     public String toString() {
         return "Location{" +
             "id=" + getId() +
+            ", key='" + getKey() + "'" +
             ", typeKey='" + getTypeKey() + "'" +
             ", countryKey='" + getCountryKey() + "'" +
             ", longitude='" + getLongitude() + "'" +
