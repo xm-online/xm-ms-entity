@@ -26,6 +26,7 @@ import com.icthh.xm.ms.entity.service.ProfileService;
 import com.icthh.xm.ms.entity.service.SeparateTransactionExecutor;
 import com.icthh.xm.ms.entity.service.TagService;
 import com.icthh.xm.ms.entity.service.XmEntityService;
+import com.icthh.xm.ms.entity.service.impl.XmEntityAvatarService;
 import com.icthh.xm.ms.entity.service.mail.MailService;
 import com.icthh.xm.ms.entity.service.metrics.CustomMetricsContext;
 import com.icthh.xm.ms.entity.service.metrics.MetricsAdapter;
@@ -47,6 +48,7 @@ public class LepContext extends BaseLepContext implements OutboxTransportService
         public ProfileService profileService;
         public LinkService linkService;
         public AttachmentService attachmentService;
+        public XmEntityAvatarService xmEntityAvatarService;
         public MailService mailService;
         public TenantConfigService tenantConfigService;
         public LocationService locationService;
