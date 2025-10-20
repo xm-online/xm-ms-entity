@@ -90,4 +90,5 @@
 
     <include file="classpath:config/liquibase/changelog/20250327000000_add_link_order.xml" relativeToChangelogFile="false"/>
 
+    <include file="classpath:config/liquibase/changelog/20251013000000_add_key_to_location.xml" relativeToChangelogFile="false"/>
 </databaseChangeLog>
