@@ -3,6 +3,7 @@ package com.icthh.xm.ms.entity.config;
 import com.icthh.xm.commons.lep.TenantScriptStorage;
 import lombok.Getter;
 import lombok.Setter;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
@@ -20,17 +21,23 @@ import java.util.List;
 @Setter
 public class ApplicationProperties {
 
+    public static final Integer DEFAULT_MAX_AVATAR_SIZE = 1024 * 1024;
+    public static final Integer DEFAULT_MAX_IMAGE_SIZE = 100;
+    public static final String DEFAULT_DB_FILE_PREFIX = "db://xme/entity/obj/";
+    public static final String DEFAULT_DB_URL_TMPLT = "https://%s.xm-online.com/entity/api/storage/object";
+
     private final Amazon amazon = new Amazon();
     private final Retry retry = new Retry();
     private final Lep lep = new Lep();
     private final Jpa jpa = new Jpa();
+    private final ObjectStorage objectStorage = new ObjectStorage();
 
     private List<String> tenantIgnoredPathList = Collections.emptyList();
     private List<String> timelineIgnoredHttpMethods = Collections.emptyList();
     /**
      * Default max avatar size 1Mb
      */
-    private long maxAvatarSize = 1024 * 1024;
+    private long maxAvatarSize = DEFAULT_MAX_AVATAR_SIZE;
     private boolean timelinesEnabled;
     private boolean kafkaEnabled;
     private boolean schedulerEnabled;
@@ -137,4 +144,48 @@ public class ApplicationProperties {
     public static class Jpa {
         private Integer findOneByIdForUpdateTimeout = 10000;
     }
+
+    @Getter
+    @Setter
+    public static class ObjectStorage {
+        private AvatarStorage avatar = new AvatarStorage();
+        private FileStorage file = new FileStorage();
+    }
+
+    @Setter
+    public static class FileStorage {
+        @Getter
+        private StorageType storageType = StorageType.S3;
+    }
+
+    @Setter
+    public static class AvatarStorage {
+        @Getter
+        private StorageType storageType = StorageType.S3;
+        private Integer maxImageSize = DEFAULT_MAX_IMAGE_SIZE;
+        private Integer maxSize = DEFAULT_MAX_AVATAR_SIZE;
+        private String dbFilePrefix;
+        private String dbUrlTemplate;
+
+        public Integer getMaxImageSize() {
+            return (maxImageSize == null || maxImageSize <= 0) ? DEFAULT_MAX_IMAGE_SIZE : maxImageSize;
+        }
+
+        public Integer getMaxSize() {
+            return (maxSize == null || maxSize <= 0) ? DEFAULT_MAX_AVATAR_SIZE : maxSize;
+        }
+
+        public String getDbFilePrefix() {
+            return StringUtils.isEmpty(dbFilePrefix) ? DEFAULT_DB_FILE_PREFIX : dbFilePrefix;
+        }
+
+        public String getDbUrlTemplate() {
+            return StringUtils.isEmpty(dbUrlTemplate) ? DEFAULT_DB_URL_TMPLT : dbUrlTemplate;
+        }
+    }
+
+    public enum StorageType {
+        DB, S3, FILE
+    }
+
 }

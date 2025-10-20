@@ -1,6 +1,8 @@
 package com.icthh.xm.ms.entity.web.rest.util;
 
 import com.icthh.xm.ms.entity.domain.FileFormatEnum;
+import com.icthh.xm.ms.entity.service.storage.AvatarStorageResponse;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.CacheControl;
@@ -78,5 +80,18 @@ public final class HeaderUtil {
                                         + String.format("%s-%s.%s", fileName,
                                                         now.format(dateFormatter), fileFormat));
         return headers;
+    }
+
+    public static MediaType mediaTypeHeader(String resourceName) {
+        if (StringUtils.containsAny(resourceName, ".jpg", ".jpeg")) {
+            return MediaType.IMAGE_JPEG;
+        }
+        if (StringUtils.containsAny(resourceName, ".png")) {
+            return MediaType.IMAGE_PNG;
+        }
+        if (StringUtils.containsAny(resourceName, ".gif")) {
+            return MediaType.IMAGE_GIF;
+        }
+        return MediaType.APPLICATION_OCTET_STREAM;
     }
 }
