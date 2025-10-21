@@ -10,6 +10,7 @@ import com.icthh.xm.ms.entity.config.ApplicationProperties;
 import com.icthh.xm.ms.entity.domain.Content;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.repository.ContentRepository;
+import com.icthh.xm.ms.entity.repository.backend.FileStorageRepository;
 import com.icthh.xm.ms.entity.repository.backend.S3StorageRepository;
 import com.icthh.xm.ms.entity.service.storage.AvatarStorageResponse;
 import com.icthh.xm.ms.entity.service.storage.AvatarStorageServiceImpl;
@@ -27,7 +28,7 @@ import java.util.Map;
 
 
 @ExtendWith(MockitoExtension.class)
-public class AvatarStorageServiceUnitTest extends AbstractJupiterUnitTest {
+public class AvatarStorageServiceInDBUnitTest extends AbstractJupiterUnitTest {
 
     private static final String DB_PREFIX = "db://xme/entity/obj";
 
@@ -43,22 +44,22 @@ public class AvatarStorageServiceUnitTest extends AbstractJupiterUnitTest {
     private TenantConfigService tenantConfigService;
 
     @Mock
-    private ApplicationProperties.AvatarStorage avatarStorage;
+    private ApplicationProperties.ObjectStorage objectStorage;
 
     @Mock
     private S3StorageRepository s3StorageRepository;
 
     @Mock
-    private ApplicationProperties.ObjectStorage objectStorage;
+    private FileStorageRepository fileStorageRepository;
+
 
     @BeforeEach
     void setUp() {
         lenient().when(applicationProperties.getObjectStorage()).thenReturn(objectStorage);
-        lenient().when(objectStorage.getAvatar()).thenReturn(avatarStorage);
         lenient().when(tenantConfigService.getConfig()).thenReturn(Map.of("baseUrl", "http://tst"));
-        lenient().when(objectStorage.getAvatar().getStorageType()).thenReturn(ApplicationProperties.StorageType.DB);
-        lenient().when(objectStorage.getAvatar().getDbFilePrefix()).thenReturn(DB_PREFIX);
-        avatarStorageService = new AvatarStorageServiceImpl(contentRepository, applicationProperties, tenantConfigService, s3StorageRepository);
+        lenient().when(objectStorage.getStorageType()).thenReturn(ApplicationProperties.StorageType.DB);
+        lenient().when(objectStorage.getDbFilePrefix()).thenReturn(DB_PREFIX);
+        avatarStorageService = new AvatarStorageServiceImpl(contentRepository, applicationProperties, tenantConfigService, s3StorageRepository, fileStorageRepository);
         avatarStorageService.init();
     }
 
@@ -118,8 +119,8 @@ public class AvatarStorageServiceUnitTest extends AbstractJupiterUnitTest {
         String dbFileName = "wer-ert-rty";
         String dbFileUrl = "https://aws/wer-ert-rty";
 
-        when(avatarStorage.getStorageType()).thenReturn(ApplicationProperties.StorageType.S3);
-        avatarStorageService = new AvatarStorageServiceImpl(contentRepository, applicationProperties, tenantConfigService, s3StorageRepository);
+        when(objectStorage.getStorageType()).thenReturn(ApplicationProperties.StorageType.S3);
+        avatarStorageService = new AvatarStorageServiceImpl(contentRepository, applicationProperties, tenantConfigService, s3StorageRepository, fileStorageRepository);
         avatarStorageService.init();
 
         XmEntity xmEntity = EntityUtils.newEntity(entity -> {
@@ -134,28 +135,6 @@ public class AvatarStorageServiceUnitTest extends AbstractJupiterUnitTest {
         // then
         assertThat(response.avatarResource()).isNull();
         assertThat(response.uri()).isEqualTo(URI.create(dbFileUrl));
-    }
-
-    @Test
-    public void shouldThrowExceptionIfStorageTypeIsFS() {
-        String dbFileName = "wer-ert-rty";
-        String dbFileUrl = "file://wer-ert-rty";
-
-        XmEntity xmEntity = EntityUtils.newEntity(entity -> {
-            entity.setRemoved(false);
-            entity.avatarUrl(dbFileUrl);
-            entity.setAvatarUrlRelative(dbFileName);
-        });
-
-        when(avatarStorage.getStorageType()).thenReturn(ApplicationProperties.StorageType.FILE);
-        avatarStorageService = new AvatarStorageServiceImpl(contentRepository, applicationProperties, tenantConfigService, s3StorageRepository);
-        avatarStorageService.init();
-
-        RuntimeException thrown = Assertions.assertThrows(RuntimeException.class, () -> {
-            avatarStorageService.getAvatarResource(xmEntity);
-        }, "Not implemented");
-
-        Assertions.assertEquals("Unsupported storage type: " + ApplicationProperties.StorageType.FILE, thrown.getMessage());
     }
 
     @Test

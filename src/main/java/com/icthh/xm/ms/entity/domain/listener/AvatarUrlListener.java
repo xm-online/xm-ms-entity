@@ -24,6 +24,7 @@ public class AvatarUrlListener {
     private ApplicationProperties.StorageType avatarStorageType;
     private String dbAvatarPrefix;
     private String dbUrlTemplate;
+    private String fsUrlTemplate;
 
     private ApplicationProperties applicationProperties;
 
@@ -41,9 +42,9 @@ public class AvatarUrlListener {
         log.debug("Initializing AvatarUrlListener patternFull={}", patternFull);
         patternPart = applicationProperties.getAmazon().getAvatar().getPostLoadUrlPartPattern();
         log.debug("Initializing AvatarUrlListener patternPart={}", patternPart);
-        avatarStorageType = applicationProperties.getObjectStorage().getAvatar().getStorageType();
-        dbAvatarPrefix = applicationProperties.getObjectStorage().getAvatar().getDbFilePrefix();
-        dbUrlTemplate = applicationProperties.getObjectStorage().getAvatar().getDbUrlTemplate();
+        avatarStorageType = applicationProperties.getObjectStorage().getStorageType();
+        dbAvatarPrefix = applicationProperties.getObjectStorage().getDbFilePrefix();
+        dbUrlTemplate = applicationProperties.getObjectStorage().getDbUrlTemplate();
     }
 
     @PrePersist
@@ -69,6 +70,15 @@ public class AvatarUrlListener {
             if (ApplicationProperties.StorageType.DB == avatarStorageType) {
                 if (StringUtils.startsWith(avatarUrl, dbAvatarPrefix)) {
                     obj.setAvatarUrlFull(dbUrlTemplate + "/" + avatarUrl);
+                    return;
+                }
+            }
+
+            if (ApplicationProperties.StorageType.FILE == avatarStorageType) {
+                if (StringUtils.startsWith(avatarUrl, "file://")) {
+                    //{murmur-fileName}
+                    String avatarFileName = StringUtils.substringAfter(avatarUrl, "file://");
+                    obj.setAvatarUrlFull(avatarUrl);
                     return;
                 }
             }

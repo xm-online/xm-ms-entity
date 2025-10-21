@@ -31,7 +31,6 @@ public class StorageResource {
     private final XmeStorageServiceFacade xmeStorageServiceFacade;
     private final ApplicationProperties applicationProperties;
 
-
     /**
      * Api for uploading data to object storage.
      * @param size used to resize avatar (legacy)
@@ -43,7 +42,7 @@ public class StorageResource {
     public ResponseEntity<String> createContent(@RequestParam(required = false) Integer size,
         @RequestParam("file") MultipartFile multipartFile)
         throws IOException {
-
+        //TODO remove this to support any object storage
         if (multipartFile.getSize() > applicationProperties.getMaxAvatarSize()) {
             throw new BusinessException(ERR_VALIDATION,
                 "Avatar file must not exceed " + applicationProperties.getMaxAvatarSize() + " bytes");
