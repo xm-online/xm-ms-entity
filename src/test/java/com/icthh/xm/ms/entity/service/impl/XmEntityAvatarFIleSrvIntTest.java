@@ -201,13 +201,13 @@ public class XmEntityAvatarFIleSrvIntTest extends AbstractJupiterSpringBootTest 
         HttpEntity<Resource> avatarEntity = XmHttpEntityUtils.buildAvatarHttpEntity(file);
 
         URI uri = xmEntityAvatarService.updateAvatar(IdOrKey.SELF, avatarEntity);
-        assertThat(uri.getPath()).contains(FILE_NAME);
+        assertThat(uri.toString()).contains(FILE_NAME);
 
         XmEntity storedEntity = xmEntityRepository.findOne(self.getXmentity().getId());
         assertThat(storedEntity.getAvatarUrl()).contains(FILE_NAME);
 
-        if (applicationProperties.getObjectStorage().getStorageType() == ApplicationProperties.StorageType.DB) {
-            assertThat(storedEntity.getAvatarUrl()).startsWith(applicationProperties.getObjectStorage().getDbFilePrefix());
+        if (applicationProperties.getObjectStorage().getStorageType() == ApplicationProperties.StorageType.FILE) {
+            assertThat(storedEntity.getAvatarUrl()).startsWith("file://");
         }
     }
 
@@ -223,13 +223,13 @@ public class XmEntityAvatarFIleSrvIntTest extends AbstractJupiterSpringBootTest 
         HttpEntity<Resource> avatarEntity = XmHttpEntityUtils.buildAvatarHttpEntity(file);
 
         URI uri = xmEntityAvatarService.updateAvatar(IdOrKey.of(otherId), avatarEntity);
-        assertThat(uri.getPath()).contains(FILE_NAME);
+        assertThat(uri.toString()).contains(FILE_NAME);
 
         storedEntity = xmEntityRepository.findOne(otherId);
         assertThat(storedEntity.getAvatarUrl()).contains(FILE_NAME);
 
-        if (ApplicationProperties.StorageType.DB.equals(applicationProperties.getObjectStorage().getStorageType())) {
-            assertThat(storedEntity.getAvatarUrl()).startsWith(applicationProperties.getObjectStorage().getDbFilePrefix());
+        if (ApplicationProperties.StorageType.FILE.equals(applicationProperties.getObjectStorage().getStorageType())) {
+            assertThat(storedEntity.getAvatarUrl()).startsWith("file://");
         }
     }
 
