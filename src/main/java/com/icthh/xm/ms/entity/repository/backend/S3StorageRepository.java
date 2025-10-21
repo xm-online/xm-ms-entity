@@ -29,7 +29,7 @@ import java.util.UUID;
 @Slf4j
 @RequiredArgsConstructor
 @Component
-public class S3StorageRepository {
+public class S3StorageRepository implements StorageRepository {
 
 
     private final ApplicationProperties applicationProperties;
