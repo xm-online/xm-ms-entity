@@ -25,8 +25,7 @@ public class StorageServiceImpl implements StorageService {
     @PostConstruct
     public void init() {
         Optional.ofNullable(applicationProperties.getObjectStorage())
-            .map(ApplicationProperties.ObjectStorage::getFile)
-            .map(ApplicationProperties.FileStorage::getStorageType)
+            .map(ApplicationProperties.ObjectStorage::getStorageType)
             .ifPresent(this::setStorageType);
     }
 

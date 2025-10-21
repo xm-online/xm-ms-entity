@@ -1,5 +1,6 @@
 package com.icthh.xm.ms.entity.service.impl;
 
+import com.icthh.xm.commons.lep.api.LepManagementService;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
 import com.icthh.xm.ms.entity.AbstractJupiterSpringBootTest;
@@ -15,6 +16,8 @@ import com.icthh.xm.ms.entity.service.storage.AvatarStorageServiceImpl;
 import com.icthh.xm.ms.entity.util.EntityUtils;
 import com.icthh.xm.ms.entity.util.XmHttpEntityUtils;
 import lombok.extern.slf4j.Slf4j;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
@@ -24,6 +27,7 @@ import org.springframework.core.io.Resource;
 import org.springframework.http.HttpEntity;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.transaction.AfterTransaction;
 import org.springframework.test.context.transaction.BeforeTransaction;
 import org.springframework.transaction.annotation.Transactional;
@@ -39,7 +43,8 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
 @Slf4j
-public class XmEntityAvatarSrvIntTest extends AbstractJupiterSpringBootTest {
+@ActiveProfiles("avatar-file")
+public class XmEntityAvatarFIleSrvIntTest extends AbstractJupiterSpringBootTest {
 
     private static final String FILE_NAME = "test.jpg";
 
@@ -63,6 +68,9 @@ public class XmEntityAvatarSrvIntTest extends AbstractJupiterSpringBootTest {
     @Autowired
     private AvatarStorageServiceImpl avatarStorageService;
 
+    @Autowired
+    private LepManagementService lepManagementService;
+
     private AutoCloseable mockito;
 
     private Profile self;
@@ -74,14 +82,25 @@ public class XmEntityAvatarSrvIntTest extends AbstractJupiterSpringBootTest {
     private static final String KEY1 = "KEY-" + 1L;
     private static final String KEY2 = "KEY-" + 2L;
 
+    @BeforeAll
+    public void setup() {
+        TenantContextUtils.setTenant(tenantContextHolder, "RESINTTEST");
+        lepManagementService.beginThreadContext();
+    }
+
     @BeforeTransaction
     public void beforeTransaction() throws IOException {
-        TenantContextUtils.setTenant(tenantContextHolder, "RESINTTEST");
-
         mockito = MockitoAnnotations.openMocks(this);
         XmeStorageServiceFacade facade = new XmeStorageServiceFacadeImpl(storageService, avatarStorageService, null);
         xmEntityAvatarService = new XmEntityAvatarService(xmEntityService, applicationProperties, facade);
     }
+
+    @AfterAll
+    public void tearDown() throws Exception {
+        lepManagementService.endThreadContext();
+        tenantContextHolder.getPrivilegedContext().destroyCurrentContext();
+    }
+
 
     @AfterTransaction
     public void afterTransaction() {

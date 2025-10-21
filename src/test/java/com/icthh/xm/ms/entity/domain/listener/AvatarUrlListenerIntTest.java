@@ -108,11 +108,11 @@ public class AvatarUrlListenerIntTest extends AbstractJupiterSpringBootTest {
 
     @Test
     public void testPostLoadXmeStoreSuccess() {
-        XmEntity entity = new XmEntity().avatarUrl(applicationProperties.getObjectStorage().getAvatar().getDbFilePrefix() + "hello.jpg");
+        XmEntity entity = new XmEntity().avatarUrl(applicationProperties.getObjectStorage().getDbFilePrefix() + "hello.jpg");
 
         target.postLoad(entity);
 
-        Assertions.assertEquals(applicationProperties.getObjectStorage().getAvatar().getDbUrlTemplate() + "/" + entity.getAvatarUrlRelative(), entity.getAvatarUrl());
+        Assertions.assertEquals(applicationProperties.getObjectStorage().getDbUrlTemplate() + "/" + entity.getAvatarUrlRelative(), entity.getAvatarUrl());
     }
 
 }
