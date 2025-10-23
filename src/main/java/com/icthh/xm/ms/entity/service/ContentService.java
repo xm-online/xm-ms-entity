@@ -16,13 +16,10 @@ import com.icthh.xm.ms.entity.repository.backend.FileStorageRepository;
 import com.icthh.xm.ms.entity.repository.backend.S3StorageRepository;
 import com.icthh.xm.ms.entity.service.dto.S3ObjectDto;
 import com.icthh.xm.ms.entity.service.dto.UploadResultDto;
-import com.icthh.xm.ms.entity.util.FileUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.digest.DigestUtils;
-import org.apache.commons.lang3.NotImplementedException;
-import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -62,37 +59,24 @@ public class ContentService {
         }
 
         AttachmentSpec spec = getSpec(attachment.getXmEntity(), attachment);
+        AttachmentStoreType storeType = spec.getStoreType() == null ? AttachmentStoreType.DB : spec.getStoreType();
         String folderName = attachment.getXmEntity().getTypeKey();
 
-        if (spec.getStoreType() == AttachmentStoreType.S3) {
-            UploadResultDto uploadResult = s3StorageRepository.store(content, folderName, attachment.getName());
-            attachment.setValueContentSize((long) content.getValue().length);
-            attachment.setContentChecksum(uploadResult.getETag());
-            attachment.setContentUrl(uploadResult.toXmContentName());
-            return attachment;
-        }
-        if (spec.getStoreType() == AttachmentStoreType.FS) {
-            UploadResultDto uploadResult = fileStorageRepository.store(content, folderName, attachment.getName());
-            attachment.setValueContentSize((long) content.getValue().length);
-            attachment.setContentChecksum(uploadResult.getETag());
-            attachment.setContentUrl(uploadResult.toXmContentName());
-            return attachment;
-        }
+        return switch (storeType) {
+            case S3 -> saveAttachmentToS3(attachment, content, folderName);
+            case FS -> saveAttachmentToFS(attachment, content, folderName);
+            default -> {
+                Content savedContent = contentRepository.save(content);
+                attachment.setContent(savedContent);
+                attachment.setValueContentSize((long) content.getValue().length);
+                attachment.setContentChecksum(DigestUtils.sha256Hex(content.getValue()));
+                yield attachment;
+            }
+        };
 
-        Content savedContent = contentRepository.save(content);
-        attachment.setContent(savedContent);
-        attachment.setValueContentSize((long) content.getValue().length);
-        attachment.setContentChecksum(DigestUtils.sha256Hex(content.getValue()));
-
-        return attachment;
     }
 
-    //private String s3FileName(UploadResultDto uploadResult) {
-    //    return uploadResult.getBucketName() + FileUtils.FILE_NAME_SEPARATOR + uploadResult.getKey();
-    //}
-
     public void delete(Attachment attachment) {
-
         AttachmentStoreType storeType = AttachmentStoreType.byContentUrl(attachment.getContentUrl());
         switch (storeType) {
             case S3 -> s3StorageRepository.delete(attachment.getContentUrl());
@@ -104,33 +88,60 @@ public class ContentService {
     @SneakyThrows
     public Attachment enrichContent(Attachment attachment) {
         AttachmentSpec spec = getSpec(attachment.getXmEntity(), attachment);
-        if (spec.getStoreType() == AttachmentStoreType.S3) {
-            Pair<String, String> s3BucketNameKey = FileUtils.getS3BucketNameKey(attachment.getContentUrl());
-            S3ObjectDto s3Object = s3StorageRepository.getS3Object(s3BucketNameKey.getKey(), s3BucketNameKey.getValue());
-            Content content = attachment.getContent();
-            if (content == null) {
-                content = new Content();
-                attachment.setContent(content);
+        AttachmentStoreType storeType = spec.getStoreType() == null ? AttachmentStoreType.DB : spec.getStoreType();
+        return switch (storeType) {
+            case AttachmentStoreType.S3 -> enrichFromS3(attachment);
+            case AttachmentStoreType.FS -> enrichFromFS(attachment);
+            default -> {
+                AttachmentRepository.enrich(attachment);
+                yield attachment;
             }
+        };
+    }
 
-            content.setValue(IOUtils.toByteArray(s3Object.getObjectContent()));
+    private Attachment saveAttachmentToS3(Attachment attachment, Content content, String folderName) {
+        UploadResultDto uploadResult = s3StorageRepository.store(content, folderName, attachment.getName());
+        attachment.setValueContentSize((long) content.getValue().length);
+        attachment.setContentChecksum(uploadResult.getETag());
+        attachment.setContentUrl(uploadResult.toXmContentName());
+        return attachment;
+    }
 
-            attachment.setValueContentType(s3Object.getContentType());
-            attachment.setValueContentSize(s3Object.getContentLength());
-            attachment.setContentChecksum(s3Object.getETag());
-        } if (spec.getStoreType() == AttachmentStoreType.FS) {
-            Resource resource =  fileStorageRepository.getFileFromFs(attachment.getContentUrl());
-            Content content = attachment.getContent();
-            if (content == null) {
-                content = new Content();
-                content.setValue(resource.getContentAsByteArray());
-                attachment.setValueContentSize(resource.contentLength());
-                attachment.setContent(content);
-            }
-        } else {
-            AttachmentRepository.enrich(attachment);
+    private Attachment saveAttachmentToFS(Attachment attachment, Content content, String folderName) {
+        UploadResultDto uploadResult = fileStorageRepository.store(content, folderName, attachment.getName());
+        attachment.setValueContentSize((long) content.getValue().length);
+        attachment.setContentChecksum(uploadResult.getETag());
+        attachment.setContentUrl(uploadResult.toXmContentName());
+        return attachment;
+    }
+
+    @SneakyThrows
+    private Attachment enrichFromS3(Attachment attachment) {
+        S3ObjectDto s3Object = s3StorageRepository.getS3Object(attachment.getContentUrl());
+        Content content = attachment.getContent();
+        if (content == null) {
+            content = new Content();
+            attachment.setContent(content);
         }
 
+        content.setValue(IOUtils.toByteArray(s3Object.getObjectContent()));
+
+        attachment.setValueContentType(s3Object.getContentType());
+        attachment.setValueContentSize(s3Object.getContentLength());
+        attachment.setContentChecksum(s3Object.getETag());
+        return attachment;
+    }
+
+    @SneakyThrows
+    private Attachment enrichFromFS(Attachment attachment) {
+        Resource resource =  fileStorageRepository.getFileFromFs(attachment.getContentUrl());
+        Content content = attachment.getContent();
+        if (content == null) {
+            content = new Content();
+            attachment.setContent(content);
+        }
+        content.setValue(resource.getContentAsByteArray());
+        attachment.setValueContentSize(resource.contentLength());
         return attachment;
     }
 
