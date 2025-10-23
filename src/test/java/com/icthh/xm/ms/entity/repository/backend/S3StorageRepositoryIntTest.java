@@ -128,7 +128,7 @@ public class S3StorageRepositoryIntTest extends AbstractJupiterSpringBootTest {
         attachment.setValueContentSize((long) content.getValue().length);
         attachment.setContentChecksum(store.getETag());
         attachment.setValueContentType(URLConnection.guessContentTypeFromStream(inputStream));
-        attachment.setContentUrl(store.getBucketName() + FileUtils.FILE_NAME_SEPARATOR + store.getKey());
+        attachment.setContentUrl(store.getBucketName() + FileUtils.BUCKET_NAME_SEPARATOR + store.getKey());
 
         URL expirableLink = s3StorageRepository.createExpirableLink(attachment, 3000000L);
 

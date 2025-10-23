@@ -10,12 +10,14 @@ import com.icthh.xm.ms.entity.domain.Attachment;
 import com.icthh.xm.ms.entity.domain.Content;
 import com.icthh.xm.ms.entity.service.dto.S3ObjectDto;
 import com.icthh.xm.ms.entity.service.dto.UploadResultDto;
+import com.icthh.xm.ms.entity.util.FileUtils;
 import com.icthh.xm.ms.entity.util.ImageResizeUtil;
 import com.icthh.xm.ms.entity.util.XmHttpEntityUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpEntity;
 import org.springframework.stereotype.Component;
@@ -58,9 +60,11 @@ public class S3StorageRepository implements StorageRepository {
         return amazonS3Template.save(bucket, key, content, fileName);
     }
 
-    @SneakyThrows
-    public void delete(String bucket, String key) {
-        amazonS3Template.delete(bucket, key);
+    @Override
+    public void delete(String contentUrl) {
+        Pair<String, String> s3BucketNameKey = FileUtils.getS3BucketNameKey(contentUrl);
+        amazonS3Template.delete(s3BucketNameKey.getKey(), s3BucketNameKey.getValue());
+
     }
 
     @SneakyThrows
@@ -78,7 +82,7 @@ public class S3StorageRepository implements StorageRepository {
             if (size != null && contentType != null && "image".equals(contentType.substring(0, 5))) {
                 stream = ImageResizeUtil.resize(stream, size);
             }
-            String filename = UUID.randomUUID().toString() + "." + FilenameUtils.getExtension(name);
+            String filename = UUID.randomUUID() + "." + FilenameUtils.getExtension(name);
             amazonS3Template.save(filename, stream);
 
             closeQuietly(stream);

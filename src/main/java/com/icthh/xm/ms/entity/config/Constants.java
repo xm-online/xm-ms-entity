@@ -58,6 +58,8 @@ public final class Constants {
 
     public static final String DEFAULT_AVATAR_URL = "/assets/img/anonymous.png";
 
+    public static final String FILE_PREFIX = "file://";
+
     private Constants() {
     }
 }
