@@ -9,10 +9,10 @@ import java.nio.charset.StandardCharsets;
 @UtilityClass
 public class FileUtils {
 
-   public static final String FILE_NAME_SEPARATOR = "::";
+   public static final String BUCKET_NAME_SEPARATOR = "::";
 
     public static Pair<String, String> getS3BucketNameKey(String contentUrl) {
-        String[] split = contentUrl.split(FILE_NAME_SEPARATOR);
+        String[] split = contentUrl.split(BUCKET_NAME_SEPARATOR);
         if (split.length != 2) {
             throw new IllegalArgumentException("Invalid format for url = " + contentUrl);
         }

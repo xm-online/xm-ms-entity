@@ -22,8 +22,7 @@ import java.net.URI;
 import java.util.Objects;
 
 import static com.icthh.xm.commons.exceptions.ErrorConstants.ERR_VALIDATION;
-import static com.icthh.xm.ms.entity.config.Constants.DEFAULT_AVATAR_URL;
-import static com.icthh.xm.ms.entity.config.Constants.DEFAULT_AVATAR_URL_PREFIX;
+import static com.icthh.xm.ms.entity.config.Constants.*;
 import static com.icthh.xm.ms.entity.web.rest.XmRestApiConstants.XM_HEADER_CONTENT_NAME;
 
 @Service
@@ -93,7 +92,7 @@ public class AvatarStorageServiceImpl implements AvatarStorageService {
     }
 
     private Resource getResourceFromFs(String fileName) {
-        String noPrefix = fileName.replace("file://", "");
+        String noPrefix = fileName.replace(FILE_PREFIX, "");
         return fileStorageRepository.getFileFromFs(noPrefix);
     }
 

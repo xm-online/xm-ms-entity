@@ -14,4 +14,6 @@ public interface StorageRepository {
 
     UploadResultDto store(Content content, String folderName, String fileName);
 
+    void delete(String contentUrl);
+
 }

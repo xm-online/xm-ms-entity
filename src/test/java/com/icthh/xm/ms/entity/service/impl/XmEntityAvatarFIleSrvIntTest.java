@@ -38,6 +38,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Locale;
 
+import static com.icthh.xm.ms.entity.config.Constants.FILE_PREFIX;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
@@ -207,7 +208,7 @@ public class XmEntityAvatarFIleSrvIntTest extends AbstractJupiterSpringBootTest 
         assertThat(storedEntity.getAvatarUrl()).contains(FILE_NAME);
 
         if (applicationProperties.getObjectStorage().getStorageType() == ApplicationProperties.StorageType.FILE) {
-            assertThat(storedEntity.getAvatarUrl()).startsWith("file://");
+            assertThat(storedEntity.getAvatarUrl()).startsWith(FILE_PREFIX);
         }
     }
 
@@ -229,7 +230,7 @@ public class XmEntityAvatarFIleSrvIntTest extends AbstractJupiterSpringBootTest 
         assertThat(storedEntity.getAvatarUrl()).contains(FILE_NAME);
 
         if (ApplicationProperties.StorageType.FILE.equals(applicationProperties.getObjectStorage().getStorageType())) {
-            assertThat(storedEntity.getAvatarUrl()).startsWith("file://");
+            assertThat(storedEntity.getAvatarUrl()).startsWith(FILE_PREFIX);
         }
     }
 

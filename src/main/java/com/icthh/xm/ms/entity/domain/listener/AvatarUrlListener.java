@@ -14,6 +14,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import static com.icthh.xm.ms.entity.config.Constants.FILE_PREFIX;
+
 @Slf4j
 @Component
 public class AvatarUrlListener {
@@ -75,9 +77,9 @@ public class AvatarUrlListener {
             }
 
             if (ApplicationProperties.StorageType.FILE == avatarStorageType) {
-                if (StringUtils.startsWith(avatarUrl, "file://")) {
+                if (StringUtils.startsWith(avatarUrl, FILE_PREFIX)) {
                     //{murmur-fileName}
-                    String avatarFileName = StringUtils.substringAfter(avatarUrl, "file://");
+                    String avatarFileName = StringUtils.substringAfter(avatarUrl, FILE_PREFIX);
                     obj.setAvatarUrlFull(avatarUrl);
                     return;
                 }

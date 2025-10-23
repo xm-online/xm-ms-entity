@@ -12,6 +12,7 @@ import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.domain.spec.AttachmentSpec;
 import com.icthh.xm.ms.entity.repository.AttachmentRepository;
 import com.icthh.xm.ms.entity.repository.ContentRepository;
+import com.icthh.xm.ms.entity.repository.backend.FileStorageRepository;
 import com.icthh.xm.ms.entity.repository.backend.S3StorageRepository;
 import com.icthh.xm.ms.entity.service.dto.S3ObjectDto;
 import com.icthh.xm.ms.entity.service.dto.UploadResultDto;
@@ -20,8 +21,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.digest.DigestUtils;
-import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.NotImplementedException;
 import org.apache.commons.lang3.tuple.Pair;
+import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -39,6 +41,7 @@ public class ContentService {
     private final PermittedRepository permittedRepository;
     private final ContentRepository contentRepository;
     private final S3StorageRepository s3StorageRepository;
+    private final FileStorageRepository fileStorageRepository;
     private final XmEntitySpecService xmEntitySpecService;
 
     @Transactional(readOnly = true)
@@ -59,30 +62,42 @@ public class ContentService {
         }
 
         AttachmentSpec spec = getSpec(attachment.getXmEntity(), attachment);
+        String folderName = attachment.getXmEntity().getTypeKey();
+
         if (spec.getStoreType() == AttachmentStoreType.S3) {
-            String folderName = attachment.getXmEntity().getTypeKey();
             UploadResultDto uploadResult = s3StorageRepository.store(content, folderName, attachment.getName());
             attachment.setValueContentSize((long) content.getValue().length);
             attachment.setContentChecksum(uploadResult.getETag());
-            attachment.setContentUrl(s3FileName(uploadResult));
-        } else {
-            Content savedContent = contentRepository.save(content);
-            attachment.setContent(savedContent);
-            attachment.setValueContentSize((long) content.getValue().length);
-            attachment.setContentChecksum(DigestUtils.sha256Hex(content.getValue()));
+            attachment.setContentUrl(uploadResult.toXmContentName());
+            return attachment;
         }
+        if (spec.getStoreType() == AttachmentStoreType.FS) {
+            UploadResultDto uploadResult = fileStorageRepository.store(content, folderName, attachment.getName());
+            attachment.setValueContentSize((long) content.getValue().length);
+            attachment.setContentChecksum(uploadResult.getETag());
+            attachment.setContentUrl(uploadResult.toXmContentName());
+            return attachment;
+        }
+
+        Content savedContent = contentRepository.save(content);
+        attachment.setContent(savedContent);
+        attachment.setValueContentSize((long) content.getValue().length);
+        attachment.setContentChecksum(DigestUtils.sha256Hex(content.getValue()));
 
         return attachment;
     }
 
-    private String s3FileName(UploadResultDto uploadResult) {
-        return uploadResult.getBucketName() + FileUtils.FILE_NAME_SEPARATOR + uploadResult.getKey();
-    }
+    //private String s3FileName(UploadResultDto uploadResult) {
+    //    return uploadResult.getBucketName() + FileUtils.FILE_NAME_SEPARATOR + uploadResult.getKey();
+    //}
 
     public void delete(Attachment attachment) {
-        if (isS3Compatible(attachment.getContentUrl())) {
-            Pair<String, String> s3BucketNameKey = FileUtils.getS3BucketNameKey(attachment.getContentUrl());
-            s3StorageRepository.delete(s3BucketNameKey.getKey(), s3BucketNameKey.getValue());
+
+        AttachmentStoreType storeType = AttachmentStoreType.byContentUrl(attachment.getContentUrl());
+        switch (storeType) {
+            case S3 -> s3StorageRepository.delete(attachment.getContentUrl());
+            case FS -> fileStorageRepository.delete(attachment.getContentUrl());
+            default -> {}
         }
     }
 
@@ -103,6 +118,15 @@ public class ContentService {
             attachment.setValueContentType(s3Object.getContentType());
             attachment.setValueContentSize(s3Object.getContentLength());
             attachment.setContentChecksum(s3Object.getETag());
+        } if (spec.getStoreType() == AttachmentStoreType.FS) {
+            Resource resource =  fileStorageRepository.getFileFromFs(attachment.getContentUrl());
+            Content content = attachment.getContent();
+            if (content == null) {
+                content = new Content();
+                content.setValue(resource.getContentAsByteArray());
+                attachment.setValueContentSize(resource.contentLength());
+                attachment.setContent(content);
+            }
         } else {
             AttachmentRepository.enrich(attachment);
         }
@@ -121,7 +145,7 @@ public class ContentService {
     }
 
     private boolean isS3Compatible(String contentUrl) {
-        return StringUtils.contains(contentUrl, FileUtils.FILE_NAME_SEPARATOR);
+        return AttachmentStoreType.S3 == AttachmentStoreType.byContentUrl(contentUrl);
     }
 
     private AttachmentSpec getSpec(XmEntity entity, Attachment attachment) {

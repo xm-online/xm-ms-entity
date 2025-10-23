@@ -3,7 +3,6 @@ package com.icthh.xm.ms.entity.service;
 import com.icthh.xm.commons.config.client.service.TenantConfigService;
 import com.icthh.xm.ms.entity.AbstractJupiterUnitTest;
 import com.icthh.xm.ms.entity.config.ApplicationProperties;
-import com.icthh.xm.ms.entity.domain.Content;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.repository.ContentRepository;
 import com.icthh.xm.ms.entity.repository.backend.FileStorageRepository;
@@ -11,7 +10,6 @@ import com.icthh.xm.ms.entity.repository.backend.S3StorageRepository;
 import com.icthh.xm.ms.entity.service.storage.AvatarStorageResponse;
 import com.icthh.xm.ms.entity.service.storage.AvatarStorageServiceImpl;
 import com.icthh.xm.ms.entity.util.EntityUtils;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -95,21 +93,21 @@ public class AvatarStorageServiceInFSUnitTest extends AbstractJupiterUnitTest {
 
         XmEntity xmEntity = EntityUtils.newEntity(entity -> {
             entity.setRemoved(false);
-            entity.avatarUrl("file://" + fileUrl);
-            entity.setAvatarUrlRelative("file://" + fileUrl);
+            entity.avatarUrl(FILE_PREFIX + fileUrl);
+            entity.setAvatarUrlRelative(FILE_PREFIX + fileUrl);
         });
 
         // when
         AvatarStorageResponse response = avatarStorageService.getAvatarResource(xmEntity);
 
         // then
-        assertThat(response.uri()).isEqualTo(URI.create("file://" + fileUrl));
+        assertThat(response.uri()).isEqualTo(URI.create(FILE_PREFIX + fileUrl));
     }
 
     @Test
     public void shouldGetAvatarResourceAWS() {
         String dbFileName = "wer-ert-rty";
-        String dbFileUrl = "file://aws/wer-ert-rty";
+        String dbFileUrl = FILE_PREFIX + "aws/wer-ert-rty";
 
         when(objectStorage.getStorageType()).thenReturn(ApplicationProperties.StorageType.FILE);
         avatarStorageService = new AvatarStorageServiceImpl(contentRepository, applicationProperties, tenantConfigService, s3StorageRepository, fileStorageRepository);
