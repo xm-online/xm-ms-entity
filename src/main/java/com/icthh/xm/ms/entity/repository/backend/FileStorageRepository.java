@@ -6,14 +6,12 @@ import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.ms.entity.config.ApplicationProperties;
 import com.icthh.xm.ms.entity.domain.Content;
 import com.icthh.xm.ms.entity.service.dto.UploadResultDto;
-import com.icthh.xm.ms.entity.util.FileUtils;
 import com.icthh.xm.ms.entity.util.XmHttpEntityUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpEntity;
@@ -67,6 +65,7 @@ public class FileStorageRepository implements StorageRepository {
 
         Path filePath = getFilePath(fileName, null);
 
+        log.info("store path: {}", filePath);
         // Create parent directories if they don't exist
         Path parentDir = filePath.getParent();
         if (parentDir != null && !Files.exists(parentDir)) {
@@ -77,16 +76,15 @@ public class FileStorageRepository implements StorageRepository {
         // Save the resource to file
         try (InputStream inputStream = resource.getInputStream()) {
             Files.copy(inputStream, filePath, StandardCopyOption.REPLACE_EXISTING);
-            log.info("Successfully stored file to: {}", filePath);
+            log.info("stored file to: {}", filePath);
         }
 
-        //??? "fs://" + subfolder + "/" + fileName
         return FILE_PREFIX + fileName;
     }
 
     @SneakyThrows
     public Resource getFileFromFs(String fileContentUrl) {
-        //fileName contains file name and details, tenant subfolder is evaluated by getFilePath() function
+        //fileName contains file name and details, the tenant subfolder is evaluated by getFilePath() function
         String simpleFileName = fileContentUrl;
         if (StringUtils.startsWith(fileContentUrl, FILE_PREFIX)) {
             simpleFileName = StringUtils.substringAfter(fileContentUrl, FILE_PREFIX);
@@ -122,7 +120,6 @@ public class FileStorageRepository implements StorageRepository {
 
         Files.write(filePath, content.getValue(), StandardOpenOption.CREATE);
 
-        //can be file://file.name
         String fileContentName = FILE_PREFIX + fullFileName;
         return new UploadResultDto(subfolder, fileContentName, DigestUtils.sha256Hex(content.getValue()));
     }

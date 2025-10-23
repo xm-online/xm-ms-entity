@@ -73,8 +73,9 @@ public class S3StorageRepository implements StorageRepository {
     }
 
     @SneakyThrows
-    public S3ObjectDto getS3Object(String bucket, String key) {
-        return amazonS3Template.getS3Object(bucket, key);
+    public S3ObjectDto getS3Object(String contentUrl) {
+        Pair<String, String> s3BucketNameKey = FileUtils.getS3BucketNameKey(contentUrl);
+        return amazonS3Template.getS3Object(s3BucketNameKey.getKey(), s3BucketNameKey.getValue());
     }
 
     private String store(InputStream stream, Integer size, String contentType, String name) {
