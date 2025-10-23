@@ -26,7 +26,6 @@ public class AvatarUrlListener {
     private ApplicationProperties.StorageType avatarStorageType;
     private String dbAvatarPrefix;
     private String dbUrlTemplate;
-    private String fsUrlTemplate;
 
     private ApplicationProperties applicationProperties;
 
