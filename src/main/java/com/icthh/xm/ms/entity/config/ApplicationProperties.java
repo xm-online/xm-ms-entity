@@ -178,40 +178,6 @@ public class ApplicationProperties {
 
     }
 
-    @Setter
-    @Deprecated
-    public static class FileStorage {
-        @Getter
-        private StorageType storageType = StorageType.S3;
-    }
-
-    @Setter
-    @Deprecated
-    public static class AvatarStorage {
-        @Getter
-        private StorageType storageType = StorageType.S3;
-        private Integer maxImageSize = DEFAULT_MAX_IMAGE_SIZE;
-        private Integer maxSize = DEFAULT_MAX_AVATAR_SIZE;
-        private String dbFilePrefix;
-        private String dbUrlTemplate;
-
-        public Integer getMaxImageSize() {
-            return (maxImageSize == null || maxImageSize <= 0) ? DEFAULT_MAX_IMAGE_SIZE : maxImageSize;
-        }
-
-        public Integer getMaxSize() {
-            return (maxSize == null || maxSize <= 0) ? DEFAULT_MAX_AVATAR_SIZE : maxSize;
-        }
-
-        public String getDbFilePrefix() {
-            return StringUtils.isEmpty(dbFilePrefix) ? DEFAULT_DB_FILE_PREFIX : dbFilePrefix;
-        }
-
-        public String getDbUrlTemplate() {
-            return StringUtils.isEmpty(dbUrlTemplate) ? DEFAULT_DB_URL_TMPLT : dbUrlTemplate;
-        }
-    }
-
     public enum StorageType {
         DB, S3, FILE
     }
