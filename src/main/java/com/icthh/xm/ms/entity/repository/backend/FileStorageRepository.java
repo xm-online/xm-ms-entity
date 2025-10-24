@@ -58,10 +58,8 @@ public class FileStorageRepository implements StorageRepository {
             throw new BusinessException("storage.file.validation", "Resource in HttpEntity is null");
         }
 
-        // Get the file template path from configurationC
-        String randomFilePrefix = Hashing.murmur3_128().hashString(UUID.randomUUID().toString(), StandardCharsets.UTF_8).toString();
         //File will be named {mumurHash}-originalFileName
-        String fileName = randomFilePrefix + "-" + XmHttpEntityUtils.getFileName(httpEntity.getHeaders());
+        String fileName = getRandomMurMurFilePrefix(XmHttpEntityUtils.getFileName(httpEntity.getHeaders()));
 
         Path filePath = getFilePath(fileName, null);
 
@@ -98,10 +96,8 @@ public class FileStorageRepository implements StorageRepository {
     @Override
     @SneakyThrows
     public UploadResultDto store(Content content, String folderName, String fileName) {
-        // Get the file template path from configurationC
-        String randomFilePrefix = Hashing.murmur3_128().hashString(UUID.randomUUID().toString(), StandardCharsets.UTF_8).toString();
         //File will be named {mumurHash}-originalFileName
-        String fullFileName = randomFilePrefix + "-" + fileName;
+        String fullFileName = getRandomMurMurFilePrefix(fileName);
 
         if (StringUtils.isNotEmpty(folderName)) {
             fullFileName = folderName + "/" + fullFileName;
@@ -149,4 +145,12 @@ public class FileStorageRepository implements StorageRepository {
         }
         return Paths.get(fileTemplate + subfolder + "/" + fileName);
     }
+
+
+
+    private String getRandomMurMurFilePrefix(String fileName) {
+        final String randomPrefix =  Hashing.murmur3_128().hashString(UUID.randomUUID().toString(), StandardCharsets.UTF_8).toString();
+        return randomPrefix + "-" + fileName;
+    }
+
 }
