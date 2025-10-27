@@ -8,7 +8,6 @@ import com.icthh.xm.ms.entity.domain.Content;
 import com.icthh.xm.ms.entity.service.dto.UploadResultDto;
 import com.icthh.xm.ms.entity.util.XmHttpEntityUtils;
 import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.io.FilenameUtils;
@@ -53,7 +52,6 @@ public class FsFileStorageRepository implements StorageRepository {
     }
 
     @Override
-    @SneakyThrows
     public String store(HttpEntity<Resource> httpEntity, Integer size) {
         // Get the resource from HttpEntity
         Resource resource = httpEntity.getBody();
@@ -63,7 +61,12 @@ public class FsFileStorageRepository implements StorageRepository {
         String fileName = FilenameUtils.getName(XmHttpEntityUtils.getFileName(httpEntity.getHeaders()));
         String fullFileName = fileNameWithSubfolder(fileName);
 
-        return storeFileContent(fullFileName, resource.getContentAsByteArray());
+        try {
+            return storeFileContent(fullFileName, resource.getContentAsByteArray());
+        } catch (Exception e) {
+            log.error("Error storing file", e);
+            throw new BusinessException("error.store.file", "File storage error");
+        }
     }
 
     @Override
