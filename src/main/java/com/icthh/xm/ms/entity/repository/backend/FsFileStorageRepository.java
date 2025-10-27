@@ -143,7 +143,7 @@ public class FsFileStorageRepository implements StorageRepository {
         String subfolder = evaluateSubFolder();
 
         if (StringUtils.isNotEmpty(subfolder)) {
-            return subfolder + "/" + fileName;
+            return subfolder + "/" + fullFileName;
         }
         return fullFileName;
     }
