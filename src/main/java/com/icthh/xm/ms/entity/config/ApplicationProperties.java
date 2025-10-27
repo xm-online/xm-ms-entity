@@ -74,6 +74,8 @@ public class ApplicationProperties {
 
     private DomainEvent domainEvent;
 
+    private DynamicPermissionCheck dynamicPermissionCheck;
+
     @Getter
     @Setter
     public static class Amazon {
@@ -139,6 +141,13 @@ public class ApplicationProperties {
     public static class DomainEvent {
         private boolean enabled;
     }
+
+    @Getter
+    @Setter
+    public static class DynamicPermissionCheck {
+        private boolean enabled;
+    }
+
     @Getter
     @Setter
     public static class Jpa {
