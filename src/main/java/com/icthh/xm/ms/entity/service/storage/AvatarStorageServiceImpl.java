@@ -6,7 +6,7 @@ import com.icthh.xm.ms.entity.config.ApplicationProperties;
 import com.icthh.xm.ms.entity.domain.Content;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.repository.ContentRepository;
-import com.icthh.xm.ms.entity.repository.backend.FileStorageRepository;
+import com.icthh.xm.ms.entity.repository.backend.FsFileStorageRepository;
 import com.icthh.xm.ms.entity.repository.backend.S3StorageRepository;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
@@ -34,7 +34,7 @@ public class AvatarStorageServiceImpl implements AvatarStorageService {
     private final TenantConfigService tenantConfigService;
 
     private final S3StorageRepository s3StorageRepository;
-    private final FileStorageRepository fileStorageRepository;
+    private final FsFileStorageRepository fsFileStorageRepository;
 
     private Integer maxSize;
     private String dbFilePrefix;
@@ -77,7 +77,7 @@ public class AvatarStorageServiceImpl implements AvatarStorageService {
         return switch (storageType) {
             case S3 -> s3StorageRepository.store(httpEntity, (int) contentSize);
             case DB -> dbStoreStrategy(httpEntity);
-            case FILE -> fileStorageRepository.store(httpEntity, (int) contentSize);
+            case FILE -> fsFileStorageRepository.store(httpEntity, (int) contentSize);
         };
 
     }
@@ -93,7 +93,7 @@ public class AvatarStorageServiceImpl implements AvatarStorageService {
 
     private Resource getResourceFromFs(String fileName) {
         String noPrefix = fileName.replace(FILE_PREFIX, "");
-        return fileStorageRepository.getFileFromFs(noPrefix);
+        return fsFileStorageRepository.getFileFromFs(noPrefix);
     }
 
     private Resource getResourceFromDB(String fileName) {

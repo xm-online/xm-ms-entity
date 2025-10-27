@@ -5,7 +5,7 @@ import com.icthh.xm.ms.entity.AbstractJupiterUnitTest;
 import com.icthh.xm.ms.entity.config.ApplicationProperties;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.repository.ContentRepository;
-import com.icthh.xm.ms.entity.repository.backend.FileStorageRepository;
+import com.icthh.xm.ms.entity.repository.backend.FsFileStorageRepository;
 import com.icthh.xm.ms.entity.repository.backend.S3StorageRepository;
 import com.icthh.xm.ms.entity.service.storage.AvatarStorageResponse;
 import com.icthh.xm.ms.entity.service.storage.AvatarStorageServiceImpl;
@@ -48,7 +48,7 @@ public class AvatarStorageServiceInFSUnitTest extends AbstractJupiterUnitTest {
     private S3StorageRepository s3StorageRepository;
 
     @Mock
-    private FileStorageRepository fileStorageRepository;
+    private FsFileStorageRepository fsFileStorageRepository;
 
 
     @BeforeEach
@@ -57,7 +57,7 @@ public class AvatarStorageServiceInFSUnitTest extends AbstractJupiterUnitTest {
         lenient().when(tenantConfigService.getConfig()).thenReturn(Map.of("baseUrl", "http://tst"));
         lenient().when(objectStorage.getStorageType()).thenReturn(ApplicationProperties.StorageType.FILE);
         lenient().when(objectStorage.getFileRoot()).thenReturn(FILE_PREFIX);
-        avatarStorageService = new AvatarStorageServiceImpl(contentRepository, applicationProperties, tenantConfigService, s3StorageRepository, fileStorageRepository);
+        avatarStorageService = new AvatarStorageServiceImpl(contentRepository, applicationProperties, tenantConfigService, s3StorageRepository, fsFileStorageRepository);
         avatarStorageService.init();
     }
 
@@ -110,7 +110,7 @@ public class AvatarStorageServiceInFSUnitTest extends AbstractJupiterUnitTest {
         String dbFileUrl = FILE_PREFIX + "aws/wer-ert-rty";
 
         when(objectStorage.getStorageType()).thenReturn(ApplicationProperties.StorageType.FILE);
-        avatarStorageService = new AvatarStorageServiceImpl(contentRepository, applicationProperties, tenantConfigService, s3StorageRepository, fileStorageRepository);
+        avatarStorageService = new AvatarStorageServiceImpl(contentRepository, applicationProperties, tenantConfigService, s3StorageRepository, fsFileStorageRepository);
         avatarStorageService.init();
 
         XmEntity xmEntity = EntityUtils.newEntity(entity -> {

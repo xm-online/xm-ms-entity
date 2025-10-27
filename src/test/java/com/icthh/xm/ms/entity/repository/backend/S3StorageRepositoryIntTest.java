@@ -28,6 +28,7 @@ import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URLEncodedUtils;
 import org.apache.http.message.BasicNameValuePair;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -46,7 +47,6 @@ import java.util.function.Consumer;
 import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_AUTH_CONTEXT;
 import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_TENANT_CONTEXT;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertNotNull;
 
 @Testcontainers
 public class S3StorageRepositoryIntTest extends AbstractJupiterSpringBootTest {
@@ -120,7 +120,7 @@ public class S3StorageRepositoryIntTest extends AbstractJupiterSpringBootTest {
         content.setValue(IOUtils.toByteArray(inputStream));
 
         UploadResultDto store = s3StorageRepository.store(content, folderName, fileName);
-        assertNotNull(store);
+        Assertions.assertNotNull(store);
 
         Attachment attachment = new Attachment();
         attachment.setName(fileName);
