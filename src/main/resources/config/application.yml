@@ -191,6 +191,8 @@ xm-config:
     kafka-config-topic: config_topic
 
 application:
+    dynamic-permission-check:
+        enabled: false
     jpa:
         findOneByIdForUpdateTimeout: 10000
     timeline-ignored-http-methods:

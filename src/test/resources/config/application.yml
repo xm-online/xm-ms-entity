@@ -135,6 +135,8 @@ xm-config:
     enabled: false
 
 application:
+    dynamic-permission-check:
+        enabled: false
     domain-event:
         enabled: true
     timeline-ignored-http-methods:
