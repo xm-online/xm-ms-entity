@@ -3,26 +3,35 @@ package com.icthh.xm.ms.entity.domain;
 import com.icthh.xm.ms.entity.util.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 
+import java.util.Arrays;
+import java.util.function.Predicate;
+
 import static com.icthh.xm.ms.entity.config.Constants.FILE_PREFIX;
 
 /**
- * Enum for attachment storage type
+ * Enum for an attachment storage type
  */
 public enum AttachmentStoreType {
 
-    DB, S3, FS;
+    DB(StringUtils::isEmpty),
+    FS(url -> StringUtils.isNotEmpty(url) && url.startsWith(FILE_PREFIX)),
+    S3(url -> StringUtils.isNotEmpty(url) && url.contains(FileUtils.BUCKET_NAME_SEPARATOR));
+
+    private final Predicate<String> matcher;
+
+    AttachmentStoreType(Predicate<String> matcher) {
+        this.matcher = matcher;
+    }
+
+    public boolean matches(String contentUrl) {
+        return matcher.test(contentUrl);
+    }
 
     public static AttachmentStoreType byContentUrl(String contentUrl) {
-        if (StringUtils.isEmpty(contentUrl)) {
-            return AttachmentStoreType.DB;
-        }
-        if (contentUrl.startsWith(FILE_PREFIX)) {
-            return AttachmentStoreType.FS;
-        }
-        if (contentUrl.contains(FileUtils.BUCKET_NAME_SEPARATOR)) {
-            return AttachmentStoreType.S3;
-        }
-        return AttachmentStoreType.DB;
+        return Arrays.stream(values())
+            .filter(type -> type.matches(contentUrl))
+            .findFirst()
+            .orElse(DB); // Fallback to DB
     }
 
 }
