@@ -11,7 +11,7 @@ import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
 import com.icthh.xm.ms.entity.AbstractJupiterSpringBootTest;
 import com.icthh.xm.ms.entity.config.ApplicationProperties;
-import com.icthh.xm.ms.entity.repository.backend.FileStorageRepository;
+import com.icthh.xm.ms.entity.repository.backend.FsFileStorageRepository;
 import com.icthh.xm.ms.entity.repository.backend.S3StorageRepository;
 import com.icthh.xm.ms.entity.service.StorageService;
 import com.icthh.xm.ms.entity.service.XmeStorageServiceFacade;
@@ -50,7 +50,7 @@ public class StorageResourceIntTest extends AbstractJupiterSpringBootTest {
     private S3StorageRepository s3StorageRepository;
 
     @Mock
-    private FileStorageRepository fileStorageRepository;
+    private FsFileStorageRepository fsFileStorageRepository;
 
     @Autowired
     private ApplicationProperties applicationProperties;
@@ -79,7 +79,7 @@ public class StorageResourceIntTest extends AbstractJupiterSpringBootTest {
     @BeforeEach
     public void setup() {
         mocks = MockitoAnnotations.openMocks(this);
-        StorageService storageService = new StorageServiceImpl(s3StorageRepository, fileStorageRepository, applicationProperties);
+        StorageService storageService = new StorageServiceImpl(s3StorageRepository, fsFileStorageRepository, applicationProperties);
         XmeStorageServiceFacade storageServiceFacade = new XmeStorageServiceFacadeImpl(storageService, null, null);
         StorageResource storageResource = new StorageResource(storageServiceFacade, applicationProperties);
         this.restStorageMockMvc = MockMvcBuilders.standaloneSetup(storageResource)

@@ -12,7 +12,7 @@ import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.domain.spec.AttachmentSpec;
 import com.icthh.xm.ms.entity.repository.AttachmentRepository;
 import com.icthh.xm.ms.entity.repository.ContentRepository;
-import com.icthh.xm.ms.entity.repository.backend.FileStorageRepository;
+import com.icthh.xm.ms.entity.repository.backend.FsFileStorageRepository;
 import com.icthh.xm.ms.entity.repository.backend.S3StorageRepository;
 import com.icthh.xm.ms.entity.service.dto.S3ObjectDto;
 import com.icthh.xm.ms.entity.service.dto.UploadResultDto;
@@ -38,7 +38,7 @@ public class ContentService {
     private final PermittedRepository permittedRepository;
     private final ContentRepository contentRepository;
     private final S3StorageRepository s3StorageRepository;
-    private final FileStorageRepository fileStorageRepository;
+    private final FsFileStorageRepository fsFileStorageRepository;
     private final XmEntitySpecService xmEntitySpecService;
 
     @Transactional(readOnly = true)
@@ -80,7 +80,7 @@ public class ContentService {
         AttachmentStoreType storeType = AttachmentStoreType.byContentUrl(attachment.getContentUrl());
         switch (storeType) {
             case S3 -> s3StorageRepository.delete(attachment.getContentUrl());
-            case FS -> fileStorageRepository.delete(attachment.getContentUrl());
+            case FS -> fsFileStorageRepository.delete(attachment.getContentUrl());
             default -> {}
         }
     }
@@ -108,7 +108,7 @@ public class ContentService {
     }
 
     private Attachment saveAttachmentToFS(Attachment attachment, Content content, String folderName) {
-        UploadResultDto uploadResult = fileStorageRepository.store(content, folderName, attachment.getName());
+        UploadResultDto uploadResult = fsFileStorageRepository.store(content, folderName, attachment.getName());
         attachment.setValueContentSize((long) content.getValue().length);
         attachment.setContentChecksum(uploadResult.getETag());
         attachment.setContentUrl(uploadResult.toXmContentName());
@@ -134,7 +134,7 @@ public class ContentService {
 
     @SneakyThrows
     private Attachment enrichFromFS(Attachment attachment) {
-        Resource resource =  fileStorageRepository.getFileFromFs(attachment.getContentUrl());
+        Resource resource =  fsFileStorageRepository.getFileFromFs(attachment.getContentUrl());
         Content content = attachment.getContent();
         if (content == null) {
             content = new Content();

@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
@@ -18,9 +19,13 @@ import org.springframework.http.HttpEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.InputStream;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -30,7 +35,7 @@ import static com.icthh.xm.ms.entity.config.Constants.FILE_PREFIX;
 @Slf4j
 @RequiredArgsConstructor
 @Component
-public class FileStorageRepository implements StorageRepository {
+public class FsFileStorageRepository implements StorageRepository {
 
     private final ApplicationProperties applicationProperties;
     private final FilePrefixNameFactory  filePrefixNameFactory;
@@ -44,7 +49,7 @@ public class FileStorageRepository implements StorageRepository {
 
     @Override
     public String store(MultipartFile file, Integer size) {
-        return "";
+        throw new UnsupportedOperationException("MultipartFile is not supported");
     }
 
     @Override
@@ -53,89 +58,75 @@ public class FileStorageRepository implements StorageRepository {
         // Get the resource from HttpEntity
         Resource resource = httpEntity.getBody();
 
-        if (resource == null) {
-            log.error("Resource in HttpEntity is null");
-            throw new BusinessException("storage.file.validation", "Resource in HttpEntity is null");
-        }
+        Objects.requireNonNull(resource, "Resource in HttpEntity is null");
 
-        //File will be named {mumurHash}-originalFileName
-        String fileName = getRandomMurMurFilePrefix(XmHttpEntityUtils.getFileName(httpEntity.getHeaders()));
+        String fileName = FilenameUtils.getName(XmHttpEntityUtils.getFileName(httpEntity.getHeaders()));
+        String fullFileName = fileNameWithSubfolder(fileName);
 
-        Path filePath = getFilePath(fileName, null);
-
-        log.info("store path: {}", filePath);
-        // Create parent directories if they don't exist
-        Path parentDir = filePath.getParent();
-        if (parentDir != null && !Files.exists(parentDir)) {
-            Files.createDirectories(parentDir);
-            log.debug("Created directory: {}", parentDir);
-        }
-
-        // Save the resource to file
-        try (InputStream inputStream = resource.getInputStream()) {
-            Files.copy(inputStream, filePath, StandardCopyOption.REPLACE_EXISTING);
-            log.info("stored file to: {}", filePath);
-        }
-
-        return FILE_PREFIX + fileName;
-    }
-
-    @SneakyThrows
-    public Resource getFileFromFs(String fileContentUrl) {
-        //fileName contains file name and details, the tenant subfolder is evaluated by getFilePath() function
-        String simpleFileName = fileContentUrl;
-        if (StringUtils.startsWith(fileContentUrl, FILE_PREFIX)) {
-            simpleFileName = StringUtils.substringAfter(fileContentUrl, FILE_PREFIX);
-        }
-
-        Path filePath = getFilePath(simpleFileName, null);
-        log.info("reading file {}", filePath);
-        return new ByteArrayResource(Files.readAllBytes(filePath));
+        return storeFileContent(fullFileName, resource.getContentAsByteArray());
     }
 
     @Override
-    @SneakyThrows
     public UploadResultDto store(Content content, String folderName, String fileName) {
-        //File will be named {mumurHash}-originalFileName
-        String fullFileName = getRandomMurMurFilePrefix(fileName);
+
+        String fullFileName = fileNameWithSubfolder(fileName);
 
         if (StringUtils.isNotEmpty(folderName)) {
             fullFileName = folderName + "/" + fullFileName;
         }
 
-        String subfolder = filePrefixNameFactory.evaluatePathSubfolder();
+        String fileContentName = storeFileContent(fullFileName, content.getValue());
+        return new UploadResultDto(folderName, fileContentName, DigestUtils.sha256Hex(content.getValue()));
+    }
 
-        Path filePath = getFilePath(fullFileName, subfolder);
+    private String storeFileContent(String fullFileName, byte[] content) {
+        try {
+            Path filePath = getFilePath(fullFileName);
+            createDirsIfNotExist(filePath);
+            Files.write(filePath, content, StandardOpenOption.CREATE);
+            return FILE_PREFIX + fullFileName;
+        } catch (IOException e) {
+            log.error("Error storing file", e);
+            throw new BusinessException("error.store.file", "File storage error");
+        }
+    }
 
-        // Create parent directories if they don't exist
-        Path parentDir = filePath.getParent();
-        if (parentDir != null && !Files.exists(parentDir)) {
-            Files.createDirectories(parentDir);
-            log.debug("Created directory: {}", parentDir);
+    public Resource getFileFromFs(String fileContentUrl) {
+        //fileName contains file name and details, the tenant subfolder is evaluated by getFilePath() function
+        String simpleFileName = fileContentUrl;
+
+        if (StringUtils.startsWith(fileContentUrl, FILE_PREFIX)) {
+            simpleFileName = StringUtils.substringAfter(fileContentUrl, FILE_PREFIX);
         }
 
-        Files.write(filePath, content.getValue(), StandardOpenOption.CREATE);
+        Path filePath = getFilePath(simpleFileName);
+        log.info("reading file {}", filePath);
+        try {
+            return new ByteArrayResource(Files.readAllBytes(filePath));
+        } catch (Exception e) {
+            log.error("Error reading file {}", filePath, e);
+            throw new BusinessException("error.read.file", "File storage error");
+        }
 
-        String fileContentName = FILE_PREFIX + fullFileName;
-        return new UploadResultDto(subfolder, fileContentName, DigestUtils.sha256Hex(content.getValue()));
     }
 
     @Override
     public void delete(String contentUrl) {
         //fileName contains file name and details, tenant subfolder is evaluated by getFilePath() function
         String simpleFileName = StringUtils.substringAfter(contentUrl, FILE_PREFIX);
-        Path filePath = getFilePath(simpleFileName, null);
+        Path filePath = getFilePath(simpleFileName);
         org.apache.commons.io.FileUtils.deleteQuietly(filePath.toFile());
     }
 
-    private Path getFilePath(String fileName, String subfolder) {
-        String tenantName = tenantContextHolder.getTenantKey().toLowerCase();
-        final String fileTemplate = applicationProperties.getObjectStorage().getFileRoot() + "/" + tenantName;
+    private Path getFilePath(String fileName) {
+        return Paths.get(applicationProperties.getObjectStorage().getFileRoot())
+            .resolve(tenantContextHolder.getTenantKey().toLowerCase())
+            .resolve(fileName)
+            .normalize();
+    }
 
-        if (StringUtils.isEmpty(subfolder)) {
-            subfolder = filePrefixNameFactory.evaluatePathSubfolder();
-        }
-
+    private String evaluateSubFolder() {
+        String  subfolder = filePrefixNameFactory.evaluatePathSubfolder();
         if (StringUtils.isNotEmpty(subfolder)) {
             Matcher matcher = pattern.matcher(subfolder);
             boolean isValid = matcher.matches();
@@ -143,14 +134,32 @@ public class FileStorageRepository implements StorageRepository {
                 throw new BusinessException("storage.file.subfolder.validation", "Subfolder " + subfolder + " is not matched for pattern \"" + FOLDER_NAME + "\"");
             }
         }
-        return Paths.get(fileTemplate + subfolder + "/" + fileName);
+        return subfolder;
     }
 
+    private String fileNameWithSubfolder(String fileName) {
+        String fullFileName = getRandomMurMurFilePrefix(fileName);
 
+        String subfolder = evaluateSubFolder();
+
+        if (StringUtils.isNotEmpty(subfolder)) {
+            return subfolder + "/" + fileName;
+        }
+        return fullFileName;
+    }
 
     private String getRandomMurMurFilePrefix(String fileName) {
         final String randomPrefix =  Hashing.murmur3_128().hashString(UUID.randomUUID().toString(), StandardCharsets.UTF_8).toString();
         return randomPrefix + "-" + fileName;
+    }
+
+    private void createDirsIfNotExist(Path filePath) throws IOException {
+        log.info("store path: {}", filePath);
+        Path parentDir = filePath.getParent();
+        if (parentDir != null && !Files.exists(parentDir)) {
+            Files.createDirectories(parentDir);
+            log.debug("Created directory: {}", parentDir);
+        }
     }
 
 }

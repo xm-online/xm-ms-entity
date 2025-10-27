@@ -8,7 +8,7 @@ import com.icthh.xm.ms.entity.domain.Content;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.domain.spec.AttachmentSpec;
 import com.icthh.xm.ms.entity.repository.ContentRepository;
-import com.icthh.xm.ms.entity.repository.backend.FileStorageRepository;
+import com.icthh.xm.ms.entity.repository.backend.FsFileStorageRepository;
 import com.icthh.xm.ms.entity.repository.backend.S3StorageRepository;
 import com.icthh.xm.ms.entity.service.dto.UploadResultDto;
 import org.apache.commons.codec.digest.DigestUtils;
@@ -25,7 +25,7 @@ public class ContentServiceImplUnitTest extends AbstractJupiterUnitTest {
 
     private ContentRepository contentRepository;
     private S3StorageRepository s3StorageRepository;
-    private FileStorageRepository fileStorageRepository;
+    private FsFileStorageRepository fsFileStorageRepository;
     private XmEntitySpecService xmEntitySpecService;
 
     private ContentService contentService;
@@ -35,10 +35,10 @@ public class ContentServiceImplUnitTest extends AbstractJupiterUnitTest {
         PermittedRepository permittedRepository = Mockito.mock(PermittedRepository.class);
         contentRepository = Mockito.mock(ContentRepository.class);
         s3StorageRepository = Mockito.mock(S3StorageRepository.class);
-        fileStorageRepository = Mockito.mock(FileStorageRepository.class);
+        fsFileStorageRepository = Mockito.mock(FsFileStorageRepository.class);
         xmEntitySpecService = Mockito.mock(XmEntitySpecService.class);
         contentService = new ContentService(
-            permittedRepository, contentRepository, s3StorageRepository, fileStorageRepository, xmEntitySpecService
+            permittedRepository, contentRepository, s3StorageRepository, fsFileStorageRepository, xmEntitySpecService
         );
     }
 
@@ -122,7 +122,7 @@ public class ContentServiceImplUnitTest extends AbstractJupiterUnitTest {
 
         Mockito.when(xmEntitySpecService.findAttachment(e.getTypeKey(), a.getTypeKey()))
             .thenReturn(Optional.of(attachmentSpec));
-        when(fileStorageRepository.store(c, e.getTypeKey(), a.getName())).thenReturn(result);
+        when(fsFileStorageRepository.store(c, e.getTypeKey(), a.getName())).thenReturn(result);
 
         Attachment save = contentService.save(a, c);
         assertThat(save.getContentUrl()).isEqualTo("bebe::fileName");

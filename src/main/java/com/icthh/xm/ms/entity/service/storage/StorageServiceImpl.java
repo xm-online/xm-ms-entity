@@ -1,7 +1,7 @@
 package com.icthh.xm.ms.entity.service.storage;
 
 import com.icthh.xm.ms.entity.config.ApplicationProperties;
-import com.icthh.xm.ms.entity.repository.backend.FileStorageRepository;
+import com.icthh.xm.ms.entity.repository.backend.FsFileStorageRepository;
 import com.icthh.xm.ms.entity.repository.backend.S3StorageRepository;
 import com.icthh.xm.ms.entity.service.StorageService;
 import jakarta.annotation.PostConstruct;
@@ -17,7 +17,7 @@ import java.util.Optional;
 public class StorageServiceImpl implements StorageService {
 
     private final S3StorageRepository s3StorageRepository;
-    private final FileStorageRepository fileStorageRepository;
+    private final FsFileStorageRepository fsFileStorageRepository;
     private final ApplicationProperties applicationProperties;
 
     private ApplicationProperties.StorageType storageType = ApplicationProperties.StorageType.S3;
@@ -34,7 +34,7 @@ public class StorageServiceImpl implements StorageService {
             return s3StorageRepository.store(httpEntity, size);
         }
         if (ApplicationProperties.StorageType.FILE.equals(storageType)) {
-            return fileStorageRepository.store(httpEntity, size);
+            return fsFileStorageRepository.store(httpEntity, size);
         }
         throw new RuntimeException("Not implemented " + storageType);
     }

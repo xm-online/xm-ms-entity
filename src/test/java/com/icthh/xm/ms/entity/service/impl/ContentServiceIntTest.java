@@ -14,7 +14,7 @@ import com.icthh.xm.ms.entity.domain.Content;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.domain.spec.AttachmentSpec;
 import com.icthh.xm.ms.entity.repository.ContentRepository;
-import com.icthh.xm.ms.entity.repository.backend.FileStorageRepository;
+import com.icthh.xm.ms.entity.repository.backend.FsFileStorageRepository;
 import com.icthh.xm.ms.entity.repository.backend.S3StorageRepository;
 import com.icthh.xm.ms.entity.service.ContentService;
 import com.icthh.xm.ms.entity.service.XmEntitySpecService;
@@ -52,7 +52,7 @@ public class ContentServiceIntTest extends AbstractJupiterSpringBootTest {
 
     private S3StorageRepository s3StorageRepository;
     @Mock
-    private FileStorageRepository fileStorageRepository;
+    private FsFileStorageRepository fsFileStorageRepository;
 
     @Autowired
     private PermittedRepository permittedRepository;
@@ -96,7 +96,7 @@ public class ContentServiceIntTest extends AbstractJupiterSpringBootTest {
         enrichAmazonProperties(applicationProperties.getAmazon());
 
         s3StorageRepository = new S3StorageRepository(applicationProperties, amazonS3Template, tenantContextHolder);
-        contentService = new ContentService(permittedRepository, contentRepository, s3StorageRepository, fileStorageRepository, xmEntitySpecService);
+        contentService = new ContentService(permittedRepository, contentRepository, s3StorageRepository, fsFileStorageRepository, xmEntitySpecService);
     }
 
     private void enrichAmazonProperties(ApplicationProperties.Amazon amazon) {
