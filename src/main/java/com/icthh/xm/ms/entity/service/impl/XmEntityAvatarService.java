@@ -31,7 +31,7 @@ public class XmEntityAvatarService {
 
         String avatarUrl = xmeStorageServiceFacade.storeAvatar(
             avatarHttpEntity,
-            applicationProperties.getObjectStorage().getAvatar().getMaxImageSize());
+            applicationProperties.getObjectStorage().getMaxImageSize());
         log.info("Avatar {} stored for entity {}", avatarUrl, idOrKey);
 
         source.setAvatarUrl(avatarUrl);

@@ -34,6 +34,10 @@ types:
       attachments:
           - key: AAAAAAAAAA
           - key: BBBBBBBBBB
+          - key: AAAAAAAAFS
+            storeType: FS
+          - key: BBBBBBBBFS
+            storeType: FS
           - key: CCCCCCCCCC
             max: 0
           - key: DDDDDDDDDD

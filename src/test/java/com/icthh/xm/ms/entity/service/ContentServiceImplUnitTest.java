@@ -8,6 +8,7 @@ import com.icthh.xm.ms.entity.domain.Content;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.domain.spec.AttachmentSpec;
 import com.icthh.xm.ms.entity.repository.ContentRepository;
+import com.icthh.xm.ms.entity.repository.backend.FsFileStorageRepository;
 import com.icthh.xm.ms.entity.repository.backend.S3StorageRepository;
 import com.icthh.xm.ms.entity.service.dto.UploadResultDto;
 import org.apache.commons.codec.digest.DigestUtils;
@@ -22,22 +23,22 @@ import static org.mockito.Mockito.when;
 
 public class ContentServiceImplUnitTest extends AbstractJupiterUnitTest {
 
-    private PermittedRepository permittedRepository;
     private ContentRepository contentRepository;
     private S3StorageRepository s3StorageRepository;
+    private FsFileStorageRepository fsFileStorageRepository;
     private XmEntitySpecService xmEntitySpecService;
-
 
     private ContentService contentService;
 
     @BeforeEach
     public void setUp() {
-        permittedRepository = Mockito.mock(PermittedRepository.class);
+        PermittedRepository permittedRepository = Mockito.mock(PermittedRepository.class);
         contentRepository = Mockito.mock(ContentRepository.class);
         s3StorageRepository = Mockito.mock(S3StorageRepository.class);
+        fsFileStorageRepository = Mockito.mock(FsFileStorageRepository.class);
         xmEntitySpecService = Mockito.mock(XmEntitySpecService.class);
         contentService = new ContentService(
-            permittedRepository, contentRepository, s3StorageRepository, xmEntitySpecService
+            permittedRepository, contentRepository, s3StorageRepository, fsFileStorageRepository, xmEntitySpecService
         );
     }
 
@@ -99,4 +100,34 @@ public class ContentServiceImplUnitTest extends AbstractJupiterUnitTest {
         assertThat(save.getContentChecksum()).isEqualTo(result.getETag());
         assertThat(save.getValueContentSize()).isEqualTo(result.getETag().getBytes().length);
     }
+
+    @Test
+    public void shouldSaveContentInFS() {
+        AttachmentSpec attachmentSpec = new AttachmentSpec();
+        attachmentSpec.setStoreType(AttachmentStoreType.FS);
+
+        XmEntity e = new XmEntity();
+        e.setTypeKey("T");
+        e.setId(1L);
+
+        Content c = new Content();
+        c.setValue("A".getBytes());
+
+        Attachment a = new Attachment();
+        a.setTypeKey("A.T");
+        a.setContent(c);
+        a.setXmEntity(e);
+
+        UploadResultDto result = new UploadResultDto("bebe", "fileName", "123");
+
+        Mockito.when(xmEntitySpecService.findAttachment(e.getTypeKey(), a.getTypeKey()))
+            .thenReturn(Optional.of(attachmentSpec));
+        when(fsFileStorageRepository.store(c, e.getTypeKey(), a.getName())).thenReturn(result);
+
+        Attachment save = contentService.save(a, c);
+        assertThat(save.getContentUrl()).isEqualTo("bebe::fileName");
+        assertThat(save.getContentChecksum()).isEqualTo("123");
+        assertThat(save.getValueContentSize()).isEqualTo(c.getValue().length);
+    }
+
 }

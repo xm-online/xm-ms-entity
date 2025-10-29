@@ -25,6 +25,7 @@ public class ApplicationProperties {
     public static final Integer DEFAULT_MAX_IMAGE_SIZE = 100;
     public static final String DEFAULT_DB_FILE_PREFIX = "db://xme/entity/obj/";
     public static final String DEFAULT_DB_URL_TMPLT = "https://%s.xm-online.com/entity/api/storage/object";
+    public static final String DEFAULT_FILE_ROOT = "/home/xme";
 
     private final Amazon amazon = new Amazon();
     private final Retry retry = new Retry();
@@ -154,27 +155,16 @@ public class ApplicationProperties {
         private Integer findOneByIdForUpdateTimeout = 10000;
     }
 
-    @Getter
     @Setter
     public static class ObjectStorage {
-        private AvatarStorage avatar = new AvatarStorage();
-        private FileStorage file = new FileStorage();
-    }
 
-    @Setter
-    public static class FileStorage {
-        @Getter
-        private StorageType storageType = StorageType.S3;
-    }
-
-    @Setter
-    public static class AvatarStorage {
         @Getter
         private StorageType storageType = StorageType.S3;
         private Integer maxImageSize = DEFAULT_MAX_IMAGE_SIZE;
         private Integer maxSize = DEFAULT_MAX_AVATAR_SIZE;
         private String dbFilePrefix;
         private String dbUrlTemplate;
+        private String fileRoot;
 
         public Integer getMaxImageSize() {
             return (maxImageSize == null || maxImageSize <= 0) ? DEFAULT_MAX_IMAGE_SIZE : maxImageSize;
@@ -191,6 +181,10 @@ public class ApplicationProperties {
         public String getDbUrlTemplate() {
             return StringUtils.isEmpty(dbUrlTemplate) ? DEFAULT_DB_URL_TMPLT : dbUrlTemplate;
         }
+        public String getFileRoot() {
+            return StringUtils.isEmpty(fileRoot) ? DEFAULT_FILE_ROOT : fileRoot;
+        }
+
     }
 
     public enum StorageType {

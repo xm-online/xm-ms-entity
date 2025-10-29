@@ -135,17 +135,15 @@ xm-config:
     enabled: false
 
 application:
-    dynamic-permission-check:
-        enabled: false
     domain-event:
-        enabled: true
+        enabled: false
     timeline-ignored-http-methods:
     scheduler-enabled: false
     tenant-ignored-path-list: /v2/api-docs, /api/profile-info, /swagger-resources/configuration/ui, /management/health
     kafka-enabled: false
     objectStorage:
         # DB, S3, FILE
-        storageType: DB
+        storageType: FILE
         # Max width
         maxImageSize: 100
         # Max file size 1024 * 32
@@ -154,15 +152,15 @@ application:
         db-file-prefix: db://xme/entity/obj/
         # File name db-pattern
         db-url-template: https://%s.xm-online.com/entity/api/storage/object
-        file-root: /home/${user.home}/xme
+        file-root: ${user.home}/xme-tmp
     amazon:
         avatar:
-            pre-persist-url-full-pattern: ^http(s)?:\/\/[a-zA-Z0-9-.]+[.]icthh[.][a-z]+(:\d+)?/[a-zA-Z0-9-.]+$
-            post-load-url-part-pattern: ^[a-zA-Z0-9-.]+$
+            pre-persist-url-full-pattern:
+            post-load-url-part-pattern:
         aws:
-            template: http://%s.rgw.icthh.test:7480/
+            template:
         s3:
-            bucket: xm-avatar
+            bucket:
     max-avatar-size: 2
     tenant-client-connection-timeout: 10000
     tenant-client-read-timeout: 10000

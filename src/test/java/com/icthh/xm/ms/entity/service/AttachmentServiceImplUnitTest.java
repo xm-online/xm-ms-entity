@@ -11,6 +11,7 @@ import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.domain.spec.AttachmentSpec;
 import com.icthh.xm.ms.entity.repository.AttachmentRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
+import com.icthh.xm.ms.entity.repository.backend.FsFileStorageRepository;
 import com.icthh.xm.ms.entity.repository.backend.S3StorageRepository;
 import com.icthh.xm.ms.entity.service.impl.StartUpdateDateGenerationStrategy;
 import org.junit.jupiter.api.BeforeEach;
@@ -398,7 +399,8 @@ public class AttachmentServiceImplUnitTest  extends AbstractJupiterUnitTest {
     @Test
     public void shouldDeleteItemInS3() {
         S3StorageRepository s3StorageRepository  = Mockito.mock(S3StorageRepository.class);
-        ContentService contentService = new ContentService(null, null, s3StorageRepository, xmEntitySpecService);
+        FsFileStorageRepository fsFileStorageRepository = Mockito.mock(FsFileStorageRepository.class);
+        ContentService contentService = new ContentService(null, null, s3StorageRepository, fsFileStorageRepository, xmEntitySpecService);
 
         attachmentService = new AttachmentService(
             attachmentRepository, contentService, permittedRepository,
@@ -423,7 +425,7 @@ public class AttachmentServiceImplUnitTest  extends AbstractJupiterUnitTest {
 
         attachmentService.delete(1L);
         verify(attachmentRepository, Mockito.times(1)).deleteById(1L);
-        verify(s3StorageRepository, Mockito.times(1)).delete("bucket", "fileName.png");
+        verify(s3StorageRepository, Mockito.times(1)).delete("bucket::fileName.png");
     }
 
 }

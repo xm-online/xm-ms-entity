@@ -88,7 +88,7 @@ public class AmazonS3TemplateUnitTest extends AbstractJupiterUnitTest {
         Attachment attachment = new Attachment();
         attachment.setName("fileName.json");
         attachment.setContentChecksum(resultDto.getETag());
-        attachment.setContentUrl(resultDto.getBucketName() + FileUtils.FILE_NAME_SEPARATOR + resultDto.getKey());
+        attachment.setContentUrl(resultDto.getBucketName() + FileUtils.BUCKET_NAME_SEPARATOR + resultDto.getKey());
 
         URL expirableLink = s3Template.createExpirableLink(attachment, 100500L);
         log.info("link: {}", expirableLink);
@@ -107,7 +107,7 @@ public class AmazonS3TemplateUnitTest extends AbstractJupiterUnitTest {
         Attachment attachment = new Attachment();
         attachment.setName("fileName.json");
         attachment.setContentChecksum(resultDto.getETag());
-        attachment.setContentUrl(resultDto.getBucketName() + FileUtils.FILE_NAME_SEPARATOR + resultDto.getKey());
+        attachment.setContentUrl(resultDto.getBucketName() + FileUtils.BUCKET_NAME_SEPARATOR + resultDto.getKey());
 
         URL expirableLink = s3Template.createExpirableLink(attachment, 100500L);
         Exception exception = assertThrows(FileNotFoundException.class, () -> {

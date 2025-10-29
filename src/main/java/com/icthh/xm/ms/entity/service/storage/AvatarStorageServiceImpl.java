@@ -6,6 +6,7 @@ import com.icthh.xm.ms.entity.config.ApplicationProperties;
 import com.icthh.xm.ms.entity.domain.Content;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.repository.ContentRepository;
+import com.icthh.xm.ms.entity.repository.backend.FsFileStorageRepository;
 import com.icthh.xm.ms.entity.repository.backend.S3StorageRepository;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
@@ -21,8 +22,7 @@ import java.net.URI;
 import java.util.Objects;
 
 import static com.icthh.xm.commons.exceptions.ErrorConstants.ERR_VALIDATION;
-import static com.icthh.xm.ms.entity.config.Constants.DEFAULT_AVATAR_URL;
-import static com.icthh.xm.ms.entity.config.Constants.DEFAULT_AVATAR_URL_PREFIX;
+import static com.icthh.xm.ms.entity.config.Constants.*;
 import static com.icthh.xm.ms.entity.web.rest.XmRestApiConstants.XM_HEADER_CONTENT_NAME;
 
 @Service
@@ -34,6 +34,7 @@ public class AvatarStorageServiceImpl implements AvatarStorageService {
     private final TenantConfigService tenantConfigService;
 
     private final S3StorageRepository s3StorageRepository;
+    private final FsFileStorageRepository fsFileStorageRepository;
 
     private Integer maxSize;
     private String dbFilePrefix;
@@ -41,9 +42,9 @@ public class AvatarStorageServiceImpl implements AvatarStorageService {
 
     @PostConstruct
     public void init() {
-        maxSize = applicationProperties.getObjectStorage().getAvatar().getMaxSize();
-        dbFilePrefix = applicationProperties.getObjectStorage().getAvatar().getDbFilePrefix();
-        storageType = applicationProperties.getObjectStorage().getAvatar().getStorageType();
+        maxSize = applicationProperties.getObjectStorage().getMaxSize();
+        dbFilePrefix = applicationProperties.getObjectStorage().getDbFilePrefix();
+        storageType = applicationProperties.getObjectStorage().getStorageType();
     }
 
     @Override
@@ -61,7 +62,7 @@ public class AvatarStorageServiceImpl implements AvatarStorageService {
         return switch (storageType) {
             case DB -> AvatarStorageResponse.withResource(getResourceFromDB(avatarRelatedUrl), URI.create(avatarRelatedUrl));
             case S3 -> AvatarStorageResponse.withRedirectUrl(URI.create(avatarUrl));
-            case FILE -> throw new RuntimeException("Unsupported storage type: " + storageType);
+            case FILE -> AvatarStorageResponse.withResource(getResourceFromFs(avatarRelatedUrl), URI.create(avatarUrl));
         };
     }
 
@@ -76,7 +77,7 @@ public class AvatarStorageServiceImpl implements AvatarStorageService {
         return switch (storageType) {
             case S3 -> s3StorageRepository.store(httpEntity, (int) contentSize);
             case DB -> dbStoreStrategy(httpEntity);
-            case FILE -> throw new RuntimeException("Not implemented");
+            case FILE -> fsFileStorageRepository.store(httpEntity, (int) contentSize);
         };
 
     }
@@ -88,6 +89,11 @@ public class AvatarStorageServiceImpl implements AvatarStorageService {
         content.setValue(data);
         content = contentRepository.save(content);
         return dbFilePrefix + content.getId() + "/" + httpEntity.getHeaders().getFirst(XM_HEADER_CONTENT_NAME);
+    }
+
+    private Resource getResourceFromFs(String fileName) {
+        String noPrefix = fileName.replace(FILE_PREFIX, "");
+        return fsFileStorageRepository.getFileFromFs(noPrefix);
     }
 
     private Resource getResourceFromDB(String fileName) {
