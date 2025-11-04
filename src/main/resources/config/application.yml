@@ -191,6 +191,8 @@ xm-config:
     kafka-config-topic: config_topic
 
 application:
+    dynamic-permission-check:
+        enabled: false
     jpa:
         findOneByIdForUpdateTimeout: 10000
     timeline-ignored-http-methods:
@@ -224,6 +226,14 @@ application:
         tenant-script-storage: XM_MS_CONFIG
         lep-resource-path-pattern: /config/tenants/{tenantName}/entity/lep/resources/**/*
         tenants-with-lep-warmup: XM
+    objectStorage:
+        storageType: DB
+        # Max width
+        maxImageSize: 100
+        # Max file size 1024 * 32
+        max-size: 32767
+        # used for FILE strategy FILE://{objectId}
+        file-root: /home/xme
     amazon:
         avatar:
             # XmEntity.avatarUrl should match this pattern to persist only last part into DB, otherwise set to null

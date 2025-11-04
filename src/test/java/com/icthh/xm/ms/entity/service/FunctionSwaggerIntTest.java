@@ -64,7 +64,7 @@ public class FunctionSwaggerIntTest extends AbstractJupiterSpringBootTest {
             "/config/tenants/TEST_TENANT/entity/xmentityspec/spec.yml", loadFile("config/swagger/test-entity-spec.yml")
         ));
 
-        var swagger = dynamicSwaggerFunctionGenerator.generateSwagger("https://xm.domain.com:8080");
+        var swagger = dynamicSwaggerFunctionGenerator.generateSwagger("https://xm.domain.com:8080", null);
         var expected = readExpected("config/swagger/expected-default.yml");
         assertEquals(toYml(expected), toYml(swagger));
 
@@ -78,7 +78,7 @@ public class FunctionSwaggerIntTest extends AbstractJupiterSpringBootTest {
 
         dynamicSwaggerRefreshableConfiguration.onRefresh("/config/tenants/TEST_TENANT/entity/swagger.yml",
             loadFile("config/swagger/test-configuration.yml"));
-        var swagger = dynamicSwaggerFunctionGenerator.generateSwagger("https://xm.domain.com:8080");
+        var swagger = dynamicSwaggerFunctionGenerator.generateSwagger("https://xm.domain.com:8080", null);
         assertEquals("4.5.0", swagger.getInfo().getVersion());
         assertEquals("Test swagger", swagger.getInfo().getTitle());
         assertEquals("https://test-env", swagger.getServers().get(0).getUrl());
@@ -101,7 +101,7 @@ public class FunctionSwaggerIntTest extends AbstractJupiterSpringBootTest {
         {
             dynamicSwaggerRefreshableConfiguration.onRefresh("/config/tenants/TEST_TENANT/entity/swagger.yml",
                 loadFile("config/swagger/test-configuration.yml"));
-            var swagger = dynamicSwaggerFunctionGenerator.generateSwagger("https://xm.domain.com:8080");
+            var swagger = dynamicSwaggerFunctionGenerator.generateSwagger("https://xm.domain.com:8080", null);
             assertPaths(swagger, Map.of(
                 "/entity/api/functions/folder/v1/TestName", List.of("post", "get"),
                 "/entity/api/functions/check/different/key/with/same/path", List.of("delete", "put"),
@@ -117,7 +117,7 @@ public class FunctionSwaggerIntTest extends AbstractJupiterSpringBootTest {
             config.setIncludeTags(List.of("test"));
             dynamicSwaggerRefreshableConfiguration.onRefresh("/config/tenants/TEST_TENANT/entity/swagger.yml",
                 toYml(config));
-            var swagger = dynamicSwaggerFunctionGenerator.generateSwagger("https://xm.domain.com:8080");
+            var swagger = dynamicSwaggerFunctionGenerator.generateSwagger("https://xm.domain.com:8080", null);
             assertPaths(swagger, Map.of(
                 "/entity/api/functions/check/different/key/with/same/path", List.of("delete", "put"),
                 "/entity/api/functions/NameFromKeyOnlyDataInReturn", List.of("post", "delete"),
@@ -131,7 +131,7 @@ public class FunctionSwaggerIntTest extends AbstractJupiterSpringBootTest {
             config.setExcludeTags(List.of("internal"));
             dynamicSwaggerRefreshableConfiguration.onRefresh("/config/tenants/TEST_TENANT/entity/swagger.yml",
                 toYml(config));
-            var swagger = dynamicSwaggerFunctionGenerator.generateSwagger("https://xm.domain.com:8080");
+            var swagger = dynamicSwaggerFunctionGenerator.generateSwagger("https://xm.domain.com:8080", null);
             assertPaths(swagger, Map.of(
                 "/entity/api/functions/folder/v1/TestName", List.of("post", "get"),
                 "/entity/api/functions/check/different/key/with/same/path", List.of("delete", "put"),
@@ -146,7 +146,7 @@ public class FunctionSwaggerIntTest extends AbstractJupiterSpringBootTest {
             config.setExcludeTags(List.of("internal"));
             dynamicSwaggerRefreshableConfiguration.onRefresh("/config/tenants/TEST_TENANT/entity/swagger.yml",
                 toYml(config));
-            var swagger = dynamicSwaggerFunctionGenerator.generateSwagger("https://xm.domain.com:8080");
+            var swagger = dynamicSwaggerFunctionGenerator.generateSwagger("https://xm.domain.com:8080", null);
             assertPaths(swagger, Map.of(
                 "/entity/api/functions/check/different/key/with/same/path", List.of("delete", "put"),
                 "/entity/api/functions/NameFromKeyOnlyDataInReturn", List.of("post", "delete")
@@ -159,7 +159,7 @@ public class FunctionSwaggerIntTest extends AbstractJupiterSpringBootTest {
             config.setExcludeTags(List.of("internal", "duplicatePathExclude"));
             dynamicSwaggerRefreshableConfiguration.onRefresh("/config/tenants/TEST_TENANT/entity/swagger.yml",
                 toYml(config));
-            var swagger = dynamicSwaggerFunctionGenerator.generateSwagger("https://xm.domain.com:8080");
+            var swagger = dynamicSwaggerFunctionGenerator.generateSwagger("https://xm.domain.com:8080", null);
             assertPaths(swagger, Map.of(
                 "/entity/api/functions/check/different/key/with/same/path", List.of("put"),
                 "/entity/api/functions/NameFromKeyOnlyDataInReturn", List.of("post", "delete")
@@ -172,7 +172,7 @@ public class FunctionSwaggerIntTest extends AbstractJupiterSpringBootTest {
             config.setExcludeTags(List.of("internal", "duplicatePathExclude"));
             dynamicSwaggerRefreshableConfiguration.onRefresh("/config/tenants/TEST_TENANT/entity/swagger.yml",
                 toYml(config));
-            var swagger = dynamicSwaggerFunctionGenerator.generateSwagger("https://xm.domain.com:8080");
+            var swagger = dynamicSwaggerFunctionGenerator.generateSwagger("https://xm.domain.com:8080", null);
             assertPaths(swagger, Map.of(
                 "/entity/api/functions/folder/v1/TestName", List.of("post", "get"),
                 "/entity/api/functions/check/different/key/with/same/path", List.of("put"),
@@ -188,7 +188,7 @@ public class FunctionSwaggerIntTest extends AbstractJupiterSpringBootTest {
             config.setExcludeKeyPatterns(List.of("folder/v1/.*"));
             dynamicSwaggerRefreshableConfiguration.onRefresh("/config/tenants/TEST_TENANT/entity/swagger.yml",
                 toYml(config));
-            var swagger = dynamicSwaggerFunctionGenerator.generateSwagger("https://xm.domain.com:8080");
+            var swagger = dynamicSwaggerFunctionGenerator.generateSwagger("https://xm.domain.com:8080", null);
             assertPaths(swagger, Map.of(
                 "/entity/api/functions/check/different/key/with/same/path", List.of("put"),
                 "/entity/api/functions/NameFromKeyOnlyDataInReturn", List.of("post", "delete"),

@@ -36,7 +36,9 @@ import com.icthh.xm.ms.entity.service.XmEntityTemplatesSpecService;
 import com.icthh.xm.ms.entity.service.impl.StartUpdateDateGenerationStrategy;
 import com.icthh.xm.ms.entity.service.impl.XmEntityFunctionServiceFacade;
 import com.icthh.xm.ms.entity.service.impl.XmEntityServiceImpl;
+import com.icthh.xm.ms.entity.service.impl.XmeStorageServiceFacadeImpl;
 import com.icthh.xm.ms.entity.service.json.JsonValidationService;
+import com.icthh.xm.ms.entity.service.storage.AvatarStorageService;
 import com.icthh.xm.ms.entity.web.rest.TestUtil;
 import com.icthh.xm.ms.entity.web.rest.XmEntityResource;
 import com.icthh.xm.ms.entity.web.rest.XmEntitySearchResource;
@@ -202,6 +204,9 @@ public class XmEntityResourceElasticsearchTest extends AbstractElasticSpringBoot
     AttachmentService attachmentService;
 
     @Autowired
+    AvatarStorageService avatarStorageService;
+
+    @Autowired
     XmEntityPermittedSearchRepository xmEntityPermittedSearchRepository;
 
     @Autowired
@@ -270,6 +275,8 @@ public class XmEntityResourceElasticsearchTest extends AbstractElasticSpringBoot
         xmEntityTemplatesSpecService.onRefresh(key, config);
         xmEntityTemplatesSpecService.refreshFinished(List.of(key));
 
+        XmeStorageServiceFacadeImpl storageServiceFacade = new XmeStorageServiceFacadeImpl(storageService, avatarStorageService, attachmentService);
+
         XmEntityServiceImpl xmEntityServiceImpl = new XmEntityServiceImpl(xmEntitySpecService,
                                                       xmEntityTemplatesSpecService,
                                                       xmEntityRepository,
@@ -277,8 +284,7 @@ public class XmEntityResourceElasticsearchTest extends AbstractElasticSpringBoot
                                                       xmEntityPermittedRepository,
                                                       profileService,
                                                       linkService,
-                                                      storageService,
-                                                      attachmentService,
+                                                      storageServiceFacade,
                                                       xmEntityPermittedSearchRepository,
                                                       startUpdateDateGenerationStrategy,
                                                       authContextHolder,

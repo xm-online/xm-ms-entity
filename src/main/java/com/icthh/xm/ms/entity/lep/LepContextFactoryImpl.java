@@ -27,6 +27,7 @@ import com.icthh.xm.ms.entity.service.SeparateTransactionExecutor;
 import com.icthh.xm.ms.entity.service.TagService;
 import com.icthh.xm.ms.entity.service.XmEntityService;
 import com.icthh.xm.ms.entity.service.XmTenantLifecycleService;
+import com.icthh.xm.ms.entity.service.impl.XmEntityAvatarService;
 import com.icthh.xm.ms.entity.service.mail.MailService;
 import com.icthh.xm.ms.entity.service.metrics.CustomMetricsContext;
 import com.icthh.xm.ms.entity.service.metrics.MetricsAdapter;
@@ -48,6 +49,7 @@ public class LepContextFactoryImpl implements LepContextFactory {
     private final MailService mailService;
     private final TenantConfigService tenantConfigService;
     private final AttachmentService attachmentService;
+    private final XmEntityAvatarService xmEntityAvatarService;
     private final RestTemplate restTemplate;
     private final RestTemplate plainRestTemplate;
     private final PathTimeoutHttpComponentsClientHttpRequestFactory requestFactory;
@@ -78,6 +80,7 @@ public class LepContextFactoryImpl implements LepContextFactory {
                                  MailService mailService,
                                  TenantConfigService tenantConfigService,
                                  AttachmentService attachmentService,
+                                 XmEntityAvatarService xmEntityAvatarService,
                                  @Qualifier("loadBalancedRestTemplateWithTimeout")
                                  RestTemplate restTemplate,
                                  @Qualifier("plainRestTemplate")
@@ -110,6 +113,7 @@ public class LepContextFactoryImpl implements LepContextFactory {
         this.mailService = mailService;
         this.tenantConfigService = tenantConfigService;
         this.attachmentService = attachmentService;
+        this.xmEntityAvatarService = xmEntityAvatarService;
         this.restTemplate = restTemplate;
         this.plainRestTemplate = plainRestTemplate;
         this.requestFactory = requestFactory;
@@ -147,6 +151,7 @@ public class LepContextFactoryImpl implements LepContextFactory {
         lepContext.services.mailService = mailService;
         lepContext.services.tenantConfigService = tenantConfigService;
         lepContext.services.attachmentService = attachmentService;
+        lepContext.services.xmEntityAvatarService = xmEntityAvatarService;
         lepContext.services.locationService = locationService;
         lepContext.services.tagService = tagService;
         lepContext.services.eventService = eventService;

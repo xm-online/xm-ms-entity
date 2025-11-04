@@ -120,6 +120,13 @@ public interface XmEntityService extends ResourceRepository<XmEntity, Object> {
                                            Pageable pageable,
                                            String privilegeKey);
 
+    /**
+     * For backward compatibility in LEPs.
+     * <p>
+     * Use XmEntityAvatarService instead.
+     * </p>
+     */
+    @Deprecated
     URI updateAvatar(IdOrKey idOrKey, HttpEntity<Resource> avatarHttpEntity);
 
     XmEntityIdKeyTypeKey getXmEntityIdKeyTypeKey(IdOrKey idOrKey);

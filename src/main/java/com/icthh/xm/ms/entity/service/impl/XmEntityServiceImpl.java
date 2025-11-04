@@ -47,18 +47,17 @@ import com.icthh.xm.ms.entity.repository.UniqueFieldRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityPermittedRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityRepositoryInternal;
 import com.icthh.xm.ms.entity.repository.search.XmEntityPermittedSearchRepository;
-import com.icthh.xm.ms.entity.service.AttachmentService;
-import com.icthh.xm.ms.entity.service.json.JsonValidationService;
-import com.icthh.xm.ms.entity.service.LifecycleLepStrategy;
 import com.icthh.xm.ms.entity.service.LifecycleLepStrategyFactory;
+import com.icthh.xm.ms.entity.service.LifecycleLepStrategy;
 import com.icthh.xm.ms.entity.service.LinkService;
 import com.icthh.xm.ms.entity.service.ProfileService;
 import com.icthh.xm.ms.entity.service.SimpleTemplateProcessor;
-import com.icthh.xm.ms.entity.service.StorageService;
+import com.icthh.xm.ms.entity.service.XmeStorageServiceFacade;
 import com.icthh.xm.ms.entity.service.XmEntityProjectionService;
 import com.icthh.xm.ms.entity.service.XmEntityService;
 import com.icthh.xm.ms.entity.service.XmEntitySpecService;
 import com.icthh.xm.ms.entity.service.XmEntityTemplatesSpecService;
+import com.icthh.xm.ms.entity.service.json.JsonValidationService;
 import com.icthh.xm.ms.entity.service.dto.LinkSourceDto;
 import com.icthh.xm.commons.search.dto.SearchDto;
 import com.jayway.jsonpath.DocumentContext;
@@ -127,8 +126,7 @@ public class XmEntityServiceImpl implements XmEntityService {
     private final XmEntityPermittedRepository xmEntityPermittedRepository;
     private final ProfileService profileService;
     private final LinkService linkService;
-    private final StorageService storageService;
-    private final AttachmentService attachmentService;
+    private final XmeStorageServiceFacade xmeStorageServiceFacade;
     private final XmEntityPermittedSearchRepository xmEntityPermittedSearchRepository;
     private final StartUpdateDateGenerationStrategy startUpdateDateGenerationStrategy;
     private final XmAuthenticationContextHolder authContextHolder;
@@ -664,9 +662,10 @@ public class XmEntityServiceImpl implements XmEntityService {
     }
 
     @Override
+    @SneakyThrows
     public XmEntity addFileAttachment(XmEntity entity, MultipartFile file) {
         //save multipart file to storage
-        String storedFileName = storageService.store(file, null);
+        String storedFileName = xmeStorageServiceFacade.store(file, null);
         log.debug("Multipart file stored with name {}", storedFileName);
 
         String targetTypeKey = entity.getTypeKey();
@@ -681,7 +680,7 @@ public class XmEntityServiceImpl implements XmEntityService {
             .getKey();
         log.debug("Attachment type key {}", attachmentTypeKey);
 
-        Attachment attachment = attachmentService.save(new Attachment()
+        Attachment attachment = xmeStorageServiceFacade.save(new Attachment()
             .typeKey(attachmentTypeKey)
             .name(file.getOriginalFilename())
             .contentUrl(storedFileName)
@@ -774,7 +773,7 @@ public class XmEntityServiceImpl implements XmEntityService {
     public URI updateAvatar(IdOrKey idOrKey, HttpEntity<Resource> avatarHttpEntity) {
         XmEntity source = toSourceXmEntity(idOrKey);
 
-        String avatarUrl = storageService.store(avatarHttpEntity, null);
+        String avatarUrl = xmeStorageServiceFacade.storeAvatar(avatarHttpEntity, null);
         log.info("Avatar {} stored for entity {}", avatarUrl, idOrKey);
 
         source.setAvatarUrl(avatarUrl);

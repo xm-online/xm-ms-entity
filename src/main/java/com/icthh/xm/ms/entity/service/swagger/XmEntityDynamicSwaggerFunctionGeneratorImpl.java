@@ -58,8 +58,8 @@ public class XmEntityDynamicSwaggerFunctionGeneratorImpl extends DefaultDynamicS
     }
 
     @Override
-    public SwaggerGenerator getSwaggerGenerator(String baseUrl) {
-        return new XmEntitySwaggerGenerator(baseUrl, getSwaggerConfiguration());
+    public SwaggerGenerator getSwaggerGenerator(String baseUrl, String specName) {
+        return new XmEntitySwaggerGenerator(baseUrl, getSwaggerConfiguration(specName));
     }
 
     @Override
