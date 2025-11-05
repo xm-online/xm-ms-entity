@@ -399,7 +399,7 @@ dependencies {
     implementation "com.icthh.xm.commons:xm-commons-lep-annotation-processor:${xm_commons_version}"
     implementation "com.icthh.xm.commons:xm-commons-lep-annotation-processor:${xm_commons_version}"
     implementation "com.icthh.xm.commons:xm-commons-search:${xm_commons_version}"
-
+    implementation "com.icthh.xm.commons:xm-commons-cache:${xm_commons_version}"
     annotationProcessor "com.icthh.xm.commons:xm-commons-lep-annotation-processor:${xm_commons_version}"
 
     implementation "org.freemarker:freemarker:${freemarker_version}"
