@@ -1,5 +1,6 @@
 package com.icthh.xm.ms.entity.lep;
 
+import com.icthh.xm.commons.cache.TenantCacheManager;
 import com.icthh.xm.commons.config.client.service.TenantConfigService;
 import com.icthh.xm.commons.domainevent.outbox.service.OutboxTransportService.OutboxTransportServiceField;
 import com.icthh.xm.commons.domainevent.service.EventPublisher;
@@ -65,6 +66,7 @@ public class LepContext extends BaseLepContext implements OutboxTransportService
         public EventPublisher eventPublisher;
         public DomainEventFactory domainEventFactory;
         public CommunicationService communicationService;
+        public TenantCacheManager tenantCacheManager;
     }
 
     public static class LepRepositories {

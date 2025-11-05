@@ -1,5 +1,6 @@
 package com.icthh.xm.ms.entity.lep;
 
+import com.icthh.xm.commons.cache.TenantCacheManager;
 import com.icthh.xm.commons.config.client.service.TenantConfigService;
 import com.icthh.xm.commons.domainevent.service.EventPublisher;
 import com.icthh.xm.commons.domainevent.service.builder.DomainEventFactory;
@@ -72,6 +73,7 @@ public class LepContextFactoryImpl implements LepContextFactory {
     private final EventPublisher eventPublisher;
     private final DomainEventFactory domainEventFactory;
     private final CommunicationService communicationService;
+    private final TenantCacheManager tenantCacheManager;
 
     public LepContextFactoryImpl(XmEntityService xmEntityService,
                                  XmTenantLifecycleService xmTenantLifecycleService,
@@ -104,7 +106,9 @@ public class LepContextFactoryImpl implements LepContextFactory {
                                  MetricsAdapter metricsAdapter,
                                  EventPublisher eventPublisher,
                                  DomainEventFactory domainEventFactory,
-                                 CommunicationService communicationService) {
+                                 CommunicationService communicationService,
+                                 @Qualifier("lepCacheManager")
+                                 TenantCacheManager tenantCacheManager) {
         this.xmEntityService = xmEntityService;
         this.xmTenantLifecycleService = xmTenantLifecycleService;
         this.xmEntityRepository = xmEntityRepository;
@@ -136,6 +140,7 @@ public class LepContextFactoryImpl implements LepContextFactory {
         this.eventPublisher = eventPublisher;
         this.domainEventFactory = domainEventFactory;
         this.communicationService = communicationService;
+        this.tenantCacheManager = tenantCacheManager;
     }
 
     @Override
@@ -166,6 +171,7 @@ public class LepContextFactoryImpl implements LepContextFactory {
         lepContext.services.eventPublisher = eventPublisher;
         lepContext.services.domainEventFactory = domainEventFactory;
         lepContext.services.communicationService = communicationService;
+        lepContext.services.tenantCacheManager = tenantCacheManager;
 
         lepContext.repositories = new LepContext.LepRepositories();
         lepContext.repositories.xmEntity = xmEntityRepository;
