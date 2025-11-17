@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd
+        http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd">
+
+    <changeSet id="20251117000000-1" author="ssenko">
+        <addColumn tableName="xm_comment">
+            <column name="client_id" type="varchar(255)">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="20251117000000-2" author="ssenko">
+        <addColumn tableName="xm_comment">
+            <column name="display_name" type="varchar(255)">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="20251117000000-3" author="ssenko">
+        <dropNotNullConstraint tableName="xm_comment" columnName="user_key" columnDataType="varchar(255)"/>
+    </changeSet>
+
+</databaseChangeLog>
