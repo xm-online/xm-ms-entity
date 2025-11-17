@@ -86,6 +86,7 @@
 
     <include file="classpath:config/liquibase/changelog/20221227000000_added_updatedBy_XmEntity.xml" relativeToChangelogFile="false"/>
 
-    <includeAll path="classpath:config/liquibase/changelog/extended/"/>
+    <include file="classpath:config/liquibase/changelog/20251117000000_add_client_id_display_name_to_comment.xml" relativeToChangelogFile="false"/>
 
+    <includeAll path="classpath:config/liquibase/changelog/extended/"/>
 </databaseChangeLog>

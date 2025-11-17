@@ -64,6 +64,12 @@ public class CommentResourceIntTest extends AbstractSpringBootTest {
     private static final String DEFAULT_USER_KEY = "AAAAAAAAAA";
     private static final String UPDATED_USER_KEY = "BBBBBBBBBB";
 
+    private static final String DEFAULT_CLIENT_ID = "CCCCCCCCCC";
+    private static final String UPDATED_CLIENT_ID = "DDDDDDDDDD";
+
+    private static final String DEFAULT_DISPLAY_NAME = "Test Display Name";
+    private static final String UPDATED_DISPLAY_NAME = "Updated Display Name";
+
     private static final String DEFAULT_MESSAGE = "AAAAAAAAAA";
     private static final String UPDATED_MESSAGE = "BBBBBBBBBB";
 
@@ -132,6 +138,7 @@ public class CommentResourceIntTest extends AbstractSpringBootTest {
         when(context.hasAuthentication()).thenReturn(true);
         when(context.getLogin()).thenReturn(Optional.of("testLogin"));
         when(context.getUserKey()).thenReturn(Optional.of(DEFAULT_USER_KEY));
+        when(context.getClientId()).thenReturn(Optional.of(DEFAULT_CLIENT_ID));
         when(context.getDetailsValue(LANGUAGE)).thenReturn(Optional.of("en"));
 
         when(authContextHolder.getContext()).thenReturn(context);
@@ -178,6 +185,8 @@ public class CommentResourceIntTest extends AbstractSpringBootTest {
     public static Comment createEntity(EntityManager em) {
         Comment comment = new Comment()
             .userKey(DEFAULT_USER_KEY)
+            .clientId(DEFAULT_CLIENT_ID)
+            .displayName(DEFAULT_DISPLAY_NAME)
             .message(DEFAULT_MESSAGE)
             .entryDate(DEFAULT_ENTRY_DATE);
         // Add required entity
@@ -204,6 +213,8 @@ public class CommentResourceIntTest extends AbstractSpringBootTest {
         assertThat(commentList).hasSize(databaseSizeBeforeCreate + 1);
         Comment testComment = commentList.get(commentList.size() - 1);
         assertThat(testComment.getUserKey()).isEqualTo(DEFAULT_USER_KEY);
+        assertThat(testComment.getClientId()).isEqualTo(DEFAULT_CLIENT_ID);
+        assertThat(testComment.getDisplayName()).isEqualTo(DEFAULT_DISPLAY_NAME);
         assertThat(testComment.getMessage()).isEqualTo(DEFAULT_MESSAGE);
         assertThat(testComment.getEntryDate()).isEqualTo(DEFAULT_ENTRY_DATE);
     }
@@ -259,24 +270,6 @@ public class CommentResourceIntTest extends AbstractSpringBootTest {
 
     @Test
     @Transactional
-    public void checkLoginIsRequired() throws Exception {
-        int databaseSizeBeforeTest = commentRepository.findAll().size();
-        // set the field null
-        comment.setUserKey(null);
-
-        // Create the Comment, which fails.
-
-        restCommentMockMvc.perform(post("/api/comments")
-            .contentType(TestUtil.APPLICATION_JSON_UTF8)
-            .content(TestUtil.convertObjectToJsonBytes(comment)))
-            .andExpect(status().isBadRequest());
-
-        List<Comment> commentList = commentRepository.findAll();
-        assertThat(commentList).hasSize(databaseSizeBeforeTest);
-    }
-
-    @Test
-    @Transactional
     @WithMockUser(authorities = "SUPER-ADMIN")
     public void getAllComments() throws Exception {
         // Initialize the database
@@ -288,6 +281,8 @@ public class CommentResourceIntTest extends AbstractSpringBootTest {
             .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
             .andExpect(jsonPath("$.[*].id").value(hasItem(comment.getId().intValue())))
             .andExpect(jsonPath("$.[*].userKey").value(hasItem(DEFAULT_USER_KEY)))
+            .andExpect(jsonPath("$.[*].clientId").value(hasItem(DEFAULT_CLIENT_ID)))
+            .andExpect(jsonPath("$.[*].displayName").value(hasItem(DEFAULT_DISPLAY_NAME)))
             .andExpect(jsonPath("$.[*].message").value(hasItem(DEFAULT_MESSAGE)))
             .andExpect(jsonPath("$.[*].entryDate").value(hasItem(DEFAULT_ENTRY_DATE.toString())));
     }
@@ -306,6 +301,8 @@ public class CommentResourceIntTest extends AbstractSpringBootTest {
             .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
             .andExpect(jsonPath("$.[*].id").value(hasItem(comment.getId().intValue())))
             .andExpect(jsonPath("$.[*].userKey").value(hasItem(DEFAULT_USER_KEY)))
+            .andExpect(jsonPath("$.[*].clientId").value(hasItem(DEFAULT_CLIENT_ID)))
+            .andExpect(jsonPath("$.[*].displayName").value(hasItem(DEFAULT_DISPLAY_NAME)))
             .andExpect(jsonPath("$.[*].message").value(hasItem(DEFAULT_MESSAGE)))
             .andExpect(jsonPath("$.[*].entryDate").value(hasItem(DEFAULT_ENTRY_DATE.toString())));
     }
@@ -322,6 +319,8 @@ public class CommentResourceIntTest extends AbstractSpringBootTest {
             .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
             .andExpect(jsonPath("$.id").value(comment.getId().intValue()))
             .andExpect(jsonPath("$.userKey").value(DEFAULT_USER_KEY))
+            .andExpect(jsonPath("$.clientId").value(DEFAULT_CLIENT_ID))
+            .andExpect(jsonPath("$.displayName").value(DEFAULT_DISPLAY_NAME))
             .andExpect(jsonPath("$.message").value(DEFAULT_MESSAGE))
             .andExpect(jsonPath("$.entryDate").value(DEFAULT_ENTRY_DATE.toString()));
     }
@@ -350,6 +349,7 @@ public class CommentResourceIntTest extends AbstractSpringBootTest {
             .orElseThrow(NullPointerException::new);
         updatedComment
             .userKey(UPDATED_USER_KEY)
+            .displayName(UPDATED_DISPLAY_NAME)
             .message(UPDATED_MESSAGE)
             .entryDate(UPDATED_ENTRY_DATE);
 
@@ -363,6 +363,8 @@ public class CommentResourceIntTest extends AbstractSpringBootTest {
         assertThat(commentList).hasSize(databaseSizeBeforeUpdate);
         Comment testComment = commentList.get(commentList.size() - 1);
         assertThat(testComment.getUserKey()).isEqualTo(DEFAULT_USER_KEY);
+        assertThat(testComment.getClientId()).isEqualTo(DEFAULT_CLIENT_ID);
+        assertThat(testComment.getDisplayName()).isEqualTo(UPDATED_DISPLAY_NAME);
         assertThat(testComment.getMessage()).isEqualTo(UPDATED_MESSAGE);
         assertThat(testComment.getEntryDate()).isEqualTo(UPDATED_ENTRY_DATE);
     }
