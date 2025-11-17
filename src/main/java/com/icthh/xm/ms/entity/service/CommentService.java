@@ -35,8 +35,11 @@ public class CommentService {
     private final XmEntityRepository xmEntityRepository;
 
     private String getUserKey() {
-        return authContextHolder.getContext().getUserKey()
-            .orElseThrow(() -> new IllegalStateException("No authenticated user in context, can't get user key"));
+        return authContextHolder.getContext().getUserKey().orElse(null);
+    }
+
+    private String getClientId() {
+        return authContextHolder.getContext().getClientId().orElse(null);
     }
 
     /**
@@ -49,6 +52,7 @@ public class CommentService {
     public Comment save(Comment comment) {
         comment.setXmEntity(xmEntityRepository.getOne(comment.getXmEntity().getId()));
         comment.setUserKey(getUserKey());
+        comment.setClientId(getClientId());
         return commentRepository.save(comment);
     }
 
