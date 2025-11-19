@@ -3,6 +3,7 @@ package com.icthh.xm.ms.entity.service.spec;
 import com.icthh.xm.commons.domain.DefinitionSpec;
 import com.icthh.xm.commons.domain.FormSpec;
 import com.icthh.xm.commons.domain.SpecificationItem;
+import com.icthh.xm.commons.logging.LoggingAspectConfig;
 import com.icthh.xm.commons.service.SpecificationProcessingService;
 import com.icthh.xm.ms.entity.domain.spec.StateSpec;
 import com.icthh.xm.ms.entity.domain.spec.TypeSpec;
@@ -56,6 +57,7 @@ public class DataSpecJsonSchemaService implements SpecificationProcessingService
         this.typeSpecProcessor = typeSpecProcessor;
     }
 
+    @LoggingAspectConfig(resultDetails = false)
     public Map<String, JsonSchema> dataSpecJsonSchemas(String tenantKey) {
         return nullSafe(dataSpecJsonSchemas.get(tenantKey));
     }
