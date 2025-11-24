@@ -141,7 +141,7 @@ application:
         enabled: true
     timeline-ignored-http-methods:
     scheduler-enabled: false
-    tenant-ignored-path-list: /v2/api-docs, /api/profile-info, /swagger-resources/configuration/ui, /management/health
+    tenant-ignored-path-list: /v3/api-docs, /api/profile-info, /swagger-resources/configuration/ui, /management/health
     kafka-enabled: false
     objectStorage:
         # DB, S3, FILE
