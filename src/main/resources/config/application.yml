@@ -165,17 +165,6 @@ jhipster:
         #max-age: 1800
     mail:
         from: entity@localhost
-    api-docs:
-        default-include-pattern: /api/.*
-        title: entity API
-        description: entity API documentation
-        version: 0.0.1
-        terms-of-service-url:
-        contact-name:
-        contact-url:
-        contact-email:
-        license:
-        license-url:
 
 # ===================================================================
 # Application specific properties
@@ -197,7 +186,7 @@ application:
         findOneByIdForUpdateTimeout: 10000
     timeline-ignored-http-methods:
     scheduler-enabled: false
-    tenant-ignored-path-list: /v2/api-docs, /api/profile-info, /swagger-resources/configuration/ui, /management/health
+    tenant-ignored-path-list: /v3/api-docs, /api/profile-info, /swagger-resources/configuration/ui, /management/health
     timelines-enabled: true
     kafka-enabled: true
     tenant-with-creation-access-list: XM, MANAGER
