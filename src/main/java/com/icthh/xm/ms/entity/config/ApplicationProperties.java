@@ -35,6 +35,7 @@ public class ApplicationProperties {
     private final Lep lep = new Lep();
     private final Jpa jpa = new Jpa();
     private final ObjectStorage objectStorage = new ObjectStorage();
+    private final AvatarDefault avatarDefault = new AvatarDefault();
 
     private List<String> tenantIgnoredPathList = Collections.emptyList();
     private List<String> timelineIgnoredHttpMethods = Collections.emptyList();
@@ -42,7 +43,6 @@ public class ApplicationProperties {
      * Default max avatar size 1Mb
      */
     private long maxAvatarSize = DEFAULT_MAX_AVATAR_SIZE;
-    private AvatarDefault avatarDefault;
     private boolean timelinesEnabled;
     private boolean kafkaEnabled;
     private boolean schedulerEnabled;

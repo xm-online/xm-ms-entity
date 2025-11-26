@@ -155,6 +155,10 @@ application:
         # File name db-pattern
         db-url-template: https://%s.xm-online.com/entity/api/storage/object
         file-root: /home/${user.home}/xme
+    avatar-default:
+        default-avatar-url: /assets/img/anonymous.png
+        default-avatar-url-prefix: http://xm-avatar.rgw.icthh.test:7480
+        max-avatar-size: 1048576
     amazon:
         avatar:
             pre-persist-url-full-pattern: ^http(s)?:\/\/[a-zA-Z0-9-.]+[.]icthh[.][a-z]+(:\d+)?/[a-zA-Z0-9-.]+$
