@@ -54,6 +54,7 @@ public class AvatarStorageServiceInFSUnitTest extends AbstractJupiterUnitTest {
     @BeforeEach
     void setUp() {
         lenient().when(applicationProperties.getObjectStorage()).thenReturn(objectStorage);
+        lenient().when(applicationProperties.getAvatarDefault()).thenReturn(new ApplicationProperties.AvatarDefault());
         lenient().when(tenantConfigService.getConfig()).thenReturn(Map.of("baseUrl", "http://tst"));
         lenient().when(objectStorage.getStorageType()).thenReturn(ApplicationProperties.StorageType.FILE);
         lenient().when(objectStorage.getFileRoot()).thenReturn(FILE_PREFIX);
