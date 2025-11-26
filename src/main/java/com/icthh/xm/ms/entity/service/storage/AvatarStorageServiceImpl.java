@@ -39,12 +39,14 @@ public class AvatarStorageServiceImpl implements AvatarStorageService {
     private Integer maxSize;
     private String dbFilePrefix;
     private ApplicationProperties.StorageType storageType;
+    private ApplicationProperties.AvatarDefault avatarDefault;
 
     @PostConstruct
     public void init() {
         maxSize = applicationProperties.getObjectStorage().getMaxSize();
         dbFilePrefix = applicationProperties.getObjectStorage().getDbFilePrefix();
         storageType = applicationProperties.getObjectStorage().getStorageType();
+        avatarDefault = applicationProperties.getAvatarDefault();
     }
 
     @Override
@@ -53,8 +55,9 @@ public class AvatarStorageServiceImpl implements AvatarStorageService {
         final String avatarUrl = xmEntity.getAvatarUrl();
 
         if (Boolean.TRUE.equals(xmEntity.isRemoved()) || avatarUrl == null) {
-            String url = (String) tenantConfigService.getConfig().getOrDefault("baseUrl", DEFAULT_AVATAR_URL_PREFIX);
-            return AvatarStorageResponse.withRedirectUrl(URI.create(url + DEFAULT_AVATAR_URL));
+            String url = (String) tenantConfigService.getConfig()
+                .getOrDefault("baseUrl", avatarDefault.getDefaultAvatarUrlPrefix());
+            return AvatarStorageResponse.withRedirectUrl(URI.create(url + avatarDefault.getDefaultAvatarUrl()));
         }
 
         final String avatarRelatedUrl = xmEntity.getAvatarUrlRelative();

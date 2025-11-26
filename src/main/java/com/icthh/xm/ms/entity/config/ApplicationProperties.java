@@ -10,6 +10,9 @@ import org.springframework.stereotype.Component;
 import java.util.Collections;
 import java.util.List;
 
+import static com.icthh.xm.ms.entity.config.Constants.DEFAULT_AVATAR_URL;
+import static com.icthh.xm.ms.entity.config.Constants.DEFAULT_AVATAR_URL_PREFIX;
+
 /**
  * Properties specific to JHipster.
  *
@@ -39,6 +42,7 @@ public class ApplicationProperties {
      * Default max avatar size 1Mb
      */
     private long maxAvatarSize = DEFAULT_MAX_AVATAR_SIZE;
+    private AvatarDefault avatarDefault;
     private boolean timelinesEnabled;
     private boolean kafkaEnabled;
     private boolean schedulerEnabled;
@@ -185,6 +189,14 @@ public class ApplicationProperties {
             return StringUtils.isEmpty(fileRoot) ? DEFAULT_FILE_ROOT : fileRoot;
         }
 
+    }
+
+    @Getter
+    @Setter
+    public static class AvatarDefault {
+        private String defaultAvatarUrlPrefix = DEFAULT_AVATAR_URL_PREFIX;
+        private String defaultAvatarUrl = DEFAULT_AVATAR_URL;
+        private long maxAvatarSize = DEFAULT_MAX_AVATAR_SIZE;
     }
 
     public enum StorageType {
