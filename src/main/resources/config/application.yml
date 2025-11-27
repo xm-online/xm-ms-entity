@@ -228,6 +228,10 @@ application:
         max-size: 32767
         # used for FILE strategy FILE://{objectId}
         file-root: /home/xme
+    avatar-default:
+        default-avatar-url: /assets/img/anonymous.png
+        default-avatar-url-prefix: http://xm-avatar.rgw.icthh.test:7480
+        max-avatar-size: 1048576
     amazon:
         avatar:
             # XmEntity.avatarUrl should match this pattern to persist only last part into DB, otherwise set to null
