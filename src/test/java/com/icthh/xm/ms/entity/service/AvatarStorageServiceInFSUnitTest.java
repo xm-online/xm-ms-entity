@@ -88,6 +88,26 @@ public class AvatarStorageServiceInFSUnitTest extends AbstractJupiterUnitTest {
     }
 
     @Test
+    public void shouldReturnDefaultAvatarIfAvatarUrlIsMissing_FormTenantConfig() {
+        lenient().when(tenantConfigService.getConfig())
+            .thenReturn(Map.of(
+            "baseUrl", "http://tst-config",
+            "defaultAvatarUrl", "/img/default/avatar.png"
+            ));
+
+        XmEntity xmEntity = EntityUtils.newEntity(entity -> {
+            entity.setRemoved(false);
+        });
+
+        avatarStorageService.getAvatarResource(xmEntity);
+
+        AvatarStorageResponse avatarResource = avatarStorageService.getAvatarResource(xmEntity);
+        assertThat(avatarResource).isNotNull();
+        assertThat(avatarResource.avatarResource()).isNull();
+        assertThat(avatarResource.uri().toString()).isEqualTo("http://tst-config/img/default/avatar.png");
+    }
+
+    @Test
     public void shouldGetAvatarResourceFromFileStorage() throws IOException {
         // given
         String fileUrl = "123";
