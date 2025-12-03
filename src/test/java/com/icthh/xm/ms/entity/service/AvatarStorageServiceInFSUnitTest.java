@@ -54,6 +54,7 @@ public class AvatarStorageServiceInFSUnitTest extends AbstractJupiterUnitTest {
     @BeforeEach
     void setUp() {
         lenient().when(applicationProperties.getObjectStorage()).thenReturn(objectStorage);
+        lenient().when(applicationProperties.getAvatarDefault()).thenReturn(new ApplicationProperties.AvatarDefault());
         lenient().when(tenantConfigService.getConfig()).thenReturn(Map.of("baseUrl", "http://tst"));
         lenient().when(objectStorage.getStorageType()).thenReturn(ApplicationProperties.StorageType.FILE);
         lenient().when(objectStorage.getFileRoot()).thenReturn(FILE_PREFIX);
@@ -84,6 +85,26 @@ public class AvatarStorageServiceInFSUnitTest extends AbstractJupiterUnitTest {
         assertThat(avatarResource).isNotNull();
         assertThat(avatarResource.avatarResource()).isNull();
         assertThat(avatarResource.uri().toString()).isEqualTo("http://tst/assets/img/anonymous.png");
+    }
+
+    @Test
+    public void shouldReturnDefaultAvatarIfAvatarUrlIsMissing_FormTenantConfig() {
+        lenient().when(tenantConfigService.getConfig())
+            .thenReturn(Map.of(
+            "baseUrl", "http://tst-config",
+            "defaultAvatarUrl", "/img/default/avatar.png"
+            ));
+
+        XmEntity xmEntity = EntityUtils.newEntity(entity -> {
+            entity.setRemoved(false);
+        });
+
+        avatarStorageService.getAvatarResource(xmEntity);
+
+        AvatarStorageResponse avatarResource = avatarStorageService.getAvatarResource(xmEntity);
+        assertThat(avatarResource).isNotNull();
+        assertThat(avatarResource.avatarResource()).isNull();
+        assertThat(avatarResource.uri().toString()).isEqualTo("http://tst-config/img/default/avatar.png");
     }
 
     @Test
