@@ -117,31 +117,36 @@ public class XmEntitySpecContextService {
     }
 
     public Map<String, TypeSpec> updateByTenantState(String tenant) {
-        Map<String, XmEntitySpecification> xmEntitySpecificationByFiles = readXmEntitySpecTypes(tenant);
-        LinkedHashMap<String, TypeSpec> tenantEntitySpec = getTenantEntitySpecs(xmEntitySpecificationByFiles);
-        Map<String, String> entityKeyToFile = entityKeyToFile(xmEntitySpecificationByFiles);
-        if (initialized.get()) {
-            xmEntitySpecCustomizer.customize(tenant, tenantEntitySpec);
+        try {
+            Map<String, XmEntitySpecification> xmEntitySpecificationByFiles = readXmEntitySpecTypes(tenant);
+            LinkedHashMap<String, TypeSpec> tenantEntitySpec = getTenantEntitySpecs(xmEntitySpecificationByFiles);
+            Map<String, String> entityKeyToFile = entityKeyToFile(xmEntitySpecificationByFiles);
+            if (initialized.get()) {
+                xmEntitySpecCustomizer.customize(tenant, tenantEntitySpec);
+            }
+
+            var xmEntitySpecs = xmEntitySpecificationByFiles.values().stream().map(XmEntitySpecification::spec).toList();
+            dataSpecJsonSchemaService.updateByTenantState(tenant, XM_ENTITY_SPEC_KEY, xmEntitySpecs);
+
+            if (tenantEntitySpec.isEmpty()) {
+                typesByTenant.remove(tenant);
+            }
+
+            specInheritanceProcessor.process(tenantEntitySpec, tenant);
+            specFieldsProcessor.processUniqueFields(tenantEntitySpec);
+
+            functionByTenantService.processFunctionSpec(tenant, xmEntitySpecificationByFiles);
+
+            xmEntitySpecs.forEach(spec -> dataSpecJsonSchemaService.processSpecification(tenant, XM_ENTITY_SPEC_KEY, spec));
+
+            typesByTenant.put(tenant, tenantEntitySpec);
+            tenantToTypeToFile.put(tenant, entityKeyToFile);
+
+            return tenantEntitySpec;
+        } catch (Exception e) {
+            log.error("Error read xm specification from tenant {}", tenant, e);
+            return null;
         }
-
-        var xmEntitySpecs = xmEntitySpecificationByFiles.values().stream().map(XmEntitySpecification::spec).toList();
-        dataSpecJsonSchemaService.updateByTenantState(tenant, XM_ENTITY_SPEC_KEY, xmEntitySpecs);
-
-        if (tenantEntitySpec.isEmpty()) {
-            typesByTenant.remove(tenant);
-        }
-
-        specInheritanceProcessor.process(tenantEntitySpec, tenant);
-        specFieldsProcessor.processUniqueFields(tenantEntitySpec);
-
-        functionByTenantService.processFunctionSpec(tenant, xmEntitySpecificationByFiles);
-
-        xmEntitySpecs.forEach(spec -> dataSpecJsonSchemaService.processSpecification(tenant, XM_ENTITY_SPEC_KEY, spec));
-
-        typesByTenant.put(tenant, tenantEntitySpec);
-        tenantToTypeToFile.put(tenant, entityKeyToFile);
-
-        return tenantEntitySpec;
     }
 
     public String getFileContentByPath(String tenant, String filePath) {
