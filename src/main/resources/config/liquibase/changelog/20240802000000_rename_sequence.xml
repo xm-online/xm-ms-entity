@@ -6,18 +6,15 @@
         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd
         http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd">
 
-    <changeSet id="20240802000000" author="vosiievska" dbms="postgresql,oracle,mysql,mariadb,mssql">
-        <!-- TODO: Replace with actual checksum from: SELECT md5sum FROM databasechangelog WHERE id = '20240802000000'; -->
-        <validCheckSum>8:REPLACE_WITH_ACTUAL_CHECKSUM_FROM_DATABASE</validCheckSum>
+    <changeSet id="20240802000000" author="vosiievska" context="!test">
         <preConditions onFail="CONTINUE">
-            <sequenceExists sequenceName="hibernate_sequence"/>
+            <and>
+                <sequenceExists sequenceName="hibernate_sequence"/>
+                <not><dbms type="h2"/></not>
+            </and>
         </preConditions>
         <renameSequence newSequenceName="sequencegenerator"
                         oldSequenceName="hibernate_sequence"/>
-    </changeSet>
-
-    <changeSet id="20240802000000_1" author="ssenko" dbms="h2">
-        <createSequence sequenceName="sequencegenerator" startValue="1000" incrementBy="50"/>
     </changeSet>
 
 </databaseChangeLog>
