@@ -19,6 +19,7 @@ import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.net.URI;
+import java.util.Map;
 import java.util.Objects;
 
 import static com.icthh.xm.commons.exceptions.ErrorConstants.ERR_VALIDATION;
@@ -39,12 +40,14 @@ public class AvatarStorageServiceImpl implements AvatarStorageService {
     private Integer maxSize;
     private String dbFilePrefix;
     private ApplicationProperties.StorageType storageType;
+    private ApplicationProperties.AvatarDefault avatarDefault;
 
     @PostConstruct
     public void init() {
         maxSize = applicationProperties.getObjectStorage().getMaxSize();
         dbFilePrefix = applicationProperties.getObjectStorage().getDbFilePrefix();
         storageType = applicationProperties.getObjectStorage().getStorageType();
+        avatarDefault = applicationProperties.getAvatarDefault();
     }
 
     @Override
@@ -53,8 +56,10 @@ public class AvatarStorageServiceImpl implements AvatarStorageService {
         final String avatarUrl = xmEntity.getAvatarUrl();
 
         if (Boolean.TRUE.equals(xmEntity.isRemoved()) || avatarUrl == null) {
-            String url = (String) tenantConfigService.getConfig().getOrDefault("baseUrl", DEFAULT_AVATAR_URL_PREFIX);
-            return AvatarStorageResponse.withRedirectUrl(URI.create(url + DEFAULT_AVATAR_URL));
+            Map<String, Object> tenantConfig = tenantConfigService.getConfig();
+            String baseUrl = (String) tenantConfig.getOrDefault("baseUrl", avatarDefault.getDefaultAvatarUrlPrefix());
+            String defaultUrl = (String) tenantConfig.getOrDefault("defaultAvatarUrl", avatarDefault.getDefaultAvatarUrl());
+            return AvatarStorageResponse.withRedirectUrl(URI.create(baseUrl + defaultUrl));
         }
 
         final String avatarRelatedUrl = xmEntity.getAvatarUrlRelative();

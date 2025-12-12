@@ -10,6 +10,9 @@ import org.springframework.stereotype.Component;
 import java.util.Collections;
 import java.util.List;
 
+import static com.icthh.xm.ms.entity.config.Constants.DEFAULT_AVATAR_URL;
+import static com.icthh.xm.ms.entity.config.Constants.DEFAULT_AVATAR_URL_PREFIX;
+
 /**
  * Properties specific to JHipster.
  *
@@ -32,6 +35,7 @@ public class ApplicationProperties {
     private final Lep lep = new Lep();
     private final Jpa jpa = new Jpa();
     private final ObjectStorage objectStorage = new ObjectStorage();
+    private final AvatarDefault avatarDefault = new AvatarDefault();
 
     private List<String> tenantIgnoredPathList = Collections.emptyList();
     private List<String> timelineIgnoredHttpMethods = Collections.emptyList();
@@ -185,6 +189,14 @@ public class ApplicationProperties {
             return StringUtils.isEmpty(fileRoot) ? DEFAULT_FILE_ROOT : fileRoot;
         }
 
+    }
+
+    @Getter
+    @Setter
+    public static class AvatarDefault {
+        private String defaultAvatarUrlPrefix = DEFAULT_AVATAR_URL_PREFIX;
+        private String defaultAvatarUrl = DEFAULT_AVATAR_URL;
+        private long maxAvatarSize = DEFAULT_MAX_AVATAR_SIZE;
     }
 
     public enum StorageType {

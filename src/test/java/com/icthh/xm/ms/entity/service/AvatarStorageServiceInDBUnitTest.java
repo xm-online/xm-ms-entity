@@ -55,6 +55,7 @@ public class AvatarStorageServiceInDBUnitTest extends AbstractJupiterUnitTest {
     @BeforeEach
     void setUp() {
         lenient().when(applicationProperties.getObjectStorage()).thenReturn(objectStorage);
+        lenient().when(applicationProperties.getAvatarDefault()).thenReturn(new ApplicationProperties.AvatarDefault());
         lenient().when(tenantConfigService.getConfig()).thenReturn(Map.of("baseUrl", "http://tst"));
         lenient().when(objectStorage.getStorageType()).thenReturn(ApplicationProperties.StorageType.DB);
         lenient().when(objectStorage.getDbFilePrefix()).thenReturn(DB_PREFIX);
