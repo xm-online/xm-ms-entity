@@ -236,7 +236,7 @@ public class XmEntityResource {
     public ResponseEntity<Object> executeGetFunction(@PathVariable String idOrKey,
                                                      @PathVariable String functionKey,
                                                      @RequestParam(required = false) Map<String, Object> functionInput) {
-        return executeFunction(idOrKey, functionKey, functionInput);
+        return executeFunction(idOrKey, functionKey, functionInput, "GET");
     }
 
     /**
@@ -255,7 +255,7 @@ public class XmEntityResource {
     public ResponseEntity<Object> executePostFunction(@PathVariable String idOrKey,
                                                            @PathVariable String functionKey,
                                                            @RequestBody(required = false) Map<String, Object> functionInput) {
-        return executeFunction(idOrKey, functionKey, functionInput);
+        return executeFunction(idOrKey, functionKey, functionInput, "POST");
     }
 
     @Timed
@@ -403,10 +403,11 @@ public class XmEntityResource {
     }
 
     private ResponseEntity<Object> executeFunction(String idOrKey,
-                                                  String functionKey,
-                                                  Map<String, Object> functionInput) {
+                                                   String functionKey,
+                                                   Map<String, Object> functionInput,
+                                                   String httpMethod) {
         Map<String, Object> fContext = functionInput != null ? functionInput : Maps.newHashMap();
-        FunctionContext result = functionService.execute(functionKey, IdOrKey.of(idOrKey), fContext);
+        FunctionContext result = functionService.execute(functionKey, IdOrKey.of(idOrKey), fContext, httpMethod);
 
         ResponseEntity.BodyBuilder response = ResponseEntity.ok();
 

@@ -60,7 +60,7 @@ public class XmEntityResourceFunctionApiIntTest extends AbstractJupiterWebMvcTes
     public void executeFunction() throws Exception {
         IdOrKey id = IdOrKey.of("1");
         when(functionService.execute(functionName,
-            id, of("var1", "val1", "var2", "val2")))
+            id, of("var1", "val1", "var2", "val2"), "POST"))
             .thenReturn((FunctionResultContext) new FunctionResultContext().data(of("test", "result")));
         mockMvc.perform(post("/api/xm-entities/1/functions/" + functionName)
             .contentType(TestUtil.APPLICATION_JSON_UTF8)
@@ -74,7 +74,7 @@ public class XmEntityResourceFunctionApiIntTest extends AbstractJupiterWebMvcTes
     public void executeGetFunction() throws Exception {
         IdOrKey id = IdOrKey.of("1");
         when(functionService.execute(functionName,
-            id, of("var1", "val1", "var2", "val2")))
+            id, of("var1", "val1", "var2", "val2"), "GET"))
             .thenReturn((FunctionResultContext) new FunctionResultContext().data(of("test", "result")));
         mockMvc.perform(get("/api/xm-entities/1/functions/"+functionName+"?var1=val1&var2=val2"))
             .andDo(print())
