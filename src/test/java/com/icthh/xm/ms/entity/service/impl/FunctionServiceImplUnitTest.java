@@ -178,7 +178,7 @@ public class FunctionServiceImplUnitTest extends AbstractJupiterUnitTest {
     @Test
     public void executeWithNullFunctionKeyAndNullId() {
         NullPointerException exception = assertThrows(NullPointerException.class, () -> {
-            functionServiceFacade.execute(null, null, Maps.newHashMap());
+            functionServiceFacade.execute(null, null, Maps.newHashMap(), null);
         });
         assertEquals("functionKey can't be null", exception.getMessage());
     }
@@ -189,7 +189,7 @@ public class FunctionServiceImplUnitTest extends AbstractJupiterUnitTest {
     @Test
     public void executeWithFunctionKeyAndNullId() {
         NullPointerException exception = assertThrows(NullPointerException.class, () -> {
-            functionServiceFacade.execute("Any key", null, Maps.newHashMap());
+            functionServiceFacade.execute("Any key", null, Maps.newHashMap(), null);
         });
         assertEquals("idOrKey can't be null", exception.getMessage());
     }
@@ -200,11 +200,11 @@ public class FunctionServiceImplUnitTest extends AbstractJupiterUnitTest {
 
         when(xmEntityService.findStateProjectionById(key)).thenReturn(getProjection(key));
 
-        when(xmEntitySpecService.findEntityFunction(xmEntityTypeKey, functionKey))
+        when(xmEntitySpecService.findEntityFunction(xmEntityTypeKey, functionKey, null))
             .thenReturn(Optional.empty());
 
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
-            functionServiceFacade.execute(functionKey, key, Maps.newHashMap());
+            functionServiceFacade.execute(functionKey, key, Maps.newHashMap(), null);
         });
         assertEquals("Function not found for entity type key " + xmEntityTypeKey
             + " and function key: " + functionKey, exception.getMessage());
@@ -225,11 +225,11 @@ public class FunctionServiceImplUnitTest extends AbstractJupiterUnitTest {
 
         when(xmEntityService.findStateProjectionById(key)).thenReturn(getProjection(key));
 
-        when(xmEntitySpecService.findEntityFunction(xmEntityTypeKey, functionName))
+        when(xmEntitySpecService.findEntityFunction(xmEntityTypeKey, functionName, "GET"))
             .thenReturn(Optional.of(spec));
 
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
-            functionServiceFacade.execute(functionName, key, Maps.newHashMap());
+            functionServiceFacade.execute(functionName, key, Maps.newHashMap(), "GET");
         });
         assertEquals("Function call forbidden for current state", exception.getMessage());
 
@@ -248,7 +248,7 @@ public class FunctionServiceImplUnitTest extends AbstractJupiterUnitTest {
 
         when(xmEntityService.findStateProjectionById(key)).thenReturn(getProjection(key));
 
-        when(xmEntitySpecService.findEntityFunction(xmEntityTypeKey, functionName))
+        when(xmEntitySpecService.findEntityFunction(xmEntityTypeKey, functionName, "GET"))
             .thenReturn(Optional.of(spec));
 
         when(functionExecutorService.execute(functionName, key, xmEntityTypeKey, context))
@@ -256,7 +256,7 @@ public class FunctionServiceImplUnitTest extends AbstractJupiterUnitTest {
 
         when(functionContextService.save(any())).thenReturn(new FunctionContext());
 
-        FunctionContext fc = functionServiceFacade.execute(functionName, key, context);
+        FunctionContext fc = functionServiceFacade.execute(functionName, key, context, "GET");
         assertThat(fc.getTypeKey()).isEqualTo(functionName);
         assertThat(fc.getKey()).contains(functionName);
         assertThat(fc.getData().keySet()).containsSequence(data.keySet().toArray(new String[0]));
@@ -276,7 +276,7 @@ public class FunctionServiceImplUnitTest extends AbstractJupiterUnitTest {
 
         when(xmEntityService.findStateProjectionById(key)).thenReturn(getProjection(key));
 
-        when(xmEntitySpecService.findEntityFunction(xmEntityTypeKey, functionName))
+        when(xmEntitySpecService.findEntityFunction(xmEntityTypeKey, functionName, "GET"))
             .thenReturn(Optional.of(spec));
 
         when(functionExecutorService.execute(functionName, key, xmEntityTypeKey, context))
@@ -284,7 +284,7 @@ public class FunctionServiceImplUnitTest extends AbstractJupiterUnitTest {
 
         when(functionContextService.save(any())).thenReturn(new FunctionContext());
 
-        FunctionContext fc = functionServiceFacade.execute(functionName, key, context);
+        FunctionContext fc = functionServiceFacade.execute(functionName, key, context, "GET");
         assertThat(fc.getTypeKey()).isEqualTo(functionName);
         assertThat(fc.getKey()).contains(functionName);
         assertThat(fc.getData().keySet()).containsSequence(data.keySet().toArray(new String[0]));
@@ -304,7 +304,7 @@ public class FunctionServiceImplUnitTest extends AbstractJupiterUnitTest {
 
         when(xmEntityService.findStateProjectionById(key)).thenReturn(getProjection(key));
 
-        when(xmEntitySpecService.findEntityFunction(xmEntityTypeKey, functionName))
+        when(xmEntitySpecService.findEntityFunction(xmEntityTypeKey, functionName, "GET"))
             .thenReturn(Optional.of(spec));
 
         when(functionExecutorService.execute(functionName, key, xmEntityTypeKey, context))
@@ -312,7 +312,7 @@ public class FunctionServiceImplUnitTest extends AbstractJupiterUnitTest {
 
         when(functionContextService.save(any())).then(AdditionalAnswers.returnsFirstArg());
 
-        FunctionContext fc = functionServiceFacade.execute(functionName, key, context);
+        FunctionContext fc = functionServiceFacade.execute(functionName, key, context, "GET");
         assertThat(fc.getTypeKey()).isEqualTo(functionName);
         assertThat(fc.getKey()).contains(functionName);
         assertThat(fc.getData().keySet()).containsSequence(data.keySet().toArray(new String[0]));
@@ -358,10 +358,11 @@ public class FunctionServiceImplUnitTest extends AbstractJupiterUnitTest {
         when(xmEntityService.findStateProjectionById(key)).thenReturn(getProjection(key));
 
         FunctionSpec spec = getFunctionSpec(Boolean.FALSE);
+        spec.setKey("FUNCTION_WITH_BINARY_RESULT");
         spec.setBinaryDataField("contentBytes");
         spec.setBinaryDataType("application/pdf");
 
-        when(xmEntitySpecService.findEntityFunction(xmEntityTypeKey, "FUNCTION_WITH_BINARY_RESULT"))
+        when(xmEntitySpecService.findEntityFunction(xmEntityTypeKey, "FUNCTION_WITH_BINARY_RESULT", "GET"))
             .thenReturn(Optional.of(spec));
 
         Map<String, Object> functionResult = new HashMap<>();
@@ -371,7 +372,7 @@ public class FunctionServiceImplUnitTest extends AbstractJupiterUnitTest {
             .thenReturn(functionResult);
 
         //WHEN
-        FunctionContext result = functionServiceFacade.execute("FUNCTION_WITH_BINARY_RESULT", key, context);
+        FunctionContext result = functionServiceFacade.execute("FUNCTION_WITH_BINARY_RESULT", key, context, "GET");
 
         //THEN
         assertTrue(result.isBinaryData());
@@ -494,9 +495,9 @@ public class FunctionServiceImplUnitTest extends AbstractJupiterUnitTest {
         verifyNoMoreInteractions(jsonValidationService);
 
         spec.setWithEntityId(true);
-        when(xmEntitySpecService.findEntityFunction(xmEntityTypeKey, VALIDATION_FUNCTION)).thenReturn(Optional.of(spec));
+        when(xmEntitySpecService.findEntityFunction(xmEntityTypeKey, VALIDATION_FUNCTION, "GET")).thenReturn(Optional.of(spec));
         when(xmEntityService.findStateProjectionById(SELF)).thenReturn(getProjection(SELF));
-        functionServiceFacade.execute(VALIDATION_FUNCTION, SELF, Map.of("numberArgument", "stringValue"));
+        functionServiceFacade.execute(VALIDATION_FUNCTION, SELF, Map.of("numberArgument", "stringValue"), "GET");
         verifyNoMoreInteractions(jsonValidationService);
     }
 
@@ -507,9 +508,9 @@ public class FunctionServiceImplUnitTest extends AbstractJupiterUnitTest {
         functionServiceFacade.execute(VALIDATION_FUNCTION, functionInput, "POST");
 
         spec.setWithEntityId(true);
-        when(xmEntitySpecService.findEntityFunction(xmEntityTypeKey, VALIDATION_FUNCTION)).thenReturn(Optional.of(spec));
+        when(xmEntitySpecService.findEntityFunction(xmEntityTypeKey, VALIDATION_FUNCTION, "GET")).thenReturn(Optional.of(spec));
         when(xmEntityService.findStateProjectionById(SELF)).thenReturn(getProjection(SELF));
-        functionServiceFacade.execute(VALIDATION_FUNCTION, SELF, functionInput);
+        functionServiceFacade.execute(VALIDATION_FUNCTION, SELF, functionInput, "GET");
 
         verify(jsonValidationService, times(2)).assertJson(eq(functionInput), eq(spec.getInputSpec()));
     }
@@ -537,11 +538,11 @@ public class FunctionServiceImplUnitTest extends AbstractJupiterUnitTest {
         FunctionSpec spec = generateFunctionSpec(true);
         Map<String, Object> functionInput = Map.of("numberArgument", "stringValue");
         spec.setWithEntityId(true);
-        when(xmEntitySpecService.findEntityFunction(xmEntityTypeKey, VALIDATION_FUNCTION)).thenReturn(Optional.of(spec));
+        when(xmEntitySpecService.findEntityFunction(xmEntityTypeKey, VALIDATION_FUNCTION, "GET")).thenReturn(Optional.of(spec));
         when(xmEntityService.findStateProjectionById(SELF)).thenReturn(getProjection(SELF));
 
         JsonValidationService.InvalidJsonException exception = assertThrows(JsonValidationService.InvalidJsonException.class, () -> {
-            functionServiceFacade.execute(VALIDATION_FUNCTION, SELF, functionInput);
+            functionServiceFacade.execute(VALIDATION_FUNCTION, SELF, functionInput, "GET");
         });
         assertEquals(exceptionMessage, exception.getMessage());
         verify(jsonValidationService).assertJson(eq(functionInput), eq(spec.getInputSpec()));

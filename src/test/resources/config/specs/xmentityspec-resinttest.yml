@@ -94,6 +94,9 @@ types:
           - key: LINK.TARGET
             builderType: NEW
             typeKey: ACCOUNT.ADMIN
+      functions:
+          -   key: TEST_ENTITY_FUNC_PATH
+              path: test/entity/{inputVariable}/path
     - key: ACCOUNT.USER
       name: { en: "User" }
       isApp: false
