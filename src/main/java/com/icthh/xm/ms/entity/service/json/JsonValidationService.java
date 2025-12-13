@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import com.icthh.xm.commons.exceptions.BusinessException;
+import com.icthh.xm.commons.logging.LoggingAspectConfig;
 import com.networknt.schema.JsonSchema;
 import com.networknt.schema.JsonSchemaFactory;
 import com.networknt.schema.SpecVersion;
@@ -25,6 +26,7 @@ public class JsonValidationService {
     private final ObjectMapper objectMapper;
     private final JsonSchemaFactory factory = JsonSchemaFactory.getInstance(SpecVersion.VersionFlag.V4);
 
+    @LoggingAspectConfig(inputExcludeParams = "schema")
     public Set<ValidationMessage> validateJson(Map<String, Object> data, JsonSchema schema) {
         Set<ValidationMessage> errors = validate(data, schema);
         if (!errors.isEmpty()) {
@@ -34,6 +36,7 @@ public class JsonValidationService {
     }
 
     @SneakyThrows
+    @LoggingAspectConfig(inputExcludeParams = "jsonSchema")
     public void assertJson(Map<String, Object> data, String jsonSchema) {
         JsonSchema schema = factory.getSchema(jsonSchema);
         Set<ValidationMessage> errors = validate(data, schema);
@@ -51,6 +54,7 @@ public class JsonValidationService {
     }
 
     @SneakyThrows
+    @LoggingAspectConfig(inputExcludeParams = "jsonSchema")
     private Set<ValidationMessage> validate(Map<String, Object> data, JsonSchema jsonSchema) {
         log.debug("Validation data. map: {}", data);
         JsonNode dataNode = objectMapper.valueToTree(data);

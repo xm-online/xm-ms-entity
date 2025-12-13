@@ -212,7 +212,13 @@ public class XmEntitySpecContextService {
     @EventListener
     public void onApplicationEvent(ContextRefreshedEvent contextRefreshedEvent) {
         if(initialized.compareAndSet(false, true)) {
-            tenants().forEach(this::updateByTenantState);
+            tenants().forEach(tenant -> {
+                try {
+                    updateByTenantState(tenant);
+                } catch (Exception e) {
+                    log.error("Error read xm specification from tenant {}", tenant, e);
+                }
+            });
         }
     }
 

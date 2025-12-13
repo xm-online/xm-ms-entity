@@ -350,8 +350,8 @@ dependencies {
     implementation "io.micrometer:micrometer-tracing-bridge-brave"
     implementation "io.springfox:springfox-bean-validators:${springfoxVersion}"
     implementation "com.h2database:h2"
-    implementation "org.postgresql:postgresql"
-    liquibaseRuntime "org.postgresql:postgresql"
+    implementation "org.postgresql:postgresql:${postgresqlVersion}"
+    liquibaseRuntime "org.postgresql:postgresql:${postgresqlVersion}"
     implementation "org.mapstruct:mapstruct:${mapstructVersion}"
     compileOnly "org.projectlombok:lombok:${lombok_version}"
     annotationProcessor "org.projectlombok:lombok:${lombok_version}"
@@ -378,6 +378,7 @@ dependencies {
         exclude group: "io.github.jhipster", module: "jhipster-framework"
     }
     implementation "com.icthh.xm.commons:xm-commons-function:${xm_commons_version}"
+    implementation "com.icthh.xm.commons:xm-commons-function-export:${xm_commons_version}"
     implementation "com.icthh.xm.commons:xm-commons-client-feign:${xm_commons_version}"
     implementation "com.icthh.xm.commons:xm-commons-lep:${xm_commons_version}"
     implementation "com.icthh.xm.commons:xm-commons-lep-groovy:${xm_commons_version}"

@@ -101,7 +101,7 @@ public class XmEntityAvatarResource {
 
     @Timed
     @GetMapping(path = "/xm-entities/self/avatar", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
-    @PreAuthorize("hasPermission('XMENTITY.SELF.AVATAR.GET')")
+    @PreAuthorize("hasPermission(null, 'XMENTITY.SELF.AVATAR.GET')")
     @PrivilegeDescription("Privilege to get avatar of current user")
     public void getSelfAvatar(HttpServletResponse response) throws IOException {
         AvatarStorageResponse avatarStorageResponse = xmEntityAvatarService.getAvatar(IdOrKey.SELF);
@@ -114,7 +114,7 @@ public class XmEntityAvatarResource {
 
     @Timed
     @GetMapping(path = "/xm-entities/{idOrKey}/avatar")
-    @PreAuthorize("hasPermission('XMENTITY.AVATAR.GET')")
+    @PreAuthorize("hasPermission({'idOrKey':#idOrKey}, 'XMENTITY.AVATAR.GET')")
     @PrivilegeDescription("Privilege to get avatar of current user")
     public void  getAvatar(@PathVariable String idOrKey, HttpServletResponse response) throws IOException {
         AvatarStorageResponse avatarStorageResponse = xmEntityAvatarService.getAvatar(IdOrKey.of(idOrKey));
