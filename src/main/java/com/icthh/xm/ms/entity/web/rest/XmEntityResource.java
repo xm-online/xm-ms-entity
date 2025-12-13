@@ -2,6 +2,8 @@ package com.icthh.xm.ms.entity.web.rest;
 
 import static com.icthh.xm.commons.utils.HttpRequestUtils.getFunctionKey;
 import static org.apache.commons.collections.CollectionUtils.isEmpty;
+import static org.springframework.http.HttpMethod.GET;
+import static org.springframework.http.HttpMethod.POST;
 
 import com.codahale.metrics.annotation.Timed;
 import com.google.common.collect.Maps;
@@ -236,7 +238,7 @@ public class XmEntityResource {
     public ResponseEntity<Object> executeGetFunction(@PathVariable String idOrKey,
                                                      @PathVariable String functionKey,
                                                      @RequestParam(required = false) Map<String, Object> functionInput) {
-        return executeFunction(idOrKey, functionKey, functionInput, "GET");
+        return executeFunction(idOrKey, functionKey, functionInput, GET.name());
     }
 
     /**
@@ -255,7 +257,7 @@ public class XmEntityResource {
     public ResponseEntity<Object> executePostFunction(@PathVariable String idOrKey,
                                                            @PathVariable String functionKey,
                                                            @RequestBody(required = false) Map<String, Object> functionInput) {
-        return executeFunction(idOrKey, functionKey, functionInput, "POST");
+        return executeFunction(idOrKey, functionKey, functionInput, POST.name());
     }
 
     @Timed
