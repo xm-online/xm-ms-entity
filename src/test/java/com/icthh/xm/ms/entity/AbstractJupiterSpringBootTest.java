@@ -7,6 +7,7 @@ import com.icthh.xm.ms.entity.config.tenant.WebappTenantOverrideConfiguration;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.TestInstance.Lifecycle;
 import org.springframework.boot.test.context.SpringBootTest;
 
 /**
@@ -23,7 +24,7 @@ import org.springframework.boot.test.context.SpringBootTest;
     WebappTenantOverrideConfiguration.class
 })
 @Tag("com.icthh.xm.ms.entity.AbstractSpringBootTest")
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+@TestInstance(Lifecycle.PER_CLASS)
 public abstract class AbstractJupiterSpringBootTest {
 
 }

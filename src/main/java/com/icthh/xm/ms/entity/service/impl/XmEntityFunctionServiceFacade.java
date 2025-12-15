@@ -52,11 +52,10 @@ public class XmEntityFunctionServiceFacade extends AbstractFunctionServiceFacade
 
     public FunctionResultContext execute(final String functionKey,
                                          final IdOrKey idOrKey,
-                                         final Map<String, Object> functionInput) {
+                                         final Map<String, Object> functionInput,
+                                         final String httpMethod) {
         functionService.validateFunctionKey(functionKey);
         Objects.requireNonNull(idOrKey, "idOrKey can't be null");
-
-        functionService.checkPermissions(FUNCTION, XM_ENITITY_FUNCTION_CALL_PRIV, functionKey);
 
         // get type key
         XmEntityStateProjection projection = xmEntityService.findStateProjectionById(idOrKey).orElseThrow(
@@ -64,17 +63,21 @@ public class XmEntityFunctionServiceFacade extends AbstractFunctionServiceFacade
         );
 
         // validate that current XmEntity has function
-        FunctionSpec functionSpec = findFunctionSpec(functionKey, projection);
+        FunctionSpec functionSpec = findFunctionSpec(functionKey, projection, httpMethod);
+
+        String functionKeyFromSpec = functionSpec.getKey();
+        functionService.checkPermissions(FUNCTION, XM_ENITITY_FUNCTION_CALL_PRIV, functionKeyFromSpec);
 
         //orElseThrow is replaced by war message
         assertCallAllowedByState(functionSpec, projection);
 
         Map<String, Object> vInput = functionService.getValidFunctionInput(functionSpec, functionInput);
+        functionService.enrichInputFromPathParams(functionKey, vInput, functionSpec);
 
         // execute function
         return (FunctionResultContext) callLepExecutor(functionSpec.getTxType(), () -> {
-            Map<String, Object> data = functionExecutorService.execute(functionKey, idOrKey, projection.getTypeKey(), vInput);
-            return functionResultProcessor.processFunctionResult(functionKey, idOrKey, data, functionSpec);
+            Map<String, Object> data = functionExecutorService.execute(functionKeyFromSpec, idOrKey, projection.getTypeKey(), vInput);
+            return functionResultProcessor.processFunctionResult(functionKeyFromSpec, idOrKey, data, functionSpec);
         });
     }
 
@@ -102,8 +105,8 @@ public class XmEntityFunctionServiceFacade extends AbstractFunctionServiceFacade
 
     }
 
-    private FunctionSpec findFunctionSpec(String functionKey, XmEntityIdKeyTypeKey projection) {
-        return xmEntitySpecService.findEntityFunction(projection.getTypeKey(), functionKey).orElseThrow(
+    private FunctionSpec findFunctionSpec(String functionKey, XmEntityIdKeyTypeKey projection, String httpMethod) {
+        return xmEntitySpecService.findEntityFunction(projection.getTypeKey(), functionKey, httpMethod).orElseThrow(
             () -> new IllegalArgumentException("Function not found for entity type key " + projection.getTypeKey()
                 + " and function key: " + functionKey)
         );

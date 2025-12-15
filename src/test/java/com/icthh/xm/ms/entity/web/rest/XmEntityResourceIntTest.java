@@ -35,6 +35,7 @@ import com.icthh.xm.ms.entity.service.ProfileService;
 import com.icthh.xm.ms.entity.service.SimpleTemplateProcessor;
 import com.icthh.xm.ms.entity.service.StorageService;
 import com.icthh.xm.ms.entity.service.TenantService;
+import com.icthh.xm.ms.entity.service.XmEntityFunctionExecutorService;
 import com.icthh.xm.ms.entity.service.XmEntityProjectionService;
 import com.icthh.xm.ms.entity.service.XmEntitySpecService;
 import com.icthh.xm.ms.entity.service.XmEntityTemplatesSpecService;
@@ -69,6 +70,7 @@ import static org.mockito.Mockito.when;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -79,6 +81,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -147,6 +150,9 @@ public class XmEntityResourceIntTest extends AbstractJupiterSpringBootTest {
 
     @Autowired
     private XmEntityFunctionServiceFacade functionService;
+
+    @MockBean
+    private XmEntityFunctionExecutorService functionExecutorService;
 
     @Autowired
     private ProfileService profileService;
@@ -290,12 +296,19 @@ public class XmEntityResourceIntTest extends AbstractJupiterSpringBootTest {
         });
         XmEntityResource resourceMock = mock(XmEntityResource.class);
         when(resourceMock.createXmEntity(any())).thenReturn(ResponseEntity.created(new URI("")).build());
-        XmEntityResource xmEntityResourceMock = new XmEntityResource(xmEntityServiceImpl,
+        XmEntityResource self = new XmEntityResource(xmEntityServiceImpl,
             profileService,
             profileEventProducer,
             functionService,
             tenantService,
             resourceMock
+        );
+        XmEntityResource xmEntityResourceMock = new XmEntityResource(xmEntityServiceImpl,
+            profileService,
+            profileEventProducer,
+            functionService,
+            tenantService,
+            self
         );
         this.restXmEntityMockMvc = MockMvcBuilders.standaloneSetup(xmEntityResourceMock)
             .setCustomArgumentResolvers(pageableArgumentResolver)
@@ -636,6 +649,19 @@ public class XmEntityResourceIntTest extends AbstractJupiterSpringBootTest {
         // Search the xmEntity
         restXmEntityMockMvc.perform(get("/api/_search-with-template/xm-entities?template="))
             .andExpect(status().is5xxServerError());
+    }
+
+    @Test
+    @Transactional
+    public void callEntityFunctionByPath() throws Exception {
+        XmEntity saved = xmEntityServiceImpl.save(xmEntity);
+        when(functionExecutorService.execute(eq("TEST_ENTITY_FUNC_PATH"), any(), eq(DEFAULT_TYPE_KEY), any()))
+            .thenAnswer(invocation -> invocation.getArgument(3));
+        restXmEntityMockMvc.perform(get("/api/xm-entities/" + saved.getId() + "/functions/test/entity/inputValue/path?test=value"))
+            .andDo(print())
+            .andExpect(jsonPath("$.data.test").value("value"))
+            .andExpect(jsonPath("$.data.inputVariable").value("inputValue"))
+            .andExpect(status().is2xxSuccessful());
     }
 
     @Test

@@ -142,7 +142,7 @@ test {
         println '!!! ATTENTION: start execution of non-categorized tests. it may impact test performance !!!'
     }
 
-    jvmArgs '-XX:+HeapDumpOnOutOfMemoryError'
+    jvmArgs '-XX:+HeapDumpOnOutOfMemoryError', '-Xmx2048m', '-Xms512m'
 
     exclude '**/CucumberTest*'
     exclude '**/*ElasticsearchTest*'
@@ -172,6 +172,8 @@ test {
 }
 
 tasks.register('runCategorizedTests', Test) {
+
+    jvmArgs '-XX:+HeapDumpOnOutOfMemoryError', '-Xmx2048m', '-Xms512m'
 
     exclude '**/JsonbCriteriaBuilderIntTest.class'// todo: excluded until pipeline problem fixed
 

@@ -2,6 +2,8 @@ package com.icthh.xm.ms.entity.web.rest;
 
 import static com.icthh.xm.commons.utils.HttpRequestUtils.getFunctionKey;
 import static org.apache.commons.collections.CollectionUtils.isEmpty;
+import static org.springframework.http.HttpMethod.GET;
+import static org.springframework.http.HttpMethod.POST;
 
 import com.codahale.metrics.annotation.Timed;
 import com.google.common.collect.Maps;
@@ -236,7 +238,7 @@ public class XmEntityResource {
     public ResponseEntity<Object> executeGetFunction(@PathVariable String idOrKey,
                                                      @PathVariable String functionKey,
                                                      @RequestParam(required = false) Map<String, Object> functionInput) {
-        return executeFunction(idOrKey, functionKey, functionInput);
+        return executeFunction(idOrKey, functionKey, functionInput, GET.name());
     }
 
     /**
@@ -255,7 +257,7 @@ public class XmEntityResource {
     public ResponseEntity<Object> executePostFunction(@PathVariable String idOrKey,
                                                            @PathVariable String functionKey,
                                                            @RequestBody(required = false) Map<String, Object> functionInput) {
-        return executeFunction(idOrKey, functionKey, functionInput);
+        return executeFunction(idOrKey, functionKey, functionInput, POST.name());
     }
 
     @Timed
@@ -403,10 +405,11 @@ public class XmEntityResource {
     }
 
     private ResponseEntity<Object> executeFunction(String idOrKey,
-                                                  String functionKey,
-                                                  Map<String, Object> functionInput) {
+                                                   String functionKey,
+                                                   Map<String, Object> functionInput,
+                                                   String httpMethod) {
         Map<String, Object> fContext = functionInput != null ? functionInput : Maps.newHashMap();
-        FunctionContext result = functionService.execute(functionKey, IdOrKey.of(idOrKey), fContext);
+        FunctionContext result = functionService.execute(functionKey, IdOrKey.of(idOrKey), fContext, httpMethod);
 
         ResponseEntity.BodyBuilder response = ResponseEntity.ok();
 
