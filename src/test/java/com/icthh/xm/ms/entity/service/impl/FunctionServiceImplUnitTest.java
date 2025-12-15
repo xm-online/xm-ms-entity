@@ -30,6 +30,7 @@ import org.mockito.Mockito;
 import org.mockito.stubbing.Answer;
 
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 
@@ -90,6 +91,7 @@ public class FunctionServiceImplUnitTest extends AbstractJupiterUnitTest {
             functionResultProcessor, xmEntityService, xmEntitySpecService);
         xmEntityTenantConfig = new XmEntityTenantConfig();
         when(xmEntityTenantConfigService.getXmEntityTenantConfig()).thenReturn(xmEntityTenantConfig);
+        Locale.setDefault(Locale.ENGLISH);
     }
 
     @Test

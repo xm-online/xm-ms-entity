@@ -662,7 +662,6 @@ public class XmEntityResourceIntTest extends AbstractJupiterSpringBootTest {
             .andExpect(jsonPath("$.data.test").value("value"))
             .andExpect(jsonPath("$.data.inputVariable").value("inputValue"))
             .andExpect(status().is2xxSuccessful());
-
     }
 
     @Test
