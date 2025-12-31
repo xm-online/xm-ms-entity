@@ -4,6 +4,7 @@ import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.repository.search.XmEntitySearchRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.support.TransactionSynchronizationAdapter;
 
@@ -16,7 +17,8 @@ import static org.springframework.transaction.support.TransactionSynchronization
 @RequiredArgsConstructor
 @TransactionScoped
 @Component
-public class ElasticIndexManager {
+@ConditionalOnProperty(name = "application.elastic-enabled", havingValue = "true", matchIfMissing = true)
+public class ElasticIndexManager implements IElasticIndexManager {
 
     private final XmEntitySearchRepository searchRepository;
     private final List<XmEntity> entityToSave = new ArrayList<>();

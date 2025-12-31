@@ -29,6 +29,7 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.time.StopWatch;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -55,7 +56,8 @@ import java.util.stream.Collectors;
 
 @Slf4j
 @Service
-public class ElasticsearchIndexService extends TransactionPropagationService<ElasticsearchIndexService> {
+@ConditionalOnProperty(name = "application.elastic-enabled", havingValue = "true", matchIfMissing = true)
+public class ElasticsearchIndexService extends TransactionPropagationService<ElasticsearchIndexService> implements IElasticsearchIndexService {
 
     private static final Lock reindexLock = new ReentrantLock();
     private static final int PAGE_SIZE = 100;

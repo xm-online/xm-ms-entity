@@ -15,11 +15,11 @@ import com.icthh.xm.ms.entity.config.RestTemplateConfiguration.PathTimeoutHttpCo
 import com.icthh.xm.ms.entity.config.amazon.AmazonS3Template;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
 import com.icthh.xm.ms.entity.repository.kafka.ProfileEventProducer;
-import com.icthh.xm.ms.entity.repository.search.PermittedSearchRepository;
+import com.icthh.xm.ms.entity.repository.search.IPermittedSearchRepository;
 import com.icthh.xm.ms.entity.service.AttachmentService;
 import com.icthh.xm.ms.entity.service.CalendarService;
 import com.icthh.xm.ms.entity.service.CommentService;
-import com.icthh.xm.ms.entity.service.ElasticsearchIndexService;
+import com.icthh.xm.ms.entity.service.IElasticsearchIndexService;
 import com.icthh.xm.ms.entity.service.EventService;
 import com.icthh.xm.ms.entity.service.LinkService;
 import com.icthh.xm.ms.entity.service.LocationService;
@@ -64,8 +64,8 @@ public class LepContextFactoryImpl implements LepContextFactory {
     private final TenantLepResource tenantLepResource;
     private final AmazonS3Template s3Template;
     private final ElasticsearchOperations elasticsearchOperations;
-    private final PermittedSearchRepository permittedSearchRepository;
-    private final ElasticsearchIndexService elasticsearchIndexService;
+    private final IPermittedSearchRepository permittedSearchRepository;
+    private final IElasticsearchIndexService elasticsearchIndexService;
     private final SeparateTransactionExecutor transactionExecutor;
     private final CustomMetricsContext customMetricsContext;
     private final KafkaTemplateService kafkaTemplateService;
@@ -98,8 +98,8 @@ public class LepContextFactoryImpl implements LepContextFactory {
                                  TenantLepResource tenantLepResource,
                                  AmazonS3Template s3Template,
                                  ElasticsearchOperations elasticsearchOperations,
-                                 PermittedSearchRepository permittedSearchRepository,
-                                 ElasticsearchIndexService elasticsearchIndexService,
+                                 IPermittedSearchRepository permittedSearchRepository,
+                                 IElasticsearchIndexService elasticsearchIndexService,
                                  SeparateTransactionExecutor transactionExecutor,
                                  CustomMetricsContext customMetricsContext,
                                  KafkaTemplateService kafkaTemplateService,

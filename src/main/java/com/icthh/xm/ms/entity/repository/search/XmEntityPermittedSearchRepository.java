@@ -3,6 +3,7 @@ package com.icthh.xm.ms.entity.repository.search;
 import com.icthh.xm.commons.search.ElasticsearchOperations;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
@@ -11,7 +12,8 @@ import java.util.Set;
 
 @Slf4j
 @Repository
-public class XmEntityPermittedSearchRepository extends PermittedSearchRepository {
+@ConditionalOnProperty(name = "application.elastic-enabled", havingValue = "true", matchIfMissing = true)
+public class XmEntityPermittedSearchRepository extends PermittedSearchRepository implements IXmEntityPermittedSearchRepository {
 
     private final ElasticsearchOperations elasticsearchOperations;
 
