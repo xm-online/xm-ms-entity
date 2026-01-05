@@ -24,7 +24,7 @@ public class NoOpXmEntityPermittedSearchRepository extends NoOpPermittedSearchRe
                                                   String typeKey,
                                                   Pageable pageable,
                                                   String privilegeKey) {
-        log.warn("Elasticsearch is disabled. Returning empty page for searchByQueryAndTypeKey. TypeKey: {}", typeKey);
+        log.error("Elasticsearch is disabled. Returning empty page for searchByQueryAndTypeKey. TypeKey: {}", typeKey);
         return new PageImpl<>(Collections.emptyList(), pageable, 0);
     }
 
@@ -34,7 +34,7 @@ public class NoOpXmEntityPermittedSearchRepository extends NoOpPermittedSearchRe
     public Page<XmEntity> searchWithIdNotIn(String query, Set<Long> ids,
                                             String targetEntityTypeKey,
                                             Pageable pageable, String privilegeKey) {
-        log.warn("Elasticsearch is disabled. Returning empty page for searchWithIdNotIn. TypeKey: {}", targetEntityTypeKey);
+        log.error("Elasticsearch is disabled. Returning empty page for searchWithIdNotIn. TypeKey: {}", targetEntityTypeKey);
         return new PageImpl<>(Collections.emptyList(), pageable, 0);
     }
 }

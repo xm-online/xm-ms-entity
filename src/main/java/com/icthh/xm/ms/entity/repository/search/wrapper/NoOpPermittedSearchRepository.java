@@ -23,7 +23,7 @@ public class NoOpPermittedSearchRepository implements IPermittedSearchRepository
      * Search permitted entities (stub implementation).
      */
     public <T> List<T> search(String query, Class<T> entityClass, String privilegeKey) {
-        log.warn("Elasticsearch is disabled. Returning empty list for search query: {}", query);
+        log.error("Elasticsearch is disabled. Returning empty list for search query: {}", query);
         return Collections.emptyList();
     }
 
@@ -31,7 +31,7 @@ public class NoOpPermittedSearchRepository implements IPermittedSearchRepository
      * Search permitted entities (stub implementation).
      */
     public <T> Page<T> search(String query, Pageable pageable, Class<T> entityClass, String privilegeKey) {
-        log.warn("Elasticsearch is disabled. Returning empty page for search query: {}", query);
+        log.error("Elasticsearch is disabled. Returning empty page for search query: {}", query);
         return new PageImpl<>(Collections.emptyList(), pageable, 0);
     }
 
@@ -43,12 +43,12 @@ public class NoOpPermittedSearchRepository implements IPermittedSearchRepository
                               Pageable pageable,
                               Class<T> entityClass,
                               String privilegeKey) {
-        log.warn("Elasticsearch is disabled. Returning empty page for scroll search query: {}", query);
+        log.error("Elasticsearch is disabled. Returning empty page for scroll search query: {}", query);
         return new PageImpl<>(Collections.emptyList(), pageable, 0);
     }
 
     public <T> Page<T> searchForPage(SearchDto searchDto, String privilegeKey) {
-        log.warn("Elasticsearch is disabled. Returning empty page for searchDto: {}", searchDto);
+        log.error("Elasticsearch is disabled. Returning empty page for searchDto: {}", searchDto);
         return new PageImpl<>(Collections.emptyList(), searchDto.getPageable(), 0);
     }
 }

@@ -18,13 +18,13 @@ public class NoOpElasticIndexManager implements IElasticIndexManager {
      * Add entity to save queue (stub implementation - does nothing).
      */
     public void addEntityToSave(XmEntity entity) {
-        log.debug("Elasticsearch is disabled. Skipping entity save to elastic: {}", entity.getId());
+        log.error("Elasticsearch is disabled. Skipping entity save to elastic: {}", entity.getId());
     }
 
     /**
      * Add entity to delete queue (stub implementation - does nothing).
      */
     public void addEntityToDelete(XmEntity entity) {
-        log.debug("Elasticsearch is disabled. Skipping entity delete from elastic: {}", entity.getId());
+        log.error("Elasticsearch is disabled. Skipping entity delete from elastic: {}", entity.getId());
     }
 }
