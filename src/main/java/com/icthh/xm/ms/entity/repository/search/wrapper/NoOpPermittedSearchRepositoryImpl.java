@@ -4,7 +4,6 @@ import com.icthh.xm.commons.search.dto.SearchDto;
 import com.icthh.xm.ms.entity.repository.search.IPermittedSearchRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.context.annotation.Primary;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -14,10 +13,9 @@ import java.util.Collections;
 import java.util.List;
 
 @Slf4j
-@Repository
-@Primary
+@Repository("permittedSearchRepository")
 @ConditionalOnProperty(name = "application.elastic-enabled", havingValue = "false")
-public class NoOpPermittedSearchRepository implements IPermittedSearchRepository {
+public class NoOpPermittedSearchRepositoryImpl implements IPermittedSearchRepository {
 
     /**
      * Search permitted entities (stub implementation).

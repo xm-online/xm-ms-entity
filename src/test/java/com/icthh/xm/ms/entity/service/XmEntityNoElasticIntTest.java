@@ -3,8 +3,6 @@ package com.icthh.xm.ms.entity.service;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 
 import com.icthh.xm.commons.lep.api.LepManagementService;
@@ -42,7 +40,7 @@ public class XmEntityNoElasticIntTest extends AbstractJupiterSpringBootTest {
     private XmEntitySpecService xmEntitySpecService;
 
     @Autowired
-    private IElasticsearchIndexService elasticsearchIndexService;
+    private ElasticsearchIndexService elasticsearchIndexService;
 
 
     @BeforeEach

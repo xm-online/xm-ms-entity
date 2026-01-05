@@ -1,6 +1,6 @@
 package com.icthh.xm.ms.entity.service.wrapper;
 
-import com.icthh.xm.ms.entity.service.IElasticsearchIndexService;
+import com.icthh.xm.ms.entity.service.ElasticsearchIndexService;
 import com.icthh.xm.ms.entity.service.TransactionPropagationService;
 import jakarta.annotation.Nonnull;
 import lombok.extern.slf4j.Slf4j;
@@ -13,7 +13,7 @@ import java.util.concurrent.CompletableFuture;
 @Slf4j
 @Service
 @ConditionalOnProperty(name = "application.elastic-enabled", havingValue = "false")
-public class NoOpElasticsearchIndexService extends TransactionPropagationService<NoOpElasticsearchIndexService> implements IElasticsearchIndexService {
+public class NoOpElasticsearchIndexService extends TransactionPropagationService<NoOpElasticsearchIndexService> implements ElasticsearchIndexService {
 
     /**
      * Reindex all entities asynchronously (stub implementation - returns 0).

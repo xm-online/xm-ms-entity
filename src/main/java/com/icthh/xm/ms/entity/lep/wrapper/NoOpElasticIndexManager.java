@@ -2,7 +2,6 @@ package com.icthh.xm.ms.entity.lep.wrapper;
 
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.lep.ElasticIndexManager;
-import com.icthh.xm.ms.entity.lep.IElasticIndexManager;
 import com.icthh.xm.ms.entity.lep.TransactionScoped;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -12,7 +11,7 @@ import org.springframework.stereotype.Component;
 @TransactionScoped
 @Component
 @ConditionalOnProperty(name = "application.elastic-enabled", havingValue = "false")
-public class NoOpElasticIndexManager implements IElasticIndexManager {
+public class NoOpElasticIndexManager implements ElasticIndexManager {
 
     /**
      * Add entity to save queue (stub implementation - does nothing).

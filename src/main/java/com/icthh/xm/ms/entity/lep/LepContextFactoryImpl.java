@@ -19,7 +19,7 @@ import com.icthh.xm.ms.entity.repository.search.IPermittedSearchRepository;
 import com.icthh.xm.ms.entity.service.AttachmentService;
 import com.icthh.xm.ms.entity.service.CalendarService;
 import com.icthh.xm.ms.entity.service.CommentService;
-import com.icthh.xm.ms.entity.service.IElasticsearchIndexService;
+import com.icthh.xm.ms.entity.service.ElasticsearchIndexService;
 import com.icthh.xm.ms.entity.service.EventService;
 import com.icthh.xm.ms.entity.service.LinkService;
 import com.icthh.xm.ms.entity.service.LocationService;
@@ -65,7 +65,7 @@ public class LepContextFactoryImpl implements LepContextFactory {
     private final AmazonS3Template s3Template;
     private final ElasticsearchOperations elasticsearchOperations;
     private final IPermittedSearchRepository permittedSearchRepository;
-    private final IElasticsearchIndexService elasticsearchIndexService;
+    private final ElasticsearchIndexService elasticsearchIndexService;
     private final SeparateTransactionExecutor transactionExecutor;
     private final CustomMetricsContext customMetricsContext;
     private final KafkaTemplateService kafkaTemplateService;
@@ -99,7 +99,7 @@ public class LepContextFactoryImpl implements LepContextFactory {
                                  AmazonS3Template s3Template,
                                  ElasticsearchOperations elasticsearchOperations,
                                  IPermittedSearchRepository permittedSearchRepository,
-                                 IElasticsearchIndexService elasticsearchIndexService,
+                                 ElasticsearchIndexService elasticsearchIndexService,
                                  SeparateTransactionExecutor transactionExecutor,
                                  CustomMetricsContext customMetricsContext,
                                  KafkaTemplateService kafkaTemplateService,

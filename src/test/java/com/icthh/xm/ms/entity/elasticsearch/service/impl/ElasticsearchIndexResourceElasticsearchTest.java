@@ -21,7 +21,7 @@ import com.icthh.xm.ms.entity.elasticsearch.AbstractElasticSpringBootTest;
 import com.icthh.xm.ms.entity.repository.XmEntityRepositoryInternal;
 import com.icthh.xm.ms.entity.repository.search.PermittedSearchRepository;
 import com.icthh.xm.ms.entity.repository.search.XmEntitySearchRepository;
-import com.icthh.xm.ms.entity.service.ElasticsearchIndexService;
+import com.icthh.xm.ms.entity.service.ElasticsearchIndexServiceImpl;
 import com.icthh.xm.ms.entity.service.SeparateTransactionExecutor;
 import com.icthh.xm.ms.entity.service.XmEntityService;
 import com.icthh.xm.ms.entity.service.XmEntitySpecService;
@@ -79,7 +79,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * Test class for the ElasticsearchIndexResource REST controller and ElasticsearchIndexService service.
  *
  * @see ElasticsearchIndexResource
- * @see ElasticsearchIndexService
+ * @see ElasticsearchIndexServiceImpl
  */
 @Slf4j
 @WithMockUser(authorities = {"SUPER-ADMIN"})
@@ -157,7 +157,7 @@ public class ElasticsearchIndexResourceElasticsearchTest extends AbstractElastic
     @Autowired
     private ApplicationProperties applicationProperties;
 
-    private ElasticsearchIndexService elasticsearchIndexService;
+    private ElasticsearchIndexServiceImpl elasticsearchIndexService;
 
     @Mock
     private Executor executor;
@@ -187,7 +187,7 @@ public class ElasticsearchIndexResourceElasticsearchTest extends AbstractElastic
         mappingConfiguration.onRefresh("/config/tenants/RESINTTEST/entity/mapping.json", null);
         indexConfiguration.onRefresh("/config/tenants/RESINTTEST/entity/index_config.json", null);
 
-        elasticsearchIndexService = new ElasticsearchIndexService(xmEntityRepositoryInternal,
+        elasticsearchIndexService = new ElasticsearchIndexServiceImpl(xmEntityRepositoryInternal,
                                                                   xmEntitySearchRepository,
             elasticsearchOperations,
                                                                   tenantContextHolder,

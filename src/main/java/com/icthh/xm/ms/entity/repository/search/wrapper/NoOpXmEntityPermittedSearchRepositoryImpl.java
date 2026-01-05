@@ -13,9 +13,9 @@ import java.util.Collections;
 import java.util.Set;
 
 @Slf4j
-@Repository
+@Repository("xmEntityPermittedSearchRepository")
 @ConditionalOnProperty(name = "application.elastic-enabled", havingValue = "false")
-public class NoOpXmEntityPermittedSearchRepository extends NoOpPermittedSearchRepository implements IXmEntityPermittedSearchRepository {
+public class NoOpXmEntityPermittedSearchRepositoryImpl extends NoOpPermittedSearchRepositoryImpl implements IXmEntityPermittedSearchRepository {
 
     /**
      * Search for XmEntity by type key and query (stub implementation).

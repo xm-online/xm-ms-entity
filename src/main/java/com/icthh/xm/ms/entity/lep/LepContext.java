@@ -20,7 +20,7 @@ import com.icthh.xm.ms.entity.service.AttachmentService;
 import com.icthh.xm.ms.entity.service.CalendarService;
 import com.icthh.xm.ms.entity.service.CommentService;
 import com.icthh.xm.ms.entity.service.EventService;
-import com.icthh.xm.ms.entity.service.IElasticsearchIndexService;
+import com.icthh.xm.ms.entity.service.ElasticsearchIndexService;
 import com.icthh.xm.ms.entity.service.LinkService;
 import com.icthh.xm.ms.entity.service.LocationService;
 import com.icthh.xm.ms.entity.service.ProfileService;
@@ -60,7 +60,7 @@ public class LepContext extends BaseLepContext implements OutboxTransportService
         public EventService eventService;
         public CalendarService calendarService;
         public TenantLepResource lepResource;
-        public IElasticsearchIndexService elasticsearchIndexService;
+        public ElasticsearchIndexService elasticsearchIndexService;
         public SeparateTransactionExecutor separateTransactionExecutor;
         public MetricsAdapter metricsAdapter;
         public EventPublisher eventPublisher;
