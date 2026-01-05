@@ -186,3 +186,4 @@ application:
         warmup-scripts: false
     periodicMetricPoolSize: 1
     elasticBatchSize: 100
+    elastic-enabled: true
