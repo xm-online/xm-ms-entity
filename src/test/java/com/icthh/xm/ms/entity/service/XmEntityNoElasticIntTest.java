@@ -1,4 +1,4 @@
-package com.icthh.xm.ms.entity.web.rest;
+package com.icthh.xm.ms.entity.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
@@ -11,9 +11,6 @@ import com.icthh.xm.commons.tenant.TenantContextUtils;
 import com.icthh.xm.ms.entity.AbstractJupiterSpringBootTest;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.lep.ElasticIndexManagerService;
-import com.icthh.xm.ms.entity.service.IElasticsearchIndexService;
-import com.icthh.xm.ms.entity.service.XmEntityService;
-import com.icthh.xm.ms.entity.service.XmEntitySpecService;
 import com.icthh.xm.ms.entity.service.wrapper.NoOpElasticsearchIndexService;
 import java.util.Date;
 import java.util.UUID;
@@ -22,11 +19,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
 
 @ActiveProfiles("no-elastic")
-@WithMockUser(authorities = {"SUPER-ADMIN"})
 public class XmEntityNoElasticIntTest extends AbstractJupiterSpringBootTest {
 
     @Autowired
