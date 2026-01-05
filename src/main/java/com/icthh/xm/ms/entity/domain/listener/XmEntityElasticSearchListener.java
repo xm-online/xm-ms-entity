@@ -1,6 +1,7 @@
 package com.icthh.xm.ms.entity.domain.listener;
 
 
+import com.icthh.xm.ms.entity.config.ApplicationProperties;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.domain.spec.TypeSpec;
 import com.icthh.xm.ms.entity.lep.ElasticIndexManagerService;
@@ -11,6 +12,7 @@ import jakarta.persistence.PostRemove;
 import jakarta.persistence.PostUpdate;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
@@ -19,16 +21,21 @@ import java.util.function.Function;
 
 @Slf4j
 @Component
-@ConditionalOnProperty(name = "application.elastic-enabled", havingValue = "true", matchIfMissing = true)
 public class XmEntityElasticSearchListener {
 
     private static ElasticIndexManagerService elasticIndexManagerService;
 
     private static XmEntitySpecService xmEntitySpecService;
+    private static ApplicationProperties applicationProperties;
 
     @Autowired
     public void setElasticIndexManagerService(ElasticIndexManagerService elasticIndexManagerService) {
         this.elasticIndexManagerService = elasticIndexManagerService;
+    }
+
+    @Autowired
+    public void setApplicationProperties(ApplicationProperties applicationProperties) {
+        this.applicationProperties = applicationProperties;
     }
 
     @Autowired
@@ -44,7 +51,7 @@ public class XmEntityElasticSearchListener {
     @PostPersist
     @PostUpdate
     void onPostPersistOrUpdate(XmEntity entity) {
-        if (isFeatureEnabled(entity, TypeSpec::getIndexAfterSaveEnabled)) {
+        if (applicationProperties.isElasticEnabled() && isFeatureEnabled(entity, TypeSpec::getIndexAfterSaveEnabled)) {
             log.debug("Save xm entity to elastic {}", entity);
             elasticIndexManagerService.addEntityToSave(entity);
         }
@@ -52,7 +59,7 @@ public class XmEntityElasticSearchListener {
 
     @PostRemove
     void onPostRemove(XmEntity entity) {
-        if(isFeatureEnabled(entity, TypeSpec::getIndexAfterDeleteEnabled)){
+        if(applicationProperties.isElasticEnabled() && isFeatureEnabled(entity, TypeSpec::getIndexAfterDeleteEnabled)){
             log.debug("Delete xm entity from elastic {}", entity);
             elasticIndexManagerService.addEntityToDelete(entity);
         }

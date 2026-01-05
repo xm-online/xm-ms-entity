@@ -67,7 +67,7 @@ public class ApplicationProperties {
     private String webappName;
     private String permissionContextUri;
     private String dbSchemaSuffix;
-    private Boolean elasticEnabled;
+    private boolean elasticEnabled;
     private String elasticSchemaSuffix;
     private Integer elasticBatchSize;
 

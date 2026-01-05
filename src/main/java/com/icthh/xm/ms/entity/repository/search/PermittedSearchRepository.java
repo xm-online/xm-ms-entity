@@ -5,7 +5,6 @@ import com.icthh.xm.commons.search.dto.SearchDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.context.annotation.Primary;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
@@ -14,7 +13,6 @@ import java.util.List;
 
 @Slf4j
 @Repository
-@Primary
 @RequiredArgsConstructor
 @ConditionalOnProperty(name = "application.elastic-enabled", havingValue = "true", matchIfMissing = true)
 public class PermittedSearchRepository implements IPermittedSearchRepository {

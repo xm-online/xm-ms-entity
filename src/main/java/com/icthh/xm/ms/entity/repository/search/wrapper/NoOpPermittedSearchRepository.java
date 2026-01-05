@@ -2,7 +2,6 @@ package com.icthh.xm.ms.entity.repository.search.wrapper;
 
 import com.icthh.xm.commons.search.dto.SearchDto;
 import com.icthh.xm.ms.entity.repository.search.IPermittedSearchRepository;
-import com.icthh.xm.ms.entity.repository.search.PermittedSearchRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Primary;
@@ -46,11 +45,6 @@ public class NoOpPermittedSearchRepository implements IPermittedSearchRepository
                               String privilegeKey) {
         log.warn("Elasticsearch is disabled. Returning empty page for scroll search query: {}", query);
         return new PageImpl<>(Collections.emptyList(), pageable, 0);
-    }
-
-    public Object getElasticsearchTemplate() {
-        log.warn("Elasticsearch is disabled. Returning null for getElasticsearchTemplate()");
-        return null;
     }
 
     public <T> Page<T> searchForPage(SearchDto searchDto, String privilegeKey) {
