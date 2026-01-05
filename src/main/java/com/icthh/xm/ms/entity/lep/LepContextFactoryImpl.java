@@ -15,7 +15,7 @@ import com.icthh.xm.ms.entity.config.RestTemplateConfiguration.PathTimeoutHttpCo
 import com.icthh.xm.ms.entity.config.amazon.AmazonS3Template;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
 import com.icthh.xm.ms.entity.repository.kafka.ProfileEventProducer;
-import com.icthh.xm.ms.entity.repository.search.IPermittedSearchRepository;
+import com.icthh.xm.ms.entity.repository.search.PermittedSearchRepository;
 import com.icthh.xm.ms.entity.service.AttachmentService;
 import com.icthh.xm.ms.entity.service.CalendarService;
 import com.icthh.xm.ms.entity.service.CommentService;
@@ -64,7 +64,7 @@ public class LepContextFactoryImpl implements LepContextFactory {
     private final TenantLepResource tenantLepResource;
     private final AmazonS3Template s3Template;
     private final ElasticsearchOperations elasticsearchOperations;
-    private final IPermittedSearchRepository permittedSearchRepository;
+    private final PermittedSearchRepository permittedSearchRepository;
     private final ElasticsearchIndexService elasticsearchIndexService;
     private final SeparateTransactionExecutor transactionExecutor;
     private final CustomMetricsContext customMetricsContext;
@@ -98,7 +98,7 @@ public class LepContextFactoryImpl implements LepContextFactory {
                                  TenantLepResource tenantLepResource,
                                  AmazonS3Template s3Template,
                                  ElasticsearchOperations elasticsearchOperations,
-                                 IPermittedSearchRepository permittedSearchRepository,
+                                 PermittedSearchRepository permittedSearchRepository,
                                  ElasticsearchIndexService elasticsearchIndexService,
                                  SeparateTransactionExecutor transactionExecutor,
                                  CustomMetricsContext customMetricsContext,

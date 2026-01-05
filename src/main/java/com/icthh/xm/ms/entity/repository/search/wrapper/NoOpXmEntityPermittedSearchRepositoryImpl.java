@@ -1,7 +1,7 @@
 package com.icthh.xm.ms.entity.repository.search.wrapper;
 
 import com.icthh.xm.ms.entity.domain.XmEntity;
-import com.icthh.xm.ms.entity.repository.search.IXmEntityPermittedSearchRepository;
+import com.icthh.xm.ms.entity.repository.search.XmEntityPermittedSearchRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.data.domain.Page;
@@ -13,9 +13,9 @@ import java.util.Collections;
 import java.util.Set;
 
 @Slf4j
-@Repository("xmEntityPermittedSearchRepository")
+@Repository("xmEntityPermittedSearchRepositoryImpl")
 @ConditionalOnProperty(name = "application.elastic-enabled", havingValue = "false")
-public class NoOpXmEntityPermittedSearchRepositoryImpl extends NoOpPermittedSearchRepositoryImpl implements IXmEntityPermittedSearchRepository {
+public class NoOpXmEntityPermittedSearchRepositoryImpl extends NoOpPermittedSearchRepositoryImpl implements XmEntityPermittedSearchRepository {
 
     /**
      * Search for XmEntity by type key and query (stub implementation).

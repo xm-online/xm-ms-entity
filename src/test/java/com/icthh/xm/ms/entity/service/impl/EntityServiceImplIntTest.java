@@ -29,7 +29,7 @@ import com.icthh.xm.ms.entity.repository.SpringXmEntityRepository;
 import com.icthh.xm.ms.entity.repository.UniqueFieldRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityProjectionRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityRepositoryInternal;
-import com.icthh.xm.ms.entity.repository.search.XmEntityPermittedSearchRepository;
+import com.icthh.xm.ms.entity.repository.search.XmEntityPermittedSearchRepositoryImpl;
 import com.icthh.xm.ms.entity.repository.search.XmEntitySearchRepository;
 import com.icthh.xm.ms.entity.service.AttachmentService;
 import com.icthh.xm.ms.entity.service.LifecycleLepStrategyFactory;
@@ -128,7 +128,7 @@ public class EntityServiceImplIntTest extends AbstractJupiterSpringBootTest {
     private LepManager lepManager;
 
     @Autowired
-    private XmEntityPermittedSearchRepository permittedSearchRepository;
+    private XmEntityPermittedSearchRepositoryImpl permittedSearchRepository;
 
     @Autowired
     private StartUpdateDateGenerationStrategy startUpdateDateGenerationStrategy;

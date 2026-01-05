@@ -15,7 +15,7 @@ import com.icthh.xm.ms.entity.config.RestTemplateConfiguration;
 import com.icthh.xm.ms.entity.config.amazon.AmazonS3Template;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
 import com.icthh.xm.ms.entity.repository.kafka.ProfileEventProducer;
-import com.icthh.xm.ms.entity.repository.search.IPermittedSearchRepository;
+import com.icthh.xm.ms.entity.repository.search.PermittedSearchRepository;
 import com.icthh.xm.ms.entity.service.AttachmentService;
 import com.icthh.xm.ms.entity.service.CalendarService;
 import com.icthh.xm.ms.entity.service.CommentService;
@@ -71,7 +71,7 @@ public class LepContext extends BaseLepContext implements OutboxTransportService
 
     public static class LepRepositories {
         public XmEntityRepository xmEntity;
-        public IPermittedSearchRepository xmEntitySearch;
+        public PermittedSearchRepository xmEntitySearch;
     }
 
     public static class LepTemplates {

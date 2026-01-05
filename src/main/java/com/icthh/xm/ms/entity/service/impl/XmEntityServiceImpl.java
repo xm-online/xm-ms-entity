@@ -46,7 +46,7 @@ import com.icthh.xm.ms.entity.repository.SpringXmEntityRepository;
 import com.icthh.xm.ms.entity.repository.UniqueFieldRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityPermittedRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityRepositoryInternal;
-import com.icthh.xm.ms.entity.repository.search.IXmEntityPermittedSearchRepository;
+import com.icthh.xm.ms.entity.repository.search.XmEntityPermittedSearchRepository;
 import com.icthh.xm.ms.entity.service.LifecycleLepStrategyFactory;
 import com.icthh.xm.ms.entity.service.LifecycleLepStrategy;
 import com.icthh.xm.ms.entity.service.LinkService;
@@ -127,7 +127,7 @@ public class XmEntityServiceImpl implements XmEntityService {
     private final ProfileService profileService;
     private final LinkService linkService;
     private final XmeStorageServiceFacade xmeStorageServiceFacade;
-    private final IXmEntityPermittedSearchRepository xmEntityPermittedSearchRepository;
+    private final XmEntityPermittedSearchRepository xmEntityPermittedSearchRepository;
     private final StartUpdateDateGenerationStrategy startUpdateDateGenerationStrategy;
     private final XmAuthenticationContextHolder authContextHolder;
     private final ObjectMapper objectMapper;

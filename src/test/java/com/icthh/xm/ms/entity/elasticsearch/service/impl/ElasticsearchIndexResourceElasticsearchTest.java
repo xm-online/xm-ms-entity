@@ -19,7 +19,7 @@ import com.icthh.xm.ms.entity.domain.listener.XmEntityElasticSearchListener;
 import com.icthh.xm.ms.entity.domain.spec.TypeSpec;
 import com.icthh.xm.ms.entity.elasticsearch.AbstractElasticSpringBootTest;
 import com.icthh.xm.ms.entity.repository.XmEntityRepositoryInternal;
-import com.icthh.xm.ms.entity.repository.search.PermittedSearchRepository;
+import com.icthh.xm.ms.entity.repository.search.PermittedSearchRepositoryImpl;
 import com.icthh.xm.ms.entity.repository.search.XmEntitySearchRepository;
 import com.icthh.xm.ms.entity.service.ElasticsearchIndexServiceImpl;
 import com.icthh.xm.ms.entity.service.SeparateTransactionExecutor;
@@ -146,7 +146,7 @@ public class ElasticsearchIndexResourceElasticsearchTest extends AbstractElastic
     private EntityManager entityManager;
 
     @Autowired
-    private PermittedSearchRepository permittedSearchRepository;
+    private PermittedSearchRepositoryImpl permittedSearchRepository;
 
     @Autowired
     private SeparateTransactionExecutor transactionExecutor;

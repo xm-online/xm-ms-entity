@@ -20,7 +20,7 @@ import com.icthh.xm.ms.entity.repository.UniqueFieldRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityPermittedRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityRepositoryInternal;
 import com.icthh.xm.ms.entity.repository.kafka.ProfileEventProducer;
-import com.icthh.xm.ms.entity.repository.search.XmEntityPermittedSearchRepository;
+import com.icthh.xm.ms.entity.repository.search.XmEntityPermittedSearchRepositoryImpl;
 import com.icthh.xm.ms.entity.repository.search.XmEntitySearchRepository;
 import com.icthh.xm.ms.entity.service.AttachmentService;
 import com.icthh.xm.ms.entity.service.LifecycleLepStrategyFactory;
@@ -206,7 +206,7 @@ public class XmEntityResourceElasticsearchTest extends AbstractElasticSpringBoot
     AvatarStorageService avatarStorageService;
 
     @Autowired
-    XmEntityPermittedSearchRepository xmEntityPermittedSearchRepository;
+    XmEntityPermittedSearchRepositoryImpl xmEntityPermittedSearchRepository;
 
     @Autowired
     XmEntityTenantConfigService tenantConfigService;
