@@ -104,7 +104,7 @@ public class ProfileResourceIntTest extends AbstractJupiterSpringBootTest {
 
         when(authContextHolder.getContext()).thenReturn(context);
 
-        profileService = new ProfileService(profileRepository, entitySearchRepository, authContextHolder);
+        profileService = new ProfileService(profileRepository, authContextHolder);
 
         final ProfileResource profileResource = new ProfileResource(profileService);
         this.restProfileMockMvc = MockMvcBuilders.standaloneSetup(profileResource)
