@@ -17,13 +17,13 @@ public class NoOpElasticIndexManager implements ElasticIndexManager {
      * Add entity to save queue (stub implementation - does nothing).
      */
     public void addEntityToSave(XmEntity entity) {
-        log.error("Elasticsearch is disabled. Skipping entity save to elastic: {}", entity.getId());
+        throw new UnsupportedOperationException("Elasticsearch is disabled");
     }
 
     /**
      * Add entity to delete queue (stub implementation - does nothing).
      */
     public void addEntityToDelete(XmEntity entity) {
-        log.error("Elasticsearch is disabled. Skipping entity delete from elastic: {}", entity.getId());
+        throw new UnsupportedOperationException("Elasticsearch is disabled");
     }
 }

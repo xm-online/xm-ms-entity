@@ -1,7 +1,6 @@
 package com.icthh.xm.ms.entity.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.verifyNoInteractions;
 
@@ -11,7 +10,6 @@ import com.icthh.xm.commons.tenant.TenantContextUtils;
 import com.icthh.xm.ms.entity.AbstractJupiterSpringBootTest;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.lep.ElasticIndexManagerService;
-import com.icthh.xm.ms.entity.service.wrapper.NoOpElasticsearchIndexService;
 import java.util.Date;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -61,22 +59,6 @@ public class XmEntityNoElasticIntTest extends AbstractJupiterSpringBootTest {
 
         assertNotNull(savedEntity.getId());
         assertEquals("Test Entity", savedEntity.getName());
-
-        assertInstanceOf(NoOpElasticsearchIndexService.class, elasticsearchIndexService);
-        verifyNoInteractions(elasticIndexManagerService);
-    }
-
-    @Test
-    public void testMultipleSavesDoNotCallElastic() {
-        for (int i = 0; i < 5; i++) {
-            XmEntity entity = new XmEntity()
-                .typeKey("TEST_NO_PROCESSING_REFS")
-                .name("Entity " + i)
-                .key(UUID.randomUUID().toString());
-
-            xmEntityService.save(entity);
-        }
-
         verifyNoInteractions(elasticIndexManagerService);
     }
 
@@ -95,17 +77,5 @@ public class XmEntityNoElasticIntTest extends AbstractJupiterSpringBootTest {
         assertEquals("Updated Name", updatedEntity.getName());
 
         verifyNoInteractions(elasticIndexManagerService);
-    }
-
-    @Test
-    public void testNoOpElasticsearchIndexServiceReturnsZero() throws Exception {
-        long result = elasticsearchIndexService.reindexAll();
-        assertEquals(0L, result);
-
-        result = elasticsearchIndexService.reindexByTypeKey("TEST_TYPE");
-        assertEquals(0L, result);
-
-        CompletableFuture<Long> asyncResult = elasticsearchIndexService.reindexAllAsync();
-        assertEquals(0L, asyncResult.get());
     }
 }

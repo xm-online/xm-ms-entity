@@ -17,12 +17,12 @@ public class NoOpTenantElasticsearchProvisioner implements TenantProvisioner {
      */
     @Override
     public void createTenant(final Tenant tenant) {
-        log.error("Elasticsearch is disabled. Skipping tenant creation for: {}", tenant.getTenantKey());
+        throw new UnsupportedOperationException("Elasticsearch is disabled");
     }
 
     @Override
     public void manageTenant(final String tenantKey, final String state) {
-        log.error("Elasticsearch is disabled. Skipping tenant management for: {}, state: {}", tenantKey, state);
+        throw new UnsupportedOperationException("Elasticsearch is disabled");
     }
 
     /**
@@ -30,6 +30,6 @@ public class NoOpTenantElasticsearchProvisioner implements TenantProvisioner {
      */
     @Override
     public void deleteTenant(final String tenantKey) {
-        log.error("Elasticsearch is disabled. Skipping tenant deletion for: {}", tenantKey);
+        throw new UnsupportedOperationException("Elasticsearch is disabled");
     }
 }

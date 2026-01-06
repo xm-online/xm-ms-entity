@@ -19,8 +19,7 @@ public class NoOpElasticsearchIndexService extends TransactionPropagationService
      * Reindex all entities asynchronously (stub implementation - returns 0).
      */
     public CompletableFuture<Long> reindexAllAsync() {
-        log.error("Elasticsearch is disabled. Skipping reindexAllAsync()");
-        return CompletableFuture.completedFuture(0L);
+        throw new UnsupportedOperationException("Elasticsearch is disabled");
     }
 
     /**
@@ -28,8 +27,7 @@ public class NoOpElasticsearchIndexService extends TransactionPropagationService
      */
     public CompletableFuture<Long> reindexByTypeKeyAsync(@Nonnull String typeKey) {
         Objects.requireNonNull(typeKey, "typeKey should not be null");
-        log.error("Elasticsearch is disabled. Skipping reindexByTypeKeyAsync() for typeKey: {}", typeKey);
-        return CompletableFuture.completedFuture(0L);
+        throw new UnsupportedOperationException("Elasticsearch is disabled");
     }
 
     /**
@@ -37,16 +35,14 @@ public class NoOpElasticsearchIndexService extends TransactionPropagationService
      */
     public CompletableFuture<Long> reindexByIdsAsync(@Nonnull Iterable<Long> ids) {
         Objects.requireNonNull(ids, "ids should not be null");
-        log.error("Elasticsearch is disabled. Skipping reindexByIdsAsync()");
-        return CompletableFuture.completedFuture(0L);
+        throw new UnsupportedOperationException("Elasticsearch is disabled");
     }
 
     /**
      * Reindex all entities (stub implementation - returns 0).
      */
     public long reindexAll() {
-        log.error("Elasticsearch is disabled. Skipping reindexAll()");
-        return 0L;
+        throw new UnsupportedOperationException("Elasticsearch is disabled");
     }
 
     /**
@@ -54,8 +50,7 @@ public class NoOpElasticsearchIndexService extends TransactionPropagationService
      */
     public long reindexByTypeKey(@Nonnull String typeKey) {
         Objects.requireNonNull(typeKey, "typeKey should not be null");
-        log.error("Elasticsearch is disabled. Skipping reindexByTypeKey() for typeKey: {}", typeKey);
-        return 0L;
+        throw new UnsupportedOperationException("Elasticsearch is disabled");
     }
 
     /**
@@ -63,8 +58,7 @@ public class NoOpElasticsearchIndexService extends TransactionPropagationService
      */
     public long reindexByTypeKey(@Nonnull String typeKey, Integer startFrom) {
         Objects.requireNonNull(typeKey, "typeKey should not be null");
-        log.error("Elasticsearch is disabled. Skipping reindexByTypeKey() for typeKey: {}, startFrom: {}", typeKey, startFrom);
-        return 0L;
+        throw new UnsupportedOperationException("Elasticsearch is disabled");
     }
 
     /**
@@ -72,7 +66,6 @@ public class NoOpElasticsearchIndexService extends TransactionPropagationService
      */
     public long reindexByIds(@Nonnull Iterable<Long> ids) {
         Objects.requireNonNull(ids, "ids should not be null");
-        log.error("Elasticsearch is disabled. Skipping reindexByIds()");
-        return 0L;
+        throw new UnsupportedOperationException("Elasticsearch is disabled");
     }
 }

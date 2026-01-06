@@ -22,37 +22,32 @@ public class NoOpXmEntitySearchRepository implements XmEntitySearchRepository {
 
     @Override
     public <S extends XmEntity> S index(S entity) {
-        log.error("Elasticsearch is disabled. Skipping index for entity: {}", entity.getId());
-        return entity;
+        throw new UnsupportedOperationException("Elasticsearch is disabled");
     }
 
     @Override
     public Iterable<XmEntity> search(QueryBuilder query) {
-        log.error("Elasticsearch is disabled. Returning empty list for search");
-        return Collections.emptyList();
+        throw new UnsupportedOperationException("Elasticsearch is disabled");
     }
 
     @Override
     public Page<XmEntity> search(QueryBuilder query, Pageable pageable) {
-        log.error("Elasticsearch is disabled. Returning empty page for search");
-        return new PageImpl<>(Collections.emptyList(), pageable, 0);
+        throw new UnsupportedOperationException("Elasticsearch is disabled");
     }
 
     @Override
     public Page<XmEntity> search(SearchQuery searchQuery) {
-        log.error("Elasticsearch is disabled. Returning empty page for search");
-        return new PageImpl<>(Collections.emptyList());
+        throw new UnsupportedOperationException("Elasticsearch is disabled");
     }
 
     @Override
     public Page<XmEntity> searchSimilar(XmEntity entity, String[] fields, Pageable pageable) {
-        log.error("Elasticsearch is disabled. Returning empty page for searchSimilar");
-        return new PageImpl<>(Collections.emptyList(), pageable, 0);
+        throw new UnsupportedOperationException("Elasticsearch is disabled");
     }
 
     @Override
     public void refresh() {
-        log.error("Elasticsearch is disabled. Skipping refresh");
+        throw new UnsupportedOperationException("Elasticsearch is disabled");
     }
 
     @Override
@@ -62,75 +57,66 @@ public class NoOpXmEntitySearchRepository implements XmEntitySearchRepository {
 
     @Override
     public Iterable<XmEntity> findAll(Sort sort) {
-        log.error("Elasticsearch is disabled. Returning empty list for findAll");
-        return Collections.emptyList();
+        throw new UnsupportedOperationException("Elasticsearch is disabled");
     }
 
     @Override
     public Page<XmEntity> findAll(Pageable pageable) {
-        log.error("Elasticsearch is disabled. Returning empty page for findAll");
-        return new PageImpl<>(Collections.emptyList(), pageable, 0);
+        throw new UnsupportedOperationException("Elasticsearch is disabled");
     }
 
     @Override
     public <S extends XmEntity> S save(S entity) {
-        log.error("Elasticsearch is disabled. Skipping save for entity: {}", entity != null ? entity.getId() : null);
-        return entity;
+        throw new UnsupportedOperationException("Elasticsearch is disabled");
     }
 
     @Override
     public <S extends XmEntity> Iterable<S> saveAll(Iterable<S> entities) {
-        log.error("Elasticsearch is disabled. Skipping saveAll");
-        return entities;
+        throw new UnsupportedOperationException("Elasticsearch is disabled");
     }
 
     @Override
     public Optional<XmEntity> findById(Long id) {
-        log.error("Elasticsearch is disabled. Returning empty Optional for findById: {}", id);
-        return Optional.empty();
+        throw new UnsupportedOperationException("Elasticsearch is disabled");
     }
 
     @Override
     public boolean existsById(Long id) {
-        log.error("Elasticsearch is disabled. Returning false for existsById: {}", id);
-        return false;
+        throw new UnsupportedOperationException("Elasticsearch is disabled");
     }
 
     @Override
     public Iterable<XmEntity> findAll() {
-        log.error("Elasticsearch is disabled. Returning empty list for findAll");
-        return Collections.emptyList();
+        throw new UnsupportedOperationException("Elasticsearch is disabled");
     }
 
     @Override
     public Iterable<XmEntity> findAllById(Iterable<Long> longs) {
-        log.error("Elasticsearch is disabled. Returning empty list for findAllById");
-        return Collections.emptyList();
+        throw new UnsupportedOperationException("Elasticsearch is disabled");
     }
 
     @Override
     public long count() {
-        log.error("Elasticsearch is disabled. Returning 0 for count");
-        return 0;
+        throw new UnsupportedOperationException("Elasticsearch is disabled");
     }
 
     @Override
     public void deleteById(Long id) {
-        log.error("Elasticsearch is disabled. Skipping deleteById: {}", id);
+        throw new UnsupportedOperationException("Elasticsearch is disabled");
     }
 
     @Override
     public void delete(XmEntity entity) {
-        log.error("Elasticsearch is disabled. Skipping delete for entity: {}", entity != null ? entity.getId() : null);
+        throw new UnsupportedOperationException("Elasticsearch is disabled");
     }
 
     @Override
     public void deleteAll(Iterable<? extends XmEntity> entities) {
-        log.error("Elasticsearch is disabled. Skipping deleteAll");
+        throw new UnsupportedOperationException("Elasticsearch is disabled");
     }
 
     @Override
     public void deleteAll() {
-        log.error("Elasticsearch is disabled. Skipping deleteAll");
+        throw new UnsupportedOperationException("Elasticsearch is disabled");
     }
 }
