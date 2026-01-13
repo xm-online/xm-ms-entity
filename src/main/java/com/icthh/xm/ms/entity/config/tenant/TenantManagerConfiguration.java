@@ -15,7 +15,6 @@ import com.icthh.xm.commons.tenantendpoint.TenantManager;
 import com.icthh.xm.commons.tenantendpoint.provisioner.TenantAbilityCheckerProvisioner;
 import com.icthh.xm.commons.tenantendpoint.provisioner.TenantConfigProvisioner;
 import com.icthh.xm.commons.tenantendpoint.provisioner.TenantListProvisioner;
-import com.icthh.xm.commons.tenantendpoint.provisioner.TenantProvisioner;
 import com.icthh.xm.ms.entity.config.ApplicationProperties;
 import com.icthh.xm.ms.entity.config.Constants;
 import com.icthh.xm.ms.entity.service.tenant.provisioner.TenantDefaultUserProfileProvisioner;
@@ -23,10 +22,10 @@ import com.icthh.xm.ms.entity.service.tenant.provisioner.TenantElasticsearchProv
 import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Optional;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -48,17 +47,19 @@ public class TenantManagerConfiguration {
                                        TenantDefaultUserProfileProvisioner profileProvisioner,
                                        TenantConfigProvisioner configProvisioner,
                                        TenantListProvisioner tenantListProvisioner,
-                                       @Qualifier("tenantElasticsearchProvisioner") TenantProvisioner elasticsearchProvisioner) {
+                                       Optional<TenantElasticsearchProvisioner> elasticsearchProvisioner) {
 
-        TenantManager manager = TenantManager.builder()
+        TenantManager.TenantManagerBuilder builder = TenantManager.builder()
                                              .service(abilityCheckerProvisioner)
                                              .service(tenantListProvisioner)
                                              .service(databaseProvisioner)
                                              .service(entitySpecLocalProvisioner)
-                                             .service(configProvisioner)
-                                             .service(elasticsearchProvisioner)
-                                             .service(profileProvisioner)
-                                             .build();
+                                             .service(configProvisioner);
+
+        elasticsearchProvisioner.ifPresent(builder::service);
+        builder.service(profileProvisioner);
+        TenantManager manager = builder.build();
+
         log.info("Configured tenant manager: {}", manager);
         return manager;
     }
