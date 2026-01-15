@@ -11,6 +11,7 @@ import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -29,6 +30,7 @@ import static com.icthh.xm.commons.search.builder.QueryBuilders.matchAllQuery;
 @Slf4j
 @Service
 @RequiredArgsConstructor
+@ConditionalOnProperty(name = "application.elastic-enabled", havingValue = "true", matchIfMissing = true)
 public class XmEntitySearchRepositoryImpl implements XmEntitySearchRepository {
 
     private final TenantContextHolder tenantContextHolder;

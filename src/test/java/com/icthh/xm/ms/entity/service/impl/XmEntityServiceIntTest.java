@@ -34,7 +34,7 @@ import com.icthh.xm.ms.entity.domain.Vote;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.domain.XmEntity_;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
-import com.icthh.xm.ms.entity.service.ElasticsearchIndexService;
+import com.icthh.xm.ms.entity.service.ElasticsearchIndexServiceImpl;
 import com.icthh.xm.ms.entity.service.SeparateTransactionExecutor;
 import java.io.InputStream;
 import java.time.Instant;
@@ -86,7 +86,7 @@ public class XmEntityServiceIntTest extends AbstractJupiterSpringBootTest {
     private XmLepScriptConfigServerResourceLoader leps;
 
     @Autowired
-    private ElasticsearchIndexService elasticsearchIndexService;
+    private ElasticsearchIndexServiceImpl elasticsearchIndexService;
 
     @Autowired
     private MappingConfiguration mappingConfiguration;

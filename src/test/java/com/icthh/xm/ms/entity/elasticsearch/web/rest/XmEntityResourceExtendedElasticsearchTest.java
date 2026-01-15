@@ -10,7 +10,6 @@ import com.google.common.collect.ImmutableMap;
 import com.icthh.xm.commons.i18n.error.web.ExceptionTranslator;
 import com.icthh.xm.commons.security.XmAuthenticationContext;
 import com.icthh.xm.commons.security.XmAuthenticationContextHolder;
-import com.icthh.xm.commons.service.FunctionServiceFacade;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
 import com.icthh.xm.lep.api.LepManager;
@@ -35,7 +34,7 @@ import com.icthh.xm.ms.entity.repository.UniqueFieldRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityPermittedRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityRepositoryInternal;
 import com.icthh.xm.ms.entity.repository.kafka.ProfileEventProducer;
-import com.icthh.xm.ms.entity.repository.search.XmEntityPermittedSearchRepository;
+import com.icthh.xm.ms.entity.repository.search.XmEntityPermittedSearchRepositoryImpl;
 import com.icthh.xm.ms.entity.repository.search.XmEntitySearchRepository;
 import com.icthh.xm.ms.entity.service.AttachmentService;
 import com.icthh.xm.ms.entity.service.CalendarService;
@@ -282,7 +281,7 @@ public class XmEntityResourceExtendedElasticsearchTest extends AbstractElasticSp
     XmEntityTenantConfigService tenantConfigService;
 
     @Autowired
-    XmEntityPermittedSearchRepository xmEntityPermittedSearchRepository;
+    XmEntityPermittedSearchRepositoryImpl xmEntityPermittedSearchRepository;
 
     @Mock
     private XmAuthenticationContextHolder authContextHolder;

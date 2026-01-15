@@ -19,6 +19,7 @@ import com.icthh.xm.ms.entity.AbstractJupiterUnitTest;
 import com.icthh.xm.ms.entity.config.ApplicationProperties;
 import com.icthh.xm.ms.entity.service.tenant.provisioner.TenantDefaultUserProfileProvisioner;
 import com.icthh.xm.ms.entity.service.tenant.provisioner.TenantElasticsearchProvisioner;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -77,7 +78,7 @@ public class TenantManagerConfigurationUnitTest extends AbstractJupiterUnitTest 
                                                     profileProvisioner,
                                                     configProvisioner,
                                                     tenantListProvisioner,
-                                                    elasticsearchProvisioner);
+                                                    Optional.of(elasticsearchProvisioner));
     }
 
     @Test

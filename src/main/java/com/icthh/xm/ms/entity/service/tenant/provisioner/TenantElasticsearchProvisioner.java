@@ -8,11 +8,13 @@ import com.icthh.xm.commons.tenantendpoint.provisioner.TenantProvisioner;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 
-@Service
+@Service("tenantElasticsearchProvisioner")
 @Slf4j
 @AllArgsConstructor
+@ConditionalOnProperty(name = "application.elastic-enabled", havingValue = "true", matchIfMissing = true)
 public class TenantElasticsearchProvisioner implements TenantProvisioner {
 
     private final ElasticsearchOperations elasticsearchOperations;

@@ -5,7 +5,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.icthh.xm.ms.entity.AbstractJupiterWebMvcTest;
-import com.icthh.xm.ms.entity.service.ElasticsearchIndexService;
+import com.icthh.xm.ms.entity.service.ElasticsearchIndexServiceImpl;
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,7 +23,7 @@ public class ElasticsearchIndexResourceUnitTest extends AbstractJupiterWebMvcTes
     @Autowired
     private MockMvc mockMvc;
     @MockBean
-    private ElasticsearchIndexService service;
+    private ElasticsearchIndexServiceImpl service;
 
     @SneakyThrows
     @Test

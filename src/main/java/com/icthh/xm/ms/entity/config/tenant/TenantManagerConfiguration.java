@@ -22,6 +22,7 @@ import com.icthh.xm.ms.entity.service.tenant.provisioner.TenantElasticsearchProv
 import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Optional;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
@@ -46,17 +47,19 @@ public class TenantManagerConfiguration {
                                        TenantDefaultUserProfileProvisioner profileProvisioner,
                                        TenantConfigProvisioner configProvisioner,
                                        TenantListProvisioner tenantListProvisioner,
-                                       TenantElasticsearchProvisioner elasticsearchProvisioner) {
+                                       Optional<TenantElasticsearchProvisioner> elasticsearchProvisioner) {
 
-        TenantManager manager = TenantManager.builder()
+        TenantManager.TenantManagerBuilder builder = TenantManager.builder()
                                              .service(abilityCheckerProvisioner)
                                              .service(tenantListProvisioner)
                                              .service(databaseProvisioner)
                                              .service(entitySpecLocalProvisioner)
-                                             .service(configProvisioner)
-                                             .service(elasticsearchProvisioner)
-                                             .service(profileProvisioner)
-                                             .build();
+                                             .service(configProvisioner);
+
+        elasticsearchProvisioner.ifPresent(builder::service);
+        builder.service(profileProvisioner);
+        TenantManager manager = builder.build();
+
         log.info("Configured tenant manager: {}", manager);
         return manager;
     }

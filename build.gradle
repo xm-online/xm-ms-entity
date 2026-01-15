@@ -283,11 +283,19 @@ repositories {
     }
 }
 
+def withElastic = !project.hasProperty("noElastic") || project.property("noElastic") != "true"
+
+
 dependencies {
     implementation platform("tech.jhipster:jhipster-dependencies:${jhipsterDependenciesVersion}")
     implementation "tech.jhipster:jhipster-dependencies:${jhipsterDependenciesVersion}"
 
-    implementation group: "tech.jhipster", name: "jhipster-framework"
+    implementation("tech.jhipster:jhipster-framework") {
+        if (!withElastic) {
+            exclude group: "co.elastic.clients", module: "elasticsearch-java"
+            exclude group: "org.elasticsearch.client", module: "elasticsearch-rest-client"
+        }
+    }
 
     implementation "io.dropwizard.metrics:metrics-core"
     implementation "io.dropwizard.metrics:metrics-json"
@@ -316,7 +324,9 @@ dependencies {
     implementation "org.springframework.boot:spring-boot-starter-actuator"
     implementation "org.springframework.boot:spring-boot-starter-data-jpa"
     // log4j2-mock needed to create embedded elasticsearch instance with SLF4J
-    runtimeOnly "de.dentrassi.elasticsearch:log4j2-mock:${log4j2_mock_version}"
+    if (withElastic) {
+        runtimeOnly "de.dentrassi.elasticsearch:log4j2-mock:${log4j2_mock_version}"
+    }
     // end of Spring Data Jest dependencies
     implementation "org.springframework.boot:spring-boot-starter-security"
     implementation("org.springframework.boot:spring-boot-starter-web") {
