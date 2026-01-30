@@ -31,7 +31,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
-import static com.icthh.xm.ms.entity.repository.entitygraph.JpaHints.LOAD_GRAPH;
+import static org.hibernate.jpa.SpecHints.HINT_SPEC_LOAD_GRAPH;
 
 @Slf4j
 public class EntityGraphRepositoryImpl<T, I extends Serializable>
@@ -65,7 +65,7 @@ public class EntityGraphRepositoryImpl<T, I extends Serializable>
 
         TypedQuery<T> query = entityManager
             .createQuery(criteriaQuery)
-            .setHint(LOAD_GRAPH, createEntityGraph(embed));
+            .setHint(HINT_SPEC_LOAD_GRAPH, createEntityGraph(embed));
 
         List<T> resultList = query.getResultList();
         if (CollectionUtils.isEmpty(resultList)) {
@@ -78,7 +78,7 @@ public class EntityGraphRepositoryImpl<T, I extends Serializable>
     public List<T> findAll(String jpql, Map<String, Object> args, List<String> embed) {
         Query query = entityManager.createQuery(jpql);
         args.forEach(query::setParameter);
-        query.setHint(LOAD_GRAPH, createEntityGraph(embed));
+        query.setHint(HINT_SPEC_LOAD_GRAPH, createEntityGraph(embed));
         return query.getResultList();
     }
 
