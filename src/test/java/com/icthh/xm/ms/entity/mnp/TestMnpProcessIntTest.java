@@ -206,6 +206,8 @@ public class TestMnpProcessIntTest extends AbstractSpringBootTest {
     private LepServiceFactoryWithLepFactoryMethod method;
 
     private WireMockServer wireMockServer;
+    @Autowired
+    private ObjectMapper objectMapper;
 
     @BeforeClass
     public static void startContainer() {
@@ -407,7 +409,6 @@ public class TestMnpProcessIntTest extends AbstractSpringBootTest {
         entity = xmEntityRepository.findOne(result.getId());
         System.out.println(entity);
         assertEquals(false, entity.getData().get("waitingForConfirm"));
-        assertEquals("ACCEPTED", entity.getStateKey());
 
         functionService.execute("PROCESS-STATUS", new HashMap<>(Map.of(
             "messageType", "ValidationResponse",
@@ -449,7 +450,65 @@ public class TestMnpProcessIntTest extends AbstractSpringBootTest {
         date = LocalDateTime.of(LocalDate.parse("2035-12-17"), LocalTime.of(13, 0));
         portingDate = date.atZone(ZoneId.of("Europe/Kiev")).toInstant().toString();
         assertEquals(portingDate, entity.getData().get("portingDate").toString());
-        verifyKafkaEvent(entity, "ACCEPTED");
+
+        setCurrentDateTime(date.minusHours(3));
+
+        ScheduledEvent scheduledEvent = new ScheduledEvent();
+        scheduledEvent.setUuid(UUID.randomUUID().toString());
+        scheduledEvent.setTypeKey("confirmPortInRequests");
+        scheduledEvent.setData(Map.of());
+        schedulerService.onEvent(scheduledEvent);
+        TenantContextUtils.setTenant(tenantContextHolder, "XM");
+        Thread.sleep(5000);
+
+        assertSasTables(result, List.of("ACCEPTED", "ACCEPTED", "REJECTED"),
+            List.of("VERIFICATION-STARTED", "REGISTERED", "ACCEPTED"));
+
+        entity = xmEntityRepository.findOne(result.getId());
+        System.out.println(entity);
+        assertEquals(false, entity.getData().get("waitingForConfirm"));
+
+        // TODO verify NO events verifyWakeUpEvent(entity);
+
+        functionService.execute("PROCESS-STATUS", new HashMap<>(Map.of(
+            "messageType", "ValidationResponse",
+            "statusCode", "0",
+            "statusDescription", "OK",
+            "messageId", "431834d8-1bc7-40e6-a65f-42ebb157d003",
+            "processId", "d9b25a0c-2817-498f-b51b-4ac759fc6445",
+            "portingDate", "2066-11-26T11:00:00Z"
+        )), "GET");
+        assertSasTables(entity, List.of("CONFIRMED", "CONFIRMED", "REJECTED"),
+            List.of("VERIFICATION-STARTED", "REGISTERED", "ACCEPTED", "CONFIRMED"));
+        verifyKafkaEvent(entity, "CONFIRMED");
+    }
+
+    @Test
+    @SneakyThrows
+    @DirtiesContext
+    public void testPortInRequestConfirmAfter2HoursNewBilling() {
+        LoggerContext loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
+        ch.qos.logback.classic.Logger rootLogger = loggerContext.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME);
+        rootLogger.setLevel(Level.INFO);
+
+        reset(kafkaTemplateService);
+        mockServer();
+        XmEntity result = createPortIn(false, "mnp/portInRequestNewBilling.json");
+        LocalDateTime date = LocalDateTime.of(LocalDate.parse("2035-12-14"), LocalTime.of(16, 0));
+        String portingDate = date.atZone(ZoneId.of("Europe/Kiev")).toInstant().toString();
+        setCurrentDateTime(date.minusHours(1));
+        registerAndAcceptPortIn(portingDate, result);
+
+        xmEntityService.updateState(IdOrKey.of(result.getId()), "CONFIRMED", Map.of());
+        assertSasTables(result, List.of("ACCEPTED", "ACCEPTED", "REJECTED"),
+            List.of("VERIFICATION-STARTED", "REGISTERED", "ACCEPTED"));
+
+        XmEntity entity = xmEntityRepository.findOne(result.getId());
+        assertEquals(true, entity.getData().get("waitingForConfirm"));
+        assertEquals("ACCEPTED", entity.getStateKey());
+        date = LocalDateTime.of(LocalDate.parse("2035-12-17"), LocalTime.of(13, 0));
+        portingDate = date.atZone(ZoneId.of("Europe/Kiev")).toInstant().toString();
+        assertEquals(portingDate, entity.getData().get("portingDate").toString());
 
         setCurrentDateTime(date.minusHours(3));
 
@@ -468,6 +527,8 @@ public class TestMnpProcessIntTest extends AbstractSpringBootTest {
         System.out.println(entity);
         assertEquals(false, entity.getData().get("waitingForConfirm"));
         assertEquals("ACCEPTED", entity.getStateKey());
+
+        verifyWakeUpEvent(entity);
 
         functionService.execute("PROCESS-STATUS", new HashMap<>(Map.of(
             "messageType", "ValidationResponse",
@@ -1317,6 +1378,23 @@ public class TestMnpProcessIntTest extends AbstractSpringBootTest {
         public static Event event(String state, boolean resetPortedDate) {
             return new Event(state, resetPortedDate);
         }
+    }
+
+    @SneakyThrows
+    private void verifyWakeUpEvent(XmEntity result) {
+        XmEntity expectedEntity = xmEntityService.findOne(IdOrKey.of(result.getId()));
+        ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
+        verify(kafkaTemplateService, times(1)).send(eq("LDB-REQUEST-WAKE-UP"), eq(0), eq(expectedEntity.getId().toString()), captor.capture());
+        List<String> allValues = captor.getAllValues();
+        String event = allValues.get(0);
+        var actual = objectMapper.readValue(event, Map.class);
+        assertEquals(objectMapper.readValue(objectMapper.writeValueAsString(Map.of(
+            "id", result.getId(),
+            "processId", result.getData().get("processId"),
+            "messageType", "WAKE_UP"
+        )), Map.class), actual);
+        verifyNoMoreInteractions(kafkaTemplateService);
+        reset(kafkaTemplateService);
     }
 
     private void verifyKafkaEvent(XmEntity result, List<Event> events) {
