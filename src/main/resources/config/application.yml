@@ -58,7 +58,7 @@ management:
         metrics:
             export:
                 enabled: true
-                step: 60
+                step: 5
 
 spring:
     application:
@@ -253,7 +253,7 @@ application:
     elasticSchemaSuffix: ""
     elasticBatchSize: 100
     requestCacheIgnoredPathPatternList: /api/functions/*/upload
-    periodicMetricPoolSize: 1
+    periodicMetricPoolSize: 5
     kafkaMetric:
         enabled: true
         connectionTimeoutTopic: 1000
