@@ -82,6 +82,8 @@ public class ApplicationProperties {
 
     private DynamicPermissionCheck dynamicPermissionCheck;
 
+    private String functionsApiPrefix;
+
     @Getter
     @Setter
     public static class Amazon {
