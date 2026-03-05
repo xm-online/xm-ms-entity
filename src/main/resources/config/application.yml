@@ -260,6 +260,8 @@ application:
         metricTopics: system_topic
     domain-event:
         enabled: true
+    functions-api-prefix: /api/functions
+    functions-export-api-prefix: /api/export/functions
 
 # ===================================================================
 # Timeline specific properties
