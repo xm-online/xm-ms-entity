@@ -6,6 +6,8 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import com.icthh.xm.ms.entity.domain.idresolver.XmEntityObjectIdResolver;
 import io.swagger.annotations.ApiModelProperty;
+import lombok.Getter;
+import lombok.Setter;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 
@@ -20,6 +22,8 @@ import java.util.Objects;
 /**
  * A Comment.
  */
+@Getter
+@Setter
 @Entity
 @Table(name = "xm_comment")
 @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
@@ -35,10 +39,17 @@ public class Comment implements Serializable {
     /**
      * Comment author user key.
      */
-    @NotNull
-    @ApiModelProperty(value = "Comment author user key", required = true)
-    @Column(name = "user_key", nullable = false)
+    @ApiModelProperty(value = "Comment author user key")
+    @Column(name = "user_key")
     private String userKey;
+
+    @ApiModelProperty(value = "Comment author client id")
+    @Column(name = "client_id")
+    private String clientId;
+
+    @ApiModelProperty(value = "Display name")
+    @Column(name = "display_name")
+    private String displayName;
 
     /**
      * Message content
@@ -70,29 +81,19 @@ public class Comment implements Serializable {
     @JoinColumn(name = "xm_entity_id", nullable = false)
     private XmEntity xmEntity;
 
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public String getUserKey() {
-        return userKey;
-    }
-
     public Comment userKey(String userKey) {
         this.userKey = userKey;
         return this;
     }
 
-    public void setUserKey(String userKey) {
-        this.userKey = userKey;
+    public Comment clientId(String clientId) {
+        this.clientId = clientId;
+        return this;
     }
 
-    public String getMessage() {
-        return message;
+    public Comment displayName(String displayName) {
+        this.displayName = displayName;
+        return this;
     }
 
     public Comment message(String message) {
@@ -100,38 +101,14 @@ public class Comment implements Serializable {
         return this;
     }
 
-    public void setMessage(String message) {
-        this.message = message;
-    }
-
-    public Instant getEntryDate() {
-        return entryDate;
-    }
-
     public Comment entryDate(Instant entryDate) {
         this.entryDate = entryDate;
         return this;
     }
 
-    public void setEntryDate(Instant entryDate) {
-        this.entryDate = entryDate;
-    }
-
-    public Comment getComment() {
-        return comment;
-    }
-
     public Comment comment(Comment comment) {
         this.comment = comment;
         return this;
-    }
-
-    public void setComment(Comment comment) {
-        this.comment = comment;
-    }
-
-    public Set<Comment> getReplies() {
-        return replies;
     }
 
     public Comment replies(Set<Comment> comments) {
@@ -151,26 +128,14 @@ public class Comment implements Serializable {
         return this;
     }
 
-    public void setReplies(Set<Comment> comments) {
-        this.replies = comments;
-    }
-
-    public XmEntity getXmEntity() {
-        return xmEntity;
-    }
-
     public Comment xmEntity(XmEntity xmEntity) {
         this.xmEntity = xmEntity;
         return this;
     }
 
-    public void setXmEntity(XmEntity xmEntity) {
-        this.xmEntity = xmEntity;
-    }
-
     @PrePersist
     private void prePersist() {
-        if (id == null && entryDate == null) {
+        if (entryDate == null) {
             entryDate = Instant.now();
         }
     }
