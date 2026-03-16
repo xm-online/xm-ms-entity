@@ -22,7 +22,7 @@ import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.converter.HttpMessageNotWritableException;
 import org.springframework.http.converter.ResourceHttpMessageConverter;
 import org.springframework.http.converter.StringHttpMessageConverter;
-import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
+import org.springframework.http.converter.json.JacksonJsonHttpMessageConverter;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MimeTypeUtils;
 import org.springframework.util.MultiValueMap;
@@ -54,7 +54,7 @@ public class MultipartMixedConverter implements HttpMessageConverter<MultiValueM
         stringHttpMessageConverter.setWriteAcceptCharset(false);
         this.partConverters.add(stringHttpMessageConverter);
         this.partConverters.add(new ResourceHttpMessageConverter());
-        this.partConverters.add(new MappingJackson2HttpMessageConverter());
+        this.partConverters.add(new JacksonJsonHttpMessageConverter());
     }
 
     @Override
@@ -326,7 +326,7 @@ public class MultipartMixedConverter implements HttpMessageConverter<MultiValueM
 
         private void writeHeaders() throws IOException {
             if (!this.headersWritten) {
-                for (Map.Entry<String, List<String>> entry : this.headers.entrySet()) {
+                for (Map.Entry<String, List<String>> entry : this.headers.headerSet()) {
                     byte[] headerName = getAsciiBytes(entry.getKey());
                     for (String headerValueString : entry.getValue()) {
                         byte[] headerValue = getAsciiBytes(headerValueString);

@@ -1,15 +1,24 @@
 package com.icthh.xm.ms.entity.domain.serializer;
 
 import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
+import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import org.hibernate.Hibernate;
-import org.springframework.boot.jackson.JsonObjectSerializer;
 
 import java.io.IOException;
 import java.time.Instant;
 
-public class SimpleXmEntitySerializer extends JsonObjectSerializer<XmEntity> {
+public class SimpleXmEntitySerializer extends StdSerializer<XmEntity> {
+
+    public SimpleXmEntitySerializer() {
+        this(null);
+    }
+
+    public SimpleXmEntitySerializer(Class<XmEntity> t) {
+        super(t);
+    }
 
     private void write(JsonGenerator jsonGenerator, SerializerProvider provider, String field, Object value)
     throws IOException {
@@ -26,7 +35,7 @@ public class SimpleXmEntitySerializer extends JsonObjectSerializer<XmEntity> {
     }
 
     @Override
-    protected void serializeObject(XmEntity value, JsonGenerator jsonGenerator, SerializerProvider provider) throws IOException {
+    public void serialize(XmEntity value, JsonGenerator jsonGenerator, SerializerProvider provider) throws IOException {
         if (!Hibernate.isInitialized(value)) {
             return;
         }

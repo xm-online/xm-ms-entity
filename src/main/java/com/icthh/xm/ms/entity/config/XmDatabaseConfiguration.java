@@ -4,8 +4,6 @@ import com.icthh.xm.commons.migration.db.config.DatabaseConfiguration;
 import com.icthh.xm.commons.migration.db.tenant.SchemaResolver;
 import com.icthh.xm.ms.entity.repository.entitygraph.EntityGraphRepositoryImpl;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.autoconfigure.domain.EntityScan;
-import org.springframework.boot.autoconfigure.orm.jpa.JpaProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
@@ -21,7 +19,6 @@ import java.sql.SQLException;
 @Configuration
 @EnableJpaRepositories(value = "com.icthh.xm.ms.entity.repository",
     repositoryBaseClass = EntityGraphRepositoryImpl.class)
-@EntityScan("com.icthh.xm.ms.entity.domain.*")
 @EnableJpaAuditing(auditorAwareRef = "springSecurityAuditorAware")
 public class XmDatabaseConfiguration extends DatabaseConfiguration {
 
@@ -30,9 +27,8 @@ public class XmDatabaseConfiguration extends DatabaseConfiguration {
     private final Environment env;
 
     public XmDatabaseConfiguration(Environment env,
-                                   JpaProperties jpaProperties,
                                    SchemaResolver schemaResolver) {
-        super(env, jpaProperties, schemaResolver);
+        super(env, null, schemaResolver);
         this.env = env;
     }
 

@@ -3,16 +3,14 @@ package com.icthh.xm.ms.entity.config;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.MediaType;
-import org.springframework.http.converter.AbstractHttpMessageConverter;
 import org.springframework.http.converter.HttpMessageConverter;
-import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
+import org.springframework.http.converter.HttpMessageConverters;
+import org.springframework.http.converter.json.JacksonJsonHttpMessageConverter;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.List;
 
 @Configuration
 @Slf4j
@@ -26,26 +24,17 @@ public class WebMvcConfiguration implements WebMvcConfigurer {
     }
 
     @Override
-    public void configureMessageConverters(List<HttpMessageConverter<?>> converters) {
-        // add text/csv and xlsx media types to MappingJackson2HttpMessageConverter
-        addSupportedMediaTypesTo(converters, MappingJackson2HttpMessageConverter.class,
-            MediaType.parseMediaType("text/csv"),
-            MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"));
+    public void configureMessageConverters(HttpMessageConverters.ServerBuilder builder) {
+        // create custom Jackson converter with additional media types
+        builder.addCustomConverter(createCustomJacksonConverter());
     }
 
-    private void addSupportedMediaTypesTo(List<HttpMessageConverter<?>> converters,
-        Class<? extends AbstractHttpMessageConverter<?>> targetConverterClass,
-        MediaType... mediaTypes) {
-        converters.stream()
-            .filter(conv -> conv.getClass() == targetConverterClass)
-            .map(conv -> (AbstractHttpMessageConverter) conv)
-            .forEach(conv -> addSupportedMediaTypes(conv, Arrays.asList(mediaTypes)));
-    }
-
-    private void addSupportedMediaTypes(AbstractHttpMessageConverter<?> converter,
-        List<MediaType> additionalMediaTypes) {
+    private JacksonJsonHttpMessageConverter createCustomJacksonConverter() {
+        JacksonJsonHttpMessageConverter converter = new JacksonJsonHttpMessageConverter();
         ArrayList<MediaType> mediaTypes = new ArrayList<>(converter.getSupportedMediaTypes());
-        mediaTypes.addAll(additionalMediaTypes);
+        mediaTypes.add(MediaType.parseMediaType("text/csv"));
+        mediaTypes.add(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"));
         converter.setSupportedMediaTypes(mediaTypes);
+        return converter;
     }
 }

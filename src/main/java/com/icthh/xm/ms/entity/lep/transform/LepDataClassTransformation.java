@@ -1,6 +1,8 @@
 package com.icthh.xm.ms.entity.lep.transform;
 
 
+import static groovyjarjarasm.asm.Opcodes.ACC_PUBLIC;
+import static groovyjarjarasm.asm.Opcodes.ACC_TRANSIENT;
 import static org.codehaus.groovy.ast.ClassHelper.STRING_TYPE;
 import static org.codehaus.groovy.ast.ClassHelper.make;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.args;
@@ -104,7 +106,7 @@ public class LepDataClassTransformation extends AbstractASTTransformation {
         }
 
         if (!hasEmptyConstructor(classNode)) {
-            classNode.addConstructor(MethodNode.ACC_PUBLIC, new Parameter[0], ClassNode.EMPTY_ARRAY, new BlockStatement());
+            classNode.addConstructor(ACC_PUBLIC, new Parameter[0], ClassNode.EMPTY_ARRAY, new BlockStatement());
         }
 
         Parameter mapParam = new Parameter(new ClassNode(Map.class), "data");
@@ -121,8 +123,7 @@ public class LepDataClassTransformation extends AbstractASTTransformation {
 
         callMapCustomization(classNode, mapParam, body);
 
-        classNode.addConstructor(
-            MethodNode.ACC_PUBLIC,
+        classNode.addConstructor(ACC_PUBLIC,
             new Parameter[]{mapParam},
             ClassNode.EMPTY_ARRAY,
             body

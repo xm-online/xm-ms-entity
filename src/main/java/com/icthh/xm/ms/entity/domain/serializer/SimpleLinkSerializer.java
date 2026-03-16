@@ -2,14 +2,22 @@ package com.icthh.xm.ms.entity.domain.serializer;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.SerializerProvider;
+import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 import com.icthh.xm.ms.entity.domain.Link;
 import org.hibernate.Hibernate;
-import org.springframework.boot.jackson.JsonObjectSerializer;
 
 import java.io.IOException;
 import java.time.Instant;
 
-public class SimpleLinkSerializer extends JsonObjectSerializer<Link> {
+public class SimpleLinkSerializer extends StdSerializer<Link> {
+
+    public SimpleLinkSerializer() {
+        this(null);
+    }
+
+    public SimpleLinkSerializer(Class<Link> t) {
+        super(t);
+    }
 
     private void write(JsonGenerator jsonGenerator, SerializerProvider provider, String field, Object value)
     throws IOException {
@@ -26,7 +34,7 @@ public class SimpleLinkSerializer extends JsonObjectSerializer<Link> {
     }
 
     @Override
-    protected void serializeObject(Link value, JsonGenerator jsonGenerator, SerializerProvider provider) throws IOException {
+    public void serialize(Link value, JsonGenerator jsonGenerator, SerializerProvider provider) throws IOException {
         if (!Hibernate.isInitialized(value)) {
             return;
         }
