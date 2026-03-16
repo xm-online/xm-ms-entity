@@ -268,8 +268,11 @@ configurations {
     implementation.exclude module: "spring-boot-starter-tomcat"
     configureEach {
         resolutionStrategy {
-            // Inherited version from Spring Boot can't be used because of regressions:
-            // To be removed as soon as spring-boot use the same version
+            eachDependency { details ->
+                if (details.requested.group == 'org.apache.groovy') {
+                    details.useVersion "${groovy_version}"
+                }
+            }
         }
     }
 }
