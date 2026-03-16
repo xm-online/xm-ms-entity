@@ -227,7 +227,7 @@ public class TestMnpProcessIntTest extends AbstractSpringBootTest {
         MockitoAnnotations.initMocks(this);
         TenantContextUtils.setTenant(tenantContextHolder, "XM");
 
-        var basePath = "/Users/serhii.senko/work/VF/mw-ms-config-repository";
+        var basePath = "/Users/serhii.senko/work/VF/prod/mw-ms-config-repository";
         Collection<File> files = FileUtils.listFiles(new File(basePath + "/config/tenants/XM/entity"), null, true);
         Map<String, String> fileCache = new HashMap<>();
         refreshableConfigurations.stream().filter(it -> it instanceof XmLepScriptConfigServerResourceLoader).forEach(it -> {
@@ -355,6 +355,10 @@ public class TestMnpProcessIntTest extends AbstractSpringBootTest {
     @SneakyThrows
     @DirtiesContext
     public void testPortInRequest() {
+        LoggerContext loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
+        ch.qos.logback.classic.Logger rootLogger = loggerContext.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME);
+        rootLogger.setLevel(Level.INFO);
+
         reset(kafkaTemplateService);
         mockServer();
         XmEntity result = portInProcess(false, "mnp/portInRequest.json");
@@ -364,7 +368,8 @@ public class TestMnpProcessIntTest extends AbstractSpringBootTest {
         wireMockServer.stop();
 
         List<LoggedRequest> smsRequests = WIRE_MOCK.findAll(postRequestedFor(urlEqualTo("/api/communicationManagement/v2/communicationMessage/send")));
-        assertEquals(4, smsRequests.size());
+        assertEquals(5, smsRequests.size());
+        smsRequests.forEach(req -> System.out.println(req.getBodyAsString()));
         smsRequests.forEach(req -> assertFalse(req.getBodyAsString().contains("#")));
     }
 
@@ -547,38 +552,67 @@ public class TestMnpProcessIntTest extends AbstractSpringBootTest {
     @SneakyThrows
     @DirtiesContext
     public void testPortSetPortingDate() {
+        LoggerContext loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
+        ch.qos.logback.classic.Logger rootLogger = loggerContext.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME);
+        rootLogger.setLevel(Level.INFO);
 
         reset(kafkaTemplateService);
         mockServer();
 
         var thursday = LocalDate.of(2066, 1, 21);
         var friday = LocalDate.of(2066, 1, 22);
+        var saturday = friday.plusDays(1);
         var monday = LocalDate.of(2066, 1, 25);
 
-        testPortingDate(thursday, LocalTime.of(8, 0), thursday, LocalTime.of(16, 0));
-        testPortingDate(thursday, LocalTime.of(8, 30), thursday, LocalTime.of(16, 0));
-        testPortingDate(thursday, LocalTime.of(9, 0), thursday, LocalTime.of(16, 0));
-        testPortingDate(thursday, LocalTime.of(10, 0), thursday, LocalTime.of(16, 0));
-        testPortingDate(thursday, LocalTime.of(10, 1), thursday, LocalTime.of(17, 0));
-        testPortingDate(thursday, LocalTime.of(11, 0), thursday, LocalTime.of(17, 0));
+        // Thursday (DAYON 08:30-17:30) - same day slots
+        testPortingDate(thursday, LocalTime.of(0, 0), thursday, LocalTime.of(13, 0));   // slot 00:00-08:30 → 13:00 same day
+        testPortingDate(thursday, LocalTime.of(8, 0), thursday, LocalTime.of(13, 0));   // slot 00:00-08:30 → 13:00 same day
+        testPortingDate(thursday, LocalTime.of(8, 30), thursday, LocalTime.of(13, 0));  // slot 00:00-08:30 (first match) → 13:00 same day
+        testPortingDate(thursday, LocalTime.of(9, 0), thursday, LocalTime.of(13, 0));   // slot 08:30-09:00 → 13:00 same day
+        testPortingDate(thursday, LocalTime.of(9, 0, 30), thursday, LocalTime.of(14, 0)); // gap 09:00-09:01 → closest slot 09:01-10:00 → 14:00 same day
+        testPortingDate(thursday, LocalTime.of(9, 1), thursday, LocalTime.of(14, 0));   // slot 09:01-10:00 → 14:00 same day
+        testPortingDate(thursday, LocalTime.of(10, 0), thursday, LocalTime.of(14, 0));  // slot 09:01-10:00 → 14:00 same day
+        testPortingDate(thursday, LocalTime.of(10, 1), thursday, LocalTime.of(15, 0));  // slot 10:01-11:00 → 15:00 same day
+        testPortingDate(thursday, LocalTime.of(11, 0), thursday, LocalTime.of(15, 0));  // slot 10:01-11:00 → 15:00 same day
+        testPortingDate(thursday, LocalTime.of(11, 1), thursday, LocalTime.of(16, 0));  // slot 11:01-12:00 → 16:00 same day
+        testPortingDate(thursday, LocalTime.of(12, 0), thursday, LocalTime.of(16, 0));  // slot 11:01-12:00 → 16:00 same day
+        testPortingDate(thursday, LocalTime.of(12, 1), thursday, LocalTime.of(17, 0));  // slot 12:01-13:00 → 17:00 same day
+        testPortingDate(thursday, LocalTime.of(13, 0), thursday, LocalTime.of(17, 0));  // slot 12:01-13:00 → 17:00 same day
 
-        testPortingDate(thursday, LocalTime.of(11, 1), friday, LocalTime.of(13, 0));
-        testPortingDate(thursday, LocalTime.of(12, 0), friday, LocalTime.of(13, 0));
-        testPortingDate(thursday, LocalTime.of(17, 23), friday, LocalTime.of(13, 0));
+        // Thursday - next working day slots
+        testPortingDate(friday, LocalTime.of(12, 30), monday, LocalTime.of(13, 0)); // short day logic
 
-        testPortingDate(thursday, LocalTime.of(17, 30), friday, LocalTime.of(16, 0));
-        testPortingDate(thursday, LocalTime.of(23, 59), friday, LocalTime.of(16, 0));
+        testPortingDate(thursday, LocalTime.of(13, 1), friday, LocalTime.of(9, 0));     // slot 13:01-14:00 → 09:00 next working day
+        testPortingDate(thursday, LocalTime.of(14, 0), friday, LocalTime.of(9, 0));     // slot 13:01-14:00 → 09:00 next working day
+        testPortingDate(thursday, LocalTime.of(14, 0, 20), friday, LocalTime.of(10, 0)); // gap 14:00-14:01 → closest slot 14:01-15:00 → 10:00 next working day
+        testPortingDate(thursday, LocalTime.of(14, 1), friday, LocalTime.of(10, 0));    // slot 14:01-15:00 → 10:00 next working day
+        testPortingDate(thursday, LocalTime.of(15, 1), friday, LocalTime.of(11, 0));    // slot 15:01-16:00 → 11:00 next working day
+        testPortingDate(thursday, LocalTime.of(16, 1), friday, LocalTime.of(12, 0));    // slot 16:01-17:00 → 12:00 next working day
+        testPortingDate(thursday, LocalTime.of(17, 0), friday, LocalTime.of(12, 0));    // slot 16:01-17:00 → 12:00 next working day
+        testPortingDate(thursday, LocalTime.of(17, 1), friday, LocalTime.of(12, 0));    // slot 17:01-17:30 → 12:00 next working day
+        testPortingDate(thursday, LocalTime.of(17, 23), friday, LocalTime.of(12, 0));   // slot 17:01-17:30 → 12:00 next working day
+        testPortingDate(thursday, LocalTime.of(17, 30), friday, LocalTime.of(12, 0));   // slot 17:01-17:30 (first match) → 12:00 next working day
+        testPortingDate(thursday, LocalTime.of(17, 31), friday, LocalTime.of(13, 0));   // slot 17:30-23:59 → 13:00 next working day
+        testPortingDate(thursday, LocalTime.of(23, 59), friday, LocalTime.of(13, 0));   // slot 17:30-23:59 → 13:00 next working day
+        testPortingDate(thursday, LocalTime.of(23, 59, 50), friday, LocalTime.of(13, 0));
 
-        testPortingDate(friday, LocalTime.of(8, 0), friday, LocalTime.of(16, 0));
-        testPortingDate(friday, LocalTime.of(10, 1), monday, LocalTime.of(13, 0));
+        // Friday (DAYON 08:30-16:30, endTime-5min=16:25) - short day logic
+        testPortingDate(friday, LocalTime.of(8, 0), friday, LocalTime.of(13, 0));       // slot 00:00-08:30 → 13:00 same day
+        testPortingDate(friday, LocalTime.of(9, 1), friday, LocalTime.of(14, 0));       // slot 09:01-10:00 → 14:00 same day (within Friday hours)
+        testPortingDate(friday, LocalTime.of(10, 1), friday, LocalTime.of(15, 0));      // slot 10:01-11:00 → 15:00 same day (within Friday hours)
+        testPortingDate(friday, LocalTime.of(11, 1), friday, LocalTime.of(16, 0));      // slot 11:01-12:00 → 16:00 same day (within Friday hours)
+        testPortingDate(friday, LocalTime.of(12, 1), monday, LocalTime.of(13, 0));      // slot 12:01-13:00 → 17:00 but !isWorkingDateTime(fri,17:00) → short day → Mon 13:00
+        testPortingDate(friday, LocalTime.of(12, 29), monday, LocalTime.of(13, 0));     // slot 12:01-13:00 → 17:00 outside Friday hours → Mon 13:00
+        testPortingDate(friday, LocalTime.of(12, 31), monday, LocalTime.of(13, 0));     // slot 12:01-13:00 → 17:00 outside Friday hours → Mon 13:00
+        testPortingDate(friday, LocalTime.of(13, 1), monday, LocalTime.of(9, 0));       // slot 13:01-14:00 → 09:00 next working day (Monday)
+        testPortingDate(friday, LocalTime.of(16, 1), monday, LocalTime.of(12, 0));      // slot 16:01-17:00 → 12:00 next working day (Monday)
+        testPortingDate(friday, LocalTime.of(16, 24), monday, LocalTime.of(12, 0));     // slot 16:01-17:00 → 12:00 next working day (Monday)
+        testPortingDate(friday, LocalTime.of(17, 30), monday, LocalTime.of(12, 0));     // slot 17:01-17:30 (first match) → 12:00 next working day (Monday)
 
-        testPortingDate(friday, LocalTime.of(12, 29), monday, LocalTime.of(13, 0));
-        testPortingDate(friday, LocalTime.of(12, 31), monday, LocalTime.of(13, 0));
-        testPortingDate(friday, LocalTime.of(16, 24), monday, LocalTime.of(13, 0));
-        testPortingDate(friday, LocalTime.of(16, 30), monday, LocalTime.of(16, 0));
-        testPortingDate(friday, LocalTime.of(16, 31), monday, LocalTime.of(16, 0));
-
-        testPortingDate(friday.plusDays(1), LocalTime.of(9, 0), monday, LocalTime.of(16, 0));
+        // Saturday (DAYOFF) → weekend logic → next working day at 13:00
+        testPortingDate(saturday, LocalTime.of(9, 0), monday, LocalTime.of(13, 0));
+        testPortingDate(saturday, LocalTime.of(9, 0, 30), monday, LocalTime.of(13, 0));
+        testPortingDate(saturday, LocalTime.of(23, 59, 50), monday, LocalTime.of(13, 0));
     }
 
     private void testPortingDate(LocalDate thursday, LocalTime createTime, LocalDate date, LocalTime time) throws IOException {
