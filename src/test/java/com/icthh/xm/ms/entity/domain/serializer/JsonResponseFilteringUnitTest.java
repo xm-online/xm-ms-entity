@@ -35,8 +35,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -67,20 +67,20 @@ public class JsonResponseFilteringUnitTest extends AbstractJupiterWebMvcTest {
 
     private static long SEQUENCE = 0L;
 
-    @MockBean
+    @MockitoBean
     private XmEntityService xmEntityService;
-    @MockBean
+    @MockitoBean
     private ProfileService profileService;
-    @MockBean
+    @MockitoBean
     private ProfileEventProducer profileEventProducer;
-    @MockBean
+    @MockitoBean
     private TenantService tenantService;
-    @MockBean
+    @MockitoBean
     private FunctionServiceFacade functionService;
-    @MockBean
+    @MockitoBean
     private LocalizationMessageService localizationMessageService;
 
-    @MockBean
+    @MockitoBean
     private LinkService linkService;
 
     @Autowired

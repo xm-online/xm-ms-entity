@@ -37,8 +37,8 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.context.annotation.EnableAspectJAutoProxy;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.domain.Page;
@@ -93,19 +93,19 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 public class JsonResponseFilteringLepUnitTest extends AbstractJupiterWebMvcTest {
 
     // XmEntityResource config
-    @MockBean
+    @MockitoBean
     private XmEntityService xmEntityService;
-    @MockBean
+    @MockitoBean
     private ProfileService profileService;
-    @MockBean
+    @MockitoBean
     private ProfileEventProducer profileEventProducer;
-    @MockBean
+    @MockitoBean
     private TenantService tenantService;
-    @MockBean
+    @MockitoBean
     private XmEntityFunctionServiceFacade functionService;
-    @MockBean
+    @MockitoBean
     private LocalizationMessageService localizationMessageService;
-    @MockBean
+    @MockitoBean
     private LoggingConfigService loggingConfigService;
 
     @Autowired

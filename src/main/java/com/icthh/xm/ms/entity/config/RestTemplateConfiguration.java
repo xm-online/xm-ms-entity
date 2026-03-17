@@ -1,22 +1,24 @@
 package com.icthh.xm.ms.entity.config;
 
-import java.net.URI;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.function.Consumer;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import org.apache.hc.client5.http.config.ConnectionConfig;
 import org.apache.hc.client5.http.config.RequestConfig;
-import org.apache.hc.client5.http.protocol.HttpClientContext;
-import org.apache.hc.core5.http.protocol.HttpContext;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
+import org.apache.hc.client5.http.impl.classic.HttpClients;
+import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManager;
 import org.apache.hc.core5.util.Timeout;
+import org.springframework.boot.restclient.RestTemplateBuilder;
 import org.springframework.cloud.client.loadbalancer.LoadBalanced;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.client.BufferingClientHttpRequestFactory;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.util.AntPathMatcher;
 import org.springframework.web.client.RestTemplate;
@@ -27,6 +29,8 @@ import org.springframework.web.client.RestTemplate;
 @Configuration
 public class RestTemplateConfiguration {
 
+    private static final int DEFAULT_TIMEOUT_MS = 30000;
+
     @LoadBalanced
     @Bean
     public RestTemplate loadBalancedRestTemplate() {
@@ -35,10 +39,11 @@ public class RestTemplateConfiguration {
 
     @LoadBalanced
     @Bean
-    public RestTemplate loadBalancedRestTemplateWithTimeout(PathTimeoutHttpComponentsClientHttpRequestFactory requestFactory) {
-        RestTemplate restTemplate = new RestTemplate();
-        restTemplate.setRequestFactory(requestFactory);
-        return restTemplate;
+    public RestTemplate loadBalancedRestTemplateWithTimeout(RestTemplateBuilder restTemplateBuilder,
+                                                            PathTimeoutHttpComponentsClientHttpRequestFactory requestFactory) {
+        return restTemplateBuilder
+            .requestFactory(() -> new BufferingClientHttpRequestFactory(requestFactory))
+            .build();
     }
 
     /**
@@ -46,8 +51,8 @@ public class RestTemplateConfiguration {
      * rest template should be created using builder
      */
     @Bean
-    public RestTemplate plainRestTemplate() {
-        return new RestTemplate();
+    public RestTemplate plainRestTemplate(RestTemplateBuilder restTemplateBuilder) {
+        return restTemplateBuilder.build();
     }
 
     @Bean
@@ -60,31 +65,23 @@ public class RestTemplateConfiguration {
         private final Set<PathTimeoutConfig> pathPatternTimeoutConfigs = new HashSet<>();
         private final AntPathMatcher matcher = new AntPathMatcher();
 
-        @Override
-        protected HttpContext createHttpContext(HttpMethod httpMethod, URI uri) {
-            for (PathTimeoutConfig config : pathPatternTimeoutConfigs) {
-                if (httpMethod.equals(config.getHttpMethod()) && matcher.match(config.getPathPattern(), uri.getPath())) {
-
-                    RequestConfig.Builder builder = RequestConfig.custom();
-                    setIfNotNull(config.getReadTimeout(),  builder::setResponseTimeout);
-                    setIfNotNull(config.getConnectionTimeout(),  builder::setConnectTimeout);
-                    setIfNotNull(config.getConnectionRequestTimeout(),  builder::setConnectionRequestTimeout);
-
-                    HttpClientContext context = HttpClientContext.create();
-                    context.setAttribute(HttpClientContext.REQUEST_CONFIG, builder.build());
-                    return context;
-                }
-            }
-
-            // Returning null allows HttpComponentsClientHttpRequestFactory to continue down normal path for populating the context
-            return null;
-        }
-
-        private void setIfNotNull(Integer value, Consumer<Timeout> setterMethod) {
-            if (value == null) {
-                return;
-            }
-            setterMethod.accept(Timeout.ofMilliseconds(value));
+        public PathTimeoutHttpComponentsClientHttpRequestFactory() {
+            super();
+            
+            PoolingHttpClientConnectionManager connectionManager = new PoolingHttpClientConnectionManager();
+            connectionManager.setDefaultConnectionConfig(ConnectionConfig.custom()
+                .setConnectTimeout(Timeout.ofMilliseconds(DEFAULT_TIMEOUT_MS))
+                .setSocketTimeout(Timeout.ofMilliseconds(DEFAULT_TIMEOUT_MS))
+                .build());
+            
+            CloseableHttpClient httpClient = HttpClients.custom()
+                .setConnectionManager(connectionManager)
+                .setDefaultRequestConfig(RequestConfig.custom()
+                    .setResponseTimeout(Timeout.ofMilliseconds(DEFAULT_TIMEOUT_MS))
+                    .build())
+                .build();
+            
+            this.setHttpClient(httpClient);
         }
 
         public void addPathTimeoutConfig(PathTimeoutConfig pathTimeoutConfig) {

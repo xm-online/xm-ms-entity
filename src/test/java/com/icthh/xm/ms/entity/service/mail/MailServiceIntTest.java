@@ -13,8 +13,8 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.boot.test.mock.mockito.SpyBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.test.context.ActiveProfiles;
@@ -46,13 +46,13 @@ public class MailServiceIntTest extends AbstractJupiterSpringBootTest {
     @Autowired
     private TenantEmailTemplateService templateService;
 
-    @MockBean
+    @MockitoBean
     private JavaMailSender javaMailSender;
 
     /**
      * periodicMetricsTaskScheduler configures in @Profile("!non-async"), needed for test passing
      */
-    @MockBean
+    @MockitoBean
     ThreadPoolTaskScheduler periodicMetricsTaskScheduler;
 
     @Autowired

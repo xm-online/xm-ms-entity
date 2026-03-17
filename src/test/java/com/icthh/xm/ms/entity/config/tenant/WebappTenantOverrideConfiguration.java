@@ -2,13 +2,17 @@ package com.icthh.xm.ms.entity.config.tenant;
 
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import com.icthh.xm.commons.config.client.repository.TenantConfigRepository;
-import com.netflix.loadbalancer.Server;
-import com.netflix.loadbalancer.ServerList;
+import java.util.List;
+import org.jetbrains.annotations.NotNull;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.cloud.netflix.ribbon.StaticServerList;
+import org.springframework.cloud.client.DefaultServiceInstance;
+import org.springframework.cloud.client.ServiceInstance;
+import org.springframework.cloud.loadbalancer.core.ServiceInstanceListSupplier;
+import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import reactor.core.publisher.Flux;
 
 @Configuration
 public class WebappTenantOverrideConfiguration {
@@ -26,9 +30,23 @@ public class WebappTenantOverrideConfiguration {
     }
 
     @Bean
-    public ServerList<Server> ribbonServerList() {
+    public ServiceInstanceListSupplier staticServiceInstanceListSupplier(ConfigurableApplicationContext context) {
         WIRE_MOCK.start();
-        return new StaticServerList<>(new Server("localhost", WIRE_MOCK.port()));
+        return new ServiceInstanceListSupplier() {
+            @NotNull
+            @Override
+            public String getServiceId() {
+                return "test-service";
+            }
+
+            @Override
+            public Flux<List<ServiceInstance>> get() {
+                return Flux.just(java.util.List.of(
+                    new DefaultServiceInstance("test-service-1", "test-service",
+                        "localhost", WIRE_MOCK.port(), false)
+                ));
+            }
+        };
     }
 
 }

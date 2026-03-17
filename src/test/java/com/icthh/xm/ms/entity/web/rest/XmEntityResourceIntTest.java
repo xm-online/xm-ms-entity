@@ -70,7 +70,7 @@ import static org.mockito.Mockito.when;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -151,7 +151,7 @@ public class XmEntityResourceIntTest extends AbstractJupiterSpringBootTest {
     @Autowired
     private XmEntityFunctionServiceFacade functionService;
 
-    @MockBean
+    @MockitoBean
     private XmEntityFunctionExecutorService functionExecutorService;
 
     @Autowired

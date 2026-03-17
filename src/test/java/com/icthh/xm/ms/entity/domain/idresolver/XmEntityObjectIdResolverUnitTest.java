@@ -23,12 +23,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.http.converter.json.JacksonJsonHttpMessageConverter;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 
 import java.time.Instant;
 import java.util.Optional;
@@ -40,16 +40,16 @@ public class XmEntityObjectIdResolverUnitTest extends AbstractJupiterWebMvcTest 
 
     private static final String DEFAULT_TYPE_KEY = "ACCOUNT.ADMIN";
 
-    @MockBean
+    @MockitoBean
     private LocalizationMessageService localizationMessageService;
 
-    @MockBean
+    @MockitoBean
     private XmEntityRepository entityRepository;
 
-    @MockBean
+    @MockitoBean
     private LinkService linkService;
 
-    @MockBean
+    @MockitoBean
     private CalendarRepository calendarRepository;
 
     @Autowired

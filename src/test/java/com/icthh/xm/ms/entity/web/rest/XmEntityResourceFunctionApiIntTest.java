@@ -27,8 +27,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.context.annotation.Primary;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
@@ -42,19 +42,19 @@ public class XmEntityResourceFunctionApiIntTest extends AbstractJupiterWebMvcTes
     @Autowired
     private WebApplicationContext wac;
     private MockMvc mockMvc;
-    @MockBean
+    @MockitoBean
     private XmEntityFunctionServiceFacade functionService;
-    @MockBean
+    @MockitoBean
     private LocalizationMessageService localizationMessageService;
-    @MockBean
+    @MockitoBean
     private XmEntityService xmEntityService;
-    @MockBean
+    @MockitoBean
     private ProfileService profileService;
-    @MockBean
+    @MockitoBean
     private ProfileEventProducer profileEventProducer;
-    @MockBean
+    @MockitoBean
     private TenantService tenantService;
-    @MockBean
+    @MockitoBean
     private LocalXmEntitySpecService localXmEntitySpecService;
 
     private String functionName = "SOME-FUNCTION_KEY.TROLOLO";
