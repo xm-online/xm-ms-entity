@@ -137,8 +137,6 @@ spring:
     liquibase:
         default-schema: XM
         change-log: classpath:config/liquibase/master.xml
-    autoconfigure:
-        exclude: org.springframework.boot.jackson.autoconfigure.JacksonAutoConfiguration
 server:
     servlet:
         session:
