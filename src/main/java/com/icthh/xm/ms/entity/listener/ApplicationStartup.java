@@ -4,6 +4,7 @@ import com.icthh.xm.commons.logging.util.MdcUtils;
 import com.icthh.xm.commons.permission.inspector.PrivilegeInspector;
 import com.icthh.xm.ms.entity.config.ApplicationProperties;
 import com.icthh.xm.ms.entity.repository.kafka.SystemTopicConsumer;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
@@ -52,7 +53,7 @@ public class ApplicationStartup implements ApplicationListener<ApplicationReadyE
         ContainerProperties containerProps = new ContainerProperties(name);
         containerProps.setObservationEnabled(true);
 
-        Map<String, Object> props = consumerFactory.getConfigurationProperties();
+        Map<String, Object> props = new HashMap<>(consumerFactory.getConfigurationProperties());
         if (name.equals(applicationProperties.getKafkaSystemTopic())) {
             props.put(ConsumerConfig.GROUP_ID_CONFIG, UUID.randomUUID().toString());
         }

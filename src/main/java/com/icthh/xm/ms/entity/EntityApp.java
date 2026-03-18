@@ -28,6 +28,7 @@ import org.springframework.context.annotation.FilterType;
 import org.springframework.context.annotation.Import;
 import org.springframework.core.env.Environment;
 import tech.jhipster.config.JHipsterConstants;
+import org.springframework.boot.liquibase.autoconfigure.LiquibaseProperties;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -41,7 +42,7 @@ import java.util.Collection;
             GroovyLepEngineConfiguration.class, LepSpringConfiguration.class})
 )
 @SpringBootApplication
-@EnableConfigurationProperties({ApplicationProperties.class})
+@EnableConfigurationProperties({LiquibaseProperties.class, ApplicationProperties.class})
 @EnableDiscoveryClient
 @Import({LepConfiguration.class, TenantContextConfiguration.class})
 public class EntityApp {

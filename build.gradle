@@ -289,9 +289,12 @@ dependencies {
     implementation "net.logstash.logback:logstash-logback-encoder"
     implementation "com.fasterxml.jackson.datatype:jackson-datatype-hppc"
     implementation "com.fasterxml.jackson.datatype:jackson-datatype-jsr310"
-    implementation "com.fasterxml.jackson.datatype:jackson-datatype-hibernate6"
+    implementation "com.fasterxml.jackson.datatype:jackson-datatype-hibernate7"
     implementation "com.fasterxml.jackson.core:jackson-annotations"
     implementation "com.fasterxml.jackson.core:jackson-databind"
+    implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-csv'
+    implementation 'com.fasterxml.jackson.module:jackson-module-jsonSchema'
+    implementation 'com.fasterxml.jackson.module:jackson-module-afterburner'
     implementation "org.hibernate.orm:hibernate-core:${hibernateVersion}"
     implementation 'javax.persistence:javax.persistence-api:2.2'
     implementation "com.zaxxer:HikariCP"
@@ -306,6 +309,9 @@ dependencies {
     implementation "org.springframework.boot:spring-boot-starter-logging"
     implementation "org.springframework.boot:spring-boot-starter-actuator"
     implementation "org.springframework.boot:spring-boot-starter-data-jpa"
+    implementation("org.springframework.boot:spring-boot-starter-liquibase")
+    implementation "org.springframework.boot:spring-boot-starter-security-oauth2-client"
+    implementation "org.springframework.boot:spring-boot-starter-security-oauth2-resource-server"
     // log4j2-mock needed to create embedded elasticsearch instance with SLF4J
     if (withElastic) {
         runtimeOnly "de.dentrassi.elasticsearch:log4j2-mock:${log4j2_mock_version}"
@@ -327,6 +333,10 @@ dependencies {
     implementation "org.glassfish.jaxb:jaxb-runtime:${jaxb_runtime_version}"
     implementation "io.swagger:swagger-annotations:${swaggerVersion}"
     implementation "org.springdoc:springdoc-openapi-starter-webmvc-ui:${springdocVersion}"
+    implementation "org.springframework.cloud:spring-cloud-starter-loadbalancer"
+    implementation "org.springframework.cloud:spring-cloud-starter-circuitbreaker-resilience4j"
+    implementation "org.springframework.boot:spring-boot-micrometer-tracing-brave"
+
 
     implementation("io.springfox:springfox-swagger2:${springfoxVersion}") {
         exclude module: "mapstruct"
@@ -357,9 +367,7 @@ dependencies {
     implementation "com.jayway.jsonpath:json-path"
     implementation "com.mortennobel:java-image-scaling:${mortennobelVersion}"
     implementation "org.codehaus.groovy.modules.http-builder:http-builder:${codehausVersion}"
-    implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-csv'
-    implementation 'com.fasterxml.jackson.module:jackson-module-jsonSchema'
-    implementation 'com.fasterxml.jackson.module:jackson-module-afterburner'
+
 
     implementation("com.icthh.xm.commons:xm-commons-ms-web:${xm_commons_version}") {
         exclude group: "io.github.jhipster", module: "jhipster-framework"
@@ -395,7 +403,7 @@ dependencies {
     implementation "org.modelmapper:modelmapper:${modelmapper_version}"
     implementation "javax.servlet:javax.servlet-api:${javaxServletVersion}"
     implementation "org.apache.httpcomponents.client5:httpclient5:${httpClient5Version}"
-    implementation "io.hypersistence:hypersistence-utils-hibernate-63:${hypersistenceVersion}"
+    implementation "org.apache.httpcomponents.core5:httpcore5:${httpCore5Version}"
 
     // security fixes
     implementation "io.netty:netty-buffer:${netty_version}"
@@ -433,21 +441,17 @@ dependencies {
     testCompileOnly "org.projectlombok:lombok:${lombok_version}"
     testAnnotationProcessor "org.projectlombok:lombok:${lombok_version}"
     testImplementation "com.jayway.jsonpath:json-path"
-    testImplementation 'io.cucumber:cucumber-junit:7.18.1'
+    testImplementation 'io.cucumber:cucumber-junit-platform-engine:7.18.1'
     testImplementation 'io.cucumber:cucumber-spring:7.18.1'
     testImplementation("org.springframework.boot:spring-boot-starter-test") {
         exclude module: "junit"
         exclude group: "com.vaadin.external.google", module: "android-json"
     }
+    testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
     testImplementation "org.springframework.security:spring-security-test"
-    testImplementation "org.springframework.boot:spring-boot-test"
-    testImplementation "org.junit.jupiter:junit-jupiter-engine"
-    testImplementation "org.junit.vintage:junit-vintage-engine"
     testImplementation "com.tngtech.archunit:archunit-junit5-api:${archunitJunit5Version}"
     testRuntimeOnly "com.tngtech.archunit:archunit-junit5-engine:${archunitJunit5Version}"
     testImplementation "org.assertj:assertj-core"
-    testImplementation "junit:junit"
-    testImplementation "org.mockito:mockito-core"
     testImplementation "org.hamcrest:hamcrest-library"
     testImplementation "com.h2database:h2"
     liquibaseRuntime "com.h2database:h2"

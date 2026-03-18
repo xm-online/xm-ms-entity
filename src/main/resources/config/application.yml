@@ -14,14 +14,21 @@
 # http://docs.spring.io/spring-boot/docs/current/reference/html/common-application-properties.html
 # ===================================================================
 
-# See https://github.com/Netflix/Hystrix/wiki/Configuration
-#hystrix:
-#    command:
-#        default:
-#            execution:
-#                isolation:
-#                    thread:
-#                        timeoutInMilliseconds: 10000
+# See https://resilience4j.readme.io/docs/circuitbreaker.html
+#resilience4j:
+#    circuitbreaker:
+#        configs:
+#            default:
+#                slidingWindowSize: 10
+#                failureRateThreshold: 33.3
+#                waitDurationInOpenState: 30s
+#                slowCallDurationThreshold: 5s
+#        instances:
+#            default:
+#                slidingWindowSize: 10
+#                failureRateThreshold: 33.3
+#                waitDurationInOpenState: 30s
+#                slowCallDurationThreshold: 5s
 
 management:
     endpoints:
@@ -85,7 +92,6 @@ spring:
                 binder:
                     health-timeout: 5 # kafkaHealthCheck timeout when scheduler-enabled: true, in seconds
     jackson:
-        serialization.write_dates_as_timestamps: false
         default-property-inclusion: non_empty
     jpa:
         open-in-view: false
@@ -131,6 +137,8 @@ spring:
     liquibase:
         default-schema: XM
         change-log: classpath:config/liquibase/master.xml
+    autoconfigure:
+        exclude: org.springframework.boot.jackson.autoconfigure.JacksonAutoConfiguration
 server:
     servlet:
         session:
