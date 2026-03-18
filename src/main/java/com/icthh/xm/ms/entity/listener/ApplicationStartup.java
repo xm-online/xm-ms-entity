@@ -12,7 +12,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
-import org.springframework.boot.kafka.autoconfigure.KafkaProperties;
 import org.springframework.context.ApplicationListener;
 import org.springframework.kafka.core.ConsumerFactory;
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
@@ -30,7 +29,6 @@ public class ApplicationStartup implements ApplicationListener<ApplicationReadyE
     private final ApplicationProperties applicationProperties;
     private final ConsumerFactory<String, String> consumerFactory;
     private final SystemTopicConsumer systemTopicConsumer;
-    private final KafkaProperties kafkaProperties;
     private final PrivilegeInspector privilegeInspector;
 
     @Override

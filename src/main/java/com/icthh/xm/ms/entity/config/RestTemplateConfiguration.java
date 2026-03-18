@@ -33,8 +33,8 @@ public class RestTemplateConfiguration {
 
     @LoadBalanced
     @Bean
-    public RestTemplate loadBalancedRestTemplate() {
-        return new RestTemplate();
+    public RestTemplate loadBalancedRestTemplate(RestTemplateBuilder restTemplateBuilder) {
+        return restTemplateBuilder.build();
     }
 
     @LoadBalanced
