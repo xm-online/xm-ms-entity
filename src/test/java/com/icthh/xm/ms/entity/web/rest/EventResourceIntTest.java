@@ -10,6 +10,8 @@ import com.icthh.xm.lep.api.LepManager;
 import com.icthh.xm.ms.entity.AbstractJupiterSpringBootTest;
 import com.icthh.xm.ms.entity.domain.Calendar;
 import com.icthh.xm.ms.entity.domain.Event;
+import com.icthh.xm.ms.entity.domain.Link;
+import com.icthh.xm.ms.entity.domain.Tag;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.domain.spec.CalendarSpec;
 import com.icthh.xm.ms.entity.repository.CalendarRepository;
@@ -22,6 +24,10 @@ import com.icthh.xm.ms.entity.service.XmEntitySpecService;
 import com.icthh.xm.ms.entity.service.impl.StartUpdateDateGenerationStrategy;
 import com.icthh.xm.ms.entity.service.query.EventQueryService;
 import jakarta.persistence.EntityManager;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.UUID;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -162,6 +168,13 @@ public class EventResourceIntTest extends AbstractJupiterSpringBootTest {
 
     private CalendarService calendarService;
 
+    private XmEntity mainEntity;
+    private XmEntity mainEntity2;
+    private XmEntity targetEntity1;
+    private XmEntity targetEntity2;
+    private Tag testTag;
+    private Tag testTag2;
+
     @BeforeTransaction
     public void beforeTransaction() {
         TenantContextUtils.setTenant(tenantContextHolder, "RESINTTEST");
@@ -241,6 +254,140 @@ public class EventResourceIntTest extends AbstractJupiterSpringBootTest {
     @BeforeEach
     public void initTest() {
         event = createEntity(em);
+
+        mainEntity = new XmEntity()
+                .typeKey("MAIN_ENTITY")
+                .key(UUID.randomUUID())
+                .name("Main Entity")
+                .startDate(Instant.now())
+                .updateDate(Instant.now());
+
+        mainEntity2 = new XmEntity()
+                .typeKey("MAIN_ENTITY2")
+                .key(UUID.randomUUID())
+                .name("Main Entity2")
+                .startDate(Instant.now())
+                .updateDate(Instant.now());
+
+        targetEntity1 = new XmEntity()
+                .typeKey("TARGET_ENTITY_1")
+                .key(UUID.randomUUID())
+                .name("Target Entity 1")
+                .startDate(Instant.now())
+                .updateDate(Instant.now())
+                .key(randomUUID());
+
+
+        targetEntity2 = new XmEntity()
+                .typeKey("TARGET_ENTITY_2")
+                .key(UUID.randomUUID())
+                .name("Target Entity 2")
+                .startDate(Instant.now())
+                .updateDate(Instant.now())
+                .key(randomUUID());
+
+
+        testTag = new Tag()
+                .typeKey("TEST_TAG")
+                .name("Test Tag")
+                .startDate(Instant.now())
+                .xmEntity(mainEntity);
+
+        testTag2 = new Tag()
+                .typeKey("TEST_TAG2")
+                .name("Test Tag2")
+                .startDate(Instant.now())
+                .xmEntity(mainEntity2);
+
+    }
+
+
+
+
+    @Test
+    @Transactional
+    public void shouldCreateXmEntityWithLinksAndTags() {
+        em.persist(mainEntity);
+        em.persist(mainEntity2);
+        em.persist(targetEntity1);
+        em.persist(targetEntity2);
+
+
+
+        Link link1 = new Link()
+                .typeKey("LINK_TYPE_1")
+                .name("Link to Target 1")
+                .description("First link from main entity")
+                .startDate(Instant.now())
+                .source(mainEntity)
+                .target(targetEntity1);
+
+        em.persist(link1);
+
+        Link link2 = new Link()
+                .typeKey("LINK_TYPE_2")
+                .name("Link to Target 2")
+                .description("Second link from main entity")
+                .startDate(Instant.now())
+                .source(mainEntity)
+                .target(targetEntity2);
+
+        em.persist(link2);
+
+        Set<Link> links1 = new HashSet<>();
+        links1.add(link1);
+        mainEntity.setSources(links1);
+        em.persist(mainEntity);
+
+        Set<Link> links2 = new HashSet<>();
+        links2.add(link2);
+        mainEntity2.setSources(links2);
+        em.persist(mainEntity2);
+
+
+        Set<Tag> tags = new HashSet<>();
+        tags.add(testTag);
+        mainEntity.setTags(tags);
+
+        Set<Tag> tags2 = new HashSet<>();
+        tags2.add(testTag2);
+        mainEntity2.setTags(tags2);
+
+        em.persist(mainEntity);
+        em.persist(mainEntity2);
+
+        XmEntity persistedEntity = xmEntityRepository.findById(mainEntity.getId()).orElse(null);
+        XmEntity persistedEntity2 = xmEntityRepository.findById(mainEntity2.getId()).orElse(null);
+
+        assertThat(persistedEntity).isNotNull();
+        assertThat(persistedEntity.getName()).isEqualTo("Main Entity");
+        assertThat(persistedEntity.getTypeKey()).isEqualTo("MAIN_ENTITY");
+
+        assertThat(persistedEntity.getSources()).hasSize(1);
+
+        Link persistedLink1 = persistedEntity.getSources().stream().findFirst().orElse(null);
+        assertThat(persistedLink1).isNotNull();
+        assertThat(persistedLink1.getName()).isEqualTo("Link to Target 1");
+        assertThat(persistedLink1.getSource().getId()).isEqualTo(persistedEntity.getId());
+        assertThat(persistedLink1.getTarget().getId()).isEqualTo(targetEntity1.getId());
+
+        Link persistedLink2 = persistedEntity2.getSources().stream().findFirst().orElse(null);
+        assertThat(persistedLink2).isNotNull();
+        assertThat(persistedLink2.getName()).isEqualTo("Link to Target 2");
+        assertThat(persistedLink2.getSource().getId()).isEqualTo(persistedEntity.getId());
+        assertThat(persistedLink2.getTarget().getId()).isEqualTo(targetEntity2.getId());
+
+        assertThat(persistedEntity.getTags()).hasSize(1);
+        Tag persistedTag = persistedEntity.getTags().iterator().next();
+        assertThat(persistedTag.getTypeKey()).isEqualTo("TEST_TAG");
+        assertThat(persistedTag.getName()).isEqualTo("Test Tag");
+        assertThat(persistedTag.getXmEntity().getId()).isEqualTo(persistedEntity.getId());
+
+        assertThat(persistedEntity2.getTags()).hasSize(1);
+        Tag persistedTag2 = persistedEntity2.getTags().iterator().next();
+        assertThat(persistedTag2.getTypeKey()).isEqualTo("TEST_TAG2");
+        assertThat(persistedTag2.getName()).isEqualTo("Test Tag2");
+        assertThat(persistedTag2.getXmEntity().getId()).isEqualTo(persistedEntity2.getId());
     }
 
     @Test
