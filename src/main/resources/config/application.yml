@@ -14,22 +14,6 @@
 # http://docs.spring.io/spring-boot/docs/current/reference/html/common-application-properties.html
 # ===================================================================
 
-# See https://resilience4j.readme.io/docs/circuitbreaker.html
-#resilience4j:
-#    circuitbreaker:
-#        configs:
-#            default:
-#                slidingWindowSize: 10
-#                failureRateThreshold: 33.3
-#                waitDurationInOpenState: 30s
-#                slowCallDurationThreshold: 5s
-#        instances:
-#            default:
-#                slidingWindowSize: 10
-#                failureRateThreshold: 33.3
-#                waitDurationInOpenState: 30s
-#                slowCallDurationThreshold: 5s
-
 management:
     endpoints:
         web:
