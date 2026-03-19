@@ -40,7 +40,7 @@ public class MailServiceIntTest extends AbstractJupiterSpringBootTest {
     private static final String RID = "rid";
     public static final String TENANT_NAME = "RESINTTEST";
 
-    @SpyBean
+    @MockitoSpyBean
     private MailService mailService;
 
     @Autowired

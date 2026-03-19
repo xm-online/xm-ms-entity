@@ -1,11 +1,15 @@
 package com.icthh.xm.ms.entity.config;
 
+import java.util.Arrays;
+import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.MediaType;
+import org.springframework.http.converter.AbstractHttpMessageConverter;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.converter.HttpMessageConverters;
-import org.springframework.http.converter.json.JacksonJsonHttpMessageConverter;
+import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
+import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import java.util.ArrayList;
@@ -25,16 +29,26 @@ public class WebMvcConfiguration implements WebMvcConfigurer {
 
     @Override
     public void configureMessageConverters(HttpMessageConverters.ServerBuilder builder) {
-        // create custom Jackson converter with additional media types
-        builder.addCustomConverter(createCustomJacksonConverter());
+        builder.configureMessageConvertersList(converters -> {
+            addSupportedMediaTypesTo(converters, MappingJackson2HttpMessageConverter.class,
+                    MediaType.parseMediaType("text/csv"),
+                    MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"));
+        });
     }
 
-    private JacksonJsonHttpMessageConverter createCustomJacksonConverter() {
-        JacksonJsonHttpMessageConverter converter = new JacksonJsonHttpMessageConverter();
+    private void addSupportedMediaTypesTo(List<HttpMessageConverter<?>> converters,
+                                          Class<? extends AbstractHttpMessageConverter<?>> targetConverterClass,
+                                          MediaType... mediaTypes) {
+        converters.stream()
+                .filter(conv -> conv.getClass() == targetConverterClass)
+                .map(conv -> (AbstractHttpMessageConverter) conv)
+                .forEach(conv -> addSupportedMediaTypes(conv, Arrays.asList(mediaTypes)));
+    }
+
+    private void addSupportedMediaTypes(AbstractHttpMessageConverter<?> converter,
+                                        List<MediaType> additionalMediaTypes) {
         ArrayList<MediaType> mediaTypes = new ArrayList<>(converter.getSupportedMediaTypes());
-        mediaTypes.add(MediaType.parseMediaType("text/csv"));
-        mediaTypes.add(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"));
+        mediaTypes.addAll(additionalMediaTypes);
         converter.setSupportedMediaTypes(mediaTypes);
-        return converter;
     }
 }

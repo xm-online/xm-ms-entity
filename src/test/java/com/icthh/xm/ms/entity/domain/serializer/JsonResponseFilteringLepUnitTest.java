@@ -47,7 +47,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
 import org.springframework.data.web.config.EnableSpringDataWebSupport;
 import org.springframework.http.MediaType;
-import org.springframework.http.converter.json.JacksonJsonHttpMessageConverter;
+import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
@@ -112,7 +112,7 @@ public class JsonResponseFilteringLepUnitTest extends AbstractJupiterWebMvcTest 
     private XmEntityResource xmEntityResource;
 
     @Autowired
-    private JacksonJsonHttpMessageConverter jacksonMessageConverter;
+    private MappingJackson2HttpMessageConverter jacksonMessageConverter;
 
     @Autowired
     private ExceptionTranslator exceptionTranslator;

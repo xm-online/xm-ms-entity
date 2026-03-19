@@ -441,8 +441,8 @@ dependencies {
     testCompileOnly "org.projectlombok:lombok:${lombok_version}"
     testAnnotationProcessor "org.projectlombok:lombok:${lombok_version}"
     testImplementation "com.jayway.jsonpath:json-path"
-    testImplementation 'io.cucumber:cucumber-junit-platform-engine:7.18.1'
-    testImplementation 'io.cucumber:cucumber-spring:7.18.1'
+    testImplementation "io.cucumber:cucumber-junit-platform-engine:${cucumber_version}"
+    testImplementation "io.cucumber:cucumber-spring:${cucumber_version}"
     testImplementation("org.springframework.boot:spring-boot-starter-test") {
         exclude module: "junit"
         exclude group: "com.vaadin.external.google", module: "android-json"
