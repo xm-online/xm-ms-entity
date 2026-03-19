@@ -9,7 +9,6 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.cloud.client.DefaultServiceInstance;
 import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.loadbalancer.core.ServiceInstanceListSupplier;
-import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import reactor.core.publisher.Flux;
@@ -30,7 +29,7 @@ public class WebappTenantOverrideConfiguration {
     }
 
     @Bean
-    public ServiceInstanceListSupplier staticServiceInstanceListSupplier(ConfigurableApplicationContext context) {
+    public ServiceInstanceListSupplier staticServiceInstanceListSupplier() {
         WIRE_MOCK.start();
         return new ServiceInstanceListSupplier() {
             @NotNull
