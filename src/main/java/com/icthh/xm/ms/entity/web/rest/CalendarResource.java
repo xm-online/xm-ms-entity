@@ -4,9 +4,9 @@ import com.codahale.metrics.annotation.Timed;
 import com.icthh.xm.commons.exceptions.BusinessException;
 import com.icthh.xm.commons.exceptions.ErrorConstants;
 import com.icthh.xm.commons.permission.annotation.PrivilegeDescription;
-import com.icthh.xm.ms.entity.domain.Calendar;
-import com.icthh.xm.ms.entity.domain.Event;
-import com.icthh.xm.ms.entity.service.CalendarService;
+import com.icthh.xm.ms.entity.service.dto.CalendarDto;
+import com.icthh.xm.ms.entity.service.dto.EventDto;
+import com.icthh.xm.ms.entity.web.rest.facade.CalendarFacade;
 import com.icthh.xm.ms.entity.service.query.filter.EventFilter;
 import com.icthh.xm.ms.entity.web.rest.util.HeaderUtil;
 import com.icthh.xm.ms.entity.web.rest.util.PaginationUtil;
@@ -43,13 +43,13 @@ public class CalendarResource {
 
     private static final String ENTITY_NAME = "calendar";
 
-    private final CalendarService calendarService;
+    private final CalendarFacade calendarFacade;
     private final CalendarResource calendarResource;
 
     public CalendarResource(
-                    CalendarService calendarService,
+                    CalendarFacade calendarFacade,
                     @Lazy CalendarResource calendarResource) {
-        this.calendarService = calendarService;
+        this.calendarFacade = calendarFacade;
         this.calendarResource = calendarResource;
     }
 
@@ -65,12 +65,12 @@ public class CalendarResource {
     @Timed
     @PreAuthorize("hasPermission({'calendar': #calendar}, 'CALENDAR.CREATE')")
     @PrivilegeDescription("Privilege to create a new calendar")
-    public ResponseEntity<Calendar> createCalendar(@Valid @RequestBody Calendar calendar) throws URISyntaxException {
+    public ResponseEntity<CalendarDto> createCalendar(@Valid @RequestBody CalendarDto calendar) throws URISyntaxException {
         if (calendar.getId() != null) {
             throw new BusinessException(ErrorConstants.ERR_BUSINESS_IDEXISTS,
                                         "A new calendar cannot already have an ID");
         }
-        Calendar result = calendarService.save(calendar);
+        CalendarDto result = calendarFacade.save(calendar);
         return ResponseEntity.created(new URI("/api/calendars/" + result.getId()))
             .headers(HeaderUtil.createEntityCreationAlert(ENTITY_NAME, result.getId().toString()))
             .body(result);
@@ -89,12 +89,12 @@ public class CalendarResource {
     @Timed
     @PreAuthorize("hasPermission({'id': #calendar.id, 'newCalendar': #calendar}, 'calendar', 'CALENDAR.UPDATE')")
     @PrivilegeDescription("Privilege to updates an existing calendar")
-    public ResponseEntity<Calendar> updateCalendar(@Valid @RequestBody Calendar calendar) throws URISyntaxException {
+    public ResponseEntity<CalendarDto> updateCalendar(@Valid @RequestBody CalendarDto calendar) throws URISyntaxException {
         if (calendar.getId() == null) {
             //in order to call method with permissions check
             return this.calendarResource.createCalendar(calendar);
         }
-        Calendar result = calendarService.save(calendar);
+        CalendarDto result = calendarFacade.save(calendar);
         return ResponseEntity.ok()
             .headers(HeaderUtil.createEntityUpdateAlert(ENTITY_NAME, calendar.getId().toString()))
             .body(result);
@@ -107,8 +107,8 @@ public class CalendarResource {
      */
     @GetMapping("/calendars")
     @Timed
-    public List<Calendar> getAllCalendars() {
-        return calendarService.findAll(null);
+    public List<CalendarDto> getAllCalendars() {
+        return calendarFacade.findAll(null);
     }
 
     /**
@@ -121,8 +121,8 @@ public class CalendarResource {
     @Timed
     @PostAuthorize("hasPermission({'returnObject': returnObject.body}, 'CALENDAR.GET_LIST.ITEM')")
     @PrivilegeDescription("Privilege to get the calendar by id")
-    public ResponseEntity<Calendar> getCalendar(@PathVariable Long id) {
-        Calendar calendar = calendarService.findOne(id);
+    public ResponseEntity<CalendarDto> getCalendar(@PathVariable Long id) {
+        CalendarDto calendar = calendarFacade.findOne(id);
         return RespContentUtil.wrapOrNotFound(Optional.ofNullable(calendar));
     }
 
@@ -136,10 +136,10 @@ public class CalendarResource {
     @Timed
     @PreAuthorize("hasPermission({'calendarId': #calendarId}, 'calendar', 'CALENDAR.GET_LIST.ITEM.EVENTS')")
     @PrivilegeDescription("Privilege to get events for specific calendar")
-    public ResponseEntity<List<Event>> getCalendarEvents(@PathVariable Long calendarId,
+    public ResponseEntity<List<EventDto>> getCalendarEvents(@PathVariable Long calendarId,
                                                          EventFilter filter,
                                                          Pageable pageable) {
-        Page<Event> page = calendarService.findEvents(calendarId, filter, pageable);
+        Page<EventDto> page = calendarFacade.findEvents(calendarId, filter, pageable);
         HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(page, "/calendars/{id}/events");
         return new ResponseEntity<>(page.getContent(), headers, HttpStatus.OK);
     }
@@ -155,7 +155,7 @@ public class CalendarResource {
     @PreAuthorize("hasPermission({'id': #id}, 'calendar', 'CALENDAR.DELETE')")
     @PrivilegeDescription("Privilege to delete the calendar by id")
     public ResponseEntity<Void> deleteCalendar(@PathVariable Long id) {
-        calendarService.delete(id);
+        calendarFacade.delete(id);
         return ResponseEntity.ok().headers(HeaderUtil.createEntityDeletionAlert(ENTITY_NAME, id.toString())).build();
     }
 }

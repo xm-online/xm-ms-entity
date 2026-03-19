@@ -5,8 +5,6 @@ import com.fasterxml.jackson.annotation.JsonIdentityReference;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import com.icthh.xm.ms.entity.domain.idresolver.XmEntityObjectIdResolver;
 import com.icthh.xm.ms.entity.validator.TypeKey;
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -35,7 +33,6 @@ import java.util.Set;
 /**
  * Represents calendar instance related to XmEntity.
  */
-@ApiModel(description = "Represents calendar instance related to XmEntity.")
 @Entity
 @Table(name = "calendar")
 @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
@@ -53,7 +50,6 @@ public class Calendar implements Serializable {
      * String typeKey with tree-like structure.
      */
     @NotNull
-    @ApiModelProperty(value = "String typeKey with tree-like structure.", required = true)
     @Column(name = "type_key", nullable = false)
     private String typeKey;
 
@@ -61,28 +57,24 @@ public class Calendar implements Serializable {
      * Calendar name.
      */
     @NotNull
-    @ApiModelProperty(value = "Calendar name.", required = true)
     @Column(name = "name", nullable = false)
     private String name;
 
     /**
      * Calendar description
      */
-    @ApiModelProperty(value = "Calendar description")
     @Column(name = "description")
     private String description;
 
     /**
      * Start date
      */
-    @ApiModelProperty(value = "Start date")
     @Column(name = "start_date", nullable = false)
     private Instant startDate;
 
     /**
      * End date
      */
-    @ApiModelProperty(value = "End date")
     @Column(name = "end_date")
     private Instant endDate;
 
@@ -100,7 +92,6 @@ public class Calendar implements Serializable {
 
     @Getter
     @Setter
-    @ApiModelProperty(value = "Timezone id")
     @Column(name = "time_zone_id")
     private String timeZoneId;
 

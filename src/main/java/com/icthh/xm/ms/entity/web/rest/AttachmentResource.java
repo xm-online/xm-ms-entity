@@ -4,8 +4,8 @@ import com.codahale.metrics.annotation.Timed;
 import com.icthh.xm.commons.exceptions.BusinessException;
 import com.icthh.xm.commons.exceptions.ErrorConstants;
 import com.icthh.xm.commons.permission.annotation.PrivilegeDescription;
-import com.icthh.xm.ms.entity.domain.Attachment;
-import com.icthh.xm.ms.entity.service.AttachmentService;
+import com.icthh.xm.ms.entity.service.dto.AttachmentDto;
+import com.icthh.xm.ms.entity.web.rest.facade.AttachmentFacade;
 import com.icthh.xm.ms.entity.web.rest.util.HeaderUtil;
 import com.icthh.xm.ms.entity.web.rest.util.RespContentUtil;
 import jakarta.validation.Valid;
@@ -36,13 +36,13 @@ public class AttachmentResource {
 
     private static final String ENTITY_NAME = "attachment";
 
-    private final AttachmentService attachmentService;
+    private final AttachmentFacade attachmentFacade;
     private final AttachmentResource attachmentResource;
 
     public AttachmentResource(
-                    AttachmentService attachmentService,
+                    AttachmentFacade attachmentFacade,
                     @Lazy AttachmentResource attachmentResource) {
-        this.attachmentService = attachmentService;
+        this.attachmentFacade = attachmentFacade;
         this.attachmentResource = attachmentResource;
     }
 
@@ -57,12 +57,12 @@ public class AttachmentResource {
     @Timed
     @PreAuthorize("hasPermission({'attachment': #attachment}, 'ATTACHMENT.CREATE')")
     @PrivilegeDescription("Privilege to create a new attachment")
-    public ResponseEntity<Attachment> createAttachment(@Valid @RequestBody Attachment attachment) throws URISyntaxException {
+    public ResponseEntity<AttachmentDto> createAttachment(@Valid @RequestBody AttachmentDto attachment) throws URISyntaxException {
         if (attachment.getId() != null) {
             throw new BusinessException(ErrorConstants.ERR_BUSINESS_IDEXISTS,
                 "A new attachment cannot already have an ID");
         }
-        Attachment result = attachmentService.save(attachment);
+        AttachmentDto result = attachmentFacade.save(attachment);
         return ResponseEntity.created(new URI("/api/attachments/" + result.getId()))
             .headers(HeaderUtil.createEntityCreationAlert(ENTITY_NAME, result.getId().toString()))
             .body(result);
@@ -81,12 +81,12 @@ public class AttachmentResource {
     @Timed
     @PreAuthorize("hasPermission({'id': #attachment.id, 'newAttachment': #attachment}, 'attachment', 'ATTACHMENT.UPDATE')")
     @PrivilegeDescription("Privilege to update an existing attachment")
-    public ResponseEntity<Attachment> updateAttachment(@Valid @RequestBody Attachment attachment) throws URISyntaxException {
+    public ResponseEntity<AttachmentDto> updateAttachment(@Valid @RequestBody AttachmentDto attachment) throws URISyntaxException {
         if (attachment.getId() == null) {
             //in order to call method with permissions check
             return this.attachmentResource.createAttachment(attachment);
         }
-        Attachment result = attachmentService.save(attachment);
+        AttachmentDto result = attachmentFacade.save(attachment);
         return ResponseEntity.ok()
             .headers(HeaderUtil.createEntityUpdateAlert(ENTITY_NAME, attachment.getId().toString()))
             .body(result);
@@ -99,8 +99,8 @@ public class AttachmentResource {
      */
     @GetMapping("/attachments")
     @Timed
-    public List<Attachment> getAllAttachments() {
-        return attachmentService.findAll(null);
+    public List<AttachmentDto> getAllAttachments() {
+        return attachmentFacade.findAll(null);
     }
 
     /**
@@ -113,8 +113,8 @@ public class AttachmentResource {
     @Timed
     @PostAuthorize("hasPermission({'returnObject': returnObject.body}, 'ATTACHMENT.GET_LIST.ITEM')")
     @PrivilegeDescription("Privilege to get attachment by id")
-    public ResponseEntity<Attachment> getAttachment(@PathVariable Long id) {
-        Optional<Attachment> attachment = attachmentService.getOneWithContent(id);
+    public ResponseEntity<AttachmentDto> getAttachment(@PathVariable Long id) {
+        Optional<AttachmentDto> attachment = attachmentFacade.getOneWithContent(id);
         return RespContentUtil.wrapOrNotFound(attachment);
     }
 
@@ -129,7 +129,7 @@ public class AttachmentResource {
     @PreAuthorize("hasPermission({'id': #id}, 'attachment', 'ATTACHMENT.DELETE')")
     @PrivilegeDescription("Privilege to delete attachment by id")
     public ResponseEntity<Void> deleteAttachment(@PathVariable Long id) {
-        attachmentService.delete(id);
+        attachmentFacade.delete(id);
         return ResponseEntity.ok().headers(HeaderUtil.createEntityDeletionAlert(ENTITY_NAME, id.toString())).build();
     }
 
@@ -144,7 +144,7 @@ public class AttachmentResource {
     @PostAuthorize("hasPermission({'returnObject': returnObject.body}, 'ATTACHMENT.GET_LIST.ITEM')")
     @PrivilegeDescription("Privilege to get attachment by id")
     public ResponseEntity<String> getAttachmentDownloadLink(@PathVariable Long id) {
-        String downloadLink = attachmentService.getAttachmentDownloadLink(id);
+        String downloadLink = attachmentFacade.getAttachmentDownloadLink(id);
         return RespContentUtil.wrapOrNotFound(Optional.ofNullable(downloadLink));
     }
 

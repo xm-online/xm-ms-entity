@@ -4,8 +4,8 @@ import com.codahale.metrics.annotation.Timed;
 import com.icthh.xm.commons.exceptions.BusinessException;
 import com.icthh.xm.commons.exceptions.ErrorConstants;
 import com.icthh.xm.commons.permission.annotation.PrivilegeDescription;
-import com.icthh.xm.ms.entity.domain.Vote;
-import com.icthh.xm.ms.entity.service.VoteService;
+import com.icthh.xm.ms.entity.service.dto.VoteDto;
+import com.icthh.xm.ms.entity.web.rest.facade.VoteFacade;
 import com.icthh.xm.ms.entity.web.rest.util.HeaderUtil;
 import com.icthh.xm.ms.entity.web.rest.util.PaginationUtil;
 import com.icthh.xm.ms.entity.web.rest.util.RespContentUtil;
@@ -43,13 +43,13 @@ public class VoteResource {
     private static final String ENTITY_NAME = "vote";
 
     private final VoteResource voteResource;
-    private final VoteService voteService;
+    private final VoteFacade voteFacade;
 
     public VoteResource(
                     @Lazy VoteResource voteResource,
-                    VoteService voteService) {
+                    VoteFacade voteFacade) {
         this.voteResource = voteResource;
-        this.voteService = voteService;
+        this.voteFacade = voteFacade;
     }
 
     /**
@@ -63,12 +63,12 @@ public class VoteResource {
     @Timed
     @PreAuthorize("hasPermission({'vote': #vote}, 'VOTE.CREATE')")
     @PrivilegeDescription("Privilege to create a new vote")
-    public ResponseEntity<Vote> createVote(@Valid @RequestBody Vote vote) throws URISyntaxException {
+    public ResponseEntity<VoteDto> createVote(@Valid @RequestBody VoteDto vote) throws URISyntaxException {
         if (vote.getId() != null) {
             throw new BusinessException(ErrorConstants.ERR_BUSINESS_IDEXISTS,
                                         "A new vote cannot already have an ID");
         }
-        Vote result = voteService.save(vote);
+        VoteDto result = voteFacade.save(vote);
         return ResponseEntity.created(new URI("/api/votes/" + result.getId()))
             .headers(HeaderUtil.createEntityCreationAlert(ENTITY_NAME, result.getId().toString()))
             .body(result);
@@ -87,12 +87,12 @@ public class VoteResource {
     @Timed
     @PreAuthorize("hasPermission({'id': #vote.id, 'newVote': #vote}, 'vote', 'VOTE.UPDATE')")
     @PrivilegeDescription("Privilege to updates an existing vote")
-    public ResponseEntity<Vote> updateVote(@Valid @RequestBody Vote vote) throws URISyntaxException {
+    public ResponseEntity<VoteDto> updateVote(@Valid @RequestBody VoteDto vote) throws URISyntaxException {
         if (vote.getId() == null) {
             //in order to call method with permissions check
             return this.voteResource.createVote(vote);
         }
-        Vote result = voteService.save(vote);
+        VoteDto result = voteFacade.save(vote);
         return ResponseEntity.ok()
             .headers(HeaderUtil.createEntityUpdateAlert(ENTITY_NAME, vote.getId().toString()))
             .body(result);
@@ -106,8 +106,8 @@ public class VoteResource {
      */
     @GetMapping("/votes")
     @Timed
-    public ResponseEntity<List<Vote>> getAllVotes(@ApiParam Pageable pageable) {
-        Page<Vote> page = voteService.findAll(pageable, null);
+    public ResponseEntity<List<VoteDto>> getAllVotes(@ApiParam Pageable pageable) {
+        Page<VoteDto> page = voteFacade.findAll(pageable, null);
         HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(page, "/api/votes");
         return new ResponseEntity<>(page.getContent(), headers, HttpStatus.OK);
     }
@@ -122,8 +122,8 @@ public class VoteResource {
     @Timed
     @PostAuthorize("hasPermission({'returnObject': returnObject.body}, 'VOTE.GET_LIST.ITEM')")
     @PrivilegeDescription("Privilege to get vote by id")
-    public ResponseEntity<Vote> getVote(@PathVariable Long id) {
-        Vote vote = voteService.findOne(id);
+    public ResponseEntity<VoteDto> getVote(@PathVariable Long id) {
+        VoteDto vote = voteFacade.findOne(id);
         return RespContentUtil.wrapOrNotFound(Optional.ofNullable(vote));
     }
 
@@ -138,7 +138,7 @@ public class VoteResource {
     @PreAuthorize("hasPermission({'id': #id}, 'vote', 'VOTE.DELETE')")
     @PrivilegeDescription("Privilege to delete the vote by id")
     public ResponseEntity<Void> deleteVote(@PathVariable Long id) {
-        voteService.delete(id);
+        voteFacade.delete(id);
         return ResponseEntity.ok().headers(HeaderUtil.createEntityDeletionAlert(ENTITY_NAME, id.toString())).build();
     }
 }

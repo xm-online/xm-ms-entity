@@ -1,6 +1,5 @@
 package com.icthh.xm.ms.entity.domain;
 
-import io.swagger.annotations.ApiModelProperty;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -38,7 +37,6 @@ public class Vote implements Serializable {
      * Vote author user key.
      */
     @NotNull
-    @ApiModelProperty(value = "Vote author user key", required = true)
     @Column(name = "user_key", nullable = false)
     private String userKey;
 
@@ -46,21 +44,18 @@ public class Vote implements Serializable {
      * Vote value
      */
     @NotNull
-    @ApiModelProperty(value = "Vote value", required = true)
     @Column(name = "jhi_value", nullable = false)
     private Double value;
 
     /**
      * Vote message
      */
-    @ApiModelProperty(value = "Vote message")
     @Column(name = "message")
     private String message;
 
     /**
      * Entry date
      */
-    @ApiModelProperty(value = "Entry date")
     @Column(name = "entry_date", nullable = false)
     private Instant entryDate;
 

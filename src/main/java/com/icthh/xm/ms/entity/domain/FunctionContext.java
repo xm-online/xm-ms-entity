@@ -6,8 +6,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import com.icthh.xm.ms.entity.domain.converter.MapToStringConverter;
 import com.icthh.xm.ms.entity.domain.idresolver.XmEntityObjectIdResolver;
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
@@ -35,7 +33,6 @@ import java.util.Objects;
 /**
  * Represents function context with result of function execution.
  */
-@ApiModel(description = "Represents function context with result of function execution.")
 @Entity
 @Table(name = "function_context")
 @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
@@ -52,7 +49,6 @@ public class FunctionContext implements Serializable {
      * Function context alphanumeric alias.
      */
     @NotNull
-    @ApiModelProperty(value = "Function context alphanumeric alias.", required = true)
     @Column(name = "jhi_key", nullable = false)
     private String key;
 
@@ -60,35 +56,30 @@ public class FunctionContext implements Serializable {
      * String typeKey with tree-like structure.
      */
     @NotNull
-    @ApiModelProperty(value = "String typeKey with tree-like structure.", required = true)
     @Column(name = "type_key", nullable = false)
     private String typeKey;
 
     /**
      * Function context description.
      */
-    @ApiModelProperty(value = "Function context description.")
     @Column(name = "description")
     private String description;
 
     /**
      * Start date.
      */
-    @ApiModelProperty(value = "Start date.")
     @Column(name = "start_date", nullable = false)
     private Instant startDate;
 
     /**
      * Update date.
      */
-    @ApiModelProperty(value = "Update date.")
     @Column(name = "update_date")
     private Instant updateDate;
 
     /**
      * End date.
      */
-    @ApiModelProperty(value = "End date.")
     @Column(name = "end_date")
     private Instant endDate;
 
@@ -96,7 +87,6 @@ public class FunctionContext implements Serializable {
      * Function context execution related data in JSON format.
      * On DTO level data type should be Map<String,Object>
      */
-    @ApiModelProperty(value = "Function context execution related data in JSON format. On DTO level data type should be Map<String,Object>")
     @Convert(converter = MapToStringConverter.class)
     @Column(name = "data")
     private Map<String, Object> data = new HashMap<>();

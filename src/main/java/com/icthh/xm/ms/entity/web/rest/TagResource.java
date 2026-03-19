@@ -4,8 +4,8 @@ import com.codahale.metrics.annotation.Timed;
 import com.icthh.xm.commons.exceptions.BusinessException;
 import com.icthh.xm.commons.exceptions.ErrorConstants;
 import com.icthh.xm.commons.permission.annotation.PrivilegeDescription;
-import com.icthh.xm.ms.entity.domain.Tag;
-import com.icthh.xm.ms.entity.service.TagService;
+import com.icthh.xm.ms.entity.service.dto.TagDto;
+import com.icthh.xm.ms.entity.web.rest.facade.TagFacade;
 import com.icthh.xm.ms.entity.web.rest.util.HeaderUtil;
 import com.icthh.xm.ms.entity.web.rest.util.RespContentUtil;
 import jakarta.validation.Valid;
@@ -37,13 +37,13 @@ public class TagResource {
     private static final String ENTITY_NAME = "tag";
 
     private final TagResource tagResource;
-    private final TagService tagService;
+    private final TagFacade tagFacade;
 
     public TagResource(
                     @Lazy TagResource tagResource,
-                    TagService tagService) {
+                    TagFacade tagFacade) {
         this.tagResource = tagResource;
-        this.tagService = tagService;
+        this.tagFacade = tagFacade;
     }
 
     /**
@@ -57,12 +57,12 @@ public class TagResource {
     @Timed
     @PreAuthorize("hasPermission({'tag': #tag}, 'TAG.CREATE')")
     @PrivilegeDescription("Privilege to create a new tag")
-    public ResponseEntity<Tag> createTag(@Valid @RequestBody Tag tag) throws URISyntaxException {
+    public ResponseEntity<TagDto> createTag(@Valid @RequestBody TagDto tag) throws URISyntaxException {
         if (tag.getId() != null) {
             throw new BusinessException(ErrorConstants.ERR_BUSINESS_IDEXISTS,
                                         "A new tag cannot already have an ID");
         }
-        Tag result = tagService.save(tag);
+        TagDto result = tagFacade.save(tag);
         return ResponseEntity.created(new URI("/api/tags/" + result.getId()))
             .headers(HeaderUtil.createEntityCreationAlert(ENTITY_NAME, result.getId().toString()))
             .body(result);
@@ -81,12 +81,12 @@ public class TagResource {
     @Timed
     @PreAuthorize("hasPermission({'id': #tag.id, 'newTag': #tag}, 'tag', 'TAG.UPDATE')")
     @PrivilegeDescription("Privilege to updates an existing tag")
-    public ResponseEntity<Tag> updateTag(@Valid @RequestBody Tag tag) throws URISyntaxException {
+    public ResponseEntity<TagDto> updateTag(@Valid @RequestBody TagDto tag) throws URISyntaxException {
         if (tag.getId() == null) {
             //in order to call method with permissions check
             return this.tagResource.createTag(tag);
         }
-        Tag result = tagService.save(tag);
+        TagDto result = tagFacade.save(tag);
         return ResponseEntity.ok()
             .headers(HeaderUtil.createEntityUpdateAlert(ENTITY_NAME, tag.getId().toString()))
             .body(result);
@@ -99,8 +99,8 @@ public class TagResource {
      */
     @GetMapping("/tags")
     @Timed
-    public List<Tag> getAllTags() {
-        return tagService.findAll(null);
+    public List<TagDto> getAllTags() {
+        return tagFacade.findAll(null);
     }
 
     /**
@@ -113,8 +113,8 @@ public class TagResource {
     @Timed
     @PostAuthorize("hasPermission({'returnObject': returnObject.body}, 'TAG.GET_LIST.ITEM')")
     @PrivilegeDescription("Privilege to get the tag by id")
-    public ResponseEntity<Tag> getTag(@PathVariable Long id) {
-        Tag tag = tagService.findOne(id);
+    public ResponseEntity<TagDto> getTag(@PathVariable Long id) {
+        TagDto tag = tagFacade.findOne(id);
         return RespContentUtil.wrapOrNotFound(Optional.ofNullable(tag));
     }
 
@@ -129,7 +129,7 @@ public class TagResource {
     @PreAuthorize("hasPermission({'id': #id}, 'tag', 'TAG.DELETE')")
     @PrivilegeDescription("Privilege to delete the tag by id")
     public ResponseEntity<Void> deleteTag(@PathVariable Long id) {
-        tagService.delete(id);
+        tagFacade.delete(id);
         return ResponseEntity.ok().headers(HeaderUtil.createEntityDeletionAlert(ENTITY_NAME, id.toString())).build();
     }
 }

@@ -16,8 +16,6 @@ import static com.icthh.xm.ms.entity.validator.NotNullBySpecField.KEY;
 import static com.icthh.xm.ms.entity.validator.NotNullBySpecField.NAME;
 import com.icthh.xm.ms.entity.validator.StateKey;
 import com.icthh.xm.ms.entity.validator.TypeKey;
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
@@ -68,8 +66,6 @@ import java.util.function.BiConsumer;
 @TypeKey
 @StateKey
 @JsonData
-@ApiModel(description = "Represents any XM entity like Account, Product Offering, Product, Order, Handling, "
-    + "Resource, Task, Agreement, Contact, Organization, Price, Channel, Segment and other.")
 @Entity
 @Table(name = "xm_entity")
 @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
@@ -104,7 +100,6 @@ public class XmEntity implements Serializable, Persistable<Long> {
      * but only one entity could be addressable at one time, as other should be ended
      * by endDate property.
      */
-    @ApiModelProperty(value = "Additional lateral identification for this entity could be defined by template Example: PO-1 for Product Offering, e-Mail or MSISDN for account, external Id for Order etc). Key is not full unique entity identification. Few entities could have one key, but only one entity could be addressable at one time, as other should be ended by endDate property.", required = true)
     @Column(name = "jhi_key", nullable = false)
     private String key;
 
@@ -117,7 +112,6 @@ public class XmEntity implements Serializable, Persistable<Long> {
      * PRODUCT-OFFERING.CAMPAIGN, PRODUCT-OFFERING.RATE-PLAN etc.
      */
     @jakarta.validation.constraints.NotNull
-    @ApiModelProperty(value = "Key reference to the configured Entity Type. Convention is capital letter with dash '-'. Example: ACCOUNT, PRODUCT-OFFERING, PRICE etc. Entity Sub Types could be separated by dot '.'. Convention is same as for Type. Example: ACCOUNT.ADMIN, ACCOUNT.USER, ACCOUNT.PARTNER for type ACCOUNT or PRODUCT-OFFERING.CAMPAIGN, PRODUCT-OFFERING.RATE-PLAN etc.", required = true)
     @Column(name = "type_key", nullable = false)
     private String typeKey;
 
@@ -126,7 +120,6 @@ public class XmEntity implements Serializable, Persistable<Long> {
      * pair of Entity Type. Convention is same as for type (ACTIVE, ORDERED, PRODUCTION,
      * CANCELED, CANCELED.MANUAL etc).
      */
-    @ApiModelProperty(value = "Key reference to the configured Entity State. Entity State matrix related to the pair of Entity Type. Convention is same as for type (ACTIVE, ORDERED, PRODUCTION, CANCELED, CANCELED.MANUAL etc).")
     @Column(name = "state_key")
     private String stateKey;
 
@@ -134,28 +127,24 @@ public class XmEntity implements Serializable, Persistable<Long> {
      * This is i18n name of Entity.
      * TODO: change data type
      */
-    @ApiModelProperty(value = "This is i18n name of Entity. TODO: change data type", required = true)
     @Column(name = "name", nullable = false)
     private String name;
 
     /**
      * Start date.
      */
-    @ApiModelProperty(value = "Start date.")
     @Column(name = "start_date", nullable = false)
     private Instant startDate;
 
     /**
      * Update date.
      */
-    @ApiModelProperty(value = "Update date.")
     @Column(name = "update_date", nullable = false)
     private Instant updateDate;
 
     /**
      * End date.
      */
-    @ApiModelProperty(value = "End date.")
     @Column(name = "end_date")
     private Instant endDate;
 
@@ -164,7 +153,6 @@ public class XmEntity implements Serializable, Persistable<Long> {
      * to identify avatar size for different views.
      */
     @JsonIgnore
-    @ApiModelProperty(value = "Relative link to the avatar image. It should support to use additional parameters to identify avatar size for different views.")
     @Column(name = "avatar_url")
     private String avatarUrlRelative;
 
@@ -178,7 +166,6 @@ public class XmEntity implements Serializable, Persistable<Long> {
      * This field describe instance of entity and is not i18n. It could be a big text.
      * Markdown or HTML format should be supported.
      */
-    @ApiModelProperty(value = "This field describe instance of entity and is not i18n. It could be a big text. Markdown or HTML format should be supported.")
     @Column(name = "description")
     private String description;
 
@@ -190,7 +177,6 @@ public class XmEntity implements Serializable, Persistable<Long> {
      * For postgres it's object and for other db need to string converter.
      */
     @JdbcTypeCode(SqlTypes.JSON)
-    @ApiModelProperty(value = "Data property represents entity fields as JSON structure. Fields specified by Formly and could use them for form building.")
     @JsonDeserialize(using = UntypedObjectDeserializer.class)
     @Convert(converter = MapToStringConverter.class)
     @Column(name = "data")
@@ -199,21 +185,18 @@ public class XmEntity implements Serializable, Persistable<Long> {
     /**
      * Field is used to mark entities as deleted without physical deletion.
      */
-    @ApiModelProperty(value = "Field is used to mark entities as deleted without physical deletion.")
     @Column(name = "removed")
     private Boolean removed;
 
     /**
      * Created by user key.
      */
-    @ApiModelProperty(value = "Created by user key.")
     @Column(name = "created_by")
     private String createdBy;
 
     /**
      * Updated by user key.
      */
-    @ApiModelProperty(value = "Updated by user key.")
     @Column(name = "updated_by")
     private String updatedBy;
 

@@ -1,7 +1,5 @@
 package com.icthh.xm.ms.entity.domain;
 
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -17,7 +15,6 @@ import java.util.Objects;
 /**
  * Represents Attachment content. Content can be extracted separately from the attachment.
  */
-@ApiModel(description = "Represents Attachment content. Content can be extracted separately from the attachment.")
 @Entity
 @Table(name = "content")
 public class Content implements Serializable {
@@ -33,7 +30,6 @@ public class Content implements Serializable {
      * Content value as byte array
      */
     @NotNull
-    @ApiModelProperty(value = "Content value as byte array", required = true)
     // @Lob // Do not use this annotation as it has different behaviour in Postgres and H2.
     @Column(name = "jhi_value", nullable = false, columnDefinition="BLOB")
     private byte[] value;

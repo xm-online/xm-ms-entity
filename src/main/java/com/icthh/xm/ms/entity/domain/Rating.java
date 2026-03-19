@@ -6,7 +6,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import com.icthh.xm.ms.entity.domain.idresolver.XmEntityObjectIdResolver;
 import com.icthh.xm.ms.entity.validator.TypeKey;
-import io.swagger.annotations.ApiModelProperty;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -53,28 +52,24 @@ public class Rating implements Serializable {
      * String typeKey with tree-like structure.
      */
     @NotNull
-    @ApiModelProperty(value = "String typeKey with tree-like structure.", required = true)
     @Column(name = "type_key", nullable = false)
     private String typeKey;
 
     /**
      * Rating value
      */
-    @ApiModelProperty(value = "Rating value")
     @Column(name = "jhi_value")
     private Double value;
 
     /**
      * Start date
      */
-    @ApiModelProperty(value = "Start date")
     @Column(name = "start_date", nullable = false)
     private Instant startDate;
 
     /**
      * End date
      */
-    @ApiModelProperty(value = "End date")
     @Column(name = "end_date")
     private Instant endDate;
 

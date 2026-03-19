@@ -5,10 +5,12 @@ import com.icthh.xm.commons.logging.LoggingAspectConfig;
 import com.icthh.xm.commons.permission.annotation.PrivilegeDescription;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.domain.spec.DataSchema;
+import com.icthh.xm.ms.entity.service.dto.XmEntityDto;
 import com.icthh.xm.ms.entity.domain.spec.TypeSpec;
 import com.icthh.xm.ms.entity.service.json.JsonSchemaGenerationService;
 import com.icthh.xm.ms.entity.service.XmEntityGeneratorService;
 import com.icthh.xm.ms.entity.service.XmEntitySpecService;
+import com.icthh.xm.ms.entity.service.mapper.XmEntityMapper;
 import com.icthh.xm.ms.entity.web.rest.util.HeaderUtil;
 import com.icthh.xm.ms.entity.web.rest.util.RespContentUtil;
 import io.swagger.annotations.ApiParam;
@@ -50,6 +52,7 @@ public class XmEntitySpecResource {
     private final XmEntitySpecService xmEntitySpecService;
     private final XmEntityGeneratorService xmEntityGeneratorService;
     private final JsonSchemaGenerationService jsonSchemaGenerationService;
+    private final XmEntityMapper xmEntityMapper;
 
     public enum Filter {
 
@@ -133,12 +136,13 @@ public class XmEntitySpecResource {
     @Timed
     @PreAuthorize("hasPermission({'rootTypeKey': #rootTypeKey}, 'XMENTITY_SPEC.GENERATE')")
     @PrivilegeDescription("Privilege to generate a new random xmEntity with passed type. Used for demo")
-    public ResponseEntity<XmEntity> generateXmEntity(@ApiParam String rootTypeKey) throws URISyntaxException {
+    public ResponseEntity<XmEntityDto> generateXmEntity(@ApiParam String rootTypeKey) throws URISyntaxException {
         log.debug("REST request to generate XmEntity");
         XmEntity result = xmEntityGeneratorService.generateXmEntity(rootTypeKey != null ? rootTypeKey : "");
+        XmEntityDto dto = xmEntityMapper.toDto(result);
         return ResponseEntity.created(new URI("/api/xm-entities/" + result.getId()))
             .headers(HeaderUtil.createEntityCreationAlert(ENTITY_NAME, result.getId().toString()))
-            .body(result);
+            .body(dto);
     }
 
     /**
@@ -152,7 +156,7 @@ public class XmEntitySpecResource {
     @Timed
     @PreAuthorize("hasPermission({'xmEntitySpec': #xmEntitySpec}, 'XMENTITY_SPEC.UPDATE')")
     @PrivilegeDescription("Privilege to update an existing xmEntity specification")
-    public ResponseEntity<XmEntity> updateXmEntitySpec(@RequestBody String xmEntitySpec) {
+    public ResponseEntity<Void> updateXmEntitySpec(@RequestBody String xmEntitySpec) {
         xmEntitySpecService.updateXmEntitySpec(xmEntitySpec);
         return ResponseEntity.ok().build();
     }
