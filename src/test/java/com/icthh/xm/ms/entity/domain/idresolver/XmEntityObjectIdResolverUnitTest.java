@@ -23,8 +23,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.converter.json.JacksonJsonHttpMessageConverter;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -56,18 +56,17 @@ public class XmEntityObjectIdResolverUnitTest extends AbstractJupiterWebMvcTest 
     private LinkResource linkResource;
 
     @Autowired
-    private MappingJackson2HttpMessageConverter jacksonMessageConverter;
-
-    @Autowired
     private ExceptionTranslator exceptionTranslator;
 
     private MockMvc mockMvc;
 
     @BeforeEach
     public void setup() {
+        JacksonJsonHttpMessageConverter converter = new JacksonJsonHttpMessageConverter();
         this.mockMvc = MockMvcBuilders.standaloneSetup(linkResource)
-                                      .setControllerAdvice(exceptionTranslator)
-            .setMessageConverters(jacksonMessageConverter).build();
+                .setControllerAdvice(exceptionTranslator)
+                .setMessageConverters(converter)
+                .build();
     }
 
     @SneakyThrows

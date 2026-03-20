@@ -3,11 +3,13 @@ package com.icthh.xm.ms.entity.config;
 import java.util.Arrays;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.AbstractHttpMessageConverter;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.converter.HttpMessageConverters;
+import org.springframework.http.converter.json.JacksonJsonHttpMessageConverter;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
@@ -30,7 +32,7 @@ public class WebMvcConfiguration implements WebMvcConfigurer {
     @Override
     public void configureMessageConverters(HttpMessageConverters.ServerBuilder builder) {
         builder.configureMessageConvertersList(converters -> {
-            addSupportedMediaTypesTo(converters, MappingJackson2HttpMessageConverter.class,
+            addSupportedMediaTypesTo(converters, JacksonJsonHttpMessageConverter.class,
                     MediaType.parseMediaType("text/csv"),
                     MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"));
         });

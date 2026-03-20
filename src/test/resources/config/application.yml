@@ -18,8 +18,6 @@ spring:
         name: entity
     main:
       allow-bean-definition-overriding: true
-    jackson:
-        serialization.write_dates_as_timestamps: false
     cache:
         type: none
     datasource:
@@ -76,6 +74,7 @@ spring:
         exclude:
         - org.springframework.boot.autoconfigure.elasticsearch.ElasticsearchClientAutoConfiguration
         - org.springframework.boot.autoconfigure.elasticsearch.ElasticsearchRestClientAutoConfiguration
+        - org.springframework.boot.security.oauth2.client.autoconfigure.servlet.OAuth2ClientWebSecurityAutoConfiguration
 
 server:
     port: 10344

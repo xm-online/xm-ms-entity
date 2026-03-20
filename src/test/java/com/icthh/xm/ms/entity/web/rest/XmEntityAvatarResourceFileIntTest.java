@@ -27,7 +27,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
 import org.springframework.http.MediaType;
-import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
+import org.springframework.http.converter.json.JacksonJsonHttpMessageConverter;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.ActiveProfiles;
@@ -64,8 +64,7 @@ public class XmEntityAvatarResourceFileIntTest extends AbstractJupiterSpringBoot
     @Autowired
     private ApplicationProperties applicationProperties;
 
-    @Autowired
-    private MappingJackson2HttpMessageConverter jacksonMessageConverter;
+    private JacksonJsonHttpMessageConverter jacksonMessageConverter;
 
     @Autowired
     private PageableHandlerMethodArgumentResolver pageableArgumentResolver;
@@ -94,6 +93,7 @@ public class XmEntityAvatarResourceFileIntTest extends AbstractJupiterSpringBoot
     public void setup() {
         TenantContextUtils.setTenant(tenantContextHolder, "RESINTTEST");
         lepManagementService.beginThreadContext();
+        JacksonJsonHttpMessageConverter converter = new JacksonJsonHttpMessageConverter();
 
         XmeStorageServiceFacade storage = new XmeStorageServiceFacadeImpl(null, avatarStorageService, null);
         avatarService = new XmEntityAvatarService(xmEntityService, applicationProperties, storage);
@@ -102,7 +102,7 @@ public class XmEntityAvatarResourceFileIntTest extends AbstractJupiterSpringBoot
         this.avatarResourceMockMvc = MockMvcBuilders.standaloneSetup(xmEntityAvatarResource)
             .setCustomArgumentResolvers(pageableArgumentResolver)
             .setControllerAdvice(exceptionTranslator)
-            .setMessageConverters(jacksonMessageConverter).build();
+            .setMessageConverters(converter).build();
     }
 
     @AfterAll

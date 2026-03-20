@@ -24,7 +24,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
-import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
+import org.springframework.http.converter.json.JacksonJsonHttpMessageConverter;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -42,9 +42,6 @@ public class TenantInterceptorIntTest extends AbstractJupiterSpringBootTest {
 
     @Autowired
     private XmEntityResource xmEntityResource;
-
-    @Autowired
-    private MappingJackson2HttpMessageConverter jacksonMessageConverter;
 
     @Autowired
     private PageableHandlerMethodArgumentResolver pageableArgumentResolver;
@@ -70,11 +67,12 @@ public class TenantInterceptorIntTest extends AbstractJupiterSpringBootTest {
     public void setup() {
         MockitoAnnotations.initMocks(this);
         SecurityContextHolder.getContext().setAuthentication(auth);
+        JacksonJsonHttpMessageConverter converter = new JacksonJsonHttpMessageConverter();
         this.restXmEntityMockMvc = MockMvcBuilders.standaloneSetup(xmEntityResource)
             .addInterceptors(tenantInterceptor)
             .setCustomArgumentResolvers(pageableArgumentResolver)
             .setControllerAdvice(exceptionTranslator)
-            .setMessageConverters(jacksonMessageConverter).build();
+            .setMessageConverters(converter).build();
     }
 
     @Test

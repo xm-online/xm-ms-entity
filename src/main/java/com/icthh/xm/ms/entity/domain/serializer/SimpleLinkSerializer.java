@@ -12,7 +12,7 @@ import java.time.Instant;
 public class SimpleLinkSerializer extends StdSerializer<Link> {
 
     public SimpleLinkSerializer() {
-        this(null);
+        super(Link.class);
     }
 
     public SimpleLinkSerializer(Class<Link> t) {
@@ -38,6 +38,8 @@ public class SimpleLinkSerializer extends StdSerializer<Link> {
         if (!Hibernate.isInitialized(value)) {
             return;
         }
+
+        jsonGenerator.writeStartObject();
 
         write(jsonGenerator, provider, "id", value.getId());
         write(jsonGenerator, provider, "typeKey", value.getTypeKey());

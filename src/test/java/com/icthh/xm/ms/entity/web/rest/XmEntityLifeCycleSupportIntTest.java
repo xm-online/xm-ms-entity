@@ -48,7 +48,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
 import org.springframework.http.ResponseEntity;
-import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
+import org.springframework.http.converter.json.JacksonJsonHttpMessageConverter;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.transaction.BeforeTransaction;
 import org.springframework.test.web.servlet.MockMvc;
@@ -73,8 +73,7 @@ public class XmEntityLifeCycleSupportIntTest extends AbstractJupiterSpringBootTe
     @Autowired
     private ProfileEventProducer profileEventProducer;
 
-    @Autowired
-    private MappingJackson2HttpMessageConverter jacksonMessageConverter;
+    private JacksonJsonHttpMessageConverter jacksonMessageConverter;
 
     @Autowired
     private PageableHandlerMethodArgumentResolver pageableArgumentResolver;
@@ -125,6 +124,8 @@ public class XmEntityLifeCycleSupportIntTest extends AbstractJupiterSpringBootTe
             ctx.setValue(THREAD_CONTEXT_KEY_AUTH_CONTEXT, authContextHolder.getContext());
         });
 
+        JacksonJsonHttpMessageConverter converter = new JacksonJsonHttpMessageConverter();
+
         XmEntityResource resourceMock = mock(XmEntityResource.class);
         when(resourceMock.createXmEntity(any())).thenReturn(ResponseEntity.created(new URI("")).build());
         XmEntityResource xmEntityResourceMock = new XmEntityResource(xmEntityServiceImpl,
@@ -138,7 +139,7 @@ public class XmEntityLifeCycleSupportIntTest extends AbstractJupiterSpringBootTe
             .setCustomArgumentResolvers(pageableArgumentResolver)
             .setControllerAdvice(exceptionTranslator)
             .setValidator(validator)
-            .setMessageConverters(jacksonMessageConverter).build();
+            .setMessageConverters(converter).build();
 
         uninitLeps();
     }

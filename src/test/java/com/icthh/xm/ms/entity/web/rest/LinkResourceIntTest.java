@@ -39,7 +39,7 @@ import org.mockito.Spy;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
 import org.springframework.http.MediaType;
-import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
+import org.springframework.http.converter.json.JacksonJsonHttpMessageConverter;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.transaction.BeforeTransaction;
 import org.springframework.test.web.servlet.MockMvc;
@@ -82,8 +82,7 @@ public class LinkResourceIntTest extends AbstractJupiterSpringBootTest {
     @Autowired
     private LinkPermittedRepository permittedRepository;
 
-    @Autowired
-    private MappingJackson2HttpMessageConverter jacksonMessageConverter;
+    private JacksonJsonHttpMessageConverter jacksonMessageConverter;
 
     @Autowired
     private PageableHandlerMethodArgumentResolver pageableArgumentResolver;
@@ -142,10 +141,11 @@ public class LinkResourceIntTest extends AbstractJupiterSpringBootTest {
         linkService.setSelf(linkService);
 
         LinkResource linkResourceMock = new LinkResource(linkService);
+        JacksonJsonHttpMessageConverter converter = new JacksonJsonHttpMessageConverter();
         this.restLinkMockMvc = MockMvcBuilders.standaloneSetup(linkResourceMock)
             .setCustomArgumentResolvers(pageableArgumentResolver)
             .setControllerAdvice(exceptionTranslator)
-            .setMessageConverters(jacksonMessageConverter).build();
+            .setMessageConverters(converter).build();
 
         linkResourceMock.setSelf(linkResourceMock);
 

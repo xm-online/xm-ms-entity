@@ -38,7 +38,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
 import org.springframework.http.MediaType;
-import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
+import org.springframework.http.converter.json.JacksonJsonHttpMessageConverter;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.transaction.BeforeTransaction;
 import org.springframework.test.web.servlet.MockMvc;
@@ -60,9 +60,6 @@ import java.util.List;
 public class LinkResourceExtendedIntTest extends AbstractJupiterSpringBootTest {
 
     private static final Instant MOCKED_START_DATE = Instant.ofEpochMilli(42L);
-
-    @Autowired
-    private MappingJackson2HttpMessageConverter jacksonMessageConverter;
 
     @Autowired
     private PageableHandlerMethodArgumentResolver pageableArgumentResolver;
@@ -120,7 +117,7 @@ public class LinkResourceExtendedIntTest extends AbstractJupiterSpringBootTest {
             startUpdateDateGenerationStrategy,
             xmEntityRepository,
             dynamicPermissionCheckService);
-
+        JacksonJsonHttpMessageConverter jacksonMessageConverter = new JacksonJsonHttpMessageConverter();
         LinkResource linkResourceMock = new LinkResource(linkService);
         this.restLinkMockMvc = MockMvcBuilders.standaloneSetup(linkResourceMock)
                                               .setCustomArgumentResolvers(pageableArgumentResolver)
