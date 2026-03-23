@@ -1407,7 +1407,7 @@ public class TestMnpProcessIntTest extends AbstractSpringBootTest {
 
     @SneakyThrows
     private void verifyComparePersonalDataKafkaEvent(XmEntity result) {
-        verify(kafkaTemplateService).send("compare-personal-data-queue",
+        verify(kafkaTemplateService).send("mnp-compare-personal-data-queue",
             Base64.getEncoder().encodeToString(objectMapper.writeValueAsBytes(Map.of("portOutId", result.getId())))
         );
         verifyNoMoreInteractions(kafkaTemplateService);
@@ -1416,8 +1416,8 @@ public class TestMnpProcessIntTest extends AbstractSpringBootTest {
 
     private void verifyPortOutStillNewAfterKafkaCompare(XmEntity result) {
         TopicConfig topicConfig = new TopicConfig();
-        topicConfig.setTopicName("compare-personal-data-queue");
-        topicConfig.setTypeKey("compare-personal-data");
+        topicConfig.setTopicName("mnp-compare-personal-data-queue");
+        topicConfig.setTypeKey("mnp-compare-personal-data");
         byte[] value = ("{\"portOutId\": " + result.getId() + "}").getBytes(UTF_8);
         messageService.onMessage(Base64.getEncoder().encodeToString(value), topicConfig);
 
