@@ -47,6 +47,7 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Map;
+import com.icthh.xm.ms.entity.web.rest.facade.FunctionContextFacade;
 
 /**
  * Test class for the FunctionContextResource REST controller.
@@ -109,6 +110,9 @@ public class FunctionContextResourceIntTest extends AbstractJupiterSpringBootTes
     @Autowired
     private XmEntityRepository xmEntityRepository;
 
+    @Autowired
+    private FunctionContextFacade functionContextFacade;
+
     @Spy
     private StartUpdateDateGenerationStrategy startUpdateDateGenerationStrategy;
 
@@ -139,7 +143,7 @@ public class FunctionContextResourceIntTest extends AbstractJupiterSpringBootTes
                                                                 xmEntityRepository);
 
         FunctionContextResource functionContextResourceMock = new FunctionContextResource(
-            functionContextService, functionContextResource);
+            functionContextFacade, functionContextResource);
         this.restFunctionContextMockMvc = MockMvcBuilders.standaloneSetup(functionContextResourceMock)
             .setCustomArgumentResolvers(pageableArgumentResolver)
             .setControllerAdvice(exceptionTranslator)

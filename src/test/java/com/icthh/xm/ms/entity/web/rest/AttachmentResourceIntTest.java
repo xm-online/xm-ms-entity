@@ -52,6 +52,7 @@ import java.net.URISyntaxException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
+import com.icthh.xm.ms.entity.web.rest.facade.AttachmentFacade;
 
 /**
  * Test class for the AttachmentResource REST controller.
@@ -136,6 +137,9 @@ public class AttachmentResourceIntTest extends AbstractJupiterSpringBootTest {
     @Autowired
     private ContentService contentService;
 
+    @Autowired
+    private AttachmentFacade attachmentFacade;
+
     @BeforeTransaction
     public void beforeTransaction() {
         TenantContextUtils.setTenant(tenantContextHolder, "RESINTTEST");
@@ -160,7 +164,7 @@ public class AttachmentResourceIntTest extends AbstractJupiterSpringBootTest {
                                                   xmEntityRepository,
                                                   xmEntitySpecService);
 
-        AttachmentResource attachmentResourceMock = new AttachmentResource(attachmentService, attachmentResource);
+        AttachmentResource attachmentResourceMock = new AttachmentResource(attachmentFacade, attachmentResource);
         this.restAttachmentMockMvc = MockMvcBuilders.standaloneSetup(attachmentResourceMock)
             .setCustomArgumentResolvers(pageableArgumentResolver)
             .setControllerAdvice(exceptionTranslator)

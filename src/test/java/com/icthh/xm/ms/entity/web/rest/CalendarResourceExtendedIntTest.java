@@ -43,6 +43,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.Validator;
+import com.icthh.xm.ms.entity.web.rest.facade.CalendarFacade;
 
 /**
  * Extended Test class for the CalendarResource REST controller.
@@ -105,6 +106,9 @@ public class CalendarResourceExtendedIntTest extends AbstractJupiterSpringBootTe
     @Autowired
     private XmEntitySpecService xmEntitySpecService;
 
+    @Autowired
+    private CalendarFacade calendarFacade;
+
     @BeforeTransaction
     public void beforeTransaction() {
         TenantContextUtils.setTenant(tenantContextHolder, "RESINTTEST");
@@ -124,7 +128,7 @@ public class CalendarResourceExtendedIntTest extends AbstractJupiterSpringBootTe
             eventQueryService,
             xmEntitySpecService);
 
-        CalendarResource calendarResourceMock = new CalendarResource(calendarService, calendarResource);
+        CalendarResource calendarResourceMock = new CalendarResource(calendarFacade, calendarResource);
         this.restCalendarMockMvc = MockMvcBuilders.standaloneSetup(calendarResourceMock)
                                               .setCustomArgumentResolvers(pageableArgumentResolver)
                                               .setControllerAdvice(exceptionTranslator)

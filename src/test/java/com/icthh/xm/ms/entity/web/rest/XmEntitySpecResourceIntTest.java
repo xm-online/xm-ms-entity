@@ -39,6 +39,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import com.icthh.xm.ms.entity.service.mapper.XmEntityMapper;
 
 /**
  * Test class for the XmEntitySpecResource REST controller.
@@ -93,6 +94,9 @@ public class XmEntitySpecResourceIntTest extends AbstractJupiterSpringBootTest {
     @Autowired
     private MappingJackson2HttpMessageConverter jacksonMessageConverter;
 
+    @Autowired
+    private XmEntityMapper xmEntityMapper;
+
     private XmEntityGeneratorService xmEntityGeneratorService;
 
     private MockMvc restXmEntitySpecMockMvc;
@@ -111,7 +115,7 @@ public class XmEntitySpecResourceIntTest extends AbstractJupiterSpringBootTest {
             xmEntitySpecService, authContextHolder, objectMapper);
 
         XmEntitySpecResource xmEntitySpecResource = new XmEntitySpecResource(xmEntitySpecService,
-            xmEntityGeneratorService, jsonSchemaGenerationService);
+            xmEntityGeneratorService, jsonSchemaGenerationService, xmEntityMapper);
         this.restXmEntitySpecMockMvc = MockMvcBuilders.standaloneSetup(xmEntitySpecResource)
             .setMessageConverters(jacksonMessageConverter)
             .setControllerAdvice(exceptionTranslator).build();

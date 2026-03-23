@@ -35,6 +35,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Base64Utils;
 
 import java.util.List;
+import com.icthh.xm.ms.entity.web.rest.facade.ContentFacade;
 
 /**
  * Test class for the ContentResource REST controller.
@@ -75,6 +76,9 @@ public class ContentResourceIntTest extends AbstractJupiterSpringBootTest {
     @Autowired
     private ContentService contentService;
 
+    @Autowired
+    private ContentFacade contentFacade;
+
     @BeforeTransaction
     public void beforeTransaction() {
         TenantContextUtils.setTenant(tenantContextHolder, "RESINTTEST");
@@ -83,7 +87,7 @@ public class ContentResourceIntTest extends AbstractJupiterSpringBootTest {
     @BeforeEach
     public void setup() {
         MockitoAnnotations.initMocks(this);
-        ContentResource contentResourceMock = new ContentResource(contentRepository, contentService, contentResource);
+        ContentResource contentResourceMock = new ContentResource(contentFacade, contentResource);
         this.restContentMockMvc = MockMvcBuilders.standaloneSetup(contentResourceMock)
             .setCustomArgumentResolvers(pageableArgumentResolver)
             .setControllerAdvice(exceptionTranslator)

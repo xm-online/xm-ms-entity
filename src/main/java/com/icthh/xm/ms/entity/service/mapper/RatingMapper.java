@@ -7,7 +7,7 @@ import org.mapstruct.Mapping;
 
 import java.util.Set;
 
-@Mapper(componentModel = "spring", uses = {VoteMapper.class})
+@Mapper(componentModel = "spring", uses = {VoteMapper.class, XmEntityRefMapper.class})
 public abstract class RatingMapper extends LazyLoadingAwareMapper {
 
     @Mapping(target = "xmEntity", qualifiedByName = "shallowXmEntityToDto")

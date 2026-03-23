@@ -18,7 +18,8 @@ import java.util.List;
     TagMapper.class,
     FunctionContextMapper.class,
     VoteMapper.class,
-    EventMapper.class
+    EventMapper.class,
+    XmEntityRefMapper.class
 })
 public abstract class XmEntityMapper extends LazyLoadingAwareMapper {
 

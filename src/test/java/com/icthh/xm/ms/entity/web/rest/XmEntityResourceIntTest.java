@@ -98,6 +98,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import static software.amazon.awssdk.utils.StringUtils.repeat;
+import com.icthh.xm.ms.entity.web.rest.facade.XmEntityFacade;
 
 /**
  * Test class for the XmEntityResource REST controller.
@@ -240,6 +241,9 @@ public class XmEntityResourceIntTest extends AbstractJupiterSpringBootTest {
     @Autowired
     private XmEntityProjectionService xmEntityProjectionService;
 
+    @Autowired
+    private XmEntityFacade xmEntityFacade;
+
     @BeforeTransaction
     public void beforeTransaction() {
         TenantContextUtils.setTenant(tenantContextHolder, "RESINTTEST");
@@ -296,14 +300,14 @@ public class XmEntityResourceIntTest extends AbstractJupiterSpringBootTest {
         });
         XmEntityResource resourceMock = mock(XmEntityResource.class);
         when(resourceMock.createXmEntity(any())).thenReturn(ResponseEntity.created(new URI("")).build());
-        XmEntityResource self = new XmEntityResource(xmEntityServiceImpl,
+        XmEntityResource self = new XmEntityResource(xmEntityFacade,
             profileService,
             profileEventProducer,
             functionService,
             tenantService,
             resourceMock
         );
-        XmEntityResource xmEntityResourceMock = new XmEntityResource(xmEntityServiceImpl,
+        XmEntityResource xmEntityResourceMock = new XmEntityResource(xmEntityFacade,
             profileService,
             profileEventProducer,
             functionService,
@@ -316,7 +320,7 @@ public class XmEntityResourceIntTest extends AbstractJupiterSpringBootTest {
             .setValidator(validator)
             .setMessageConverters(jacksonMessageConverter).build();
 
-        this.restXmEntitySearchMockMvc = MockMvcBuilders.standaloneSetup(new XmEntitySearchResource(xmEntityServiceImpl))
+        this.restXmEntitySearchMockMvc = MockMvcBuilders.standaloneSetup(new XmEntitySearchResource(xmEntityFacade))
             .setCustomArgumentResolvers(pageableArgumentResolver)
             .setControllerAdvice(exceptionTranslator)
             .setValidator(validator)

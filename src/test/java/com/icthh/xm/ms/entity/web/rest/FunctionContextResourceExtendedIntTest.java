@@ -37,6 +37,7 @@ import org.springframework.validation.Validator;
 
 import java.time.Instant;
 import java.util.List;
+import com.icthh.xm.ms.entity.web.rest.facade.FunctionContextFacade;
 
 /**
  * Extended Test class for the FunctionContextResource REST controller.
@@ -79,6 +80,9 @@ public class FunctionContextResourceExtendedIntTest extends AbstractJupiterSprin
     @Autowired
     private XmEntityRepository xmEntityRepository;
 
+    @Autowired
+    private FunctionContextFacade functionContextFacade;
+
     @Spy
     private StartUpdateDateGenerationStrategy startUpdateDateGenerationStrategy;
 
@@ -106,7 +110,7 @@ public class FunctionContextResourceExtendedIntTest extends AbstractJupiterSprin
             startUpdateDateGenerationStrategy,
             xmEntityRepository);
 
-        FunctionContextResource functionContextResourceMock = new FunctionContextResource(functionContextService,
+        FunctionContextResource functionContextResourceMock = new FunctionContextResource(functionContextFacade,
                                                                                           functionContextResource);
         this.restFunctionContextMockMvc = MockMvcBuilders.standaloneSetup(functionContextResourceMock)
                                                          .setCustomArgumentResolvers(pageableArgumentResolver)

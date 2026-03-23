@@ -128,6 +128,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import com.icthh.xm.ms.entity.web.rest.facade.XmEntityFacade;
+import com.icthh.xm.ms.entity.web.rest.facade.EventFacade;
+import com.icthh.xm.ms.entity.web.rest.facade.CalendarFacade;
 
 /**
  * Extension Test class for the XmEntityResource REST controller. Contains additional test apart from Jhipster generated
@@ -307,6 +310,15 @@ public class XmEntityResourceExtendedIntTest extends AbstractJupiterSpringBootTe
     @Autowired
     private XmEntityProjectionService xmEntityProjectionService;
 
+    @Autowired
+    private XmEntityFacade xmEntityFacade;
+
+    @Autowired
+    private EventFacade eventFacade;
+
+    @Autowired
+    private CalendarFacade calendarFacade;
+
     @Mock
     private XmAuthenticationContext context;
 
@@ -373,9 +385,9 @@ public class XmEntityResourceExtendedIntTest extends AbstractJupiterSpringBootTe
             ctx.setValue(THREAD_CONTEXT_KEY_AUTH_CONTEXT, authContextHolder.getContext());
         });
 
-        EventResource eventResourceMock = new EventResource(eventService, eventResource);
+        EventResource eventResourceMock = new EventResource(eventFacade, eventResource);
 
-        XmEntityResource xmEntityResourceMock = new XmEntityResource(xmEntityService,
+        XmEntityResource xmEntityResourceMock = new XmEntityResource(xmEntityFacade,
                                                                      profileService,
                                                                      profileEventProducer,
                                                                      functionService,
@@ -383,7 +395,7 @@ public class XmEntityResourceExtendedIntTest extends AbstractJupiterSpringBootTe
                                                                      xmEntityResource
         );
         this.restXmEntityMockMvc = MockMvcBuilders.standaloneSetup(
-            xmEntityResourceMock, new CalendarResource(calendarService, calendarResource), eventResourceMock)
+            xmEntityResourceMock, new CalendarResource(calendarFacade, calendarResource), eventResourceMock)
                                                   .setCustomArgumentResolvers(pageableArgumentResolver)
                                                   .setControllerAdvice(exceptionTranslator)
                                                   .setValidator(validator)
@@ -391,7 +403,7 @@ public class XmEntityResourceExtendedIntTest extends AbstractJupiterSpringBootTe
                                                   .addMappedInterceptors(WebMvcConfiguration.getJsonFilterAllowedURIs())
                                                   .build();
 
-        this.restXmEntitySearchMockMvc = MockMvcBuilders.standaloneSetup(new XmEntitySearchResource(xmEntityService))
+        this.restXmEntitySearchMockMvc = MockMvcBuilders.standaloneSetup(new XmEntitySearchResource(xmEntityFacade))
                                                   .setCustomArgumentResolvers(pageableArgumentResolver)
                                                   .setControllerAdvice(exceptionTranslator)
                                                   .setValidator(validator)

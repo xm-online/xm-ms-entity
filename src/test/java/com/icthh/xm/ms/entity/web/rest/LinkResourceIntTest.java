@@ -51,6 +51,7 @@ import java.io.UnsupportedEncodingException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
+import com.icthh.xm.ms.entity.web.rest.facade.LinkFacade;
 
 /**
  * Test class for the LinkResource REST controller.
@@ -109,6 +110,9 @@ public class LinkResourceIntTest extends AbstractJupiterSpringBootTest {
     @Autowired
     private XmEntityDynamicPermissionCheckService dynamicPermissionCheckService;
 
+    @Autowired
+    private LinkFacade linkFacade;
+
     @Spy
     private StartUpdateDateGenerationStrategy startUpdateDateGenerationStrategy;
 
@@ -141,7 +145,7 @@ public class LinkResourceIntTest extends AbstractJupiterSpringBootTest {
                                       dynamicPermissionCheckService);
         linkService.setSelf(linkService);
 
-        LinkResource linkResourceMock = new LinkResource(linkService);
+        LinkResource linkResourceMock = new LinkResource(linkFacade);
         this.restLinkMockMvc = MockMvcBuilders.standaloneSetup(linkResourceMock)
             .setCustomArgumentResolvers(pageableArgumentResolver)
             .setControllerAdvice(exceptionTranslator)

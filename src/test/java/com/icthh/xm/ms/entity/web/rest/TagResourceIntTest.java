@@ -44,6 +44,7 @@ import org.springframework.validation.Validator;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
+import com.icthh.xm.ms.entity.web.rest.facade.TagFacade;
 
 /**
  * Test class for the TagResource REST controller.
@@ -92,6 +93,9 @@ public class TagResourceIntTest extends AbstractJupiterSpringBootTest {
     @Autowired
     private XmEntityRepository xmEntityRepository;
 
+    @Autowired
+    private TagFacade tagFacade;
+
     @Spy
     private StartUpdateDateGenerationStrategy startUpdateDateGenerationStrategy;
 
@@ -118,7 +122,7 @@ public class TagResourceIntTest extends AbstractJupiterSpringBootTest {
             startUpdateDateGenerationStrategy,
             xmEntityRepository);
 
-        TagResource tagResourceMock = new TagResource(tagResource, tagService);
+        TagResource tagResourceMock = new TagResource(tagResource, tagFacade);
         this.restTagMockMvc = MockMvcBuilders.standaloneSetup(tagResourceMock)
             .setCustomArgumentResolvers(pageableArgumentResolver)
             .setControllerAdvice(exceptionTranslator)
@@ -167,6 +171,7 @@ public class TagResourceIntTest extends AbstractJupiterSpringBootTest {
         restTagMockMvc.perform(post("/api/tags")
                                    .contentType(TestUtil.APPLICATION_JSON_UTF8)
                                    .content(TestUtil.convertObjectToJsonBytes(tag)))
+            .andDo(result -> java.nio.file.Files.writeString(java.nio.file.Path.of("/tmp/tag-create-response.txt"), "STATUS=" + result.getResponse().getStatus() + "\nBODY=" + result.getResponse().getContentAsString()))
             .andExpect(status().isCreated());
 
         // Validate the Tag in the database

@@ -49,6 +49,7 @@ import static org.hamcrest.Matchers.notNullValue;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import com.icthh.xm.ms.entity.web.rest.facade.AttachmentFacade;
 
 /**
  * Test class for the AttachmentResource REST controller.
@@ -131,6 +132,9 @@ public class AttachmentResourceFsIntTest extends AbstractJupiterSpringBootTest {
     @Autowired
     private ContentService contentService;
 
+    @Autowired
+    private AttachmentFacade attachmentFacade;
+
     @BeforeTransaction
     public void beforeTransaction() {
         TenantContextUtils.setTenant(tenantContextHolder, "RESINTTEST");
@@ -155,7 +159,7 @@ public class AttachmentResourceFsIntTest extends AbstractJupiterSpringBootTest {
                                                   xmEntityRepository,
                                                   xmEntitySpecService);
 
-        AttachmentResource attachmentResourceMock = new AttachmentResource(attachmentService, attachmentResource);
+        AttachmentResource attachmentResourceMock = new AttachmentResource(attachmentFacade, attachmentResource);
         this.restAttachmentMockMvc = MockMvcBuilders.standaloneSetup(attachmentResourceMock)
             .setCustomArgumentResolvers(pageableArgumentResolver)
             .setControllerAdvice(exceptionTranslator)

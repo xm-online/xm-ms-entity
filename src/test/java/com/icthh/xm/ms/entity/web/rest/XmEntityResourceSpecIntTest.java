@@ -63,6 +63,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import com.icthh.xm.ms.entity.web.rest.facade.XmEntityFacade;
 
 
 @Slf4j
@@ -156,6 +157,9 @@ public class XmEntityResourceSpecIntTest extends AbstractJupiterSpringBootTest {
     @Autowired
     private XmEntityProjectionService xmEntityProjectionService;
 
+    @Autowired
+    private XmEntityFacade xmEntityFacade;
+
     @BeforeTransaction
     public void beforeTransaction() {
         TenantContextUtils.setTenant(tenantContextHolder, "SPECIFICATIONS");
@@ -204,7 +208,7 @@ public class XmEntityResourceSpecIntTest extends AbstractJupiterSpringBootTest {
 
         XmEntityResource resourceMock = mock(XmEntityResource.class);
         when(resourceMock.createXmEntity(any())).thenReturn(ResponseEntity.created(new URI("")).build());
-        XmEntityResource xmEntityResourceMock = new XmEntityResource(xmEntityServiceImpl,
+        XmEntityResource xmEntityResourceMock = new XmEntityResource(xmEntityFacade,
             profileService,
             profileEventProducer,
             functionService,

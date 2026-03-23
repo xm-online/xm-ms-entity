@@ -40,6 +40,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.Validator;
 
 import java.util.List;
+import com.icthh.xm.ms.entity.web.rest.facade.LocationFacade;
 
 /**
  * Test class for the LocationResource REST controller.
@@ -119,6 +120,9 @@ public class LocationResourceIntTest extends AbstractJupiterSpringBootTest {
     @Autowired
     private LepManager lepManager;
 
+    @Autowired
+    private LocationFacade locationFacade;
+
     @BeforeTransaction
     public void beforeTransaction() {
         TenantContextUtils.setTenant(tenantContextHolder, "RESINTTEST");
@@ -133,7 +137,7 @@ public class LocationResourceIntTest extends AbstractJupiterSpringBootTest {
         });
 
         MockitoAnnotations.initMocks(this);
-        LocationResource locationResourceMock = new LocationResource(locationResource, locationService);
+        LocationResource locationResourceMock = new LocationResource(locationResource, locationFacade);
         this.restLocationMockMvc = MockMvcBuilders.standaloneSetup(locationResourceMock)
             .setCustomArgumentResolvers(pageableArgumentResolver)
             .setControllerAdvice(exceptionTranslator)

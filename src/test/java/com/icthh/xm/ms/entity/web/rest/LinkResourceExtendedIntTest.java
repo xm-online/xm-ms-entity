@@ -49,6 +49,7 @@ import org.springframework.validation.Validator;
 
 import java.time.Instant;
 import java.util.List;
+import com.icthh.xm.ms.entity.web.rest.facade.LinkFacade;
 
 /**
  * Extended Test class for the LinkResource REST controller.
@@ -94,6 +95,9 @@ public class LinkResourceExtendedIntTest extends AbstractJupiterSpringBootTest {
     @Autowired
     private XmEntityDynamicPermissionCheckService dynamicPermissionCheckService;
 
+    @Autowired
+    private LinkFacade linkFacade;
+
     @Spy
     private StartUpdateDateGenerationStrategy startUpdateDateGenerationStrategy;
 
@@ -121,7 +125,7 @@ public class LinkResourceExtendedIntTest extends AbstractJupiterSpringBootTest {
             xmEntityRepository,
             dynamicPermissionCheckService);
 
-        LinkResource linkResourceMock = new LinkResource(linkService);
+        LinkResource linkResourceMock = new LinkResource(linkFacade);
         this.restLinkMockMvc = MockMvcBuilders.standaloneSetup(linkResourceMock)
                                               .setCustomArgumentResolvers(pageableArgumentResolver)
                                               .setControllerAdvice(exceptionTranslator)

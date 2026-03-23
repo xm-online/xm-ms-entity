@@ -11,7 +11,7 @@ import org.mapstruct.Named;
 import java.util.List;
 import java.util.Set;
 
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = "spring", uses = {XmEntityRefMapper.class})
 public abstract class LinkMapper extends LazyLoadingAwareMapper {
 
     @Mapping(target = "target", qualifiedByName = "targetXmEntityToDto")
@@ -46,6 +46,18 @@ public abstract class LinkMapper extends LazyLoadingAwareMapper {
         dto.setCreatedBy(entity.getCreatedBy());
         dto.setRemoved(entity.isRemoved());
         dto.setData(entity.getData());
+        // Null out collections to match SimpleLinkSerializer behavior (no sub-entity collections in link target)
+        dto.setTags(null);
+        dto.setLocations(null);
+        dto.setAttachments(null);
+        dto.setComments(null);
+        dto.setRatings(null);
+        dto.setCalendars(null);
+        dto.setTargets(null);
+        dto.setSources(null);
+        dto.setFunctionContexts(null);
+        dto.setVotes(null);
+        dto.setEvents(null);
         return dto;
     }
 

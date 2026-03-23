@@ -7,7 +7,7 @@ import org.mapstruct.Mapping;
 
 import java.util.Set;
 
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = "spring", uses = {XmEntityRefMapper.class})
 public abstract class LocationMapper extends LazyLoadingAwareMapper {
 
     @Mapping(target = "xmEntity", qualifiedByName = "shallowXmEntityToDto")

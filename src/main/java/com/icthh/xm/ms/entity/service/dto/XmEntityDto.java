@@ -1,6 +1,7 @@
 package com.icthh.xm.ms.entity.service.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.deser.std.UntypedObjectDeserializer;
@@ -32,6 +33,7 @@ import java.util.Set;
 @NotNull(field = KEY)
 @Getter
 @Setter
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class XmEntityDto implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -64,6 +66,7 @@ public class XmEntityDto implements Serializable {
     @ApiModelProperty(value = "Relative link to the avatar image. It should support to use additional parameters to identify avatar size for different views.")
     private String avatarUrlRelative;
 
+    @JsonIgnore
     private String avatarUrlFull;
 
     @ApiModelProperty(value = "This field describe instance of entity and is not i18n. It could be a big text. Markdown or HTML format should be supported.")

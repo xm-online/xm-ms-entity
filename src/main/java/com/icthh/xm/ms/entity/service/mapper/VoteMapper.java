@@ -10,7 +10,7 @@ import org.mapstruct.Named;
 
 import java.util.Set;
 
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = "spring", uses = {XmEntityRefMapper.class})
 public abstract class VoteMapper extends LazyLoadingAwareMapper {
 
     @Mapping(target = "xmEntity", qualifiedByName = "shallowXmEntityToDto")
