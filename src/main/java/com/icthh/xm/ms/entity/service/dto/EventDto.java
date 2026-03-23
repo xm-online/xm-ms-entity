@@ -3,7 +3,7 @@ package com.icthh.xm.ms.entity.service.dto;
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.JsonIdentityReference;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
-import com.icthh.xm.ms.entity.domain.idresolver.CalendarObjectIdResolver;
+import com.icthh.xm.ms.entity.domain.idresolver.CalendarDtoObjectIdResolver;
 import com.icthh.xm.ms.entity.domain.idresolver.XmEntityDtoObjectIdResolver;
 import com.icthh.xm.ms.entity.validator.EventDataTypeKey;
 import io.swagger.annotations.ApiModelProperty;
@@ -43,7 +43,7 @@ public class EventDto implements Serializable {
     @ApiModelProperty(value = "End date")
     private Instant endDate;
 
-    @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id", resolver = CalendarObjectIdResolver.class)
+    @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id", resolver = CalendarDtoObjectIdResolver.class)
     @JsonIdentityReference(alwaysAsId = true)
     private CalendarDto calendar;
 

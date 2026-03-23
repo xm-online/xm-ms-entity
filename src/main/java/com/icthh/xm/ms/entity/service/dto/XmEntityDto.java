@@ -5,6 +5,9 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.deser.std.UntypedObjectDeserializer;
+import com.icthh.xm.ms.entity.domain.WithId;
+import com.icthh.xm.ms.entity.domain.EntityBaseFields;
+import com.icthh.xm.ms.entity.domain.WithTypeKey;
 import com.icthh.xm.ms.entity.validator.JsonData;
 import com.icthh.xm.ms.entity.validator.NotNull;
 import static com.icthh.xm.ms.entity.validator.NotNullBySpecField.KEY;
@@ -34,7 +37,7 @@ import java.util.Set;
 @Getter
 @Setter
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class XmEntityDto implements Serializable {
+public class XmEntityDto implements Serializable, WithId, WithTypeKey, EntityBaseFields {
 
     private static final long serialVersionUID = 1L;
 

@@ -1,6 +1,6 @@
 package com.icthh.xm.ms.entity.validator;
 
-import com.icthh.xm.ms.entity.domain.XmEntity;
+import com.icthh.xm.ms.entity.domain.EntityBaseFields;
 import com.icthh.xm.ms.entity.service.XmEntitySpecService;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
@@ -32,12 +32,12 @@ public class TypeKeyValidator implements ConstraintValidator<TypeKey, Object> {
     @Override
     public boolean isValid(Object value, ConstraintValidatorContext context) {
         try {
-            if (value instanceof XmEntity) {
-                String typeKey = ((XmEntity)value).getTypeKey();
+            if (value instanceof EntityBaseFields entity) {
+                String typeKey = entity.getTypeKey();
                 return xmEntitySpecService.getTypeSpecByKeyWithoutFunctionFilter(typeKey).isPresent();
             } else {
                 String typeKey = (String) FieldUtils.readField(value, typeKeyField, true);
-                XmEntity entity = (XmEntity) FieldUtils.readField(value, entityField, true);
+                EntityBaseFields entity = (EntityBaseFields) FieldUtils.readField(value, entityField, true);
                 if (entity == null) {
                     return true;
                 }
@@ -53,7 +53,12 @@ public class TypeKeyValidator implements ConstraintValidator<TypeKey, Object> {
     }
 
     private static String getClassName(Object value) {
-        return value.getClass().getSimpleName().concat(CLASSNAME_SUFFIX);
+        String simpleName = value.getClass().getSimpleName();
+        // Normalize DTO class names to match entity spec keys (e.g. TagDto -> TagSpec)
+        if (simpleName.endsWith("Dto")) {
+            simpleName = simpleName.substring(0, simpleName.length() - 3);
+        }
+        return simpleName.concat(CLASSNAME_SUFFIX);
     }
 
 }

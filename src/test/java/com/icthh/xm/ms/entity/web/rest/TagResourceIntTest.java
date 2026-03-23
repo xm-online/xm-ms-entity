@@ -171,7 +171,6 @@ public class TagResourceIntTest extends AbstractJupiterSpringBootTest {
         restTagMockMvc.perform(post("/api/tags")
                                    .contentType(TestUtil.APPLICATION_JSON_UTF8)
                                    .content(TestUtil.convertObjectToJsonBytes(tag)))
-            .andDo(result -> java.nio.file.Files.writeString(java.nio.file.Path.of("/tmp/tag-create-response.txt"), "STATUS=" + result.getResponse().getStatus() + "\nBODY=" + result.getResponse().getContentAsString()))
             .andExpect(status().isCreated());
 
         // Validate the Tag in the database

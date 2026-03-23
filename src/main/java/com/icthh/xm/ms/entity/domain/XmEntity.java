@@ -83,7 +83,7 @@ import java.util.function.BiConsumer;
 @EntityListeners({AvatarUrlListener.class, XmEntityElasticSearchListener.class})
 @NotNull(field = NAME)
 @NotNull(field = KEY)
-public class XmEntity implements Serializable, Persistable<Long> {
+public class XmEntity implements Serializable, Persistable<Long>, EntityBaseFields {
 
     private static final long serialVersionUID = 1L;
 
