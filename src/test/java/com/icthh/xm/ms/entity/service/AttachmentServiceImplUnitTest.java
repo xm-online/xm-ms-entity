@@ -507,6 +507,13 @@ public class AttachmentServiceImplUnitTest extends AbstractJupiterUnitTest {
 
     @Test
     public void shouldNOTPassContentTypeValidationWhenSpecContentTypesNotEq() {
+        ContentService contentService = new ContentService(null, null, null, null, xmEntitySpecService, attachmentContentTypeValidator);
+
+        attachmentService = new AttachmentService(
+                attachmentRepository, contentService, permittedRepository,
+                startUpdateDateGenerationStrategy, xmEntityRepository, xmEntitySpecService
+        );
+
         AttachmentSpec spec = new AttachmentSpec();
         spec.setContentTypes(Arrays.asList("application/pdf"));
 
