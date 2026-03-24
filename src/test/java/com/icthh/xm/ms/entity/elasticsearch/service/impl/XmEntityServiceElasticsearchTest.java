@@ -24,7 +24,7 @@ import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.domain.ext.IdOrKey;
 import com.icthh.xm.ms.entity.elasticsearch.AbstractElasticSpringBootTest;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
-import com.icthh.xm.ms.entity.service.ElasticsearchIndexService;
+import com.icthh.xm.ms.entity.service.ElasticsearchIndexServiceImpl;
 import com.icthh.xm.ms.entity.service.SeparateTransactionExecutor;
 import com.icthh.xm.ms.entity.service.impl.XmEntityServiceImpl;
 import jakarta.persistence.EntityManager;
@@ -85,7 +85,7 @@ public class XmEntityServiceElasticsearchTest extends AbstractElasticSpringBootT
     private XmLepScriptConfigServerResourceLoader leps;
 
     @Autowired
-    private ElasticsearchIndexService elasticsearchIndexService;
+    private ElasticsearchIndexServiceImpl elasticsearchIndexService;
 
     @Autowired
     private MappingConfiguration mappingConfiguration;

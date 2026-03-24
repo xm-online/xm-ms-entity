@@ -126,6 +126,8 @@ public class LinkResourceExtendedIntTest extends AbstractJupiterSpringBootTest {
             xmEntityRepository,
             dynamicPermissionCheckService);
 
+        linkService.setSelf(linkService);
+
         LinkFacade linkFacade = new LinkFacade(linkService, linkMapper);
         LinkResource linkResourceMock = new LinkResource(linkFacade);
         this.restLinkMockMvc = MockMvcBuilders.standaloneSetup(linkResourceMock)

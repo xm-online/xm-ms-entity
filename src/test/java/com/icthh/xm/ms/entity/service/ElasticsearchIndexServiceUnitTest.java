@@ -43,7 +43,7 @@ public class ElasticsearchIndexServiceUnitTest extends AbstractJupiterUnitTest {
     private static final String TENANT_KEY = "XM";
     public static final String INDEX_KEY = TENANT_KEY.toLowerCase() + "_xmentity";
 
-    private ElasticsearchIndexService service;
+    private ElasticsearchIndexServiceImpl service;
 
     @Mock
     private ElasticsearchOperations elasticsearchOperations;
@@ -72,7 +72,7 @@ public class ElasticsearchIndexServiceUnitTest extends AbstractJupiterUnitTest {
     public void before() {
         MockitoAnnotations.initMocks(this);
         when(applicationProperties.getElasticBatchSize()).thenReturn(100);
-        service = new ElasticsearchIndexService(xmEntityRepository, xmEntitySearchRepository, elasticsearchOperations,
+        service = new ElasticsearchIndexServiceImpl(xmEntityRepository, xmEntitySearchRepository, elasticsearchOperations,
             tenantContextHolder, mappingConfiguration, indexConfiguration, null, entityManager, applicationProperties,
             xmEntitySpecService);
         service.setSelf(service);

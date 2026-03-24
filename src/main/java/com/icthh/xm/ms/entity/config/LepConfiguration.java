@@ -6,8 +6,7 @@ import com.icthh.xm.commons.domain.FunctionSpecWithFileName;
 import com.icthh.xm.commons.lep.TenantScriptStorage;
 import com.icthh.xm.commons.lep.groovy.GroovyLepEngineConfiguration;
 import com.icthh.xm.commons.service.FunctionManageService;
-import com.icthh.xm.commons.service.impl.AbstractFunctionService;
-import com.icthh.xm.ms.entity.lep.ElasticIndexManager;
+import com.icthh.xm.ms.entity.lep.ElasticIndexManagerImpl;
 import com.icthh.xm.ms.entity.lep.ElasticIndexManagerService;
 import com.icthh.xm.ms.entity.security.access.XmEntityDynamicPermissionCheckService;
 import com.icthh.xm.ms.entity.service.XmEntityFunctionManagementService;
@@ -46,9 +45,9 @@ public class LepConfiguration extends GroovyLepEngineConfiguration {
     public ElasticIndexManagerService elasticIndexManagerService(ApplicationContext context) {
         return new ElasticIndexManagerService() {
             @Override
-            public ElasticIndexManager getElasticIndexManager() {
+            public ElasticIndexManagerImpl getElasticIndexManager() {
                 // using application context to fetch correct bean by scope rules every times
-                return context.getBean(ElasticIndexManager.class);
+                return context.getBean(ElasticIndexManagerImpl.class);
             }
         };
     }

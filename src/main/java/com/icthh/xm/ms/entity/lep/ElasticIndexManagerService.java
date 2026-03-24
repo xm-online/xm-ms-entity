@@ -12,7 +12,7 @@ import org.springframework.stereotype.Service;
 @Scope
 public abstract class ElasticIndexManagerService {
 
-    public abstract ElasticIndexManager getElasticIndexManager();
+    public abstract ElasticIndexManagerImpl getElasticIndexManager();
 
     public void addEntityToSave(XmEntity entity) {
         getElasticIndexManager().addEntityToSave(entity);

@@ -268,8 +268,11 @@ configurations {
     implementation.exclude module: "spring-boot-starter-tomcat"
     configureEach {
         resolutionStrategy {
-            // Inherited version from Spring Boot can't be used because of regressions:
-            // To be removed as soon as spring-boot use the same version
+            eachDependency { details ->
+                if (details.requested.group == 'org.apache.groovy') {
+                    details.useVersion "${groovy_version}"
+                }
+            }
         }
     }
 }
@@ -283,11 +286,19 @@ repositories {
     }
 }
 
+def withElastic = !project.hasProperty("noElastic") || project.property("noElastic") != "true"
+
+
 dependencies {
     implementation platform("tech.jhipster:jhipster-dependencies:${jhipsterDependenciesVersion}")
     implementation "tech.jhipster:jhipster-dependencies:${jhipsterDependenciesVersion}"
 
-    implementation group: "tech.jhipster", name: "jhipster-framework"
+    implementation("tech.jhipster:jhipster-framework") {
+        if (!withElastic) {
+            exclude group: "co.elastic.clients", module: "elasticsearch-java"
+            exclude group: "org.elasticsearch.client", module: "elasticsearch-rest-client"
+        }
+    }
 
     implementation "io.dropwizard.metrics:metrics-core"
     implementation "io.dropwizard.metrics:metrics-json"
@@ -316,7 +327,9 @@ dependencies {
     implementation "org.springframework.boot:spring-boot-starter-actuator"
     implementation "org.springframework.boot:spring-boot-starter-data-jpa"
     // log4j2-mock needed to create embedded elasticsearch instance with SLF4J
-    runtimeOnly "de.dentrassi.elasticsearch:log4j2-mock:${log4j2_mock_version}"
+    if (withElastic) {
+        runtimeOnly "de.dentrassi.elasticsearch:log4j2-mock:${log4j2_mock_version}"
+    }
     // end of Spring Data Jest dependencies
     implementation "org.springframework.boot:spring-boot-starter-security"
     implementation("org.springframework.boot:spring-boot-starter-web") {
@@ -421,13 +434,37 @@ dependencies {
     implementation "io.netty:netty-resolver:${netty_version}"
     implementation "io.netty:netty-transport:${netty_version}"
     implementation "commons-beanutils:commons-beanutils:${beanutils_version}"
-    implementation "io.undertow:undertow-core:${undertow_version}"
-    implementation "io.undertow:undertow-servlet:${undertow_version}"
-    implementation "io.undertow:undertow-websockets-jsr:${undertow_version}"
 
     implementation 'com.intellij:annotations:12.0'
 
     implementation 'commons-fileupload:commons-fileupload'
+
+     // security fixes set direct version to use
+    constraints {
+        implementation("org.apache.commons:commons-compress:${apacheCommonCompress}")
+        implementation("io.github.classgraph:classgraph:${gitClassGraph}")
+
+        implementation("io.undertow:undertow-core") {
+            version {
+                strictly("${undertow_version}")
+            }
+        }
+        implementation("io.undertow:undertow-servlet") {
+            version {
+                strictly("${undertow_version}")
+            }
+        }
+        implementation("io.undertow:undertow-websockets-jsr") {
+            version {
+                strictly("${undertow_version}")
+            }
+        }
+        implementation("org.jboss.xnio:xnio-api") {
+            version {
+                strictly("${xnioApiVersion}")
+            }
+        }
+    }
 
     // test dependencies
     testCompileOnly "com.icthh.xm.commons:xm-commons-lep-annotation-processor:${xm_commons_version}"

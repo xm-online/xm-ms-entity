@@ -2,9 +2,10 @@ package com.icthh.xm.ms.entity.web.rest;
 
 import com.codahale.metrics.annotation.Timed;
 import com.icthh.xm.commons.permission.annotation.PrivilegeDescription;
-import com.icthh.xm.ms.entity.service.ElasticsearchIndexService;
+import com.icthh.xm.ms.entity.service.ElasticsearchIndexServiceImpl;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -18,9 +19,10 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/api")
+@ConditionalOnProperty(name = "application.elastic-enabled", havingValue = "true", matchIfMissing = true)
 public class ElasticsearchIndexResource {
 
-    private final ElasticsearchIndexService elasticsearchIndexService;
+    private final ElasticsearchIndexServiceImpl elasticsearchIndexService;
 
     /**
      * POST  /elasticsearch/index -> Reindex all Elasticsearch documents

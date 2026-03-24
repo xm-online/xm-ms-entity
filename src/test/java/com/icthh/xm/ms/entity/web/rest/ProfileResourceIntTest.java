@@ -109,7 +109,7 @@ public class ProfileResourceIntTest extends AbstractJupiterSpringBootTest {
 
         when(authContextHolder.getContext()).thenReturn(context);
 
-        profileService = new ProfileService(profileRepository, entitySearchRepository, authContextHolder);
+        profileService = new ProfileService(profileRepository, authContextHolder);
 
         ProfileFacade profileFacade = new ProfileFacade(profileService, xmEntityMapper);
         final ProfileResource profileResource = new ProfileResource(profileFacade);

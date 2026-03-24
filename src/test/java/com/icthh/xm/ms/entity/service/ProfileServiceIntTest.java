@@ -46,7 +46,7 @@ public class ProfileServiceIntTest extends AbstractJupiterSpringBootTest {
         TenantContextUtils.setTenant(tenantContextHolder, "TEST");
 
         entitySearchRepository = mock(XmEntitySearchRepository.class);
-        service = new ProfileService(profileRepository, entitySearchRepository, authContextHolder);
+        service = new ProfileService(profileRepository, authContextHolder);
     }
 
     @BeforeTransaction
@@ -62,7 +62,7 @@ public class ProfileServiceIntTest extends AbstractJupiterSpringBootTest {
     @Test
     public void saveProfile() {
         profileRepository = mock(ProfileRepository.class);
-        service = new ProfileService(profileRepository, entitySearchRepository, authContextHolder);
+        service = new ProfileService(profileRepository, authContextHolder);
         Profile profile = new Profile();
         profile.setId(ID);
         XmEntity xmEntity = new XmEntity();
@@ -78,7 +78,7 @@ public class ProfileServiceIntTest extends AbstractJupiterSpringBootTest {
     @Test
     public void getProfile() {
         profileRepository = mock(ProfileRepository.class);
-        service = new ProfileService(profileRepository, entitySearchRepository, authContextHolder);
+        service = new ProfileService(profileRepository, authContextHolder);
         Profile profile = new Profile();
         profile.setId(1L);
         profile.setUserKey(USER_KEY);
@@ -91,7 +91,7 @@ public class ProfileServiceIntTest extends AbstractJupiterSpringBootTest {
     @Test
     public void getProfileByEntityId() {
         profileRepository = mock(ProfileRepository.class);
-        service = new ProfileService(profileRepository, entitySearchRepository, authContextHolder);
+        service = new ProfileService(profileRepository, authContextHolder);
         Profile profile = new Profile();
         profile.setId(1L);
         profile.setUserKey(USER_KEY);
