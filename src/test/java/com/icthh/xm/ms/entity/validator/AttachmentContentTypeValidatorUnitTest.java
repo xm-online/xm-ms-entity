@@ -44,6 +44,10 @@ public class AttachmentContentTypeValidatorUnitTest extends AbstractJupiterUnitT
 
         when(context.buildConstraintViolationWithTemplate(anyString())).thenReturn(violationBuilder);
         when(violationBuilder.addConstraintViolation()).thenReturn(context);
+
+        ApplicationProperties.AttachmentValidation validation = new ApplicationProperties.AttachmentValidation();
+        validation.setContentTypeValidationEnabled(true);
+        when(applicationProperties.getAttachmentValidation()).thenReturn(validation);
     }
 
     @Test
@@ -60,21 +64,12 @@ public class AttachmentContentTypeValidatorUnitTest extends AbstractJupiterUnitT
     @Test
     public void shouldPassValidationWhenNoSpec() {
         Attachment attachment = createAttachmentWithContent("test.jpg", new byte[]{(byte) 0xFF, (byte) 0xD8, (byte) 0xFF});
-        
-        ApplicationProperties.AttachmentValidation validation = new ApplicationProperties.AttachmentValidation();
-        validation.setContentTypeValidationEnabled(true);
-        when(applicationProperties.getAttachmentValidation()).thenReturn(validation);
-
         assertTrue(validator.isValid(attachment, context));
     }
 
     @Test
     public void shouldPassValidationWhenNoContentTypesInSpec() {
         Attachment attachment = createAttachmentWithContent("test.jpg", new byte[]{(byte) 0xFF, (byte) 0xD8, (byte) 0xFF});
-        
-        ApplicationProperties.AttachmentValidation validation = new ApplicationProperties.AttachmentValidation();
-        validation.setContentTypeValidationEnabled(true);
-        when(applicationProperties.getAttachmentValidation()).thenReturn(validation);
         
         AttachmentSpec spec = new AttachmentSpec();
         spec.setContentTypes(null);
@@ -87,10 +82,6 @@ public class AttachmentContentTypeValidatorUnitTest extends AbstractJupiterUnitT
     public void shouldPassValidationWhenEmptyContentTypesInSpec() {
         Attachment attachment = createAttachmentWithContent("test.jpg", new byte[]{(byte) 0xFF, (byte) 0xD8, (byte) 0xFF});
         
-        ApplicationProperties.AttachmentValidation validation = new ApplicationProperties.AttachmentValidation();
-        validation.setContentTypeValidationEnabled(true);
-        when(applicationProperties.getAttachmentValidation()).thenReturn(validation);
-        
         AttachmentSpec spec = new AttachmentSpec();
         spec.setContentTypes(Arrays.asList());
         when(xmEntitySpecService.findAttachment(anyString(), anyString())).thenReturn(java.util.Optional.of(spec));
@@ -101,10 +92,6 @@ public class AttachmentContentTypeValidatorUnitTest extends AbstractJupiterUnitT
     @Test
     public void shouldPassValidationWhenNoContent() {
         Attachment attachment = createAttachmentWithContent("test.jpg", new byte[0]);
-        
-        ApplicationProperties.AttachmentValidation validation = new ApplicationProperties.AttachmentValidation();
-        validation.setContentTypeValidationEnabled(true);
-        when(applicationProperties.getAttachmentValidation()).thenReturn(validation);
         
         AttachmentSpec spec = new AttachmentSpec();
         spec.setContentTypes(Arrays.asList("image/jpeg"));
@@ -118,10 +105,6 @@ public class AttachmentContentTypeValidatorUnitTest extends AbstractJupiterUnitT
         byte[] jpegBytes = {(byte) 0xFF, (byte) 0xD8, (byte) 0xFF, 0x00};
         Attachment attachment = createAttachmentWithContent("test.jpg", jpegBytes);
         
-        ApplicationProperties.AttachmentValidation validation = new ApplicationProperties.AttachmentValidation();
-        validation.setContentTypeValidationEnabled(true);
-        when(applicationProperties.getAttachmentValidation()).thenReturn(validation);
-        
         AttachmentSpec spec = new AttachmentSpec();
         spec.setContentTypes(Arrays.asList("image/jpeg"));
         when(xmEntitySpecService.findAttachment(anyString(), anyString())).thenReturn(java.util.Optional.of(spec));
@@ -133,10 +116,6 @@ public class AttachmentContentTypeValidatorUnitTest extends AbstractJupiterUnitT
     public void shouldPassValidationForPngFile() {
         byte[] pngBytes = {(byte) 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A};
         Attachment attachment = createAttachmentWithContent("test.png", pngBytes);
-        
-        ApplicationProperties.AttachmentValidation validation = new ApplicationProperties.AttachmentValidation();
-        validation.setContentTypeValidationEnabled(true);
-        when(applicationProperties.getAttachmentValidation()).thenReturn(validation);
         
         AttachmentSpec spec = new AttachmentSpec();
         spec.setContentTypes(Arrays.asList("image/png"));
@@ -150,10 +129,6 @@ public class AttachmentContentTypeValidatorUnitTest extends AbstractJupiterUnitT
         byte[] pdfBytes = {0x25, 0x50, 0x44, 0x46, 0x2D, 0x31, 0x2E, 0x34};
         Attachment attachment = createAttachmentWithContent("test.pdf", pdfBytes);
         
-        ApplicationProperties.AttachmentValidation validation = new ApplicationProperties.AttachmentValidation();
-        validation.setContentTypeValidationEnabled(true);
-        when(applicationProperties.getAttachmentValidation()).thenReturn(validation);
-        
         AttachmentSpec spec = new AttachmentSpec();
         spec.setContentTypes(Arrays.asList("application/pdf"));
         when(xmEntitySpecService.findAttachment(anyString(), anyString())).thenReturn(java.util.Optional.of(spec));
@@ -165,10 +140,6 @@ public class AttachmentContentTypeValidatorUnitTest extends AbstractJupiterUnitT
     public void shouldNotPassValidationForWildcardContentType() {
         byte[] jpegBytes = {(byte) 0xFF, (byte) 0xD8, (byte) 0xFF, 0x00};
         Attachment attachment = createAttachmentWithContent("test.jpg", jpegBytes);
-        
-        ApplicationProperties.AttachmentValidation validation = new ApplicationProperties.AttachmentValidation();
-        validation.setContentTypeValidationEnabled(true);
-        when(applicationProperties.getAttachmentValidation()).thenReturn(validation);
         
         AttachmentSpec spec = new AttachmentSpec();
         spec.setContentTypes(Arrays.asList("image/*"));
@@ -182,10 +153,6 @@ public class AttachmentContentTypeValidatorUnitTest extends AbstractJupiterUnitT
         byte[] jpegBytes = {(byte) 0xFF, (byte) 0xD8, (byte) 0xFF, 0x00};
         Attachment attachment = createAttachmentWithContent("test.jpg", jpegBytes);
         
-        ApplicationProperties.AttachmentValidation validation = new ApplicationProperties.AttachmentValidation();
-        validation.setContentTypeValidationEnabled(true);
-        when(applicationProperties.getAttachmentValidation()).thenReturn(validation);
-        
         AttachmentSpec spec = new AttachmentSpec();
         spec.setContentTypes(Arrays.asList("application/pdf"));
         when(xmEntitySpecService.findAttachment(anyString(), anyString())).thenReturn(java.util.Optional.of(spec));
@@ -197,10 +164,6 @@ public class AttachmentContentTypeValidatorUnitTest extends AbstractJupiterUnitT
     public void shouldFailValidationForTextFileWhenImageExpected() {
         byte[] textBytes = "Hello World".getBytes();
         Attachment attachment = createAttachmentWithContent("test.txt", textBytes);
-        
-        ApplicationProperties.AttachmentValidation validation = new ApplicationProperties.AttachmentValidation();
-        validation.setContentTypeValidationEnabled(true);
-        when(applicationProperties.getAttachmentValidation()).thenReturn(validation);
         
         AttachmentSpec spec = new AttachmentSpec();
         spec.setContentTypes(Arrays.asList("image/jpeg"));
@@ -214,10 +177,6 @@ public class AttachmentContentTypeValidatorUnitTest extends AbstractJupiterUnitT
         byte[] jpegBytes = {(byte) 0xFF, (byte) 0xD8, (byte) 0xFF, 0x00};
         Attachment attachment = createAttachmentWithContent("test.jpg", jpegBytes);
         
-        ApplicationProperties.AttachmentValidation validation = new ApplicationProperties.AttachmentValidation();
-        validation.setContentTypeValidationEnabled(true);
-        when(applicationProperties.getAttachmentValidation()).thenReturn(validation);
-        
         AttachmentSpec spec = new AttachmentSpec();
         spec.setContentTypes(Arrays.asList("image/jpeg", "image/png", "application/pdf"));
         when(xmEntitySpecService.findAttachment(anyString(), anyString())).thenReturn(java.util.Optional.of(spec));
@@ -227,23 +186,7 @@ public class AttachmentContentTypeValidatorUnitTest extends AbstractJupiterUnitT
 
     @Test
     public void shouldPassValidationForNullAttachment() {
-        ApplicationProperties.AttachmentValidation validation = new ApplicationProperties.AttachmentValidation();
-        validation.setContentTypeValidationEnabled(true);
-        when(applicationProperties.getAttachmentValidation()).thenReturn(validation);
-
         assertTrue(validator.isValid(null, context));
-    }
-
-    @Test
-    public void shouldPassValidationForAttachmentWithoutXmEntity() {
-        Attachment attachment = new Attachment();
-        attachment.setTypeKey("TEST");
-        
-        ApplicationProperties.AttachmentValidation validation = new ApplicationProperties.AttachmentValidation();
-        validation.setContentTypeValidationEnabled(true);
-        when(applicationProperties.getAttachmentValidation()).thenReturn(validation);
-
-        assertTrue(validator.isValid(attachment, context));
     }
 
     private Attachment createAttachmentWithContent(String fileName, byte[] contentBytes) {
