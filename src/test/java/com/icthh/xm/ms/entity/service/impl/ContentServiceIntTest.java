@@ -19,6 +19,7 @@ import com.icthh.xm.ms.entity.repository.backend.S3StorageRepository;
 import com.icthh.xm.ms.entity.service.ContentService;
 import com.icthh.xm.ms.entity.service.XmEntitySpecService;
 import com.icthh.xm.ms.entity.service.dto.UploadResultDto;
+import com.icthh.xm.ms.entity.validator.AttachmentContentTypeValidator;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.digest.DigestUtils;
@@ -72,6 +73,9 @@ public class ContentServiceIntTest extends AbstractJupiterSpringBootTest {
     @Autowired
     private ApplicationProperties applicationProperties;
 
+    @Autowired
+    private AttachmentContentTypeValidator contentTypeValidator;
+
     @Mock
     private AmazonS3Template amazonS3Template;
 
@@ -96,7 +100,7 @@ public class ContentServiceIntTest extends AbstractJupiterSpringBootTest {
         enrichAmazonProperties(applicationProperties.getAmazon());
 
         s3StorageRepository = new S3StorageRepository(applicationProperties, amazonS3Template, tenantContextHolder);
-        contentService = new ContentService(permittedRepository, contentRepository, s3StorageRepository, fsFileStorageRepository, xmEntitySpecService);
+        contentService = new ContentService(permittedRepository, contentRepository, s3StorageRepository, fsFileStorageRepository, xmEntitySpecService, contentTypeValidator);
     }
 
     private void enrichAmazonProperties(ApplicationProperties.Amazon amazon) {

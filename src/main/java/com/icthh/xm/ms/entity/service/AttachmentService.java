@@ -14,6 +14,8 @@ import com.icthh.xm.ms.entity.domain.spec.AttachmentSpec;
 import com.icthh.xm.ms.entity.repository.AttachmentRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
 import com.icthh.xm.ms.entity.service.impl.StartUpdateDateGenerationStrategy;
+import com.icthh.xm.ms.entity.config.ApplicationProperties;
+import com.icthh.xm.ms.entity.validator.AttachmentContentTypeValidator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -38,6 +40,7 @@ public class AttachmentService {
     public static final String ZERO_RESTRICTION = "error.attachment.zero";
     public static final String MAX_RESTRICTION = "error.attachment.max";
     public static final String SIZE_RESTRICTION = "error.attachment.size";
+    public static final String CONTENT_TYPE_RESTRICTION = "error.attachment.contentType";
 
     private final AttachmentRepository attachmentRepository;
     private final ContentService contentService;
@@ -76,6 +79,9 @@ public class AttachmentService {
 
         // check file size by spec
         assertFileSize(spec, attachment.getContent());
+
+        // check content by content type spec
+        assertContentType(spec, attachment);
 
         //check only for addingNew
         if (attachment.getId() == null && spec.getMax() != null) {
@@ -224,6 +230,10 @@ public class AttachmentService {
         if (dataSize.toBytes() < content.getValue().length) {
             throw new BusinessException(SIZE_RESTRICTION, "Spec for " + spec.getKey() + " allows to add file max size " + spec.getSize());
         }
+    }
+
+    protected void assertContentType(AttachmentSpec spec, Attachment attachment) {
+        contentService.validateContentType(spec, attachment);
     }
 
     @Transactional(readOnly = true)

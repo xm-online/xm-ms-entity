@@ -2,6 +2,7 @@ package com.icthh.xm.ms.entity.service;
 
 import com.icthh.xm.commons.permission.repository.PermittedRepository;
 import com.icthh.xm.ms.entity.AbstractJupiterUnitTest;
+import com.icthh.xm.ms.entity.config.ApplicationProperties;
 import com.icthh.xm.ms.entity.domain.Attachment;
 import com.icthh.xm.ms.entity.domain.AttachmentStoreType;
 import com.icthh.xm.ms.entity.domain.Content;
@@ -11,6 +12,7 @@ import com.icthh.xm.ms.entity.repository.ContentRepository;
 import com.icthh.xm.ms.entity.repository.backend.FsFileStorageRepository;
 import com.icthh.xm.ms.entity.repository.backend.S3StorageRepository;
 import com.icthh.xm.ms.entity.service.dto.UploadResultDto;
+import com.icthh.xm.ms.entity.validator.AttachmentContentTypeValidator;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -27,8 +29,10 @@ public class ContentServiceImplUnitTest extends AbstractJupiterUnitTest {
     private S3StorageRepository s3StorageRepository;
     private FsFileStorageRepository fsFileStorageRepository;
     private XmEntitySpecService xmEntitySpecService;
+    private ApplicationProperties applicationProperties;
 
     private ContentService contentService;
+    private AttachmentContentTypeValidator contentTypeValidator;
 
     @BeforeEach
     public void setUp() {
@@ -37,8 +41,10 @@ public class ContentServiceImplUnitTest extends AbstractJupiterUnitTest {
         s3StorageRepository = Mockito.mock(S3StorageRepository.class);
         fsFileStorageRepository = Mockito.mock(FsFileStorageRepository.class);
         xmEntitySpecService = Mockito.mock(XmEntitySpecService.class);
+        applicationProperties = Mockito.mock(ApplicationProperties.class);
+        contentTypeValidator = new AttachmentContentTypeValidator(applicationProperties, xmEntitySpecService);
         contentService = new ContentService(
-            permittedRepository, contentRepository, s3StorageRepository, fsFileStorageRepository, xmEntitySpecService
+            permittedRepository, contentRepository, s3StorageRepository, fsFileStorageRepository, xmEntitySpecService, contentTypeValidator
         );
     }
 

@@ -14,22 +14,28 @@ import com.icthh.xm.ms.entity.repository.XmEntityRepository;
 import com.icthh.xm.ms.entity.repository.backend.FsFileStorageRepository;
 import com.icthh.xm.ms.entity.repository.backend.S3StorageRepository;
 import com.icthh.xm.ms.entity.service.impl.StartUpdateDateGenerationStrategy;
+import com.icthh.xm.ms.entity.config.ApplicationProperties;
+import com.icthh.xm.ms.entity.validator.AttachmentContentTypeValidator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import java.util.Optional;
+import java.util.Arrays;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-public class AttachmentServiceImplUnitTest  extends AbstractJupiterUnitTest {
+public class AttachmentServiceImplUnitTest extends AbstractJupiterUnitTest {
 
     private AttachmentService attachmentService;
+    private AttachmentContentTypeValidator attachmentContentTypeValidator;
 
     private AttachmentRepository attachmentRepository;
     private PermittedRepository permittedRepository;
@@ -37,6 +43,7 @@ public class AttachmentServiceImplUnitTest  extends AbstractJupiterUnitTest {
     private XmEntityRepository xmEntityRepository;
     private XmEntitySpecService xmEntitySpecService;
     private ContentService contentService;
+    private ApplicationProperties applicationProperties;
 
     @BeforeEach
     public void setUp() {
@@ -46,10 +53,16 @@ public class AttachmentServiceImplUnitTest  extends AbstractJupiterUnitTest {
         xmEntityRepository = Mockito.mock(XmEntityRepository.class);
         xmEntitySpecService = Mockito.mock(XmEntitySpecService.class);
         contentService = Mockito.mock(ContentService.class);
+        applicationProperties = Mockito.mock(ApplicationProperties.class);
+        attachmentContentTypeValidator = new AttachmentContentTypeValidator(applicationProperties, xmEntitySpecService);
         attachmentService = new AttachmentService(
             attachmentRepository, contentService, permittedRepository,
             startUpdateDateGenerationStrategy, xmEntityRepository, xmEntitySpecService
         );
+
+        ApplicationProperties.AttachmentValidation validation = new ApplicationProperties.AttachmentValidation();
+        validation.setContentTypeValidationEnabled(false);
+        when(applicationProperties.getAttachmentValidation()).thenReturn(validation);
     }
 
     @Test
@@ -400,7 +413,7 @@ public class AttachmentServiceImplUnitTest  extends AbstractJupiterUnitTest {
     public void shouldDeleteItemInS3() {
         S3StorageRepository s3StorageRepository  = Mockito.mock(S3StorageRepository.class);
         FsFileStorageRepository fsFileStorageRepository = Mockito.mock(FsFileStorageRepository.class);
-        ContentService contentService = new ContentService(null, null, s3StorageRepository, fsFileStorageRepository, xmEntitySpecService);
+        ContentService contentService = new ContentService(null, null, s3StorageRepository, fsFileStorageRepository, xmEntitySpecService, attachmentContentTypeValidator);
 
         attachmentService = new AttachmentService(
             attachmentRepository, contentService, permittedRepository,
@@ -428,4 +441,99 @@ public class AttachmentServiceImplUnitTest  extends AbstractJupiterUnitTest {
         verify(s3StorageRepository, Mockito.times(1)).delete("bucket::fileName.png");
     }
 
+    @Test
+    public void shouldPassContentTypeValidationWhenDisabled() {
+        AttachmentSpec spec = new AttachmentSpec();
+        spec.setContentTypes(Arrays.asList("image/jpeg", "image/png"));
+
+        Attachment attachment = new Attachment();
+        attachment.setValueContentType("application/pdf");
+
+        assertDoesNotThrow(() -> attachmentService.assertContentType(spec, attachment));
+    }
+
+    @Test
+    public void shouldPassContentTypeValidationWhenEnable() {
+        AttachmentSpec spec = new AttachmentSpec();
+        spec.setContentTypes(Arrays.asList("image/jpeg", "image/png"));
+        byte[] jpegBytes = {(byte) 0xFF, (byte) 0xD8, (byte) 0xFF, 0x00};
+        XmEntity e = new XmEntity();
+        e.setTypeKey("T");
+
+        Content c = new Content();
+        c.setValue(jpegBytes);
+
+        Attachment attachment = new Attachment();
+        attachment.setTypeKey("A.T");
+        attachment.setId(1L);
+        attachment.setContentUrl("bucket::test.jpeg");
+        attachment.setContent(c);
+        attachment.setXmEntity(e);
+
+        ApplicationProperties.AttachmentValidation validation = new ApplicationProperties.AttachmentValidation();
+        validation.setContentTypeValidationEnabled(true);
+        when(applicationProperties.getAttachmentValidation()).thenReturn(validation);
+
+        assertDoesNotThrow(() -> attachmentService.assertContentType(spec, attachment));
+    }
+
+    @Test
+    public void shouldPassContentTypeValidationWhenEmptySpecContentTypes() {
+        AttachmentSpec spec = new AttachmentSpec();
+        spec.setContentTypes(Arrays.asList());
+
+        byte[] pdfBytes = {0x25, 0x50, 0x44, 0x46, 0x2D, 0x31, 0x2E, 0x34};
+
+        XmEntity e = new XmEntity();
+        e.setTypeKey("T");
+
+        Content c = new Content();
+        c.setValue(pdfBytes);
+
+        Attachment attachment = new Attachment();
+        attachment.setTypeKey("A.T");
+        attachment.setId(1L);
+        attachment.setContentUrl("bucket::test.pdf");
+        attachment.setContent(c);
+        attachment.setXmEntity(e);
+        attachment.setValueContentType("application/pdf");
+
+        ApplicationProperties.AttachmentValidation validation = new ApplicationProperties.AttachmentValidation();
+        validation.setContentTypeValidationEnabled(true);
+        when(applicationProperties.getAttachmentValidation()).thenReturn(validation);
+
+        assertDoesNotThrow(() -> attachmentService.assertContentType(spec, attachment));
+    }
+
+    @Test
+    public void shouldNOTPassContentTypeValidationWhenSpecContentTypesNotEq() {
+        AttachmentSpec spec = new AttachmentSpec();
+        spec.setContentTypes(Arrays.asList("application/pdf"));
+
+        byte[] jpegBytes = {(byte) 0xFF, (byte) 0xD8, (byte) 0xFF, 0x00};
+        XmEntity e = new XmEntity();
+        e.setTypeKey("T");
+
+        Content c = new Content();
+        c.setValue(jpegBytes);
+
+        Attachment attachment = new Attachment();
+        attachment.setTypeKey("A.T");
+        attachment.setId(1L);
+        attachment.setContentUrl("bucket::test.jpeg");
+        attachment.setContent(c);
+        attachment.setXmEntity(e);
+
+        ApplicationProperties.AttachmentValidation validation = new ApplicationProperties.AttachmentValidation();
+        validation.setContentTypeValidationEnabled(true);
+        when(applicationProperties.getAttachmentValidation()).thenReturn(validation);
+        when(xmEntitySpecService.findAttachment(eq(attachment.getXmEntity().getTypeKey()), eq(attachment.getTypeKey()))).thenReturn(Optional.of(spec));
+
+        BusinessException thrown = assertThrows(BusinessException.class, () -> {
+            attachmentService.assertContentType(spec, attachment);
+        });
+
+        assertInstanceOf(BusinessException.class, thrown);
+        assertThat(thrown.getCode()).isEqualTo(AttachmentService.CONTENT_TYPE_RESTRICTION);
+    }
 }

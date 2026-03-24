@@ -82,6 +82,8 @@ public class ApplicationProperties {
 
     private DynamicPermissionCheck dynamicPermissionCheck;
 
+    private AttachmentValidation attachmentValidation;
+
     @Getter
     @Setter
     public static class Amazon {
@@ -198,6 +200,12 @@ public class ApplicationProperties {
         private String defaultAvatarUrlPrefix = DEFAULT_AVATAR_URL_PREFIX;
         private String defaultAvatarUrl = DEFAULT_AVATAR_URL;
         private long maxAvatarSize = DEFAULT_MAX_AVATAR_SIZE;
+    }
+
+    @Getter
+    @Setter
+    public static class AttachmentValidation {
+        private boolean contentTypeValidationEnabled = false;
     }
 
     public enum StorageType {
