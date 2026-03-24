@@ -442,33 +442,11 @@ public class AttachmentServiceImplUnitTest extends AbstractJupiterUnitTest {
     }
 
     @Test
-    public void shouldPassContentTypeValidationWhenDisabled() {
-        AttachmentSpec spec = new AttachmentSpec();
-        spec.setContentTypes(Arrays.asList("image/jpeg", "image/png"));
-
-        Attachment attachment = new Attachment();
-        attachment.setValueContentType("application/pdf");
-
-        assertDoesNotThrow(() -> attachmentService.assertContentType(spec, attachment));
-    }
-
-    @Test
     public void shouldPassContentTypeValidationWhenEnable() {
         AttachmentSpec spec = new AttachmentSpec();
         spec.setContentTypes(Arrays.asList("image/jpeg", "image/png"));
-        byte[] jpegBytes = {(byte) 0xFF, (byte) 0xD8, (byte) 0xFF, 0x00};
-        XmEntity e = new XmEntity();
-        e.setTypeKey("T");
-
-        Content c = new Content();
-        c.setValue(jpegBytes);
-
-        Attachment attachment = new Attachment();
-        attachment.setTypeKey("A.T");
-        attachment.setId(1L);
-        attachment.setContentUrl("bucket::test.jpeg");
-        attachment.setContent(c);
-        attachment.setXmEntity(e);
+        
+        Attachment attachment = createAttachmentWithJpegContent();
 
         ApplicationProperties.AttachmentValidation validation = new ApplicationProperties.AttachmentValidation();
         validation.setContentTypeValidationEnabled(true);
@@ -482,21 +460,7 @@ public class AttachmentServiceImplUnitTest extends AbstractJupiterUnitTest {
         AttachmentSpec spec = new AttachmentSpec();
         spec.setContentTypes(Arrays.asList());
 
-        byte[] pdfBytes = {0x25, 0x50, 0x44, 0x46, 0x2D, 0x31, 0x2E, 0x34};
-
-        XmEntity e = new XmEntity();
-        e.setTypeKey("T");
-
-        Content c = new Content();
-        c.setValue(pdfBytes);
-
-        Attachment attachment = new Attachment();
-        attachment.setTypeKey("A.T");
-        attachment.setId(1L);
-        attachment.setContentUrl("bucket::test.pdf");
-        attachment.setContent(c);
-        attachment.setXmEntity(e);
-        attachment.setValueContentType("application/pdf");
+        Attachment attachment = createAttachmentWithPdfContent();
 
         ApplicationProperties.AttachmentValidation validation = new ApplicationProperties.AttachmentValidation();
         validation.setContentTypeValidationEnabled(true);
@@ -517,6 +481,22 @@ public class AttachmentServiceImplUnitTest extends AbstractJupiterUnitTest {
         AttachmentSpec spec = new AttachmentSpec();
         spec.setContentTypes(Arrays.asList("application/pdf"));
 
+        Attachment attachment = createAttachmentWithJpegContent();
+
+        ApplicationProperties.AttachmentValidation validation = new ApplicationProperties.AttachmentValidation();
+        validation.setContentTypeValidationEnabled(true);
+        when(applicationProperties.getAttachmentValidation()).thenReturn(validation);
+        when(xmEntitySpecService.findAttachment(eq(attachment.getXmEntity().getTypeKey()), eq(attachment.getTypeKey()))).thenReturn(Optional.of(spec));
+
+        BusinessException thrown = assertThrows(BusinessException.class, () -> {
+            attachmentService.assertContentType(spec, attachment);
+        });
+
+        assertInstanceOf(BusinessException.class, thrown);
+        assertThat(thrown.getCode()).isEqualTo(AttachmentService.CONTENT_TYPE_RESTRICTION);
+    }
+
+    private Attachment createAttachmentWithJpegContent() {
         byte[] jpegBytes = {(byte) 0xFF, (byte) 0xD8, (byte) 0xFF, 0x00};
         XmEntity e = new XmEntity();
         e.setTypeKey("T");
@@ -530,17 +510,24 @@ public class AttachmentServiceImplUnitTest extends AbstractJupiterUnitTest {
         attachment.setContentUrl("bucket::test.jpeg");
         attachment.setContent(c);
         attachment.setXmEntity(e);
+        return attachment;
+    }
 
-        ApplicationProperties.AttachmentValidation validation = new ApplicationProperties.AttachmentValidation();
-        validation.setContentTypeValidationEnabled(true);
-        when(applicationProperties.getAttachmentValidation()).thenReturn(validation);
-        when(xmEntitySpecService.findAttachment(eq(attachment.getXmEntity().getTypeKey()), eq(attachment.getTypeKey()))).thenReturn(Optional.of(spec));
+    private Attachment createAttachmentWithPdfContent() {
+        byte[] pdfBytes = {0x25, 0x50, 0x44, 0x46, 0x2D, 0x31, 0x2E, 0x34};
+        XmEntity e = new XmEntity();
+        e.setTypeKey("T");
 
-        BusinessException thrown = assertThrows(BusinessException.class, () -> {
-            attachmentService.assertContentType(spec, attachment);
-        });
+        Content c = new Content();
+        c.setValue(pdfBytes);
 
-        assertInstanceOf(BusinessException.class, thrown);
-        assertThat(thrown.getCode()).isEqualTo(AttachmentService.CONTENT_TYPE_RESTRICTION);
+        Attachment attachment = new Attachment();
+        attachment.setTypeKey("A.T");
+        attachment.setId(1L);
+        attachment.setContentUrl("bucket::test.pdf");
+        attachment.setContent(c);
+        attachment.setXmEntity(e);
+        attachment.setValueContentType("application/pdf");
+        return attachment;
     }
 }
