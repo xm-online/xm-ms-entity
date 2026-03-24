@@ -53,6 +53,7 @@ public class XmEntityDtoObjectIdResolver extends SimpleObjectIdResolver {
 
         XmEntityDto dto = new XmEntityDto();
         dto.setId(entity.getId());
+        dto.setTypeKey(entity.getTypeKey());
         return dto;
     }
 

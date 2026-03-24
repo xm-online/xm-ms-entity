@@ -51,6 +51,7 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
+import com.icthh.xm.ms.entity.service.mapper.CommentMapper;
 import com.icthh.xm.ms.entity.web.rest.facade.CommentFacade;
 
 /**
@@ -113,7 +114,10 @@ public class CommentResourceIntTest extends AbstractJupiterSpringBootTest {
     private CommentService commentServiceForLep;
 
     @Autowired
-    private CommentFacade commentFacade;
+    private CommentFacade commentFacadeForLep;
+
+    @Autowired
+    private CommentMapper commentMapper;
 
     @Mock
     private XmAuthenticationContextHolder authContextHolder;
@@ -151,6 +155,7 @@ public class CommentResourceIntTest extends AbstractJupiterSpringBootTest {
                                             permittedRepository,
                                             xmEntityRepository);
 
+        CommentFacade commentFacade = new CommentFacade(commentService, commentMapper);
         CommentResource self = new CommentResource(commentFacade, null);
         CommentResource commentResourceMock = new CommentResource(commentFacade, self);
 
@@ -160,7 +165,7 @@ public class CommentResourceIntTest extends AbstractJupiterSpringBootTest {
             .setMessageConverters(jacksonMessageConverter).build();
 
         this.restCommentMockMvcForLep = MockMvcBuilders
-            .standaloneSetup(new CommentResource(commentFacade, commentResource))
+            .standaloneSetup(new CommentResource(commentFacadeForLep, commentResource))
             .setCustomArgumentResolvers(pageableArgumentResolver)
             .setControllerAdvice(exceptionTranslator)
             .setMessageConverters(jacksonMessageConverter).build();

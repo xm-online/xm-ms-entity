@@ -53,6 +53,7 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import com.icthh.xm.ms.entity.web.rest.facade.AttachmentFacade;
+import com.icthh.xm.ms.entity.service.mapper.AttachmentMapper;
 
 /**
  * Test class for the AttachmentResource REST controller.
@@ -138,7 +139,7 @@ public class AttachmentResourceIntTest extends AbstractJupiterSpringBootTest {
     private ContentService contentService;
 
     @Autowired
-    private AttachmentFacade attachmentFacade;
+    private AttachmentMapper attachmentMapper;
 
     @BeforeTransaction
     public void beforeTransaction() {
@@ -164,6 +165,7 @@ public class AttachmentResourceIntTest extends AbstractJupiterSpringBootTest {
                                                   xmEntityRepository,
                                                   xmEntitySpecService);
 
+        AttachmentFacade attachmentFacade = new AttachmentFacade(attachmentService, attachmentMapper);
         AttachmentResource attachmentResourceMock = new AttachmentResource(attachmentFacade, attachmentResource);
         this.restAttachmentMockMvc = MockMvcBuilders.standaloneSetup(attachmentResourceMock)
             .setCustomArgumentResolvers(pageableArgumentResolver)

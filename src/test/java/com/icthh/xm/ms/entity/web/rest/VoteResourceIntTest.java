@@ -45,6 +45,7 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import com.icthh.xm.ms.entity.web.rest.facade.VoteFacade;
+import com.icthh.xm.ms.entity.service.mapper.VoteMapper;
 
 /**
  * Test class for the VoteResource REST controller.
@@ -94,7 +95,7 @@ public class VoteResourceIntTest extends AbstractJupiterSpringBootTest {
     private XmEntityRepository xmEntityRepository;
 
     @Autowired
-    private VoteFacade voteFacade;
+    private VoteMapper voteMapper;
 
     private VoteService voteService;
 
@@ -121,6 +122,7 @@ public class VoteResourceIntTest extends AbstractJupiterSpringBootTest {
                                       startUpdateDateGenerationStrategy,
                                       xmEntityRepository);
 
+        VoteFacade voteFacade = new VoteFacade(voteService, voteMapper);
         VoteResource voteResourceMock = new VoteResource(voteResource, voteFacade);
         this.restVoteMockMvc = MockMvcBuilders.standaloneSetup(voteResourceMock)
             .setCustomArgumentResolvers(pageableArgumentResolver)

@@ -3,6 +3,7 @@ package com.icthh.xm.ms.entity.service.dto;
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.JsonIdentityReference;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
+import com.icthh.xm.ms.entity.domain.WithTypeKey;
 import com.icthh.xm.ms.entity.domain.idresolver.CalendarDtoObjectIdResolver;
 import com.icthh.xm.ms.entity.domain.idresolver.XmEntityDtoObjectIdResolver;
 import com.icthh.xm.ms.entity.validator.EventDataTypeKey;
@@ -17,7 +18,7 @@ import java.time.Instant;
 @Getter
 @Setter
 @EventDataTypeKey
-public class EventDto implements Serializable {
+public class EventDto implements Serializable, WithTypeKey {
 
     private static final long serialVersionUID = 1L;
 

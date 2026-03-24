@@ -66,6 +66,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import com.icthh.xm.ms.entity.web.rest.facade.EventFacade;
+import com.icthh.xm.ms.entity.service.mapper.EventMapper;
 
 /**
  * Test class for the EventResource REST controller.
@@ -162,7 +163,7 @@ public class EventResourceIntTest extends AbstractJupiterSpringBootTest {
     private StartUpdateDateGenerationStrategy startUpdateDateGenerationStrategy;
 
     @Autowired
-    private EventFacade eventFacade;
+    private EventMapper eventMapper;
 
     private CalendarService calendarService;
 
@@ -190,6 +191,7 @@ public class EventResourceIntTest extends AbstractJupiterSpringBootTest {
             calendarService);
         eventService.setSelf(eventService);
 
+        EventFacade eventFacade = new EventFacade(eventService, eventMapper);
         EventResource eventResourceMock = new EventResource(eventFacade, eventResource);
         this.restEventMockMvc = MockMvcBuilders.standaloneSetup(eventResourceMock)
             .setCustomArgumentResolvers(pageableArgumentResolver)

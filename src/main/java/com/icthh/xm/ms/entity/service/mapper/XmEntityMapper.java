@@ -45,7 +45,7 @@ public abstract class XmEntityMapper extends LazyLoadingAwareMapper {
 
     public abstract List<XmEntityDto> toDtoList(List<XmEntity> entities);
 
-    @Named("shallowDto")
+    @Named("_shallowDtoInternal")
     @Mapping(target = "attachments", ignore = true)
     @Mapping(target = "calendars", ignore = true)
     @Mapping(target = "locations", ignore = true)
@@ -59,5 +59,14 @@ public abstract class XmEntityMapper extends LazyLoadingAwareMapper {
     @Mapping(target = "events", ignore = true)
     @Mapping(target = "avatarUrlRelative", source = "avatarUrlRelative")
     @Mapping(target = "avatarUrlFull", expression = "java(entity.getAvatarUrl())")
-    public abstract XmEntityDto toShallowDto(XmEntity entity);
+    protected abstract XmEntityDto toShallowDtoInternal(XmEntity entity);
+
+    @Named("shallowDto")
+    public XmEntityDto toShallowDto(XmEntity entity) {
+        XmEntityDto dto = toShallowDtoInternal(entity);
+        if (dto != null) {
+            XmEntityRefMapper.nullifyCollections(dto);
+        }
+        return dto;
+    }
 }

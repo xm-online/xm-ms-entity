@@ -99,6 +99,8 @@ import java.util.Optional;
 
 import static software.amazon.awssdk.utils.StringUtils.repeat;
 import com.icthh.xm.ms.entity.web.rest.facade.XmEntityFacade;
+import com.icthh.xm.ms.entity.service.mapper.XmEntityMapper;
+import com.icthh.xm.ms.entity.service.mapper.LinkMapper;
 
 /**
  * Test class for the XmEntityResource REST controller.
@@ -242,7 +244,10 @@ public class XmEntityResourceIntTest extends AbstractJupiterSpringBootTest {
     private XmEntityProjectionService xmEntityProjectionService;
 
     @Autowired
-    private XmEntityFacade xmEntityFacade;
+    private XmEntityMapper xmEntityMapper;
+
+    @Autowired
+    private LinkMapper linkMapper;
 
     @BeforeTransaction
     public void beforeTransaction() {
@@ -298,6 +303,7 @@ public class XmEntityResourceIntTest extends AbstractJupiterSpringBootTest {
             ctx.setValue(THREAD_CONTEXT_KEY_TENANT_CONTEXT, tenantContextHolder.getContext());
             ctx.setValue(THREAD_CONTEXT_KEY_AUTH_CONTEXT, authContextHolder.getContext());
         });
+        XmEntityFacade xmEntityFacade = new XmEntityFacade(xmEntityServiceImpl, xmEntityMapper, linkMapper);
         XmEntityResource resourceMock = mock(XmEntityResource.class);
         when(resourceMock.createXmEntity(any())).thenReturn(ResponseEntity.created(new URI("")).build());
         XmEntityResource self = new XmEntityResource(xmEntityFacade,

@@ -7,12 +7,16 @@ import com.icthh.xm.ms.entity.service.dto.XmEntityDto;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.List;
 import java.util.Set;
 
 @Mapper(componentModel = "spring", uses = {XmEntityRefMapper.class})
 public abstract class LinkMapper extends LazyLoadingAwareMapper {
+
+    @Autowired
+    protected XmEntityRefMapper xmEntityRefMapper;
 
     @Mapping(target = "target", qualifiedByName = "targetXmEntityToDto")
     @Mapping(target = "source", qualifiedByName = "shallowXmEntityToDto")
@@ -30,54 +34,15 @@ public abstract class LinkMapper extends LazyLoadingAwareMapper {
 
     @Named("targetXmEntityToDto")
     protected XmEntityDto targetXmEntityToDto(XmEntity entity) {
-        if (entity == null) return null;
-        if (!org.hibernate.Hibernate.isInitialized(entity)) return null;
-        XmEntityDto dto = new XmEntityDto();
-        dto.setId(entity.getId());
-        dto.setKey(entity.getKey());
-        dto.setTypeKey(entity.getTypeKey());
-        dto.setStateKey(entity.getStateKey());
-        dto.setName(entity.getName());
-        dto.setStartDate(entity.getStartDate());
-        dto.setEndDate(entity.getEndDate());
-        dto.setUpdateDate(entity.getUpdateDate());
-        dto.setAvatarUrl(entity.getAvatarUrl());
-        dto.setDescription(entity.getDescription());
-        dto.setCreatedBy(entity.getCreatedBy());
-        dto.setRemoved(entity.isRemoved());
-        dto.setData(entity.getData());
-        // Null out collections to match SimpleLinkSerializer behavior (no sub-entity collections in link target)
-        dto.setTags(null);
-        dto.setLocations(null);
-        dto.setAttachments(null);
-        dto.setComments(null);
-        dto.setRatings(null);
-        dto.setCalendars(null);
-        dto.setTargets(null);
-        dto.setSources(null);
-        dto.setFunctionContexts(null);
-        dto.setVotes(null);
-        dto.setEvents(null);
+        XmEntityDto dto = xmEntityRefMapper.fullXmEntityToDto(entity);
+        if (dto != null) {
+            XmEntityRefMapper.nullifyCollections(dto);
+        }
         return dto;
     }
 
     @Named("targetXmEntityToEntity")
     protected XmEntity targetXmEntityToEntity(XmEntityDto dto) {
-        if (dto == null) return null;
-        XmEntity entity = new XmEntity();
-        entity.setId(dto.getId());
-        entity.setKey(dto.getKey());
-        entity.setTypeKey(dto.getTypeKey());
-        entity.setStateKey(dto.getStateKey());
-        entity.setName(dto.getName());
-        entity.setStartDate(dto.getStartDate());
-        entity.setEndDate(dto.getEndDate());
-        entity.setUpdateDate(dto.getUpdateDate());
-        entity.setAvatarUrl(dto.getAvatarUrl());
-        entity.setDescription(dto.getDescription());
-        entity.setCreatedBy(dto.getCreatedBy());
-        entity.setRemoved(dto.isRemoved());
-        entity.setData(dto.getData());
-        return entity;
+        return xmEntityRefMapper.fullXmEntityToEntity(dto);
     }
 }

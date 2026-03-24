@@ -15,12 +15,12 @@ public abstract class EventMapper extends LazyLoadingAwareMapper {
 
     @Mapping(target = "assigned", qualifiedByName = "shallowXmEntityToDto")
     @Mapping(target = "calendar", qualifiedByName = "shallowCalendarToDto")
-    @Mapping(target = "eventDataRef", qualifiedByName = "shallowXmEntityToDto")
+    @Mapping(target = "eventDataRef", qualifiedByName = "fullXmEntityToDto")
     public abstract EventDto toDto(Event entity);
 
     @Mapping(target = "assigned", qualifiedByName = "shallowXmEntityToEntity")
     @Mapping(target = "calendar", qualifiedByName = "shallowCalendarToEntity")
-    @Mapping(target = "eventDataRef", qualifiedByName = "shallowXmEntityToEntity")
+    @Mapping(target = "eventDataRef", qualifiedByName = "fullXmEntityToEntity")
     public abstract Event toEntity(EventDto dto);
 
     public abstract Set<EventDto> toDtoSet(Set<Event> entities);
@@ -40,6 +40,7 @@ public abstract class EventMapper extends LazyLoadingAwareMapper {
         if (dto == null) return null;
         Calendar entity = new Calendar();
         entity.setId(dto.getId());
+        entity.setTypeKey(dto.getTypeKey());
         return entity;
     }
 }

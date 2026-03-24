@@ -40,6 +40,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 import com.icthh.xm.ms.entity.web.rest.facade.ProfileFacade;
+import com.icthh.xm.ms.entity.service.mapper.XmEntityMapper;
 
 /**
  * Test class for the ProfileResource REST controller.
@@ -77,7 +78,7 @@ public class ProfileResourceIntTest extends AbstractJupiterSpringBootTest {
     private XmEntitySearchRepository entitySearchRepository;
 
     @Autowired
-    private ProfileFacade profileFacade;
+    private XmEntityMapper xmEntityMapper;
 
     @Mock
     private XmAuthenticationContextHolder authContextHolder;
@@ -110,6 +111,7 @@ public class ProfileResourceIntTest extends AbstractJupiterSpringBootTest {
 
         profileService = new ProfileService(profileRepository, entitySearchRepository, authContextHolder);
 
+        ProfileFacade profileFacade = new ProfileFacade(profileService, xmEntityMapper);
         final ProfileResource profileResource = new ProfileResource(profileFacade);
         this.restProfileMockMvc = MockMvcBuilders.standaloneSetup(profileResource)
             .setCustomArgumentResolvers(pageableArgumentResolver)

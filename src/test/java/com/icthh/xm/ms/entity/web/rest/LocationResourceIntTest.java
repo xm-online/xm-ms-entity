@@ -41,6 +41,7 @@ import org.springframework.validation.Validator;
 
 import java.util.List;
 import com.icthh.xm.ms.entity.web.rest.facade.LocationFacade;
+import com.icthh.xm.ms.entity.service.mapper.LocationMapper;
 
 /**
  * Test class for the LocationResource REST controller.
@@ -121,7 +122,7 @@ public class LocationResourceIntTest extends AbstractJupiterSpringBootTest {
     private LepManager lepManager;
 
     @Autowired
-    private LocationFacade locationFacade;
+    private LocationMapper locationMapper;
 
     @BeforeTransaction
     public void beforeTransaction() {
@@ -137,6 +138,7 @@ public class LocationResourceIntTest extends AbstractJupiterSpringBootTest {
         });
 
         MockitoAnnotations.initMocks(this);
+        LocationFacade locationFacade = new LocationFacade(locationService, locationMapper);
         LocationResource locationResourceMock = new LocationResource(locationResource, locationFacade);
         this.restLocationMockMvc = MockMvcBuilders.standaloneSetup(locationResourceMock)
             .setCustomArgumentResolvers(pageableArgumentResolver)

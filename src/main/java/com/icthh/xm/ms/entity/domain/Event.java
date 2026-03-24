@@ -38,7 +38,7 @@ import static jakarta.persistence.CascadeType.REMOVE;
 @Getter
 @Setter
 @EventDataTypeKey
-public class Event implements Serializable {
+public class Event implements Serializable, WithTypeKey {
 
     private static final long serialVersionUID = 1L;
 

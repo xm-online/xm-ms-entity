@@ -35,12 +35,12 @@ public class CalendarDtoObjectIdResolver extends SimpleObjectIdResolver {
 
     @Override
     public Object resolveId(final ObjectIdGenerator.IdKey id) {
-        if (!repository.existsById((Long) id.key)) {
-            throw new BusinessException(ErrorConstants.ERR_NOTFOUND,
-                "Can not resolve Calendar by ID: " + id.key);
-        }
+        var entity = repository.findById((Long) id.key).orElseThrow(
+            () -> new BusinessException(ErrorConstants.ERR_NOTFOUND,
+                "Can not resolve Calendar by ID: " + id.key));
         CalendarDto dto = new CalendarDto();
-        dto.setId((Long) id.key);
+        dto.setId(entity.getId());
+        dto.setTypeKey(entity.getTypeKey());
         return dto;
     }
 

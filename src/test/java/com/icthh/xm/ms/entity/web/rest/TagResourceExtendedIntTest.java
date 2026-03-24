@@ -37,6 +37,7 @@ import org.springframework.validation.Validator;
 import java.time.Instant;
 import java.util.List;
 import com.icthh.xm.ms.entity.web.rest.facade.TagFacade;
+import com.icthh.xm.ms.entity.service.mapper.TagMapper;
 
 /**
  * Extended Test class for the TagResource REST controller.
@@ -79,7 +80,7 @@ public class TagResourceExtendedIntTest extends AbstractJupiterSpringBootTest {
     private XmEntityRepository xmEntityRepository;
 
     @Autowired
-    private TagFacade tagFacade;
+    private TagMapper tagMapper;
 
     @Spy
     private StartUpdateDateGenerationStrategy startUpdateDateGenerationStrategy;
@@ -107,6 +108,7 @@ public class TagResourceExtendedIntTest extends AbstractJupiterSpringBootTest {
             startUpdateDateGenerationStrategy,
             xmEntityRepository);
 
+        TagFacade tagFacade = new TagFacade(tagService, tagMapper);
         TagResource tagResourceMock = new TagResource(tagResource, tagFacade);
         this.restTagMockMvc = MockMvcBuilders.standaloneSetup(tagResourceMock)
                                              .setCustomArgumentResolvers(pageableArgumentResolver)
