@@ -44,6 +44,7 @@ public class CalendarDto implements Serializable {
     @ApiModelProperty(value = "End date")
     private Instant endDate;
 
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private Set<EventDto> events = new HashSet<>();
 
     @NotNull

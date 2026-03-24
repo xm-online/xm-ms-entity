@@ -91,24 +91,32 @@ public class XmEntityDto implements Serializable, WithId, WithTypeKey, EntityBas
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private Integer version;
 
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private Set<AttachmentDto> attachments = new HashSet<>();
 
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private Set<CalendarDto> calendars = new HashSet<>();
 
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private Set<LocationDto> locations = new HashSet<>();
 
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private Set<RatingDto> ratings = new HashSet<>();
 
     @Valid
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private Set<TagDto> tags = new HashSet<>();
 
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private Set<CommentDto> comments = new HashSet<>();
 
     @JsonIgnore
     private Set<VoteDto> votes = new HashSet<>();
 
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private Set<LinkDto> sources = new HashSet<>();
 
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private Set<LinkDto> targets = new HashSet<>();
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
