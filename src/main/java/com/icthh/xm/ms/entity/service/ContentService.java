@@ -20,16 +20,10 @@ import com.icthh.xm.ms.entity.repository.backend.S3StorageRepository;
 import com.icthh.xm.ms.entity.service.dto.S3ObjectDto;
 import com.icthh.xm.ms.entity.service.dto.UploadResultDto;
 import com.icthh.xm.ms.entity.validator.AttachmentContentTypeValidator;
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.digest.DigestUtils;
-import org.apache.tika.Tika;
-import org.apache.tika.mime.MediaType;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -51,10 +45,6 @@ public class ContentService {
     private final FsFileStorageRepository fsFileStorageRepository;
     private final XmEntitySpecService xmEntitySpecService;
     private final AttachmentContentTypeValidator contentTypeValidator;
-
-    @Value( "${application.attachment-validation.content-type-validation-enabled:false}")
-    private Boolean enableValidationContentType;
-    private final Tika tika = new Tika();
 
     @Transactional(readOnly = true)
     @FindWithPermission("CONTENT.GET_LIST")

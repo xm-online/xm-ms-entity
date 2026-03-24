@@ -20,9 +20,11 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
+import org.springframework.stereotype.Component;
 
 @Slf4j
 @RequiredArgsConstructor
+@Component
 public class AttachmentContentTypeValidator implements ConstraintValidator<AttachmentContentType, Attachment> {
 
     private final Tika tika = new Tika();
@@ -58,14 +60,14 @@ public class AttachmentContentTypeValidator implements ConstraintValidator<Attac
             }
 
             String detectedContentType = detectContentType(contentBytes);
-            
+
             boolean isValid = allowedContentTypes.stream()
                 .anyMatch(allowed -> isContentTypeMatch(detectedContentType, allowed));
 
             if (!isValid && context != null) {
                 context.disableDefaultConstraintViolation();
                 context.buildConstraintViolationWithTemplate(
-                    "Detected content type '" + detectedContentType + 
+                    "Detected content type '" + detectedContentType +
                     "' is not allowed. Allowed types: " + allowedContentTypes)
                 .addConstraintViolation();
             }
@@ -99,7 +101,7 @@ public class AttachmentContentTypeValidator implements ConstraintValidator<Attac
         try {
             MediaType detectedType = MediaType.parse(detected);
             MediaType allowedType = MediaType.parse(allowed);
-            
+
             if (detectedType.equals(allowedType)) {
                 return true;
             }
@@ -110,7 +112,7 @@ public class AttachmentContentTypeValidator implements ConstraintValidator<Attac
                 return true;
             }
         }
-        
+
         return false;
     }
 }
