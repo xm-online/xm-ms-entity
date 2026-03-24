@@ -37,11 +37,6 @@ public class EventFacade {
             .toList();
     }
 
-    // TODO: EventService.findAll(EventFilter, Pageable, String) does not exist yet
-    // public Page<EventDto> findAll(EventFilter filter, Pageable pageable, String privilegeKey) {
-    //     return eventService.findAll(filter, pageable, privilegeKey).map(eventMapper::toDto);
-    // }
-
     public EventDto findOne(Long id) {
         return eventMapper.toDto(eventService.findOne(id));
     }
