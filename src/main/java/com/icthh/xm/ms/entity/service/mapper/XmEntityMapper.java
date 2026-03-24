@@ -48,17 +48,39 @@ public abstract class XmEntityMapper extends LazyLoadingAwareMapper {
      */
     @AfterMapping
     protected void nullifyUninitializedCollections(XmEntity entity, @MappingTarget XmEntityDto dto) {
-        if (!Hibernate.isInitialized(entity.getAttachments())) dto.setAttachments(null);
-        if (!Hibernate.isInitialized(entity.getCalendars())) dto.setCalendars(null);
-        if (!Hibernate.isInitialized(entity.getLocations())) dto.setLocations(null);
-        if (!Hibernate.isInitialized(entity.getRatings())) dto.setRatings(null);
-        if (!Hibernate.isInitialized(entity.getTags())) dto.setTags(null);
-        if (!Hibernate.isInitialized(entity.getComments())) dto.setComments(null);
-        if (!Hibernate.isInitialized(entity.getVotes())) dto.setVotes(null);
-        if (!Hibernate.isInitialized(entity.getSources())) dto.setSources(null);
-        if (!Hibernate.isInitialized(entity.getTargets())) dto.setTargets(null);
-        if (!Hibernate.isInitialized(entity.getFunctionContexts())) dto.setFunctionContexts(null);
-        if (!Hibernate.isInitialized(entity.getEvents())) dto.setEvents(null);
+        if (!Hibernate.isInitialized(entity.getAttachments())) {
+            dto.setAttachments(null);
+        }
+        if (!Hibernate.isInitialized(entity.getCalendars())) {
+            dto.setCalendars(null);
+        }
+        if (!Hibernate.isInitialized(entity.getLocations())) {
+            dto.setLocations(null);
+        }
+        if (!Hibernate.isInitialized(entity.getRatings())) {
+            dto.setRatings(null);
+        }
+        if (!Hibernate.isInitialized(entity.getTags())) {
+            dto.setTags(null);
+        }
+        if (!Hibernate.isInitialized(entity.getComments())) {
+            dto.setComments(null);
+        }
+        if (!Hibernate.isInitialized(entity.getVotes())) {
+            dto.setVotes(null);
+        }
+        if (!Hibernate.isInitialized(entity.getSources())) {
+            dto.setSources(null);
+        }
+        if (!Hibernate.isInitialized(entity.getTargets())) {
+            dto.setTargets(null);
+        }
+        if (!Hibernate.isInitialized(entity.getFunctionContexts())) {
+            dto.setFunctionContexts(null);
+        }
+        if (!Hibernate.isInitialized(entity.getEvents())) {
+            dto.setEvents(null);
+        }
     }
 
     @Mapping(target = "uniqueFields", ignore = true)

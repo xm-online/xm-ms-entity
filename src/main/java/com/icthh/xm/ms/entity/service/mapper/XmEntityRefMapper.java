@@ -17,8 +17,12 @@ public abstract class XmEntityRefMapper {
 
     @Named("shallowXmEntityToDto")
     public XmEntityDto shallowXmEntityToDto(XmEntity entity) {
-        if (entity == null) return null;
-        if (!Hibernate.isInitialized(entity)) return null;
+        if (entity == null) {
+            return null;
+        }
+        if (!Hibernate.isInitialized(entity)) {
+            return null;
+        }
         XmEntityDto dto = new XmEntityDto();
         dto.setId(entity.getId());
         dto.setTypeKey(entity.getTypeKey());
@@ -27,7 +31,9 @@ public abstract class XmEntityRefMapper {
 
     @Named("shallowXmEntityToEntity")
     public XmEntity shallowXmEntityToEntity(XmEntityDto dto) {
-        if (dto == null) return null;
+        if (dto == null) {
+            return null;
+        }
         XmEntity entity = new XmEntity();
         entity.setId(dto.getId());
         entity.setTypeKey(dto.getTypeKey());

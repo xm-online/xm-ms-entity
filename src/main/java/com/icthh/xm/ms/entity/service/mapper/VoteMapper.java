@@ -27,7 +27,9 @@ public abstract class VoteMapper extends LazyLoadingAwareMapper {
 
     @Named("shallowRatingToDto")
     protected RatingDto shallowRatingToDto(Rating entity) {
-        if (entity == null) return null;
+        if (entity == null) {
+            return null;
+        }
         RatingDto dto = new RatingDto();
         dto.setId(entity.getId());
         dto.setTypeKey(entity.getTypeKey());
@@ -36,7 +38,9 @@ public abstract class VoteMapper extends LazyLoadingAwareMapper {
 
     @Named("shallowRatingToEntity")
     protected Rating shallowRatingToEntity(RatingDto dto) {
-        if (dto == null) return null;
+        if (dto == null) {
+            return null;
+        }
         Rating entity = new Rating();
         entity.setId(dto.getId());
         entity.setTypeKey(dto.getTypeKey());

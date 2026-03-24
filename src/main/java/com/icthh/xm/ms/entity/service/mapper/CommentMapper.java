@@ -29,7 +29,9 @@ public abstract class CommentMapper extends LazyLoadingAwareMapper {
 
     @Named("shallowCommentToDto")
     protected CommentDto shallowCommentToDto(Comment entity) {
-        if (entity == null) return null;
+        if (entity == null) {
+            return null;
+        }
         CommentDto dto = new CommentDto();
         dto.setId(entity.getId());
         dto.setUserKey(entity.getUserKey());
@@ -40,7 +42,9 @@ public abstract class CommentMapper extends LazyLoadingAwareMapper {
 
     @Named("shallowCommentToEntity")
     protected Comment shallowCommentToEntity(CommentDto dto) {
-        if (dto == null) return null;
+        if (dto == null) {
+            return null;
+        }
         Comment entity = new Comment();
         entity.setId(dto.getId());
         entity.setUserKey(dto.getUserKey());

@@ -29,7 +29,9 @@ public abstract class EventMapper extends LazyLoadingAwareMapper {
 
     @Named("shallowCalendarToDto")
     protected CalendarDto shallowCalendarToDto(Calendar entity) {
-        if (entity == null) return null;
+        if (entity == null) {
+            return null;
+        }
         CalendarDto dto = new CalendarDto();
         dto.setId(entity.getId());
         return dto;
@@ -37,7 +39,9 @@ public abstract class EventMapper extends LazyLoadingAwareMapper {
 
     @Named("shallowCalendarToEntity")
     protected Calendar shallowCalendarToEntity(CalendarDto dto) {
-        if (dto == null) return null;
+        if (dto == null) {
+            return null;
+        }
         Calendar entity = new Calendar();
         entity.setId(dto.getId());
         entity.setTypeKey(dto.getTypeKey());
