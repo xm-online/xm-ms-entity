@@ -2,8 +2,11 @@ package com.icthh.xm.ms.entity.service.mapper;
 
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.service.dto.XmEntityDto;
+import org.hibernate.Hibernate;
+import org.mapstruct.AfterMapping;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.mapstruct.MappingTarget;
 import org.mapstruct.Named;
 
 import java.util.List;
@@ -37,6 +40,27 @@ public abstract class XmEntityMapper extends LazyLoadingAwareMapper {
     @Mapping(target = "avatarUrlRelative", source = "avatarUrlRelative")
     @Mapping(target = "avatarUrlFull", expression = "java(entity.getAvatarUrl())")
     public abstract XmEntityDto toDto(XmEntity entity);
+
+    /**
+     * Null out DTO collections that were not initialized in the entity (lazy-loaded).
+     * The conditionExpression skips mapping for uninitialized collections,
+     * leaving the DTO's default empty HashSet. This @AfterMapping nullifies them
+     * to match the old Hibernate module behavior (null for unloaded collections).
+     */
+    @AfterMapping
+    protected void nullifyUninitializedCollections(XmEntity entity, @MappingTarget XmEntityDto dto) {
+        if (!Hibernate.isInitialized(entity.getAttachments())) dto.setAttachments(null);
+        if (!Hibernate.isInitialized(entity.getCalendars())) dto.setCalendars(null);
+        if (!Hibernate.isInitialized(entity.getLocations())) dto.setLocations(null);
+        if (!Hibernate.isInitialized(entity.getRatings())) dto.setRatings(null);
+        if (!Hibernate.isInitialized(entity.getTags())) dto.setTags(null);
+        if (!Hibernate.isInitialized(entity.getComments())) dto.setComments(null);
+        if (!Hibernate.isInitialized(entity.getVotes())) dto.setVotes(null);
+        if (!Hibernate.isInitialized(entity.getSources())) dto.setSources(null);
+        if (!Hibernate.isInitialized(entity.getTargets())) dto.setTargets(null);
+        if (!Hibernate.isInitialized(entity.getFunctionContexts())) dto.setFunctionContexts(null);
+        if (!Hibernate.isInitialized(entity.getEvents())) dto.setEvents(null);
+    }
 
     @Mapping(target = "avatarUrlRelative", source = "avatarUrlRelative")
     @Mapping(target = "avatarUrlFull", source = "avatarUrlFull")

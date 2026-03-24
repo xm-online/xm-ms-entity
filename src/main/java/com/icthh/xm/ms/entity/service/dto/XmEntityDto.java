@@ -36,7 +36,6 @@ import java.util.Set;
 @NotNull(field = KEY)
 @Getter
 @Setter
-@JsonInclude(JsonInclude.Include.NON_NULL)
 public class XmEntityDto implements Serializable, WithId, WithTypeKey, EntityBaseFields {
 
     private static final long serialVersionUID = 1L;
@@ -86,8 +85,10 @@ public class XmEntityDto implements Serializable, WithId, WithTypeKey, EntityBas
     private String createdBy;
 
     @ApiModelProperty(value = "Updated by user key.")
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private String updatedBy;
 
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private Integer version;
 
     private Set<AttachmentDto> attachments = new HashSet<>();
@@ -110,6 +111,7 @@ public class XmEntityDto implements Serializable, WithId, WithTypeKey, EntityBas
 
     private Set<LinkDto> targets = new HashSet<>();
 
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private Set<FunctionContextDto> functionContexts = new HashSet<>();
 
     @JsonIgnore

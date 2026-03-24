@@ -37,6 +37,9 @@ public abstract class LinkMapper extends LazyLoadingAwareMapper {
         XmEntityDto dto = xmEntityRefMapper.fullXmEntityToDto(entity);
         if (dto != null) {
             XmEntityRefMapper.nullifyCollections(dto);
+            // Match SimpleLinkSerializer: version and updatedBy are not included in link target
+            dto.setVersion(null);
+            dto.setUpdatedBy(null);
         }
         return dto;
     }
