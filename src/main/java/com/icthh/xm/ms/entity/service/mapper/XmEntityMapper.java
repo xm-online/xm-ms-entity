@@ -37,8 +37,7 @@ public abstract class XmEntityMapper extends LazyLoadingAwareMapper {
     @Mapping(target = "targets", conditionExpression = "java(org.hibernate.Hibernate.isInitialized(entity.getTargets()))")
     @Mapping(target = "functionContexts", conditionExpression = "java(org.hibernate.Hibernate.isInitialized(entity.getFunctionContexts()))")
     @Mapping(target = "events", conditionExpression = "java(org.hibernate.Hibernate.isInitialized(entity.getEvents()))")
-    @Mapping(target = "avatarUrlRelative", source = "avatarUrlRelative")
-    @Mapping(target = "avatarUrlFull", expression = "java(entity.getAvatarUrl())")
+    @Mapping(target = "avatarUrl", expression = "java(entity.getAvatarUrl())")
     public abstract XmEntityDto toDto(XmEntity entity);
 
     /**
@@ -62,8 +61,6 @@ public abstract class XmEntityMapper extends LazyLoadingAwareMapper {
         if (!Hibernate.isInitialized(entity.getEvents())) dto.setEvents(null);
     }
 
-    @Mapping(target = "avatarUrlRelative", source = "avatarUrlRelative")
-    @Mapping(target = "avatarUrlFull", source = "avatarUrlFull")
     @Mapping(target = "uniqueFields", ignore = true)
     public abstract XmEntity toEntity(XmEntityDto dto);
 
@@ -81,8 +78,7 @@ public abstract class XmEntityMapper extends LazyLoadingAwareMapper {
     @Mapping(target = "targets", ignore = true)
     @Mapping(target = "functionContexts", ignore = true)
     @Mapping(target = "events", ignore = true)
-    @Mapping(target = "avatarUrlRelative", source = "avatarUrlRelative")
-    @Mapping(target = "avatarUrlFull", expression = "java(entity.getAvatarUrl())")
+    @Mapping(target = "avatarUrl", expression = "java(entity.getAvatarUrl())")
     protected abstract XmEntityDto toShallowDtoInternal(XmEntity entity);
 
     @Named("shallowDto")

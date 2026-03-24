@@ -1070,6 +1070,48 @@ public class XmEntityDtoJsonSerializationIntTest extends AbstractJupiterSpringBo
         assertThat(restored.getData()).isEqualTo(original.getData());
     }
 
+    /**
+     * AvatarUrl roundtrip through DTO layer:
+     * - Inbound: JSON "avatarUrl" -> DTO -> Entity (sets both avatarUrlRelative and avatarUrlFull)
+     * - AvatarUrlListener.prePersist strips full URL to relative filename
+     * - AvatarUrlListener.postLoad reconstructs full URL from relative
+     * - Outbound: Entity -> DTO -> JSON "avatarUrl" (full URL from getAvatarUrl())
+     *
+     * This test verifies the DTO mapping preserves the avatar URL contract
+     * without relying on the DB persistence (AvatarUrlListener is tested separately).
+     */
+    @Test
+    void roundtrip_avatarUrl() throws Exception {
+        String fullUrl = "http://example.com/avatar.png";
+        XmEntity original = createMinimalEntity();
+        original.setAvatarUrl(fullUrl);
+
+        // Verify: Entity -> DTO -> JSON produces "avatarUrl" with full URL
+        XmEntityDto dto = xmEntityMapper.toDto(original);
+        assertThat(dto.getAvatarUrl()).isEqualTo(fullUrl);
+
+        String json = objectMapper.writeValueAsString(dto);
+        JsonNode jsonNode = objectMapper.readTree(json);
+        assertThat(jsonNode.get("avatarUrl").asText()).isEqualTo(fullUrl);
+        assertThat(jsonNode.has("avatarUrlRelative")).isFalse();
+        assertThat(jsonNode.has("avatarUrlFull")).isFalse();
+
+        // Verify: JSON -> DTO -> Entity sets both internal entity fields
+        // (so AvatarUrlListener.prePersist can strip the URL correctly)
+        XmEntityDto restoredDto = objectMapper.readValue(json, XmEntityDto.class);
+        assertThat(restoredDto.getAvatarUrl()).isEqualTo(fullUrl);
+
+        XmEntity restored = xmEntityMapper.toEntity(restoredDto);
+        // Entity.setAvatarUrl() sets both avatarUrlRelative and avatarUrlFull
+        assertThat(restored.getAvatarUrlRelative()).isEqualTo(fullUrl);
+        assertThat(restored.getAvatarUrl()).isEqualTo(fullUrl);
+
+        // Simulate what AvatarUrlListener.prePersist does: strip to relative
+        // (the listener runs on JPA lifecycle, not tested here — tested in AvatarUrlListenerIntTest)
+        // After prePersist: avatarUrlRelative = "avatar.png" (filename only if URL matched pattern)
+        // After postLoad: avatarUrlFull = prefix + "avatar.png" (reconstructed)
+    }
+
     @Test
     void serialize_functionContextIgnoredTransientFields() throws Exception {
         XmEntity entity = createMinimalEntity();

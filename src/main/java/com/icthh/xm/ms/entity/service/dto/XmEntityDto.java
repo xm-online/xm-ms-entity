@@ -64,12 +64,8 @@ public class XmEntityDto implements Serializable, WithId, WithTypeKey, EntityBas
     @ApiModelProperty(value = "End date.")
     private Instant endDate;
 
-    @JsonIgnore
-    @ApiModelProperty(value = "Relative link to the avatar image. It should support to use additional parameters to identify avatar size for different views.")
-    private String avatarUrlRelative;
-
-    @JsonIgnore
-    private String avatarUrlFull;
+    @ApiModelProperty(value = "Link to the avatar image.")
+    private String avatarUrl;
 
     @ApiModelProperty(value = "This field describe instance of entity and is not i18n. It could be a big text. Markdown or HTML format should be supported.")
     private String description;
@@ -124,16 +120,6 @@ public class XmEntityDto implements Serializable, WithId, WithTypeKey, EntityBas
 
     @JsonIgnore
     private Set<EventDto> events = new HashSet<>();
-
-    @JsonProperty("avatarUrl")
-    public String getAvatarUrl() {
-        return avatarUrlFull;
-    }
-
-    public void setAvatarUrl(String avatarUrl) {
-        this.avatarUrlRelative = avatarUrl;
-        this.avatarUrlFull = avatarUrl;
-    }
 
     @JsonIgnore
     public Set<LinkDto> getSources() {

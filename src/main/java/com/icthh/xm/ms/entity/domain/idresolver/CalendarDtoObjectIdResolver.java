@@ -22,7 +22,7 @@ import org.springframework.stereotype.Component;
 @Slf4j
 public class CalendarDtoObjectIdResolver extends SimpleObjectIdResolver {
 
-    CalendarRepository repository;
+    private CalendarRepository repository;
 
     @Autowired
     public CalendarDtoObjectIdResolver(CalendarRepository repository) {

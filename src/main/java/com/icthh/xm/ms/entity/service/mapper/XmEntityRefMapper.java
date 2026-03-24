@@ -35,8 +35,7 @@ public abstract class XmEntityRefMapper {
     }
 
     @Named("fullXmEntityToDto")
-    @Mapping(target = "avatarUrlRelative", source = "avatarUrlRelative")
-    @Mapping(target = "avatarUrlFull", expression = "java(entity.getAvatarUrl())")
+    @Mapping(target = "avatarUrl", expression = "java(entity.getAvatarUrl())")
     @Mapping(target = "attachments", ignore = true)
     @Mapping(target = "calendars", ignore = true)
     @Mapping(target = "locations", ignore = true)
@@ -51,8 +50,6 @@ public abstract class XmEntityRefMapper {
     public abstract XmEntityDto fullXmEntityToDto(XmEntity entity);
 
     @Named("fullXmEntityToEntity")
-    @Mapping(target = "avatarUrlRelative", source = "avatarUrlRelative")
-    @Mapping(target = "avatarUrlFull", source = "avatarUrlFull")
     @Mapping(target = "uniqueFields", ignore = true)
     public abstract XmEntity fullXmEntityToEntity(XmEntityDto dto);
 
