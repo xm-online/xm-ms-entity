@@ -200,22 +200,22 @@ public class XmEntitySpecService implements RefreshableConfiguration {
         return dataSchemas;
     }
 
-    @LoggingAspectConfig(resultDetails = false)
+    @IgnoreLogginAspect
     public Optional<TypeSpec> getTypeSpecByKey(String key) {
         return ofNullable(getTypeSpecs().get(key)).map(this::filterFunctions);
     }
 
-    @LoggingAspectConfig(resultDetails = false)
+    @IgnoreLogginAspect
     public Optional<JsonSchema> getDataJsonSchemaByKey(String key) {
         return ofNullable(xmEntitySpecContextService.dataSpecJsonSchemas(getTenantKeyValue())).map(it -> it.get(key));
     }
 
-    @LoggingAspectConfig(resultDetails = false)
+    @IgnoreLogginAspect
     public Optional<TypeSpec> getTypeSpecByKeyWithoutFunctionFilter(String key) {
         return ofNullable(getTypeSpecs().get(key));
     }
 
-    @LoggingAspectConfig(resultDetails = false)
+    @IgnoreLogginAspect
     public Optional<LinkSpec> getLinkSpec(String entityTypeKey, String linkTypeKey) {
         return getTypeSpecByKey(entityTypeKey).flatMap(ts -> ts.findLinkSpec(linkTypeKey));
     }

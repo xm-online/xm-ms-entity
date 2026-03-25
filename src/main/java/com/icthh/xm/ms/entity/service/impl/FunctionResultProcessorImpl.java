@@ -2,6 +2,7 @@ package com.icthh.xm.ms.entity.service.impl;
 
 import com.icthh.xm.commons.domain.FunctionResult;
 import com.icthh.xm.commons.logging.LoggingAspectConfig;
+import com.icthh.xm.commons.logging.aop.IgnoreLogginAspect;
 import com.icthh.xm.commons.service.FunctionResultProcessor;
 import com.icthh.xm.ms.entity.domain.FunctionContext;
 import com.icthh.xm.ms.entity.domain.FunctionResultContext;
@@ -36,6 +37,7 @@ public class FunctionResultProcessorImpl implements FunctionResultProcessor<Func
         return processFunctionResult(functionKey, null, executorResult, functionSpec);
     }
 
+    @IgnoreLogginAspect
     public FunctionResultContext processFunctionResult(String functionKey,
                                                  IdOrKey idOrKey,
                                                  Object data,

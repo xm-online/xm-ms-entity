@@ -207,11 +207,13 @@ public class XmEntityServiceImpl implements XmEntityService {
         return xmEntityRepository.save(xmEntity);
     }
 
+    @IgnoreLogginAspect
     @LogicExtensionPoint(value = "ProcessReferences", resolver = XmEntityTypeKeyResolver.class)
     public void processReferences(XmEntity xmEntity) {
         self.processReferencesGeneralLep(xmEntity);
     }
 
+    @IgnoreLogginAspect
     @LogicExtensionPoint("ProcessReferences")
     public void processReferencesGeneralLep(XmEntity xmEntity) {
 
@@ -763,6 +765,7 @@ public class XmEntityServiceImpl implements XmEntityService {
         }
     }
 
+    @IgnoreLogginAspect
     @Transactional(readOnly = true)
     @Override
     public Optional<XmEntityStateProjection> findStateProjectionById(IdOrKey idOrKey) {
