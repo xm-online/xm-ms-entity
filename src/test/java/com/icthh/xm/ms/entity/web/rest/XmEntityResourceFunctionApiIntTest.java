@@ -23,6 +23,7 @@ import com.icthh.xm.ms.entity.service.ProfileService;
 import com.icthh.xm.ms.entity.service.TenantService;
 import com.icthh.xm.ms.entity.service.XmEntityService;
 import com.icthh.xm.ms.entity.service.impl.XmEntityFunctionServiceFacade;
+import com.icthh.xm.ms.entity.web.rest.facade.XmEntityFacade;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -46,6 +47,8 @@ public class XmEntityResourceFunctionApiIntTest extends AbstractJupiterWebMvcTes
     private XmEntityFunctionServiceFacade functionService;
     @MockitoBean
     private LocalizationMessageService localizationMessageService;
+    @MockitoBean
+    private XmEntityFacade xmEntityFacade;
     @MockitoBean
     private XmEntityService xmEntityService;
     @MockitoBean

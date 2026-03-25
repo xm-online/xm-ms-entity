@@ -51,6 +51,8 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
+import com.icthh.xm.ms.entity.service.mapper.CommentMapper;
+import com.icthh.xm.ms.entity.web.rest.facade.CommentFacade;
 
 /**
  * Test class for the CommentResource REST controller.
@@ -111,6 +113,12 @@ public class CommentResourceIntTest extends AbstractJupiterSpringBootTest {
     @Autowired
     private CommentService commentServiceForLep;
 
+    @Autowired
+    private CommentFacade commentFacadeForLep;
+
+    @Autowired
+    private CommentMapper commentMapper;
+
     @Mock
     private XmAuthenticationContextHolder authContextHolder;
 
@@ -147,8 +155,9 @@ public class CommentResourceIntTest extends AbstractJupiterSpringBootTest {
                                             permittedRepository,
                                             xmEntityRepository);
 
-        CommentResource self = new CommentResource(commentService, null);
-        CommentResource commentResourceMock = new CommentResource(commentService, self);
+        CommentFacade commentFacade = new CommentFacade(commentService, commentMapper);
+        CommentResource self = new CommentResource(commentFacade, null);
+        CommentResource commentResourceMock = new CommentResource(commentFacade, self);
 
         this.restCommentMockMvc = MockMvcBuilders.standaloneSetup(commentResourceMock)
             .setCustomArgumentResolvers(pageableArgumentResolver)
@@ -156,7 +165,7 @@ public class CommentResourceIntTest extends AbstractJupiterSpringBootTest {
             .setMessageConverters(jacksonMessageConverter).build();
 
         this.restCommentMockMvcForLep = MockMvcBuilders
-            .standaloneSetup(new CommentResource(commentServiceForLep, commentResource))
+            .standaloneSetup(new CommentResource(commentFacadeForLep, commentResource))
             .setCustomArgumentResolvers(pageableArgumentResolver)
             .setControllerAdvice(exceptionTranslator)
             .setMessageConverters(jacksonMessageConverter).build();

@@ -3,9 +3,9 @@ package com.icthh.xm.ms.entity.validator;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import com.icthh.xm.ms.entity.domain.Event;
-import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.domain.spec.EventSpec;
 import com.icthh.xm.ms.entity.service.XmEntitySpecService;
+import com.icthh.xm.ms.entity.service.dto.EventDto;
 import java.util.Optional;
 
 import jakarta.validation.ConstraintValidator;
@@ -15,20 +15,33 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @RequiredArgsConstructor
-public class EventDataTypeKeyValidator implements ConstraintValidator<EventDataTypeKey, Event> {
+public class EventDataTypeKeyValidator implements ConstraintValidator<EventDataTypeKey, Object> {
 
     private static final String TYPE_KEY_FIELD_NAME = "typeKey";
 
     private final XmEntitySpecService xmEntitySpecService;
 
     @Override
-    public boolean isValid(Event event, ConstraintValidatorContext constraintValidatorContext) {
-        XmEntity eventDataRef = event.getEventDataRef();
-        if (eventDataRef == null) {
+    public boolean isValid(Object value, ConstraintValidatorContext constraintValidatorContext) {
+        String eventTypeKey;
+        String eventDataRefTypeKey;
+
+        if (value instanceof Event event) {
+            if (event.getEventDataRef() == null) {
+                return true;
+            }
+            eventTypeKey = event.getTypeKey();
+            eventDataRefTypeKey = event.getEventDataRef().getTypeKey();
+        } else if (value instanceof EventDto dto) {
+            if (dto.getEventDataRef() == null) {
+                return true;
+            }
+            eventTypeKey = dto.getTypeKey();
+            eventDataRefTypeKey = dto.getEventDataRef().getTypeKey();
+        } else {
             return true;
         }
 
-        String eventTypeKey = event.getTypeKey();
         Optional<EventSpec> eventSpec = xmEntitySpecService.findEvent(eventTypeKey);
         if (eventSpec.isEmpty()) {
             processConstraintViolation(constraintValidatorContext,
@@ -49,7 +62,7 @@ public class EventDataTypeKeyValidator implements ConstraintValidator<EventDataT
             return false;
         }
 
-        if (!eventSpecDataTypeKey.equals(eventDataRef.getTypeKey())) {
+        if (!eventSpecDataTypeKey.equals(eventDataRefTypeKey)) {
             processConstraintViolation(constraintValidatorContext,
                 "Specified event data ref type key not matched with configured", "eventDataRef");
             return false;

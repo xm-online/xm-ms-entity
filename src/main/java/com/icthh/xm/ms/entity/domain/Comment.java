@@ -5,7 +5,6 @@ import com.fasterxml.jackson.annotation.JsonIdentityReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import com.icthh.xm.ms.entity.domain.idresolver.XmEntityObjectIdResolver;
-import io.swagger.annotations.ApiModelProperty;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -49,29 +48,24 @@ public class Comment implements Serializable {
     /**
      * Comment author user key.
      */
-    @ApiModelProperty(value = "Comment author user key")
     @Column(name = "user_key")
     private String userKey;
 
-    @ApiModelProperty(value = "Comment author client id")
     @Column(name = "client_id")
     private String clientId;
 
-    @ApiModelProperty(value = "Display name")
     @Column(name = "display_name")
     private String displayName;
 
     /**
      * Message content
      */
-    @ApiModelProperty(value = "Message content")
     @Column(name = "message")
     private String message;
 
     /**
      * Entry date
      */
-    @ApiModelProperty(value = "Entry date")
     @Column(name = "entry_date")
     private Instant entryDate;
 

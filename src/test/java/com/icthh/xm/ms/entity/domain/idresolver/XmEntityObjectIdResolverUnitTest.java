@@ -16,8 +16,11 @@ import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.repository.CalendarRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
 import com.icthh.xm.ms.entity.service.LinkService;
+import com.icthh.xm.ms.entity.service.mapper.LinkMapperImpl;
+import com.icthh.xm.ms.entity.service.mapper.XmEntityRefMapperImpl;
 import com.icthh.xm.ms.entity.web.rest.LinkResource;
 import com.icthh.xm.ms.entity.web.rest.TestUtil;
+import com.icthh.xm.ms.entity.web.rest.facade.LinkFacade;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
@@ -35,7 +38,7 @@ import java.util.Optional;
 
 @Slf4j
 @WebMvcTest(controllers = LinkResource.class)
-@ContextConfiguration(classes = {LinkResource.class, ExceptionTranslator.class})
+@ContextConfiguration(classes = {LinkResource.class, LinkMapperImpl.class, LinkFacade.class, XmEntityRefMapperImpl.class, ExceptionTranslator.class})
 public class XmEntityObjectIdResolverUnitTest extends AbstractJupiterWebMvcTest {
 
     private static final String DEFAULT_TYPE_KEY = "ACCOUNT.ADMIN";

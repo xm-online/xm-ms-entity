@@ -56,6 +56,9 @@ import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.Validator;
+import com.icthh.xm.ms.entity.web.rest.facade.CalendarFacade;
+import com.icthh.xm.ms.entity.service.mapper.CalendarMapper;
+import com.icthh.xm.ms.entity.service.mapper.EventMapper;
 
 /**
  * Test class for the CalendarResource REST controller.
@@ -128,6 +131,12 @@ public class CalendarResourceIntTest extends AbstractJupiterSpringBootTest {
     @Autowired
     private LepManager lepManager;
 
+    @Autowired
+    private CalendarMapper calendarMapper;
+
+    @Autowired
+    private EventMapper eventMapper;
+
     @Mock
     private XmAuthenticationContext context;
 
@@ -152,7 +161,8 @@ public class CalendarResourceIntTest extends AbstractJupiterSpringBootTest {
             eventQueryService,
             xmEntitySpecService);
 
-        CalendarResource calendarResourceMock = new CalendarResource(calendarService, calendarResource);
+        CalendarFacade calendarFacade = new CalendarFacade(calendarService, calendarMapper, eventMapper);
+        CalendarResource calendarResourceMock = new CalendarResource(calendarFacade, calendarResource);
         this.restCalendarMockMvc = MockMvcBuilders.standaloneSetup(calendarResourceMock)
             .setCustomArgumentResolvers(pageableArgumentResolver)
             .setControllerAdvice(exceptionTranslator)
