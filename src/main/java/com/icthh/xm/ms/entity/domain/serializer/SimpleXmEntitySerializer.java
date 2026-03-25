@@ -11,7 +11,11 @@ import java.time.Instant;
 
 public class SimpleXmEntitySerializer extends StdSerializer<XmEntity> {
 
-    protected SimpleXmEntitySerializer(Class<XmEntity> t) {
+    public SimpleXmEntitySerializer() {
+        super(XmEntity.class);
+    }
+
+    public SimpleXmEntitySerializer(Class<XmEntity> t) {
         super(t);
     }
 

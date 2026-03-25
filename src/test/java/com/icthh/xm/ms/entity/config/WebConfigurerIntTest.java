@@ -14,7 +14,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.icthh.xm.ms.entity.AbstractJupiterSpringBootTest;
-import org.springframework.boot.jetty.servlet.JettyServletWebServerFactory;
+import org.springframework.boot.tomcat.servlet.TomcatServletWebServerFactory;
 import org.springframework.boot.web.server.servlet.ConfigurableServletWebServerFactory;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -91,7 +91,7 @@ public class WebConfigurerIntTest extends AbstractJupiterSpringBootTest {
     @Test
     public void testCustomizeServletContainer() {
         env.setActiveProfiles(JHipsterConstants.SPRING_PROFILE_PRODUCTION);
-        ConfigurableServletWebServerFactory container = new JettyServletWebServerFactory();
+        ConfigurableServletWebServerFactory container = new TomcatServletWebServerFactory();
         webConfigurer.customize(container);
         assertThat(container.getSettings().getMimeMappings().get("html")).isEqualTo("text/html;charset=utf-8");
         assertThat(container.getSettings().getMimeMappings().get("json")).isEqualTo("text/html;charset=utf-8");

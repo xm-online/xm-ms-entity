@@ -61,11 +61,13 @@ public class XmEntityObjectIdResolverUnitTest extends AbstractJupiterWebMvcTest 
     @Autowired
     private ExceptionTranslator exceptionTranslator;
 
+    @Autowired
+    private JacksonJsonHttpMessageConverter converter;
+
     private MockMvc mockMvc;
 
     @BeforeEach
     public void setup() {
-        JacksonJsonHttpMessageConverter converter = new JacksonJsonHttpMessageConverter();
         this.mockMvc = MockMvcBuilders.standaloneSetup(linkResource)
                 .setControllerAdvice(exceptionTranslator)
                 .setMessageConverters(converter)

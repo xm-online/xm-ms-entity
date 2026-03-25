@@ -76,7 +76,7 @@ import org.mockito.Spy;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
 import org.springframework.http.MediaType;
-import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
+import org.springframework.http.converter.json.JacksonJsonHttpMessageConverter;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.transaction.BeforeTransaction;
@@ -231,7 +231,7 @@ public class XmEntityResourceExtendedElasticsearchTest extends AbstractElasticSp
     private XmEntitySearchRepository xmEntitySearchRepository;
 
     @Autowired
-    private MappingJackson2HttpMessageConverter jacksonMessageConverter;
+    private JacksonJsonHttpMessageConverter jacksonMessageConverter;
 
     @Autowired
     private PageableHandlerMethodArgumentResolver pageableArgumentResolver;
@@ -962,7 +962,7 @@ public class XmEntityResourceExtendedElasticsearchTest extends AbstractElasticSp
 
     @SneakyThrows
     private XmEntity readValue(MvcResult r) {
-        return jacksonMessageConverter.getObjectMapper()
+        return jacksonMessageConverter.getMapper()
                                       .readValue(r.getResponse().getContentAsString(), XmEntity.class);
     }
 

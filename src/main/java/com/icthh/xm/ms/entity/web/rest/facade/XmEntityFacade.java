@@ -45,7 +45,6 @@ public class XmEntityFacade {
         return xmEntityService.findByIds(pageable, ids, embed, privilegeKey).map(xmEntityMapper::toDto);
     }
 
-    @Transactional(readOnly = true)
     public XmEntityDto findOne(IdOrKey idOrKey) {
         XmEntity entity = xmEntityService.findOne(idOrKey);
         return entity != null ? xmEntityMapper.toDto(entity) : null;

@@ -108,6 +108,9 @@ public class XmEntityLifeCycleSupportIntTest extends AbstractJupiterSpringBootTe
     @Autowired
     private XmEntityFacade xmEntityFacade;
 
+    @Autowired
+    private JacksonJsonHttpMessageConverter converter;
+
     private List<String> lepsForCleanUp = new ArrayList<>();
 
     @BeforeTransaction
@@ -127,9 +130,6 @@ public class XmEntityLifeCycleSupportIntTest extends AbstractJupiterSpringBootTe
             ctx.setValue(THREAD_CONTEXT_KEY_TENANT_CONTEXT, tenantContextHolder.getContext());
             ctx.setValue(THREAD_CONTEXT_KEY_AUTH_CONTEXT, authContextHolder.getContext());
         });
-
-        JacksonJsonHttpMessageConverter converter = new JacksonJsonHttpMessageConverter();
-
         XmEntityResource resourceMock = mock(XmEntityResource.class);
         when(resourceMock.createXmEntity(any())).thenReturn(ResponseEntity.created(new URI("")).build());
         XmEntityResource xmEntityResourceMock = new XmEntityResource(xmEntityFacade,

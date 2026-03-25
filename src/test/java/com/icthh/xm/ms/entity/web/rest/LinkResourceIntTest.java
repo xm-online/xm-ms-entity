@@ -84,8 +84,6 @@ public class LinkResourceIntTest extends AbstractJupiterSpringBootTest {
     @Autowired
     private LinkPermittedRepository permittedRepository;
 
-    private JacksonJsonHttpMessageConverter jacksonMessageConverter;
-
     @Autowired
     private PageableHandlerMethodArgumentResolver pageableArgumentResolver;
 
@@ -125,6 +123,9 @@ public class LinkResourceIntTest extends AbstractJupiterSpringBootTest {
     @Autowired
     private LinkFacade linkFacade;
 
+    @Autowired
+    private JacksonJsonHttpMessageConverter converter;
+
     @BeforeTransaction
     public void beforeTransaction() {
         TenantContextUtils.setTenant(tenantContextHolder, "RESINTTEST");
@@ -149,7 +150,6 @@ public class LinkResourceIntTest extends AbstractJupiterSpringBootTest {
         linkService.setSelf(linkService);
 
         LinkResource linkResourceMock = new LinkResource(linkFacade);
-        JacksonJsonHttpMessageConverter converter = new JacksonJsonHttpMessageConverter();
         this.restLinkMockMvc = MockMvcBuilders.standaloneSetup(linkResourceMock)
             .setCustomArgumentResolvers(pageableArgumentResolver)
             .setControllerAdvice(exceptionTranslator)

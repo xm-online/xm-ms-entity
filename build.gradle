@@ -146,7 +146,6 @@ test {
 
     jvmArgs '-XX:+HeapDumpOnOutOfMemoryError', '-Xmx2048m', '-Xms512m'
 
-    exclude '**/CucumberTest*'
     exclude '**/*ElasticsearchTest*'
     exclude '**/JsonbCriteriaBuilderIntTest.class'// todo: excluded until pipeline problem fixed
     dependsOn 'clean', 'runCategorizedTests'
@@ -185,19 +184,6 @@ tasks.register('runCategorizedTests', Test) {
     testLogging testLoggingConf
 }
 
-tasks.register('cucumberTest', Test) {
-    description = "Execute cucumber BDD tests."
-    group = "verification"
-    include '**/CucumberTest*'
-
-    // uncomment if the tests reports are not generated
-    // see https://github.com/jhipster/generator-jhipster/pull/2771 and https://github.com/jhipster/generator-jhipster/pull/4484
-    // ignoreFailures true
-    reports.html.required = false
-}
-
-check.dependsOn cucumberTest
-
 tasks.register('runElasticsearchTest', Test) {
     description = 'Execute elasticsearch tests'
     group = 'verification'
@@ -218,11 +204,6 @@ tasks.register('runElasticsearchTest', Test) {
 }
 
 tasks.register('testReport', TestReport) {
-    getDestinationDirectory().set(file("$buildDir/reports/tests"))
-    reportOn test
-}
-
-tasks.register('cucumberTestReport', TestReport) {
     getDestinationDirectory().set(file("$buildDir/reports/tests"))
     reportOn test
 }
@@ -311,7 +292,6 @@ dependencies {
     implementation "org.springframework.boot:spring-boot-starter-data-jpa"
     implementation("org.springframework.boot:spring-boot-starter-liquibase")
     implementation "org.springframework.boot:spring-boot-starter-security-oauth2-client"
-    implementation "org.springframework.boot:spring-boot-starter-security-oauth2-resource-server"
     // log4j2-mock needed to create embedded elasticsearch instance with SLF4J
     if (withElastic) {
         runtimeOnly "de.dentrassi.elasticsearch:log4j2-mock:${log4j2_mock_version}"
@@ -422,10 +402,6 @@ dependencies {
 
     implementation 'commons-fileupload:commons-fileupload'
 
-    implementation "io.undertow:undertow-core:${undertow_version}"
-    implementation "io.undertow:undertow-servlet:${undertow_version}"
-    implementation "io.undertow:undertow-websockets-jsr:${undertow_version}"
-
      // security fixes set direct version to use
     constraints {
         implementation("org.apache.commons:commons-compress:${apacheCommonCompress}")
@@ -444,8 +420,6 @@ dependencies {
     testCompileOnly "org.projectlombok:lombok:${lombok_version}"
     testAnnotationProcessor "org.projectlombok:lombok:${lombok_version}"
     testImplementation "com.jayway.jsonpath:json-path"
-    testImplementation "io.cucumber:cucumber-junit-platform-engine:${cucumber_version}"
-    testImplementation "io.cucumber:cucumber-spring:${cucumber_version}"
     testImplementation("org.springframework.boot:spring-boot-starter-test") {
         exclude module: "junit"
         exclude group: "com.vaadin.external.google", module: "android-json"

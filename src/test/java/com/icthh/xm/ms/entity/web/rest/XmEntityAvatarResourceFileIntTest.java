@@ -89,11 +89,13 @@ public class XmEntityAvatarResourceFileIntTest extends AbstractJupiterSpringBoot
     @Autowired
     private ProfileService profileService;
 
+    @Autowired
+    private JacksonJsonHttpMessageConverter converter;
+
     @BeforeAll
     public void setup() {
         TenantContextUtils.setTenant(tenantContextHolder, "RESINTTEST");
         lepManagementService.beginThreadContext();
-        JacksonJsonHttpMessageConverter converter = new JacksonJsonHttpMessageConverter();
 
         XmeStorageServiceFacade storage = new XmeStorageServiceFacadeImpl(null, avatarStorageService, null);
         avatarService = new XmEntityAvatarService(xmEntityService, applicationProperties, storage);

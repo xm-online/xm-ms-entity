@@ -10,8 +10,6 @@ import org.springframework.http.converter.AbstractHttpMessageConverter;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.converter.HttpMessageConverters;
 import org.springframework.http.converter.json.JacksonJsonHttpMessageConverter;
-import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
-import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import java.util.ArrayList;
@@ -27,6 +25,11 @@ public class WebMvcConfiguration implements WebMvcConfigurer {
 
     public static String[] getJsonFilterAllowedURIs() {
         return JSON_FILTER_APPLIED_URI.toArray(new String[]{});
+    }
+
+    @Bean
+    public JacksonJsonHttpMessageConverter converter() {
+        return new JacksonJsonHttpMessageConverter();
     }
 
     @Override

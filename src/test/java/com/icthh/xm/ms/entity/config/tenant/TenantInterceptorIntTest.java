@@ -61,13 +61,15 @@ public class TenantInterceptorIntTest extends AbstractJupiterSpringBootTest {
     @Mock
     private XmAuthenticationDetails details;
 
+    @Autowired
+    private JacksonJsonHttpMessageConverter converter;
+
     private MockMvc restXmEntityMockMvc;
 
     @BeforeEach
     public void setup() {
         MockitoAnnotations.initMocks(this);
         SecurityContextHolder.getContext().setAuthentication(auth);
-        JacksonJsonHttpMessageConverter converter = new JacksonJsonHttpMessageConverter();
         this.restXmEntityMockMvc = MockMvcBuilders.standaloneSetup(xmEntityResource)
             .addInterceptors(tenantInterceptor)
             .setCustomArgumentResolvers(pageableArgumentResolver)
