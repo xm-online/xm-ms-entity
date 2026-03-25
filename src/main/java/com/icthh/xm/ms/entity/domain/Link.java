@@ -6,8 +6,6 @@ import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.icthh.xm.ms.entity.domain.idresolver.XmEntityObjectIdResolver;
 import com.icthh.xm.ms.entity.domain.serializer.SimpleLinkSerializer;
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -29,7 +27,6 @@ import java.util.Objects;
 /**
  * Bidirectional link between two XmEntites.
  */
-@ApiModel(description = "Bidirectional link between two XmEntites.")
 @Entity
 @Table(name = "link")
 @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
@@ -47,35 +44,30 @@ public class Link implements Serializable {
      * String typeKey with tree-like structure.
      */
     @NotNull
-    @ApiModelProperty(value = "String typeKey with tree-like structure.", required = true)
     @Column(name = "type_key", nullable = false)
     private String typeKey;
 
     /**
      * Link name
      */
-    @ApiModelProperty(value = "Link name")
     @Column(name = "name")
     private String name;
 
     /**
      * Link description
      */
-    @ApiModelProperty(value = "Link description")
     @Column(name = "description")
     private String description;
 
     /**
      * Start date
      */
-    @ApiModelProperty(value = "Start date")
     @Column(name = "start_date", nullable = false)
     private Instant startDate;
 
     /**
      * End date
      */
-    @ApiModelProperty(value = "End date")
     @Column(name = "end_date")
     private Instant endDate;
 
@@ -92,7 +84,6 @@ public class Link implements Serializable {
     @JoinColumn(name = "source_id", nullable = false)
     private XmEntity source;
 
-    @ApiModelProperty(value = "Order")
     @Column(name = "link_order")
     private Integer order;
 

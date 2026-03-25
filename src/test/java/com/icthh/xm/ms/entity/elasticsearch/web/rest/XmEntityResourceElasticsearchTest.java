@@ -41,6 +41,7 @@ import com.icthh.xm.ms.entity.service.storage.AvatarStorageService;
 import com.icthh.xm.ms.entity.web.rest.TestUtil;
 import com.icthh.xm.ms.entity.web.rest.XmEntityResource;
 import com.icthh.xm.ms.entity.web.rest.XmEntitySearchResource;
+import com.icthh.xm.ms.entity.web.rest.facade.XmEntityFacade;
 import jakarta.persistence.EntityManager;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -156,6 +157,9 @@ public class XmEntityResourceElasticsearchTest extends AbstractElasticSpringBoot
 
     @Autowired
     private XmEntityFunctionServiceFacade functionService;
+
+    @Autowired
+    private XmEntityFacade xmEntityFacade;
 
     @Autowired
     private ProfileService profileService;
@@ -306,7 +310,7 @@ public class XmEntityResourceElasticsearchTest extends AbstractElasticSpringBoot
         });
         XmEntityResource resourceMock = mock(XmEntityResource.class);
         when(resourceMock.createXmEntity(any())).thenReturn(ResponseEntity.created(new URI("")).build());
-        XmEntityResource xmEntityResourceMock = new XmEntityResource(xmEntityServiceImpl,
+        XmEntityResource xmEntityResourceMock = new XmEntityResource(xmEntityFacade,
             profileService,
             profileEventProducer,
             functionService,
@@ -319,7 +323,7 @@ public class XmEntityResourceElasticsearchTest extends AbstractElasticSpringBoot
             .setValidator(validator)
             .setMessageConverters(jacksonMessageConverter).build();
 
-        this.restXmEntitySearchMockMvc = MockMvcBuilders.standaloneSetup(new XmEntitySearchResource(xmEntityServiceImpl))
+        this.restXmEntitySearchMockMvc = MockMvcBuilders.standaloneSetup(new XmEntitySearchResource(xmEntityFacade))
             .setCustomArgumentResolvers(pageableArgumentResolver)
             .setControllerAdvice(exceptionTranslator)
             .setValidator(validator)

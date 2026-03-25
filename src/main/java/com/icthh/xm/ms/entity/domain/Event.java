@@ -6,7 +6,6 @@ import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import com.icthh.xm.ms.entity.domain.idresolver.CalendarObjectIdResolver;
 import com.icthh.xm.ms.entity.domain.idresolver.XmEntityObjectIdResolver;
 import com.icthh.xm.ms.entity.validator.EventDataTypeKey;
-import io.swagger.annotations.ApiModelProperty;
 import java.io.Serializable;
 import java.time.Instant;
 import java.util.Objects;
@@ -39,7 +38,7 @@ import static jakarta.persistence.CascadeType.REMOVE;
 @Getter
 @Setter
 @EventDataTypeKey
-public class Event implements Serializable {
+public class Event implements Serializable, WithTypeKey {
 
     private static final long serialVersionUID = 1L;
 
@@ -52,14 +51,12 @@ public class Event implements Serializable {
      * String typeKey with tree-like structure.
      */
     @NotNull
-    @ApiModelProperty(value = "String typeKey with tree-like structure.")
     @Column(name = "type_key")
     private String typeKey;
 
     /**
      * Configuration for event repetition.
      */
-    @ApiModelProperty(value = "Configuration for event repetition")
     @Column(name = "repeat_rule_key")
     private String repeatRuleKey;
 
@@ -67,28 +64,24 @@ public class Event implements Serializable {
      * Event title.
      */
     @NotNull
-    @ApiModelProperty(value = "Event title", required = true)
     @Column(name = "title", nullable = false)
     private String title;
 
     /**
      * Event description.
      */
-    @ApiModelProperty(value = "Event description")
     @Column(name = "description")
     private String description;
 
     /**
      * Start date.
      */
-    @ApiModelProperty(value = "Start date")
     @Column(name = "start_date")
     private Instant startDate;
 
     /**
      * End date.
      */
-    @ApiModelProperty(value = "End date")
     @Column(name = "end_date")
     private Instant endDate;
 
@@ -107,7 +100,6 @@ public class Event implements Serializable {
     /**
      * Reference to {@link XmEntity} which stores extra data regarding to this {@link Event}.
      */
-    @ApiModelProperty(value = "Reference to event's extra data")
     @OneToOne(cascade = REMOVE)
     @JoinColumn(name = "event_data_ref_id", unique = true)
     private XmEntity eventDataRef;
@@ -115,7 +107,6 @@ public class Event implements Serializable {
     /**
      * Event color. Override default color from {@link com.icthh.xm.ms.entity.domain.spec.EventSpec}
      */
-    @ApiModelProperty(value = "Event color")
     private String color;
 
     public Event typeKey(String typeKey) {

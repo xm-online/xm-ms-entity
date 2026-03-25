@@ -54,6 +54,7 @@ import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
+import com.icthh.xm.ms.entity.web.rest.facade.XmEntityFacade;
 
 /**
  * Test class for the XmEntitySpecResource REST controller.
@@ -115,6 +116,9 @@ public class XmEntitySearchElasticsearchTest extends AbstractElasticSpringBootTe
     @Autowired
     private XmEntityRepositoryInternal repository;
 
+    @Autowired
+    private XmEntityFacade xmEntityFacade;
+
     @BeforeEach
     @SneakyThrows
     public void setup() {
@@ -136,10 +140,10 @@ public class XmEntitySearchElasticsearchTest extends AbstractElasticSpringBootTe
         });
 
 
-        this.restXmEntityMockMvc = MockMvcBuilders.standaloneSetup(new XmEntityResource(xmEntityService, null, null, null, null, null))
+        this.restXmEntityMockMvc = MockMvcBuilders.standaloneSetup(new XmEntityResource(xmEntityFacade, null, null, null, null, null))
             .setValidator(validator).setControllerAdvice(exceptionTranslator).setCustomArgumentResolvers(pageableArgumentResolver).build();
 
-        this.restXmEntitySearchMockMvc = MockMvcBuilders.standaloneSetup(new XmEntitySearchResource(xmEntityService))
+        this.restXmEntitySearchMockMvc = MockMvcBuilders.standaloneSetup(new XmEntitySearchResource(xmEntityFacade))
             .setValidator(validator)
             .setControllerAdvice(exceptionTranslator)
             .setCustomArgumentResolvers(pageableArgumentResolver)

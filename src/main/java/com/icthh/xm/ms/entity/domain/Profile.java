@@ -1,8 +1,6 @@
 package com.icthh.xm.ms.entity.domain;
 
 import com.icthh.xm.ms.entity.domain.listener.ProfileElasticSearchListener;
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -25,7 +23,6 @@ import java.util.Objects;
  * Represents User's profile on Entity microservice.
  * Contains relation to XmEntity by foreign key. Profile will be creatid in LEP code as a reaction to event for new user registration.
  */
-@ApiModel(description = "Represents User's profile on Entity microservice. Contains relation to XmEntity by foreign key. Profile will be creatid in LEP code as a reaction to event for new user registration.")
 @Entity
 @Table(name = "profile")
 @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
@@ -43,7 +40,6 @@ public class Profile implements Serializable {
      * User identifier from UAA.
      */
     @NotNull
-    @ApiModelProperty(value = "User identifier from UAA.", required = true)
     @Column(name = "user_key", nullable = false)
     private String userKey;
 

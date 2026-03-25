@@ -4,8 +4,8 @@ import com.codahale.metrics.annotation.Timed;
 import com.icthh.xm.commons.exceptions.BusinessException;
 import com.icthh.xm.commons.exceptions.ErrorConstants;
 import com.icthh.xm.commons.permission.annotation.PrivilegeDescription;
-import com.icthh.xm.ms.entity.domain.Rating;
-import com.icthh.xm.ms.entity.service.RatingService;
+import com.icthh.xm.ms.entity.service.dto.RatingDto;
+import com.icthh.xm.ms.entity.web.rest.facade.RatingFacade;
 import com.icthh.xm.ms.entity.web.rest.dto.RatingCountDto;
 import com.icthh.xm.ms.entity.web.rest.util.HeaderUtil;
 import com.icthh.xm.ms.entity.web.rest.util.RespContentUtil;
@@ -37,13 +37,13 @@ public class RatingResource {
 
     private static final String ENTITY_NAME = "rating";
 
-    private final RatingService ratingService;
+    private final RatingFacade ratingFacade;
     private final RatingResource ratingResource;
 
     public RatingResource(
-                    RatingService ratingService,
+                    RatingFacade ratingFacade,
                     @Lazy RatingResource ratingResource) {
-        this.ratingService = ratingService;
+        this.ratingFacade = ratingFacade;
         this.ratingResource = ratingResource;
     }
 
@@ -58,12 +58,12 @@ public class RatingResource {
     @Timed
     @PreAuthorize("hasPermission({'rating': #rating}, 'RATING.CREATE')")
     @PrivilegeDescription("Privilege to create a new rating")
-    public ResponseEntity<Rating> createRating(@Valid @RequestBody Rating rating) throws URISyntaxException {
+    public ResponseEntity<RatingDto> createRating(@Valid @RequestBody RatingDto rating) throws URISyntaxException {
         if (rating.getId() != null) {
             throw new BusinessException(ErrorConstants.ERR_BUSINESS_IDEXISTS,
                                         "A new rating cannot already have an ID");
         }
-        Rating result = ratingService.save(rating);
+        RatingDto result = ratingFacade.save(rating);
         return ResponseEntity.created(new URI("/api/ratings/" + result.getId()))
             .headers(HeaderUtil.createEntityCreationAlert(ENTITY_NAME, result.getId().toString()))
             .body(result);
@@ -82,12 +82,12 @@ public class RatingResource {
     @Timed
     @PreAuthorize("hasPermission({'id': #rating.id, 'newRating': #rating}, 'rating', 'RATING.UPDATE')")
     @PrivilegeDescription("Privilege to updates an existing rating")
-    public ResponseEntity<Rating> updateRating(@Valid @RequestBody Rating rating) throws URISyntaxException {
+    public ResponseEntity<RatingDto> updateRating(@Valid @RequestBody RatingDto rating) throws URISyntaxException {
         if (rating.getId() == null) {
             //in order to call method with permissions check
             return this.ratingResource.createRating(rating);
         }
-        Rating result = ratingService.save(rating);
+        RatingDto result = ratingFacade.save(rating);
         return ResponseEntity.ok()
             .headers(HeaderUtil.createEntityUpdateAlert(ENTITY_NAME, rating.getId().toString()))
             .body(result);
@@ -100,8 +100,8 @@ public class RatingResource {
      */
     @GetMapping("/ratings")
     @Timed
-    public List<Rating> getAllRatings() {
-        return ratingService.findAll(null);
+    public List<RatingDto> getAllRatings() {
+        return ratingFacade.findAll(null);
     }
 
     /**
@@ -114,8 +114,8 @@ public class RatingResource {
     @Timed
     @PostAuthorize("hasPermission({'returnObject': returnObject.body}, 'RATING.GET_LIST.ITEM')")
     @PrivilegeDescription("Privilege to get the rating by id")
-    public ResponseEntity<Rating> getRating(@PathVariable Long id) {
-        Rating rating = ratingService.findOne(id);
+    public ResponseEntity<RatingDto> getRating(@PathVariable Long id) {
+        RatingDto rating = ratingFacade.findOne(id);
         return RespContentUtil.wrapOrNotFound(Optional.ofNullable(rating));
     }
 
@@ -124,7 +124,7 @@ public class RatingResource {
     @PostAuthorize("hasPermission({'returnObject': returnObject.body}, 'RATING.GET_LIST.ITEM.VOTES.COUNT')")
     @PrivilegeDescription("Privilege to get the rating by id")
     public ResponseEntity<RatingCountDto> getVotesCount(@PathVariable Long id) {
-        RatingCountDto ratingCountDto = ratingService.getVotesCount(id);
+        RatingCountDto ratingCountDto = ratingFacade.getVotesCount(id);
         return RespContentUtil.wrapOrNotFound(Optional.ofNullable(ratingCountDto));
     }
 
@@ -139,7 +139,7 @@ public class RatingResource {
     @PreAuthorize("hasPermission({'id': #id}, 'rating', 'RATING.DELETE')")
     @PrivilegeDescription("Privilege to delete the rating by id")
     public ResponseEntity<Void> deleteRating(@PathVariable Long id) {
-        ratingService.delete(id);
+        ratingFacade.delete(id);
         return ResponseEntity.ok().headers(HeaderUtil.createEntityDeletionAlert(ENTITY_NAME, id.toString())).build();
     }
 }

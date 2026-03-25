@@ -2,9 +2,8 @@ package com.icthh.xm.ms.entity.web.rest;
 
 import com.codahale.metrics.annotation.Timed;
 import com.icthh.xm.commons.permission.annotation.PrivilegeDescription;
-import com.icthh.xm.ms.entity.domain.Profile;
-import com.icthh.xm.ms.entity.domain.XmEntity;
-import com.icthh.xm.ms.entity.service.ProfileService;
+import com.icthh.xm.ms.entity.service.dto.XmEntityDto;
+import com.icthh.xm.ms.entity.web.rest.facade.ProfileFacade;
 import com.icthh.xm.ms.entity.web.rest.util.RespContentUtil;
 
 import jakarta.validation.Valid;
@@ -28,7 +27,7 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class ProfileResource {
 
-    private final ProfileService profileService;
+    private final ProfileFacade profileFacade;
 
     /**
      * GET  /profile : get the profile.
@@ -39,9 +38,9 @@ public class ProfileResource {
     @Timed
     @PostAuthorize("hasPermission({'returnObject': returnObject.body}, 'ENTITY.PROFILE.SELF.GET')")
     @PrivilegeDescription("Privilege to get current user profile")
-    public ResponseEntity<XmEntity> getProfile() {
-        Profile profile = profileService.getSelfProfile();
-        return RespContentUtil.wrapOrNotFound(Optional.ofNullable(profile).map(Profile::getXmentity));
+    public ResponseEntity<XmEntityDto> getProfile() {
+        Optional<XmEntityDto> profile = profileFacade.getSelfProfile();
+        return RespContentUtil.wrapOrNotFound(profile);
     }
 
     /**
@@ -55,8 +54,8 @@ public class ProfileResource {
     @Timed
     @PostAuthorize("hasPermission({'returnObject': returnObject.body}, 'ENTITY.PROFILE.SELF.UPDATE')")
     @PrivilegeDescription("Privilege to update the profile of current user")
-    public ResponseEntity<XmEntity> updateProfile(@Valid @RequestBody XmEntity xmEntity) {
-        XmEntity result = profileService.updateProfile(xmEntity);
+    public ResponseEntity<XmEntityDto> updateProfile(@Valid @RequestBody XmEntityDto xmEntity) {
+        XmEntityDto result = profileFacade.updateProfile(xmEntity);
 
         return ResponseEntity.ok().body(result);
     }
@@ -65,9 +64,9 @@ public class ProfileResource {
     @Timed
     @PostAuthorize("hasPermission({'returnObject': returnObject.body}, 'ENTITY.PROFILE.GET_LIST.ITEM')")
     @PrivilegeDescription("Privilege to get the profile by userKey")
-    public ResponseEntity<XmEntity> getProfile(@PathVariable("userKey") String userKey) {
-        Profile profile = profileService.getProfile(userKey);
-        return RespContentUtil.wrapOrNotFound(Optional.ofNullable(profile).map(Profile::getXmentity));
+    public ResponseEntity<XmEntityDto> getProfile(@PathVariable("userKey") String userKey) {
+        Optional<XmEntityDto> profile = profileFacade.getProfile(userKey);
+        return RespContentUtil.wrapOrNotFound(profile);
     }
 
 }

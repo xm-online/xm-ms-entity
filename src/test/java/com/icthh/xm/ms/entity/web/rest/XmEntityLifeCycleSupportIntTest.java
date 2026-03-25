@@ -55,6 +55,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.Validator;
+import com.icthh.xm.ms.entity.web.rest.facade.XmEntityFacade;
 
 @Slf4j
 @WithMockUser(authorities = {"SUPER-ADMIN"})
@@ -105,6 +106,9 @@ public class XmEntityLifeCycleSupportIntTest extends AbstractJupiterSpringBootTe
     @Autowired
     private XmEntityTenantConfigService xmEntityTenantConfigService;
 
+    @Autowired
+    private XmEntityFacade xmEntityFacade;
+
     private List<String> lepsForCleanUp = new ArrayList<>();
 
     @BeforeTransaction
@@ -127,7 +131,7 @@ public class XmEntityLifeCycleSupportIntTest extends AbstractJupiterSpringBootTe
 
         XmEntityResource resourceMock = mock(XmEntityResource.class);
         when(resourceMock.createXmEntity(any())).thenReturn(ResponseEntity.created(new URI("")).build());
-        XmEntityResource xmEntityResourceMock = new XmEntityResource(xmEntityServiceImpl,
+        XmEntityResource xmEntityResourceMock = new XmEntityResource(xmEntityFacade,
             profileService,
             profileEventProducer,
             functionService,

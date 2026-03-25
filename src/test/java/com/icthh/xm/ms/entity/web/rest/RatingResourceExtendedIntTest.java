@@ -40,6 +40,8 @@ import org.springframework.validation.Validator;
 
 import java.time.Instant;
 import java.util.List;
+import com.icthh.xm.ms.entity.web.rest.facade.RatingFacade;
+import com.icthh.xm.ms.entity.service.mapper.RatingMapper;
 
 /**
  * Extended Test class for the RatingResource REST controller.
@@ -84,6 +86,9 @@ public class RatingResourceExtendedIntTest extends AbstractJupiterSpringBootTest
     @Autowired
     private XmEntityRepository xmEntityRepository;
 
+    @Autowired
+    private RatingMapper ratingMapper;
+
     @Spy
     private StartUpdateDateGenerationStrategy startUpdateDateGenerationStrategy;
 
@@ -111,7 +116,8 @@ public class RatingResourceExtendedIntTest extends AbstractJupiterSpringBootTest
             startUpdateDateGenerationStrategy,
             xmEntityRepository);
 
-        RatingResource ratingResourceMock = new RatingResource(ratingService, ratingResource);
+        RatingFacade ratingFacade = new RatingFacade(ratingService, ratingMapper);
+        RatingResource ratingResourceMock = new RatingResource(ratingFacade, ratingResource);
         this.restRatingMockMvc = MockMvcBuilders.standaloneSetup(ratingResourceMock)
                                                 .setCustomArgumentResolvers(pageableArgumentResolver)
                                                 .setControllerAdvice(exceptionTranslator)
