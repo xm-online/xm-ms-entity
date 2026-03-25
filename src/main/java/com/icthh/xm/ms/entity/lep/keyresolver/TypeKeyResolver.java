@@ -11,6 +11,7 @@ import java.util.List;
 public class TypeKeyResolver implements LepKeyResolver {
     @Override
     public List<String> segments(LepMethod method) {
-        return Collections.singletonList(method.getParameter("typeKey", String.class));
+        String typeKey = method.getParameter("typeKey", String.class);
+        return typeKey != null ? List.of(typeKey) : List.of();
     }
 }
