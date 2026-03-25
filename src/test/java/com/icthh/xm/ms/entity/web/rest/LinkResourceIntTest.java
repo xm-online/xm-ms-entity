@@ -28,6 +28,7 @@ import com.icthh.xm.ms.entity.repository.XmEntityRepository;
 import com.icthh.xm.ms.entity.security.access.XmEntityDynamicPermissionCheckService;
 import com.icthh.xm.ms.entity.service.LinkService;
 import com.icthh.xm.ms.entity.service.impl.StartUpdateDateGenerationStrategy;
+import com.icthh.xm.ms.entity.web.rest.facade.LinkFacade;
 import jakarta.persistence.EntityManager;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.AfterEach;
@@ -51,7 +52,6 @@ import java.io.UnsupportedEncodingException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
-import com.icthh.xm.ms.entity.web.rest.facade.LinkFacade;
 import com.icthh.xm.ms.entity.service.mapper.LinkMapper;
 
 /**
@@ -122,6 +122,9 @@ public class LinkResourceIntTest extends AbstractJupiterSpringBootTest {
 
     private Link link;
 
+    @Autowired
+    private LinkFacade linkFacade;
+
     @BeforeTransaction
     public void beforeTransaction() {
         TenantContextUtils.setTenant(tenantContextHolder, "RESINTTEST");
@@ -145,7 +148,7 @@ public class LinkResourceIntTest extends AbstractJupiterSpringBootTest {
                                       dynamicPermissionCheckService);
         linkService.setSelf(linkService);
 
-        LinkResource linkResourceMock = new LinkResource(linkService);
+        LinkResource linkResourceMock = new LinkResource(linkFacade);
         JacksonJsonHttpMessageConverter converter = new JacksonJsonHttpMessageConverter();
         this.restLinkMockMvc = MockMvcBuilders.standaloneSetup(linkResourceMock)
             .setCustomArgumentResolvers(pageableArgumentResolver)

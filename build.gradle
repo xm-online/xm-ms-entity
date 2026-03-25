@@ -326,10 +326,13 @@ dependencies {
     implementation "org.springframework.retry:spring-retry"
     implementation "org.springframework.cloud:spring-cloud-starter-consul-discovery"
     implementation "org.springframework.cloud:spring-cloud-starter-consul-config"
+    implementation "org.springframework.cloud:spring-cloud-security:${cloudVersion}"
     implementation "org.springframework.cloud:spring-cloud-starter-openfeign"
+    implementation "org.springframework.boot:spring-boot-starter-cloud-connectors:${cloudConnectorsVersion}"
     implementation "org.springframework.security:spring-security-config"
     implementation "org.springframework.security:spring-security-data"
     implementation "org.springframework.security:spring-security-web"
+    implementation "org.springframework.security:spring-security-jwt:${securityJwtVersion}"
     implementation "org.glassfish.jaxb:jaxb-runtime:${jaxb_runtime_version}"
     implementation "io.swagger:swagger-annotations:${swaggerVersion}"
     implementation "org.springdoc:springdoc-openapi-starter-webmvc-ui:${springdocVersion}"
@@ -448,6 +451,7 @@ dependencies {
         exclude group: "com.vaadin.external.google", module: "android-json"
     }
     testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
+    testImplementation "org.springframework.boot:spring-boot-test"
     testImplementation "org.springframework.security:spring-security-test"
     testImplementation "com.tngtech.archunit:archunit-junit5-api:${archunitJunit5Version}"
     testRuntimeOnly "com.tngtech.archunit:archunit-junit5-engine:${archunitJunit5Version}"

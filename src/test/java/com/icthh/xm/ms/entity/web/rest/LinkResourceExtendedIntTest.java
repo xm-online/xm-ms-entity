@@ -123,7 +123,6 @@ public class LinkResourceExtendedIntTest extends AbstractJupiterSpringBootTest {
             xmEntityRepository,
             dynamicPermissionCheckService);
         JacksonJsonHttpMessageConverter jacksonMessageConverter = new JacksonJsonHttpMessageConverter();
-        LinkResource linkResourceMock = new LinkResource(linkService);
 
         linkService.setSelf(linkService);
 

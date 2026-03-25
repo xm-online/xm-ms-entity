@@ -15,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -44,6 +45,7 @@ public class XmEntityFacade {
         return xmEntityService.findByIds(pageable, ids, embed, privilegeKey).map(xmEntityMapper::toDto);
     }
 
+    @Transactional(readOnly = true)
     public XmEntityDto findOne(IdOrKey idOrKey) {
         XmEntity entity = xmEntityService.findOne(idOrKey);
         return entity != null ? xmEntityMapper.toDto(entity) : null;
