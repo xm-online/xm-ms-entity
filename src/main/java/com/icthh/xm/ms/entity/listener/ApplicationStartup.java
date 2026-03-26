@@ -12,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.boot.kafka.autoconfigure.KafkaProperties;
 import org.springframework.context.ApplicationListener;
 import org.springframework.kafka.core.ConsumerFactory;
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
@@ -30,6 +31,7 @@ public class ApplicationStartup implements ApplicationListener<ApplicationReadyE
     private final ConsumerFactory<String, String> consumerFactory;
     private final SystemTopicConsumer systemTopicConsumer;
     private final PrivilegeInspector privilegeInspector;
+    private final KafkaProperties kafkaProperties;
 
     @Override
     public void onApplicationEvent(ApplicationReadyEvent event) {
@@ -51,7 +53,7 @@ public class ApplicationStartup implements ApplicationListener<ApplicationReadyE
         ContainerProperties containerProps = new ContainerProperties(name);
         containerProps.setObservationEnabled(true);
 
-        Map<String, Object> props = new HashMap<>(consumerFactory.getConfigurationProperties());
+        Map<String, Object> props = kafkaProperties.buildConsumerProperties();
         if (name.equals(applicationProperties.getKafkaSystemTopic())) {
             props.put(ConsumerConfig.GROUP_ID_CONFIG, UUID.randomUUID().toString());
         }
