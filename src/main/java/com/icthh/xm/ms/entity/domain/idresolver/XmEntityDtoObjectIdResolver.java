@@ -7,8 +7,8 @@ import com.icthh.xm.commons.exceptions.BusinessException;
 import com.icthh.xm.commons.exceptions.ErrorConstants;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
 import com.icthh.xm.ms.entity.service.dto.XmEntityDto;
+import com.icthh.xm.ms.entity.util.AutowireHelper;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
@@ -25,13 +25,6 @@ import java.util.Map;
 public class XmEntityDtoObjectIdResolver extends SimpleObjectIdResolver {
     protected Map<ObjectIdGenerator.IdKey, Object> items;
 
-    private XmEntityRepository repository;
-
-    @Autowired
-    public XmEntityDtoObjectIdResolver(XmEntityRepository repository) {
-        this.repository = repository;
-    }
-
     public XmEntityDtoObjectIdResolver() {
         log.debug("XmEntityDto object id resolver inited");
     }
@@ -46,6 +39,7 @@ public class XmEntityDtoObjectIdResolver extends SimpleObjectIdResolver {
             return resolved;
         }
 
+        XmEntityRepository repository = getRepository();
         var entity = repository.findById((Long) id.key).orElse(null);
         if (entity == null) {
             throw new BusinessException(ErrorConstants.ERR_NOTFOUND, "Can not resolve XmEntity by ID: " + id.key);
@@ -57,9 +51,13 @@ public class XmEntityDtoObjectIdResolver extends SimpleObjectIdResolver {
         return dto;
     }
 
+    private XmEntityRepository getRepository() {
+        return AutowireHelper.getInstance().getBean(XmEntityRepository.class);
+    }
+
     @Override
     public ObjectIdResolver newForDeserialization(final Object context) {
-        return new XmEntityDtoObjectIdResolver(repository);
+        return new XmEntityDtoObjectIdResolver();
     }
 
     @Override
