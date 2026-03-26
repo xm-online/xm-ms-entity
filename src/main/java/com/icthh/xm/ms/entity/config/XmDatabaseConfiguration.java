@@ -21,7 +21,7 @@ import java.sql.SQLException;
 @Configuration
 @EnableJpaRepositories(value = "com.icthh.xm.ms.entity.repository",
     repositoryBaseClass = EntityGraphRepositoryImpl.class)
-@EntityScan("com.icthh.xm.ms.entity.domain.*")
+@EntityScan(basePackages = "com.icthh.xm.ms.entity.domain")
 @EnableJpaAuditing(auditorAwareRef = "springSecurityAuditorAware")
 public class XmDatabaseConfiguration extends DatabaseConfiguration {
 

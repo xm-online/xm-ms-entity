@@ -4,7 +4,6 @@ import com.icthh.xm.commons.logging.util.MdcUtils;
 import com.icthh.xm.commons.permission.inspector.PrivilegeInspector;
 import com.icthh.xm.ms.entity.config.ApplicationProperties;
 import com.icthh.xm.ms.entity.repository.kafka.SystemTopicConsumer;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
