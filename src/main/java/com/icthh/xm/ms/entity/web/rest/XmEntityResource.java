@@ -250,7 +250,6 @@ public class XmEntityResource {
      * @param functionInput - optional input
      * @return any object
      */
-    @LoggingAspectConfig(inputExcludeParams = "functionInput")
     @Timed
     @PostMapping("/xm-entities/{idOrKey}/functions/{functionKey:.+}")
     @PreAuthorize("hasPermission({'idOrKey': #idOrKey, 'id': #functionKey, 'context': #context}, "
@@ -262,6 +261,7 @@ public class XmEntityResource {
         return executeFunction(idOrKey, functionKey, functionInput, POST.name());
     }
 
+    @LoggingAspectConfig(inputExcludeParams = "functionInput")
     @Timed
     @GetMapping("/xm-entities/{idOrKey}/functions/**")
     public ResponseEntity<Object> executeGetFunction(@PathVariable String idOrKey,
@@ -270,6 +270,7 @@ public class XmEntityResource {
         return xmEntityResource.executeGetFunction(idOrKey, getFunctionKey(request), functionInput);
     }
 
+    @LoggingAspectConfig(inputExcludeParams = "functionInput")
     @Timed
     @PostMapping("/xm-entities/{idOrKey}/functions/**")
     public ResponseEntity<Object> executeFunction(@PathVariable String idOrKey,

@@ -261,7 +261,7 @@ public class XmEntitySpecService implements RefreshableConfiguration {
      * @param attachmentKey Attachment key
      * @return entity Attachment if present
      */
-    @LoggingAspectConfig(resultDetails = false)
+    @IgnoreLogginAspect
     public Optional<AttachmentSpec> findAttachment(String key, String attachmentKey) {
         return getTypeSpecs().get(key).getAttachments().stream().filter(l -> l.getKey().equals(attachmentKey))
             .findFirst();
@@ -326,6 +326,7 @@ public class XmEntitySpecService implements RefreshableConfiguration {
             .filter(f -> f.functionKey().equals(functionKey)).toList();
     }
 
+    @IgnoreLogginAspect
     public List<FunctionMetaInfo> findAllFunctionMetaInfo() {
         return xmEntitySpecContextService.functionsMetaInfoByTenant(getTenantKeyValue());
     }
