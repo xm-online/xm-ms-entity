@@ -6,8 +6,8 @@ import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_TENANT_
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.ObjectMapper;
 import com.icthh.xm.commons.lep.XmLepScriptConfigServerResourceLoader;
 import com.icthh.xm.commons.security.XmAuthenticationContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
@@ -89,7 +89,7 @@ public class XmEntityCommonsIntTest extends AbstractJupiterSpringBootTest {
     public void testCommons() {
         initLeps();
         Object result = functionService.execute("NAME", of(), null);
-        Map<String, Object> name = new ObjectMapper().convertValue(result, new TypeReference<>() {});
+        Map<String, Object> name = new ObjectMapper().convertValue(result, new TypeReference<Map<String, Object>>() {});
         log.info("RESULT {}", name);
         assertThat(name.get("result")).isEqualTo("RESULT [1, 2, 5] | COMMON_ARGUMENT");
     }

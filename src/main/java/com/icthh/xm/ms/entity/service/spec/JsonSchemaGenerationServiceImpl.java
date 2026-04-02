@@ -1,12 +1,12 @@
 package com.icthh.xm.ms.entity.service.spec;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.module.jsonSchema.JsonSchema;
-import com.fasterxml.jackson.module.jsonSchema.JsonSchemaGenerator;
-import com.fasterxml.jackson.module.jsonSchema.types.ArraySchema;
-import com.fasterxml.jackson.module.jsonSchema.types.ObjectSchema;
-import com.fasterxml.jackson.module.jsonSchema.types.StringSchema;
+
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.module.jsonSchema.JsonSchema;
+import tools.jackson.module.jsonSchema.JsonSchemaGenerator;
+import tools.jackson.module.jsonSchema.types.ArraySchema;
+import tools.jackson.module.jsonSchema.types.ObjectSchema;
+import tools.jackson.module.jsonSchema.types.StringSchema;
 import com.icthh.xm.ms.entity.domain.spec.XmEntitySpec;
 import com.icthh.xm.ms.entity.service.json.JsonSchemaGenerationService;
 import lombok.SneakyThrows;
@@ -20,14 +20,12 @@ public class JsonSchemaGenerationServiceImpl implements JsonSchemaGenerationServ
     @SneakyThrows
     public String generateJsonSchema() {
         ObjectMapper mapper = new ObjectMapper();
-        mapper.configure(SerializationFeature.WRITE_ENUMS_USING_TO_STRING, true);
 
         JsonSchemaGenerator schemaGen = new JsonSchemaGenerator(mapper);
         JsonSchema jsonSchema = schemaGen.generateSchema(XmEntitySpec.class);
         rejectAdditionalProperties(jsonSchema);
         StringWriter json = new StringWriter();
-        mapper.configure(SerializationFeature.INDENT_OUTPUT, true);
-        mapper.writeValue(json, jsonSchema);
+        mapper.writerWithDefaultPrettyPrinter().writeValue(json, jsonSchema);
         return json.toString();
     }
 

@@ -2,9 +2,9 @@ package com.icthh.xm.ms.entity.service;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.dataformat.yaml.YAMLFactory;
 import com.icthh.xm.commons.config.client.api.RefreshableConfiguration;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
@@ -19,7 +19,6 @@ import org.springframework.util.AntPathMatcher;
 
 import java.util.Collections;
 import java.util.Map;
-import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
@@ -91,8 +90,7 @@ public class XmEntityTemplatesSpecService implements RefreshableConfiguration {
     private static Map<String, Template> ymlToTemplates(String yml) {
         try {
             Map<String, Template> map = mapper
-                .readValue(yml, new TypeReference<TreeMap<String, Template>>() {
-                });
+                .readValue(yml, new TypeReference<>() {});
             map.forEach((templateKey, template) -> template.setKey(templateKey));
             return map;
         } catch (Exception e) {

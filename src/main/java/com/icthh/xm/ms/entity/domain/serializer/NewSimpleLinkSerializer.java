@@ -1,40 +1,37 @@
 package com.icthh.xm.ms.entity.domain.serializer;
 
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.databind.SerializerProvider;
-import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 import com.icthh.xm.ms.entity.domain.Link;
-import org.hibernate.Hibernate;
-
-import java.io.IOException;
 import java.time.Instant;
+import org.hibernate.Hibernate;
+import tools.jackson.core.JacksonException;
+import tools.jackson.core.JsonGenerator;
+import tools.jackson.databind.SerializationContext;
+import tools.jackson.databind.ser.std.StdSerializer;
 
-public class SimpleLinkSerializer extends StdSerializer<Link> {
+public class NewSimpleLinkSerializer extends StdSerializer<Link> {
 
-    public SimpleLinkSerializer() {
+    public NewSimpleLinkSerializer() {
         super(Link.class);
     }
 
-    public SimpleLinkSerializer(Class<Link> t) {
+    public NewSimpleLinkSerializer(Class<Link> t) {
         super(t);
     }
 
-    private void write(JsonGenerator jsonGenerator, SerializerProvider provider, String field, Object value)
-    throws IOException {
+    private void write(JsonGenerator jsonGenerator, SerializationContext provider, String field, Object value) {
         if (value != null) {
-            provider.defaultSerializeField(field, value, jsonGenerator);
+            provider.defaultSerializeProperty(field, value, jsonGenerator);
         }
     }
 
-    private void writeInstant(JsonGenerator jsonGenerator, SerializerProvider provider, String field, Instant value) throws IOException {
+    private void writeInstant(JsonGenerator jsonGenerator, SerializationContext provider, String field, Instant value) {
         if (value != null) {
-            jsonGenerator.writeFieldName(field);
-            provider.findValueSerializer(Instant.class).serialize(value, jsonGenerator, provider);
+            jsonGenerator.writeStringProperty(field, value.toString());
         }
     }
 
     @Override
-    public void serialize(Link value, JsonGenerator jsonGenerator, SerializerProvider provider) throws IOException {
+    public void serialize(Link value, JsonGenerator jsonGenerator, SerializationContext provider) throws JacksonException {
         if (!Hibernate.isInitialized(value)) {
             return;
         }
@@ -48,8 +45,10 @@ public class SimpleLinkSerializer extends StdSerializer<Link> {
         writeInstant(jsonGenerator, provider, "startDate", value.getStartDate());
         writeInstant(jsonGenerator, provider, "endDate", value.getEndDate());
 
-        jsonGenerator.writeObjectFieldStart("target");
+        jsonGenerator.writeName("target");
         if (value.getTarget() != null) {
+            jsonGenerator.writeStartObject();
+
             write(jsonGenerator, provider, "id", value.getTarget().getId());
             write(jsonGenerator, provider, "key", value.getTarget().getKey());
             write(jsonGenerator, provider, "typeKey", value.getTarget().getTypeKey());
@@ -63,6 +62,9 @@ public class SimpleLinkSerializer extends StdSerializer<Link> {
             write(jsonGenerator, provider, "createdBy", value.getTarget().getCreatedBy());
             write(jsonGenerator, provider, "removed", value.getTarget().isRemoved());
             write(jsonGenerator, provider, "data", value.getTarget().getData());
+            jsonGenerator.writeEndObject();
+        } else {
+            jsonGenerator.writeNullProperty("target");
         }
 
         if (value.getSource() != null) {

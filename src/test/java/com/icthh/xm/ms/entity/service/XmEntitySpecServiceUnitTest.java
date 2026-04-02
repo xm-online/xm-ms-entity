@@ -1,8 +1,9 @@
 package com.icthh.xm.ms.entity.service;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import java.util.HashSet;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.dataformat.yaml.YAMLFactory;
 import com.icthh.xm.commons.config.client.config.XmConfigProperties;
 import com.icthh.xm.commons.config.client.repository.CommonConfigRepository;
 import com.icthh.xm.commons.config.client.repository.TenantConfigRepository;
@@ -42,10 +43,10 @@ import com.icthh.xm.ms.entity.service.processor.XmEntityDataFormSpecProcessor;
 import com.icthh.xm.ms.entity.service.processor.XmEntityTypeSpecProcessor;
 import com.icthh.xm.ms.entity.service.spec.DataSpecJsonSchemaService;
 import com.icthh.xm.ms.entity.service.spec.XmEntitySpecCustomizer;
-import com.networknt.schema.JsonSchema;
-import com.networknt.schema.JsonSchemaFactory;
-import com.networknt.schema.SpecVersion;
-import com.networknt.schema.ValidationMessage;
+import com.networknt.schema.Schema;
+import com.networknt.schema.SchemaRegistry;
+import com.networknt.schema.SpecificationVersion;
+import com.networknt.schema.Error;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
@@ -65,6 +66,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+import tools.jackson.module.jsonSchema.JsonSchema;
 
 import static com.google.common.collect.ImmutableMap.of;
 import static com.google.common.collect.Maps.newHashMap;
@@ -228,8 +230,8 @@ public class XmEntitySpecServiceUnitTest extends AbstractJupiterUnitTest {
         xmEntitySpecService.onRefresh(key, configFirstPart);
         xmEntitySpecService.onRefresh(key, configSecondPart);
 
-        JsonSchema jsonSchemaFromFirstFile = xmEntitySpecService.getDataJsonSchemaByKey("BASE_ENTITY.EXTENDS_ENABLED").orElse(null);
-        JsonSchema jsonSchemaFromSecondFile = xmEntitySpecService.getDataJsonSchemaByKey("BASE_ENTITY.SEPARATE_FILE_EXTENDS_ENABLED").orElse(null);
+        Schema jsonSchemaFromFirstFile = xmEntitySpecService.getDataJsonSchemaByKey("BASE_ENTITY.EXTENDS_ENABLED").orElse(null);
+        Schema jsonSchemaFromSecondFile = xmEntitySpecService.getDataJsonSchemaByKey("BASE_ENTITY.SEPARATE_FILE_EXTENDS_ENABLED").orElse(null);
         assertNotNull(jsonSchemaFromFirstFile);
         assertNotNull(jsonSchemaFromSecondFile);
     }
@@ -1094,9 +1096,9 @@ public class XmEntitySpecServiceUnitTest extends AbstractJupiterUnitTest {
         ObjectMapper objectMapper = new ObjectMapper();
         JsonNode valueJsonNode = objectMapper.readTree(objectMapper.writeValueAsString(value));
         JsonNode schemaNode = new ObjectMapper().readTree(schema);
-        JsonSchemaFactory factory = JsonSchemaFactory.getInstance(SpecVersion.VersionFlag.V4);
-        JsonSchema jsonSchema = factory.getSchema(schemaNode);
-        Set<ValidationMessage> report = jsonSchema.validate(valueJsonNode);
+        SchemaRegistry factory = SchemaRegistry.withDefaultDialect(SpecificationVersion.DRAFT_4);
+        Schema jsonSchema = factory.getSchema(schemaNode);
+        Set<Error> report = new HashSet<>(jsonSchema.validate(valueJsonNode));
         log.info("Validation: {}", report.toString());
         return report.isEmpty();
     }

@@ -1,10 +1,9 @@
 package com.icthh.xm.ms.entity.domain;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
 import com.icthh.xm.ms.entity.AbstractJupiterSpringBootTest;
+import com.icthh.xm.ms.entity.config.WebMvcConfiguration;
 import com.icthh.xm.ms.entity.service.dto.XmEntityDto;
 import com.icthh.xm.ms.entity.service.mapper.XmEntityMapper;
 import jakarta.persistence.EntityManager;
@@ -22,6 +21,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.json.JsonMapper;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -38,8 +39,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @WithMockUser(authorities = {"SUPER-ADMIN"})
 public class XmEntityDtoJsonSerializationIntTest extends AbstractJupiterSpringBootTest {
 
-    @Autowired
-    private ObjectMapper objectMapper;
+    private JsonMapper objectMapper;
 
     @Autowired
     private XmEntityMapper xmEntityMapper;
@@ -62,6 +62,7 @@ public class XmEntityDtoJsonSerializationIntTest extends AbstractJupiterSpringBo
     @BeforeEach
     public void setup() {
         TenantContextUtils.setTenant(tenantContextHolder, "RESINTTEST");
+        objectMapper = JsonMapper.builder().build();
     }
 
     @AfterEach

@@ -1,7 +1,8 @@
 package com.icthh.xm.ms.entity.service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import tools.jackson.databind.MapperFeature;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.dataformat.yaml.YAMLFactory;
 import com.google.common.collect.Maps;
 import com.icthh.xm.commons.config.client.api.RefreshableConfiguration;
 import com.icthh.xm.commons.config.client.repository.TenantConfigRepository;
@@ -29,7 +30,7 @@ import com.icthh.xm.ms.entity.domain.spec.XmEntitySpec;
 import com.icthh.xm.ms.entity.security.access.XmEntityDynamicPermissionCheckService;
 import com.icthh.xm.ms.entity.service.spec.FunctionMetaInfo;
 import com.icthh.xm.ms.entity.service.spec.XmEntitySpecContextService;
-import com.networknt.schema.JsonSchema;
+import com.networknt.schema.Schema;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -48,6 +49,7 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import tools.jackson.dataformat.yaml.YAMLMapper;
 
 import static com.google.common.collect.Iterables.getFirst;
 import static java.util.Collections.emptyList;
@@ -66,7 +68,9 @@ public class XmEntitySpecService implements RefreshableConfiguration {
     private static final String TYPE_SEPARATOR = ".";
     private static final String TENANT_NAME = "tenantName";
     private final AntPathMatcher matcher = new AntPathMatcher();
-    private final ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+    private final ObjectMapper mapper = YAMLMapper.builder()
+                .disable(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY)
+                .build();
     private final TenantConfigRepository tenantConfigRepository;
     private final ApplicationProperties applicationProperties;
     private final TenantContextHolder tenantContextHolder;
@@ -206,7 +210,7 @@ public class XmEntitySpecService implements RefreshableConfiguration {
     }
 
     @LoggingAspectConfig(resultDetails = false)
-    public Optional<JsonSchema> getDataJsonSchemaByKey(String key) {
+    public Optional<Schema> getDataJsonSchemaByKey(String key) {
         return ofNullable(xmEntitySpecContextService.dataSpecJsonSchemas(getTenantKeyValue())).map(it -> it.get(key));
     }
 

@@ -2,18 +2,17 @@ package com.icthh.xm.ms.entity.validator;
 
 import static org.apache.commons.collections.MapUtils.isEmpty;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import tools.jackson.databind.ObjectMapper;
 import com.icthh.xm.ms.entity.domain.EntityBaseFields;
 import com.icthh.xm.ms.entity.domain.spec.TypeSpec;
 import com.icthh.xm.ms.entity.service.json.JsonValidationService;
 import com.icthh.xm.ms.entity.service.XmEntitySpecService;
 
+import com.networknt.schema.Schema;
+import com.networknt.schema.Error;
 import java.util.List;
 import java.util.Set;
 
-import com.networknt.schema.JsonSchema;
-import com.networknt.schema.ValidationMessage;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 import lombok.RequiredArgsConstructor;
@@ -32,13 +31,12 @@ public class JsonDataValidator implements ConstraintValidator<JsonData, EntityBa
     @Override
     public void initialize(JsonData constraintAnnotation) {
         log.trace("Json data validator inited");
-        objectMapper.registerModule(new JavaTimeModule());
     }
 
     @Override
     public boolean isValid(EntityBaseFields value, ConstraintValidatorContext context) {
         TypeSpec typeSpecification = xmEntitySpecService.getTypeSpecByKeyWithoutFunctionFilter(value.getTypeKey()).orElse(null);
-        JsonSchema jsonSchema = xmEntitySpecService.getDataJsonSchemaByKey(value.getTypeKey()).orElse(null);
+        Schema jsonSchema = xmEntitySpecService.getDataJsonSchemaByKey(value.getTypeKey()).orElse(null);
 
         if (!present(typeSpecification) || dataAndSpecificationEmpty(value, jsonSchema)) {
             return true;
@@ -60,17 +58,17 @@ public class JsonDataValidator implements ConstraintValidator<JsonData, EntityBa
         return typeSpec.getDataSpec() == null && !isEmpty(value.getData());
     }
 
-    private static boolean dataAndSpecificationEmpty(EntityBaseFields value, JsonSchema jsonSchema) {
+    private static boolean dataAndSpecificationEmpty(EntityBaseFields value, Schema jsonSchema) {
         return isEmpty(value.getData()) && jsonSchema == null;
     }
 
     @SneakyThrows
-    private boolean validate(EntityBaseFields value, JsonSchema jsonSchema, ConstraintValidatorContext context) {
+    private boolean validate(EntityBaseFields value, Schema jsonSchema, ConstraintValidatorContext context) {
 
-        final Set<ValidationMessage> report = jsonValidationService.validateJson(value.getData(), jsonSchema);
+        final Set<Error> report = jsonValidationService.validateJson(value.getData(), jsonSchema);
         boolean isSuccess = report.isEmpty();
         if (!isSuccess) {
-            List<?> message = report.stream().map(ValidationMessage::getMessage).toList();
+            List<?> message = report.stream().map(Error::getMessage).toList();
             log.error("Validation data report for entity with typeKey {} and id {}: {}",
                     value.getTypeKey(), value.getId(), StringUtils.join(" | ", message));
             context.disableDefaultConstraintViolation();

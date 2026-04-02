@@ -77,6 +77,10 @@ spring:
                     health-timeout: 5 # kafkaHealthCheck timeout when scheduler-enabled: true, in seconds
     jackson:
         default-property-inclusion: non_empty
+        deserialization:
+            fail-on-unknown-properties: false # disable(FAIL_ON_UNKNOWN_PROPERTIES)
+        mapper:
+            sort-properties-alphabetically: false # disable(SORT_PROPERTIES_ALPHABETICALLY)
     jpa:
         open-in-view: false
         properties:

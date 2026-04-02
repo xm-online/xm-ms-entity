@@ -35,6 +35,7 @@ import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 
 import java.time.Instant;
 import java.util.Optional;
+import tools.jackson.databind.json.JsonMapper;
 
 @Slf4j
 @WebMvcTest(controllers = LinkResource.class)

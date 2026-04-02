@@ -1,8 +1,6 @@
 package com.icthh.xm.ms.entity.domain.serializer;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
+import tools.jackson.databind.ObjectMapper;
 import com.icthh.xm.commons.i18n.error.web.ExceptionTranslator;
 import com.icthh.xm.commons.i18n.spring.service.LocalizationMessageService;
 import com.icthh.xm.commons.lep.XmLepScriptConfigServerResourceLoader;
@@ -38,6 +36,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.http.converter.json.JacksonJsonHttpMessageConverter;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.context.annotation.EnableAspectJAutoProxy;
 import org.springframework.core.io.ClassPathResource;
@@ -47,7 +46,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
 import org.springframework.data.web.config.EnableSpringDataWebSupport;
 import org.springframework.http.MediaType;
-import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
+
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
@@ -60,6 +59,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY;
 import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_AUTH_CONTEXT;
 import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_TENANT_CONTEXT;
 import static com.icthh.xm.ms.entity.domain.serializer.JsonResponseFilteringUnitTest.addTargetLink;
@@ -112,7 +112,7 @@ public class JsonResponseFilteringLepUnitTest extends AbstractJupiterWebMvcTest 
     private XmEntityResource xmEntityResource;
 
     @Autowired
-    private MappingJackson2HttpMessageConverter jacksonMessageConverter;
+    private JacksonJsonHttpMessageConverter jacksonMessageConverter;
 
     @Autowired
     private ExceptionTranslator exceptionTranslator;
@@ -147,8 +147,8 @@ public class JsonResponseFilteringLepUnitTest extends AbstractJupiterWebMvcTest 
 
         TenantContextUtils.setTenant(tenantContextHolder, "RESINTTEST");
 
-        objectMapper.configure(SerializationFeature.INDENT_OUTPUT, true);
-        objectMapper.setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
+
+        objectMapper.rebuild().changeDefaultPropertyInclusion(incl -> incl.withValueInclusion(NON_EMPTY)).build();
 
         this.mockMvc = MockMvcBuilders.standaloneSetup(xmEntityResource)
                                       .setControllerAdvice(exceptionTranslator)

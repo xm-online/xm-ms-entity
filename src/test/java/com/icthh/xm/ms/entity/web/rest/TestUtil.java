@@ -2,9 +2,6 @@ package com.icthh.xm.ms.entity.web.rest;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.hamcrest.Description;
 import org.hamcrest.TypeSafeDiagnosingMatcher;
 import org.springframework.http.MediaType;
@@ -13,6 +10,7 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.time.Instant;
 import java.time.format.DateTimeParseException;
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * Utility class for testing REST controllers.
@@ -34,24 +32,14 @@ public class TestUtil {
      * @throws IOException
      */
     public static byte[] convertObjectToJsonBytes(Object object) throws IOException {
-        ObjectMapper mapper = getObjectMapper();
+        ObjectMapper mapper = new ObjectMapper();
 
         return mapper.writeValueAsBytes(object);
     }
 
     public static <T> T convertJsonBytesToObject(byte[] bytes, Class<T> clazz) throws IOException {
-        ObjectMapper mapper = getObjectMapper();
-
-        return mapper.readValue(bytes, clazz);
-    }
-
-    private static ObjectMapper getObjectMapper() {
         ObjectMapper mapper = new ObjectMapper();
-        mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
-
-        JavaTimeModule module = new JavaTimeModule();
-        mapper.registerModule(module);
-        return mapper;
+        return mapper.readValue(bytes, clazz);
     }
 
     /**

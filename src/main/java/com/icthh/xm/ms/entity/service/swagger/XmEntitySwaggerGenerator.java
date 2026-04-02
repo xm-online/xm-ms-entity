@@ -1,10 +1,7 @@
 package com.icthh.xm.ms.entity.service.swagger;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import com.fasterxml.jackson.module.jsonSchema.JsonSchema;
-import com.fasterxml.jackson.module.jsonSchema.JsonSchemaGenerator;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.node.ObjectNode;
 import com.icthh.xm.commons.config.swagger.DynamicSwaggerConfiguration;
 import com.icthh.xm.commons.swagger.JsonSchemaToSwaggerSchemaConverter;
 import com.icthh.xm.commons.swagger.impl.AbstractSwaggerGenerator;
@@ -21,6 +18,8 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import tools.jackson.module.jsonSchema.JsonSchema;
+import tools.jackson.module.jsonSchema.JsonSchemaGenerator;
 
 import static com.icthh.xm.ms.entity.service.processor.XmEntityDefinitionSpecProcessor.XM_ENTITY_DEFINITION;
 import static com.icthh.xm.ms.entity.service.spec.DataSpecJsonSchemaService.DEFINITION_PREFIXES;
@@ -30,7 +29,7 @@ public class XmEntitySwaggerGenerator extends AbstractSwaggerGenerator {
 
     private final Map<String, Object> DEFAULT_SCHEMA = Map.of("type", "string", "format", "binary");
     private final Set<String> SUCCESS_RESPONSE_CODES = Set.of("200", "201");
-    private final ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     public XmEntitySwaggerGenerator(String baseUrl, DynamicSwaggerConfiguration configuration) {
         super(baseUrl, configuration, new JsonSchemaToSwaggerSchemaConverter(XM_ENTITY_DEFINITION, DEFINITION_PREFIXES));

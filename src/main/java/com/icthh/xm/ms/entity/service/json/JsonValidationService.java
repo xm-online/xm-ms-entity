@@ -1,14 +1,12 @@
 package com.icthh.xm.ms.entity.service.json;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import com.icthh.xm.commons.exceptions.BusinessException;
 import com.icthh.xm.commons.logging.LoggingAspectConfig;
-import com.networknt.schema.JsonSchema;
-import com.networknt.schema.JsonSchemaFactory;
-import com.networknt.schema.SpecVersion;
-import com.networknt.schema.ValidationMessage;
+import com.networknt.schema.Error;
+import com.networknt.schema.Schema;
+import com.networknt.schema.SchemaRegistry;
+import com.networknt.schema.SpecificationVersion;
+import java.util.HashSet;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -17,6 +15,8 @@ import org.springframework.stereotype.Service;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 
 @Slf4j
 @Service
@@ -24,11 +24,11 @@ import java.util.stream.Collectors;
 public class JsonValidationService {
 
     private final ObjectMapper objectMapper;
-    private final JsonSchemaFactory factory = JsonSchemaFactory.getInstance(SpecVersion.VersionFlag.V4);
+    private final SchemaRegistry factory = SchemaRegistry.withDefaultDialect(SpecificationVersion.DRAFT_4);
 
     @LoggingAspectConfig(inputExcludeParams = "schema")
-    public Set<ValidationMessage> validateJson(Map<String, Object> data, JsonSchema schema) {
-        Set<ValidationMessage> errors = validate(data, schema);
+    public Set<Error> validateJson(Map<String, Object> data, Schema schema) {
+        Set<Error> errors = validate(data, schema);
         if (!errors.isEmpty()) {
             log.error("Validation data report: {}", getReportErrorMessage(errors));
         }
@@ -38,8 +38,8 @@ public class JsonValidationService {
     @SneakyThrows
     @LoggingAspectConfig(inputExcludeParams = "jsonSchema")
     public void assertJson(Map<String, Object> data, String jsonSchema) {
-        JsonSchema schema = factory.getSchema(jsonSchema);
-        Set<ValidationMessage> errors = validate(data, schema);
+        Schema schema = factory.getSchema(jsonSchema);
+        Set<Error> errors = validate(data, schema);
         if (!errors.isEmpty()) {
             String message = getReportErrorMessage(errors);
             log.error("Validation data report: {}", message);
@@ -47,18 +47,18 @@ public class JsonValidationService {
         }
     }
 
-    private String getReportErrorMessage(Set<ValidationMessage> report) {
+    private String getReportErrorMessage(Set<Error> report) {
         return report.stream()
-            .map(ValidationMessage::getMessage)
+            .map(Error::getMessage)
             .collect(Collectors.joining(" | "));
     }
 
     @SneakyThrows
     @LoggingAspectConfig(inputExcludeParams = "jsonSchema")
-    private Set<ValidationMessage> validate(Map<String, Object> data, JsonSchema jsonSchema) {
+    private Set<Error> validate(Map<String, Object> data, Schema jsonSchema) {
         log.debug("Validation data. map: {}", data);
         JsonNode dataNode = objectMapper.valueToTree(data);
-        return jsonSchema.validate(dataNode);
+        return new HashSet<>(jsonSchema.validate(dataNode));
     }
 
     public static class InvalidJsonException extends BusinessException {

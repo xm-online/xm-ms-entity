@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.SimpleObjectIdResolver;
 import com.icthh.xm.commons.exceptions.BusinessException;
 import com.icthh.xm.commons.exceptions.ErrorConstants;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
+import com.icthh.xm.ms.entity.util.AutowireHelper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
@@ -24,13 +25,6 @@ import java.util.Map;
 public class XmEntityObjectIdResolver extends SimpleObjectIdResolver {
     protected Map<ObjectIdGenerator.IdKey,Object> items;
 
-    private XmEntityRepository repository;
-
-    @Autowired
-    public XmEntityObjectIdResolver(XmEntityRepository repository) {
-        this.repository = repository;
-    }
-
     public XmEntityObjectIdResolver() {
         log.debug("XmEntity object id resolver inited");
     }
@@ -42,7 +36,7 @@ public class XmEntityObjectIdResolver extends SimpleObjectIdResolver {
     public Object resolveId(final ObjectIdGenerator.IdKey id) {
         Object entity = (items != null && items.containsKey(id))
             ? items.get(id)
-            : repository.findById((Long) id.key).orElse(null);
+            : getRepository().findById((Long) id.key).orElse(null);
 
         if (entity == null) {
             throw new BusinessException(ErrorConstants.ERR_NOTFOUND, "Can not resolve XmEntity by ID: " + id.key);
@@ -51,12 +45,16 @@ public class XmEntityObjectIdResolver extends SimpleObjectIdResolver {
         return entity;
     }
 
+    public XmEntityRepository getRepository() {
+        return AutowireHelper.getInstance().getBean(XmEntityRepository.class);
+    }
+
     /**
      * {@inheritDoc}
      */
     @Override
     public ObjectIdResolver newForDeserialization(final Object context) {
-        return new XmEntityObjectIdResolver(repository);
+        return new XmEntityObjectIdResolver();
     }
 
     @Override

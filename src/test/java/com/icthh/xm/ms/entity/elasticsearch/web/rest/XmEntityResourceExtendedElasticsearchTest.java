@@ -3,9 +3,8 @@ package com.icthh.xm.ms.entity.elasticsearch.web.rest;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.PropertyAccessor;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import tools.jackson.databind.ObjectMapper;
+
 import com.google.common.collect.ImmutableMap;
 import com.icthh.xm.commons.i18n.error.web.ExceptionTranslator;
 import com.icthh.xm.commons.security.XmAuthenticationContext;
@@ -77,7 +76,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.json.JacksonJsonHttpMessageConverter;
-import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
+
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.transaction.BeforeTransaction;
 import org.springframework.test.web.servlet.MockMvc;
@@ -120,6 +119,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.icthh.xm.ms.entity.web.rest.facade.XmEntityFacade;
 import com.icthh.xm.ms.entity.web.rest.facade.EventFacade;
 import com.icthh.xm.ms.entity.web.rest.facade.CalendarFacade;
+import tools.jackson.databind.json.JsonMapper;
 
 /**
  * Extension Test class for the XmEntityResource REST controller. Contains additional test apart from Jhipster generated
@@ -410,8 +410,8 @@ public class XmEntityResourceExtendedElasticsearchTest extends AbstractElasticSp
 
         xmEntityIncoming = createEntityComplexIncoming();
 
-        objectMapper.configure(SerializationFeature.INDENT_OUTPUT, true);
-        objectMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
+
+
     }
 
     @AfterEach
@@ -544,18 +544,17 @@ public class XmEntityResourceExtendedElasticsearchTest extends AbstractElasticSp
      * @param object the object to convert
      * @return the JSON byte array
      */
-    public static byte[] convertObjectToJsonBytesByFields(Object object)
-    throws IOException {
-        ObjectMapper mapper = new ObjectMapper();
-        mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
-
-        mapper.setVisibility(PropertyAccessor.ALL, JsonAutoDetect.Visibility.NONE)
-              .setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
-
-        JavaTimeModule module = new JavaTimeModule();
-        mapper.registerModule(module);
-
-        return mapper.writeValueAsBytes(object);
+    public static byte[] convertObjectToJsonBytesByFields(Object object) throws IOException {
+        return JsonMapper.builder()
+                .changeDefaultPropertyInclusion(incl ->
+                        incl.withValueInclusion(JsonInclude.Include.NON_NULL)
+                )
+                .changeDefaultVisibility(checker -> checker
+                        .withVisibility(PropertyAccessor.ALL, JsonAutoDetect.Visibility.NONE)
+                        .withVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY)
+                )
+                .build()
+                .writeValueAsBytes(object);
     }
 
     private XmEntity convertJsonToObject(String json) throws IOException {

@@ -1,9 +1,9 @@
 package com.icthh.xm.ms.entity.config.tenant;
 
-import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import com.icthh.xm.commons.config.client.repository.TenantConfigRepository;
-import java.util.List;
-import org.jetbrains.annotations.NotNull;
+import java.util.concurrent.atomic.AtomicBoolean;
+import lombok.extern.slf4j.Slf4j;
+import okhttp3.mockwebserver.MockWebServer;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.cloud.client.DefaultServiceInstance;
@@ -13,10 +13,13 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import reactor.core.publisher.Flux;
 
-@Configuration
+import java.util.Collections;
+
+@Configuration(proxyBeanMethods = false)
+@Slf4j
 public class WebappTenantOverrideConfiguration {
 
-    public static WireMockRule WIRE_MOCK = new WireMockRule();
+    public static MockWebServer MOCK_WEB_SERVER = new MockWebServer();
 
     @Bean
     @Qualifier("webappTenantConfigRepository")
@@ -29,21 +32,26 @@ public class WebappTenantOverrideConfiguration {
     }
 
     @Bean
-    public ServiceInstanceListSupplier staticServiceInstanceListSupplier() {
-        WIRE_MOCK.start();
+    public ServiceInstanceListSupplier staticServiceInstanceListSupplier() throws Exception {
+        if (MOCK_WEB_SERVER.getPort() == -1) {
+            MOCK_WEB_SERVER.start();
+        }
         return new ServiceInstanceListSupplier() {
-            @NotNull
             @Override
             public String getServiceId() {
                 return "test-service";
             }
 
             @Override
-            public Flux<List<ServiceInstance>> get() {
-                return Flux.just(java.util.List.of(
-                    new DefaultServiceInstance("test-service-1", "test-service",
-                        "localhost", WIRE_MOCK.port(), false)
-                ));
+            public Flux<java.util.List<ServiceInstance>> get() {
+                ServiceInstance instance = new DefaultServiceInstance(
+                    "test-service-1",
+                    "test-service",
+                    "localhost",
+                    MOCK_WEB_SERVER.getPort(),
+                    false
+                );
+                return Flux.just(Collections.singletonList(instance));
             }
         };
     }

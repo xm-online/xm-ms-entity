@@ -6,7 +6,6 @@ import com.fasterxml.jackson.annotation.SimpleObjectIdResolver;
 import com.icthh.xm.commons.exceptions.BusinessException;
 import com.icthh.xm.commons.exceptions.ErrorConstants;
 import com.icthh.xm.ms.entity.repository.CalendarRepository;
-import com.icthh.xm.ms.entity.repository.XmEntityRepository;
 import com.icthh.xm.ms.entity.service.dto.CalendarDto;
 import com.icthh.xm.ms.entity.util.AutowireHelper;
 import lombok.extern.slf4j.Slf4j;

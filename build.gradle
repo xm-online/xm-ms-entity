@@ -139,6 +139,7 @@ Closure testLoggingConf = {
 }
 
 test {
+    useJUnitPlatform()
 
     doFirst {
         println '!!! ATTENTION: start execution of non-categorized tests. it may impact test performance !!!'
@@ -156,9 +157,9 @@ test {
     include '**/*IntTest*'
 
     // to run all test that was not categorized
-    useJUnit {
-        excludeCategories(testCategories)
-    }
+//    useJUnit {
+//        excludeCategories(testCategories)
+//    }
 
     // uncomment if the tests reports are not generated
     // see https://github.com/jhipster/generator-jhipster/pull/2771 and https://github.com/jhipster/generator-jhipster/pull/4484
@@ -265,6 +266,13 @@ dependencies {
             exclude group: "org.elasticsearch.client", module: "elasticsearch-rest-client"
         }
     }
+
+    implementation "tools.jackson.core:jackson-databind:3.0.0"
+
+    // Source: https://mvnrepository.com/artifact/tools.jackson.dataformat/jackson-dataformat-csv
+    implementation("tools.jackson.dataformat:jackson-dataformat-csv:3.1.1")
+    /// Source: https://mvnrepository.com/artifact/tools.jackson.module/jackson-module-jsonSchema
+    implementation("tools.jackson.module:jackson-module-jsonSchema:3.1.1")
 
     implementation "io.micrometer:micrometer-registry-prometheus"
     implementation "net.logstash.logback:logstash-logback-encoder"
@@ -434,7 +442,8 @@ dependencies {
     liquibaseRuntime "com.h2database:h2"
     testImplementation "com.adobe.testing:s3mock-junit4:${s3mockVersion}"
     testImplementation "org.awaitility:awaitility:${awaitilityVersion}"
-    testImplementation "org.wiremock:wiremock-jetty12:${wiremockVersion}"
+    testImplementation "com.squareup.okhttp3:okhttp:4.12.0"
+    testImplementation "com.squareup.okhttp3:mockwebserver:4.12.0"
     testImplementation "org.testcontainers:testcontainers:${testcontainersVersion}"
     testImplementation "org.testcontainers:junit-jupiter:${testcontainersVersion}"
     testImplementation "org.testcontainers:postgresql:${testcontainersVersion}"

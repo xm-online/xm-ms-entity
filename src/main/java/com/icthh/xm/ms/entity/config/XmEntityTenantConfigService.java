@@ -1,12 +1,11 @@
 package com.icthh.xm.ms.entity.config;
 
+
 import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
-import static com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 import com.icthh.xm.commons.config.client.config.XmConfigProperties;
 import com.icthh.xm.commons.config.client.service.TenantConfigService;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
@@ -19,6 +18,7 @@ import lombok.Data;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import tools.jackson.dataformat.yaml.YAMLMapper;
 
 @Slf4j
 @Component
@@ -37,10 +37,13 @@ public class XmEntityTenantConfigService extends TenantConfigService {
     public void onRefresh(String updatedKey, String config) {
         try {
             super.onRefresh(updatedKey, config);
-            ObjectMapper objectMapper = new ObjectMapper(new YAMLFactory());
-            objectMapper.registerModule(new JavaTimeModule());
-            objectMapper.configure(FAIL_ON_UNKNOWN_PROPERTIES, false);
-            config = skipNullFIelds(config, objectMapper);
+            ObjectMapper objectMapper = YAMLMapper.builder()
+                    .changeDefaultPropertyInclusion(incl ->
+                            incl.withValueInclusion(NON_NULL)
+                                    .withContentInclusion(NON_NULL)
+                    )
+                    .build();
+            config = skipNullFields(config, objectMapper);
             XmEntityTenantConfig value = objectMapper.readValue(config, XmEntityTenantConfig.class);
             configs.put(getTenantKey(updatedKey), value);
         } catch (Exception e) {
@@ -48,8 +51,7 @@ public class XmEntityTenantConfigService extends TenantConfigService {
         }
     }
 
-    private String skipNullFIelds(String config, ObjectMapper objectMapper) throws java.io.IOException {
-        objectMapper.setSerializationInclusion(NON_NULL);
+    private String skipNullFields(String config, ObjectMapper objectMapper) throws JacksonException {
         return objectMapper.writeValueAsString(objectMapper.readValue(config, Map.class));
     }
 

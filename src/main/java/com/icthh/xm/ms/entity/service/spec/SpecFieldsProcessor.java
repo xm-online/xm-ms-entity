@@ -1,7 +1,6 @@
 package com.icthh.xm.ms.entity.service.spec;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.JsonNode;
 import com.google.common.collect.Sets;
 import com.icthh.xm.ms.entity.domain.spec.TypeSpec;
 import com.icthh.xm.ms.entity.domain.spec.UniqueFieldSpec;
@@ -12,6 +11,7 @@ import org.apache.commons.lang3.StringUtils;
 
 import java.util.Map;
 import java.util.Set;
+import tools.jackson.databind.ObjectMapper;
 
 import static com.icthh.xm.ms.entity.validator.NodeType.OBJECT;
 import static com.icthh.xm.ms.entity.validator.NodeType.getNodeType;
@@ -44,7 +44,7 @@ public class SpecFieldsProcessor {
         }
 
         JsonNode properties = node.get("properties");
-        properties.fieldNames().forEachRemaining(name -> processNode(properties.get(name), jsonPath + "." + name, uniqueFields));
+        properties.propertyNames().forEach(name -> processNode(properties.get(name), jsonPath + "." + name, uniqueFields));
     }
 
     private boolean isObject(JsonNode schemaNode) {

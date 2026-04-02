@@ -1,9 +1,7 @@
 package com.icthh.xm.ms.entity.repository.kafka;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 import com.icthh.xm.commons.logging.util.MdcUtils;
 import com.icthh.xm.commons.security.XmAuthenticationContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
@@ -32,8 +30,7 @@ import java.util.Map;
 public class ProfileEventProducer {
 
     private final KafkaTemplate<String, String> template;
-    private final ObjectMapper mapper = new ObjectMapper().configure(
-        SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false).registerModule(new JavaTimeModule());
+    private final ObjectMapper mapper = new ObjectMapper();
 
     private final TenantContextHolder tenantContextHolder;
     private final XmAuthenticationContextHolder authContextHolder;
@@ -58,7 +55,7 @@ public class ProfileEventProducer {
             event = buildSystemEvent(eventType);
             event.setData(buildDataContent(profile));
             return mapper.writeValueAsString(event);
-        } catch (JsonProcessingException e) {
+        } catch (JacksonException e) {
             log.warn("Event creation error, eventType = {}, data = {}", eventType, event.getData(), e);
         }
         return null;
@@ -70,7 +67,7 @@ public class ProfileEventProducer {
             event = buildSystemEvent(eventType);
             event.setData(data);
             return mapper.writeValueAsString(event);
-        } catch (JsonProcessingException e) {
+        } catch (JacksonException e) {
             log.warn("Event creation error, eventType = {}, data = {}", eventType, event.getData(), e);
         }
         return null;

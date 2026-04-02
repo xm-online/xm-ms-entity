@@ -1,9 +1,9 @@
 package com.icthh.xm.ms.entity.service.processor;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.ObjectWriter;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectWriter;
+import tools.jackson.dataformat.yaml.YAMLFactory;
 import com.icthh.xm.commons.domain.DefinitionSpec;
 import com.icthh.xm.commons.domain.FormSpec;
 import com.icthh.xm.commons.listener.JsonListenerService;
@@ -86,7 +86,7 @@ public class XmEntityDataFormSpecProcessorUnitTest extends AbstractJupiterUnitTe
 
     @Test
     public void shouldThrowIllegalArgumentExceptionWhenProcessTypeSpecWithNotValidJson() {
-        assertThrows(JsonProcessingException.class, () -> {
+        assertThrows(JacksonException.class, () -> {
             XmEntitySpec inputXmEntitySpec = loadXmEntitySpecByFileName("xmentityspec-forms-input");
             TypeSpec typeSpec = inputXmEntitySpec.getTypes().getFirst();
             jsonListenerService.processTenantSpecification(TENANT, RELATIVE_PATH_TO_FILE, "{,}");

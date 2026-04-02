@@ -15,6 +15,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import tools.jackson.databind.json.JsonMapper;
 
 @Configuration
 @Slf4j
@@ -29,7 +30,8 @@ public class WebMvcConfiguration implements WebMvcConfigurer {
 
     @Bean
     public JacksonJsonHttpMessageConverter converter() {
-        return new JacksonJsonHttpMessageConverter();
+        JsonMapper jsonMapper = JsonMapper.builder().build();
+        return new JacksonJsonHttpMessageConverter(jsonMapper);
     }
 
     @Override
