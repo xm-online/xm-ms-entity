@@ -49,7 +49,7 @@ public class JsonValidationService {
 
     private String getReportErrorMessage(Set<Error> report) {
         return report.stream()
-            .map(Error::getMessage)
+            .map(Error::toString)
             .collect(Collectors.joining(" | "));
     }
 

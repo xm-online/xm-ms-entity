@@ -24,6 +24,7 @@ import com.icthh.xm.ms.entity.repository.VoteRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
 import com.icthh.xm.ms.entity.service.VoteService;
 import com.icthh.xm.ms.entity.service.impl.StartUpdateDateGenerationStrategy;
+import com.icthh.xm.ms.entity.util.AutowireHelper;
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -32,6 +33,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
 import org.springframework.http.MediaType;
 
@@ -98,6 +100,9 @@ public class VoteResourceIntTest extends AbstractJupiterSpringBootTest {
     @Autowired
     private VoteMapper voteMapper;
 
+    @Autowired
+    private ApplicationContext applicationContext;
+
     private VoteService voteService;
 
     @Spy
@@ -115,6 +120,7 @@ public class VoteResourceIntTest extends AbstractJupiterSpringBootTest {
     @BeforeEach
     public void setup() {
         MockitoAnnotations.initMocks(this);
+        AutowireHelper.getInstance().setApplicationContext(applicationContext);
 
         when(startUpdateDateGenerationStrategy.generateStartDate()).thenReturn(UPDATED_ENTRY_DATE);
 

@@ -10,6 +10,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import tools.jackson.databind.ObjectMapper;
 import com.icthh.xm.commons.security.XmAuthenticationContext;
 import com.icthh.xm.commons.security.XmAuthenticationContextHolder;
@@ -36,6 +37,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.List;
 import java.util.Set;
+import tools.jackson.databind.json.JsonMapper;
 
 @Slf4j
 public class XmEntityGeneratorServiceIntTest extends AbstractJupiterSpringBootTest {
@@ -54,18 +56,19 @@ public class XmEntityGeneratorServiceIntTest extends AbstractJupiterSpringBootTe
     @Autowired
     private TenantContextHolder tenantContextHolder;
 
-    @Autowired
     private ObjectMapper objectMapper;
 
-    @Mock
+    @MockitoBean
     private XmAuthenticationContextHolder authContextHolder;
 
-    @Mock
+    @MockitoBean
     private XmAuthenticationContext context;
 
     @BeforeEach
     public void init() {
         TenantContextUtils.setTenant(tenantContextHolder, "TEST");
+
+        objectMapper = JsonMapper.builder().build();
 
         when(authContextHolder.getContext()).thenReturn(context);
         when(context.getRequiredUserKey()).thenReturn("userKey");

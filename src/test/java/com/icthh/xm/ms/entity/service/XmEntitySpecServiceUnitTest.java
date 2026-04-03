@@ -1,8 +1,12 @@
 package com.icthh.xm.ms.entity.service;
 
+import com.icthh.xm.ms.entity.web.rest.TestUtil;
 import java.util.HashSet;
+import tools.jackson.core.StreamReadFeature;
+import tools.jackson.databind.DeserializationFeature;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 import tools.jackson.dataformat.yaml.YAMLFactory;
 import com.icthh.xm.commons.config.client.config.XmConfigProperties;
 import com.icthh.xm.commons.config.client.repository.CommonConfigRepository;
@@ -66,6 +70,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+import tools.jackson.dataformat.yaml.YAMLMapper;
 import tools.jackson.module.jsonSchema.JsonSchema;
 
 import static com.google.common.collect.ImmutableMap.of;
@@ -287,7 +292,7 @@ public class XmEntitySpecServiceUnitTest extends AbstractJupiterUnitTest {
 
     @SneakyThrows
     public void prepareConfig(Map<String, Object> map) {
-        tenantConfig.onRefresh("/config/tenants/XM/tenant-config.yml", new ObjectMapper().writeValueAsString(map));
+        tenantConfig.onRefresh("/config/tenants/XM/tenant-config.yml", JsonMapper.builder().build().writeValueAsString(map));
     }
 
     @Test
@@ -534,7 +539,7 @@ public class XmEntitySpecServiceUnitTest extends AbstractJupiterUnitTest {
     @SneakyThrows
     public void testUpdateCustomXmEntityDeletePrivileges() {
         Map<String, Object> configMap = Map.of("dynamicTypeKeyPermission", Map.of("entityDeletion", Boolean.TRUE.toString()));
-        tenantConfig.onRefresh("/config/tenants/XM/tenant-config.yml", new ObjectMapper().writeValueAsString(configMap));
+        tenantConfig.onRefresh("/config/tenants/XM/tenant-config.yml", JsonMapper.builder().build().writeValueAsString(configMap));
 
         String customPrivileges = readFile("config/privileges/custom-privileges.yml");
         String expectedCustomPrivileges = readFile("config/privileges/expected-custom-privileges-with-xm-entity.yml");
@@ -992,7 +997,7 @@ public class XmEntitySpecServiceUnitTest extends AbstractJupiterUnitTest {
 
     @Test
     public void testUpdateTenantByStateWithDefinitionsAndForms() throws Exception {
-        ObjectMapper objectMapper = new ObjectMapper(new YAMLFactory());
+        ObjectMapper objectMapper = YAMLMapper.builder().build();
         String config = getXmEntitySpec("specifications");
         String key = SPEC_FOLDER_URL.replace("{tenantName}", "RESINTTEST") + "/file.yml";
         mockTenant("RESINTTEST");
@@ -1021,7 +1026,7 @@ public class XmEntitySpecServiceUnitTest extends AbstractJupiterUnitTest {
 
     @Test
     public void testUpdateTenantByStateWithDefinitionsAndFormsAndUpdatedJsonFile() throws Exception {
-        ObjectMapper objectMapper = new ObjectMapper(new YAMLFactory());
+        ObjectMapper objectMapper = YAMLMapper.builder().build();
         String config = getXmEntitySpec("specifications");
         String key = SPEC_FOLDER_URL.replace("{tenantName}", "RESINTTEST") + "/file.yml";
         mockTenant("RESINTTEST");
@@ -1076,7 +1081,7 @@ public class XmEntitySpecServiceUnitTest extends AbstractJupiterUnitTest {
 
     @SneakyThrows
     private void assertEqualsTypeSpecFields(String expectedField, String actualField) {
-        ObjectMapper objectMapper = new ObjectMapper();
+        ObjectMapper objectMapper = TestUtil.getJsonMapper();
         Map expected = objectMapper.readValue(expectedField, Map.class);
         Map actual = objectMapper.readValue(actualField, Map.class);
 
@@ -1085,7 +1090,8 @@ public class XmEntitySpecServiceUnitTest extends AbstractJupiterUnitTest {
 
     @SneakyThrows
     private void assertEqualsJson(Map<String, ?> expected, String actual) {
-        ObjectMapper objectMapper = new ObjectMapper();
+
+        ObjectMapper objectMapper = TestUtil.getJsonMapper();
         JsonNode expectedTree = objectMapper.readTree(objectMapper.writeValueAsString(expected));
         JsonNode actualTree = objectMapper.readTree(actual);
         assertEquals(expectedTree, actualTree);
@@ -1093,9 +1099,9 @@ public class XmEntitySpecServiceUnitTest extends AbstractJupiterUnitTest {
 
     @SneakyThrows
     private boolean validateByJsonSchema(String schema, Map<String, Object> value) {
-        ObjectMapper objectMapper = new ObjectMapper();
+        ObjectMapper objectMapper = JsonMapper.builder().build();
         JsonNode valueJsonNode = objectMapper.readTree(objectMapper.writeValueAsString(value));
-        JsonNode schemaNode = new ObjectMapper().readTree(schema);
+        JsonNode schemaNode = JsonMapper.builder().build().readTree(schema);
         SchemaRegistry factory = SchemaRegistry.withDefaultDialect(SpecificationVersion.DRAFT_4);
         Schema jsonSchema = factory.getSchema(schemaNode);
         Set<Error> report = new HashSet<>(jsonSchema.validate(valueJsonNode));

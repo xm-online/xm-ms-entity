@@ -20,6 +20,7 @@ import org.springframework.util.AntPathMatcher;
 import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import tools.jackson.dataformat.yaml.YAMLMapper;
 
 @Slf4j
 @Service
@@ -27,7 +28,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class XmEntityTemplatesSpecService implements RefreshableConfiguration {
 
     private static final String TENANT_NAME = "tenantName";
-    private static final ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+    private static final ObjectMapper mapper = YAMLMapper.builder().build();
     private final AntPathMatcher matcher = new AntPathMatcher();
     private final ConcurrentHashMap<String, Map<String, Template>> templates = new ConcurrentHashMap<>();
     private final ApplicationProperties applicationProperties;

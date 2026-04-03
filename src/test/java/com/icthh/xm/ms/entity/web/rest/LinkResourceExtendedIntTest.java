@@ -87,13 +87,14 @@ public class LinkResourceExtendedIntTest extends AbstractJupiterSpringBootTest {
     private XmEntityRepository xmEntityRepository;
 
     @Autowired
-    private ObjectMapper objectMapper;
-
-    @Autowired
     private XmEntityDynamicPermissionCheckService dynamicPermissionCheckService;
 
     @Autowired
     private LinkMapper linkMapper;
+
+    @Autowired
+    private JacksonJsonHttpMessageConverter jacksonMessageConverter;
+
 
     @Spy
     private StartUpdateDateGenerationStrategy startUpdateDateGenerationStrategy;
@@ -121,7 +122,6 @@ public class LinkResourceExtendedIntTest extends AbstractJupiterSpringBootTest {
             startUpdateDateGenerationStrategy,
             xmEntityRepository,
             dynamicPermissionCheckService);
-        JacksonJsonHttpMessageConverter jacksonMessageConverter = new JacksonJsonHttpMessageConverter();
 
         linkService.setSelf(linkService);
 

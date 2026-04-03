@@ -27,6 +27,7 @@ import org.mockito.Mockito;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
+import tools.jackson.databind.json.JsonMapper;
 
 import static com.icthh.xm.ms.entity.domain.ext.IdOrKey.SELF;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -68,7 +69,7 @@ public class FunctionServiceImplTxControlUnitTest extends AbstractJupiterUnitTes
         dynamicPermissionCheckService = Mockito.mock(XmEntityDynamicPermissionCheckService.class);
         xmEntityTenantConfigService = Mockito.mock(XmEntityTenantConfigService.class);
         functionTxControl = spy(new FunctionTxControlImpl());
-        jsonValidationService = spy(new JsonValidationService(new ObjectMapper()));
+        jsonValidationService = spy(new JsonValidationService(JsonMapper.builder().build()));
         functionResultMapper = spy(new FunctionResultMapperImpl());
 
         functionResultProcessor = new FunctionResultProcessorImpl(xmEntityService, functionContextService, functionResultMapper);

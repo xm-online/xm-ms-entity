@@ -16,7 +16,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Set;
+import tools.jackson.databind.json.JsonMapper;
 import tools.jackson.dataformat.yaml.YAMLFactory;
+import tools.jackson.dataformat.yaml.YAMLMapper;
 
 import static com.icthh.xm.ms.entity.web.rest.XmEntitySaveIntTest.loadFile;
 import static org.junit.Assert.assertTrue;
@@ -35,10 +37,10 @@ public class JsonSchemaGenerationServiceUnitTest extends AbstractJupiterUnitTest
     @SneakyThrows
     public void testXmEntitySpecSchemaGeneration() {
         String jsonSchema = service.generateJsonSchema();
-        ObjectMapper objectMapper = new ObjectMapper(new YAMLFactory());
+        ObjectMapper objectMapper = YAMLMapper.builder().build();
         JsonNode xmentityspec = objectMapper.readTree(loadFile("config/specs/xmentityspec-xm.yml"));
 
-        JsonNode schemaNode = new ObjectMapper().readTree(jsonSchema);
+        JsonNode schemaNode = JsonMapper.builder().build().readTree(jsonSchema);
         SchemaRegistry factory = SchemaRegistry.withDefaultDialect(SpecificationVersion.DRAFT_4);
         Schema schema = factory.getSchema(schemaNode);
         List<Error> report = schema.validate(xmentityspec);

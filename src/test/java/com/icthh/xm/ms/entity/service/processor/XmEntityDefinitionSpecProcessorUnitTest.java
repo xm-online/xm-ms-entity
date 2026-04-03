@@ -20,6 +20,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import tools.jackson.dataformat.yaml.YAMLMapper;
 
 import static com.icthh.xm.ms.entity.service.json.JsonConfigurationListener.XM_ENTITY_SPEC_KEY;
 import static com.icthh.xm.ms.entity.web.rest.XmEntitySaveIntTest.loadFile;
@@ -145,7 +146,7 @@ public class XmEntityDefinitionSpecProcessorUnitTest extends AbstractJupiterUnit
 
     @SneakyThrows
     private XmEntitySpec loadXmEntitySpecByFileName(String name) {
-        ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+        ObjectMapper mapper = YAMLMapper.builder().build();
         return mapper.readValue(loadFile("config/specs/definitions/" + name + ".yml"), XmEntitySpec.class);
     }
 
@@ -161,7 +162,7 @@ public class XmEntityDefinitionSpecProcessorUnitTest extends AbstractJupiterUnit
 
     @SneakyThrows
     private void assertEqualsEntities(XmEntitySpec expected, XmEntitySpec actual) {
-        ObjectMapper objectMapper = new ObjectMapper(new YAMLFactory());
+        ObjectMapper objectMapper = YAMLMapper.builder().build();
         TypeSpec expectedTypeSpec = expected.getTypes().get(0);
         TypeSpec actualTypeSpec = actual.getTypes().get(0);
         Map expectedTree = objectMapper.readValue(expectedTypeSpec.getDataSpec(), Map.class);

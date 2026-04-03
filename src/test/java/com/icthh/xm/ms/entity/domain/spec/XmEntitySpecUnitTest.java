@@ -105,7 +105,7 @@ public class XmEntitySpecUnitTest extends AbstractJupiterUnitTest {
     @Test
     @SneakyThrows
     public void testEquals() {
-        ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+        ObjectMapper mapper = YAMLMapper.builder().build();
         for(val fileName: SPEC_MAIN_FILES) {
 
             XmEntitySpec xmEntitySpecFirst = mapper.readValue(XmEntitySpecUnitTest.class.getClassLoader().getResourceAsStream(fileName), XmEntitySpec.class);
@@ -197,7 +197,7 @@ public class XmEntitySpecUnitTest extends AbstractJupiterUnitTest {
 
     @Test
     public void testParseXmEntitySpecFromYmlForSeveralTenants() throws IOException {
-        ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+        ObjectMapper mapper = YAMLMapper.builder().build();
         String[] tenants = {"test", "resinttest"};
         String configName;
 

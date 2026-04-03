@@ -9,7 +9,9 @@ import static com.icthh.xm.commons.utils.YamlPatchUtils.updateSequenceItem;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.MapperFeature;
 import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.SerializationFeature;
 import com.icthh.xm.commons.config.client.repository.CommonConfigRepository;
 import com.icthh.xm.commons.config.client.service.CommonConfigService;
 import com.icthh.xm.commons.config.domain.Configuration;
@@ -48,6 +50,7 @@ public class XmEntityFunctionManagementService implements FunctionManageService<
                         .withSetterVisibility(JsonAutoDetect.Visibility.NONE)
                         .withCreatorVisibility(JsonAutoDetect.Visibility.NONE)
                 )
+                .disable(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY)
                 .build();
     }
 

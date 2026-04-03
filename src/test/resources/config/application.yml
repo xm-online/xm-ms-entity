@@ -18,6 +18,11 @@ spring:
         name: entity
     main:
       allow-bean-definition-overriding: true
+    jackson:
+        deserialization:
+          fail-on-trailing-tokens: false
+        mapper:
+          sort-properties-alphabetically: false
     cache:
         type: none
     datasource:
@@ -94,6 +99,11 @@ management:
         mail:
             enabled: false # When using the MailService, configure an SMTP server and set this to true
 
+logging:
+    level:
+        org.springframework.http.converter: DEBUG
+        com.fasterxml.jackson: DEBUG
+        tools.jackson: DEBUG
 jhipster:
     clientApp:
       name: 'entityApp'

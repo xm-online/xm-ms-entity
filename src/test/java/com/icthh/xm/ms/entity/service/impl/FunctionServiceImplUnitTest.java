@@ -33,6 +33,7 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
+import tools.jackson.databind.json.JsonMapper;
 
 import static com.icthh.xm.ms.entity.domain.ext.IdOrKey.SELF;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -82,7 +83,7 @@ public class FunctionServiceImplUnitTest extends AbstractJupiterUnitTest {
         functionContextService = Mockito.mock(FunctionContextService.class);
         dynamicPermissionCheckService = Mockito.mock(XmEntityDynamicPermissionCheckService.class);
         xmEntityTenantConfigService = Mockito.mock(XmEntityTenantConfigService.class);
-        jsonValidationService = spy(new JsonValidationService(new ObjectMapper()));
+        jsonValidationService = spy(new JsonValidationService(JsonMapper.builder().build()));
         functionResultMapper = spy(new FunctionResultMapperImpl());
         functionResultProcessor = new FunctionResultProcessorImpl(xmEntityService, functionContextService, functionResultMapper);
         functionService = new XmEntityFunctionServiceImpl(dynamicPermissionCheckService, xmEntitySpecService,
@@ -519,7 +520,7 @@ public class FunctionServiceImplUnitTest extends AbstractJupiterUnitTest {
 
     @Test
     public void validationFailOnInvalidFunctionInputWhenValidationEnabled() {
-        String exceptionMessage = "$.numberArgument: string found, number expected";
+        String exceptionMessage = "/numberArgument: string found, number expected";
 
         FunctionSpec spec = generateFunctionSpec(true);
         when(xmEntitySpecService.findFunction(VALIDATION_FUNCTION, "POST")).thenReturn(Optional.of(spec));
@@ -535,7 +536,7 @@ public class FunctionServiceImplUnitTest extends AbstractJupiterUnitTest {
 
     @Test
     public void validationFailOnInvalidFunctionWithEntityIdInputWhenValidationEnabled() {
-        String exceptionMessage = "$.numberArgument: string found, number expected";
+        String exceptionMessage = "/numberArgument: string found, number expected";
 
         FunctionSpec spec = generateFunctionSpec(true);
         Map<String, Object> functionInput = Map.of("numberArgument", "stringValue");

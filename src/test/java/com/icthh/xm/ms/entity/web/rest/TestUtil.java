@@ -10,7 +10,10 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.time.Instant;
 import java.time.format.DateTimeParseException;
+import tools.jackson.core.StreamReadFeature;
+import tools.jackson.databind.DeserializationFeature;
 import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 
 /**
  * Utility class for testing REST controllers.
@@ -32,14 +35,20 @@ public class TestUtil {
      * @throws IOException
      */
     public static byte[] convertObjectToJsonBytes(Object object) throws IOException {
-        ObjectMapper mapper = new ObjectMapper();
-
+        ObjectMapper mapper = getJsonMapper();
         return mapper.writeValueAsBytes(object);
     }
 
     public static <T> T convertJsonBytesToObject(byte[] bytes, Class<T> clazz) throws IOException {
-        ObjectMapper mapper = new ObjectMapper();
+        ObjectMapper mapper = getJsonMapper();
         return mapper.readValue(bytes, clazz);
+    }
+
+    public static JsonMapper getJsonMapper() {
+        return JsonMapper.builder()
+                .disable(DeserializationFeature.FAIL_ON_TRAILING_TOKENS)
+                .enable(StreamReadFeature.INCLUDE_SOURCE_IN_LOCATION)
+                .build();
     }
 
     /**

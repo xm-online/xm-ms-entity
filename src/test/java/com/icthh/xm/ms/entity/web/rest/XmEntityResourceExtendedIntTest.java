@@ -3,6 +3,9 @@ package com.icthh.xm.ms.entity.web.rest;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.PropertyAccessor;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.google.common.collect.ImmutableMap;
 import static com.google.common.collect.ImmutableMap.of;
 import com.icthh.xm.commons.i18n.error.web.ExceptionTranslator;
@@ -54,6 +57,7 @@ import com.icthh.xm.ms.entity.service.XmEntityProjectionService;
 import com.icthh.xm.ms.entity.service.XmEntityService;
 import com.icthh.xm.ms.entity.service.XmEntitySpecService;
 import com.icthh.xm.ms.entity.service.XmEntityTemplatesSpecService;
+import com.icthh.xm.ms.entity.service.dto.LinkDto;
 import com.icthh.xm.ms.entity.service.dto.XmEntityDto;
 import com.icthh.xm.ms.entity.service.impl.StartUpdateDateGenerationStrategy;
 import com.icthh.xm.ms.entity.service.impl.XmEntityFunctionServiceFacade;
@@ -63,6 +67,7 @@ import com.icthh.xm.ms.entity.service.json.JsonValidationService;
 import static com.icthh.xm.ms.entity.web.rest.TestUtil.sameInstant;
 
 import com.icthh.xm.ms.entity.service.storage.AvatarStorageService;
+import com.icthh.xm.ms.entity.util.AutowireHelper;
 import com.jayway.jsonpath.JsonPath;
 import static java.time.Instant.now;
 import static java.util.Collections.emptyMap;
@@ -71,6 +76,7 @@ import static java.util.Objects.requireNonNull;
 import static java.util.UUID.randomUUID;
 
 import jakarta.persistence.EntityManager;
+import java.nio.charset.StandardCharsets;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -98,6 +104,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
 import org.springframework.http.MediaType;
@@ -334,6 +341,9 @@ public class XmEntityResourceExtendedIntTest extends AbstractJupiterSpringBootTe
     @MockitoSpyBean
     private StartUpdateDateGenerationStrategy startUpdateDateGenerationStrategy;
 
+    @Autowired
+    private ApplicationContext applicationContext;
+
     private MockMvc restXmEntityMockMvc;
 
     private MockMvc restXmEntitySearchMockMvc;
@@ -352,6 +362,8 @@ public class XmEntityResourceExtendedIntTest extends AbstractJupiterSpringBootTe
         TenantContextUtils.setTenant(tenantContextHolder, "RESINTTEST");
 
         MockitoAnnotations.initMocks(this);
+
+        AutowireHelper.getInstance().setApplicationContext(applicationContext);
 
         when(authContextHolder.getContext()).thenReturn(context);
         when(context.getUserKey()).thenReturn(Optional.of("userKey"));

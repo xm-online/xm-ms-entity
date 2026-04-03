@@ -29,6 +29,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.io.InputStream;
 import java.util.Map;
+import tools.jackson.databind.json.JsonMapper;
 
 @Slf4j
 public class XmEntityCommonsIntTest extends AbstractJupiterSpringBootTest {
@@ -89,7 +90,7 @@ public class XmEntityCommonsIntTest extends AbstractJupiterSpringBootTest {
     public void testCommons() {
         initLeps();
         Object result = functionService.execute("NAME", of(), null);
-        Map<String, Object> name = new ObjectMapper().convertValue(result, new TypeReference<Map<String, Object>>() {});
+        Map<String, Object> name = JsonMapper.builder().build().convertValue(result, new TypeReference<Map<String, Object>>() {});
         log.info("RESULT {}", name);
         assertThat(name.get("result")).isEqualTo("RESULT [1, 2, 5] | COMMON_ARGUMENT");
     }

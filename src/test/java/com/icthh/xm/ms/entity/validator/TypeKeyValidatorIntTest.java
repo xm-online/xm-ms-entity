@@ -117,8 +117,7 @@ public class TypeKeyValidatorIntTest extends AbstractJupiterSpringBootTest {
         assertEquals(1, constraintViolations.size());
         String messageTemplate = constraintViolations.iterator().next().getMessageTemplate();
 
-        Object expectedPropertyName = data.keySet().iterator().next();
-        String expectedResult = String.format("[\"$.%s: %s found, %s expected\"]", expectedPropertyName, actualType, expected);
+        String expectedResult = String.format("[\"%s found, %s expected\"]", actualType, expected);
 
         assertEquals(expectedResult, messageTemplate);
     }

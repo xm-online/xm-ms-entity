@@ -8,7 +8,6 @@ import jakarta.persistence.Converter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 
-import java.io.IOException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -18,7 +17,7 @@ import tools.jackson.databind.json.JsonMapper;
 @Converter
 public class MapToStringConverter implements AttributeConverter<Map<String, Object>, String> {
 
-    private ObjectMapper mapper = JsonMapper.builder().build();
+    private final ObjectMapper mapper = JsonMapper.builder().build();
 
     public MapToStringConverter() {
     }

@@ -8,6 +8,7 @@ import com.icthh.xm.commons.exceptions.ErrorConstants;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
 import com.icthh.xm.ms.entity.service.dto.XmEntityDto;
 import com.icthh.xm.ms.entity.util.AutowireHelper;
+import java.util.HashMap;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
@@ -63,5 +64,23 @@ public class XmEntityDtoObjectIdResolver extends SimpleObjectIdResolver {
     @Override
     public boolean canUseFor(ObjectIdResolver resolverType) {
         return resolverType.getClass() == getClass();
+    }
+
+    @Override
+    public void bindItem(ObjectIdGenerator.IdKey id, Object pojo) {
+        if (items == null) {
+            items = new HashMap<>();
+        }
+
+        Object existing = items.get(id);
+
+        if (existing == null) {
+            items.put(id, pojo);
+        } else {
+            // simulate Jackson 2-style - ignore duplicate
+            if (existing != pojo) {
+                log.debug("Duplicate object id detected for id {}. Ignoring new instance.", id.key);
+            }
+        }
     }
 }

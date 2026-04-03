@@ -291,7 +291,7 @@ public class XmEntityServiceImplUnitTest extends AbstractJupiterUnitTest {
 
         log.info(json);
 
-        ObjectMapper objectMapper = new ObjectMapper();
+        ObjectMapper objectMapper = JsonMapper.builder().build();
 
         objectMapper.readValue("{}", FunctionContext.class);
         objectMapper.readValue("{}", Comment.class);

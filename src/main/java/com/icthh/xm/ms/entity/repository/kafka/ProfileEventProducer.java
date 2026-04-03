@@ -20,6 +20,7 @@ import org.springframework.stereotype.Service;
 import java.time.Instant;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import tools.jackson.databind.json.JsonMapper;
 
 /**
  * Kafka event producer for {@link com.icthh.xm.ms.entity.domain.Profile}.
@@ -30,7 +31,7 @@ import java.util.Map;
 public class ProfileEventProducer {
 
     private final KafkaTemplate<String, String> template;
-    private final ObjectMapper mapper = new ObjectMapper();
+    private final ObjectMapper mapper = JsonMapper.builder().build();
 
     private final TenantContextHolder tenantContextHolder;
     private final XmAuthenticationContextHolder authContextHolder;

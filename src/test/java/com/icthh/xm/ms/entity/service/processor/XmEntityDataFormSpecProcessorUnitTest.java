@@ -3,6 +3,7 @@ package com.icthh.xm.ms.entity.service.processor;
 import tools.jackson.core.JacksonException;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.ObjectWriter;
+import tools.jackson.databind.json.JsonMapper;
 import tools.jackson.dataformat.yaml.YAMLFactory;
 import com.icthh.xm.commons.domain.DefinitionSpec;
 import com.icthh.xm.commons.domain.FormSpec;
@@ -19,6 +20,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
 import java.util.Map;
+import tools.jackson.dataformat.yaml.YAMLMapper;
 
 import static com.icthh.xm.ms.entity.service.json.JsonConfigurationListener.XM_ENTITY_SPEC_KEY;
 import static com.icthh.xm.ms.entity.web.rest.XmEntitySaveIntTest.loadFile;
@@ -98,19 +100,19 @@ public class XmEntityDataFormSpecProcessorUnitTest extends AbstractJupiterUnitTe
 
     @SneakyThrows
     private XmEntitySpec loadXmEntitySpecByFileName(String name) {
-        ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+        ObjectMapper mapper = YAMLMapper.builder().build();
         return mapper.readValue(loadFile("config/specs/forms/" + name + ".yml"), XmEntitySpec.class);
     }
 
     @SneakyThrows
     private void assertEqualsEntities(XmEntitySpec expected, XmEntitySpec actual) {
-        ObjectMapper objectMapper = new ObjectMapper(new YAMLFactory());
+        ObjectMapper objectMapper = YAMLMapper.builder().build();
         TypeSpec expectedTypeSpec = expected.getTypes().getFirst();
         TypeSpec actualTypeSpec = actual.getTypes().getFirst();
         Map<?, ?> expectedForm = objectMapper.readValue(expectedTypeSpec.getDataForm(), Map.class);
         Map<?, ?> actualForm = objectMapper.readValue(actualTypeSpec.getDataForm(), Map.class);
 
-        ObjectWriter prettyPrinter = new ObjectMapper().writerWithDefaultPrettyPrinter();
+        ObjectWriter prettyPrinter = JsonMapper.builder().build().writerWithDefaultPrettyPrinter();
         Assertions.assertEquals(prettyPrinter.writeValueAsString(expectedForm), prettyPrinter.writeValueAsString(actualForm));
         Assertions.assertEquals(expectedTypeSpec.getKey(), actualTypeSpec.getKey());
         Assertions.assertEquals(expected.getDefinitions(), actual.getDefinitions());
