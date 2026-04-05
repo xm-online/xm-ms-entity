@@ -15,8 +15,6 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import tools.jackson.core.StreamReadFeature;
-import tools.jackson.databind.DeserializationFeature;
 import tools.jackson.databind.json.JsonMapper;
 
 @Configuration
@@ -31,12 +29,7 @@ public class WebMvcConfiguration implements WebMvcConfigurer {
     }
 
     @Bean
-    public JacksonJsonHttpMessageConverter converter() {
-        JsonMapper jsonMapper = JsonMapper.builder()
-                .disable(DeserializationFeature.FAIL_ON_TRAILING_TOKENS)
-                .enable(StreamReadFeature.INCLUDE_SOURCE_IN_LOCATION)
-                .build();
-
+    public JacksonJsonHttpMessageConverter converter(JsonMapper jsonMapper) {
         return new JacksonJsonHttpMessageConverter(jsonMapper);
     }
 
