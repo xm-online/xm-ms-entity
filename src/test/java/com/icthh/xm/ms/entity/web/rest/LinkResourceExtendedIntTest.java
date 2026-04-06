@@ -155,7 +155,7 @@ public class LinkResourceExtendedIntTest extends AbstractJupiterSpringBootTest {
 
         restLinkMockMvc.perform(post("/api/links")
                                     .contentType(TestUtil.APPLICATION_JSON_UTF8)
-                                    .content(TestUtil.convertObjectToJsonBytes(link)))
+                                    .content(TestUtil.convertObjectToJsonBytes(linkMapper.toDto(link))))
                        .andExpect(status().isCreated())
                        .andExpect(jsonPath("$.startDate").value(MOCKED_START_DATE.toString()))
         ;
@@ -176,7 +176,7 @@ public class LinkResourceExtendedIntTest extends AbstractJupiterSpringBootTest {
         // Create the Link
         restLinkMockMvc.perform(post("/api/links")
                                     .contentType(TestUtil.APPLICATION_JSON_UTF8)
-                                    .content(TestUtil.convertObjectToJsonBytes(link)))
+                                    .content(TestUtil.convertObjectToJsonBytes(linkMapper.toDto(link))))
                        .andDo(this::printMvcResult)
                        .andExpect(status().isCreated())
                        .andExpect(jsonPath("$.startDate").value(MOCKED_START_DATE.toString()));

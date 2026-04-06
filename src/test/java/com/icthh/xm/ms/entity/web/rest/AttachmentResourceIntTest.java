@@ -231,7 +231,7 @@ public class AttachmentResourceIntTest extends AbstractJupiterSpringBootTest {
         // Create the Attachment
         restAttachmentMockMvc.perform(post("/api/attachments")
                                           .contentType(TestUtil.APPLICATION_JSON_UTF8)
-                                          .content(TestUtil.convertObjectToJsonBytes(attachment)))
+                                          .content(TestUtil.convertObjectToJsonBytes(attachmentMapper.toDto(attachment))))
             .andExpect(status().isCreated());
 
         // Validate the Attachment in the database
@@ -311,7 +311,7 @@ public class AttachmentResourceIntTest extends AbstractJupiterSpringBootTest {
         // An entity with an existing ID cannot be created, so this API call must fail
         restAttachmentMockMvc.perform(post("/api/attachments")
                                           .contentType(TestUtil.APPLICATION_JSON_UTF8)
-                                          .content(TestUtil.convertObjectToJsonBytes(attachment)))
+                                          .content(TestUtil.convertObjectToJsonBytes(attachmentMapper.toDto(attachment))))
             .andExpect(status().isBadRequest())
             .andExpect(jsonPath("$.error").value("error.business.idexists"))
             .andExpect(jsonPath("$.error_description").value(notNullValue()))
@@ -333,7 +333,7 @@ public class AttachmentResourceIntTest extends AbstractJupiterSpringBootTest {
 
         restAttachmentMockMvc.perform(post("/api/attachments")
                                           .contentType(TestUtil.APPLICATION_JSON_UTF8)
-                                          .content(TestUtil.convertObjectToJsonBytes(attachment)))
+                                          .content(TestUtil.convertObjectToJsonBytes(attachmentMapper.toDto(attachment))))
             .andExpect(status().isBadRequest())
             .andExpect(jsonPath("$.error").value("error.validation"))
             .andExpect(jsonPath("$.error_description").value(notNullValue()))
@@ -357,7 +357,7 @@ public class AttachmentResourceIntTest extends AbstractJupiterSpringBootTest {
 
         restAttachmentMockMvc.perform(post("/api/attachments")
                                           .contentType(TestUtil.APPLICATION_JSON_UTF8)
-                                          .content(TestUtil.convertObjectToJsonBytes(attachment)))
+                                          .content(TestUtil.convertObjectToJsonBytes(attachmentMapper.toDto(attachment))))
             .andExpect(status().isBadRequest())
             .andExpect(jsonPath("$.error").value("error.validation"))
             .andExpect(jsonPath("$.error_description").value(notNullValue()))
@@ -382,7 +382,7 @@ public class AttachmentResourceIntTest extends AbstractJupiterSpringBootTest {
 
         restAttachmentMockMvc.perform(post("/api/attachments")
                                           .contentType(TestUtil.APPLICATION_JSON_UTF8)
-                                          .content(TestUtil.convertObjectToJsonBytes(attachment)))
+                                          .content(TestUtil.convertObjectToJsonBytes(attachmentMapper.toDto(attachment))))
             .andExpect(status().isBadRequest())
             .andExpect(jsonPath("$.error").value("error.validation"))
             .andExpect(jsonPath("$.error_description").value(notNullValue()))
@@ -407,7 +407,7 @@ public class AttachmentResourceIntTest extends AbstractJupiterSpringBootTest {
 
         restAttachmentMockMvc.perform(post("/api/attachments")
                                           .contentType(TestUtil.APPLICATION_JSON_UTF8)
-                                          .content(TestUtil.convertObjectToJsonBytes(attachment)))
+                                          .content(TestUtil.convertObjectToJsonBytes(attachmentMapper.toDto(attachment))))
             .andExpect(status().isBadRequest())
             .andExpect(jsonPath("$.error").value("error.validation"))
             .andExpect(jsonPath("$.error_description").value(notNullValue()))
@@ -525,7 +525,7 @@ public class AttachmentResourceIntTest extends AbstractJupiterSpringBootTest {
         // If the entity doesn't have an ID, it will be created instead of just being updated
         restAttachmentMockMvc.perform(put("/api/attachments")
                                           .contentType(TestUtil.APPLICATION_JSON_UTF8)
-                                          .content(TestUtil.convertObjectToJsonBytes(attachment)))
+                                          .content(TestUtil.convertObjectToJsonBytes(attachmentMapper.toDto(attachment))))
             .andExpect(status().isCreated());
 
         // Validate the Attachment in the database

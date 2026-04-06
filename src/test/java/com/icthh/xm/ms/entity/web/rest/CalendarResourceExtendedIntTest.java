@@ -167,7 +167,7 @@ public class CalendarResourceExtendedIntTest extends AbstractJupiterSpringBootTe
 
         restCalendarMockMvc.perform(post("/api/calendars")
                                     .contentType(TestUtil.APPLICATION_JSON_UTF8)
-                                    .content(TestUtil.convertObjectToJsonBytes(calendar)))
+                                    .content(TestUtil.convertObjectToJsonBytes(calendarMapper.toDto(calendar))))
                        .andExpect(status().isCreated())
                        .andExpect(jsonPath("$.startDate").value(MOCKED_START_DATE.toString()))
         ;
@@ -188,7 +188,7 @@ public class CalendarResourceExtendedIntTest extends AbstractJupiterSpringBootTe
         // Create the Calendar
         restCalendarMockMvc.perform(post("/api/calendars")
                                     .contentType(TestUtil.APPLICATION_JSON_UTF8)
-                                    .content(TestUtil.convertObjectToJsonBytes(calendar)))
+                                    .content(TestUtil.convertObjectToJsonBytes(calendarMapper.toDto(calendar))))
                        .andExpect(status().isCreated())
                        .andExpect(jsonPath("$.startDate").value(MOCKED_START_DATE.toString()));
 

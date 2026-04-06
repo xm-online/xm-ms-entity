@@ -215,7 +215,7 @@ public class AttachmentResourceFsIntTest extends AbstractJupiterSpringBootTest {
 
         var result = restAttachmentMockMvc.perform(post("/api/attachments")
                 .contentType(TestUtil.APPLICATION_JSON_UTF8)
-                .content(TestUtil.convertObjectToJsonBytes(attachment)));
+                .content(TestUtil.convertObjectToJsonBytes(attachmentMapper.toDto(attachment))));
 
         result.andExpect(status().isCreated());
 
@@ -258,7 +258,7 @@ public class AttachmentResourceFsIntTest extends AbstractJupiterSpringBootTest {
 
         var result = restAttachmentMockMvc.perform(post("/api/attachments")
             .contentType(TestUtil.APPLICATION_JSON_UTF8)
-            .content(TestUtil.convertObjectToJsonBytes(attachment)));
+            .content(TestUtil.convertObjectToJsonBytes(attachmentMapper.toDto(attachment))));
 
         result.andExpect(status().isCreated());
 
@@ -298,7 +298,7 @@ public class AttachmentResourceFsIntTest extends AbstractJupiterSpringBootTest {
 
         var result = restAttachmentMockMvc.perform(post("/api/attachments")
             .contentType(TestUtil.APPLICATION_JSON_UTF8)
-            .content(TestUtil.convertObjectToJsonBytes(attachment)));
+            .content(TestUtil.convertObjectToJsonBytes(attachmentMapper.toDto(attachment))));
 
         result.andExpect(status().isCreated());
 

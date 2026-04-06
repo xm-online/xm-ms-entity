@@ -196,7 +196,7 @@ public class FunctionContextResourceIntTest extends AbstractJupiterSpringBootTes
         // Create the FunctionContext
         restFunctionContextMockMvc.perform(post("/api/function-contexts")
             .contentType(TestUtil.APPLICATION_JSON_UTF8)
-            .content(TestUtil.convertObjectToJsonBytes(functionContext)))
+            .content(TestUtil.convertObjectToJsonBytes(functionContextMapper.toDto(functionContext))))
             .andExpect(status().isCreated());
 
         // Validate the FunctionContext in the database
@@ -223,7 +223,7 @@ public class FunctionContextResourceIntTest extends AbstractJupiterSpringBootTes
         // An entity with an existing ID cannot be created, so this API call must fail
         restFunctionContextMockMvc.perform(post("/api/function-contexts")
             .contentType(TestUtil.APPLICATION_JSON_UTF8)
-            .content(TestUtil.convertObjectToJsonBytes(functionContext)))
+            .content(TestUtil.convertObjectToJsonBytes(functionContextMapper.toDto(functionContext))))
             .andExpect(status().isBadRequest());
 
         // Validate the Alice in the database
@@ -242,7 +242,7 @@ public class FunctionContextResourceIntTest extends AbstractJupiterSpringBootTes
 
         restFunctionContextMockMvc.perform(post("/api/function-contexts")
             .contentType(TestUtil.APPLICATION_JSON_UTF8)
-            .content(TestUtil.convertObjectToJsonBytes(functionContext)))
+            .content(TestUtil.convertObjectToJsonBytes(functionContextMapper.toDto(functionContext))))
             .andExpect(status().isBadRequest());
 
         List<FunctionContext> functionContextList = functionContextRepository.findAll();
@@ -260,7 +260,7 @@ public class FunctionContextResourceIntTest extends AbstractJupiterSpringBootTes
 
         restFunctionContextMockMvc.perform(post("/api/function-contexts")
             .contentType(TestUtil.APPLICATION_JSON_UTF8)
-            .content(TestUtil.convertObjectToJsonBytes(functionContext)))
+            .content(TestUtil.convertObjectToJsonBytes(functionContextMapper.toDto(functionContext))))
             .andExpect(status().isBadRequest());
 
         List<FunctionContext> functionContextList = functionContextRepository.findAll();
@@ -279,7 +279,7 @@ public class FunctionContextResourceIntTest extends AbstractJupiterSpringBootTes
 
         restFunctionContextMockMvc.perform(post("/api/function-contexts")
             .contentType(TestUtil.APPLICATION_JSON_UTF8)
-            .content(TestUtil.convertObjectToJsonBytes(functionContext)))
+            .content(TestUtil.convertObjectToJsonBytes(functionContextMapper.toDto(functionContext))))
             .andExpect(status().isBadRequest());
 
         List<FunctionContext> functionContextList = functionContextRepository.findAll();
@@ -386,7 +386,7 @@ public class FunctionContextResourceIntTest extends AbstractJupiterSpringBootTes
         // If the entity doesn't have an ID, it will be created instead of just being updated
         restFunctionContextMockMvc.perform(put("/api/function-contexts")
             .contentType(TestUtil.APPLICATION_JSON_UTF8)
-            .content(TestUtil.convertObjectToJsonBytes(functionContext)))
+            .content(TestUtil.convertObjectToJsonBytes(functionContextMapper.toDto(functionContext))))
             .andExpect(status().isCreated());
 
         // Validate the FunctionContext in the database

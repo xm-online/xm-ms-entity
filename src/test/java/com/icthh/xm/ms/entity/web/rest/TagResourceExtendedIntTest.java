@@ -137,7 +137,7 @@ public class TagResourceExtendedIntTest extends AbstractJupiterSpringBootTest {
 
         restTagMockMvc.perform(post("/api/tags")
                                    .contentType(TestUtil.APPLICATION_JSON_UTF8)
-                                   .content(TestUtil.convertObjectToJsonBytes(tag)))
+                                   .content(TestUtil.convertObjectToJsonBytes(tagMapper.toDto(tag))))
                       .andExpect(status().isCreated())
                       .andExpect(jsonPath("$.startDate").value(MOCKED_START_DATE.toString()))
         ;
@@ -158,7 +158,7 @@ public class TagResourceExtendedIntTest extends AbstractJupiterSpringBootTest {
         // Create the Tag
         restTagMockMvc.perform(post("/api/tags")
                                    .contentType(TestUtil.APPLICATION_JSON_UTF8)
-                                   .content(TestUtil.convertObjectToJsonBytes(tag)))
+                                   .content(TestUtil.convertObjectToJsonBytes(tagMapper.toDto(tag))))
                       .andExpect(status().isCreated())
                       .andExpect(jsonPath("$.startDate").value(MOCKED_START_DATE.toString()));
 
