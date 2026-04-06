@@ -1,6 +1,9 @@
 package com.icthh.xm.ms.entity.service;
 
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import tools.jackson.databind.MapperFeature;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.dataformat.yaml.YAMLFactory;
 import com.icthh.xm.commons.config.swagger.DynamicSwaggerConfiguration;
@@ -68,8 +71,6 @@ public class FunctionSwaggerIntTest extends AbstractJupiterSpringBootTest {
         var swagger = dynamicSwaggerFunctionGenerator.generateSwagger("https://xm.domain.com:8080", null);
         var expected = readExpected("config/swagger/expected-default.yml");
         assertEquals(toYml(expected), toYml(swagger));
-        //todo change generator swagger for date -> string with format -> date-time
-
     }
 
     @Test
@@ -211,7 +212,10 @@ public class FunctionSwaggerIntTest extends AbstractJupiterSpringBootTest {
 
     @SneakyThrows
     private SwaggerModel readExpected(String path) {
-        return new ObjectMapper(new YAMLFactory()).readValue(loadFile(path), SwaggerModel.class);
+        return YAMLMapper.builder()
+                .disable(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY)
+                .build()
+                .readValue(loadFile(path), SwaggerModel.class);
     }
 
     public void initConfig(Map<String, String> files) {
