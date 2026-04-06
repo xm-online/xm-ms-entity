@@ -227,7 +227,7 @@ public class TestMnpProcessIntTest extends AbstractSpringBootTest {
         MockitoAnnotations.initMocks(this);
         TenantContextUtils.setTenant(tenantContextHolder, "XM");
 
-        var basePath = "/home/yredko/IdeaProjects/mw-ms-config-repository-new";
+        var basePath = "/Users/serhii.senko/work/VF/prod/mw-ms-config-repository";
         Collection<File> files = FileUtils.listFiles(new File(basePath + "/config/tenants/XM/entity"), null, true);
         Map<String, String> fileCache = new HashMap<>();
         refreshableConfigurations.stream().filter(it -> it instanceof XmLepScriptConfigServerResourceLoader).forEach(it -> {
