@@ -227,7 +227,7 @@ public class TestMnpProcessIntTest extends AbstractSpringBootTest {
         MockitoAnnotations.initMocks(this);
         TenantContextUtils.setTenant(tenantContextHolder, "XM");
 
-        var basePath = "/Users/serhii.senko/work/VF/prod/mw-ms-config-repository";
+        var basePath = "/home/yredko/IdeaProjects/mw-ms-config-repository-new";
         Collection<File> files = FileUtils.listFiles(new File(basePath + "/config/tenants/XM/entity"), null, true);
         Map<String, String> fileCache = new HashMap<>();
         refreshableConfigurations.stream().filter(it -> it instanceof XmLepScriptConfigServerResourceLoader).forEach(it -> {
@@ -750,7 +750,7 @@ public class TestMnpProcessIntTest extends AbstractSpringBootTest {
     public void testReturnNumber() {
         mockServer();
         reset(kafkaTemplateService);
-        prepareTenantConfig(false, 180);
+        prepareTenantConfig(false, true, 180);
         ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
         var returnNumber = objectMapper.readValue(readFile("mnp/return_number.json"), XmEntity.class);
         var returnNumberResult = objectMapper.readValue(readFile("mnp/return_number.json"), XmEntity.class);
@@ -820,7 +820,7 @@ public class TestMnpProcessIntTest extends AbstractSpringBootTest {
     public void testReturnNumberNewBilling() {
         mockServer();
         reset(kafkaTemplateService);
-        prepareTenantConfig(true, 180);
+        prepareTenantConfig(true, true, 180);
         ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
         var returnNumberResult = objectMapper.readValue(readFile("mnp/return_number.json"), XmEntity.class);
         String uuid = "d0b00a0c-0000-498f-b51b-4ac759fc6414";
@@ -862,7 +862,7 @@ public class TestMnpProcessIntTest extends AbstractSpringBootTest {
 
         mockCheckIsNewBilling("{\"id\": \"SXID380662582086\",\"characteristic\": [{\"name\": \"status\",\"value\": \"NOT_FOUND\"}]}");
 
-        XmEntity result = createPortOutRequest("Anonymous", this::mockComparePersonalDataAnonymous, false, "ACCEPTED");
+        XmEntity result = createPortOutRequest("Anonymous", this::mockComparePersonalDataAnonymous, false, "ACCEPTED", true);
 
         functionService.execute("UPDATE-STATUS", IdOrKey.of(result.getId()), new HashMap<>(Map.of(
             "stateKey", "SERVICE-PORT-OUT-ON"
@@ -894,7 +894,7 @@ public class TestMnpProcessIntTest extends AbstractSpringBootTest {
 
         reset(kafkaTemplateService);
         mockServer();
-        XmEntity result = createPortOutRequest("Individual", this::mockComparePersonalDataIndividual, false, "ACCEPTED");
+        XmEntity result = createPortOutRequest("Individual", this::mockComparePersonalDataIndividual, false, "ACCEPTED", true);
 
         functionService.execute("UPDATE-STATUS", IdOrKey.of(result.getId()), new HashMap<>(Map.of(
             "stateKey", "SERVICE-PORT-OUT-ON"
@@ -925,7 +925,7 @@ public class TestMnpProcessIntTest extends AbstractSpringBootTest {
         WIRE_MOCK.stubFor(post(urlPathEqualTo("/tmf-api/processFlowManagement/v4/processFlow"))
             .willReturn(aResponse().withStatus(200)));
 
-        XmEntity result = createPortOutRequest("Anonymous", this::mockComparePersonalDataAnonymousNewBilling, true, "ACCEPTED");
+        XmEntity result = createPortOutRequest("Anonymous", this::mockComparePersonalDataAnonymousNewBilling, true, "ACCEPTED", true);
 
         functionService.execute("UPDATE-STATUS", IdOrKey.of(result.getId()), new HashMap<>(Map.of(
             "stateKey", "SERVICE-PORT-OUT-ON"
@@ -962,7 +962,7 @@ public class TestMnpProcessIntTest extends AbstractSpringBootTest {
 
         reset(kafkaTemplateService);
         mockServer();
-        XmEntity result = createPortOutRequest("Individual", this::mockIndividualRejectNewBilling, true, "REJECTED");
+        XmEntity result = createPortOutRequest("Individual", this::mockIndividualRejectNewBilling, true, "REJECTED", true);
 
         assertSasTables(result,
             List.of("REJECTED", "REJECTED", "REJECTED", "REJECTED"),
@@ -1085,7 +1085,7 @@ public class TestMnpProcessIntTest extends AbstractSpringBootTest {
 
         reset(kafkaTemplateService);
         mockServer();
-        XmEntity result = createPortOutRequest("Individual", this::mockComparePersonalDataIndividualNewBilling, true, "ACCEPTED");
+        XmEntity result = createPortOutRequest("Individual", this::mockComparePersonalDataIndividualNewBilling, true, "ACCEPTED", true);
 
         functionService.execute("UPDATE-STATUS", IdOrKey.of(result.getId()), new HashMap<>(Map.of(
             "stateKey", "SERVICE-PORT-OUT-ON"
@@ -1118,7 +1118,7 @@ public class TestMnpProcessIntTest extends AbstractSpringBootTest {
         reset(kafkaTemplateService);
         mockServer();
         XmEntity result = createPortOutRequest("Organization",
-            () -> mockComparePersonalDataOrganizationNewBilling("Organization"), true, "ACCEPTED");
+            () -> mockComparePersonalDataOrganizationNewBilling("Organization"), true, "ACCEPTED", true);
 
         functionService.execute("UPDATE-STATUS", IdOrKey.of(result.getId()), new HashMap<>(Map.of(
             "stateKey", "SERVICE-PORT-OUT-ON"
@@ -1151,7 +1151,7 @@ public class TestMnpProcessIntTest extends AbstractSpringBootTest {
         reset(kafkaTemplateService);
         mockServer();
         XmEntity result = createPortOutRequest("Fop",
-            () -> mockComparePersonalDataOrganizationNewBilling("Fop"), true, "ACCEPTED");
+            () -> mockComparePersonalDataOrganizationNewBilling("Fop"), true, "ACCEPTED", true);
 
         functionService.execute("UPDATE-STATUS", IdOrKey.of(result.getId()), new HashMap<>(Map.of(
             "stateKey", "SERVICE-PORT-OUT-ON"
@@ -1176,6 +1176,33 @@ public class TestMnpProcessIntTest extends AbstractSpringBootTest {
     @Test
     @SneakyThrows
     @DirtiesContext
+    public void testPortOutRequestWithoutCompareAfterCreate() {
+        mockCheckIsNewBilling("{\"id\": \"SXID380662582086\",\"characteristic\": [{\"name\": \"status\",\"value\": \"NOT_FOUND\"}]}");
+
+        reset(kafkaTemplateService);
+        mockServer();
+        XmEntity result = createPortOutRequest("Individual", this::mockComparePersonalDataIndividual, false, "ACCEPTED", false);
+
+        functionService.execute("UPDATE-STATUS", IdOrKey.of(result.getId()), new HashMap<>(Map.of(
+            "stateKey", "SERVICE-PORT-OUT-ON"
+        )));
+        assertSasTables(result,
+            List.of("REJECTED", "SERVICE-PORT-OUT-ON", "SERVICE-PORT-OUT-ON", "REJECTED"),
+            List.of("NEW", "ACCEPTED", "SERVICE-PORT-OUT-ON"));
+        verifyKafkaEvent(result, "SERVICE-PORT-OUT-ON");
+
+        runDeactivateForPortOutRequest(result, false);
+        finishPortOutRequest(result);
+
+        WIRE_MOCK.verify(putRequestedFor(urlEqualTo("/crm/api/v1/portingRequest")));
+        wireMockServer.stop();
+
+        verifyNoMoreInteractions(kafkaTemplateService);
+    }
+
+    @Test
+    @SneakyThrows
+    @DirtiesContext
     public void testLdbRejectPortOutRequestRejected() {
         reset(kafkaTemplateService);
         mockServer();
@@ -1186,7 +1213,7 @@ public class TestMnpProcessIntTest extends AbstractSpringBootTest {
         WIRE_MOCK.stubFor(put(urlEqualTo("/cdb/api/v1/portingRequest/d9b25a0c-2817-498f-b51b-4ac759fc6445/reject"))
             .willReturn(aResponse().withStatus(200)));
 
-        XmEntity result = savePortOutRequest("Anonymous", this::mockComparePersonalDataAnonymousNewBilling, true, "ACCEPTED");
+        XmEntity result = savePortOutRequest("Anonymous", this::mockComparePersonalDataAnonymousNewBilling, true, "ACCEPTED", true);
         Long portOutId = result.getId();
         String msisdn = (String) ((List<Map<String, Object>>) result.getData().get("numbers")).stream()
             .map(it -> it.get("msisdn")).findFirst().get();
@@ -1194,7 +1221,7 @@ public class TestMnpProcessIntTest extends AbstractSpringBootTest {
         TopicConfig topicConfig = new TopicConfig();
         topicConfig.setTopicName("ldb-portout-reject-queue");
         topicConfig.setTypeKey("ldb-portout-reject");
-        String value = "{\"portOutId\": " + portOutId + ", \"msisdn\": \"" + msisdn + "\" }";
+        String value = "{\"id\": " + portOutId + ", \"msisdn\": \"" + msisdn + "\" }";
         messageService.onMessage(value, topicConfig);
 
         XmEntity actualEntity = xmEntityService.findOne(IdOrKey.of(result.getId()));
@@ -1246,7 +1273,7 @@ public class TestMnpProcessIntTest extends AbstractSpringBootTest {
         WIRE_MOCK.stubFor(post(urlPathEqualTo("/tmf-api/processFlowManagement/v4/processFlow"))
             .willReturn(aResponse().withStatus(200)));
 
-        XmEntity result = createPortOutRequest("Anonymous", this::mockComparePersonalDataAnonymousNewBilling, true, "ACCEPTED");
+        XmEntity result = createPortOutRequest("Anonymous", this::mockComparePersonalDataAnonymousNewBilling, true, "ACCEPTED", true);
         Long portOutId = result.getId();
         String msisdn = (String) ((List<Map<String, Object>>) result.getData().get("numbers")).stream()
             .map(it -> it.get("msisdn")).findFirst().get();
@@ -1254,7 +1281,7 @@ public class TestMnpProcessIntTest extends AbstractSpringBootTest {
         TopicConfig topicConfig = new TopicConfig();
         topicConfig.setTopicName("ldb-portout-reject-queue");
         topicConfig.setTypeKey("ldb-portout-reject");
-        String value = "{\"portOutId\": " + portOutId + ", \"msisdn\": \"" + msisdn + "\" }";
+        String value = "{\"id\": " + portOutId + ", \"msisdn\": \"" + msisdn + "\" }";
         messageService.onMessage(value, topicConfig);
 
         XmEntity actualEntity = xmEntityService.findOne(IdOrKey.of(result.getId()));
@@ -1348,8 +1375,9 @@ public class TestMnpProcessIntTest extends AbstractSpringBootTest {
 
     @NotNull
     @SneakyThrows
-    private XmEntity createPortOutRequest(String partyType, Runnable mockComparePersonalData, boolean isNewBilling, String nextStatus) throws IOException {
-        XmEntity result = savePortOutRequest(partyType, mockComparePersonalData, isNewBilling, nextStatus);
+    private XmEntity createPortOutRequest(String partyType, Runnable mockComparePersonalData, boolean isNewBilling,
+                                          String nextStatus, boolean executeCompareAfterCreate) throws IOException {
+        XmEntity result = savePortOutRequest(partyType, mockComparePersonalData, isNewBilling, nextStatus, executeCompareAfterCreate);
 
         // event (uuid=d0349bb3-8be3-423a-96d4-4cd1ea3e30df, id=14228938, key=null, name=null, typeKey=portOutRequestNew, stateKey=null, createdBy=middleware, startDate=2025-04-10T17:58:22.874629Z, endDate=2025-04-13T17:58:22.874629Z, handlingTime=2025-04-10T17:58:22.874760Z, channelType=QUEUE, data={processId=e3bb2655-0afa-4525-8093-1048d0930046, userKey=middleware, id=108820670})
 
@@ -1384,10 +1412,10 @@ public class TestMnpProcessIntTest extends AbstractSpringBootTest {
     }
 
     @SneakyThrows
-    private XmEntity savePortOutRequest(String partyType, Runnable mockComparePersonalData, boolean isNewBilling, String nextStatus) {
+    private XmEntity savePortOutRequest(String partyType, Runnable mockComparePersonalData, boolean isNewBilling, String nextStatus, boolean executeCompareAfterCreate) {
         mockPortOutCreate(isNewBilling);
         mockComparePersonalData.run();
-        prepareTenantConfig(isNewBilling, 0);
+        prepareTenantConfig(isNewBilling, executeCompareAfterCreate, 0);
 
         ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
         XmEntity portOut = objectMapper.readValue(getClass().getClassLoader().getResourceAsStream("mnp/portOutRequest" + partyType + ".json"), XmEntity.class);
@@ -1397,7 +1425,7 @@ public class TestMnpProcessIntTest extends AbstractSpringBootTest {
         assertNotNull(result.getId());
         assertSasTables(result, List.of("NEW", "NEW", "NEW", "NEW"), List.of("NEW"));
 
-        verifyComparePersonalDataKafkaEvent(result);
+        verifyComparePersonalDataKafkaEvent(result, executeCompareAfterCreate);
         if (!nextStatus.equals("REJECTED")) {
             verifyPortOutStillNewAfterKafkaCompare(result);
         }
@@ -1406,10 +1434,12 @@ public class TestMnpProcessIntTest extends AbstractSpringBootTest {
     }
 
     @SneakyThrows
-    private void verifyComparePersonalDataKafkaEvent(XmEntity result) {
-        verify(kafkaTemplateService).send("mnp-compare-personal-data-queue",
-            Base64.getEncoder().encodeToString(objectMapper.writeValueAsBytes(Map.of("portOutId", result.getId())))
-        );
+    private void verifyComparePersonalDataKafkaEvent(XmEntity result, boolean executeCompareAfterCreate) {
+        if (executeCompareAfterCreate) {
+            verify(kafkaTemplateService).send("mnp-compare-personal-data-queue",
+                Base64.getEncoder().encodeToString(objectMapper.writeValueAsBytes(Map.of("portOutId", result.getId())))
+            );
+        }
         verifyNoMoreInteractions(kafkaTemplateService);
         reset(kafkaTemplateService);
     }
@@ -1498,7 +1528,7 @@ public class TestMnpProcessIntTest extends AbstractSpringBootTest {
     @NotNull
     private XmEntity createPortIn(boolean isNewBilling, String name) throws IOException {
         mockPortInCreate(isNewBilling);
-        prepareTenantConfig(isNewBilling, 180);
+        prepareTenantConfig(isNewBilling, true, 180);
 
         ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
         XmEntity portIn = objectMapper.readValue(getClass().getClassLoader().getResourceAsStream(name), XmEntity.class);
@@ -1657,7 +1687,7 @@ public class TestMnpProcessIntTest extends AbstractSpringBootTest {
             List.of("VERIFICATION-STARTED", "REGISTERED", "ACCEPTED", "CONFIRMED", "STARTED", "ACTIVATED", "PORTED"));
     }
 
-    private void prepareTenantConfig(boolean isNewBilling, int taskPeriod) throws JsonProcessingException {
+    private void prepareTenantConfig(boolean isNewBilling, boolean executeCompareAfterCreate, int taskPeriod) throws JsonProcessingException {
         HashMap<String, Object> tenantConfig = new HashMap<>(tenantConfigService.getConfig());
         Map<String, Object> scheduler = new HashMap<>((Map<String, Object>) tenantConfig.get("scheduler"));
         Map<String, Object> portOutRequestNew = new HashMap<>((Map<String, Object>) scheduler.get("portOutRequestNew"));
@@ -1687,6 +1717,7 @@ public class TestMnpProcessIntTest extends AbstractSpringBootTest {
         newBillingCheck.get("newBillingCheckEnabledFor").put("ANONYMOUS", true);
         newBillingCheck.get("newBillingCheckEnabledFor").put("ORGANIZATION", true);
         newBillingCheck.get("newBillingCheckEnabledFor").put("FOP", true);
+        ((Map<String, Object>) tenantConfig.get("ldb")).put("executeCompareAfterCreate", executeCompareAfterCreate);
 
         tenantConfigService.onRefresh(TENANT_CONFIG_YML, new ObjectMapper().writeValueAsString(tenantConfig));
     }
