@@ -120,7 +120,7 @@ public class VoteResourceIntTest extends AbstractJupiterSpringBootTest {
     @BeforeEach
     public void setup() {
         MockitoAnnotations.initMocks(this);
-        AutowireHelper.getInstance().setApplicationContext(applicationContext);
+        
 
         when(startUpdateDateGenerationStrategy.generateStartDate()).thenReturn(UPDATED_ENTRY_DATE);
 

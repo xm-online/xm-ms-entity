@@ -39,6 +39,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @WithMockUser(authorities = {"SUPER-ADMIN"})
 public class XmEntityDtoJsonSerializationIntTest extends AbstractJupiterSpringBootTest {
 
+    @Autowired
     private JsonMapper objectMapper;
 
     @Autowired
@@ -62,7 +63,6 @@ public class XmEntityDtoJsonSerializationIntTest extends AbstractJupiterSpringBo
     @BeforeEach
     public void setup() {
         TenantContextUtils.setTenant(tenantContextHolder, "RESINTTEST");
-        objectMapper = JsonMapper.builder().build();
     }
 
     @AfterEach

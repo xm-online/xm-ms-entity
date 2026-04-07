@@ -56,6 +56,7 @@ public class XmEntityGeneratorServiceIntTest extends AbstractJupiterSpringBootTe
     @Autowired
     private TenantContextHolder tenantContextHolder;
 
+    @Autowired
     private ObjectMapper objectMapper;
 
     @MockitoBean
@@ -67,8 +68,6 @@ public class XmEntityGeneratorServiceIntTest extends AbstractJupiterSpringBootTe
     @BeforeEach
     public void init() {
         TenantContextUtils.setTenant(tenantContextHolder, "TEST");
-
-        objectMapper = JsonMapper.builder().build();
 
         when(authContextHolder.getContext()).thenReturn(context);
         when(context.getRequiredUserKey()).thenReturn("userKey");

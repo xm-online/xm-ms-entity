@@ -26,6 +26,13 @@ import java.util.Map;
 public class XmEntityObjectIdResolver extends SimpleObjectIdResolver {
     protected Map<ObjectIdGenerator.IdKey,Object> items;
 
+    private XmEntityRepository repository;
+
+    @Autowired
+    public XmEntityObjectIdResolver(XmEntityRepository repository) {
+        this.repository = repository;
+    }
+
     public XmEntityObjectIdResolver() {
         log.debug("XmEntity object id resolver inited");
     }
@@ -37,7 +44,7 @@ public class XmEntityObjectIdResolver extends SimpleObjectIdResolver {
     public Object resolveId(final ObjectIdGenerator.IdKey id) {
         Object entity = (items != null && items.containsKey(id))
             ? items.get(id)
-            : getRepository().findById((Long) id.key).orElse(null);
+            : repository.findById((Long) id.key).orElse(null);
 
         if (entity == null) {
             throw new BusinessException(ErrorConstants.ERR_NOTFOUND, "Can not resolve XmEntity by ID: " + id.key);
@@ -46,16 +53,12 @@ public class XmEntityObjectIdResolver extends SimpleObjectIdResolver {
         return entity;
     }
 
-    public XmEntityRepository getRepository() {
-        return AutowireHelper.getInstance().getBean(XmEntityRepository.class);
-    }
-
     /**
      * {@inheritDoc}
      */
     @Override
     public ObjectIdResolver newForDeserialization(final Object context) {
-        return new XmEntityObjectIdResolver();
+        return new XmEntityObjectIdResolver(repository);
     }
 
     @Override

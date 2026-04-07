@@ -9,6 +9,7 @@ import com.icthh.xm.ms.entity.repository.CalendarRepository;
 import com.icthh.xm.ms.entity.service.dto.CalendarDto;
 import com.icthh.xm.ms.entity.util.AutowireHelper;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
@@ -22,13 +23,19 @@ import org.springframework.stereotype.Component;
 @Slf4j
 public class CalendarDtoObjectIdResolver extends SimpleObjectIdResolver {
 
+    private CalendarRepository repository;
+
+    @Autowired
+    public CalendarDtoObjectIdResolver(CalendarRepository repository) {
+        this.repository = repository;
+    }
+
     public CalendarDtoObjectIdResolver() {
         log.debug("CalendarDto object id resolver inited");
     }
 
     @Override
     public Object resolveId(final ObjectIdGenerator.IdKey id) {
-        CalendarRepository repository = getRepository();
         var entity = repository.findById((Long) id.key).orElseThrow(
             () -> new BusinessException(ErrorConstants.ERR_NOTFOUND,
                 "Can not resolve Calendar by ID: " + id.key));
@@ -38,12 +45,8 @@ public class CalendarDtoObjectIdResolver extends SimpleObjectIdResolver {
         return dto;
     }
 
-    private CalendarRepository getRepository() {
-        return AutowireHelper.getInstance().getBean(CalendarRepository.class);
-    }
-
     @Override
     public ObjectIdResolver newForDeserialization(final Object context) {
-        return new CalendarDtoObjectIdResolver();
+        return new CalendarDtoObjectIdResolver(repository);
     }
 }

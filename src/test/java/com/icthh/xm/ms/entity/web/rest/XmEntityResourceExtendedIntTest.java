@@ -363,7 +363,7 @@ public class XmEntityResourceExtendedIntTest extends AbstractJupiterSpringBootTe
 
         MockitoAnnotations.initMocks(this);
 
-        AutowireHelper.getInstance().setApplicationContext(applicationContext);
+        
 
         when(authContextHolder.getContext()).thenReturn(context);
         when(context.getUserKey()).thenReturn(Optional.of("userKey"));

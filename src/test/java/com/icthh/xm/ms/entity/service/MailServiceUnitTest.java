@@ -1,5 +1,6 @@
 package com.icthh.xm.ms.entity.service;
 
+import com.icthh.xm.ms.entity.config.XmFreeMarkerConfiguration;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.dataformat.yaml.YAMLFactory;
 import com.google.common.collect.Lists;
@@ -73,8 +74,8 @@ public class MailServiceUnitTest extends AbstractJupiterUnitTest {
     private MailProviderService mailProviderService = new MailProviderService(javaMailSender);
     @Mock
     private TenantEmailTemplateService tenantEmailTemplateService;
-    @Spy
-    private Configuration freeMarkerConfiguration = new Configuration(Configuration.VERSION_2_3_0);
+    @Mock
+    private XmFreeMarkerConfiguration.XmFreeMarkerConfigurer freeMarkerConfiguration;
     @Mock
     private LocalizationMessageService localizationMessageService;
     private TenantContextHolder tenantContextHolder = mock(TenantContextHolder.class);

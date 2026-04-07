@@ -20,7 +20,7 @@ import com.icthh.xm.commons.tenant.TenantContextUtils;
 import com.icthh.xm.commons.tenant.TenantKey;
 import com.icthh.xm.ms.entity.config.XmEntityTenantConfigService;
 import com.icthh.xm.ms.entity.config.XmEntityTenantConfigService.XmEntityTenantConfig.MailSetting;
-import freemarker.template.Configuration;
+import com.icthh.xm.ms.entity.config.XmFreeMarkerConfiguration;
 import freemarker.template.Template;
 import freemarker.template.TemplateException;
 import java.io.IOException;
@@ -60,7 +60,7 @@ public class MailService {
     private final MailProviderService mailProviderService;
     private final MessageSource messageSource;
     private final TenantEmailTemplateService tenantEmailTemplateService;
-    private final Configuration freeMarkerConfiguration;
+    private final XmFreeMarkerConfiguration.XmFreeMarkerConfigurer freeMarkerConfiguration;
     private final TenantContextHolder tenantContextHolder;
     private final XmEntityTenantConfigService tenantConfigService;
     private final LocalizationMessageService localizationMessageService;
@@ -252,7 +252,7 @@ public class MailService {
             try {
                 tenantContextHolder.getPrivilegedContext().setTenant(new PlainTenant(tenantKey));
 
-                Template mailTemplate = new Template(templateKey, emailTemplate, freeMarkerConfiguration);
+                Template mailTemplate = new Template(templateKey, emailTemplate, freeMarkerConfiguration.getConfiguration());
                 String content = FreeMarkerTemplateUtils.processTemplateIntoString(mailTemplate, objectModel);
                 MailParams mailParams = resolve(subject, from, templateName, locale);
                 sendEmail(
