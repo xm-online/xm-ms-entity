@@ -1,6 +1,6 @@
 package com.icthh.xm.ms.entity.service;
 
-import com.icthh.xm.ms.entity.config.XmFreeMarkerConfiguration;
+import freemarker.template.Configuration;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.dataformat.yaml.YAMLFactory;
 import com.google.common.collect.Lists;
@@ -15,7 +15,6 @@ import com.icthh.xm.ms.entity.AbstractJupiterUnitTest;
 import com.icthh.xm.ms.entity.config.XmEntityTenantConfigService;
 import com.icthh.xm.ms.entity.service.mail.MailService;
 import com.icthh.xm.ms.entity.service.mail.TenantEmailTemplateService;
-import freemarker.template.Configuration;
 import jakarta.activation.DataSource;
 import jakarta.mail.BodyPart;
 import jakarta.mail.Message;
@@ -74,8 +73,8 @@ public class MailServiceUnitTest extends AbstractJupiterUnitTest {
     private MailProviderService mailProviderService = new MailProviderService(javaMailSender);
     @Mock
     private TenantEmailTemplateService tenantEmailTemplateService;
-    @Mock
-    private XmFreeMarkerConfiguration.XmFreeMarkerConfigurer freeMarkerConfiguration;
+    @Spy
+    private Configuration freeMarkerConfiguration = new Configuration(Configuration.VERSION_2_3_34);
     @Mock
     private LocalizationMessageService localizationMessageService;
     private TenantContextHolder tenantContextHolder = mock(TenantContextHolder.class);
