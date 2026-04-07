@@ -81,7 +81,7 @@ public class ElasticsearchIndexServiceImpl extends TransactionPropagationService
                                          TenantContextHolder tenantContextHolder,
                                          MappingConfiguration mappingConfiguration,
                                          IndexConfiguration indexConfiguration,
-                                         @Qualifier("taskExecutor") Executor executor,
+                                         @Qualifier("applicationTaskExecutor") Executor executor,
                                          EntityManager entityManager,
                                          ApplicationProperties applicationProperties,
                                          XmEntitySpecService xmEntitySpecService) {
