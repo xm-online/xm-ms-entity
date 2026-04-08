@@ -9,6 +9,7 @@ import com.codahale.metrics.annotation.Timed;
 import com.google.common.collect.Maps;
 import com.icthh.xm.commons.exceptions.BusinessException;
 import com.icthh.xm.commons.exceptions.ErrorConstants;
+import com.icthh.xm.commons.logging.LoggingAspectConfig;
 import com.icthh.xm.commons.permission.annotation.PrivilegeDescription;
 import com.icthh.xm.ms.entity.config.Constants;
 import com.icthh.xm.ms.entity.domain.FunctionContext;
@@ -260,6 +261,7 @@ public class XmEntityResource {
         return executeFunction(idOrKey, functionKey, functionInput, POST.name());
     }
 
+    @LoggingAspectConfig(inputExcludeParams = "functionInput")
     @Timed
     @GetMapping("/xm-entities/{idOrKey}/functions/**")
     public ResponseEntity<Object> executeGetFunction(@PathVariable String idOrKey,
@@ -268,6 +270,7 @@ public class XmEntityResource {
         return xmEntityResource.executeGetFunction(idOrKey, getFunctionKey(request), functionInput);
     }
 
+    @LoggingAspectConfig(inputExcludeParams = "functionInput")
     @Timed
     @PostMapping("/xm-entities/{idOrKey}/functions/**")
     public ResponseEntity<Object> executeFunction(@PathVariable String idOrKey,

@@ -10,7 +10,7 @@ import java.util.HashSet;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
 import java.util.Map;
 import java.util.Set;
@@ -19,14 +19,13 @@ import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 
 @Slf4j
-@Service
+@Component
 @RequiredArgsConstructor
 public class JsonValidationService {
 
     private final ObjectMapper objectMapper;
     private final SchemaRegistry factory = SchemaRegistry.withDefaultDialect(SpecificationVersion.DRAFT_4);
 
-    @LoggingAspectConfig(inputExcludeParams = "schema")
     public Set<Error> validateJson(Map<String, Object> data, Schema schema) {
         Set<Error> errors = validate(data, schema);
         if (!errors.isEmpty()) {
@@ -36,7 +35,6 @@ public class JsonValidationService {
     }
 
     @SneakyThrows
-    @LoggingAspectConfig(inputExcludeParams = "jsonSchema")
     public void assertJson(Map<String, Object> data, String jsonSchema) {
         Schema schema = factory.getSchema(jsonSchema);
         Set<Error> errors = validate(data, schema);
@@ -54,7 +52,6 @@ public class JsonValidationService {
     }
 
     @SneakyThrows
-    @LoggingAspectConfig(inputExcludeParams = "jsonSchema")
     private Set<Error> validate(Map<String, Object> data, Schema jsonSchema) {
         log.debug("Validation data. map: {}", data);
         JsonNode dataNode = objectMapper.valueToTree(data);
