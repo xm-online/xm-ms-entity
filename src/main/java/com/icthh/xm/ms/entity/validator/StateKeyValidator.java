@@ -2,7 +2,7 @@ package com.icthh.xm.ms.entity.validator;
 
 import static java.util.stream.Collectors.toSet;
 
-import com.icthh.xm.ms.entity.domain.XmEntity;
+import com.icthh.xm.ms.entity.domain.EntityBaseFields;
 import com.icthh.xm.ms.entity.domain.spec.StateSpec;
 import com.icthh.xm.ms.entity.domain.spec.TypeSpec;
 import com.icthh.xm.ms.entity.service.XmEntitySpecService;
@@ -15,7 +15,7 @@ import java.util.List;
 import java.util.Set;
 
 @Slf4j
-public class StateKeyValidator implements ConstraintValidator<StateKey, XmEntity> {
+public class StateKeyValidator implements ConstraintValidator<StateKey, EntityBaseFields> {
 
     @Autowired
     private XmEntitySpecService xmEntitySpecService;
@@ -26,7 +26,7 @@ public class StateKeyValidator implements ConstraintValidator<StateKey, XmEntity
     }
 
     @Override
-    public boolean isValid(XmEntity value, ConstraintValidatorContext context) {
+    public boolean isValid(EntityBaseFields value, ConstraintValidatorContext context) {
 
         if (value.getStateKey() == null) {
             return true;

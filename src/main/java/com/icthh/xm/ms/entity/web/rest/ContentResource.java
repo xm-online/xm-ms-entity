@@ -4,9 +4,8 @@ import com.codahale.metrics.annotation.Timed;
 import com.icthh.xm.commons.exceptions.BusinessException;
 import com.icthh.xm.commons.exceptions.ErrorConstants;
 import com.icthh.xm.commons.permission.annotation.PrivilegeDescription;
-import com.icthh.xm.ms.entity.domain.Content;
-import com.icthh.xm.ms.entity.repository.ContentRepository;
-import com.icthh.xm.ms.entity.service.ContentService;
+import com.icthh.xm.ms.entity.service.dto.ContentDto;
+import com.icthh.xm.ms.entity.web.rest.facade.ContentFacade;
 import com.icthh.xm.ms.entity.web.rest.util.HeaderUtil;
 import com.icthh.xm.ms.entity.web.rest.util.RespContentUtil;
 import jakarta.validation.Valid;
@@ -37,16 +36,13 @@ public class ContentResource {
 
     private static final String ENTITY_NAME = "content";
 
-    private final ContentRepository contentRepository;
-    private final ContentService contentService;
+    private final ContentFacade contentFacade;
     private final ContentResource contentResource;
 
     public ContentResource(
-                    ContentRepository contentRepository,
-                    ContentService contentService,
+                    ContentFacade contentFacade,
                     @Lazy ContentResource contentResource) {
-        this.contentRepository = contentRepository;
-        this.contentService = contentService;
+        this.contentFacade = contentFacade;
         this.contentResource = contentResource;
     }
 
@@ -61,12 +57,12 @@ public class ContentResource {
     @Timed
     @PreAuthorize("hasPermission({'content': #content}, 'CONTENT.CREATE')")
     @PrivilegeDescription("Privilege to create a new content")
-    public ResponseEntity<Content> createContent(@Valid @RequestBody Content content) throws URISyntaxException {
+    public ResponseEntity<ContentDto> createContent(@Valid @RequestBody ContentDto content) throws URISyntaxException {
         if (content.getId() != null) {
             throw new BusinessException(ErrorConstants.ERR_BUSINESS_IDEXISTS,
                                         "A new content cannot already have an ID");
         }
-        Content result = contentRepository.save(content);
+        ContentDto result = contentFacade.save(content);
         return ResponseEntity.created(new URI("/api/contents/" + result.getId()))
             .headers(HeaderUtil.createEntityCreationAlert(ENTITY_NAME, result.getId().toString()))
             .body(result);
@@ -85,12 +81,12 @@ public class ContentResource {
     @Timed
     @PreAuthorize("hasPermission({'id': #content.id, 'newContent': #content}, 'content', 'CONTENT.UPDATE')")
     @PrivilegeDescription("Privilege to updates an existing content")
-    public ResponseEntity<Content> updateContent(@Valid @RequestBody Content content) throws URISyntaxException {
+    public ResponseEntity<ContentDto> updateContent(@Valid @RequestBody ContentDto content) throws URISyntaxException {
         if (content.getId() == null) {
             //in order to call method with permissions check
             return this.contentResource.createContent(content);
         }
-        Content result = contentRepository.save(content);
+        ContentDto result = contentFacade.save(content);
         return ResponseEntity.ok()
             .headers(HeaderUtil.createEntityUpdateAlert(ENTITY_NAME, content.getId().toString()))
             .body(result);
@@ -103,8 +99,8 @@ public class ContentResource {
      */
     @GetMapping("/contents")
     @Timed
-    public List<Content> getAllContents() {
-        return contentService.findAll(null);
+    public List<ContentDto> getAllContents() {
+        return contentFacade.findAll(null);
     }
 
     /**
@@ -117,9 +113,8 @@ public class ContentResource {
     @Timed
     @PostAuthorize("hasPermission({'returnObject': returnObject.body}, 'CONTENT.GET_LIST.ITEM')")
     @PrivilegeDescription("Privilege to get the content by id")
-    public ResponseEntity<Content> getContent(@PathVariable Long id) {
-        Content content = contentRepository.findById(id).orElse(null);
-        return RespContentUtil.wrapOrNotFound(Optional.ofNullable(content));
+    public ResponseEntity<ContentDto> getContent(@PathVariable Long id) {
+        return RespContentUtil.wrapOrNotFound(contentFacade.findById(id));
     }
 
     /**
@@ -133,7 +128,7 @@ public class ContentResource {
     @PreAuthorize("hasPermission({'id': #id}, 'content', 'CONTENT.DELETE')")
     @PrivilegeDescription("Privilege to delete the content by id")
     public ResponseEntity<Void> deleteContent(@PathVariable Long id) {
-        contentRepository.deleteById(id);
+        contentFacade.delete(id);
         return ResponseEntity.ok().headers(HeaderUtil.createEntityDeletionAlert(ENTITY_NAME, id.toString())).build();
     }
 

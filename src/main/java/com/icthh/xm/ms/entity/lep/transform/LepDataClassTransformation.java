@@ -25,6 +25,7 @@ import static org.codehaus.groovy.ast.tools.GeneralUtils.stmt;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.ternaryX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.varX;
 
+import aj.org.objectweb.asm.Opcodes;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -104,7 +105,7 @@ public class LepDataClassTransformation extends AbstractASTTransformation {
         }
 
         if (!hasEmptyConstructor(classNode)) {
-            classNode.addConstructor(MethodNode.ACC_PUBLIC, new Parameter[0], ClassNode.EMPTY_ARRAY, new BlockStatement());
+            classNode.addConstructor(Opcodes.ACC_PUBLIC, new Parameter[0], ClassNode.EMPTY_ARRAY, new BlockStatement());
         }
 
         Parameter mapParam = new Parameter(new ClassNode(Map.class), "data");
@@ -122,7 +123,7 @@ public class LepDataClassTransformation extends AbstractASTTransformation {
         callMapCustomization(classNode, mapParam, body);
 
         classNode.addConstructor(
-            MethodNode.ACC_PUBLIC,
+            Opcodes.ACC_PUBLIC,
             new Parameter[]{mapParam},
             ClassNode.EMPTY_ARRAY,
             body
@@ -147,7 +148,7 @@ public class LepDataClassTransformation extends AbstractASTTransformation {
 
         MethodNode method = new MethodNode(
             "toMap",
-            ACC_PUBLIC,
+            Opcodes.ACC_PUBLIC,
             new ClassNode(Map.class),
             new Parameter[0],
             ClassNode.EMPTY_ARRAY,
@@ -174,7 +175,7 @@ public class LepDataClassTransformation extends AbstractASTTransformation {
     }
 
     private boolean isDataField(FieldNode field) {
-        return !field.isStatic() && !field.getName().contains(DOLLAR) && (field.getModifiers() & ACC_TRANSIENT) == 0 && !isIgnored(field);
+        return !field.isStatic() && !field.getName().contains(DOLLAR) && (field.getModifiers() & Opcodes.ACC_TRANSIENT) == 0 && !isIgnored(field);
     }
 
     private void addPutFieldToMapStatement(FieldNode field, BlockStatement body) {

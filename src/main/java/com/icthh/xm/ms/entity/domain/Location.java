@@ -1,6 +1,5 @@
 package com.icthh.xm.ms.entity.domain;
 
-import io.swagger.annotations.ApiModelProperty;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -42,7 +41,6 @@ public class Location implements Serializable {
     /**
      * Additional lateral identification for this location, could be used as reference to the external system
      */
-    @ApiModelProperty(value = "Additional lateral identification for this location, could be used as reference to the external system")
     @Column(name = "jhi_key")
     private String key;
 
@@ -50,70 +48,60 @@ public class Location implements Serializable {
      * String typeKey with tree-like structure.
      */
     @NotNull
-    @ApiModelProperty(value = "String typeKey with tree-like structure.", required = true)
     @Column(name = "type_key", nullable = false)
     private String typeKey;
 
     /**
      * Country code.
      */
-    @ApiModelProperty(value = "Country code.")
     @Column(name = "country_key")
     private String countryKey;
 
     /**
      * GPS longityde in decimal format
      */
-    @ApiModelProperty(value = "GPS longityde in decimal format")
     @Column(name = "longitude")
     private Double longitude;
 
     /**
      * GPS latitude in decimal format
      */
-    @ApiModelProperty(value = "GPS latitude in decimal format")
     @Column(name = "latitude")
     private Double latitude;
 
     /**
      * Full address name
      */
-    @ApiModelProperty(value = "Full address name")
     @Column(name = "name")
     private String name;
 
     /**
      * Street and number, P.O. box, c/o
      */
-    @ApiModelProperty(value = "Street and number, P.O. box, c/o")
     @Column(name = "address_line_1")
     private String addressLine1;
 
     /**
      * Apartment, suite, unit, building, floor, etc.
      */
-    @ApiModelProperty(value = "Apartment, suite, unit, building, floor, etc.")
     @Column(name = "address_line_2")
     private String addressLine2;
 
     /**
      * City name
      */
-    @ApiModelProperty(value = "City name")
     @Column(name = "city")
     private String city;
 
     /**
      * State, Province, Region
      */
-    @ApiModelProperty(value = "State, Province, Region")
     @Column(name = "region")
     private String region;
 
     /**
      * ZIP code
      */
-    @ApiModelProperty(value = "ZIP code")
     @Column(name = "zip")
     private String zip;
 

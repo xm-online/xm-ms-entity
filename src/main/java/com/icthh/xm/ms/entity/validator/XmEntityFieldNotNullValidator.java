@@ -2,7 +2,7 @@ package com.icthh.xm.ms.entity.validator;
 
 import static java.lang.Boolean.TRUE;
 
-import com.icthh.xm.ms.entity.domain.XmEntity;
+import com.icthh.xm.ms.entity.domain.EntityBaseFields;
 import com.icthh.xm.ms.entity.domain.spec.TypeSpec;
 import com.icthh.xm.ms.entity.service.XmEntitySpecService;
 import jakarta.validation.ConstraintValidator;
@@ -13,7 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 
 @Slf4j
-public class XmEntityFieldNotNullValidator implements ConstraintValidator<NotNull, XmEntity> {
+public class XmEntityFieldNotNullValidator implements ConstraintValidator<NotNull, EntityBaseFields> {
 
     @Autowired
     private XmEntitySpecService xmEntitySpecService;
@@ -27,21 +27,25 @@ public class XmEntityFieldNotNullValidator implements ConstraintValidator<NotNul
 
     @Override
     @SneakyThrows
-    public boolean isValid(XmEntity xmEntity, ConstraintValidatorContext ctx) {
-        TypeSpec typeSpec = xmEntitySpecService.getTypeSpecByKeyWithoutFunctionFilter(xmEntity.getTypeKey()).orElse(null);
+    public boolean isValid(EntityBaseFields value, ConstraintValidatorContext ctx) {
+        String typeKey = value.getTypeKey();
+        if (typeKey == null) {
+            return true;
+        }
 
+        TypeSpec typeSpec = xmEntitySpecService.getTypeSpecByKeyWithoutFunctionFilter(typeKey).orElse(null);
         if (typeSpec == null) {
             return true;
         }
 
         Boolean isFieldRequired = field.isRequiredExtractor.apply(typeSpec);
-        Object fieldValue = field.valueExtractor.apply(xmEntity);
+        Object fieldValue = field.valueExtractor.apply(value);
         if (TRUE.equals(isFieldRequired) && fieldValue == null) {
             ctx.disableDefaultConstraintViolation();
             ctx.buildConstraintViolationWithTemplate("{jakarta.validation.constraints.NotNull.message}")
                 .addPropertyNode(field.fieldName)
                 .addConstraintViolation();
-            log.error("Field {} is required on entity with typeKey {} and id {}", field.fieldName, xmEntity.getTypeKey(), xmEntity.getId());
+            log.error("Field {} is required on entity with typeKey {} and id {}", field.fieldName, typeKey, value.getId());
             return false;
         }
         return true;

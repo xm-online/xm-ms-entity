@@ -49,6 +49,8 @@ import org.springframework.validation.Validator;
 
 import java.time.Instant;
 import java.util.List;
+import com.icthh.xm.ms.entity.web.rest.facade.AttachmentFacade;
+import com.icthh.xm.ms.entity.service.mapper.AttachmentMapper;
 
 /**
  * Extended Test class for the AttachmentResource REST controller.
@@ -100,6 +102,9 @@ public class AttachmentResourceExtendedIntTest extends AbstractJupiterSpringBoot
     @Autowired
     private ContentService contentService;
 
+    @Autowired
+    private AttachmentMapper attachmentMapper;
+
     @Spy
     private StartUpdateDateGenerationStrategy startUpdateDateGenerationStrategy;
 
@@ -128,7 +133,8 @@ public class AttachmentResourceExtendedIntTest extends AbstractJupiterSpringBoot
             xmEntityRepository,
             xmEntitySpecService);
 
-        AttachmentResource attachmentResourceMock = new AttachmentResource(attachmentService, attachmentResource);
+        AttachmentFacade attachmentFacade = new AttachmentFacade(attachmentService, attachmentMapper);
+        AttachmentResource attachmentResourceMock = new AttachmentResource(attachmentFacade, attachmentResource);
         this.restAttachmentMockMvc = MockMvcBuilders.standaloneSetup(attachmentResourceMock)
                                                     .setCustomArgumentResolvers(pageableArgumentResolver)
                                                     .setControllerAdvice(exceptionTranslator)

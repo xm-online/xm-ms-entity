@@ -61,6 +61,14 @@ public class CalendarService {
             return;
         }
 
+        // Load from DB if the calendar is a shallow reference (e.g., from DTO mapping)
+        if (calendar.getXmEntity() == null || calendar.getXmEntity().getTypeKey() == null) {
+            calendar = calendarRepository.findById(calendar.getId()).orElse(null);
+            if (calendar == null) {
+                return;
+            }
+        }
+
         specService
             .findCalendar(calendar.getXmEntity().getTypeKey(), calendar.getTypeKey())
             .map(CalendarSpec::getReadonly)

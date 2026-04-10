@@ -116,6 +116,9 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import com.icthh.xm.ms.entity.web.rest.facade.XmEntityFacade;
+import com.icthh.xm.ms.entity.web.rest.facade.EventFacade;
+import com.icthh.xm.ms.entity.web.rest.facade.CalendarFacade;
 
 /**
  * Extension Test class for the XmEntityResource REST controller. Contains additional test apart from Jhipster generated
@@ -295,6 +298,15 @@ public class XmEntityResourceExtendedElasticsearchTest extends AbstractElasticSp
     @Autowired
     private XmEntityProjectionService xmEntityProjectionService;
 
+    @Autowired
+    private XmEntityFacade xmEntityFacade;
+
+    @Autowired
+    private EventFacade eventFacade;
+
+    @Autowired
+    private CalendarFacade calendarFacade;
+
     @Mock
     private XmAuthenticationContext context;
 
@@ -369,9 +381,9 @@ public class XmEntityResourceExtendedElasticsearchTest extends AbstractElasticSp
             ctx.setValue(THREAD_CONTEXT_KEY_AUTH_CONTEXT, authContextHolder.getContext());
         });
 
-        EventResource eventResourceMock = new EventResource(eventService, eventResource);
+        EventResource eventResourceMock = new EventResource(eventFacade, eventResource);
 
-        XmEntityResource xmEntityResourceMock = new XmEntityResource(xmEntityService,
+        XmEntityResource xmEntityResourceMock = new XmEntityResource(xmEntityFacade,
                                                                      profileService,
                                                                      profileEventProducer,
                                                                      functionService,
@@ -379,7 +391,7 @@ public class XmEntityResourceExtendedElasticsearchTest extends AbstractElasticSp
                                                                      xmEntityResource
         );
         this.restXmEntityMockMvc = MockMvcBuilders.standaloneSetup(
-            xmEntityResourceMock, new CalendarResource(calendarService, calendarResource), eventResourceMock)
+            xmEntityResourceMock, new CalendarResource(calendarFacade, calendarResource), eventResourceMock)
                                                   .setCustomArgumentResolvers(pageableArgumentResolver)
                                                   .setControllerAdvice(exceptionTranslator)
                                                   .setValidator(validator)
@@ -387,7 +399,7 @@ public class XmEntityResourceExtendedElasticsearchTest extends AbstractElasticSp
                                                   .addMappedInterceptors(WebMvcConfiguration.getJsonFilterAllowedURIs())
                                                   .build();
 
-        this.restXmEntitySearchMockMvc = MockMvcBuilders.standaloneSetup(new XmEntitySearchResource(xmEntityService))
+        this.restXmEntitySearchMockMvc = MockMvcBuilders.standaloneSetup(new XmEntitySearchResource(xmEntityFacade))
                                                   .setCustomArgumentResolvers(pageableArgumentResolver)
                                                   .setControllerAdvice(exceptionTranslator)
                                                   .setValidator(validator)

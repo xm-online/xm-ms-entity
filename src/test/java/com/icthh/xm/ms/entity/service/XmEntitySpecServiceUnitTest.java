@@ -511,6 +511,14 @@ public class XmEntitySpecServiceUnitTest extends AbstractJupiterUnitTest {
 
     @Test
     @SneakyThrows
+    public void testUpdateCustomerPrivilegesCustomSort() {
+        String customPrivileges = readFile("config/privileges/custom-privileges-custom-sort.yml");
+
+        testUpdateCustomPrivilegesCustomSort(customPrivileges);
+    }
+
+    @Test
+    @SneakyThrows
     public void testUpdateCustomerPrivilegesWithEntity() {
         enableDynamicPermissionCheck();
 
@@ -565,6 +573,20 @@ public class XmEntitySpecServiceUnitTest extends AbstractJupiterUnitTest {
         assertEquals(privilegesPath, captor.getValue().getPath());
         assertEquals(expectedCustomPrivileges, captor.getValue().getContent());
 
+        verifyNoMoreInteractions(commonConfigRepository);
+    }
+
+    private void testUpdateCustomPrivilegesCustomSort(String customPrivileges) {
+        String privilegesPath = PRIVILEGES_PATH;
+        Map<String, Configuration> configs = of(
+            privilegesPath, new Configuration(privilegesPath, customPrivileges)
+        );
+        when(commonConfigRepository.getConfig(isNull(), eq(List.of(privilegesPath)))).thenReturn(configs);
+        when(roleService.getRoles("TEST")).thenReturn(of("TEST_ROLE", new Role()));
+
+        xmEntitySpecService.getTypeSpecs();
+
+        verify(commonConfigRepository).getConfig(isNull(), eq(List.of(privilegesPath)));
         verifyNoMoreInteractions(commonConfigRepository);
     }
 

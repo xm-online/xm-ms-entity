@@ -1,6 +1,7 @@
 package com.icthh.xm.ms.entity.service.impl;
 
 import com.icthh.xm.commons.exceptions.EntityNotFoundException;
+import com.icthh.xm.commons.logging.aop.IgnoreLogginAspect;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.domain.ext.IdOrKey;
 import com.icthh.xm.ms.entity.projection.XmEntityIdKeyTypeKey;
@@ -25,6 +26,7 @@ public class XmEntityProjectionServiceImpl implements XmEntityProjectionService 
     private final XmEntityProjectionRepository xmEntityProjectionRepository;
     private final ProfileService profileService;
 
+    @IgnoreLogginAspect
     @Transactional(readOnly = true)
     public Optional<XmEntityStateProjection> findStateProjection(IdOrKey idOrKey) {
         return findByIdOrKey(idOrKey,

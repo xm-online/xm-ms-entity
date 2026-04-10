@@ -51,11 +51,23 @@ public class LinkService extends TransactionPropagationService<LinkService> {
     /**
      * Save a link.
      *
+     * <p>NOTE: Method triggers LEP method which resolved by {@link Link#getTypeKey()} value.
+     * @param link the entity to save
+     * @return the persisted entity
+     */
+    @LogicExtensionPoint(value = "Save", resolver = LinkTypeKeyResolver.class)
+    public Link save(Link link) {
+        return self.saveLink(link);
+    }
+
+    /**
+     * Save a link.
+     *
      * @param link the entity to save
      * @return the persisted entity
      */
     @LogicExtensionPoint("Save")
-    public Link save(Link link) {
+    public Link saveLink(Link link) {
 
         startUpdateDateGenerationStrategy.preProcessStartDate(link,
                                                               link.getId(),

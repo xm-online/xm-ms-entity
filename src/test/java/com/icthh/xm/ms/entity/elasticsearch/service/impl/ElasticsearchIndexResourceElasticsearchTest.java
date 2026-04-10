@@ -28,6 +28,7 @@ import com.icthh.xm.ms.entity.service.XmEntitySpecService;
 import com.icthh.xm.ms.entity.web.rest.ElasticsearchIndexResource;
 import com.icthh.xm.ms.entity.web.rest.XmEntityResource;
 import com.icthh.xm.ms.entity.web.rest.XmEntitySearchResource;
+import com.icthh.xm.ms.entity.web.rest.facade.XmEntityFacade;
 import jakarta.persistence.EntityManager;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -96,6 +97,9 @@ public class ElasticsearchIndexResourceElasticsearchTest extends AbstractElastic
 
     @Autowired
     private XmEntityService xmEntityService;
+
+    @Autowired
+    private XmEntityFacade xmEntityFacade;
 
     @Autowired
     private XmEntityResource xmEntityResource;
@@ -209,7 +213,7 @@ public class ElasticsearchIndexResourceElasticsearchTest extends AbstractElastic
                                       .setControllerAdvice(exceptionTranslator)
                                       .setMessageConverters(jacksonMessageConverter).build();
 
-        this.restXmEntitySearchMockMvc = MockMvcBuilders.standaloneSetup(new XmEntitySearchResource(xmEntityService))
+        this.restXmEntitySearchMockMvc = MockMvcBuilders.standaloneSetup(new XmEntitySearchResource(xmEntityFacade))
                                       .setCustomArgumentResolvers(pageableArgumentResolver)
                                       .setControllerAdvice(exceptionTranslator)
                                       .setMessageConverters(jacksonMessageConverter).build();

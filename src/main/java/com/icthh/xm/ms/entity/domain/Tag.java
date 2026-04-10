@@ -1,7 +1,5 @@
 package com.icthh.xm.ms.entity.domain;
 
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -29,7 +27,6 @@ import java.util.Objects;
 /**
  * Represents tags associated with the XmEntity.
  */
-@ApiModel(description = "Represents tags associated with the XmEntity.")
 @Entity
 @Table(name = "tag")
 @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
@@ -47,21 +44,18 @@ public class Tag implements Serializable {
      * String typeKey with tree-like structure.
      */
     @NotNull
-    @ApiModelProperty(value = "String typeKey with tree-like structure.", required = true)
     @Column(name = "type_key", nullable = false)
     private String typeKey;
 
     /**
      * Searhable Tag's name
      */
-    @ApiModelProperty(value = "Searhable Tag's name")
     @Column(name = "name")
     private String name;
 
     /**
      * Start date
      */
-    @ApiModelProperty(value = "Start date")
     @Column(name = "start_date", nullable = false)
     private Instant startDate;
 

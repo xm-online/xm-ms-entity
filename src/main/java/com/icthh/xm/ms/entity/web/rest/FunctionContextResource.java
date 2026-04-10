@@ -5,8 +5,8 @@ import com.codahale.metrics.annotation.Timed;
 import com.icthh.xm.commons.exceptions.BusinessException;
 import com.icthh.xm.commons.exceptions.ErrorConstants;
 import com.icthh.xm.commons.permission.annotation.PrivilegeDescription;
-import com.icthh.xm.ms.entity.domain.FunctionContext;
-import com.icthh.xm.ms.entity.service.FunctionContextService;
+import com.icthh.xm.ms.entity.service.dto.FunctionContextDto;
+import com.icthh.xm.ms.entity.web.rest.facade.FunctionContextFacade;
 import com.icthh.xm.ms.entity.web.rest.util.HeaderUtil;
 import com.icthh.xm.ms.entity.web.rest.util.RespContentUtil;
 import jakarta.persistence.EntityNotFoundException;
@@ -41,13 +41,13 @@ public class FunctionContextResource {
 
     private static final String ENTITY_NAME = "functionContext";
 
-    private final FunctionContextService functionContextService;
+    private final FunctionContextFacade functionContextFacade;
     private final FunctionContextResource functionContextResource;
 
     public FunctionContextResource(
-                    FunctionContextService functionContextService,
+                    FunctionContextFacade functionContextFacade,
                     @Lazy FunctionContextResource functionContextResource) {
-        this.functionContextService = functionContextService;
+        this.functionContextFacade = functionContextFacade;
         this.functionContextResource = functionContextResource;
     }
 
@@ -62,11 +62,11 @@ public class FunctionContextResource {
     @Timed
     @PreAuthorize("hasPermission({'functionContext': #functionContext}, 'FUNCTION_CONTEXT.CREATE')")
     @PrivilegeDescription("Privilege to create a new functionContext")
-    public ResponseEntity<FunctionContext> createFunctionContext(@Valid @RequestBody FunctionContext functionContext) throws URISyntaxException {
+    public ResponseEntity<FunctionContextDto> createFunctionContext(@Valid @RequestBody FunctionContextDto functionContext) throws URISyntaxException {
         if (functionContext.getId() != null) {
             return ResponseEntity.badRequest().headers(HeaderUtil.createFailureAlert(ENTITY_NAME, "idexists", "A new functionContext cannot already have an ID")).body(null);
         }
-        FunctionContext result = functionContextService.save(functionContext);
+        FunctionContextDto result = functionContextFacade.save(functionContext);
         return ResponseEntity.created(new URI("/api/function-contexts/" + result.getId()))
             .headers(HeaderUtil.createEntityCreationAlert(ENTITY_NAME, result.getId().toString()))
             .body(result);
@@ -85,12 +85,12 @@ public class FunctionContextResource {
     @Timed
     @PreAuthorize("hasPermission({'id': #functionContext.id, 'newFunctionContext': #functionContext}, 'functionContext', 'FUNCTION_CONTEXT.UPDATE')")
     @PrivilegeDescription("Privilege to updates an existing functionContext")
-    public ResponseEntity<FunctionContext> updateFunctionContext(@Valid @RequestBody FunctionContext functionContext) throws URISyntaxException {
+    public ResponseEntity<FunctionContextDto> updateFunctionContext(@Valid @RequestBody FunctionContextDto functionContext) throws URISyntaxException {
         if (functionContext.getId() == null) {
             //in order to call method with permissions check
             return this.functionContextResource.createFunctionContext(functionContext);
         }
-        FunctionContext result = functionContextService.save(functionContext);
+        FunctionContextDto result = functionContextFacade.save(functionContext);
         return ResponseEntity.ok()
             .headers(HeaderUtil.createEntityUpdateAlert(ENTITY_NAME, functionContext.getId().toString()))
             .body(result);
@@ -103,8 +103,8 @@ public class FunctionContextResource {
      */
     @GetMapping("/function-contexts")
     @Timed
-    public List<FunctionContext> getAllFunctionContexts() {
-        return functionContextService.findAll(null);
+    public List<FunctionContextDto> getAllFunctionContexts() {
+        return functionContextFacade.findAll(null);
     }
 
     /**
@@ -117,8 +117,8 @@ public class FunctionContextResource {
     @Timed
     @PostAuthorize("hasPermission({'returnObject': returnObject.body}, 'FUNCTION_CONTEXT.GET_LIST.ITEM')")
     @PrivilegeDescription("Privilege to get the functionContext by id")
-    public ResponseEntity<FunctionContext> getFunctionContext(@PathVariable Long id) {
-        FunctionContext functionContext = functionContextService.findOne(id);
+    public ResponseEntity<FunctionContextDto> getFunctionContext(@PathVariable Long id) {
+        FunctionContextDto functionContext = functionContextFacade.findOne(id);
         return RespContentUtil.wrapOrNotFound(Optional.ofNullable(functionContext));
     }
 
@@ -133,7 +133,7 @@ public class FunctionContextResource {
     @PreAuthorize("hasPermission({'id': #id}, 'functionContext', 'FUNCTION_CONTEXT.DELETE')")
     @PrivilegeDescription("Privilege to delete the functionContext by id")
     public ResponseEntity<Void> deleteFunctionContext(@PathVariable Long id) {
-        functionContextService.delete(id);
+        functionContextFacade.delete(id);
         return ResponseEntity.ok().headers(HeaderUtil.createEntityDeletionAlert(ENTITY_NAME, id.toString())).build();
     }
 }
