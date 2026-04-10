@@ -47,7 +47,7 @@ public class AvatarUrlListener {
         avatarStorageType = applicationProperties.getObjectStorage().getStorageType();
         dbAvatarPrefix = applicationProperties.getObjectStorage().getDbFilePrefix();
         dbUrlTemplate = applicationProperties.getObjectStorage().getDbUrlTemplate();
-        isAddPrefixDbUrlTemplate = applicationProperties.getObjectStorage().isAddPrefixDbUrlTemplate();
+        isAddPrefixDbUrlTemplate = applicationProperties.getObjectStorage().isAvatarUrlDbPrefixEnabled();
     }
 
     @PrePersist

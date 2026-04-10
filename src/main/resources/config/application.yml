@@ -223,7 +223,7 @@ application:
         max-size: 32767
         # used for FILE strategy FILE://{objectId}
         file-root: /home/xme
-        add-prefix-db-url-template: false
+        avatar-url-db-prefix-enabled: false
     avatar-default:
         default-avatar-url: /assets/img/anonymous.png
         default-avatar-url-prefix: http://xm-avatar.rgw.icthh.test:7480

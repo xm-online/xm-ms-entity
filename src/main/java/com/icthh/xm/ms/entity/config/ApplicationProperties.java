@@ -171,7 +171,7 @@ public class ApplicationProperties {
         private String dbUrlTemplate;
         private String fileRoot;
         @Getter
-        private boolean addPrefixDbUrlTemplate;
+        private boolean avatarUrlDbPrefixEnabled;
 
         public Integer getMaxImageSize() {
             return (maxImageSize == null || maxImageSize <= 0) ? DEFAULT_MAX_IMAGE_SIZE : maxImageSize;
