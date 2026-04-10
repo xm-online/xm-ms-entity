@@ -476,6 +476,12 @@ pmd {
     ruleSetFiles = files("./qa/pmd.xml")
 }
 
+tasks.register('preCompileLep', JavaExec) {
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'com.icthh.xm.commons.lep.groovy.LepCompiler'
+    args = findProperty('exportArgs')?.split(' ')?.toList() ?: []
+}
+
 tasks.register('cleanResources', Delete) {
     delete "build/resources"
 }
