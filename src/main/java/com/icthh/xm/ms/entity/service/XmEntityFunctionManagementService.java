@@ -12,8 +12,8 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import com.icthh.xm.commons.config.client.api.ConfigService;
 import com.icthh.xm.commons.config.client.repository.CommonConfigRepository;
-import com.icthh.xm.commons.config.client.service.CommonConfigService;
 import com.icthh.xm.commons.config.domain.Configuration;
 import com.icthh.xm.commons.domain.FunctionSpecWithFileName;
 import com.icthh.xm.commons.exceptions.BusinessException;
@@ -30,7 +30,6 @@ import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.jetbrains.annotations.NotNull;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -38,7 +37,7 @@ public class XmEntityFunctionManagementService implements FunctionManageService<
 
     private final XmEntitySpecService xmEntitySpecService;
     private final CommonConfigRepository commonConfigRepository;
-    private final CommonConfigService commonConfigService;
+    private final ConfigService configService;
     private final ObjectMapper objectMapper = initMapper();
 
     private static ObjectMapper initMapper() {
@@ -67,7 +66,7 @@ public class XmEntityFunctionManagementService implements FunctionManageService<
 
         Configuration updatedConfig = new Configuration(config.getPath(), yaml);
         commonConfigRepository.updateConfigFullPath(updatedConfig, null);
-        commonConfigService.notifyUpdated(updatedConfig);
+        configService.notifyUpdated(updatedConfig);
     }
 
     private String addToYaml(String yaml, String entityTypeKey, Object item) {
@@ -103,7 +102,7 @@ public class XmEntityFunctionManagementService implements FunctionManageService<
             String updatedYaml = updateSequenceItem(config.getContent(), convertToMap(updatedFunction), deletePath(entityTypeKey, functionKey));
             Configuration updatedConfig = new Configuration(config.getPath(), updatedYaml);
             commonConfigRepository.updateConfigFullPath(updatedConfig, null);
-            commonConfigService.notifyUpdated(updatedConfig);
+            configService.notifyUpdated(updatedConfig);
         } else {
             removeFunction(functionKey);
             addFunction(updatedFunction);
@@ -123,7 +122,7 @@ public class XmEntityFunctionManagementService implements FunctionManageService<
             yaml = delete(yaml, deletePath(entityTypeKey, functionKey));
             Configuration updatedConfig = new Configuration(config.getPath(), yaml);
             commonConfigRepository.updateConfigFullPath(updatedConfig, null);
-            commonConfigService.notifyUpdated(updatedConfig);
+            configService.notifyUpdated(updatedConfig);
         });
     }
 
