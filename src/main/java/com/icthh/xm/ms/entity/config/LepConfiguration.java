@@ -52,27 +52,4 @@ public class LepConfiguration extends GroovyLepEngineConfiguration {
         };
     }
 
-    @Bean
-    public FunctionManageService<?, ? extends FunctionSpecWithFileName<?>> functionManageService(XmEntitySpecService xmEntitySpecService,
-                                                                                                 CommonConfigRepository commonConfigRepository,
-                                                                                                 CommonConfigService commonConfigService) {
-        return new XmEntityFunctionManagementService(
-            xmEntitySpecService, commonConfigRepository, commonConfigService
-        );
-    }
-
-    @Bean
-    @Primary
-    public XmEntityFunctionServiceImpl functionService(XmEntityDynamicPermissionCheckService dynamicPermissionCheckService,
-                                                      XmEntitySpecService xmEntitySpecService,
-                                                      XmEntityTenantConfigService xmEntityTenantConfigService,
-                                                      JsonValidationService jsonValidationService) {
-        return new XmEntityFunctionServiceImpl(
-            dynamicPermissionCheckService,
-            xmEntitySpecService,
-            xmEntityTenantConfigService,
-            jsonValidationService
-        );
-    }
-
 }
