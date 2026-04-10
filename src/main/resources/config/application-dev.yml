@@ -38,20 +38,12 @@ spring:
             kafka:
                 binder:
                     brokers: ${spring.kafka.bootstrap-servers}
-    datasource:
-        type: com.zaxxer.hikari.HikariDataSource
-        url: jdbc:postgresql://localhost:5432/entity
-        username: postgres
-        password: postgres
-        hikari:
-            poolName: Hikari
-            auto-commit: false
     h2:
         console:
             enabled: false
     jpa:
-        database-platform: com.icthh.xm.commons.migration.db.jsonb.CustomPostgreSQLDialect
-        database: POSTGRESQL
+        database-platform: io.github.jhipster.domain.util.FixedH2Dialect
+        database: H2
         show-sql: true
         properties:
             hibernate.model.generator_name_as_sequence_name: false
@@ -141,7 +133,7 @@ jhipster:
 # ===================================================================
 
 application:
-    kafka-enabled: true
+    kafka-enabled: false
     amazon:
         aws:
             endpoint:
@@ -159,7 +151,3 @@ application:
 ##   'ln -s <xm-sm-config-repository> ~/xm-online'
     lep:
         tenant-script-storage: XM_MS_CONFIG
-    elastic-enabled: true
-xm-config:
-    configMode: FILE
-    configDirPath: /Users/viktorpavlenko/work/xm-ms-config-repository

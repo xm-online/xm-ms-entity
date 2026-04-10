@@ -99,11 +99,6 @@ management:
         mail:
             enabled: false # When using the MailService, configure an SMTP server and set this to true
 
-logging:
-    level:
-        org.springframework.http.converter: DEBUG
-        com.fasterxml.jackson: DEBUG
-        tools.jackson: DEBUG
 jhipster:
     clientApp:
       name: 'entityApp'
