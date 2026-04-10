@@ -27,7 +27,6 @@ import tools.jackson.databind.annotation.JsonDeserialize;
 @Builder(toBuilder = true)
 @AllArgsConstructor
 @NoArgsConstructor
-@Jacksonized
 @JsonDeserialize(builder = TypeSpec.TypeSpecBuilder.class)
 public class TypeSpec implements DataSpec, SpecificationItem {
 

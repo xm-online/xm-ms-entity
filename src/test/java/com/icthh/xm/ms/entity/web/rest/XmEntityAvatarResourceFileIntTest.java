@@ -64,8 +64,6 @@ public class XmEntityAvatarResourceFileIntTest extends AbstractJupiterSpringBoot
     @Autowired
     private ApplicationProperties applicationProperties;
 
-    private JacksonJsonHttpMessageConverter jacksonMessageConverter;
-
     @Autowired
     private PageableHandlerMethodArgumentResolver pageableArgumentResolver;
 
