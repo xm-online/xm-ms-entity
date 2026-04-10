@@ -2,6 +2,7 @@ package com.icthh.xm.ms.entity.service.impl;
 
 import com.icthh.xm.commons.domain.FunctionResult;
 import com.icthh.xm.commons.logging.LoggingAspectConfig;
+import com.icthh.xm.commons.logging.aop.IgnoreLogginAspect;
 import com.icthh.xm.commons.service.FunctionResultProcessor;
 import com.icthh.xm.ms.entity.domain.FunctionContext;
 import com.icthh.xm.ms.entity.domain.FunctionResultContext;
@@ -11,13 +12,13 @@ import com.icthh.xm.ms.entity.domain.spec.FunctionSpec;
 import com.icthh.xm.ms.entity.service.FunctionContextService;
 import com.icthh.xm.ms.entity.service.XmEntityService;
 import com.icthh.xm.ms.entity.service.mapper.FunctionResultMapper;
+import java.util.concurrent.ThreadLocalRandom;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.util.Map;
-import java.util.UUID;
 
 import static java.util.Collections.emptyList;
 
@@ -36,6 +37,7 @@ public class FunctionResultProcessorImpl implements FunctionResultProcessor<Func
         return processFunctionResult(functionKey, null, executorResult, functionSpec);
     }
 
+    @IgnoreLogginAspect
     public FunctionResultContext processFunctionResult(String functionKey,
                                                  IdOrKey idOrKey,
                                                  Object data,
@@ -53,7 +55,10 @@ public class FunctionResultProcessorImpl implements FunctionResultProcessor<Func
 
         FunctionContext functionResult = new FunctionContext();
         // TODO review key & typeKey ...
-        functionResult.setKey(functionKey + "-" + UUID.randomUUID().toString());
+        ThreadLocalRandom localRandom = ThreadLocalRandom.current();
+        String uniqueKey = Long.toHexString(localRandom.nextLong()) + Long.toHexString(localRandom.nextLong());
+
+        functionResult.setKey(functionKey + "-" + uniqueKey);
         functionResult.setTypeKey(functionKey);
         functionResult.setData((Map<String, Object>) data);
         functionResult.setStartDate(Instant.now());
