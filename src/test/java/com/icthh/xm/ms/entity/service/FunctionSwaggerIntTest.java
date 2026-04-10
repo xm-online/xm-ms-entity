@@ -1,11 +1,7 @@
 package com.icthh.xm.ms.entity.service;
 
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import tools.jackson.databind.MapperFeature;
 import tools.jackson.databind.ObjectMapper;
-import tools.jackson.dataformat.yaml.YAMLFactory;
 import com.icthh.xm.commons.config.swagger.DynamicSwaggerConfiguration;
 import com.icthh.xm.commons.config.swagger.DynamicSwaggerRefreshableConfiguration;
 import com.icthh.xm.commons.swagger.model.SwaggerModel;
@@ -237,7 +233,8 @@ public class FunctionSwaggerIntTest extends AbstractJupiterSpringBootTest {
                 .enable(ORDER_MAP_ENTRIES_BY_KEYS)
                 .build();
 
-        return mapper.writeValueAsString(mapper.convertValue(swagger, Map.class));
+        return mapper.writerWithDefaultPrettyPrinter()
+                .writeValueAsString(mapper.convertValue(swagger, Map.class));
     }
 
     @SneakyThrows

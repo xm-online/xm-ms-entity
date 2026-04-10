@@ -56,7 +56,7 @@ public class RestTimeoutCustomizerIntTest extends AbstractJupiterSpringBootTest 
     @Test
     public void testCallWithTimeout() {
         Assertions.assertThrows(ResourceAccessException.class, () -> {
-            String expectedUri = "http://localhost:8081/test/sleep";
+            String expectedUri = "http://entity/test/sleep";
 
             mockWebServer.enqueue(new MockResponse().setResponseCode(200).setBodyDelay(100, java.util.concurrent.TimeUnit.MILLISECONDS));
             requestFactory.addPathTimeoutConfig(PathTimeoutConfig.builder()
@@ -70,7 +70,7 @@ public class RestTimeoutCustomizerIntTest extends AbstractJupiterSpringBootTest 
 
     @Test
     public void testCallWithoutTimeout() throws Exception {
-        String expectedUri = "http://localhost:8081/test/sleep";
+        String expectedUri = "http://entity/test/sleep";
         mockWebServer.enqueue(new MockResponse().setResponseCode(200));
         requestFactory.addPathTimeoutConfig(PathTimeoutConfig.builder()
                                                              .httpMethod(HttpMethod.GET)

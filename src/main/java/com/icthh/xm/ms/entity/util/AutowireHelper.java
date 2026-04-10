@@ -41,12 +41,5 @@ public final class AutowireHelper implements ApplicationContextAware {
     public static AutowireHelper getInstance() {
         return INSTANCE;
     }
-    
-    public <T> T getBean(Class<T> beanClass) {
-        if (applicationContext == null) {
-            throw new IllegalStateException("ApplicationContext is not initialized");
-        }
-        return applicationContext.getBean(beanClass);
-    }
 
 }

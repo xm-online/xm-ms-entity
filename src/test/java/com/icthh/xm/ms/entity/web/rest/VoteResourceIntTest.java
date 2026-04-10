@@ -24,7 +24,7 @@ import com.icthh.xm.ms.entity.repository.VoteRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
 import com.icthh.xm.ms.entity.service.VoteService;
 import com.icthh.xm.ms.entity.service.impl.StartUpdateDateGenerationStrategy;
-import com.icthh.xm.ms.entity.util.AutowireHelper;
+
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -120,7 +120,6 @@ public class VoteResourceIntTest extends AbstractJupiterSpringBootTest {
     @BeforeEach
     public void setup() {
         MockitoAnnotations.initMocks(this);
-        
 
         when(startUpdateDateGenerationStrategy.generateStartDate()).thenReturn(UPDATED_ENTRY_DATE);
 

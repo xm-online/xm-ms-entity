@@ -43,16 +43,16 @@ public class WebMvcConfiguration implements WebMvcConfigurer {
     }
 
     private void addSupportedMediaTypesTo(List<HttpMessageConverter<?>> converters,
-                                          Class<? extends AbstractHttpMessageConverter<?>> targetConverterClass,
-                                          MediaType... mediaTypes) {
+        Class<? extends AbstractHttpMessageConverter<?>> targetConverterClass,
+        MediaType... mediaTypes) {
         converters.stream()
-                .filter(conv -> conv.getClass() == targetConverterClass)
-                .map(conv -> (AbstractHttpMessageConverter) conv)
-                .forEach(conv -> addSupportedMediaTypes(conv, Arrays.asList(mediaTypes)));
+            .filter(conv -> conv.getClass() == targetConverterClass)
+            .map(conv -> (AbstractHttpMessageConverter) conv)
+            .forEach(conv -> addSupportedMediaTypes(conv, Arrays.asList(mediaTypes)));
     }
 
     private void addSupportedMediaTypes(AbstractHttpMessageConverter<?> converter,
-                                        List<MediaType> additionalMediaTypes) {
+        List<MediaType> additionalMediaTypes) {
         ArrayList<MediaType> mediaTypes = new ArrayList<>(converter.getSupportedMediaTypes());
         mediaTypes.addAll(additionalMediaTypes);
         converter.setSupportedMediaTypes(mediaTypes);

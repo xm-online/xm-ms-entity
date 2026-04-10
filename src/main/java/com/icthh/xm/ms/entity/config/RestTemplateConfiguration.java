@@ -30,15 +30,15 @@ public class RestTemplateConfiguration {
 
     @LoadBalanced
     @Bean
-    public RestTemplate loadBalancedRestTemplate(RestTemplateBuilder restTemplateBuilder) {
-        return restTemplateBuilder.build();
+    public RestTemplate loadBalancedRestTemplate(RestTemplateBuilder builder) {
+        return builder.build();
     }
 
     @LoadBalanced
     @Bean
-    public RestTemplate loadBalancedRestTemplateWithTimeout(RestTemplateBuilder restTemplateBuilder,
+    public RestTemplate loadBalancedRestTemplateWithTimeout(RestTemplateBuilder builder,
                                                             PathTimeoutHttpComponentsClientHttpRequestFactory requestFactory) {
-        return restTemplateBuilder
+        return builder
             .requestFactory(() -> requestFactory)
             .build();
     }
@@ -48,8 +48,8 @@ public class RestTemplateConfiguration {
      * rest template should be created using builder
      */
     @Bean
-    public RestTemplate plainRestTemplate(RestTemplateBuilder restTemplateBuilder) {
-        return restTemplateBuilder.build();
+    public RestTemplate plainRestTemplate(RestTemplateBuilder builder) {
+        return builder.build();
     }
 
     @Bean
@@ -78,6 +78,7 @@ public class RestTemplateConfiguration {
                 }
             }
 
+            // Returning null allows HttpComponentsClientHttpRequestFactory to continue down normal path for populating the context
             return null;
         }
 

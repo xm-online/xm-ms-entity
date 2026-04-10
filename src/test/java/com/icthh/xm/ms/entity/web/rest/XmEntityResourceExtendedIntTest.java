@@ -67,7 +67,7 @@ import com.icthh.xm.ms.entity.service.json.JsonValidationService;
 import static com.icthh.xm.ms.entity.web.rest.TestUtil.sameInstant;
 
 import com.icthh.xm.ms.entity.service.storage.AvatarStorageService;
-import com.icthh.xm.ms.entity.util.AutowireHelper;
+
 import com.jayway.jsonpath.JsonPath;
 import static java.time.Instant.now;
 import static java.util.Collections.emptyMap;
@@ -362,8 +362,6 @@ public class XmEntityResourceExtendedIntTest extends AbstractJupiterSpringBootTe
         TenantContextUtils.setTenant(tenantContextHolder, "RESINTTEST");
 
         MockitoAnnotations.initMocks(this);
-
-        
 
         when(authContextHolder.getContext()).thenReturn(context);
         when(context.getUserKey()).thenReturn(Optional.of("userKey"));
@@ -775,10 +773,6 @@ public class XmEntityResourceExtendedIntTest extends AbstractJupiterSpringBootTe
         Integer targetId = target.getId().intValue();
         Integer srcId1 = source1.getId().intValue();
         Integer srcId2 = source2.getId().intValue();
-
-//        LinkSourceDto linkSourceDto = new LinkSourceDto(source1.getSources().iterator().next());
-//
-//        objectMapper.writeValueAsString()
 
         // Get the xmEntityPersisted with tag by ID
         performGet("/api/v2/xm-entities/{id}/links/sources", target.getId())

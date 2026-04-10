@@ -29,8 +29,8 @@ public class ApplicationStartup implements ApplicationListener<ApplicationReadyE
     private final ApplicationProperties applicationProperties;
     private final ConsumerFactory<String, String> consumerFactory;
     private final SystemTopicConsumer systemTopicConsumer;
-    private final PrivilegeInspector privilegeInspector;
     private final KafkaProperties kafkaProperties;
+    private final PrivilegeInspector privilegeInspector;
 
     @Override
     public void onApplicationEvent(ApplicationReadyEvent event) {
