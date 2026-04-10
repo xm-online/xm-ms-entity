@@ -7,17 +7,17 @@ import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Converter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import com.icthh.xm.commons.tenant.JsonMapperUtils;
 
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import tools.jackson.databind.json.JsonMapper;
 
 @Slf4j
 @Converter
 public class MapToStringConverter implements AttributeConverter<Map<String, Object>, String> {
 
-    private final ObjectMapper mapper = JsonMapper.builder().build();
+    private final ObjectMapper mapper = JsonMapperUtils.getDefaultJsonMapper();
 
     public MapToStringConverter() {
     }

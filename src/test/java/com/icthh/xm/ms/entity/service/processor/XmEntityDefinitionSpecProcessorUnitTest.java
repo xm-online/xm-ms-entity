@@ -1,11 +1,11 @@
 package com.icthh.xm.ms.entity.service.processor;
 
+import com.icthh.xm.commons.tenant.YamlMapperUtils;
 import tools.jackson.databind.ObjectMapper;
 
 import tools.jackson.databind.SerializationFeature;
-import tools.jackson.databind.json.JsonMapper;
-import tools.jackson.dataformat.yaml.YAMLFactory;
 import com.icthh.xm.commons.domain.DefinitionSpec;
+import com.icthh.xm.commons.tenant.JsonMapperUtils;
 import com.icthh.xm.commons.domain.FormSpec;
 import com.icthh.xm.commons.listener.JsonListenerService;
 import com.icthh.xm.ms.entity.AbstractJupiterUnitTest;
@@ -41,7 +41,7 @@ public class XmEntityDefinitionSpecProcessorUnitTest extends AbstractJupiterUnit
         JsonListenerService jsonListenerService = new JsonListenerService();
         XmEntityTypeSpecProcessor typeSpecProcessor = new XmEntityTypeSpecProcessor(jsonListenerService);
         subject = new XmEntityDefinitionSpecProcessor(jsonListenerService, typeSpecProcessor);
-        objectMapper = JsonMapper.builder().build();
+        objectMapper = JsonMapperUtils.getDefaultJsonMapper();
         jsonListenerService.processTenantSpecification(TENANT, RELATIVE_PATH_TO_FILE, loadFile("config/specs/definitions/specification-definitions.json"));
     }
 
@@ -146,7 +146,7 @@ public class XmEntityDefinitionSpecProcessorUnitTest extends AbstractJupiterUnit
 
     @SneakyThrows
     private XmEntitySpec loadXmEntitySpecByFileName(String name) {
-        ObjectMapper mapper = YAMLMapper.builder().build();
+        ObjectMapper mapper = YamlMapperUtils.yamlDefaultMapper();
         return mapper.readValue(loadFile("config/specs/definitions/" + name + ".yml"), XmEntitySpec.class);
     }
 
@@ -162,7 +162,7 @@ public class XmEntityDefinitionSpecProcessorUnitTest extends AbstractJupiterUnit
 
     @SneakyThrows
     private void assertEqualsEntities(XmEntitySpec expected, XmEntitySpec actual) {
-        ObjectMapper objectMapper = YAMLMapper.builder().build();
+        ObjectMapper objectMapper = YamlMapperUtils.yamlDefaultMapper();
         TypeSpec expectedTypeSpec = expected.getTypes().get(0);
         TypeSpec actualTypeSpec = actual.getTypes().get(0);
         Map expectedTree = objectMapper.readValue(expectedTypeSpec.getDataSpec(), Map.class);

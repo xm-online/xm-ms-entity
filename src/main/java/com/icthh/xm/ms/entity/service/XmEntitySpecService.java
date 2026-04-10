@@ -1,5 +1,6 @@
 package com.icthh.xm.ms.entity.service;
 
+import com.icthh.xm.commons.tenant.YamlMapperUtils;
 import tools.jackson.databind.MapperFeature;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.dataformat.yaml.YAMLFactory;
@@ -68,9 +69,7 @@ public class XmEntitySpecService implements RefreshableConfiguration {
     private static final String TYPE_SEPARATOR = ".";
     private static final String TENANT_NAME = "tenantName";
     private final AntPathMatcher matcher = new AntPathMatcher();
-    private final ObjectMapper mapper = YAMLMapper.builder()
-                .disable(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY)
-                .build();
+    private final ObjectMapper mapper = YamlMapperUtils.yamlDefaultMapper();
     private final TenantConfigRepository tenantConfigRepository;
     private final ApplicationProperties applicationProperties;
     private final TenantContextHolder tenantContextHolder;

@@ -8,6 +8,7 @@ import com.codahale.metrics.Gauge;
 import com.codahale.metrics.Metric;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.MetricSet;
+import com.icthh.xm.commons.tenant.YamlMapperUtils;
 import tools.jackson.core.type.TypeReference;
 import tools.jackson.databind.MapperFeature;
 import tools.jackson.databind.ObjectMapper;
@@ -30,9 +31,7 @@ public class CustomMetricsConfiguration implements RefreshableConfiguration {
 
     private static final String METRICS_PREFIX = "custom.metrics.";
 
-    private final ObjectMapper mapper = YAMLMapper.builder()
-                .disable(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY)
-                .build();
+    private final ObjectMapper mapper = YamlMapperUtils.yamlDefaultMapper();
     private final ConcurrentHashMap<String, List<CustomMetric>> configuration = new ConcurrentHashMap<>();
     private final AntPathMatcher matcher = new AntPathMatcher();
 

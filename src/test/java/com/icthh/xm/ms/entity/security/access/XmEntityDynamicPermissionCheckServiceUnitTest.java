@@ -1,8 +1,8 @@
 package com.icthh.xm.ms.entity.security.access;
 
-import tools.jackson.databind.ObjectMapper;
 import com.icthh.xm.commons.config.client.config.XmConfigProperties;
 import com.icthh.xm.commons.permission.constants.RoleConstant;
+import com.icthh.xm.commons.tenant.JsonMapperUtils;
 import com.icthh.xm.commons.permission.domain.Permission;
 import com.icthh.xm.commons.permission.service.PermissionCheckService;
 import com.icthh.xm.commons.permission.service.PermissionService;
@@ -38,7 +38,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
-import tools.jackson.databind.json.JsonMapper;
 
 import static com.google.common.collect.Maps.newHashMap;
 import static com.google.common.collect.Sets.newHashSet;
@@ -328,6 +327,6 @@ public class XmEntityDynamicPermissionCheckServiceUnitTest extends AbstractJupit
 
     @SneakyThrows
     public void prepareConfig(Map<String, Object> map) {
-        tenantConfig.onRefresh("/config/tenants/XM/tenant-config.yml", JsonMapper.builder().build().writeValueAsString(map));
+        tenantConfig.onRefresh("/config/tenants/XM/tenant-config.yml", JsonMapperUtils.getDefaultJsonMapper().writeValueAsString(map));
     }
 }

@@ -1,6 +1,6 @@
 package com.icthh.xm.ms.entity.service.impl;
 
-import tools.jackson.databind.ObjectMapper;
+import com.icthh.xm.commons.tenant.JsonMapperUtils;
 import com.google.common.collect.Maps;
 import com.icthh.xm.commons.service.FunctionTxControl;
 import com.icthh.xm.commons.service.impl.FunctionTxControlImpl;
@@ -33,7 +33,6 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
-import tools.jackson.databind.json.JsonMapper;
 
 import static com.icthh.xm.ms.entity.domain.ext.IdOrKey.SELF;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -83,7 +82,7 @@ public class FunctionServiceImplUnitTest extends AbstractJupiterUnitTest {
         functionContextService = Mockito.mock(FunctionContextService.class);
         dynamicPermissionCheckService = Mockito.mock(XmEntityDynamicPermissionCheckService.class);
         xmEntityTenantConfigService = Mockito.mock(XmEntityTenantConfigService.class);
-        jsonValidationService = spy(new JsonValidationService(JsonMapper.builder().build()));
+        jsonValidationService = spy(new JsonValidationService(JsonMapperUtils.getDefaultJsonMapper()));
         functionResultMapper = spy(new FunctionResultMapperImpl());
         functionResultProcessor = new FunctionResultProcessorImpl(xmEntityService, functionContextService, functionResultMapper);
         functionService = new XmEntityFunctionServiceImpl(dynamicPermissionCheckService, xmEntitySpecService,

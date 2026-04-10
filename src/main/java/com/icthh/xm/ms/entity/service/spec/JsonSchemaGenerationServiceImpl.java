@@ -2,9 +2,9 @@ package com.icthh.xm.ms.entity.service.spec;
 
 
 import tools.jackson.databind.ObjectMapper;
-import tools.jackson.databind.json.JsonMapper;
 import tools.jackson.module.jsonSchema.JsonSchema;
 import tools.jackson.module.jsonSchema.JsonSchemaGenerator;
+import com.icthh.xm.commons.tenant.JsonMapperUtils;
 import tools.jackson.module.jsonSchema.types.ArraySchema;
 import tools.jackson.module.jsonSchema.types.ObjectSchema;
 import tools.jackson.module.jsonSchema.types.StringSchema;
@@ -20,7 +20,7 @@ public class JsonSchemaGenerationServiceImpl implements JsonSchemaGenerationServ
 
     @SneakyThrows
     public String generateJsonSchema() {
-        ObjectMapper mapper = JsonMapper.builder().build();
+        ObjectMapper mapper = JsonMapperUtils.getDefaultJsonMapper();
 
         JsonSchemaGenerator schemaGen = new JsonSchemaGenerator(mapper);
         JsonSchema jsonSchema = schemaGen.generateSchema(XmEntitySpec.class);

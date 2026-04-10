@@ -1,5 +1,6 @@
 package com.icthh.xm.ms.entity.service;
 
+import com.icthh.xm.commons.tenant.YamlMapperUtils;
 import tools.jackson.databind.MapperFeature;
 import tools.jackson.databind.ObjectMapper;
 import com.icthh.xm.commons.config.swagger.DynamicSwaggerConfiguration;
@@ -208,9 +209,7 @@ public class FunctionSwaggerIntTest extends AbstractJupiterSpringBootTest {
 
     @SneakyThrows
     private SwaggerModel readExpected(String path) {
-        return YAMLMapper.builder()
-                .disable(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY)
-                .build()
+        return YamlMapperUtils.yamlDefaultMapper()
                 .readValue(loadFile(path), SwaggerModel.class);
     }
 

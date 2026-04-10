@@ -6,6 +6,7 @@ import com.icthh.xm.commons.logging.util.MdcUtils;
 import com.icthh.xm.commons.security.XmAuthenticationContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
+import com.icthh.xm.commons.tenant.JsonMapperUtils;
 import com.icthh.xm.ms.entity.domain.Profile;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.domain.kafka.SystemEvent;
@@ -20,7 +21,6 @@ import org.springframework.stereotype.Service;
 import java.time.Instant;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import tools.jackson.databind.json.JsonMapper;
 
 /**
  * Kafka event producer for {@link com.icthh.xm.ms.entity.domain.Profile}.
@@ -31,7 +31,7 @@ import tools.jackson.databind.json.JsonMapper;
 public class ProfileEventProducer {
 
     private final KafkaTemplate<String, String> template;
-    private final ObjectMapper mapper = JsonMapper.builder().build();
+    private final ObjectMapper mapper = JsonMapperUtils.getDefaultJsonMapper();
 
     private final TenantContextHolder tenantContextHolder;
     private final XmAuthenticationContextHolder authContextHolder;

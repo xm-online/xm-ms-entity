@@ -4,6 +4,7 @@ import static com.icthh.xm.commons.config.domain.Configuration.of;
 import static com.icthh.xm.commons.tenantendpoint.provisioner.TenantConfigProvisioner.prependTenantPath;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
+import com.icthh.xm.commons.tenant.YamlMapperUtils;
 import tools.jackson.core.JacksonException;
 import tools.jackson.databind.ObjectMapper;
 import com.icthh.xm.commons.config.client.api.RefreshableConfiguration;
@@ -36,7 +37,7 @@ import tools.jackson.dataformat.yaml.YAMLMapper;
 @Configuration
 public class TenantManagerConfiguration {
 
-    private ObjectMapper mapper = YAMLMapper.builder().build();
+    private ObjectMapper mapper = YamlMapperUtils.yamlDefaultMapper();
 
     @Value("${spring.application.name}")
     private String applicationName;

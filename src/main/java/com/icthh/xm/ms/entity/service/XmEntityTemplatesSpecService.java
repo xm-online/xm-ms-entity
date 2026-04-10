@@ -2,6 +2,7 @@ package com.icthh.xm.ms.entity.service;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import com.icthh.xm.commons.tenant.YamlMapperUtils;
 import tools.jackson.core.type.TypeReference;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.dataformat.yaml.YAMLFactory;
@@ -28,7 +29,7 @@ import tools.jackson.dataformat.yaml.YAMLMapper;
 public class XmEntityTemplatesSpecService implements RefreshableConfiguration {
 
     private static final String TENANT_NAME = "tenantName";
-    private static final ObjectMapper mapper = YAMLMapper.builder().build();
+    private static final ObjectMapper mapper = YamlMapperUtils.yamlDefaultMapper();
     private final AntPathMatcher matcher = new AntPathMatcher();
     private final ConcurrentHashMap<String, Map<String, Template>> templates = new ConcurrentHashMap<>();
     private final ApplicationProperties applicationProperties;

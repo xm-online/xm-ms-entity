@@ -1,11 +1,11 @@
 package com.icthh.xm.ms.entity.service.swagger;
 
 import tools.jackson.databind.ObjectMapper;
-import tools.jackson.databind.json.JsonMapper;
 import tools.jackson.databind.node.ObjectNode;
 import com.icthh.xm.commons.config.swagger.DynamicSwaggerConfiguration;
 import com.icthh.xm.commons.swagger.JsonSchemaToSwaggerSchemaConverter;
 import com.icthh.xm.commons.swagger.impl.AbstractSwaggerGenerator;
+import com.icthh.xm.commons.tenant.JsonMapperUtils;
 import com.icthh.xm.commons.swagger.model.ApiMethod;
 import com.icthh.xm.commons.swagger.model.SwaggerContent;
 import com.icthh.xm.commons.swagger.model.SwaggerFunction;
@@ -30,7 +30,7 @@ public class XmEntitySwaggerGenerator extends AbstractSwaggerGenerator {
 
     private final Map<String, Object> DEFAULT_SCHEMA = Map.of("type", "string", "format", "binary");
     private final Set<String> SUCCESS_RESPONSE_CODES = Set.of("200", "201");
-    private final ObjectMapper objectMapper = JsonMapper.builder().build();
+    private final ObjectMapper objectMapper = JsonMapperUtils.getDefaultJsonMapper();
 
     public XmEntitySwaggerGenerator(String baseUrl, DynamicSwaggerConfiguration configuration) {
         super(baseUrl, configuration, new JsonSchemaToSwaggerSchemaConverter(XM_ENTITY_DEFINITION, DEFINITION_PREFIXES));

@@ -1,11 +1,11 @@
 package com.icthh.xm.ms.entity.service.processor;
 
+import com.icthh.xm.commons.tenant.YamlMapperUtils;
 import tools.jackson.core.JacksonException;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.ObjectWriter;
-import tools.jackson.databind.json.JsonMapper;
-import tools.jackson.dataformat.yaml.YAMLFactory;
 import com.icthh.xm.commons.domain.DefinitionSpec;
+import com.icthh.xm.commons.tenant.JsonMapperUtils;
 import com.icthh.xm.commons.domain.FormSpec;
 import com.icthh.xm.commons.listener.JsonListenerService;
 import com.icthh.xm.ms.entity.AbstractJupiterUnitTest;
@@ -100,19 +100,19 @@ public class XmEntityDataFormSpecProcessorUnitTest extends AbstractJupiterUnitTe
 
     @SneakyThrows
     private XmEntitySpec loadXmEntitySpecByFileName(String name) {
-        ObjectMapper mapper = YAMLMapper.builder().build();
+        ObjectMapper mapper = YamlMapperUtils.yamlDefaultMapper();
         return mapper.readValue(loadFile("config/specs/forms/" + name + ".yml"), XmEntitySpec.class);
     }
 
     @SneakyThrows
     private void assertEqualsEntities(XmEntitySpec expected, XmEntitySpec actual) {
-        ObjectMapper objectMapper = YAMLMapper.builder().build();
+        ObjectMapper objectMapper = YamlMapperUtils.yamlDefaultMapper();
         TypeSpec expectedTypeSpec = expected.getTypes().getFirst();
         TypeSpec actualTypeSpec = actual.getTypes().getFirst();
         Map<?, ?> expectedForm = objectMapper.readValue(expectedTypeSpec.getDataForm(), Map.class);
         Map<?, ?> actualForm = objectMapper.readValue(actualTypeSpec.getDataForm(), Map.class);
 
-        ObjectWriter prettyPrinter = JsonMapper.builder().build().writerWithDefaultPrettyPrinter();
+        ObjectWriter prettyPrinter = JsonMapperUtils.getDefaultJsonMapper().writerWithDefaultPrettyPrinter();
         Assertions.assertEquals(prettyPrinter.writeValueAsString(expectedForm), prettyPrinter.writeValueAsString(actualForm));
         Assertions.assertEquals(expectedTypeSpec.getKey(), actualTypeSpec.getKey());
         Assertions.assertEquals(expected.getDefinitions(), actual.getDefinitions());

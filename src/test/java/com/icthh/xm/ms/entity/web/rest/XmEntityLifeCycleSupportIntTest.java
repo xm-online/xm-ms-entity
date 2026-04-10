@@ -13,11 +13,10 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import tools.jackson.databind.ObjectMapper;
-import tools.jackson.databind.json.JsonMapper;
 import tools.jackson.databind.node.ObjectNode;
 import com.icthh.xm.commons.i18n.error.web.ExceptionTranslator;
 import com.icthh.xm.commons.lep.XmLepScriptConfigServerResourceLoader;
+import com.icthh.xm.commons.tenant.JsonMapperUtils;
 import com.icthh.xm.commons.security.XmAuthenticationContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
@@ -232,7 +231,7 @@ public class XmEntityLifeCycleSupportIntTest extends AbstractJupiterSpringBootTe
             .content(TestUtil.convertObjectToJsonBytes(createEntity("KEY1", "TEST_LIFECYCLE"))))
             .andDo(r -> {
                 log.info(r.getResponse().getContentAsString());
-                final ObjectNode node = JsonMapper.builder().build().readValue(r.getResponse().getContentAsString(), ObjectNode.class);
+                final ObjectNode node = JsonMapperUtils.getDefaultJsonMapper().readValue(r.getResponse().getContentAsString(), ObjectNode.class);
                 id.setValue(node.get("id").longValue());
             })
             .andExpect(status().isCreated());
@@ -271,7 +270,7 @@ public class XmEntityLifeCycleSupportIntTest extends AbstractJupiterSpringBootTe
                                         .content(TestUtil.convertObjectToJsonBytes(entity)))
             .andDo(r -> {
                 log.info(r.getResponse().getContentAsString());
-                final ObjectNode node = JsonMapper.builder().build().readValue(r.getResponse().getContentAsString(), ObjectNode.class);
+                final ObjectNode node = JsonMapperUtils.getDefaultJsonMapper().readValue(r.getResponse().getContentAsString(), ObjectNode.class);
                 id.setValue(node.get("id").longValue());
             })
             .andExpect(status().isCreated());
@@ -282,7 +281,7 @@ public class XmEntityLifeCycleSupportIntTest extends AbstractJupiterSpringBootTe
             .andDo(r -> {
                 String json = r.getResponse().getContentAsString();
                 log.info(json);
-                final ObjectNode node = JsonMapper.builder().build().readValue(r.getResponse().getContentAsString(), ObjectNode.class);
+                final ObjectNode node = JsonMapperUtils.getDefaultJsonMapper().readValue(r.getResponse().getContentAsString(), ObjectNode.class);
                 String expected = " root TEST_LIFECYCLE_TYPE_KEY TEST_LIFECYCLE_TYPE_KEY$SUB " +
                                   "TEST_LIFECYCLE_TYPE_KEY$SUB$CHILD TEST_LIFECYCLE_TYPE_KEY$$STATE2" +
                                   " TEST_LIFECYCLE_TYPE_KEY$SUB$$STATE2 TEST_LIFECYCLE_TYPE_KEY$SUB$CHILD$$STATE2" +
@@ -318,7 +317,7 @@ public class XmEntityLifeCycleSupportIntTest extends AbstractJupiterSpringBootTe
             .content(TestUtil.convertObjectToJsonBytes(createEntity("KEY1", "TEST_LIFECYCLE"))))
             .andDo(r -> {
                 log.info(r.getResponse().getContentAsString());
-                final ObjectNode node = JsonMapper.builder().build().readValue(r.getResponse().getContentAsString(), ObjectNode.class);
+                final ObjectNode node = JsonMapperUtils.getDefaultJsonMapper().readValue(r.getResponse().getContentAsString(), ObjectNode.class);
                 id.setValue(node.get("id").longValue());
             })
             .andExpect(status().isCreated());
@@ -344,7 +343,7 @@ public class XmEntityLifeCycleSupportIntTest extends AbstractJupiterSpringBootTe
             .andDo(r -> {
                 String json = r.getResponse().getContentAsString();
                 log.info(json);
-                final ObjectNode node = JsonMapper.builder().build().readValue(r.getResponse().getContentAsString(), ObjectNode.class);
+                final ObjectNode node = JsonMapperUtils.getDefaultJsonMapper().readValue(r.getResponse().getContentAsString(), ObjectNode.class);
                 assertThat(node.get("data").get("updateState").intValue()).isEqualTo(updateState);
                 assertThat(node.get("data").get("updateByEntity").intValue()).isEqualTo(updateByEntity);
                 assertThat(node.get("data").get("updateByTargetState").intValue()).isEqualTo(updateByTargetState);

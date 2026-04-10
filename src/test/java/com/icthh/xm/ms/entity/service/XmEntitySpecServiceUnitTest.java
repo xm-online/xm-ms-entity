@@ -1,13 +1,11 @@
 package com.icthh.xm.ms.entity.service;
 
+import com.icthh.xm.commons.tenant.TenantContext;
+import com.icthh.xm.commons.tenant.YamlMapperUtils;
 import com.icthh.xm.ms.entity.web.rest.TestUtil;
 import java.util.HashSet;
-import tools.jackson.core.StreamReadFeature;
-import tools.jackson.databind.DeserializationFeature;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
-import tools.jackson.databind.json.JsonMapper;
-import tools.jackson.dataformat.yaml.YAMLFactory;
 import com.icthh.xm.commons.config.client.config.XmConfigProperties;
 import com.icthh.xm.commons.config.client.repository.CommonConfigRepository;
 import com.icthh.xm.commons.config.client.repository.TenantConfigRepository;
@@ -17,7 +15,7 @@ import com.icthh.xm.commons.listener.JsonListenerService;
 import com.icthh.xm.commons.permission.domain.Role;
 import com.icthh.xm.commons.permission.service.RoleService;
 import com.icthh.xm.commons.tenant.PrivilegedTenantContext;
-import com.icthh.xm.commons.tenant.TenantContext;
+import com.icthh.xm.commons.tenant.JsonMapperUtils;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantKey;
 import com.icthh.xm.ms.entity.AbstractJupiterUnitTest;
@@ -71,7 +69,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import tools.jackson.dataformat.yaml.YAMLMapper;
-import tools.jackson.module.jsonSchema.JsonSchema;
 
 import static com.google.common.collect.ImmutableMap.of;
 import static com.google.common.collect.Maps.newHashMap;
@@ -292,7 +289,7 @@ public class XmEntitySpecServiceUnitTest extends AbstractJupiterUnitTest {
 
     @SneakyThrows
     public void prepareConfig(Map<String, Object> map) {
-        tenantConfig.onRefresh("/config/tenants/XM/tenant-config.yml", JsonMapper.builder().build().writeValueAsString(map));
+        tenantConfig.onRefresh("/config/tenants/XM/tenant-config.yml", JsonMapperUtils.getDefaultJsonMapper().writeValueAsString(map));
     }
 
     @Test
@@ -539,7 +536,7 @@ public class XmEntitySpecServiceUnitTest extends AbstractJupiterUnitTest {
     @SneakyThrows
     public void testUpdateCustomXmEntityDeletePrivileges() {
         Map<String, Object> configMap = Map.of("dynamicTypeKeyPermission", Map.of("entityDeletion", Boolean.TRUE.toString()));
-        tenantConfig.onRefresh("/config/tenants/XM/tenant-config.yml", JsonMapper.builder().build().writeValueAsString(configMap));
+        tenantConfig.onRefresh("/config/tenants/XM/tenant-config.yml", JsonMapperUtils.getDefaultJsonMapper().writeValueAsString(configMap));
 
         String customPrivileges = readFile("config/privileges/custom-privileges.yml");
         String expectedCustomPrivileges = readFile("config/privileges/expected-custom-privileges-with-xm-entity.yml");
@@ -997,7 +994,7 @@ public class XmEntitySpecServiceUnitTest extends AbstractJupiterUnitTest {
 
     @Test
     public void testUpdateTenantByStateWithDefinitionsAndForms() throws Exception {
-        ObjectMapper objectMapper = YAMLMapper.builder().build();
+        ObjectMapper objectMapper = YamlMapperUtils.yamlDefaultMapper();
         String config = getXmEntitySpec("specifications");
         String key = SPEC_FOLDER_URL.replace("{tenantName}", "RESINTTEST") + "/file.yml";
         mockTenant("RESINTTEST");
@@ -1026,7 +1023,7 @@ public class XmEntitySpecServiceUnitTest extends AbstractJupiterUnitTest {
 
     @Test
     public void testUpdateTenantByStateWithDefinitionsAndFormsAndUpdatedJsonFile() throws Exception {
-        ObjectMapper objectMapper = YAMLMapper.builder().build();
+        ObjectMapper objectMapper = YamlMapperUtils.yamlDefaultMapper();
         String config = getXmEntitySpec("specifications");
         String key = SPEC_FOLDER_URL.replace("{tenantName}", "RESINTTEST") + "/file.yml";
         mockTenant("RESINTTEST");
@@ -1099,9 +1096,9 @@ public class XmEntitySpecServiceUnitTest extends AbstractJupiterUnitTest {
 
     @SneakyThrows
     private boolean validateByJsonSchema(String schema, Map<String, Object> value) {
-        ObjectMapper objectMapper = JsonMapper.builder().build();
+        ObjectMapper objectMapper = JsonMapperUtils.getDefaultJsonMapper();
         JsonNode valueJsonNode = objectMapper.readTree(objectMapper.writeValueAsString(value));
-        JsonNode schemaNode = JsonMapper.builder().build().readTree(schema);
+        JsonNode schemaNode = JsonMapperUtils.getDefaultJsonMapper().readTree(schema);
         SchemaRegistry factory = SchemaRegistry.withDefaultDialect(SpecificationVersion.DRAFT_4);
         Schema jsonSchema = factory.getSchema(schemaNode);
         Set<Error> report = new HashSet<>(jsonSchema.validate(valueJsonNode));

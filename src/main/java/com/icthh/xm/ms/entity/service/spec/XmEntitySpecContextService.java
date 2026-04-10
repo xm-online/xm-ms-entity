@@ -1,5 +1,6 @@
 package com.icthh.xm.ms.entity.service.spec;
 
+import com.icthh.xm.commons.tenant.YamlMapperUtils;
 import tools.jackson.databind.MapperFeature;
 import tools.jackson.databind.ObjectMapper;
 import com.icthh.xm.commons.config.domain.Configuration;
@@ -55,9 +56,7 @@ public class XmEntitySpecContextService {
     // now we have cycle entitySpecService -> EntityService -> LepContextFactory -> <lep-s related> -> entitySpecCustomizer -> entitySpecService
     private final AtomicBoolean initialized = new AtomicBoolean(false);
 
-    private final ObjectMapper mapper = YAMLMapper.builder()
-                .disable(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY)
-                .build();
+    private final ObjectMapper mapper = YamlMapperUtils.yamlDefaultMapper();
     private final ConcurrentHashMap<String, Map<String, TypeSpec>> typesByTenant = new ConcurrentHashMap<>();
     // tenant -> filePath -> fileContent
     private final ConcurrentHashMap<String, Map<String, String>> typesByTenantByFile = new ConcurrentHashMap<>();

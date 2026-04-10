@@ -1,5 +1,6 @@
 package com.icthh.xm.ms.entity.service;
 
+import com.icthh.xm.commons.tenant.JsonMapperUtils;
 import tools.jackson.databind.ObjectMapper;
 import com.icthh.xm.commons.config.client.service.TenantConfigService;
 import com.icthh.xm.commons.exceptions.BusinessException;
@@ -43,7 +44,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import tools.jackson.databind.json.JsonMapper;
 
 import static com.google.common.collect.ImmutableMap.of;
 import static com.icthh.xm.ms.entity.util.EntityUtils.TEST_ID;
@@ -89,7 +89,7 @@ public class XmEntityServiceImplUnitTest extends AbstractJupiterUnitTest {
     XmAuthenticationContext authContext;
 
     @Spy
-    private ObjectMapper mapper = JsonMapper.builder().build();
+    private ObjectMapper mapper = JsonMapperUtils.getDefaultJsonMapper();
     @Spy
     private SimpleTemplateProcessor templateProcessor = new SimpleTemplateProcessor(mapper);
 
@@ -291,7 +291,7 @@ public class XmEntityServiceImplUnitTest extends AbstractJupiterUnitTest {
 
         log.info(json);
 
-        ObjectMapper objectMapper = JsonMapper.builder().build();
+        ObjectMapper objectMapper = JsonMapperUtils.getDefaultJsonMapper();
 
         objectMapper.readValue("{}", FunctionContext.class);
         objectMapper.readValue("{}", Comment.class);

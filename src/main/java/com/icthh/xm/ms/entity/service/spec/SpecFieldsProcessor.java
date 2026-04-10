@@ -11,8 +11,7 @@ import org.apache.commons.lang3.StringUtils;
 
 import java.util.Map;
 import java.util.Set;
-import tools.jackson.databind.ObjectMapper;
-import tools.jackson.databind.json.JsonMapper;
+import com.icthh.xm.commons.tenant.JsonMapperUtils;
 
 import static com.icthh.xm.ms.entity.validator.NodeType.OBJECT;
 import static com.icthh.xm.ms.entity.validator.NodeType.getNodeType;
@@ -27,7 +26,7 @@ public class SpecFieldsProcessor {
                 continue;
             }
 
-            JsonNode node = JsonMapper.builder().build().readTree(typeSpec.getDataSpec());
+            JsonNode node = JsonMapperUtils.getDefaultJsonMapper().readTree(typeSpec.getDataSpec());
             Set<UniqueFieldSpec> uniqueFields = Sets.newHashSet();
             processNode(node, "$", uniqueFields);
             typeSpec.setUniqueFields(uniqueFields);
