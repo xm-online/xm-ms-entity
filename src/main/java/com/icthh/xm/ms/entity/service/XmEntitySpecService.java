@@ -29,7 +29,7 @@ import com.icthh.xm.ms.entity.domain.spec.XmEntitySpec;
 import com.icthh.xm.ms.entity.security.access.XmEntityDynamicPermissionCheckService;
 import com.icthh.xm.ms.entity.service.spec.FunctionMetaInfo;
 import com.icthh.xm.ms.entity.service.spec.XmEntitySpecContextService;
-import com.networknt.schema.JsonSchema;
+import com.networknt.schema.Schema;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -206,7 +206,7 @@ public class XmEntitySpecService implements RefreshableConfiguration {
     }
 
     @IgnoreLogginAspect
-    public Optional<JsonSchema> getDataJsonSchemaByKey(String key) {
+    public Optional<Schema> getDataJsonSchemaByKey(String key) {
         return ofNullable(xmEntitySpecContextService.dataSpecJsonSchemas(getTenantKeyValue())).map(it -> it.get(key));
     }
 

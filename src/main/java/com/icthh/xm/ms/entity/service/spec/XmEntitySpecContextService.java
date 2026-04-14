@@ -10,7 +10,7 @@ import com.icthh.xm.ms.entity.config.XmEntityTenantConfigService;
 import com.icthh.xm.ms.entity.domain.spec.FunctionSpec;
 import com.icthh.xm.ms.entity.domain.spec.TypeSpec;
 import com.icthh.xm.ms.entity.domain.spec.XmEntitySpec;
-import com.networknt.schema.JsonSchema;
+import com.networknt.schema.Schema;
 import java.util.Collection;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -85,7 +85,7 @@ public class XmEntitySpecContextService {
         return nullSafe(typesByTenant.get(tenantKey));
     }
 
-    public Map<String, JsonSchema> dataSpecJsonSchemas(String tenantKey) {
+    public Map<String, Schema> dataSpecJsonSchemas(String tenantKey) {
         return dataSpecJsonSchemaService.dataSpecJsonSchemas(tenantKey);
     }
 
