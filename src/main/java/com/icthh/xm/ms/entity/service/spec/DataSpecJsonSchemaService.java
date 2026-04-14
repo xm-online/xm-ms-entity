@@ -12,7 +12,9 @@ import com.icthh.xm.ms.entity.service.processor.XmEntityDefinitionSpecProcessor;
 import com.icthh.xm.ms.entity.service.processor.XmEntityDataFormSpecProcessor;
 import com.icthh.xm.ms.entity.service.processor.XmEntityTypeSpecProcessor;
 import com.networknt.schema.Schema;
+import com.networknt.schema.SchemaException;
 import com.networknt.schema.SchemaRegistry;
+import com.networknt.schema.SchemaRegistryConfig;
 import com.networknt.schema.SpecificationVersion;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -28,12 +30,15 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
+import tools.jackson.core.JacksonException;
 
 import static com.icthh.xm.commons.utils.DataSpecConstants.DEFINITIONS;
 import static com.icthh.xm.ms.entity.service.processor.XmEntityDefinitionSpecProcessor.XM_ENTITY_DEFINITION;
 import static com.icthh.xm.ms.entity.service.processor.XmEntityTypeSpecProcessor.XM_ENTITY_DATA_SPEC;
 import static com.icthh.xm.ms.entity.service.spec.SpecInheritanceProcessor.XM_ENTITY_INHERITANCE_DEFINITION;
 import static com.icthh.xm.ms.entity.util.CustomCollectionUtils.nullSafe;
+import static com.networknt.schema.SpecificationVersion.DRAFT_4;
+import static com.networknt.schema.path.PathType.LEGACY;
 
 @Slf4j
 @Service
@@ -64,7 +69,8 @@ public class DataSpecJsonSchemaService implements SpecificationProcessingService
     @Override
     public <I extends SpecificationItem> Collection<I> processDataSpecifications(String tenant, String dataSpecKey, Collection<I> specifications) {
         var dataSchemas = new HashMap<String, Schema>();
-        SchemaRegistry schemaRegistry = SchemaRegistry.withDefaultDialect(SpecificationVersion.DRAFT_4);
+        SchemaRegistry schemaRegistry = SchemaRegistry.withDefaultDialect(DRAFT_4,
+        builder -> builder.schemaRegistryConfig(SchemaRegistryConfig.builder().pathType(LEGACY).build()));
 
         Optional.ofNullable(specifications).orElse(List.of())
             .forEach(typeSpec -> {
@@ -130,7 +136,7 @@ public class DataSpecJsonSchemaService implements SpecificationProcessingService
             try {
                 var schema = schemaRegistry.getSchema(typeSpec.getDataSpec());
                 dataSchemas.put(typeSpec.getKey(), schema);
-            } catch (Exception e) {
+            } catch (SchemaException e) {
                 log.error("Error processing data spec", e);
             }
         }

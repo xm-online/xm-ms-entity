@@ -109,7 +109,7 @@ public class AvatarUrlListenerIntTest extends AbstractJupiterSpringBootTest {
 
     @Test
     public void testPostLoadXmeStoreSuccess() {
-        ReflectionTestUtils.setField(target, "isAddPrefixDbUrlTemplate", true);
+        ReflectionTestUtils.setField(target, "isAvatarUrlDbPrefixEnabled", true);
         XmEntity entity = new XmEntity().avatarUrl(applicationProperties.getObjectStorage().getDbFilePrefix() + "hello.jpg");
 
         target.postLoad(entity);

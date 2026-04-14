@@ -141,7 +141,7 @@ public class FunctionContextResourceExtendedIntTest extends AbstractJupiterSprin
 
         restFunctionContextMockMvc.perform(post("/api/function-contexts")
                                                .contentType(TestUtil.APPLICATION_JSON_UTF8)
-                                               .content(TestUtil.convertObjectToJsonBytes(functionContextMapper.toDto(functionContext))))
+                                               .content(TestUtil.assertObjectsAndConvertToJsonBytesDto(functionContext, functionContextMapper.toDto(functionContext))))
                                   .andExpect(status().isCreated())
                                   .andExpect(jsonPath("$.startDate").value(MOCKED_START_DATE.toString()))
                                   .andExpect(jsonPath("$.updateDate").value(MOCKED_UPDATE_DATE.toString()))
@@ -164,7 +164,7 @@ public class FunctionContextResourceExtendedIntTest extends AbstractJupiterSprin
         // Create the FunctionContext
         restFunctionContextMockMvc.perform(post("/api/function-contexts")
                                                .contentType(TestUtil.APPLICATION_JSON_UTF8)
-                                               .content(TestUtil.convertObjectToJsonBytes(functionContextMapper.toDto(functionContext))))
+                                               .content(TestUtil.assertObjectsAndConvertToJsonBytesDto(functionContext, functionContextMapper.toDto(functionContext))))
                                   .andExpect(status().isCreated())
                                   .andExpect(jsonPath("$.startDate").value(MOCKED_START_DATE.toString()))
                                   .andExpect(jsonPath("$.updateDate").value(MOCKED_UPDATE_DATE.toString()))

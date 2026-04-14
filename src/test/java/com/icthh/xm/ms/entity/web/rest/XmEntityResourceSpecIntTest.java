@@ -249,7 +249,7 @@ public class XmEntityResourceSpecIntTest extends AbstractJupiterSpringBootTest {
 
         restXmEntityMockMvc.perform(post("/api/xm-entities")
                 .contentType(TestUtil.APPLICATION_JSON_UTF8)
-                .content(TestUtil.convertObjectToJsonBytes(xmEntity)))
+                .content(TestUtil.assertObjectsAndConvertToJsonBytesDto(xmEntity, xmEntityMapper.toDto(xmEntity))))
             .andExpect(status().isCreated());
 
         List<XmEntity> xmEntityList = xmEntityRepository.findAll();
@@ -270,7 +270,7 @@ public class XmEntityResourceSpecIntTest extends AbstractJupiterSpringBootTest {
 
         restXmEntityMockMvc.perform(post("/api/xm-entities")
                 .contentType(TestUtil.APPLICATION_JSON_UTF8)
-                .content(TestUtil.convertObjectToJsonBytes(xmEntity)))
+                .content(TestUtil.assertObjectsAndConvertToJsonBytesDto(xmEntity, xmEntityMapper.toDto(xmEntity))))
             .andExpect(status().is4xxClientError());
 
         List<XmEntity> xmEntityList = xmEntityRepository.findAll();

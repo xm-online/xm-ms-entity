@@ -519,7 +519,7 @@ public class FunctionServiceImplUnitTest extends AbstractJupiterUnitTest {
 
     @Test
     public void validationFailOnInvalidFunctionInputWhenValidationEnabled() {
-        String exceptionMessage = "/numberArgument: string found, number expected";
+        String exceptionMessage = "$.numberArgument: string found, number expected";
 
         FunctionSpec spec = generateFunctionSpec(true);
         when(xmEntitySpecService.findFunction(VALIDATION_FUNCTION, "POST")).thenReturn(Optional.of(spec));
@@ -535,7 +535,7 @@ public class FunctionServiceImplUnitTest extends AbstractJupiterUnitTest {
 
     @Test
     public void validationFailOnInvalidFunctionWithEntityIdInputWhenValidationEnabled() {
-        String exceptionMessage = "/numberArgument: string found, number expected";
+        String exceptionMessage = "$.numberArgument: string found, number expected";
 
         FunctionSpec spec = generateFunctionSpec(true);
         Map<String, Object> functionInput = Map.of("numberArgument", "stringValue");

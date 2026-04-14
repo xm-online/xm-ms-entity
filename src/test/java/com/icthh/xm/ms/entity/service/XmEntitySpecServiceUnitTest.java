@@ -3,6 +3,7 @@ package com.icthh.xm.ms.entity.service;
 import com.icthh.xm.commons.tenant.TenantContext;
 import com.icthh.xm.commons.tenant.YamlMapperUtils;
 import com.icthh.xm.ms.entity.web.rest.TestUtil;
+import com.networknt.schema.SchemaRegistryConfig;
 import java.util.HashSet;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
@@ -47,7 +48,6 @@ import com.icthh.xm.ms.entity.service.spec.DataSpecJsonSchemaService;
 import com.icthh.xm.ms.entity.service.spec.XmEntitySpecCustomizer;
 import com.networknt.schema.Schema;
 import com.networknt.schema.SchemaRegistry;
-import com.networknt.schema.SpecificationVersion;
 import com.networknt.schema.Error;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -68,7 +68,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
-import tools.jackson.dataformat.yaml.YAMLMapper;
 
 import static com.google.common.collect.ImmutableMap.of;
 import static com.google.common.collect.Maps.newHashMap;
@@ -76,6 +75,8 @@ import static com.icthh.xm.ms.entity.config.TenantConfigMockConfiguration.getXmE
 import static com.icthh.xm.ms.entity.security.access.XmEntityDynamicPermissionCheckService.CONFIG_SECTION;
 import static com.icthh.xm.ms.entity.util.CustomCollectionUtils.nullSafe;
 import static com.icthh.xm.ms.entity.web.rest.XmEntitySaveIntTest.loadFile;
+import static com.networknt.schema.SpecificationVersion.DRAFT_4;
+import static com.networknt.schema.path.PathType.LEGACY;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
 import static java.util.function.Function.identity;
@@ -1099,7 +1100,8 @@ public class XmEntitySpecServiceUnitTest extends AbstractJupiterUnitTest {
         ObjectMapper objectMapper = JsonMapperUtils.getDefaultJsonMapper();
         JsonNode valueJsonNode = objectMapper.readTree(objectMapper.writeValueAsString(value));
         JsonNode schemaNode = JsonMapperUtils.getDefaultJsonMapper().readTree(schema);
-        SchemaRegistry factory = SchemaRegistry.withDefaultDialect(SpecificationVersion.DRAFT_4);
+        SchemaRegistry factory = SchemaRegistry.withDefaultDialect(DRAFT_4,
+        builder -> builder.schemaRegistryConfig(SchemaRegistryConfig.builder().pathType(LEGACY).build()));
         Schema jsonSchema = factory.getSchema(schemaNode);
         Set<Error> report = new HashSet<>(jsonSchema.validate(valueJsonNode));
         log.info("Validation: {}", report.toString());

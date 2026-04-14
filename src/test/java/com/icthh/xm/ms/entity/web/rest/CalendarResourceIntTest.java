@@ -218,7 +218,7 @@ public class CalendarResourceIntTest extends AbstractJupiterSpringBootTest {
         // Create the Calendar
         restCalendarMockMvc.perform(post("/api/calendars")
                                         .contentType(TestUtil.APPLICATION_JSON_UTF8)
-                                        .content(TestUtil.convertObjectToJsonBytes(calendarMapper.toDto(calendar))))
+                                        .content(TestUtil.assertObjectsAndConvertToJsonBytesDto(calendar, calendarMapper.toDto(calendar))))
             .andExpect(status().isCreated());
 
         // Validate the Calendar in the database
@@ -265,7 +265,7 @@ public class CalendarResourceIntTest extends AbstractJupiterSpringBootTest {
 
         restCalendarMockMvc.perform(put("/api/calendars")
             .contentType(TestUtil.APPLICATION_JSON_UTF8)
-            .content(TestUtil.convertObjectToJsonBytes(updatedCalendar)))
+            .content(TestUtil.assertObjectsAndConvertToJsonBytesDto(updatedCalendar, calendarMapper.toDto(updatedCalendar))))
             .andExpect(status().isBadRequest())
             .andExpect(jsonPath("$.error").value("error.read.only.calendar"))
             .andExpect(jsonPath("$.error_description").value(notNullValue()));
@@ -282,7 +282,7 @@ public class CalendarResourceIntTest extends AbstractJupiterSpringBootTest {
         // An entity with an existing ID cannot be created, so this API call must fail
         restCalendarMockMvc.perform(post("/api/calendars")
                                         .contentType(TestUtil.APPLICATION_JSON_UTF8)
-                                        .content(TestUtil.convertObjectToJsonBytes(calendarMapper.toDto(calendar))))
+                                        .content(TestUtil.assertObjectsAndConvertToJsonBytesDto(calendar, calendarMapper.toDto(calendar))))
             .andExpect(status().isBadRequest())
             .andExpect(jsonPath("$.error").value("error.business.idexists"))
             .andExpect(jsonPath("$.error_description").value(notNullValue()))
@@ -304,7 +304,7 @@ public class CalendarResourceIntTest extends AbstractJupiterSpringBootTest {
 
         restCalendarMockMvc.perform(post("/api/calendars")
                                         .contentType(TestUtil.APPLICATION_JSON_UTF8)
-                                        .content(TestUtil.convertObjectToJsonBytes(calendarMapper.toDto(calendar))))
+                                        .content(TestUtil.assertObjectsAndConvertToJsonBytesDto(calendar, calendarMapper.toDto(calendar))))
             .andExpect(status().isBadRequest())
             .andExpect(jsonPath("$.error").value("error.validation"))
             .andExpect(jsonPath("$.error_description").value(notNullValue()))
@@ -328,7 +328,7 @@ public class CalendarResourceIntTest extends AbstractJupiterSpringBootTest {
 
         restCalendarMockMvc.perform(post("/api/calendars")
                                         .contentType(TestUtil.APPLICATION_JSON_UTF8)
-                                        .content(TestUtil.convertObjectToJsonBytes(calendarMapper.toDto(calendar))))
+                                        .content(TestUtil.assertObjectsAndConvertToJsonBytesDto(calendar, calendarMapper.toDto(calendar))))
             .andExpect(status().isBadRequest())
             .andExpect(jsonPath("$.error").value("error.validation"))
             .andExpect(jsonPath("$.error_description").value(notNullValue()))
@@ -353,7 +353,7 @@ public class CalendarResourceIntTest extends AbstractJupiterSpringBootTest {
 
         restCalendarMockMvc.perform(post("/api/calendars")
                                         .contentType(TestUtil.APPLICATION_JSON_UTF8)
-                                        .content(TestUtil.convertObjectToJsonBytes(calendarMapper.toDto(calendar))))
+                                        .content(TestUtil.assertObjectsAndConvertToJsonBytesDto(calendar, calendarMapper.toDto(calendar))))
             .andExpect(status().isBadRequest())
             .andExpect(jsonPath("$.error").value("error.validation"))
             .andExpect(jsonPath("$.error_description").value(notNullValue()))
@@ -437,7 +437,7 @@ public class CalendarResourceIntTest extends AbstractJupiterSpringBootTest {
 
         restCalendarMockMvc.perform(put("/api/calendars")
                                         .contentType(TestUtil.APPLICATION_JSON_UTF8)
-                                        .content(TestUtil.convertObjectToJsonBytes(updatedCalendar)))
+                                        .content(TestUtil.assertObjectsAndConvertToJsonBytesDto(updatedCalendar, calendarMapper.toDto(updatedCalendar))))
             .andExpect(status().isOk());
 
         // Validate the Calendar in the database
@@ -462,7 +462,7 @@ public class CalendarResourceIntTest extends AbstractJupiterSpringBootTest {
         // If the entity doesn't have an ID, it will be created instead of just being updated
         restCalendarMockMvc.perform(put("/api/calendars")
                                         .contentType(TestUtil.APPLICATION_JSON_UTF8)
-                                        .content(TestUtil.convertObjectToJsonBytes(calendarMapper.toDto(calendar))))
+                                        .content(TestUtil.assertObjectsAndConvertToJsonBytesDto(calendar, calendarMapper.toDto(calendar))))
             .andExpect(status().isCreated());
 
         // Validate the Calendar in the database

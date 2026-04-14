@@ -3,9 +3,6 @@ package com.icthh.xm.ms.entity.web.rest;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.PropertyAccessor;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.google.common.collect.ImmutableMap;
 import static com.google.common.collect.ImmutableMap.of;
 import com.icthh.xm.commons.i18n.error.web.ExceptionTranslator;
@@ -57,7 +54,6 @@ import com.icthh.xm.ms.entity.service.XmEntityProjectionService;
 import com.icthh.xm.ms.entity.service.XmEntityService;
 import com.icthh.xm.ms.entity.service.XmEntitySpecService;
 import com.icthh.xm.ms.entity.service.XmEntityTemplatesSpecService;
-import com.icthh.xm.ms.entity.service.dto.LinkDto;
 import com.icthh.xm.ms.entity.service.dto.XmEntityDto;
 import com.icthh.xm.ms.entity.service.impl.StartUpdateDateGenerationStrategy;
 import com.icthh.xm.ms.entity.service.impl.XmEntityFunctionServiceFacade;
@@ -76,7 +72,6 @@ import static java.util.Objects.requireNonNull;
 import static java.util.UUID.randomUUID;
 
 import jakarta.persistence.EntityManager;
-import java.nio.charset.StandardCharsets;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -435,9 +430,6 @@ public class XmEntityResourceExtendedIntTest extends AbstractJupiterSpringBootTe
                                                   .build();
 
         xmEntityIncoming = createEntityComplexIncoming();
-
-
-
     }
 
     @AfterEach
@@ -1355,7 +1347,7 @@ public class XmEntityResourceExtendedIntTest extends AbstractJupiterSpringBootTe
 
         restXmEntityMockMvc.perform(post("/api/xm-entities")
                                         .contentType(TestUtil.APPLICATION_JSON_UTF8)
-                                        .content(TestUtil.convertObjectToJsonBytes(xmEntityIncomingDto)))
+                                        .content(TestUtil.assertObjectsAndConvertToJsonBytesDto(xmEntityIncoming, xmEntityIncomingDto)))
                            .andExpect(status().isCreated())
                            .andExpect(jsonPath("$.startDate").value(MOCKED_START_DATE.toString()))
                            .andExpect(jsonPath("$.updateDate").value(MOCKED_UPDATE_DATE.toString()))
@@ -1376,7 +1368,7 @@ public class XmEntityResourceExtendedIntTest extends AbstractJupiterSpringBootTe
 
         restXmEntityMockMvc.perform(post("/api/xm-entities")
                                         .contentType(TestUtil.APPLICATION_JSON_UTF8)
-                                        .content(TestUtil.convertObjectToJsonBytes(xmEntityIncomingDto)))
+                                        .content(TestUtil.assertObjectsAndConvertToJsonBytesDto(xmEntityIncoming, xmEntityIncomingDto)))
                            .andExpect(status().isCreated())
                            .andExpect(jsonPath("$.startDate").value(MOCKED_START_DATE.toString()))
                            .andExpect(jsonPath("$.updateDate").value(MOCKED_UPDATE_DATE.toString()))
@@ -1540,8 +1532,9 @@ public class XmEntityResourceExtendedIntTest extends AbstractJupiterSpringBootTe
         );
 
         XmEntityDto entityDto = xmEntityMapper.toDto(entity);
+        TestUtil.assertBytesObjects(entity, entityDto);
 
-        performPost("/api/xm-entities", entityDto)
+        performPost("/api/xm-entities", entity)
             .andExpect(status().isCreated())
             .andExpect(jsonPath("$.key").value(DEFAULT_KEY))
             .andReturn();

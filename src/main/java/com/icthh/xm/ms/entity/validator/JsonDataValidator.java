@@ -68,7 +68,7 @@ public class JsonDataValidator implements ConstraintValidator<JsonData, EntityBa
         final Set<Error> report = jsonValidationService.validateJson(value.getData(), jsonSchema);
         boolean isSuccess = report.isEmpty();
         if (!isSuccess) {
-            List<?> message = report.stream().map(Error::getMessage).toList();
+            List<?> message = report.stream().map(error -> error.getInstanceLocation() + ": " + error.getMessage()).toList();
             log.error("Validation data report for entity with typeKey {} and id {}: {}",
                     value.getTypeKey(), value.getId(), StringUtils.join(" | ", message));
             context.disableDefaultConstraintViolation();

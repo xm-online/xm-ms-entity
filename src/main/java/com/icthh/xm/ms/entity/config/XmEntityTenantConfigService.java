@@ -2,6 +2,7 @@ package com.icthh.xm.ms.entity.config;
 
 
 import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
+import static tools.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import tools.jackson.core.JacksonException;
@@ -42,6 +43,7 @@ public class XmEntityTenantConfigService extends TenantConfigService {
                             incl.withValueInclusion(NON_NULL)
                                     .withContentInclusion(NON_NULL)
                     )
+                    .disable(FAIL_ON_UNKNOWN_PROPERTIES)
                     .build();
             config = skipNullFields(config, objectMapper);
             XmEntityTenantConfig value = objectMapper.readValue(config, XmEntityTenantConfig.class);

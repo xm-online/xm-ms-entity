@@ -1,8 +1,11 @@
 package com.icthh.xm.ms.entity.web.rest;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.icthh.xm.ms.entity.domain.XmEntity;
+import com.icthh.xm.ms.entity.service.dto.XmEntityDto;
 import org.hamcrest.Description;
 import org.hamcrest.TypeSafeDiagnosingMatcher;
 import org.springframework.http.MediaType;
@@ -13,6 +16,7 @@ import java.time.Instant;
 import java.time.format.DateTimeParseException;
 import tools.jackson.core.StreamReadFeature;
 import tools.jackson.databind.DeserializationFeature;
+import tools.jackson.databind.MapperFeature;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.json.JsonMapper;
 
@@ -40,6 +44,27 @@ public class TestUtil {
         return mapper.writeValueAsBytes(object);
     }
 
+    public static byte[] assertObjectsAndConvertToJsonBytesDto(Object entity, Object dto) throws IOException {
+        ObjectMapper mapper = getJsonMapper();
+
+        assertBytesObjects(entity, dto);
+
+        return mapper.writeValueAsBytes(dto);
+    }
+
+    public static void assertBytesObjects(Object entity, Object dto) {
+        ObjectMapper mapper = getJsonMapper();
+
+        byte[] entityJson = mapper.writeValueAsBytes(entity);
+        byte[] dtoJson = mapper.writeValueAsBytes(dto);
+
+        assertEquals(
+                mapper.readTree(entityJson),
+                mapper.readTree(dtoJson)
+        );
+    }
+
+
     public static <T> T convertJsonBytesToObject(byte[] bytes, Class<T> clazz) throws IOException {
         ObjectMapper mapper = getJsonMapper();
         return mapper.readValue(bytes, clazz);
@@ -52,6 +77,7 @@ public class TestUtil {
                 .changeDefaultPropertyInclusion(incl ->
                         incl.withValueInclusion(JsonInclude.Include.NON_NULL)
                 )
+                .disable(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY)
                 .build();
     }
 

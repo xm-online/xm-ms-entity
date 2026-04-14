@@ -6,7 +6,6 @@ import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.icthh.xm.ms.entity.domain.idresolver.XmEntityObjectIdResolver;
 import com.icthh.xm.ms.entity.domain.serializer.NewSimpleLinkSerializer;
-import com.icthh.xm.ms.entity.domain.serializer.NewSimpleXmEntitySerializer;
 import com.icthh.xm.ms.entity.domain.serializer.SimpleLinkSerializer;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

@@ -162,7 +162,7 @@ public class AttachmentResourceExtendedIntTest extends AbstractJupiterSpringBoot
 
         restAttachmentMockMvc.perform(post("/api/attachments")
                                           .contentType(TestUtil.APPLICATION_JSON_UTF8)
-                                          .content(TestUtil.convertObjectToJsonBytes(attachmentMapper.toDto(attachment))))
+                                          .content(TestUtil.assertObjectsAndConvertToJsonBytesDto(attachment, attachmentMapper.toDto(attachment))))
                              .andExpect(status().isCreated())
                              .andExpect(jsonPath("$.startDate").value(MOCKED_START_DATE.toString()))
         ;
@@ -183,7 +183,7 @@ public class AttachmentResourceExtendedIntTest extends AbstractJupiterSpringBoot
         // Create the Attachment
         restAttachmentMockMvc.perform(post("/api/attachments")
                                           .contentType(TestUtil.APPLICATION_JSON_UTF8)
-                                          .content(TestUtil.convertObjectToJsonBytes(attachmentMapper.toDto(attachment))))
+                                          .content(TestUtil.assertObjectsAndConvertToJsonBytesDto(attachment, attachmentMapper.toDto(attachment))))
                              .andExpect(status().isCreated())
                              .andExpect(jsonPath("$.startDate").value(MOCKED_START_DATE.toString()));
 
@@ -245,7 +245,7 @@ public class AttachmentResourceExtendedIntTest extends AbstractJupiterSpringBoot
         // Create the Attachment
         restAttachmentMockMvc.perform(post("/api/attachments")
             .contentType(TestUtil.APPLICATION_JSON_UTF8)
-            .content(TestUtil.convertObjectToJsonBytes(attachmentMapper.toDto(attachment))))
+            .content(TestUtil.assertObjectsAndConvertToJsonBytesDto(attachment, attachmentMapper.toDto(attachment))))
             .andDo(print())
             .andExpect(status().isCreated());
 

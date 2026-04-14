@@ -203,7 +203,7 @@ public class LinkResourceIntTest extends AbstractJupiterSpringBootTest {
         // Create the Link
         restLinkMockMvc.perform(post("/api/links")
             .contentType(TestUtil.APPLICATION_JSON_UTF8)
-            .content(TestUtil.convertObjectToJsonBytes(linkMapper.toDto(link))))
+            .content(TestUtil.assertObjectsAndConvertToJsonBytesDto(link, linkMapper.toDto(link))))
             .andDo(this::printMvcResult)
             .andExpect(status().isCreated());
 
@@ -229,7 +229,7 @@ public class LinkResourceIntTest extends AbstractJupiterSpringBootTest {
         // An entity with an existing ID cannot be created, so this API call must fail
         restLinkMockMvc.perform(post("/api/links")
             .contentType(TestUtil.APPLICATION_JSON_UTF8)
-            .content(TestUtil.convertObjectToJsonBytes(linkMapper.toDto(link))))
+            .content(TestUtil.assertObjectsAndConvertToJsonBytesDto(link, linkMapper.toDto(link))))
             .andDo(this::printMvcResult)
             .andExpect(status().isBadRequest())
             .andExpect(jsonPath("$.error").value("error.business.idexists"))
@@ -252,7 +252,7 @@ public class LinkResourceIntTest extends AbstractJupiterSpringBootTest {
 
         restLinkMockMvc.perform(post("/api/links")
             .contentType(TestUtil.APPLICATION_JSON_UTF8)
-            .content(TestUtil.convertObjectToJsonBytes(linkMapper.toDto(link))))
+            .content(TestUtil.assertObjectsAndConvertToJsonBytesDto(link, linkMapper.toDto(link))))
             .andExpect(status().isBadRequest())
             .andExpect(jsonPath("$.error").value("error.validation"))
             .andExpect(jsonPath("$.error_description").value(notNullValue()))
@@ -277,7 +277,7 @@ public class LinkResourceIntTest extends AbstractJupiterSpringBootTest {
 
         restLinkMockMvc.perform(post("/api/links")
             .contentType(TestUtil.APPLICATION_JSON_UTF8)
-            .content(TestUtil.convertObjectToJsonBytes(linkMapper.toDto(link))))
+            .content(TestUtil.assertObjectsAndConvertToJsonBytesDto(link, linkMapper.toDto(link))))
             .andExpect(status().isBadRequest())
             .andExpect(jsonPath("$.error").value("error.validation"))
             .andExpect(jsonPath("$.error_description").value(notNullValue()))

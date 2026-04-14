@@ -107,7 +107,7 @@ public class XmEntityObjectIdResolverIntTest extends AbstractJupiterWebMvcTest {
         for (int i = 0; i < 2; i++) {
             mockMvc.perform(post("/api/links")
                 .contentType(TestUtil.APPLICATION_JSON_UTF8)
-                .content(TestUtil.convertObjectToJsonBytes(linkMapper.toDto(link))))
+                .content(TestUtil.assertObjectsAndConvertToJsonBytesDto(link, linkMapper.toDto(link))))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.source").value(1L))
                 .andExpect(jsonPath("$.target.id").value(2L));

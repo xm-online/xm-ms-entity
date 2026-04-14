@@ -20,7 +20,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
 import java.util.Map;
-import tools.jackson.dataformat.yaml.YAMLMapper;
 
 import static com.icthh.xm.ms.entity.service.json.JsonConfigurationListener.XM_ENTITY_SPEC_KEY;
 import static com.icthh.xm.ms.entity.web.rest.XmEntitySaveIntTest.loadFile;

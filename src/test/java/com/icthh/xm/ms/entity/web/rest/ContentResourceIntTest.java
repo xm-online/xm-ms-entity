@@ -18,6 +18,7 @@ import com.icthh.xm.ms.entity.AbstractJupiterSpringBootTest;
 import com.icthh.xm.ms.entity.domain.Content;
 import com.icthh.xm.ms.entity.repository.ContentRepository;
 import com.icthh.xm.ms.entity.service.ContentService;
+import com.icthh.xm.ms.entity.service.mapper.ContentMapper;
 import jakarta.persistence.EntityManager;
 import java.util.Base64;
 import org.junit.jupiter.api.AfterEach;
@@ -80,6 +81,9 @@ public class ContentResourceIntTest extends AbstractJupiterSpringBootTest {
     @Autowired
     private ContentFacade contentFacade;
 
+    @Autowired
+    private ContentMapper contentMapper;
+
     @BeforeTransaction
     public void beforeTransaction() {
         TenantContextUtils.setTenant(tenantContextHolder, "RESINTTEST");
@@ -125,7 +129,7 @@ public class ContentResourceIntTest extends AbstractJupiterSpringBootTest {
         // Create the Content
         restContentMockMvc.perform(post("/api/contents")
             .contentType(TestUtil.APPLICATION_JSON_UTF8)
-            .content(TestUtil.convertObjectToJsonBytes(content)))
+            .content(TestUtil.assertObjectsAndConvertToJsonBytesDto(content, contentMapper.toDto(content))))
             .andExpect(status().isCreated());
 
         // Validate the Content in the database
@@ -146,7 +150,7 @@ public class ContentResourceIntTest extends AbstractJupiterSpringBootTest {
         // An entity with an existing ID cannot be created, so this API call must fail
         restContentMockMvc.perform(post("/api/contents")
             .contentType(TestUtil.APPLICATION_JSON_UTF8)
-            .content(TestUtil.convertObjectToJsonBytes(content)))
+            .content(TestUtil.assertObjectsAndConvertToJsonBytesDto(content, contentMapper.toDto(content))))
             .andExpect(status().isBadRequest())
             .andExpect(jsonPath("$.error").value("error.business.idexists"))
             .andExpect(jsonPath("$.error_description").value(notNullValue()))
@@ -168,7 +172,7 @@ public class ContentResourceIntTest extends AbstractJupiterSpringBootTest {
 
         restContentMockMvc.perform(post("/api/contents")
             .contentType(TestUtil.APPLICATION_JSON_UTF8)
-            .content(TestUtil.convertObjectToJsonBytes(content)))
+            .content(TestUtil.assertObjectsAndConvertToJsonBytesDto(content, contentMapper.toDto(content))))
             .andExpect(status().isBadRequest())
             .andExpect(jsonPath("$.error").value("error.validation"))
             .andExpect(jsonPath("$.error_description").value(notNullValue()))
@@ -236,7 +240,7 @@ public class ContentResourceIntTest extends AbstractJupiterSpringBootTest {
 
         restContentMockMvc.perform(put("/api/contents")
             .contentType(TestUtil.APPLICATION_JSON_UTF8)
-            .content(TestUtil.convertObjectToJsonBytes(updatedContent)))
+            .content(TestUtil.assertObjectsAndConvertToJsonBytesDto(updatedContent, contentMapper.toDto(updatedContent))))
             .andExpect(status().isOk());
 
         // Validate the Content in the database
@@ -256,7 +260,7 @@ public class ContentResourceIntTest extends AbstractJupiterSpringBootTest {
         // If the entity doesn't have an ID, it will be created instead of just being updated
         restContentMockMvc.perform(put("/api/contents")
             .contentType(TestUtil.APPLICATION_JSON_UTF8)
-            .content(TestUtil.convertObjectToJsonBytes(content)))
+            .content(TestUtil.assertObjectsAndConvertToJsonBytesDto(content, contentMapper.toDto(content))))
             .andExpect(status().isCreated());
 
         // Validate the Content in the database

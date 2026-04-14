@@ -257,7 +257,7 @@ public class EventResourceIntTest extends AbstractJupiterSpringBootTest {
         // Create the Event
         restEventMockMvc.perform(post("/api/events")
             .contentType(TestUtil.APPLICATION_JSON_UTF8)
-            .content(TestUtil.convertObjectToJsonBytes(eventMapper.toDto(event))))
+            .content(TestUtil.assertObjectsAndConvertToJsonBytesDto(event, eventMapper.toDto(event))))
             .andExpect(status().isCreated())
             .andExpect(jsonPath("$.eventDataRef.typeKey").value(DEFAULT_EVENT_DATA_REF_TYPE_KEY))
             .andExpect(jsonPath("$.eventDataRef.data").value(is(DEFAULT_EVENT_DATA_REF_DATA)));
@@ -306,7 +306,7 @@ public class EventResourceIntTest extends AbstractJupiterSpringBootTest {
 
         restEventMockMvc.perform(put("/api/events")
             .contentType(TestUtil.APPLICATION_JSON_UTF8)
-            .content(TestUtil.convertObjectToJsonBytes(eventMapper.toDto(event))))
+            .content(TestUtil.assertObjectsAndConvertToJsonBytesDto(event, eventMapper.toDto(event))))
             .andExpect(status().isBadRequest())
             .andExpect(jsonPath("$.error").value("error.read.only.calendar"))
             .andExpect(jsonPath("$.error_description").value(notNullValue()));
@@ -327,7 +327,7 @@ public class EventResourceIntTest extends AbstractJupiterSpringBootTest {
 
         restEventMockMvc.perform(post("/api/events")
             .contentType(TestUtil.APPLICATION_JSON_UTF8)
-            .content(TestUtil.convertObjectToJsonBytes(eventMapper.toDto(event))))
+            .content(TestUtil.assertObjectsAndConvertToJsonBytesDto(event, eventMapper.toDto(event))))
             .andExpect(status().isBadRequest())
             .andExpect(jsonPath("$.error").value("error.read.only.calendar"))
             .andExpect(jsonPath("$.error_description").value(notNullValue()));
@@ -344,7 +344,7 @@ public class EventResourceIntTest extends AbstractJupiterSpringBootTest {
         // An entity with an existing ID cannot be created, so this API call must fail
         restEventMockMvc.perform(post("/api/events")
             .contentType(TestUtil.APPLICATION_JSON_UTF8)
-            .content(TestUtil.convertObjectToJsonBytes(eventMapper.toDto(event))))
+            .content(TestUtil.assertObjectsAndConvertToJsonBytesDto(event, eventMapper.toDto(event))))
             .andExpect(status().isBadRequest())
             .andExpect(jsonPath("$.error").value("error.business.idexists"))
             .andExpect(jsonPath("$.error_description").value(notNullValue()))
@@ -362,7 +362,7 @@ public class EventResourceIntTest extends AbstractJupiterSpringBootTest {
 
         restEventMockMvc.perform(post("/api/events")
             .contentType(TestUtil.APPLICATION_JSON_UTF8)
-            .content(TestUtil.convertObjectToJsonBytes(eventMapper.toDto(event))))
+            .content(TestUtil.assertObjectsAndConvertToJsonBytesDto(event, eventMapper.toDto(event))))
             .andExpect(status().isBadRequest())
             .andExpect(jsonPath("$.error").value("error.validation"))
             .andExpect(jsonPath("$.error_description").value(notNullValue()))
@@ -382,7 +382,7 @@ public class EventResourceIntTest extends AbstractJupiterSpringBootTest {
 
         restEventMockMvc.perform(post("/api/events")
             .contentType(TestUtil.APPLICATION_JSON_UTF8)
-            .content(TestUtil.convertObjectToJsonBytes(eventMapper.toDto(event))))
+            .content(TestUtil.assertObjectsAndConvertToJsonBytesDto(event, eventMapper.toDto(event))))
             .andExpect(status().isBadRequest())
             .andExpect(jsonPath("$.error").value("error.validation"))
             .andExpect(jsonPath("$.error_description").value(notNullValue()))
@@ -403,7 +403,7 @@ public class EventResourceIntTest extends AbstractJupiterSpringBootTest {
 
         restEventMockMvc.perform(post("/api/events")
             .contentType(TestUtil.APPLICATION_JSON_UTF8)
-            .content(TestUtil.convertObjectToJsonBytes(eventMapper.toDto(event))))
+            .content(TestUtil.assertObjectsAndConvertToJsonBytesDto(event, eventMapper.toDto(event))))
             .andExpect(status().isBadRequest())
             .andExpect(jsonPath("$.error").value("error.validation"))
             .andExpect(jsonPath("$.error_description").value(notNullValue()))
@@ -423,7 +423,7 @@ public class EventResourceIntTest extends AbstractJupiterSpringBootTest {
 
         restEventMockMvc.perform(post("/api/events")
             .contentType(TestUtil.APPLICATION_JSON_UTF8)
-            .content(TestUtil.convertObjectToJsonBytes(eventMapper.toDto(event))))
+            .content(TestUtil.assertObjectsAndConvertToJsonBytesDto(event, eventMapper.toDto(event))))
             .andExpect(status().isBadRequest())
             .andExpect(jsonPath("$.error").value("error.validation"))
             .andExpect(jsonPath("$.error_description").value(notNullValue()))
@@ -463,7 +463,7 @@ public class EventResourceIntTest extends AbstractJupiterSpringBootTest {
 
         restEventMockMvc.perform(post("/api/events")
             .contentType(TestUtil.APPLICATION_JSON_UTF8)
-            .content(TestUtil.convertObjectToJsonBytes(eventMapper.toDto(event))))
+            .content(TestUtil.assertObjectsAndConvertToJsonBytesDto(event, eventMapper.toDto(event))))
             .andExpect(status().isBadRequest())
             .andExpect(jsonPath("$.error").value("error.validation"))
             .andExpect(jsonPath("$.error_description").value(notNullValue()))
@@ -570,7 +570,7 @@ public class EventResourceIntTest extends AbstractJupiterSpringBootTest {
 
         restEventMockMvc.perform(put("/api/events")
             .contentType(TestUtil.APPLICATION_JSON_UTF8)
-            .content(TestUtil.convertObjectToJsonBytes(eventMapper.toDto(event))))
+            .content(TestUtil.assertObjectsAndConvertToJsonBytesDto(event, eventMapper.toDto(event))))
             .andExpect(status().isOk());
 
         // Validate the Event in the database
@@ -599,7 +599,7 @@ public class EventResourceIntTest extends AbstractJupiterSpringBootTest {
         // If the entity doesn't have an ID, it will be created instead of just being updated
         restEventMockMvc.perform(put("/api/events")
             .contentType(TestUtil.APPLICATION_JSON_UTF8)
-            .content(TestUtil.convertObjectToJsonBytes(eventMapper.toDto(event))))
+            .content(TestUtil.assertObjectsAndConvertToJsonBytesDto(event, eventMapper.toDto(event))))
             .andExpect(status().isCreated());
 
         // Validate the Event in the database

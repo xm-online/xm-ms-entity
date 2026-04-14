@@ -1,10 +1,14 @@
 package com.icthh.xm.ms.entity.service.json;
 
+import static com.networknt.schema.SpecificationVersion.DRAFT_4;
+import static com.networknt.schema.path.PathType.LEGACY;
+
 import com.icthh.xm.commons.exceptions.BusinessException;
 import com.icthh.xm.commons.logging.LoggingAspectConfig;
 import com.networknt.schema.Error;
 import com.networknt.schema.Schema;
 import com.networknt.schema.SchemaRegistry;
+import com.networknt.schema.SchemaRegistryConfig;
 import com.networknt.schema.SpecificationVersion;
 import java.util.HashSet;
 import lombok.RequiredArgsConstructor;
@@ -24,7 +28,8 @@ import tools.jackson.databind.ObjectMapper;
 public class JsonValidationService {
 
     private final ObjectMapper objectMapper;
-    private final SchemaRegistry factory = SchemaRegistry.withDefaultDialect(SpecificationVersion.DRAFT_4);
+    private final SchemaRegistry factory = SchemaRegistry.withDefaultDialect(DRAFT_4,
+        builder -> builder.schemaRegistryConfig(SchemaRegistryConfig.builder().pathType(LEGACY).build()));
 
     public Set<Error> validateJson(Map<String, Object> data, Schema schema) {
         Set<Error> errors = validate(data, schema);
@@ -47,7 +52,7 @@ public class JsonValidationService {
 
     private String getReportErrorMessage(Set<Error> report) {
         return report.stream()
-            .map(Error::toString)
+            .map(error -> error.getInstanceLocation() + ": " + error.getMessage())
             .collect(Collectors.joining(" | "));
     }
 

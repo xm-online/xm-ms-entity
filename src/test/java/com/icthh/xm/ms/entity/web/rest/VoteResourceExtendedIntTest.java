@@ -130,7 +130,7 @@ public class VoteResourceExtendedIntTest extends AbstractJupiterSpringBootTest {
         // Create the Vote.
         restVoteMockMvc.perform(post("/api/votes")
                                     .contentType(TestUtil.APPLICATION_JSON_UTF8)
-                                    .content(TestUtil.convertObjectToJsonBytes(voteMapper.toDto(vote))))
+                                    .content(TestUtil.assertObjectsAndConvertToJsonBytesDto(vote, voteMapper.toDto(vote))))
                        .andExpect(status().isCreated())
                        .andExpect(jsonPath("$.entryDate").value(MOCKED_ENTRY_DATE.toString()))
         ;
@@ -149,7 +149,7 @@ public class VoteResourceExtendedIntTest extends AbstractJupiterSpringBootTest {
         // Create the Vote
         restVoteMockMvc.perform(post("/api/votes")
                                     .contentType(TestUtil.APPLICATION_JSON_UTF8)
-                                    .content(TestUtil.convertObjectToJsonBytes(voteMapper.toDto(vote))))
+                                    .content(TestUtil.assertObjectsAndConvertToJsonBytesDto(vote, voteMapper.toDto(vote))))
                        .andExpect(status().isCreated())
                        .andExpect(jsonPath("$.entryDate").value(MOCKED_ENTRY_DATE.toString()));
 

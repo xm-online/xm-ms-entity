@@ -174,7 +174,7 @@ public class TagResourceIntTest extends AbstractJupiterSpringBootTest {
         // Create the Tag
         restTagMockMvc.perform(post("/api/tags")
                                    .contentType(TestUtil.APPLICATION_JSON_UTF8)
-                                   .content(TestUtil.convertObjectToJsonBytes(tagMapper.toDto(tag))))
+                                   .content(TestUtil.assertObjectsAndConvertToJsonBytesDto(tag, tagMapper.toDto(tag))))
                 .andDo(print())
             .andExpect(status().isCreated());
 
@@ -198,7 +198,7 @@ public class TagResourceIntTest extends AbstractJupiterSpringBootTest {
         // An entity with an existing ID cannot be created, so this API call must fail
         restTagMockMvc.perform(post("/api/tags")
                                    .contentType(TestUtil.APPLICATION_JSON_UTF8)
-                                   .content(TestUtil.convertObjectToJsonBytes(tagMapper.toDto(tag))))
+                                   .content(TestUtil.assertObjectsAndConvertToJsonBytesDto(tag, tagMapper.toDto(tag))))
             .andExpect(status().isBadRequest())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON))
             .andExpect(jsonPath("$.error").value("error.business.idexists"))
@@ -220,7 +220,7 @@ public class TagResourceIntTest extends AbstractJupiterSpringBootTest {
 
         restTagMockMvc.perform(post("/api/tags")
                                    .contentType(TestUtil.APPLICATION_JSON_UTF8)
-                                   .content(TestUtil.convertObjectToJsonBytes(tag)))
+                                   .content(TestUtil.assertObjectsAndConvertToJsonBytesDto(tag, tagMapper.toDto(tag))))
             .andExpect(status().isBadRequest())
             .andExpect(jsonPath("$.error").value("error.validation"))
             .andExpect(jsonPath("$.error_description").value(notNullValue()))
@@ -245,7 +245,7 @@ public class TagResourceIntTest extends AbstractJupiterSpringBootTest {
 
         restTagMockMvc.perform(post("/api/tags")
                                    .contentType(TestUtil.APPLICATION_JSON_UTF8)
-                                   .content(TestUtil.convertObjectToJsonBytes(tagMapper.toDto(tag))))
+                                   .content(TestUtil.assertObjectsAndConvertToJsonBytesDto(tag, tagMapper.toDto(tag))))
             .andExpect(status().isBadRequest())
             .andExpect(jsonPath("$.error").value("error.validation"))
             .andExpect(jsonPath("$.error_description").value(notNullValue()))
@@ -319,7 +319,7 @@ public class TagResourceIntTest extends AbstractJupiterSpringBootTest {
 
         restTagMockMvc.perform(put("/api/tags")
                                    .contentType(TestUtil.APPLICATION_JSON_UTF8)
-                                   .content(TestUtil.convertObjectToJsonBytes(updatedTag)))
+                                   .content(TestUtil.assertObjectsAndConvertToJsonBytesDto(updatedTag, tagMapper.toDto(updatedTag))))
             .andExpect(status().isOk());
 
         // Validate the Tag in the database
@@ -341,7 +341,7 @@ public class TagResourceIntTest extends AbstractJupiterSpringBootTest {
         // If the entity doesn't have an ID, it will be created instead of just being updated
         restTagMockMvc.perform(put("/api/tags")
                                    .contentType(TestUtil.APPLICATION_JSON_UTF8)
-                                   .content(TestUtil.convertObjectToJsonBytes(tagMapper.toDto(tag))))
+                                   .content(TestUtil.assertObjectsAndConvertToJsonBytesDto(tag, tagMapper.toDto(tag))))
             .andExpect(status().isCreated());
 
         // Validate the Tag in the database

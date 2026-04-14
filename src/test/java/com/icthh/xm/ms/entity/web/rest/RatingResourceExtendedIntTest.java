@@ -145,7 +145,7 @@ public class RatingResourceExtendedIntTest extends AbstractJupiterSpringBootTest
 
         restRatingMockMvc.perform(post("/api/ratings")
                                       .contentType(TestUtil.APPLICATION_JSON_UTF8)
-                                      .content(TestUtil.convertObjectToJsonBytes(ratingMapper.toDto(rating))))
+                                      .content(TestUtil.assertObjectsAndConvertToJsonBytesDto(rating, ratingMapper.toDto(rating))))
                          .andExpect(status().isCreated())
                          .andExpect(jsonPath("$.startDate").value(MOCKED_START_DATE.toString()))
         ;
@@ -166,7 +166,7 @@ public class RatingResourceExtendedIntTest extends AbstractJupiterSpringBootTest
         // Create the Rating
         restRatingMockMvc.perform(post("/api/ratings")
                                       .contentType(TestUtil.APPLICATION_JSON_UTF8)
-                                      .content(TestUtil.convertObjectToJsonBytes(ratingMapper.toDto(rating))))
+                                      .content(TestUtil.assertObjectsAndConvertToJsonBytesDto(rating, ratingMapper.toDto(rating))))
                          .andExpect(status().isCreated())
                          .andExpect(jsonPath("$.startDate").value(MOCKED_START_DATE.toString()));
 

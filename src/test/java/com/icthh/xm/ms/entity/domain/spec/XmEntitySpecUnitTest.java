@@ -3,12 +3,8 @@ package com.icthh.xm.ms.entity.domain.spec;
 import static com.icthh.xm.ms.entity.web.rest.XmEntitySaveIntTest.loadFile;
 import static org.junit.jupiter.api.Assertions.*;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.Nulls;
 import com.icthh.xm.commons.tenant.YamlMapperUtils;
-import tools.jackson.databind.DeserializationFeature;
 import tools.jackson.databind.ObjectMapper;
-import tools.jackson.dataformat.yaml.YAMLFactory;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Method;
@@ -34,7 +30,6 @@ import org.springframework.cglib.proxy.Enhancer;
 import org.springframework.cglib.proxy.MethodInterceptor;
 import org.springframework.cglib.proxy.MethodProxy;
 import org.springframework.core.io.ClassPathResource;
-import tools.jackson.dataformat.yaml.YAMLMapper;
 
 @Slf4j
 public class XmEntitySpecUnitTest extends AbstractJupiterUnitTest {

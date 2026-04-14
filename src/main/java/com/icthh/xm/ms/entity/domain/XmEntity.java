@@ -10,7 +10,6 @@ import com.icthh.xm.ms.entity.domain.converter.MapToStringConverter;
 import com.icthh.xm.ms.entity.domain.listener.AvatarUrlListener;
 import com.icthh.xm.ms.entity.domain.listener.XmEntityElasticSearchListener;
 import com.icthh.xm.ms.entity.domain.serializer.NewSimpleLinkSerializer;
-import com.icthh.xm.ms.entity.domain.serializer.NewSimpleXmEntitySerializer;
 import com.icthh.xm.ms.entity.domain.serializer.SimpleLinkSerializer;
 import com.icthh.xm.ms.entity.validator.JsonData;
 import com.icthh.xm.ms.entity.validator.NotNull;
