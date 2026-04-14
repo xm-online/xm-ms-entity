@@ -135,7 +135,7 @@ public class XmEntitySpecService implements RefreshableConfiguration {
         return xmEntitySpecContextService.typesByTenant(getTenantKeyValue()).values();
     }
 
-    private String extractTenantName(String it) {
+    public String extractTenantName(String it) {
         return matcher.extractUriTemplateVariables(getPathPattern(it), it).get(TENANT_NAME);
     }
 
