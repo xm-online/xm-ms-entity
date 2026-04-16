@@ -21,4 +21,8 @@ spring:
       hibernate.format_sql: true
       hibernate.interceptor: com.icthh.xm.commons.domainevent.db.service.DatabaseSourceInterceptor
       hibernate:
+        hibernate:
+          query:
+            hql:
+              json_functions_enabled: true
         dialect: com.icthh.xm.commons.migration.db.jsonb.CustomPostgreSQLDialect
