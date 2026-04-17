@@ -332,6 +332,7 @@ public class AttachmentResourceExtendedIntTest extends AbstractJupiterSpringBoot
         spec.setContentTypes(Arrays.asList("application/pdf"));
         spec.setKey("ENTITY_TYPE_SPEC");
         spec.setMax(5000);
+        spec.setSize("1");
 
         when(xmEntitySpecService.findAttachment(attachmentWithContent.getXmEntity().getTypeKey(), attachmentWithContent.getTypeKey())).thenReturn(Optional.of(spec));
 
