@@ -2,6 +2,7 @@ package com.icthh.xm.ms.entity.validator;
 
 import com.icthh.xm.ms.entity.AbstractJupiterUnitTest;
 import com.icthh.xm.ms.entity.config.ApplicationProperties;
+import com.icthh.xm.ms.entity.config.XmEntityTenantConfigService;
 import com.icthh.xm.ms.entity.domain.Attachment;
 import com.icthh.xm.ms.entity.domain.Content;
 import com.icthh.xm.ms.entity.domain.XmEntity;
@@ -17,17 +18,16 @@ import java.util.Arrays;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
 public class AttachmentContentTypeValidatorUnitTest extends AbstractJupiterUnitTest {
 
     @Mock
-    private ApplicationProperties applicationProperties;
+    private XmEntitySpecService xmEntitySpecService;
 
     @Mock
-    private XmEntitySpecService xmEntitySpecService;
+    private XmEntityTenantConfigService xmEntityTenantConfigService;
 
     @Mock
     private ConstraintValidatorContext context;
@@ -40,23 +40,23 @@ public class AttachmentContentTypeValidatorUnitTest extends AbstractJupiterUnitT
     @BeforeEach
     public void setUp() {
         MockitoAnnotations.openMocks(this);
-        validator = new AttachmentContentTypeValidator(applicationProperties, xmEntitySpecService);
+        validator = new AttachmentContentTypeValidator(xmEntitySpecService, xmEntityTenantConfigService);
 
         when(context.buildConstraintViolationWithTemplate(anyString())).thenReturn(violationBuilder);
         when(violationBuilder.addConstraintViolation()).thenReturn(context);
 
-        ApplicationProperties.AttachmentValidation validation = new ApplicationProperties.AttachmentValidation();
-        validation.setContentTypeValidationEnabled(true);
-        when(applicationProperties.getAttachmentValidation()).thenReturn(validation);
+        XmEntityTenantConfigService.XmEntityTenantConfig tenantConfig = new XmEntityTenantConfigService.XmEntityTenantConfig();
+        tenantConfig.getAttachmentValidation().setContentTypeValidationEnabled(true);
+        when(xmEntityTenantConfigService.getXmEntityTenantConfig()).thenReturn(tenantConfig);
     }
 
     @Test
     public void shouldPassValidationWhenDisabled() {
         Attachment attachment = createAttachmentWithContent("test.jpg", new byte[]{(byte) 0xFF, (byte) 0xD8, (byte) 0xFF});
         
-        ApplicationProperties.AttachmentValidation validation = new ApplicationProperties.AttachmentValidation();
-        validation.setContentTypeValidationEnabled(false);
-        when(applicationProperties.getAttachmentValidation()).thenReturn(validation);
+        XmEntityTenantConfigService.XmEntityTenantConfig tenantConfig = new XmEntityTenantConfigService.XmEntityTenantConfig();
+        tenantConfig.getAttachmentValidation().setContentTypeValidationEnabled(false);
+        when(xmEntityTenantConfigService.getXmEntityTenantConfig()).thenReturn(tenantConfig);
 
         assertTrue(validator.isValid(attachment, context));
     }

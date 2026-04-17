@@ -3,6 +3,7 @@ package com.icthh.xm.ms.entity.service;
 import com.icthh.xm.commons.permission.repository.PermittedRepository;
 import com.icthh.xm.ms.entity.AbstractJupiterUnitTest;
 import com.icthh.xm.ms.entity.config.ApplicationProperties;
+import com.icthh.xm.ms.entity.config.XmEntityTenantConfigService;
 import com.icthh.xm.ms.entity.domain.Attachment;
 import com.icthh.xm.ms.entity.domain.AttachmentStoreType;
 import com.icthh.xm.ms.entity.domain.Content;
@@ -29,7 +30,7 @@ public class ContentServiceImplUnitTest extends AbstractJupiterUnitTest {
     private S3StorageRepository s3StorageRepository;
     private FsFileStorageRepository fsFileStorageRepository;
     private XmEntitySpecService xmEntitySpecService;
-    private ApplicationProperties applicationProperties;
+    private XmEntityTenantConfigService xmEntityTenantConfigService;
 
     private ContentService contentService;
     private AttachmentContentTypeValidator contentTypeValidator;
@@ -41,8 +42,8 @@ public class ContentServiceImplUnitTest extends AbstractJupiterUnitTest {
         s3StorageRepository = Mockito.mock(S3StorageRepository.class);
         fsFileStorageRepository = Mockito.mock(FsFileStorageRepository.class);
         xmEntitySpecService = Mockito.mock(XmEntitySpecService.class);
-        applicationProperties = Mockito.mock(ApplicationProperties.class);
-        contentTypeValidator = new AttachmentContentTypeValidator(applicationProperties, xmEntitySpecService);
+        xmEntityTenantConfigService = Mockito.mock(XmEntityTenantConfigService.class);
+        contentTypeValidator = new AttachmentContentTypeValidator(xmEntitySpecService, xmEntityTenantConfigService);
         contentService = new ContentService(
             permittedRepository, contentRepository, s3StorageRepository, fsFileStorageRepository, xmEntitySpecService, contentTypeValidator
         );

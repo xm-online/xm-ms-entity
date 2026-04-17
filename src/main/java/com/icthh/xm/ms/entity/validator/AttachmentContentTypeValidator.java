@@ -31,16 +31,11 @@ public class AttachmentContentTypeValidator implements ConstraintValidator<Attac
 
     private final Tika tika = new Tika();
 
-    private final ApplicationProperties applicationProperties;
     private final XmEntitySpecService xmEntitySpecService;
     private final XmEntityTenantConfigService xmEntityTenantConfigService;
 
     @Override
     public boolean isValid(Attachment attachment, ConstraintValidatorContext context) {
-        if (!isContentTypeValidationEnabled()) {
-            return true;
-        }
-
         if (Objects.isNull(attachment) || Objects.isNull(attachment.getXmEntity())) {
             return true;
         }
@@ -78,10 +73,6 @@ public class AttachmentContentTypeValidator implements ConstraintValidator<Attac
             log.error("Error during attachment content type validation", e);
             return false;
         }
-    }
-
-    private boolean isContentTypeValidationEnabled() {
-        return applicationProperties.getAttachmentValidation().isContentTypeValidationEnabled();
     }
 
     private boolean isContentTypeValidationEnabled(AttachmentSpec spec) {

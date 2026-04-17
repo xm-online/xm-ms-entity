@@ -233,8 +233,6 @@ application:
         default-avatar-url: /assets/img/anonymous.png
         default-avatar-url-prefix: http://xm-avatar.rgw.icthh.test:7480
         max-avatar-size: 1048576
-    attachment-validation:
-        content-type-validation-enabled: false
     amazon:
         avatar:
             # XmEntity.avatarUrl should match this pattern to persist only last part into DB, otherwise set to null

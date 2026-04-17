@@ -82,8 +82,6 @@ public class ApplicationProperties {
 
     private DynamicPermissionCheck dynamicPermissionCheck;
 
-    private AttachmentValidation attachmentValidation;
-
     @Getter
     @Setter
     public static class Amazon {
@@ -202,11 +200,6 @@ public class ApplicationProperties {
         private long maxAvatarSize = DEFAULT_MAX_AVATAR_SIZE;
     }
 
-    @Getter
-    @Setter
-    public static class AttachmentValidation {
-        private boolean contentTypeValidationEnabled = false;
-    }
 
     public enum StorageType {
         DB, S3, FILE

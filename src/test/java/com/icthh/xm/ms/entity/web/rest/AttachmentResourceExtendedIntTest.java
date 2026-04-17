@@ -21,6 +21,7 @@ import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
 import com.icthh.xm.ms.entity.AbstractJupiterSpringBootTest;
 import com.icthh.xm.ms.entity.config.ApplicationProperties;
+import com.icthh.xm.ms.entity.config.XmEntityTenantConfigService;
 import com.icthh.xm.ms.entity.domain.Attachment;
 import com.icthh.xm.ms.entity.domain.Content;
 import com.icthh.xm.ms.entity.domain.XmEntity;
@@ -37,6 +38,7 @@ import org.apache.commons.codec.digest.DigestUtils;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -109,6 +111,9 @@ public class AttachmentResourceExtendedIntTest extends AbstractJupiterSpringBoot
 
     @Autowired
     private ApplicationProperties applicationProperties;
+
+    @SpyBean
+    private XmEntityTenantConfigService xmEntityTenantConfigService;
 
     @Spy
     private StartUpdateDateGenerationStrategy startUpdateDateGenerationStrategy;
@@ -270,7 +275,9 @@ public class AttachmentResourceExtendedIntTest extends AbstractJupiterSpringBoot
     @Test
     @Transactional
     public void shouldCreateAttachmentWithValidContent() throws Exception {
-        applicationProperties.getAttachmentValidation().setContentTypeValidationEnabled(true);
+        XmEntityTenantConfigService.XmEntityTenantConfig tenantConfig = new XmEntityTenantConfigService.XmEntityTenantConfig();
+        tenantConfig.getAttachmentValidation().setContentTypeValidationEnabled(true);
+        when(xmEntityTenantConfigService.getXmEntityTenantConfig()).thenReturn(tenantConfig);
 
         byte[] jpegBytes = {(byte) 0xFF, (byte) 0xD8, (byte) 0xFF, 0x00};
         String contentBase64 = Base64.getEncoder().encodeToString(jpegBytes);
@@ -305,7 +312,9 @@ public class AttachmentResourceExtendedIntTest extends AbstractJupiterSpringBoot
     @Test
     @Transactional
     public void shouldFailCreateAttachmentWithInvalidContent() throws Exception {
-        applicationProperties.getAttachmentValidation().setContentTypeValidationEnabled(true);
+        XmEntityTenantConfigService.XmEntityTenantConfig tenantConfig = new XmEntityTenantConfigService.XmEntityTenantConfig();
+        tenantConfig.getAttachmentValidation().setContentTypeValidationEnabled(true);
+        when(xmEntityTenantConfigService.getXmEntityTenantConfig()).thenReturn(tenantConfig);
         
         byte[] jpegBytes = {(byte) 0xFF, (byte) 0xD8, (byte) 0xFF, 0x00};
         String contentBase64 = Base64.getEncoder().encodeToString(jpegBytes);

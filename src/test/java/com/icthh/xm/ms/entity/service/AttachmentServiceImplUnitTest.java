@@ -15,6 +15,7 @@ import com.icthh.xm.ms.entity.repository.backend.FsFileStorageRepository;
 import com.icthh.xm.ms.entity.repository.backend.S3StorageRepository;
 import com.icthh.xm.ms.entity.service.impl.StartUpdateDateGenerationStrategy;
 import com.icthh.xm.ms.entity.config.ApplicationProperties;
+import com.icthh.xm.ms.entity.config.XmEntityTenantConfigService;
 import com.icthh.xm.ms.entity.validator.AttachmentContentTypeValidator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -44,6 +45,7 @@ public class AttachmentServiceImplUnitTest extends AbstractJupiterUnitTest {
     private XmEntitySpecService xmEntitySpecService;
     private ContentService contentService;
     private ApplicationProperties applicationProperties;
+    private XmEntityTenantConfigService xmEntityTenantConfigService;
 
     @BeforeEach
     public void setUp() {
@@ -54,15 +56,16 @@ public class AttachmentServiceImplUnitTest extends AbstractJupiterUnitTest {
         xmEntitySpecService = Mockito.mock(XmEntitySpecService.class);
         contentService = Mockito.mock(ContentService.class);
         applicationProperties = Mockito.mock(ApplicationProperties.class);
-        attachmentContentTypeValidator = new AttachmentContentTypeValidator(applicationProperties, xmEntitySpecService);
+        xmEntityTenantConfigService = Mockito.mock(XmEntityTenantConfigService.class);
+        attachmentContentTypeValidator = new AttachmentContentTypeValidator(xmEntitySpecService, xmEntityTenantConfigService);
         attachmentService = new AttachmentService(
             attachmentRepository, contentService, permittedRepository,
             startUpdateDateGenerationStrategy, xmEntityRepository, xmEntitySpecService
         );
 
-        ApplicationProperties.AttachmentValidation validation = new ApplicationProperties.AttachmentValidation();
-        validation.setContentTypeValidationEnabled(false);
-        when(applicationProperties.getAttachmentValidation()).thenReturn(validation);
+        XmEntityTenantConfigService.XmEntityTenantConfig tenantConfig = new XmEntityTenantConfigService.XmEntityTenantConfig();
+        tenantConfig.getAttachmentValidation().setContentTypeValidationEnabled(false);
+        when(xmEntityTenantConfigService.getXmEntityTenantConfig()).thenReturn(tenantConfig);
     }
 
     @Test
@@ -448,9 +451,9 @@ public class AttachmentServiceImplUnitTest extends AbstractJupiterUnitTest {
         
         Attachment attachment = createAttachmentWithJpegContent();
 
-        ApplicationProperties.AttachmentValidation validation = new ApplicationProperties.AttachmentValidation();
-        validation.setContentTypeValidationEnabled(true);
-        when(applicationProperties.getAttachmentValidation()).thenReturn(validation);
+        XmEntityTenantConfigService.XmEntityTenantConfig tenantConfig = new XmEntityTenantConfigService.XmEntityTenantConfig();
+        tenantConfig.getAttachmentValidation().setContentTypeValidationEnabled(true);
+        when(xmEntityTenantConfigService.getXmEntityTenantConfig()).thenReturn(tenantConfig);
 
         assertDoesNotThrow(() -> attachmentService.assertContentType(spec, attachment));
     }
@@ -462,9 +465,9 @@ public class AttachmentServiceImplUnitTest extends AbstractJupiterUnitTest {
 
         Attachment attachment = createAttachmentWithPdfContent();
 
-        ApplicationProperties.AttachmentValidation validation = new ApplicationProperties.AttachmentValidation();
-        validation.setContentTypeValidationEnabled(true);
-        when(applicationProperties.getAttachmentValidation()).thenReturn(validation);
+        XmEntityTenantConfigService.XmEntityTenantConfig tenantConfig = new XmEntityTenantConfigService.XmEntityTenantConfig();
+        tenantConfig.getAttachmentValidation().setContentTypeValidationEnabled(true);
+        when(xmEntityTenantConfigService.getXmEntityTenantConfig()).thenReturn(tenantConfig);
 
         assertDoesNotThrow(() -> attachmentService.assertContentType(spec, attachment));
     }
@@ -483,9 +486,9 @@ public class AttachmentServiceImplUnitTest extends AbstractJupiterUnitTest {
 
         Attachment attachment = createAttachmentWithJpegContent();
 
-        ApplicationProperties.AttachmentValidation validation = new ApplicationProperties.AttachmentValidation();
-        validation.setContentTypeValidationEnabled(true);
-        when(applicationProperties.getAttachmentValidation()).thenReturn(validation);
+        XmEntityTenantConfigService.XmEntityTenantConfig tenantConfig = new XmEntityTenantConfigService.XmEntityTenantConfig();
+        tenantConfig.getAttachmentValidation().setContentTypeValidationEnabled(true);
+        when(xmEntityTenantConfigService.getXmEntityTenantConfig()).thenReturn(tenantConfig);
         when(xmEntitySpecService.findAttachment(eq(attachment.getXmEntity().getTypeKey()), eq(attachment.getTypeKey()))).thenReturn(Optional.of(spec));
 
         BusinessException thrown = assertThrows(BusinessException.class, () -> {
