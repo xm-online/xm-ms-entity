@@ -4,8 +4,8 @@ import com.codahale.metrics.annotation.Timed;
 import com.icthh.xm.commons.exceptions.BusinessException;
 import com.icthh.xm.commons.exceptions.ErrorConstants;
 import com.icthh.xm.commons.permission.annotation.PrivilegeDescription;
-import com.icthh.xm.ms.entity.domain.Link;
-import com.icthh.xm.ms.entity.service.LinkService;
+import com.icthh.xm.ms.entity.service.dto.LinkDto;
+import com.icthh.xm.ms.entity.web.rest.facade.LinkFacade;
 import com.icthh.xm.ms.entity.service.TransactionPropagationService;
 import com.icthh.xm.ms.entity.web.rest.util.HeaderUtil;
 import com.icthh.xm.ms.entity.web.rest.util.PaginationUtil;
@@ -46,7 +46,7 @@ public class LinkResource extends TransactionPropagationService<LinkResource> {
 
     private static final String ENTITY_NAME = "link";
 
-    private final LinkService linkService;
+    private final LinkFacade linkFacade;
 
     /**
      * POST  /links : Create a new link.
@@ -59,12 +59,12 @@ public class LinkResource extends TransactionPropagationService<LinkResource> {
     @Timed
     @PreAuthorize("hasPermission({'link': #link}, 'LINK.CREATE')")
     @PrivilegeDescription("Privilege to create a new link")
-    public ResponseEntity<Link> createLink(@Valid @RequestBody Link link) throws URISyntaxException {
+    public ResponseEntity<LinkDto> createLink(@Valid @RequestBody LinkDto link) throws URISyntaxException {
         if (link.getId() != null) {
             throw new BusinessException(ErrorConstants.ERR_BUSINESS_IDEXISTS,
                                         "A new link cannot already have an ID");
         }
-        Link result = linkService.save(link);
+        LinkDto result = linkFacade.save(link);
         return ResponseEntity.created(new URI("/api/links/" + result.getId()))
             .headers(HeaderUtil.createEntityCreationAlert(ENTITY_NAME, result.getId().toString()))
             .body(result);
@@ -83,12 +83,12 @@ public class LinkResource extends TransactionPropagationService<LinkResource> {
     @Timed
     @PreAuthorize("hasPermission({'id': #link.id, 'newLink': #link}, 'link', 'LINK.UPDATE')")
     @PrivilegeDescription("Privilege to updates an existing link")
-    public ResponseEntity<Link> updateLink(@Valid @RequestBody Link link) throws URISyntaxException {
+    public ResponseEntity<LinkDto> updateLink(@Valid @RequestBody LinkDto link) throws URISyntaxException {
         if (link.getId() == null) {
             //in order to call method with permissions check
             return self.createLink(link);
         }
-        Link result = linkService.save(link);
+        LinkDto result = linkFacade.save(link);
         return ResponseEntity.ok()
             .headers(HeaderUtil.createEntityUpdateAlert(ENTITY_NAME, link.getId().toString()))
             .body(result);
@@ -102,8 +102,8 @@ public class LinkResource extends TransactionPropagationService<LinkResource> {
      */
     @GetMapping("/links")
     @Timed
-    public ResponseEntity<List<Link>> getAllLinks(@ApiParam Pageable pageable) {
-        Page<Link> page = linkService.findAll(pageable, null);
+    public ResponseEntity<List<LinkDto>> getAllLinks(@ApiParam Pageable pageable) {
+        Page<LinkDto> page = linkFacade.findAll(pageable, null);
         HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(page, "/api/links");
         return new ResponseEntity<>(page.getContent(), headers, HttpStatus.OK);
     }
@@ -118,8 +118,8 @@ public class LinkResource extends TransactionPropagationService<LinkResource> {
     @Timed
     @PostAuthorize("hasPermission({'returnObject': returnObject.body}, 'LINK.GET_LIST.ITEM')")
     @PrivilegeDescription("Privilege to get the link by id")
-    public ResponseEntity<Link> getLink(@PathVariable Long id) {
-        Link link = linkService.findOne(id);
+    public ResponseEntity<LinkDto> getLink(@PathVariable Long id) {
+        LinkDto link = linkFacade.findOne(id);
         return RespContentUtil.wrapOrNotFound(Optional.ofNullable(link));
     }
 
@@ -134,7 +134,7 @@ public class LinkResource extends TransactionPropagationService<LinkResource> {
     @PreAuthorize("hasPermission({'id': #id}, 'link', 'LINK.DELETE')")
     @PrivilegeDescription("Privilege to delete the link by id")
     public ResponseEntity<Void> deleteLink(@PathVariable Long id) {
-        linkService.delete(id);
+        linkFacade.delete(id);
         return ResponseEntity.ok().headers(HeaderUtil.createEntityDeletionAlert(ENTITY_NAME, id.toString())).build();
     }
 }

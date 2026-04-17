@@ -4,8 +4,8 @@ import com.codahale.metrics.annotation.Timed;
 import com.icthh.xm.commons.exceptions.BusinessException;
 import com.icthh.xm.commons.exceptions.ErrorConstants;
 import com.icthh.xm.commons.permission.annotation.PrivilegeDescription;
-import com.icthh.xm.ms.entity.domain.Comment;
-import com.icthh.xm.ms.entity.service.CommentService;
+import com.icthh.xm.ms.entity.service.dto.CommentDto;
+import com.icthh.xm.ms.entity.web.rest.facade.CommentFacade;
 import com.icthh.xm.ms.entity.web.rest.util.HeaderUtil;
 import com.icthh.xm.ms.entity.web.rest.util.PaginationUtil;
 import com.icthh.xm.ms.entity.web.rest.util.RespContentUtil;
@@ -42,13 +42,13 @@ public class CommentResource {
 
     private static final String ENTITY_NAME = "comment";
 
-    private final CommentService commentService;
+    private final CommentFacade commentFacade;
     private final CommentResource commentResource;
 
     public CommentResource(
-                    CommentService commentService,
+                    CommentFacade commentFacade,
                     @Lazy CommentResource commentResource) {
-        this.commentService = commentService;
+        this.commentFacade = commentFacade;
         this.commentResource = commentResource;
     }
 
@@ -63,12 +63,12 @@ public class CommentResource {
     @Timed
     @PreAuthorize("hasPermission({'comment': #comment}, 'COMMENT.CREATE')")
     @PrivilegeDescription("Privilege to create a new comment")
-    public ResponseEntity<Comment> createComment(@Valid @RequestBody Comment comment) throws URISyntaxException {
+    public ResponseEntity<CommentDto> createComment(@Valid @RequestBody CommentDto comment) throws URISyntaxException {
         if (comment.getId() != null) {
             throw new BusinessException(ErrorConstants.ERR_BUSINESS_IDEXISTS,
                                         "A new comment cannot already have an ID");
         }
-        Comment result = commentService.save(comment);
+        CommentDto result = commentFacade.save(comment);
         return ResponseEntity.created(new URI("/api/comments/" + result.getId()))
             .headers(HeaderUtil.createEntityCreationAlert(ENTITY_NAME, result.getId().toString()))
             .body(result);
@@ -87,12 +87,12 @@ public class CommentResource {
     @Timed
     @PreAuthorize("hasPermission({'id': #comment.id, 'newComment': #comment}, 'comment', 'COMMENT.UPDATE')")
     @PrivilegeDescription("Privilege to updates an existing comment")
-    public ResponseEntity<Comment> updateComment(@Valid @RequestBody Comment comment) throws URISyntaxException {
+    public ResponseEntity<CommentDto> updateComment(@Valid @RequestBody CommentDto comment) throws URISyntaxException {
         if (comment.getId() == null) {
             //in order to call method with permissions check
             return this.commentResource.createComment(comment);
         }
-        Comment result = commentService.save(comment);
+        CommentDto result = commentFacade.save(comment);
         return ResponseEntity.ok()
             .headers(HeaderUtil.createEntityUpdateAlert(ENTITY_NAME, comment.getId().toString()))
             .body(result);
@@ -106,8 +106,8 @@ public class CommentResource {
      */
     @GetMapping("/comments")
     @Timed
-    public ResponseEntity<List<Comment>> getAllComments(@ApiParam Pageable pageable) {
-        Page<Comment> page = commentService.findAll(pageable, null);
+    public ResponseEntity<List<CommentDto>> getAllComments(@ApiParam Pageable pageable) {
+        Page<CommentDto> page = commentFacade.findAll(pageable, null);
         HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(page, "/api/comments");
         return new ResponseEntity<>(page.getContent(), headers, HttpStatus.OK);
     }
@@ -122,8 +122,8 @@ public class CommentResource {
     @Timed
     @PostAuthorize("hasPermission({'returnObject': returnObject.body}, 'COMMENT.GET_LIST.ITEM')")
     @PrivilegeDescription("Privilege to get the comment by id")
-    public ResponseEntity<Comment> getComment(@PathVariable Long id) {
-        Comment comment = commentService.findOne(id);
+    public ResponseEntity<CommentDto> getComment(@PathVariable Long id) {
+        CommentDto comment = commentFacade.findOne(id);
         return RespContentUtil.wrapOrNotFound(Optional.ofNullable(comment));
     }
 
@@ -138,14 +138,14 @@ public class CommentResource {
     @PreAuthorize("hasPermission({'id': #id}, 'comment', 'COMMENT.DELETE')")
     @PrivilegeDescription("Privilege to delete the comment by id")
     public ResponseEntity<Void> deleteComment(@PathVariable Long id) {
-        commentService.delete(id);
+        commentFacade.delete(id);
         return ResponseEntity.ok().headers(HeaderUtil.createEntityDeletionAlert(ENTITY_NAME, id.toString())).build();
     }
 
     @GetMapping("/xm-entities/{id}/comments")
     @Timed
-    public ResponseEntity<List<Comment>> getCommentsByXmEntity(@PathVariable Long id, @ApiParam Pageable pageable) {
-        Page<Comment> page = commentService.findByXmEntity(id, pageable, null);
+    public ResponseEntity<List<CommentDto>> getCommentsByXmEntity(@PathVariable Long id, @ApiParam Pageable pageable) {
+        Page<CommentDto> page = commentFacade.findByXmEntity(id, pageable, null);
         HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(page, "/xm-entities/" + id + "/comments");
         return new ResponseEntity<>(page.getContent(), headers, HttpStatus.OK);
     }

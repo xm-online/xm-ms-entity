@@ -25,14 +25,12 @@ import java.util.Map;
 @Order(value = Ordered.HIGHEST_PRECEDENCE)
 public class EntityExceptionTranslator {
 
-
     private static final String INTEGRITY_CONSTRAINT_VIOLATION_ERROR_CODE_PREFIX = "error.db.dataIntegrityViolation.";
     private static final String INTEGRITY_CONSTRAINT_VIOLATION_GROUP_CODE = "23";
 
     private final LocalizationMessageService localizationMessageService;
     private final ExceptionTranslator exceptionTranslator;
     private final LepExceptionParametersResolver lepExceptionParametersResolver;
-
 
     @ExceptionHandler(DataIntegrityViolationException.class)
     @ResponseBody

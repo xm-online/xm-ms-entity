@@ -4,8 +4,8 @@ import com.codahale.metrics.annotation.Timed;
 import com.icthh.xm.commons.exceptions.BusinessException;
 import com.icthh.xm.commons.exceptions.ErrorConstants;
 import com.icthh.xm.commons.permission.annotation.PrivilegeDescription;
-import com.icthh.xm.ms.entity.domain.Event;
-import com.icthh.xm.ms.entity.service.EventService;
+import com.icthh.xm.ms.entity.service.dto.EventDto;
+import com.icthh.xm.ms.entity.web.rest.facade.EventFacade;
 import com.icthh.xm.ms.entity.service.query.filter.EventFilter;
 import com.icthh.xm.ms.entity.web.rest.util.HeaderUtil;
 import com.icthh.xm.ms.entity.web.rest.util.RespContentUtil;
@@ -37,13 +37,13 @@ public class EventResource {
 
     private static final String ENTITY_NAME = "event";
 
-    private final EventService eventService;
+    private final EventFacade eventFacade;
     private final EventResource eventResource;
 
     public EventResource(
-                    EventService eventService,
+                    EventFacade eventFacade,
                     @Lazy EventResource eventResource) {
-        this.eventService = eventService;
+        this.eventFacade = eventFacade;
         this.eventResource = eventResource;
     }
 
@@ -58,12 +58,12 @@ public class EventResource {
     @Timed
     @PreAuthorize("hasPermission({'event': #event}, 'EVENT.CREATE')")
     @PrivilegeDescription("Privilege to create a new event")
-    public ResponseEntity<Event> createEvent(@Valid @RequestBody Event event) throws URISyntaxException {
+    public ResponseEntity<EventDto> createEvent(@Valid @RequestBody EventDto event) throws URISyntaxException {
         if (event.getId() != null) {
             throw new BusinessException(ErrorConstants.ERR_BUSINESS_IDEXISTS,
                                         "A new event cannot already have an ID");
         }
-        Event result = eventService.save(event);
+        EventDto result = eventFacade.save(event);
         return ResponseEntity.created(new URI("/api/events/" + result.getId()))
             .headers(HeaderUtil.createEntityCreationAlert(ENTITY_NAME, result.getId().toString()))
             .body(result);
@@ -82,12 +82,12 @@ public class EventResource {
     @Timed
     @PreAuthorize("hasPermission({'id': #event.id, 'newEvent': #event}, 'event', 'EVENT.UPDATE')")
     @PrivilegeDescription("Privilege to updates an existing event")
-    public ResponseEntity<Event> updateEvent(@Valid @RequestBody Event event) throws URISyntaxException {
+    public ResponseEntity<EventDto> updateEvent(@Valid @RequestBody EventDto event) throws URISyntaxException {
         if (event.getId() == null) {
             //in order to call method with permissions check
             return this.eventResource.createEvent(event);
         }
-        Event result = eventService.save(event);
+        EventDto result = eventFacade.save(event);
         return ResponseEntity.ok()
             .headers(HeaderUtil.createEntityUpdateAlert(ENTITY_NAME, event.getId().toString()))
             .body(result);
@@ -100,8 +100,8 @@ public class EventResource {
      */
     @GetMapping("/events")
     @Timed
-    public List<Event> getAllEvents(EventFilter eventFilter) {
-        return eventFilter == null ? eventService.findAll(null) : eventService.findAllByFilter(eventFilter);
+    public List<EventDto> getAllEvents(EventFilter eventFilter) {
+        return eventFilter == null ? eventFacade.findAll(null) : eventFacade.findAllByFilter(eventFilter);
     }
 
     /**
@@ -114,8 +114,8 @@ public class EventResource {
     @Timed
     @PostAuthorize("hasPermission({'returnObject': returnObject.body}, 'EVENT.GET_LIST.ITEM')")
     @PrivilegeDescription("Privilege to get the event by id")
-    public ResponseEntity<Event> getEvent(@PathVariable Long id) {
-        Event event = eventService.findOne(id);
+    public ResponseEntity<EventDto> getEvent(@PathVariable Long id) {
+        EventDto event = eventFacade.findOne(id);
         return RespContentUtil.wrapOrNotFound(Optional.ofNullable(event));
     }
 
@@ -130,7 +130,7 @@ public class EventResource {
     @PreAuthorize("hasPermission({'id': #id}, 'event', 'EVENT.DELETE')")
     @PrivilegeDescription("Privilege to delete the event by id")
     public ResponseEntity<Void> deleteEvent(@PathVariable Long id) {
-        eventService.delete(id);
+        eventFacade.delete(id);
         return ResponseEntity.ok().headers(HeaderUtil.createEntityDeletionAlert(ENTITY_NAME, id.toString())).build();
     }
 }

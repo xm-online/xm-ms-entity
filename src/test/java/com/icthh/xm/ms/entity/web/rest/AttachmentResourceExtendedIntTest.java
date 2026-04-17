@@ -58,6 +58,8 @@ import org.springframework.validation.Validator;
 
 import java.time.Instant;
 import java.util.List;
+import com.icthh.xm.ms.entity.web.rest.facade.AttachmentFacade;
+import com.icthh.xm.ms.entity.service.mapper.AttachmentMapper;
 
 /**
  * Extended Test class for the AttachmentResource REST controller.
@@ -115,6 +117,9 @@ public class AttachmentResourceExtendedIntTest extends AbstractJupiterSpringBoot
     @SpyBean
     private XmEntityTenantConfigService xmEntityTenantConfigService;
 
+    @Autowired
+    private AttachmentMapper attachmentMapper;
+
     @Spy
     private StartUpdateDateGenerationStrategy startUpdateDateGenerationStrategy;
 
@@ -143,7 +148,8 @@ public class AttachmentResourceExtendedIntTest extends AbstractJupiterSpringBoot
             xmEntityRepository,
             xmEntitySpecService);
 
-        AttachmentResource attachmentResourceMock = new AttachmentResource(attachmentService, attachmentResource);
+        AttachmentFacade attachmentFacade = new AttachmentFacade(attachmentService, attachmentMapper);
+        AttachmentResource attachmentResourceMock = new AttachmentResource(attachmentFacade, attachmentResource);
         this.restAttachmentMockMvc = MockMvcBuilders.standaloneSetup(attachmentResourceMock)
                                                     .setCustomArgumentResolvers(pageableArgumentResolver)
                                                     .setControllerAdvice(exceptionTranslator)
@@ -315,22 +321,22 @@ public class AttachmentResourceExtendedIntTest extends AbstractJupiterSpringBoot
         XmEntityTenantConfigService.XmEntityTenantConfig tenantConfig = new XmEntityTenantConfigService.XmEntityTenantConfig();
         tenantConfig.getAttachmentValidation().setContentTypeValidationEnabled(true);
         when(xmEntityTenantConfigService.getXmEntityTenantConfig()).thenReturn(tenantConfig);
-        
+
         byte[] jpegBytes = {(byte) 0xFF, (byte) 0xD8, (byte) 0xFF, 0x00};
         String contentBase64 = Base64.getEncoder().encodeToString(jpegBytes);
 
         Attachment attachmentWithContent = createEntity(em);
         attachmentWithContent.setContent(new Content().value(contentBase64.getBytes()));
-        
+
         AttachmentSpec spec = new AttachmentSpec();
         spec.setContentTypes(Arrays.asList("application/pdf"));
         spec.setKey("ENTITY_TYPE_SPEC");
         spec.setMax(5000);
 
         when(xmEntitySpecService.findAttachment(attachmentWithContent.getXmEntity().getTypeKey(), attachmentWithContent.getTypeKey())).thenReturn(Optional.of(spec));
-        
+
         int databaseSizeBeforeCreate = attachmentRepository.findAll().size();
-        
+
         restAttachmentMockMvc.perform(post("/api/attachments")
             .contentType(TestUtil.APPLICATION_JSON_UTF8)
             .content(TestUtil.convertObjectToJsonBytes(attachmentWithContent)))

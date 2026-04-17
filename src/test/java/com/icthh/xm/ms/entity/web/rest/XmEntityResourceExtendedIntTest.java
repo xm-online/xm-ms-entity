@@ -128,6 +128,13 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import com.icthh.xm.ms.entity.web.rest.facade.XmEntityFacade;
+import com.icthh.xm.ms.entity.web.rest.facade.EventFacade;
+import com.icthh.xm.ms.entity.web.rest.facade.CalendarFacade;
+import com.icthh.xm.ms.entity.service.mapper.XmEntityMapper;
+import com.icthh.xm.ms.entity.service.mapper.LinkMapper;
+import com.icthh.xm.ms.entity.service.mapper.EventMapper;
+import com.icthh.xm.ms.entity.service.mapper.CalendarMapper;
 
 /**
  * Extension Test class for the XmEntityResource REST controller. Contains additional test apart from Jhipster generated
@@ -307,6 +314,18 @@ public class XmEntityResourceExtendedIntTest extends AbstractJupiterSpringBootTe
     @Autowired
     private XmEntityProjectionService xmEntityProjectionService;
 
+    @Autowired
+    private XmEntityMapper xmEntityMapper;
+
+    @Autowired
+    private LinkMapper linkMapper;
+
+    @Autowired
+    private EventMapper eventMapper;
+
+    @Autowired
+    private CalendarMapper calendarMapper;
+
     @Mock
     private XmAuthenticationContext context;
 
@@ -373,9 +392,13 @@ public class XmEntityResourceExtendedIntTest extends AbstractJupiterSpringBootTe
             ctx.setValue(THREAD_CONTEXT_KEY_AUTH_CONTEXT, authContextHolder.getContext());
         });
 
-        EventResource eventResourceMock = new EventResource(eventService, eventResource);
+        XmEntityFacade xmEntityFacade = new XmEntityFacade(xmEntityService, xmEntityMapper, linkMapper);
+        EventFacade eventFacade = new EventFacade(eventService, eventMapper);
+        CalendarFacade calendarFacade = new CalendarFacade(calendarService, calendarMapper, eventMapper);
 
-        XmEntityResource xmEntityResourceMock = new XmEntityResource(xmEntityService,
+        EventResource eventResourceMock = new EventResource(eventFacade, eventResource);
+
+        XmEntityResource xmEntityResourceMock = new XmEntityResource(xmEntityFacade,
                                                                      profileService,
                                                                      profileEventProducer,
                                                                      functionService,
@@ -383,7 +406,7 @@ public class XmEntityResourceExtendedIntTest extends AbstractJupiterSpringBootTe
                                                                      xmEntityResource
         );
         this.restXmEntityMockMvc = MockMvcBuilders.standaloneSetup(
-            xmEntityResourceMock, new CalendarResource(calendarService, calendarResource), eventResourceMock)
+            xmEntityResourceMock, new CalendarResource(calendarFacade, calendarResource), eventResourceMock)
                                                   .setCustomArgumentResolvers(pageableArgumentResolver)
                                                   .setControllerAdvice(exceptionTranslator)
                                                   .setValidator(validator)
@@ -391,7 +414,7 @@ public class XmEntityResourceExtendedIntTest extends AbstractJupiterSpringBootTe
                                                   .addMappedInterceptors(WebMvcConfiguration.getJsonFilterAllowedURIs())
                                                   .build();
 
-        this.restXmEntitySearchMockMvc = MockMvcBuilders.standaloneSetup(new XmEntitySearchResource(xmEntityService))
+        this.restXmEntitySearchMockMvc = MockMvcBuilders.standaloneSetup(new XmEntitySearchResource(xmEntityFacade))
                                                   .setCustomArgumentResolvers(pageableArgumentResolver)
                                                   .setControllerAdvice(exceptionTranslator)
                                                   .setValidator(validator)
@@ -996,9 +1019,9 @@ public class XmEntityResourceExtendedIntTest extends AbstractJupiterSpringBootTe
             .andExpect(jsonPath("$.endDate").value(sameInstant(DEFAULT_END_DATE)))
             .andExpect(jsonPath("$.description").value(DEFAULT_DESCRIPTION))
             .andExpect(jsonPath("$.data.AAAAAAAAAA").value("BBBBBBBBBB"))
-            .andExpect(jsonPath("$.attachments").value(nullValue()))
-            .andExpect(jsonPath("$.tags").value(nullValue()))
-            .andExpect(jsonPath("$.locations").value(nullValue()));
+            .andExpect(jsonPath("$.attachments").doesNotExist())
+            .andExpect(jsonPath("$.tags").doesNotExist())
+            .andExpect(jsonPath("$.locations").doesNotExist());
 
         performGet("/api/xm-entities-by-ids?ids={id}&embed=id", id)
             .andExpect(status().isOk())
@@ -1015,9 +1038,9 @@ public class XmEntityResourceExtendedIntTest extends AbstractJupiterSpringBootTe
             .andExpect(jsonPath("$.[0].endDate").value(sameInstant(DEFAULT_END_DATE)))
             .andExpect(jsonPath("$.[0].description").value(DEFAULT_DESCRIPTION))
             .andExpect(jsonPath("$.[0].data.AAAAAAAAAA").value("BBBBBBBBBB"))
-            .andExpect(jsonPath("$.[0].attachments").value(nullValue()))
-            .andExpect(jsonPath("$.[0].tags").value(nullValue()))
-            .andExpect(jsonPath("$.[0].locations").value(nullValue()));
+            .andExpect(jsonPath("$.[0].attachments").doesNotExist())
+            .andExpect(jsonPath("$.[0].tags").doesNotExist())
+            .andExpect(jsonPath("$.[0].locations").doesNotExist());
     }
 
     @Test
@@ -1056,7 +1079,7 @@ public class XmEntityResourceExtendedIntTest extends AbstractJupiterSpringBootTe
             .andExpect(jsonPath("$.data.AAAAAAAAAA").value("BBBBBBBBBB"))
             .andExpect(jsonPath("$.attachments.length()").value(1))
             .andExpect(jsonPath("$.tags.length()").value(1))
-            .andExpect(jsonPath("$.locations").value(nullValue()));
+            .andExpect(jsonPath("$.locations").doesNotExist());
 
         performGet("/api/xm-entities-by-ids?ids={id}&embed=id,attachments,tags", id)
             .andExpect(status().isOk())
@@ -1075,7 +1098,7 @@ public class XmEntityResourceExtendedIntTest extends AbstractJupiterSpringBootTe
             .andExpect(jsonPath("$.[0].data.AAAAAAAAAA").value("BBBBBBBBBB"))
             .andExpect(jsonPath("$.[0].attachments.length()").value(1))
             .andExpect(jsonPath("$.[0].tags.length()").value(1))
-            .andExpect(jsonPath("$.[0].locations").value(nullValue()));
+            .andExpect(jsonPath("$.[0].locations").doesNotExist());
     }
 
     @Test
@@ -1156,7 +1179,7 @@ public class XmEntityResourceExtendedIntTest extends AbstractJupiterSpringBootTe
             .andExpect(jsonPath("$.description").value(DEFAULT_DESCRIPTION))
             .andExpect(jsonPath("$.data.AAAAAAAAAA").value("BBBBBBBBBB"))
             .andExpect(jsonPath("$.calendars.length()").value(1))
-            .andExpect(jsonPath("$.calendars[0].events").value(nullValue()));
+            .andExpect(jsonPath("$.calendars[0].events").doesNotExist());
 
         performGet("/api/xm-entities-by-ids?ids={id}&embed=calendars", id)
             .andExpect(status().isOk())
@@ -1174,7 +1197,7 @@ public class XmEntityResourceExtendedIntTest extends AbstractJupiterSpringBootTe
             .andExpect(jsonPath("$.[0].description").value(DEFAULT_DESCRIPTION))
             .andExpect(jsonPath("$.[0].data.AAAAAAAAAA").value("BBBBBBBBBB"))
             .andExpect(jsonPath("$.[0].calendars.length()").value(1))
-            .andExpect(jsonPath("$.[0].calendars[0].events").value(nullValue()));
+            .andExpect(jsonPath("$.[0].calendars[0].events").doesNotExist());
     }
 
     private int prepareCalendar() throws Exception {

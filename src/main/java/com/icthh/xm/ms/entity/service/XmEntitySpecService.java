@@ -29,7 +29,7 @@ import com.icthh.xm.ms.entity.domain.spec.XmEntitySpec;
 import com.icthh.xm.ms.entity.security.access.XmEntityDynamicPermissionCheckService;
 import com.icthh.xm.ms.entity.service.spec.FunctionMetaInfo;
 import com.icthh.xm.ms.entity.service.spec.XmEntitySpecContextService;
-import com.networknt.schema.JsonSchema;
+import com.networknt.schema.Schema;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -135,7 +135,7 @@ public class XmEntitySpecService implements RefreshableConfiguration {
         return xmEntitySpecContextService.typesByTenant(getTenantKeyValue()).values();
     }
 
-    private String extractTenantName(String it) {
+    public String extractTenantName(String it) {
         return matcher.extractUriTemplateVariables(getPathPattern(it), it).get(TENANT_NAME);
     }
 
@@ -200,22 +200,22 @@ public class XmEntitySpecService implements RefreshableConfiguration {
         return dataSchemas;
     }
 
-    @LoggingAspectConfig(resultDetails = false)
+    @IgnoreLogginAspect
     public Optional<TypeSpec> getTypeSpecByKey(String key) {
         return ofNullable(getTypeSpecs().get(key)).map(this::filterFunctions);
     }
 
-    @LoggingAspectConfig(resultDetails = false)
-    public Optional<JsonSchema> getDataJsonSchemaByKey(String key) {
+    @IgnoreLogginAspect
+    public Optional<Schema> getDataJsonSchemaByKey(String key) {
         return ofNullable(xmEntitySpecContextService.dataSpecJsonSchemas(getTenantKeyValue())).map(it -> it.get(key));
     }
 
-    @LoggingAspectConfig(resultDetails = false)
+    @IgnoreLogginAspect
     public Optional<TypeSpec> getTypeSpecByKeyWithoutFunctionFilter(String key) {
         return ofNullable(getTypeSpecs().get(key));
     }
 
-    @LoggingAspectConfig(resultDetails = false)
+    @IgnoreLogginAspect
     public Optional<LinkSpec> getLinkSpec(String entityTypeKey, String linkTypeKey) {
         return getTypeSpecByKey(entityTypeKey).flatMap(ts -> ts.findLinkSpec(linkTypeKey));
     }
@@ -261,7 +261,7 @@ public class XmEntitySpecService implements RefreshableConfiguration {
      * @param attachmentKey Attachment key
      * @return entity Attachment if present
      */
-    @LoggingAspectConfig(resultDetails = false)
+    @IgnoreLogginAspect
     public Optional<AttachmentSpec> findAttachment(String key, String attachmentKey) {
         return getTypeSpecs().get(key).getAttachments().stream().filter(l -> l.getKey().equals(attachmentKey))
             .findFirst();
@@ -326,6 +326,7 @@ public class XmEntitySpecService implements RefreshableConfiguration {
             .filter(f -> f.functionKey().equals(functionKey)).toList();
     }
 
+    @IgnoreLogginAspect
     public List<FunctionMetaInfo> findAllFunctionMetaInfo() {
         return xmEntitySpecContextService.functionsMetaInfoByTenant(getTenantKeyValue());
     }

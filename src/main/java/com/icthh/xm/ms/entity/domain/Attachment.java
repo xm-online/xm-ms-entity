@@ -39,7 +39,6 @@ import static jakarta.persistence.CascadeType.ALL;
  * - zip bombs
  * - viruses
  */
-@ApiModel(description = "Represents any XM entity file attachment. It could be image, zip archive, pdf document or other file formats (List of available file formats should be configured). Files should be verified on: - size - zip bombs - viruses")
 @Entity
 @Table(name = "attachment")
 @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
@@ -58,7 +57,6 @@ public class Attachment implements Serializable {
      * String typeKey with tree-like structure.
      */
     @NotNull
-    @ApiModelProperty(value = "String typeKey with tree-like structure.", required = true)
     @Column(name = "type_key", nullable = false)
     private String typeKey;
 
@@ -66,56 +64,48 @@ public class Attachment implements Serializable {
      * Attachment name
      */
     @NotNull
-    @ApiModelProperty(value = "Attachment name", required = true)
     @Column(name = "name", nullable = false)
     private String name;
 
     /**
      * Content retrieving URL
      */
-    @ApiModelProperty(value = "Content retrieving URL")
     @Column(name = "content_url")
     private String contentUrl;
 
     /**
      * Content description
      */
-    @ApiModelProperty(value = "Content description")
     @Column(name = "description")
     private String description;
 
     /**
      * Start date
      */
-    @ApiModelProperty(value = "Start date")
     @Column(name = "start_date", nullable = false)
     private Instant startDate;
 
     /**
      * End date
      */
-    @ApiModelProperty(value = "End date")
     @Column(name = "end_date")
     private Instant endDate;
 
     /**
      * Content type
      */
-    @ApiModelProperty(value = "Content type")
     @Column(name = "value_content_type")
     private String valueContentType;
 
     /**
      * Content size in bytes
      */
-    @ApiModelProperty(value = "Content size in bytes")
     @Column(name = "value_content_size")
     private Long valueContentSize;
 
     /**
      * Content checksum
      */
-    @ApiModelProperty(value = "Content checksum")
     @Column(name = "content_checksum")
     private String contentChecksum;
 
