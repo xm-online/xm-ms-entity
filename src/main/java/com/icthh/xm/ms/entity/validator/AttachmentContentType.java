@@ -15,7 +15,7 @@ import java.lang.annotation.Target;
 @Constraint(validatedBy = AttachmentContentTypeValidator.class)
 public @interface AttachmentContentType {
 
-    String message() default "{xm.ms.entity.attachment.contentType.constraint}";
+    String message() default "Detected content type is not allowed for your spec";
 
     Class<?>[] groups() default {};
 

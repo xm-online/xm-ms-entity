@@ -1,6 +1,8 @@
 package com.icthh.xm.ms.entity.validator;
 
+import com.icthh.xm.commons.exceptions.BusinessException;
 import com.icthh.xm.ms.entity.config.ApplicationProperties;
+import com.icthh.xm.ms.entity.config.XmEntityTenantConfigService;
 import com.icthh.xm.ms.entity.domain.Attachment;
 import com.icthh.xm.ms.entity.domain.Content;
 import com.icthh.xm.ms.entity.domain.XmEntity;
@@ -31,6 +33,7 @@ public class AttachmentContentTypeValidator implements ConstraintValidator<Attac
 
     private final ApplicationProperties applicationProperties;
     private final XmEntitySpecService xmEntitySpecService;
+    private final XmEntityTenantConfigService xmEntityTenantConfigService;
 
     @Override
     public boolean isValid(Attachment attachment, ConstraintValidatorContext context) {
@@ -48,23 +51,21 @@ public class AttachmentContentTypeValidator implements ConstraintValidator<Attac
                 .findAttachment(entity.getTypeKey(), attachment.getTypeKey())
                 .orElse(null);
 
-            if (Objects.isNull(spec) || CollectionUtils.isEmpty(spec.getContentTypes())) {
+            if (Objects.isNull(spec) || CollectionUtils.isEmpty(spec.getContentTypes()) || !isContentTypeValidationEnabled(spec)) {
                 return true;
             }
-
             List<String> allowedContentTypes = spec.getContentTypes();
-
             byte[] contentBytes = getContentBytes(attachment);
             if (contentBytes == null || contentBytes.length == 0) {
                 return true;
             }
-
             String detectedContentType = detectContentType(contentBytes);
-
             boolean isValid = allowedContentTypes.stream()
                 .anyMatch(allowed -> isContentTypeMatch(detectedContentType, allowed));
 
             if (!isValid && context != null) {
+                log.warn("Attachment content type validation failed. Entity typeKey: {}, attachment typeKey: {}, detected: {}, expected: {}", 
+                    entity.getTypeKey(), attachment.getTypeKey(), detectedContentType, allowedContentTypes);
                 context.disableDefaultConstraintViolation();
                 context.buildConstraintViolationWithTemplate(
                     "Detected content type '" + detectedContentType +
@@ -83,6 +84,15 @@ public class AttachmentContentTypeValidator implements ConstraintValidator<Attac
         return applicationProperties.getAttachmentValidation().isContentTypeValidationEnabled();
     }
 
+    private boolean isContentTypeValidationEnabled(AttachmentSpec spec) {
+        if (spec.getContentTypeValidationEnabled() != null) {
+            return spec.getContentTypeValidationEnabled();
+        }
+        return xmEntityTenantConfigService.getXmEntityTenantConfig()
+                .getAttachmentValidation()
+                .getContentTypeValidationEnabled();
+    }
+
     private byte[] getContentBytes(Attachment attachment) {
         return Optional.ofNullable(attachment.getContent()).map(Content::getValue).orElse(null);
 
@@ -93,7 +103,7 @@ public class AttachmentContentTypeValidator implements ConstraintValidator<Attac
             return tika.detect(inputStream);
         } catch (IOException e) {
             log.warn("Error detecting content type with Tika", e);
-            throw new IllegalArgumentException("Error detecting content type", e);
+            throw new BusinessException("Error detecting content type");
         }
     }
 
@@ -106,9 +116,9 @@ public class AttachmentContentTypeValidator implements ConstraintValidator<Attac
                 return true;
             }
 
-        } catch (Exception e) {
-            log.debug("Error parsing media types with Tika", e);
-            if (detected.equalsIgnoreCase(allowed)) {
+        } catch (IllegalArgumentException | NullPointerException e) {
+            log.warn("Error parsing media types with Tika, falling back to string comparison", e);
+            if (detected != null && detected.equalsIgnoreCase(allowed)) {
                 return true;
             }
         }
