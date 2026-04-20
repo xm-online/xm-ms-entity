@@ -102,7 +102,7 @@ public class AttachmentContentTypeValidator implements ConstraintValidator<Attac
         MediaType detectedType = MediaType.parse(detected);
         MediaType allowedType = MediaType.parse(allowed);
 
-        if (detectedType != null && detectedType.getBaseType().equals(allowedType.getBaseType())) {
+        if (detectedType != null && allowedType != null && detectedType.getBaseType().equals(allowedType.getBaseType())) {
             return true;
         }
         
