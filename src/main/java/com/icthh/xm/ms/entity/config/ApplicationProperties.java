@@ -200,7 +200,6 @@ public class ApplicationProperties {
         private long maxAvatarSize = DEFAULT_MAX_AVATAR_SIZE;
     }
 
-
     public enum StorageType {
         DB, S3, FILE
     }
