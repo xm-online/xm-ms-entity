@@ -99,16 +99,11 @@ public class AttachmentContentTypeValidator implements ConstraintValidator<Attac
     }
 
     private boolean isContentTypeMatch(String detected, String allowed) {
-        try {
-            MediaType detectedType = MediaType.parse(detected);
-            MediaType allowedType = MediaType.parse(allowed);
+        MediaType detectedType = MediaType.parse(detected);
+        MediaType allowedType = MediaType.parse(allowed);
 
-            if (detectedType != null && detectedType.getBaseType().equals(allowedType.getBaseType())) {
-                return true;
-            }
-
-        } catch (IllegalArgumentException e) {
-            log.warn("Error parsing media types with Tika, falling back to string comparison", e);
+        if (detectedType != null && detectedType.getBaseType().equals(allowedType.getBaseType())) {
+            return true;
         }
         
         // Fallback to string comparison
