@@ -103,17 +103,15 @@ public class AttachmentContentTypeValidator implements ConstraintValidator<Attac
             MediaType detectedType = MediaType.parse(detected);
             MediaType allowedType = MediaType.parse(allowed);
 
-            if (detectedType.equals(allowedType)) {
+            if (detectedType != null && detectedType.getBaseType().equals(allowedType.getBaseType())) {
                 return true;
             }
 
-        } catch (IllegalArgumentException | NullPointerException e) {
+        } catch (IllegalArgumentException e) {
             log.warn("Error parsing media types with Tika, falling back to string comparison", e);
-            if (detected != null && detected.equalsIgnoreCase(allowed)) {
-                return true;
-            }
         }
-
-        return false;
+        
+        // Fallback to string comparison
+        return detected != null && detected.equalsIgnoreCase(allowed);
     }
 }
