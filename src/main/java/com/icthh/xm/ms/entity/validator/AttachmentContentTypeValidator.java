@@ -40,39 +40,46 @@ public class AttachmentContentTypeValidator implements ConstraintValidator<Attac
             return true;
         }
 
-        try {
-            XmEntity entity = attachment.getXmEntity();
-            AttachmentSpec spec = xmEntitySpecService
+        XmEntity entity = attachment.getXmEntity();
+        
+        if (Objects.isNull(attachment.getContent())) {
+            log.warn("Attachment has no content object, skipping content type validation. Entity typeKey: {}, attachment typeKey: {}",
+                    entity.getTypeKey(), attachment.getTypeKey());
+            return true;
+        }
+
+        AttachmentSpec spec = xmEntitySpecService
                 .findAttachment(entity.getTypeKey(), attachment.getTypeKey())
                 .orElse(null);
 
-            if (Objects.isNull(spec) || CollectionUtils.isEmpty(spec.getContentTypes()) || !isContentTypeValidationEnabled(spec)) {
-                return true;
-            }
-            List<String> allowedContentTypes = spec.getContentTypes();
-            byte[] contentBytes = getContentBytes(attachment);
-            if (contentBytes == null || contentBytes.length == 0) {
-                return true;
-            }
-            String detectedContentType = detectContentType(contentBytes);
-            boolean isValid = allowedContentTypes.stream()
+        if (Objects.isNull(spec) || CollectionUtils.isEmpty(spec.getContentTypes()) || !isContentTypeValidationEnabled(spec)) {
+            return true;
+        }
+        
+        List<String> allowedContentTypes = spec.getContentTypes();
+        byte[] contentBytes = getContentBytes(attachment);
+        
+        if (contentBytes == null || contentBytes.length == 0) {
+            log.warn("Attachment has no content bytes, skipping content type validation. Entity typeKey: {}, attachment typeKey: {}",
+                    entity.getTypeKey(), attachment.getTypeKey());
+            return true;
+        }
+        
+        String detectedContentType = detectContentType(contentBytes);
+        boolean isValid = allowedContentTypes.stream()
                 .anyMatch(allowed -> isContentTypeMatch(detectedContentType, allowed));
 
-            if (!isValid && context != null) {
-                log.warn("Attachment content type validation failed. Entity typeKey: {}, attachment typeKey: {}, detected: {}, expected: {}", 
+        if (!isValid && context != null) {
+            log.warn("Attachment content type validation failed. Entity typeKey: {}, attachment typeKey: {}, detected: {}, expected: {}",
                     entity.getTypeKey(), attachment.getTypeKey(), detectedContentType, allowedContentTypes);
-                context.disableDefaultConstraintViolation();
-                context.buildConstraintViolationWithTemplate(
-                    "Detected content type '" + detectedContentType +
-                    "' is not allowed. Allowed types: " + allowedContentTypes)
-                .addConstraintViolation();
-            }
-
-            return isValid;
-        } catch (Exception e) {
-            log.error("Error during attachment content type validation", e);
-            return false;
+            context.disableDefaultConstraintViolation();
+            context.buildConstraintViolationWithTemplate(
+                            "Detected content type '" + detectedContentType +
+                                    "' is not allowed. Allowed types: " + allowedContentTypes)
+                    .addConstraintViolation();
         }
+
+        return isValid;
     }
 
     private boolean isContentTypeValidationEnabled(AttachmentSpec spec) {
@@ -90,23 +97,27 @@ public class AttachmentContentTypeValidator implements ConstraintValidator<Attac
     }
 
     private String detectContentType(byte[] contentBytes) {
-        try (InputStream inputStream = new ByteArrayInputStream(contentBytes)) {
-            return tika.detect(inputStream);
-        } catch (IOException e) {
-            log.warn("Error detecting content type with Tika", e);
+        try {
+            return tika.detect(contentBytes);
+        } catch (IllegalStateException e) {
+            log.error("Error detecting content type with Tika", e);
             throw new BusinessException("Error detecting content type");
         }
     }
 
     private boolean isContentTypeMatch(String detected, String allowed) {
+        if (detected == null || allowed == null) {
+            return false;
+        }
+
         MediaType detectedType = MediaType.parse(detected);
         MediaType allowedType = MediaType.parse(allowed);
 
-        if (detectedType != null && allowedType != null && detectedType.getBaseType().equals(allowedType.getBaseType())) {
-            return true;
+        if (detectedType != null && allowedType != null) {
+            return detectedType.getBaseType().equals(allowedType.getBaseType());
         }
-        
-        // Fallback to string comparison
-        return detected != null && detected.equalsIgnoreCase(allowed);
+
+        log.warn("Media type parsing failed, falling back to string comparison. Detected: {}, Allowed: {}", detected, allowed);
+        return detected.equalsIgnoreCase(allowed);
     }
 }
