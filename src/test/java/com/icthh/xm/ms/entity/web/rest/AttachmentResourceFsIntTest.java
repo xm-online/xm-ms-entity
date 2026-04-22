@@ -135,6 +135,9 @@ public class AttachmentResourceFsIntTest extends AbstractJupiterSpringBootTest {
     @Autowired
     private AttachmentMapper attachmentMapper;
 
+    @Autowired
+    private AttachmentContentTypeValidator attachmentContentTypeValidator;
+
     @BeforeTransaction
     public void beforeTransaction() {
         TenantContextUtils.setTenant(tenantContextHolder, "RESINTTEST");
@@ -157,7 +160,7 @@ public class AttachmentResourceFsIntTest extends AbstractJupiterSpringBootTest {
                                                   permittedRepository,
                                                   startUpdateDateGenerationStrategy,
                                                   xmEntityRepository,
-                                                  xmEntitySpecService);
+                                                  xmEntitySpecService, attachmentContentTypeValidator);
 
         AttachmentFacade attachmentFacade = new AttachmentFacade(attachmentService, attachmentMapper);
         AttachmentResource attachmentResourceMock = new AttachmentResource(attachmentFacade, attachmentResource);

@@ -100,7 +100,7 @@ public class ContentServiceIntTest extends AbstractJupiterSpringBootTest {
         enrichAmazonProperties(applicationProperties.getAmazon());
 
         s3StorageRepository = new S3StorageRepository(applicationProperties, amazonS3Template, tenantContextHolder);
-        contentService = new ContentService(permittedRepository, contentRepository, s3StorageRepository, fsFileStorageRepository, xmEntitySpecService, contentTypeValidator);
+        contentService = new ContentService(permittedRepository, contentRepository, s3StorageRepository, fsFileStorageRepository, xmEntitySpecService);
     }
 
     private void enrichAmazonProperties(ApplicationProperties.Amazon amazon) {

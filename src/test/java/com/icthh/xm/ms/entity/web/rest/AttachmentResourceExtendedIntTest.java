@@ -32,6 +32,7 @@ import com.icthh.xm.ms.entity.service.AttachmentService;
 import com.icthh.xm.ms.entity.service.ContentService;
 import com.icthh.xm.ms.entity.service.XmEntitySpecService;
 import com.icthh.xm.ms.entity.service.impl.StartUpdateDateGenerationStrategy;
+import com.icthh.xm.ms.entity.validator.AttachmentContentTypeValidator;
 import jakarta.persistence.EntityManager;
 import java.util.Optional;
 import org.apache.commons.codec.digest.DigestUtils;
@@ -119,6 +120,9 @@ public class AttachmentResourceExtendedIntTest extends AbstractJupiterSpringBoot
     @Autowired
     private AttachmentMapper attachmentMapper;
 
+    @Autowired
+    private AttachmentContentTypeValidator attachmentContentTypeValidator;
+
     @Spy
     private StartUpdateDateGenerationStrategy startUpdateDateGenerationStrategy;
 
@@ -145,7 +149,7 @@ public class AttachmentResourceExtendedIntTest extends AbstractJupiterSpringBoot
             permittedRepository,
             startUpdateDateGenerationStrategy,
             xmEntityRepository,
-            xmEntitySpecService);
+            xmEntitySpecService, attachmentContentTypeValidator);
 
         AttachmentFacade attachmentFacade = new AttachmentFacade(attachmentService, attachmentMapper);
         AttachmentResource attachmentResourceMock = new AttachmentResource(attachmentFacade, attachmentResource);

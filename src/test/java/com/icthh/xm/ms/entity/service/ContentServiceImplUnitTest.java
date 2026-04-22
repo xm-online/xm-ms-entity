@@ -30,10 +30,8 @@ public class ContentServiceImplUnitTest extends AbstractJupiterUnitTest {
     private S3StorageRepository s3StorageRepository;
     private FsFileStorageRepository fsFileStorageRepository;
     private XmEntitySpecService xmEntitySpecService;
-    private XmEntityTenantConfigService xmEntityTenantConfigService;
 
     private ContentService contentService;
-    private AttachmentContentTypeValidator contentTypeValidator;
 
     @BeforeEach
     public void setUp() {
@@ -42,10 +40,8 @@ public class ContentServiceImplUnitTest extends AbstractJupiterUnitTest {
         s3StorageRepository = Mockito.mock(S3StorageRepository.class);
         fsFileStorageRepository = Mockito.mock(FsFileStorageRepository.class);
         xmEntitySpecService = Mockito.mock(XmEntitySpecService.class);
-        xmEntityTenantConfigService = Mockito.mock(XmEntityTenantConfigService.class);
-        contentTypeValidator = new AttachmentContentTypeValidator(xmEntitySpecService, xmEntityTenantConfigService);
         contentService = new ContentService(
-            permittedRepository, contentRepository, s3StorageRepository, fsFileStorageRepository, xmEntitySpecService, contentTypeValidator
+            permittedRepository, contentRepository, s3StorageRepository, fsFileStorageRepository, xmEntitySpecService
         );
     }
 

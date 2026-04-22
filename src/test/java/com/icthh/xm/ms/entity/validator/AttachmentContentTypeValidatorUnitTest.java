@@ -1,7 +1,6 @@
 package com.icthh.xm.ms.entity.validator;
 
 import com.icthh.xm.ms.entity.AbstractJupiterUnitTest;
-import com.icthh.xm.ms.entity.config.ApplicationProperties;
 import com.icthh.xm.ms.entity.config.XmEntityTenantConfigService;
 import com.icthh.xm.ms.entity.domain.Attachment;
 import com.icthh.xm.ms.entity.domain.Content;

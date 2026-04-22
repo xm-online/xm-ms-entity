@@ -14,7 +14,6 @@ import com.icthh.xm.ms.entity.domain.spec.AttachmentSpec;
 import com.icthh.xm.ms.entity.repository.AttachmentRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
 import com.icthh.xm.ms.entity.service.impl.StartUpdateDateGenerationStrategy;
-import com.icthh.xm.ms.entity.config.ApplicationProperties;
 import com.icthh.xm.ms.entity.validator.AttachmentContentTypeValidator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -52,6 +51,7 @@ public class AttachmentService {
     private final XmEntityRepository xmEntityRepository;
 
     private final XmEntitySpecService xmEntitySpecService;
+    private final AttachmentContentTypeValidator contentTypeValidator;
 
     /**
      * Save a attachment.
@@ -233,7 +233,10 @@ public class AttachmentService {
     }
 
     protected void assertContentType(AttachmentSpec spec, Attachment attachment) {
-        contentService.validateContentType(spec, attachment);
+        if (!contentTypeValidator.isValid(attachment, null)) {
+            throw new BusinessException(CONTENT_TYPE_RESTRICTION,
+                    "Attachment content type is not allowed for " + spec.getKey());
+        }
     }
 
     @Transactional(readOnly = true)

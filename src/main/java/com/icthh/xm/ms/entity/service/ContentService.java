@@ -1,9 +1,7 @@
 package com.icthh.xm.ms.entity.service;
 
-import static com.icthh.xm.ms.entity.service.AttachmentService.CONTENT_TYPE_RESTRICTION;
 
 import com.amazonaws.util.IOUtils;
-import com.icthh.xm.commons.exceptions.BusinessException;
 import com.icthh.xm.commons.exceptions.EntityNotFoundException;
 import com.icthh.xm.commons.permission.annotation.FindWithPermission;
 import com.icthh.xm.commons.permission.annotation.PrivilegeDescription;
@@ -19,7 +17,6 @@ import com.icthh.xm.ms.entity.repository.backend.FsFileStorageRepository;
 import com.icthh.xm.ms.entity.repository.backend.S3StorageRepository;
 import com.icthh.xm.ms.entity.service.dto.S3ObjectDto;
 import com.icthh.xm.ms.entity.service.dto.UploadResultDto;
-import com.icthh.xm.ms.entity.validator.AttachmentContentTypeValidator;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -44,7 +41,6 @@ public class ContentService {
     private final S3StorageRepository s3StorageRepository;
     private final FsFileStorageRepository fsFileStorageRepository;
     private final XmEntitySpecService xmEntitySpecService;
-    private final AttachmentContentTypeValidator contentTypeValidator;
 
     @Transactional(readOnly = true)
     @FindWithPermission("CONTENT.GET_LIST")
@@ -102,13 +98,6 @@ public class ContentService {
                 yield attachment;
             }
         };
-    }
-
-    public void validateContentType(AttachmentSpec spec, Attachment attachment) {
-        if (!contentTypeValidator.isValid(attachment, null)) {
-            throw new BusinessException(CONTENT_TYPE_RESTRICTION,
-                    "Attachment content type is not allowed for " + spec.getKey());
-        }
     }
 
     private Attachment saveAttachmentToS3(Attachment attachment, Content content, String folderName) {

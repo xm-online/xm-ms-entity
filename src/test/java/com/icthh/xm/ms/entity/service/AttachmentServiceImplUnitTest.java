@@ -60,7 +60,7 @@ public class AttachmentServiceImplUnitTest extends AbstractJupiterUnitTest {
         attachmentContentTypeValidator = new AttachmentContentTypeValidator(xmEntitySpecService, xmEntityTenantConfigService);
         attachmentService = new AttachmentService(
             attachmentRepository, contentService, permittedRepository,
-            startUpdateDateGenerationStrategy, xmEntityRepository, xmEntitySpecService
+            startUpdateDateGenerationStrategy, xmEntityRepository, xmEntitySpecService, attachmentContentTypeValidator
         );
 
         XmEntityTenantConfigService.XmEntityTenantConfig tenantConfig = new XmEntityTenantConfigService.XmEntityTenantConfig();
@@ -416,11 +416,11 @@ public class AttachmentServiceImplUnitTest extends AbstractJupiterUnitTest {
     public void shouldDeleteItemInS3() {
         S3StorageRepository s3StorageRepository  = Mockito.mock(S3StorageRepository.class);
         FsFileStorageRepository fsFileStorageRepository = Mockito.mock(FsFileStorageRepository.class);
-        ContentService contentService = new ContentService(null, null, s3StorageRepository, fsFileStorageRepository, xmEntitySpecService, attachmentContentTypeValidator);
+        ContentService contentService = new ContentService(null, null, s3StorageRepository, fsFileStorageRepository, xmEntitySpecService);
 
         attachmentService = new AttachmentService(
             attachmentRepository, contentService, permittedRepository,
-            startUpdateDateGenerationStrategy, xmEntityRepository, xmEntitySpecService
+            startUpdateDateGenerationStrategy, xmEntityRepository, xmEntitySpecService, attachmentContentTypeValidator
         );
 
 
@@ -474,11 +474,11 @@ public class AttachmentServiceImplUnitTest extends AbstractJupiterUnitTest {
 
     @Test
     public void shouldNOTPassContentTypeValidationWhenSpecContentTypesNotEq() {
-        ContentService contentService = new ContentService(null, null, null, null, xmEntitySpecService, attachmentContentTypeValidator);
+        ContentService contentService = new ContentService(null, null, null, null, xmEntitySpecService);
 
         attachmentService = new AttachmentService(
                 attachmentRepository, contentService, permittedRepository,
-                startUpdateDateGenerationStrategy, xmEntityRepository, xmEntitySpecService
+                startUpdateDateGenerationStrategy, xmEntityRepository, xmEntitySpecService, attachmentContentTypeValidator
         );
 
         AttachmentSpec spec = new AttachmentSpec();
