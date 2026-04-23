@@ -1,8 +1,8 @@
 
 dependencies {
-    implementation "com.h2database:h2"
     implementation "org.postgresql:postgresql"
     testImplementation "org.testcontainers:postgresql"
+    developmentOnly "org.springframework.boot:spring-boot-docker-compose"
 }
 
 ext {
