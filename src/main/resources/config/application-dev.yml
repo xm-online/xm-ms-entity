@@ -38,21 +38,28 @@ spring:
             kafka:
                 binder:
                     brokers: ${spring.kafka.bootstrap-servers}
-    h2:
-        console:
-            enabled: false
+    datasource:
+        type: com.zaxxer.hikari.HikariDataSource
+        url: jdbc:postgresql://localhost:15432/entity
+        username: entity
+        password: entity
+        hikari:
+            poolName: Hikari
+            auto-commit: false
     jpa:
-        database-platform: io.github.jhipster.domain.util.FixedH2Dialect
-        database: H2
+        database-platform: com.icthh.xm.commons.migration.db.jsonb.CustomPostgreSQLDialect
+        database: POSTGRESQL
         show-sql: false
         properties:
             hibernate.model.generator_name_as_sequence_name: false
             hibernate.id.new_generator_mappings: true
+            hibernate.connection.provider_disables_autocommit: true
             hibernate.cache.use_second_level_cache: false
             hibernate.cache.use_query_cache: false
             hibernate.cache.use_minimal_puts: true
             hibernate.show_sql: false
             hibernate.format_sql: false
+            hibernate.dialect: com.icthh.xm.commons.migration.db.jsonb.CustomPostgreSQLDialect
     kafka:
         bootstrap-servers: localhost:9092
     security:

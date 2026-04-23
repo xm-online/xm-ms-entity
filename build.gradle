@@ -365,7 +365,6 @@ dependencies {
     implementation 'io.micrometer:micrometer-observation'
     implementation "io.micrometer:micrometer-tracing-bridge-brave"
     implementation "io.springfox:springfox-bean-validators:${springfoxVersion}"
-    implementation "com.h2database:h2"
     implementation "org.postgresql:postgresql:${postgresqlVersion}"
     liquibaseRuntime "org.postgresql:postgresql:${postgresqlVersion}"
     implementation "org.mapstruct:mapstruct:${mapstructVersion}"
