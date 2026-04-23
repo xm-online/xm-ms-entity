@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonIdentityReference;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import com.icthh.xm.ms.entity.domain.idresolver.XmEntityObjectIdResolver;
 import com.icthh.xm.ms.entity.validator.TypeKey;
+import com.icthh.xm.ms.entity.validator.AttachmentContentType;
 import java.io.Serializable;
 import java.time.Instant;
 import java.util.Objects;
@@ -40,6 +41,7 @@ import static jakarta.persistence.CascadeType.ALL;
 @Table(name = "attachment")
 @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
 @TypeKey
+@AttachmentContentType
 public class Attachment implements Serializable {
 
     private static final long serialVersionUID = 1L;

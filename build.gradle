@@ -316,6 +316,7 @@ dependencies {
     implementation 'javax.persistence:javax.persistence-api:2.2'
     implementation "com.zaxxer:HikariCP"
     implementation "org.apache.commons:commons-lang3"
+    implementation("org.apache.tika:tika-core:${apacheTikaVersion}")
     implementation "commons-io:commons-io"
     implementation "org.hibernate.validator:hibernate-validator"
     implementation "org.liquibase:liquibase-core"

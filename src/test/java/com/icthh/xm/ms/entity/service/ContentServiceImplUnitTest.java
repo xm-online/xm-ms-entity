@@ -2,6 +2,8 @@ package com.icthh.xm.ms.entity.service;
 
 import com.icthh.xm.commons.permission.repository.PermittedRepository;
 import com.icthh.xm.ms.entity.AbstractJupiterUnitTest;
+import com.icthh.xm.ms.entity.config.ApplicationProperties;
+import com.icthh.xm.ms.entity.config.XmEntityTenantConfigService;
 import com.icthh.xm.ms.entity.domain.Attachment;
 import com.icthh.xm.ms.entity.domain.AttachmentStoreType;
 import com.icthh.xm.ms.entity.domain.Content;
@@ -11,6 +13,7 @@ import com.icthh.xm.ms.entity.repository.ContentRepository;
 import com.icthh.xm.ms.entity.repository.backend.FsFileStorageRepository;
 import com.icthh.xm.ms.entity.repository.backend.S3StorageRepository;
 import com.icthh.xm.ms.entity.service.dto.UploadResultDto;
+import com.icthh.xm.ms.entity.validator.AttachmentContentTypeValidator;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
