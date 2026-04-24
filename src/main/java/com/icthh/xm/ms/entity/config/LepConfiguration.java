@@ -16,6 +16,7 @@ import com.icthh.xm.ms.entity.service.impl.XmEntityFunctionServiceImpl;
 import com.icthh.xm.ms.entity.service.json.JsonValidationService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -77,6 +78,7 @@ public class LepConfiguration extends GroovyLepEngineConfiguration {
     }
 
     @Bean
+    @ConditionalOnMissingBean
     public Hibernate6Module hibernate6Module() {
         return new Hibernate6Module();
     }
