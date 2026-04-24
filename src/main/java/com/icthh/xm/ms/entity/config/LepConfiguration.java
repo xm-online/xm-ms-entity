@@ -1,5 +1,6 @@
 package com.icthh.xm.ms.entity.config;
 
+import com.fasterxml.jackson.datatype.hibernate6.Hibernate6Module;
 import com.icthh.xm.commons.config.client.repository.CommonConfigRepository;
 import com.icthh.xm.commons.config.client.service.CommonConfigService;
 import com.icthh.xm.commons.domain.FunctionSpecWithFileName;
@@ -73,6 +74,11 @@ public class LepConfiguration extends GroovyLepEngineConfiguration {
             xmEntityTenantConfigService,
             jsonValidationService
         );
+    }
+
+    @Bean
+    public Hibernate6Module hibernate6Module() {
+        return new Hibernate6Module();
     }
 
 }
