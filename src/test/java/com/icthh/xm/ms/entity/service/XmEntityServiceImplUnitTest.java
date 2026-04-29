@@ -1,7 +1,7 @@
 package com.icthh.xm.ms.entity.service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.icthh.xm.commons.tenant.JsonMapperUtils;
+import tools.jackson.databind.ObjectMapper;
 import com.icthh.xm.commons.config.client.service.TenantConfigService;
 import com.icthh.xm.commons.exceptions.BusinessException;
 import com.icthh.xm.commons.security.XmAuthenticationContext;
@@ -45,7 +45,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
-import static com.fasterxml.jackson.databind.SerializationFeature.WRITE_DATES_AS_TIMESTAMPS;
 import static com.google.common.collect.ImmutableMap.of;
 import static com.icthh.xm.ms.entity.util.EntityUtils.TEST_ID;
 import static com.icthh.xm.ms.entity.util.EntityUtils.TEST_KEY;
@@ -90,13 +89,12 @@ public class XmEntityServiceImplUnitTest extends AbstractJupiterUnitTest {
     XmAuthenticationContext authContext;
 
     @Spy
-    private ObjectMapper mapper = new ObjectMapper().configure(WRITE_DATES_AS_TIMESTAMPS, false).registerModule(new JavaTimeModule());
+    private ObjectMapper mapper = JsonMapperUtils.getDefaultJsonMapper();
     @Spy
     private SimpleTemplateProcessor templateProcessor = new SimpleTemplateProcessor(mapper);
 
     @BeforeEach
     public void before(){
-        mapper.registerModule(new JavaTimeModule());
         xmEntityService.setSelf(xmEntityService);
     }
 
@@ -293,8 +291,7 @@ public class XmEntityServiceImplUnitTest extends AbstractJupiterUnitTest {
 
         log.info(json);
 
-        ObjectMapper objectMapper = new ObjectMapper();
-        objectMapper.registerModule(new JavaTimeModule());
+        ObjectMapper objectMapper = JsonMapperUtils.getDefaultJsonMapper();
 
         objectMapper.readValue("{}", FunctionContext.class);
         objectMapper.readValue("{}", Comment.class);

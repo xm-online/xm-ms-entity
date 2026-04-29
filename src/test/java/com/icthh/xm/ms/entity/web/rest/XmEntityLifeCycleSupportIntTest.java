@@ -13,10 +13,10 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import tools.jackson.databind.node.ObjectNode;
 import com.icthh.xm.commons.i18n.error.web.ExceptionTranslator;
 import com.icthh.xm.commons.lep.XmLepScriptConfigServerResourceLoader;
+import com.icthh.xm.commons.tenant.JsonMapperUtils;
 import com.icthh.xm.commons.security.XmAuthenticationContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
@@ -29,6 +29,7 @@ import com.icthh.xm.ms.entity.service.ProfileService;
 import com.icthh.xm.ms.entity.service.TenantService;
 import com.icthh.xm.ms.entity.service.impl.XmEntityFunctionServiceFacade;
 import com.icthh.xm.ms.entity.service.impl.XmEntityServiceImpl;
+import com.icthh.xm.ms.entity.service.mapper.XmEntityMapper;
 import java.io.InputStream;
 import java.net.URI;
 import java.util.ArrayList;
@@ -48,7 +49,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
 import org.springframework.http.ResponseEntity;
-import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
+import org.springframework.http.converter.json.JacksonJsonHttpMessageConverter;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.transaction.BeforeTransaction;
 import org.springframework.test.web.servlet.MockMvc;
@@ -73,9 +74,6 @@ public class XmEntityLifeCycleSupportIntTest extends AbstractJupiterSpringBootTe
 
     @Autowired
     private ProfileEventProducer profileEventProducer;
-
-    @Autowired
-    private MappingJackson2HttpMessageConverter jacksonMessageConverter;
 
     @Autowired
     private PageableHandlerMethodArgumentResolver pageableArgumentResolver;
@@ -108,6 +106,12 @@ public class XmEntityLifeCycleSupportIntTest extends AbstractJupiterSpringBootTe
 
     @Autowired
     private XmEntityFacade xmEntityFacade;
+
+    @Autowired
+    private XmEntityMapper xmEntityMapper;
+
+    @Autowired
+    private JacksonJsonHttpMessageConverter jacksonMessageConverter;
 
     private List<String> lepsForCleanUp = new ArrayList<>();
 
@@ -226,12 +230,13 @@ public class XmEntityLifeCycleSupportIntTest extends AbstractJupiterSpringBootTe
         MutableLong id = new MutableLong();
 
         // Create the XmEntity
+        XmEntity entity1 = createEntity("KEY1", "TEST_LIFECYCLE");
         restXmEntityMockMvc.perform(post("/api/xm-entities")
             .contentType(TestUtil.APPLICATION_JSON_UTF8)
-            .content(TestUtil.convertObjectToJsonBytes(createEntity("KEY1", "TEST_LIFECYCLE"))))
+            .content(TestUtil.assertObjectsAndConvertToJsonBytesDto(entity1, xmEntityMapper.toDto(entity1))))
             .andDo(r -> {
                 log.info(r.getResponse().getContentAsString());
-                final ObjectNode node = new ObjectMapper().readValue(r.getResponse().getContentAsString(), ObjectNode.class);
+                final ObjectNode node = JsonMapperUtils.getDefaultJsonMapper().readValue(r.getResponse().getContentAsString(), ObjectNode.class);
                 id.setValue(node.get("id").longValue());
             })
             .andExpect(status().isCreated());
@@ -267,10 +272,10 @@ public class XmEntityLifeCycleSupportIntTest extends AbstractJupiterSpringBootTe
         entity.getData().put("called", "");
         restXmEntityMockMvc.perform(post("/api/xm-entities")
                                         .contentType(TestUtil.APPLICATION_JSON_UTF8)
-                                        .content(TestUtil.convertObjectToJsonBytes(entity)))
+                                        .content(TestUtil.assertObjectsAndConvertToJsonBytesDto(entity, xmEntityMapper.toDto(entity))))
             .andDo(r -> {
                 log.info(r.getResponse().getContentAsString());
-                final ObjectNode node = new ObjectMapper().readValue(r.getResponse().getContentAsString(), ObjectNode.class);
+                final ObjectNode node = JsonMapperUtils.getDefaultJsonMapper().readValue(r.getResponse().getContentAsString(), ObjectNode.class);
                 id.setValue(node.get("id").longValue());
             })
             .andExpect(status().isCreated());
@@ -281,7 +286,7 @@ public class XmEntityLifeCycleSupportIntTest extends AbstractJupiterSpringBootTe
             .andDo(r -> {
                 String json = r.getResponse().getContentAsString();
                 log.info(json);
-                final ObjectNode node = new ObjectMapper().readValue(r.getResponse().getContentAsString(), ObjectNode.class);
+                final ObjectNode node = JsonMapperUtils.getDefaultJsonMapper().readValue(r.getResponse().getContentAsString(), ObjectNode.class);
                 String expected = " root TEST_LIFECYCLE_TYPE_KEY TEST_LIFECYCLE_TYPE_KEY$SUB " +
                                   "TEST_LIFECYCLE_TYPE_KEY$SUB$CHILD TEST_LIFECYCLE_TYPE_KEY$$STATE2" +
                                   " TEST_LIFECYCLE_TYPE_KEY$SUB$$STATE2 TEST_LIFECYCLE_TYPE_KEY$SUB$CHILD$$STATE2" +
@@ -297,9 +302,10 @@ public class XmEntityLifeCycleSupportIntTest extends AbstractJupiterSpringBootTe
     @Transactional
     public void setCreateEntityWithoutState() throws Exception {
         // Create the XmEntity
+        XmEntity entity2 = createEntity("KEY1", "TEST_LIFECYCLE").stateKey(null);
         restXmEntityMockMvc.perform(post("/api/xm-entities")
             .contentType(TestUtil.APPLICATION_JSON_UTF8)
-            .content(TestUtil.convertObjectToJsonBytes(createEntity("KEY1", "TEST_LIFECYCLE").stateKey(null))))
+            .content(TestUtil.assertObjectsAndConvertToJsonBytesDto(entity2, xmEntityMapper.toDto(entity2))))
             .andExpect(jsonPath("$.stateKey").value("STATE1"))
             .andExpect(status().isCreated());
     }
@@ -312,12 +318,13 @@ public class XmEntityLifeCycleSupportIntTest extends AbstractJupiterSpringBootTe
         MutableLong id = new MutableLong();
 
         // Create the XmEntity
+        XmEntity entity3 = createEntity("KEY1", "TEST_LIFECYCLE");
         restXmEntityMockMvc.perform(post("/api/xm-entities")
             .contentType(TestUtil.APPLICATION_JSON_UTF8)
-            .content(TestUtil.convertObjectToJsonBytes(createEntity("KEY1", "TEST_LIFECYCLE"))))
+            .content(TestUtil.assertObjectsAndConvertToJsonBytesDto(entity3, xmEntityMapper.toDto(entity3))))
             .andDo(r -> {
                 log.info(r.getResponse().getContentAsString());
-                final ObjectNode node = new ObjectMapper().readValue(r.getResponse().getContentAsString(), ObjectNode.class);
+                final ObjectNode node = JsonMapperUtils.getDefaultJsonMapper().readValue(r.getResponse().getContentAsString(), ObjectNode.class);
                 id.setValue(node.get("id").longValue());
             })
             .andExpect(status().isCreated());
@@ -325,14 +332,16 @@ public class XmEntityLifeCycleSupportIntTest extends AbstractJupiterSpringBootTe
         // Create the XmEntity
         XmEntity entity = createEntity("KEY1", "TEST_LIFECYCLE");
         entity.setId(id.toLong());
+        XmEntity entityState2 = entity.stateKey("STATE2");
         restXmEntityMockMvc.perform(put("/api/xm-entities")
             .contentType(TestUtil.APPLICATION_JSON_UTF8)
-            .content(TestUtil.convertObjectToJsonBytes(entity.stateKey("STATE2"))))
+            .content(TestUtil.assertObjectsAndConvertToJsonBytesDto(entityState2, xmEntityMapper.toDto(entityState2))))
             .andExpect(status().isOk());
 
+        XmEntity entityStateNull = entity.stateKey(null);
         restXmEntityMockMvc.perform(put("/api/xm-entities")
             .contentType(TestUtil.APPLICATION_JSON_UTF8)
-            .content(TestUtil.convertObjectToJsonBytes(entity.stateKey(null))))
+            .content(TestUtil.assertObjectsAndConvertToJsonBytesDto(entityStateNull, xmEntityMapper.toDto(entityStateNull))))
             .andExpect(jsonPath("$.stateKey").value("STATE2"))
             .andExpect(status().isOk());
     }
@@ -343,7 +352,7 @@ public class XmEntityLifeCycleSupportIntTest extends AbstractJupiterSpringBootTe
             .andDo(r -> {
                 String json = r.getResponse().getContentAsString();
                 log.info(json);
-                final ObjectNode node = new ObjectMapper().readValue(r.getResponse().getContentAsString(), ObjectNode.class);
+                final ObjectNode node = JsonMapperUtils.getDefaultJsonMapper().readValue(r.getResponse().getContentAsString(), ObjectNode.class);
                 assertThat(node.get("data").get("updateState").intValue()).isEqualTo(updateState);
                 assertThat(node.get("data").get("updateByEntity").intValue()).isEqualTo(updateByEntity);
                 assertThat(node.get("data").get("updateByTargetState").intValue()).isEqualTo(updateByTargetState);

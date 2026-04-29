@@ -27,7 +27,7 @@ spring:
             enabled: false # we use Webpack dev server + BrowserSync for livereload
     jackson:
         serialization:
-            indent-output: true
+            INDENT_OUTPUT: true
     cloud:
         consul:
             discovery:

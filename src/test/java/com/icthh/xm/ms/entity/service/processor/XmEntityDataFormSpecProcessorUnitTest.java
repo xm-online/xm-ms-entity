@@ -1,10 +1,11 @@
 package com.icthh.xm.ms.entity.service.processor;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.ObjectWriter;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import com.icthh.xm.commons.tenant.YamlMapperUtils;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectWriter;
 import com.icthh.xm.commons.domain.DefinitionSpec;
+import com.icthh.xm.commons.tenant.JsonMapperUtils;
 import com.icthh.xm.commons.domain.FormSpec;
 import com.icthh.xm.commons.listener.JsonListenerService;
 import com.icthh.xm.ms.entity.AbstractJupiterUnitTest;
@@ -86,7 +87,7 @@ public class XmEntityDataFormSpecProcessorUnitTest extends AbstractJupiterUnitTe
 
     @Test
     public void shouldThrowIllegalArgumentExceptionWhenProcessTypeSpecWithNotValidJson() {
-        assertThrows(JsonProcessingException.class, () -> {
+        assertThrows(JacksonException.class, () -> {
             XmEntitySpec inputXmEntitySpec = loadXmEntitySpecByFileName("xmentityspec-forms-input");
             TypeSpec typeSpec = inputXmEntitySpec.getTypes().getFirst();
             jsonListenerService.processTenantSpecification(TENANT, RELATIVE_PATH_TO_FILE, "{,}");
@@ -98,19 +99,19 @@ public class XmEntityDataFormSpecProcessorUnitTest extends AbstractJupiterUnitTe
 
     @SneakyThrows
     private XmEntitySpec loadXmEntitySpecByFileName(String name) {
-        ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+        ObjectMapper mapper = YamlMapperUtils.yamlDefaultMapper();
         return mapper.readValue(loadFile("config/specs/forms/" + name + ".yml"), XmEntitySpec.class);
     }
 
     @SneakyThrows
     private void assertEqualsEntities(XmEntitySpec expected, XmEntitySpec actual) {
-        ObjectMapper objectMapper = new ObjectMapper(new YAMLFactory());
+        ObjectMapper objectMapper = YamlMapperUtils.yamlDefaultMapper();
         TypeSpec expectedTypeSpec = expected.getTypes().getFirst();
         TypeSpec actualTypeSpec = actual.getTypes().getFirst();
         Map<?, ?> expectedForm = objectMapper.readValue(expectedTypeSpec.getDataForm(), Map.class);
         Map<?, ?> actualForm = objectMapper.readValue(actualTypeSpec.getDataForm(), Map.class);
 
-        ObjectWriter prettyPrinter = new ObjectMapper().writerWithDefaultPrettyPrinter();
+        ObjectWriter prettyPrinter = JsonMapperUtils.getDefaultJsonMapper().writerWithDefaultPrettyPrinter();
         Assertions.assertEquals(prettyPrinter.writeValueAsString(expectedForm), prettyPrinter.writeValueAsString(actualForm));
         Assertions.assertEquals(expectedTypeSpec.getKey(), actualTypeSpec.getKey());
         Assertions.assertEquals(expected.getDefinitions(), actual.getDefinitions());

@@ -1,6 +1,6 @@
 package com.icthh.xm.ms.entity.web.rest;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableMap;
 import com.icthh.xm.commons.i18n.error.web.ExceptionTranslator;
 import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_AUTH_CONTEXT;
@@ -70,11 +70,11 @@ import static org.mockito.Mockito.when;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
+import org.springframework.http.converter.json.JacksonJsonHttpMessageConverter;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.transaction.BeforeTransaction;
 import org.springframework.test.web.servlet.MockMvc;
@@ -154,7 +154,7 @@ public class XmEntityResourceIntTest extends AbstractJupiterSpringBootTest {
     @Autowired
     private XmEntityFunctionServiceFacade functionService;
 
-    @MockBean
+    @MockitoBean
     private XmEntityFunctionExecutorService functionExecutorService;
 
     @Autowired
@@ -167,7 +167,7 @@ public class XmEntityResourceIntTest extends AbstractJupiterSpringBootTest {
     private XmEntitySearchRepository xmEntitySearchRepository;
 
     @Autowired
-    private MappingJackson2HttpMessageConverter jacksonMessageConverter;
+    private JacksonJsonHttpMessageConverter jacksonMessageConverter;
 
     @Autowired
     private PageableHandlerMethodArgumentResolver pageableArgumentResolver;
@@ -378,7 +378,7 @@ public class XmEntityResourceIntTest extends AbstractJupiterSpringBootTest {
         // An entity with an existing ID cannot be created, so this API call must fail
         restXmEntityMockMvc.perform(post("/api/xm-entities")
             .contentType(TestUtil.APPLICATION_JSON_UTF8)
-            .content(TestUtil.convertObjectToJsonBytes(xmEntity)))
+            .content(TestUtil.assertObjectsAndConvertToJsonBytesDto(xmEntity, xmEntityMapper.toDto(xmEntity))))
             .andExpect(status().isBadRequest())
             .andExpect(jsonPath("$.error").value("error.business.idexists"))
             .andExpect(jsonPath("$.error_description").value(notNullValue()))
@@ -401,7 +401,7 @@ public class XmEntityResourceIntTest extends AbstractJupiterSpringBootTest {
         // An entity with an existing ID cannot be created, so this API call must fail
         restXmEntityMockMvc.perform(post("/api/xm-entities")
             .contentType(TestUtil.APPLICATION_JSON_UTF8)
-            .content(TestUtil.convertObjectToJsonBytes(tenant)))
+            .content(TestUtil.assertObjectsAndConvertToJsonBytesDto(tenant, xmEntityMapper.toDto(tenant))))
             .andExpect(status().isBadRequest())
             .andExpect(jsonPath("$.error").value("error.validation"))
             .andExpect(jsonPath("$.error_description").value(notNullValue()))
@@ -423,7 +423,7 @@ public class XmEntityResourceIntTest extends AbstractJupiterSpringBootTest {
 
         restXmEntityMockMvc.perform(post("/api/xm-entities")
             .contentType(TestUtil.APPLICATION_JSON_UTF8)
-            .content(TestUtil.convertObjectToJsonBytes(xmEntity)))
+            .content(TestUtil.assertObjectsAndConvertToJsonBytesDto(xmEntity, xmEntityMapper.toDto(xmEntity))))
             .andExpect(status().isBadRequest())
             .andExpect(jsonPath("$.error").value("error.validation"))
             .andExpect(jsonPath("$.error_description").value(notNullValue()))
@@ -447,7 +447,7 @@ public class XmEntityResourceIntTest extends AbstractJupiterSpringBootTest {
 
         restXmEntityMockMvc.perform(post("/api/xm-entities")
             .contentType(TestUtil.APPLICATION_JSON_UTF8)
-            .content(TestUtil.convertObjectToJsonBytes(xmEntity)))
+            .content(TestUtil.assertObjectsAndConvertToJsonBytesDto(xmEntity, xmEntityMapper.toDto(xmEntity))))
             .andExpect(status().isBadRequest())
             .andExpect(jsonPath("$.error").value("error.validation"))
             .andExpect(jsonPath("$.error_description").value(notNullValue()))
@@ -471,7 +471,7 @@ public class XmEntityResourceIntTest extends AbstractJupiterSpringBootTest {
 
         restXmEntityMockMvc.perform(post("/api/xm-entities")
             .contentType(TestUtil.APPLICATION_JSON_UTF8)
-            .content(TestUtil.convertObjectToJsonBytes(xmEntity)))
+            .content(TestUtil.assertObjectsAndConvertToJsonBytesDto(xmEntity, xmEntityMapper.toDto(xmEntity))))
             .andExpect(status().isBadRequest())
             .andExpect(jsonPath("$.error").value("error.validation"))
             .andExpect(jsonPath("$.error_description").value(notNullValue()))
@@ -496,7 +496,7 @@ public class XmEntityResourceIntTest extends AbstractJupiterSpringBootTest {
 
         restXmEntityMockMvc.perform(post("/api/xm-entities")
             .contentType(TestUtil.APPLICATION_JSON_UTF8)
-            .content(TestUtil.convertObjectToJsonBytes(xmEntity)))
+            .content(TestUtil.assertObjectsAndConvertToJsonBytesDto(xmEntity, xmEntityMapper.toDto(xmEntity))))
             .andExpect(status().isBadRequest())
             .andExpect(jsonPath("$.error").value("error.validation"))
             .andExpect(jsonPath("$.error_description").value(notNullValue()))
@@ -521,7 +521,7 @@ public class XmEntityResourceIntTest extends AbstractJupiterSpringBootTest {
 
         restXmEntityMockMvc.perform(post("/api/xm-entities")
             .contentType(TestUtil.APPLICATION_JSON_UTF8)
-            .content(TestUtil.convertObjectToJsonBytes(xmEntity)))
+            .content(TestUtil.assertObjectsAndConvertToJsonBytesDto(xmEntity, xmEntityMapper.toDto(xmEntity))))
             .andExpect(status().isBadRequest())
             .andExpect(jsonPath("$.error").value("error.validation"))
             .andExpect(jsonPath("$.error_description").value(notNullValue()))
@@ -637,7 +637,7 @@ public class XmEntityResourceIntTest extends AbstractJupiterSpringBootTest {
         // If the entity doesn't have an ID, it will be created instead of just being updated
         restXmEntityMockMvc.perform(put("/api/xm-entities")
             .contentType(TestUtil.APPLICATION_JSON_UTF8)
-            .content(TestUtil.convertObjectToJsonBytes(xmEntity)))
+            .content(TestUtil.assertObjectsAndConvertToJsonBytesDto(xmEntity, xmEntityMapper.toDto(xmEntity))))
             .andExpect(status().isCreated());
     }
 

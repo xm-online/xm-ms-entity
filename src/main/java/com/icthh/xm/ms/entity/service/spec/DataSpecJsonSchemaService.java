@@ -15,6 +15,7 @@ import com.networknt.schema.Schema;
 import com.networknt.schema.SchemaException;
 import com.networknt.schema.SchemaRegistry;
 import com.networknt.schema.SchemaRegistryConfig;
+import com.networknt.schema.SpecificationVersion;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
@@ -29,6 +30,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
+import tools.jackson.core.JacksonException;
 
 import static com.icthh.xm.commons.utils.DataSpecConstants.DEFINITIONS;
 import static com.icthh.xm.ms.entity.service.processor.XmEntityDefinitionSpecProcessor.XM_ENTITY_DEFINITION;
@@ -46,8 +48,6 @@ public class DataSpecJsonSchemaService implements SpecificationProcessingService
         XM_ENTITY_INHERITANCE_DEFINITION, XM_ENTITY_DATA_SPEC);
 
     private final ConcurrentHashMap<String, Map<String, Schema>> dataSpecJsonSchemas = new ConcurrentHashMap<>();
-    private final SchemaRegistry factory = SchemaRegistry.withDefaultDialect(DRAFT_4,
-        builder -> builder.schemaRegistryConfig(SchemaRegistryConfig.builder().pathType(LEGACY).build()));
 
     private final XmEntityDefinitionSpecProcessor definitionSpecProcessor;
     private final XmEntityDataFormSpecProcessor formSpecProcessor;
@@ -69,11 +69,13 @@ public class DataSpecJsonSchemaService implements SpecificationProcessingService
     @Override
     public <I extends SpecificationItem> Collection<I> processDataSpecifications(String tenant, String dataSpecKey, Collection<I> specifications) {
         var dataSchemas = new HashMap<String, Schema>();
+        SchemaRegistry schemaRegistry = SchemaRegistry.withDefaultDialect(DRAFT_4,
+        builder -> builder.schemaRegistryConfig(SchemaRegistryConfig.builder().pathType(LEGACY).build()));
 
         Optional.ofNullable(specifications).orElse(List.of())
             .forEach(typeSpec -> {
                 processDataSpecification(tenant, dataSpecKey, (TypeSpec) typeSpec);
-                addJsonSchema(dataSchemas, (TypeSpec) typeSpec);
+                addJsonSchema(dataSchemas, schemaRegistry, (TypeSpec) typeSpec);
             });
         definitionSpecProcessor.processDefinitionsItSelf(tenant, dataSpecKey);
         dataSpecJsonSchemas.computeIfAbsent(tenant, it -> new HashMap<>()).putAll(dataSchemas);
@@ -128,11 +130,12 @@ public class DataSpecJsonSchemaService implements SpecificationProcessingService
             });
     }
 
-    private void addJsonSchema(HashMap<String, Schema> dataSchemas, TypeSpec typeSpec) {
+    private void addJsonSchema(HashMap<String, Schema> dataSchemas,
+                               SchemaRegistry schemaRegistry, TypeSpec typeSpec) {
         if (StringUtils.isNotBlank(typeSpec.getDataSpec())) {
             try {
-                var jsonSchema = factory.getSchema(typeSpec.getDataSpec());
-                dataSchemas.put(typeSpec.getKey(), jsonSchema);
+                var schema = schemaRegistry.getSchema(typeSpec.getDataSpec());
+                dataSchemas.put(typeSpec.getKey(), schema);
             } catch (SchemaException e) {
                 log.error("Error processing data spec", e);
             }

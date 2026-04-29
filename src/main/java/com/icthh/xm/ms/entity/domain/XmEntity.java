@@ -9,6 +9,7 @@ import static com.icthh.xm.ms.entity.config.Constants.REGEX_EOL;
 import com.icthh.xm.ms.entity.domain.converter.MapToStringConverter;
 import com.icthh.xm.ms.entity.domain.listener.AvatarUrlListener;
 import com.icthh.xm.ms.entity.domain.listener.XmEntityElasticSearchListener;
+import com.icthh.xm.ms.entity.domain.serializer.NewSimpleLinkSerializer;
 import com.icthh.xm.ms.entity.domain.serializer.SimpleLinkSerializer;
 import com.icthh.xm.ms.entity.validator.JsonData;
 import com.icthh.xm.ms.entity.validator.NotNull;
@@ -239,12 +240,14 @@ public class XmEntity implements Serializable, Persistable<Long>, EntityBaseFiel
     @OneToMany(mappedBy = "target", cascade = {PERSIST, MERGE, REMOVE})
     @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
     @JsonSerialize(contentUsing = SimpleLinkSerializer.class)
+    @tools.jackson.databind.annotation.JsonSerialize(contentUsing = NewSimpleLinkSerializer.class)
     private Set<Link> sources = new HashSet<>();
 
     // No REMOVE it's not mistake. Link will be removed in logic.
     @OneToMany(mappedBy = "source", cascade = {PERSIST, MERGE})
     @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
     @JsonSerialize(contentUsing = SimpleLinkSerializer.class)
+    @tools.jackson.databind.annotation.JsonSerialize(contentUsing = NewSimpleLinkSerializer.class)
     private Set<Link> targets = new HashSet<>();
 
     @OneToMany(mappedBy = "xmEntity", cascade = {PERSIST, MERGE, REMOVE})

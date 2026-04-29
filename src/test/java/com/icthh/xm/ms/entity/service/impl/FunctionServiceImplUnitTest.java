@@ -1,6 +1,6 @@
 package com.icthh.xm.ms.entity.service.impl;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.icthh.xm.commons.tenant.JsonMapperUtils;
 import com.google.common.collect.Maps;
 import com.icthh.xm.commons.service.FunctionTxControl;
 import com.icthh.xm.commons.service.impl.FunctionTxControlImpl;
@@ -82,7 +82,7 @@ public class FunctionServiceImplUnitTest extends AbstractJupiterUnitTest {
         functionContextService = Mockito.mock(FunctionContextService.class);
         dynamicPermissionCheckService = Mockito.mock(XmEntityDynamicPermissionCheckService.class);
         xmEntityTenantConfigService = Mockito.mock(XmEntityTenantConfigService.class);
-        jsonValidationService = spy(new JsonValidationService(new ObjectMapper()));
+        jsonValidationService = spy(new JsonValidationService(JsonMapperUtils.getDefaultJsonMapper()));
         functionResultMapper = spy(new FunctionResultMapperImpl());
         functionResultProcessor = new FunctionResultProcessorImpl(xmEntityService, functionContextService, functionResultMapper);
         functionService = new XmEntityFunctionServiceImpl(dynamicPermissionCheckService, xmEntitySpecService,

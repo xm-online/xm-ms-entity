@@ -1,6 +1,5 @@
 package com.icthh.xm.ms.entity.service.metrics;
 
-import static com.icthh.xm.commons.tenant.TenantContextUtils.getRequiredTenantKeyValue;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -9,11 +8,12 @@ import com.codahale.metrics.Gauge;
 import com.codahale.metrics.Metric;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.MetricSet;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import com.icthh.xm.commons.tenant.YamlMapperUtils;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.MapperFeature;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.dataformat.yaml.YAMLFactory;
 import com.icthh.xm.commons.config.client.api.RefreshableConfiguration;
-import com.icthh.xm.commons.tenant.TenantContextHolder;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -23,6 +23,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.util.AntPathMatcher;
+import tools.jackson.dataformat.yaml.YAMLMapper;
 
 @Slf4j
 @Component
@@ -30,7 +31,7 @@ public class CustomMetricsConfiguration implements RefreshableConfiguration {
 
     private static final String METRICS_PREFIX = "custom.metrics.";
 
-    private final ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+    private final ObjectMapper mapper = YamlMapperUtils.yamlDefaultMapper();
     private final ConcurrentHashMap<String, List<CustomMetric>> configuration = new ConcurrentHashMap<>();
     private final AntPathMatcher matcher = new AntPathMatcher();
 

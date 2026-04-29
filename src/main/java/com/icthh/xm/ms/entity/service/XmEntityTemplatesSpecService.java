@@ -2,9 +2,10 @@ package com.icthh.xm.ms.entity.service;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import com.icthh.xm.commons.tenant.YamlMapperUtils;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.dataformat.yaml.YAMLFactory;
 import com.icthh.xm.commons.config.client.api.RefreshableConfiguration;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
@@ -19,8 +20,8 @@ import org.springframework.util.AntPathMatcher;
 
 import java.util.Collections;
 import java.util.Map;
-import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
+import tools.jackson.dataformat.yaml.YAMLMapper;
 
 @Slf4j
 @Service
@@ -28,7 +29,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class XmEntityTemplatesSpecService implements RefreshableConfiguration {
 
     private static final String TENANT_NAME = "tenantName";
-    private static final ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+    private static final ObjectMapper mapper = YamlMapperUtils.yamlDefaultMapper();
     private final AntPathMatcher matcher = new AntPathMatcher();
     private final ConcurrentHashMap<String, Map<String, Template>> templates = new ConcurrentHashMap<>();
     private final ApplicationProperties applicationProperties;
@@ -91,8 +92,7 @@ public class XmEntityTemplatesSpecService implements RefreshableConfiguration {
     private static Map<String, Template> ymlToTemplates(String yml) {
         try {
             Map<String, Template> map = mapper
-                .readValue(yml, new TypeReference<TreeMap<String, Template>>() {
-                });
+                .readValue(yml, new TypeReference<>() {});
             map.forEach((templateKey, template) -> template.setKey(templateKey));
             return map;
         } catch (Exception e) {

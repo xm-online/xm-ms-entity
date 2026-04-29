@@ -31,7 +31,8 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
 import org.springframework.http.MediaType;
-import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
+
+import org.springframework.http.converter.json.JacksonJsonHttpMessageConverter;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.transaction.BeforeTransaction;
 import org.springframework.test.web.servlet.MockMvc;
@@ -91,7 +92,7 @@ public class LocationResourceIntTest extends AbstractJupiterSpringBootTest {
     private LocationRepository locationRepository;
 
     @Autowired
-    private MappingJackson2HttpMessageConverter jacksonMessageConverter;
+    private JacksonJsonHttpMessageConverter jacksonMessageConverter;
 
     @Autowired
     private PageableHandlerMethodArgumentResolver pageableArgumentResolver;
@@ -195,7 +196,7 @@ public class LocationResourceIntTest extends AbstractJupiterSpringBootTest {
         // Create the Location
         restLocationMockMvc.perform(post("/api/locations")
             .contentType(TestUtil.APPLICATION_JSON_UTF8)
-            .content(TestUtil.convertObjectToJsonBytes(location)))
+            .content(TestUtil.assertObjectsAndConvertToJsonBytesDto(location, locationMapper.toDto(location))))
             .andExpect(status().isCreated());
 
         // Validate the Location in the database
@@ -226,7 +227,7 @@ public class LocationResourceIntTest extends AbstractJupiterSpringBootTest {
         // An entity with an existing ID cannot be created, so this API call must fail
         restLocationMockMvc.perform(post("/api/locations")
             .contentType(TestUtil.APPLICATION_JSON_UTF8)
-            .content(TestUtil.convertObjectToJsonBytes(location)))
+            .content(TestUtil.assertObjectsAndConvertToJsonBytesDto(location, locationMapper.toDto(location))))
             .andExpect(status().isBadRequest())
             .andExpect(jsonPath("$.error").value("error.business.idexists"))
             .andExpect(jsonPath("$.error_description").value(notNullValue()))
@@ -248,7 +249,7 @@ public class LocationResourceIntTest extends AbstractJupiterSpringBootTest {
 
         restLocationMockMvc.perform(post("/api/locations")
             .contentType(TestUtil.APPLICATION_JSON_UTF8)
-            .content(TestUtil.convertObjectToJsonBytes(location)))
+            .content(TestUtil.assertObjectsAndConvertToJsonBytesDto(location, locationMapper.toDto(location))))
             .andExpect(status().isBadRequest())
             .andExpect(jsonPath("$.error").value("error.validation"))
             .andExpect(jsonPath("$.error_description").value(notNullValue()))
@@ -376,7 +377,7 @@ public class LocationResourceIntTest extends AbstractJupiterSpringBootTest {
         // If the entity doesn't have an ID, it will be created instead of just being updated
         restLocationMockMvc.perform(put("/api/locations")
             .contentType(TestUtil.APPLICATION_JSON_UTF8)
-            .content(TestUtil.convertObjectToJsonBytes(location)))
+            .content(TestUtil.assertObjectsAndConvertToJsonBytesDto(location, locationMapper.toDto(location))))
             .andExpect(status().isCreated());
 
         // Validate the Location in the database

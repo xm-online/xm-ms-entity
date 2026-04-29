@@ -19,7 +19,10 @@ spring:
     main:
       allow-bean-definition-overriding: true
     jackson:
-        serialization.write_dates_as_timestamps: false
+        deserialization:
+          fail-on-trailing-tokens: false
+        mapper:
+          sort-properties-alphabetically: false
     cache:
         type: none
     datasource:
@@ -76,6 +79,7 @@ spring:
         exclude:
         - org.springframework.boot.autoconfigure.elasticsearch.ElasticsearchClientAutoConfiguration
         - org.springframework.boot.autoconfigure.elasticsearch.ElasticsearchRestClientAutoConfiguration
+        - org.springframework.boot.security.oauth2.client.autoconfigure.servlet.OAuth2ClientWebSecurityAutoConfiguration
 
 server:
     port: 10344
@@ -155,6 +159,7 @@ application:
         # File name db-pattern
         db-url-template: https://%s.xm-online.com/entity/api/storage/object
         file-root: /home/${user.home}/xme
+        avatar-url-db-prefix-enabled: false
     avatar-default:
         default-avatar-url: /assets/img/anonymous.png
         default-avatar-url-prefix: http://xm-avatar.rgw.icthh.test:7480

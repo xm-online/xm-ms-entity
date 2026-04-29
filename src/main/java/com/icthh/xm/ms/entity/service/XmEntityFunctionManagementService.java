@@ -1,6 +1,5 @@
 package com.icthh.xm.ms.entity.service;
 
-import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.NONE;
 import static com.icthh.xm.commons.utils.YamlPatchUtils.addObject;
 import static com.icthh.xm.commons.utils.YamlPatchUtils.addSequenceItem;
 import static com.icthh.xm.commons.utils.YamlPatchUtils.arrayByField;
@@ -9,9 +8,10 @@ import static com.icthh.xm.commons.utils.YamlPatchUtils.key;
 import static com.icthh.xm.commons.utils.YamlPatchUtils.updateSequenceItem;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.MapperFeature;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.SerializationFeature;
 import com.icthh.xm.commons.config.client.repository.CommonConfigRepository;
 import com.icthh.xm.commons.config.client.service.CommonConfigService;
 import com.icthh.xm.commons.config.domain.Configuration;
@@ -30,7 +30,7 @@ import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.jetbrains.annotations.NotNull;
+import tools.jackson.dataformat.yaml.YAMLMapper;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -42,17 +42,16 @@ public class XmEntityFunctionManagementService implements FunctionManageService<
     private final ObjectMapper objectMapper = initMapper();
 
     private static ObjectMapper initMapper() {
-        ObjectMapper objectMapper = new ObjectMapper(new YAMLFactory());
-        objectMapper.setVisibility(
-        objectMapper.getSerializationConfig()
-            .getDefaultVisibilityChecker()
-            .withFieldVisibility(JsonAutoDetect.Visibility.ANY)
-            .withGetterVisibility(NONE)
-            .withIsGetterVisibility(NONE)
-            .withSetterVisibility(NONE)
-            .withCreatorVisibility(NONE)
-        );
-        return objectMapper;
+        return YAMLMapper.builder()
+                .changeDefaultVisibility(checker -> checker
+                        .withFieldVisibility(JsonAutoDetect.Visibility.ANY)
+                        .withGetterVisibility(JsonAutoDetect.Visibility.NONE)
+                        .withIsGetterVisibility(JsonAutoDetect.Visibility.NONE)
+                        .withSetterVisibility(JsonAutoDetect.Visibility.NONE)
+                        .withCreatorVisibility(JsonAutoDetect.Visibility.NONE)
+                )
+                .disable(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY)
+                .build();
     }
 
     @Override

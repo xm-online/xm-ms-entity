@@ -1,7 +1,8 @@
 package com.icthh.xm.ms.entity.service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import com.icthh.xm.commons.tenant.YamlMapperUtils;
+import tools.jackson.databind.MapperFeature;
+import tools.jackson.databind.ObjectMapper;
 import com.icthh.xm.commons.config.swagger.DynamicSwaggerConfiguration;
 import com.icthh.xm.commons.config.swagger.DynamicSwaggerRefreshableConfiguration;
 import com.icthh.xm.commons.swagger.model.SwaggerModel;
@@ -24,11 +25,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import tools.jackson.dataformat.yaml.YAMLMapper;
 
 import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY;
-import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
-import static com.fasterxml.jackson.databind.MapperFeature.SORT_PROPERTIES_ALPHABETICALLY;
-import static com.fasterxml.jackson.databind.SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS;
+import static tools.jackson.databind.MapperFeature.SORT_PROPERTIES_ALPHABETICALLY;
+import static tools.jackson.databind.SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.assertEquals;
 
@@ -67,7 +68,6 @@ public class FunctionSwaggerIntTest extends AbstractJupiterSpringBootTest {
         var swagger = dynamicSwaggerFunctionGenerator.generateSwagger("https://xm.domain.com:8080", null);
         var expected = readExpected("config/swagger/expected-default.yml");
         assertEquals(toYml(expected), toYml(swagger));
-
     }
 
     @Test
@@ -209,7 +209,8 @@ public class FunctionSwaggerIntTest extends AbstractJupiterSpringBootTest {
 
     @SneakyThrows
     private SwaggerModel readExpected(String path) {
-        return new ObjectMapper(new YAMLFactory()).readValue(loadFile(path), SwaggerModel.class);
+        return YamlMapperUtils.yamlDefaultMapper()
+                .readValue(loadFile(path), SwaggerModel.class);
     }
 
     public void initConfig(Map<String, String> files) {
@@ -221,13 +222,18 @@ public class FunctionSwaggerIntTest extends AbstractJupiterSpringBootTest {
     }
 
     @SneakyThrows
-    private String toYml(Object swagger) {
-        ObjectMapper mapper = new ObjectMapper(new YAMLFactory())
-            .setSerializationInclusion(NON_NULL)
-            .setSerializationInclusion(NON_EMPTY)
-            .enable(SORT_PROPERTIES_ALPHABETICALLY)
-            .enable(ORDER_MAP_ENTRIES_BY_KEYS);
-        return mapper.writerWithDefaultPrettyPrinter().writeValueAsString(mapper.convertValue(swagger, Map.class));
+    public static String toYml(Object swagger) {
+        ObjectMapper mapper = YAMLMapper.builder()
+                .changeDefaultPropertyInclusion(incl ->
+                        incl.withValueInclusion(NON_EMPTY)
+                                .withContentInclusion(NON_EMPTY)
+                )
+                .enable(SORT_PROPERTIES_ALPHABETICALLY)
+                .enable(ORDER_MAP_ENTRIES_BY_KEYS)
+                .build();
+
+        return mapper.writerWithDefaultPrettyPrinter()
+                .writeValueAsString(mapper.convertValue(swagger, Map.class));
     }
 
     @SneakyThrows

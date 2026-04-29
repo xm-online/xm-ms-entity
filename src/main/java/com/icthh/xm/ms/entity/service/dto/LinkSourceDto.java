@@ -3,6 +3,7 @@ package com.icthh.xm.ms.entity.service.dto;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.icthh.xm.ms.entity.domain.Link;
 import com.icthh.xm.ms.entity.domain.XmEntity;
+import com.icthh.xm.ms.entity.domain.serializer.NewSimpleXmEntitySerializer;
 import com.icthh.xm.ms.entity.domain.serializer.SimpleXmEntitySerializer;
 import lombok.Getter;
 import lombok.Setter;
@@ -49,6 +50,7 @@ public class LinkSourceDto {
     private Long target;
 
     @JsonSerialize(using = SimpleXmEntitySerializer.class)
+    @tools.jackson.databind.annotation.JsonSerialize(using = NewSimpleXmEntitySerializer.class)
     private XmEntity source;
 
 }

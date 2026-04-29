@@ -22,3 +22,6 @@ spring:
       hibernate.interceptor: com.icthh.xm.commons.domainevent.db.service.DatabaseSourceInterceptor
       hibernate:
         dialect: com.icthh.xm.commons.migration.db.jsonb.CustomPostgreSQLDialect
+        query:
+          hql:
+            json_functions_enabled: true

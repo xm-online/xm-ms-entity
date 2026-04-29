@@ -1,30 +1,31 @@
 package com.icthh.xm.ms.entity.service.json;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import com.icthh.xm.commons.tenant.YamlMapperUtils;
+import com.networknt.schema.SchemaRegistryConfig;
+import java.util.List;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 import com.icthh.xm.ms.entity.AbstractJupiterUnitTest;
+import com.icthh.xm.commons.tenant.JsonMapperUtils;
 import com.icthh.xm.ms.entity.service.spec.JsonSchemaGenerationServiceImpl;
 import com.networknt.schema.Schema;
-import com.networknt.schema.Error;
 import com.networknt.schema.SchemaRegistry;
+import com.networknt.schema.Error;
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.List;
-
 import static com.icthh.xm.ms.entity.web.rest.XmEntitySaveIntTest.loadFile;
 import static com.networknt.schema.SpecificationVersion.DRAFT_4;
+import static com.networknt.schema.path.PathType.LEGACY;
 import static org.junit.Assert.assertTrue;
 
 @ExtendWith(MockitoExtension.class)
 public class JsonSchemaGenerationServiceUnitTest extends AbstractJupiterUnitTest {
 
     JsonSchemaGenerationService service;
-    SchemaRegistry factory = SchemaRegistry.withDefaultDialect(DRAFT_4);
 
     @BeforeEach
     public void setUp() throws Exception {
@@ -35,10 +36,12 @@ public class JsonSchemaGenerationServiceUnitTest extends AbstractJupiterUnitTest
     @SneakyThrows
     public void testXmEntitySpecSchemaGeneration() {
         String jsonSchema = service.generateJsonSchema();
-        ObjectMapper objectMapper = new ObjectMapper(new YAMLFactory());
+        ObjectMapper objectMapper = YamlMapperUtils.yamlDefaultMapper();
         JsonNode xmentityspec = objectMapper.readTree(loadFile("config/specs/xmentityspec-xm.yml"));
 
-        JsonNode schemaNode = new ObjectMapper().readTree(jsonSchema);
+        JsonNode schemaNode = JsonMapperUtils.getDefaultJsonMapper().readTree(jsonSchema);
+        SchemaRegistry factory = SchemaRegistry.withDefaultDialect(DRAFT_4,
+        builder -> builder.schemaRegistryConfig(SchemaRegistryConfig.builder().pathType(LEGACY).build()));
         Schema schema = factory.getSchema(schemaNode);
         List<Error> report = schema.validate(xmentityspec);
 

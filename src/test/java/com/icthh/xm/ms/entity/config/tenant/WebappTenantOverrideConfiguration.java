@@ -1,19 +1,25 @@
 package com.icthh.xm.ms.entity.config.tenant;
 
-import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import com.icthh.xm.commons.config.client.repository.TenantConfigRepository;
-import com.netflix.loadbalancer.Server;
-import com.netflix.loadbalancer.ServerList;
+import java.util.concurrent.atomic.AtomicBoolean;
+import lombok.extern.slf4j.Slf4j;
+import okhttp3.mockwebserver.MockWebServer;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.cloud.netflix.ribbon.StaticServerList;
+import org.springframework.cloud.client.DefaultServiceInstance;
+import org.springframework.cloud.client.ServiceInstance;
+import org.springframework.cloud.loadbalancer.core.ServiceInstanceListSupplier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import reactor.core.publisher.Flux;
 
-@Configuration
+import java.util.Collections;
+
+@Configuration(proxyBeanMethods = false)
+@Slf4j
 public class WebappTenantOverrideConfiguration {
 
-    public static WireMockRule WIRE_MOCK = new WireMockRule();
+    public static MockWebServer MOCK_WEB_SERVER = new MockWebServer();
 
     @Bean
     @Qualifier("webappTenantConfigRepository")
@@ -26,9 +32,28 @@ public class WebappTenantOverrideConfiguration {
     }
 
     @Bean
-    public ServerList<Server> ribbonServerList() {
-        WIRE_MOCK.start();
-        return new StaticServerList<>(new Server("localhost", WIRE_MOCK.port()));
+    public ServiceInstanceListSupplier staticServiceInstanceListSupplier() throws Exception {
+        if (MOCK_WEB_SERVER.getPort() == -1) {
+            MOCK_WEB_SERVER.start();
+        }
+        return new ServiceInstanceListSupplier() {
+            @Override
+            public String getServiceId() {
+                return "test-service";
+            }
+
+            @Override
+            public Flux<java.util.List<ServiceInstance>> get() {
+                ServiceInstance instance = new DefaultServiceInstance(
+                    "test-service-1",
+                    "test-service",
+                    "localhost",
+                    MOCK_WEB_SERVER.getPort(),
+                    false
+                );
+                return Flux.just(Collections.singletonList(instance));
+            }
+        };
     }
 
 }

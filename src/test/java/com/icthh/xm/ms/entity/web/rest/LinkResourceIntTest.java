@@ -27,7 +27,9 @@ import com.icthh.xm.ms.entity.repository.LinkRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
 import com.icthh.xm.ms.entity.security.access.XmEntityDynamicPermissionCheckService;
 import com.icthh.xm.ms.entity.service.LinkService;
+import com.icthh.xm.ms.entity.service.dto.LinkDto;
 import com.icthh.xm.ms.entity.service.impl.StartUpdateDateGenerationStrategy;
+import com.icthh.xm.ms.entity.web.rest.facade.LinkFacade;
 import jakarta.persistence.EntityManager;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.AfterEach;
@@ -39,8 +41,9 @@ import org.mockito.Spy;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
 import org.springframework.http.MediaType;
-import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
+import org.springframework.http.converter.json.JacksonJsonHttpMessageConverter;
 import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import org.springframework.test.context.transaction.BeforeTransaction;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
@@ -51,7 +54,6 @@ import java.io.UnsupportedEncodingException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
-import com.icthh.xm.ms.entity.web.rest.facade.LinkFacade;
 import com.icthh.xm.ms.entity.service.mapper.LinkMapper;
 
 /**
@@ -85,9 +87,6 @@ public class LinkResourceIntTest extends AbstractJupiterSpringBootTest {
     private LinkPermittedRepository permittedRepository;
 
     @Autowired
-    private MappingJackson2HttpMessageConverter jacksonMessageConverter;
-
-    @Autowired
     private PageableHandlerMethodArgumentResolver pageableArgumentResolver;
 
     @Autowired
@@ -114,7 +113,7 @@ public class LinkResourceIntTest extends AbstractJupiterSpringBootTest {
     @Autowired
     private LinkMapper linkMapper;
 
-    @Spy
+    @MockitoSpyBean
     private StartUpdateDateGenerationStrategy startUpdateDateGenerationStrategy;
 
     private LinkService linkService;
@@ -122,6 +121,12 @@ public class LinkResourceIntTest extends AbstractJupiterSpringBootTest {
     private MockMvc restLinkMockMvc;
 
     private Link link;
+
+    @Autowired
+    private LinkFacade linkFacade;
+
+    @Autowired
+    private JacksonJsonHttpMessageConverter converter;
 
     @BeforeTransaction
     public void beforeTransaction() {
@@ -146,12 +151,11 @@ public class LinkResourceIntTest extends AbstractJupiterSpringBootTest {
                                       dynamicPermissionCheckService);
         linkService.setSelf(linkService);
 
-        LinkFacade linkFacade = new LinkFacade(linkService, linkMapper);
         LinkResource linkResourceMock = new LinkResource(linkFacade);
         this.restLinkMockMvc = MockMvcBuilders.standaloneSetup(linkResourceMock)
             .setCustomArgumentResolvers(pageableArgumentResolver)
             .setControllerAdvice(exceptionTranslator)
-            .setMessageConverters(jacksonMessageConverter).build();
+            .setMessageConverters(converter).build();
 
         linkResourceMock.setSelf(linkResourceMock);
 
@@ -199,7 +203,7 @@ public class LinkResourceIntTest extends AbstractJupiterSpringBootTest {
         // Create the Link
         restLinkMockMvc.perform(post("/api/links")
             .contentType(TestUtil.APPLICATION_JSON_UTF8)
-            .content(TestUtil.convertObjectToJsonBytes(link)))
+            .content(TestUtil.assertObjectsAndConvertToJsonBytesDto(link, linkMapper.toDto(link))))
             .andDo(this::printMvcResult)
             .andExpect(status().isCreated());
 
@@ -225,7 +229,7 @@ public class LinkResourceIntTest extends AbstractJupiterSpringBootTest {
         // An entity with an existing ID cannot be created, so this API call must fail
         restLinkMockMvc.perform(post("/api/links")
             .contentType(TestUtil.APPLICATION_JSON_UTF8)
-            .content(TestUtil.convertObjectToJsonBytes(link)))
+            .content(TestUtil.assertObjectsAndConvertToJsonBytesDto(link, linkMapper.toDto(link))))
             .andDo(this::printMvcResult)
             .andExpect(status().isBadRequest())
             .andExpect(jsonPath("$.error").value("error.business.idexists"))
@@ -248,7 +252,7 @@ public class LinkResourceIntTest extends AbstractJupiterSpringBootTest {
 
         restLinkMockMvc.perform(post("/api/links")
             .contentType(TestUtil.APPLICATION_JSON_UTF8)
-            .content(TestUtil.convertObjectToJsonBytes(link)))
+            .content(TestUtil.assertObjectsAndConvertToJsonBytesDto(link, linkMapper.toDto(link))))
             .andExpect(status().isBadRequest())
             .andExpect(jsonPath("$.error").value("error.validation"))
             .andExpect(jsonPath("$.error_description").value(notNullValue()))
@@ -273,7 +277,7 @@ public class LinkResourceIntTest extends AbstractJupiterSpringBootTest {
 
         restLinkMockMvc.perform(post("/api/links")
             .contentType(TestUtil.APPLICATION_JSON_UTF8)
-            .content(TestUtil.convertObjectToJsonBytes(link)))
+            .content(TestUtil.assertObjectsAndConvertToJsonBytesDto(link, linkMapper.toDto(link))))
             .andExpect(status().isBadRequest())
             .andExpect(jsonPath("$.error").value("error.validation"))
             .andExpect(jsonPath("$.error_description").value(notNullValue()))
@@ -352,10 +356,13 @@ public class LinkResourceIntTest extends AbstractJupiterSpringBootTest {
             .startDate(UPDATED_START_DATE)
             .endDate(UPDATED_END_DATE);
 
+
+        LinkDto updatedLinkDto = linkMapper.toDto(updatedLink);
+
         restLinkMockMvc.perform(put("/api/links")
-            .contentType(TestUtil.APPLICATION_JSON_UTF8)
-            .content(TestUtil.convertObjectToJsonBytes(updatedLink)))
-            .andExpect(status().isOk());
+                        .contentType(TestUtil.APPLICATION_JSON_UTF8)
+                        .content(TestUtil.convertObjectToJsonBytes(updatedLinkDto)))
+                .andExpect(status().isOk());
 
         // Validate the Link in the database
         List<Link> linkList = linkRepository.findAll();
@@ -374,11 +381,12 @@ public class LinkResourceIntTest extends AbstractJupiterSpringBootTest {
         int databaseSizeBeforeUpdate = linkRepository.findAll().size();
 
         // Create the Link
+        LinkDto linkDto = linkMapper.toDto(link);
 
         // If the entity doesn't have an ID, it will be created instead of just being updated
         restLinkMockMvc.perform(put("/api/links")
             .contentType(TestUtil.APPLICATION_JSON_UTF8)
-            .content(TestUtil.convertObjectToJsonBytes(link)))
+            .content(TestUtil.convertObjectToJsonBytes(linkDto)))
             .andExpect(status().isCreated());
 
         // Validate the Link in the database

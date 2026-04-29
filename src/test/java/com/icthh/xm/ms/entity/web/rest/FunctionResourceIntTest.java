@@ -14,6 +14,7 @@ import com.icthh.xm.ms.entity.AbstractJupiterSpringBootTest;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.service.impl.XmEntityServiceImpl;
 import com.icthh.xm.ms.entity.service.processor.XmEntityDataFormSpecProcessor;
+import java.nio.charset.StandardCharsets;
 import lombok.SneakyThrows;
 import org.apache.commons.io.IOUtils;
 import org.junit.jupiter.api.AfterEach;
@@ -25,7 +26,8 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.ByteArrayHttpMessageConverter;
-import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
+
+import org.springframework.http.converter.json.JacksonJsonHttpMessageConverter;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.transaction.BeforeTransaction;
@@ -89,7 +91,7 @@ public class FunctionResourceIntTest extends AbstractJupiterSpringBootTest {
     private XmEntityServiceImpl xmEntityService;
 
     @Autowired
-    private MappingJackson2HttpMessageConverter jacksonMessageConverter;
+    private JacksonJsonHttpMessageConverter jacksonMessageConverter;
 
     @Autowired
     private PageableHandlerMethodArgumentResolver pageableArgumentResolver;
@@ -257,7 +259,7 @@ public class FunctionResourceIntTest extends AbstractJupiterSpringBootTest {
     @SneakyThrows
     public void testFunctionWithPackageAndContentTypeApplicationJson() {
         testFunctionWithPackageAndContentType(MediaType.APPLICATION_JSON);
-        testFunctionWithPackageAndContentType(MediaType.APPLICATION_JSON_UTF8);
+        testFunctionWithPackageAndContentType(new MediaType("application", "json", StandardCharsets.UTF_8));
     }
 
     @Test

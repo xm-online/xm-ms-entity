@@ -36,7 +36,8 @@ import org.mockito.Spy;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
-import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
+
+import org.springframework.http.converter.json.JacksonJsonHttpMessageConverter;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.transaction.BeforeTransaction;
 import org.springframework.test.web.servlet.MockMvc;
@@ -58,7 +59,7 @@ public class CalendarResourceExtendedIntTest extends AbstractJupiterSpringBootTe
     private static final Instant MOCKED_START_DATE = Instant.ofEpochMilli(42L);
 
     @Autowired
-    private MappingJackson2HttpMessageConverter jacksonMessageConverter;
+    private JacksonJsonHttpMessageConverter jacksonMessageConverter;
 
     @Autowired
     private PageableHandlerMethodArgumentResolver pageableArgumentResolver;
@@ -166,7 +167,7 @@ public class CalendarResourceExtendedIntTest extends AbstractJupiterSpringBootTe
 
         restCalendarMockMvc.perform(post("/api/calendars")
                                     .contentType(TestUtil.APPLICATION_JSON_UTF8)
-                                    .content(TestUtil.convertObjectToJsonBytes(calendar)))
+                                    .content(TestUtil.assertObjectsAndConvertToJsonBytesDto(calendar, calendarMapper.toDto(calendar))))
                        .andExpect(status().isCreated())
                        .andExpect(jsonPath("$.startDate").value(MOCKED_START_DATE.toString()))
         ;
@@ -187,7 +188,7 @@ public class CalendarResourceExtendedIntTest extends AbstractJupiterSpringBootTe
         // Create the Calendar
         restCalendarMockMvc.perform(post("/api/calendars")
                                     .contentType(TestUtil.APPLICATION_JSON_UTF8)
-                                    .content(TestUtil.convertObjectToJsonBytes(calendar)))
+                                    .content(TestUtil.assertObjectsAndConvertToJsonBytesDto(calendar, calendarMapper.toDto(calendar))))
                        .andExpect(status().isCreated())
                        .andExpect(jsonPath("$.startDate").value(MOCKED_START_DATE.toString()));
 

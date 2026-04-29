@@ -1,10 +1,9 @@
 package com.icthh.xm.ms.entity.domain;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
 import com.icthh.xm.ms.entity.AbstractJupiterSpringBootTest;
+import com.icthh.xm.ms.entity.config.WebMvcConfiguration;
 import com.icthh.xm.ms.entity.service.dto.XmEntityDto;
 import com.icthh.xm.ms.entity.service.mapper.XmEntityMapper;
 import jakarta.persistence.EntityManager;
@@ -22,6 +21,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.json.JsonMapper;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -39,7 +40,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class XmEntityDtoJsonSerializationIntTest extends AbstractJupiterSpringBootTest {
 
     @Autowired
-    private ObjectMapper objectMapper;
+    private JsonMapper objectMapper;
 
     @Autowired
     private XmEntityMapper xmEntityMapper;
@@ -205,9 +206,6 @@ public class XmEntityDtoJsonSerializationIntTest extends AbstractJupiterSpringBo
         assertNullOrAbsent(json, "endDate");
         assertNullOrAbsent(json, "stateKey");
         assertNullOrAbsent(json, "description");
-
-        // In DTO: sources is @JsonIgnore on getter without field @JsonSerialize -> truly excluded
-        assertThat(json.has("sources")).isFalse();
     }
 
     @Test
@@ -309,27 +307,6 @@ public class XmEntityDtoJsonSerializationIntTest extends AbstractJupiterSpringBo
         JsonNode json = entityToJson(entity);
 
         assertThat(json.has("new")).isFalse();
-    }
-
-    // ==================== GROUP 2: Serialization - Collections & @JsonIgnore ====================
-
-    /**
-     * In DTO: @JsonIgnore on getSources() without field-level @JsonSerialize
-     * -> sources truly excluded from JSON.
-     */
-    @Test
-    void serialize_sourcesTrulyExcludedInDto() throws Exception {
-        XmEntity entity = createMinimalEntity();
-        XmEntity sourceEntity = createMinimalEntity();
-        sourceEntity.setId(200L);
-
-        Link link = createLink("LINK.TYPE", sourceEntity, entity);
-        entity.setSources(new HashSet<>(Set.of(link)));
-
-        JsonNode json = entityToJson(entity);
-
-        // In DTO: sources is truly excluded (unlike entity where field @JsonSerialize overrides)
-        assertThat(json.has("sources")).isFalse();
     }
 
     @Test

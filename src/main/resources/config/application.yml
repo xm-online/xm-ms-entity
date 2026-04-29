@@ -14,15 +14,6 @@
 # http://docs.spring.io/spring-boot/docs/current/reference/html/common-application-properties.html
 # ===================================================================
 
-# See https://github.com/Netflix/Hystrix/wiki/Configuration
-#hystrix:
-#    command:
-#        default:
-#            execution:
-#                isolation:
-#                    thread:
-#                        timeoutInMilliseconds: 10000
-
 management:
     endpoints:
         web:
@@ -85,8 +76,11 @@ spring:
                 binder:
                     health-timeout: 5 # kafkaHealthCheck timeout when scheduler-enabled: true, in seconds
     jackson:
-        serialization.write_dates_as_timestamps: false
+        serialization:
+            INDENT_OUTPUT: true
         default-property-inclusion: non_empty
+        mapper:
+            sort-properties-alphabetically: false # disable(SORT_PROPERTIES_ALPHABETICALLY)
     jpa:
         open-in-view: false
         properties:
@@ -94,8 +88,8 @@ spring:
         hibernate:
             ddl-auto: none
             naming:
-                physical-strategy: org.springframework.boot.orm.jpa.hibernate.SpringPhysicalNamingStrategy
-                implicit-strategy: org.springframework.boot.orm.jpa.hibernate.SpringImplicitNamingStrategy
+                physical-strategy: org.hibernate.boot.model.naming.CamelCaseToUnderscoresNamingStrategy
+                implicit-strategy: org.springframework.boot.hibernate.SpringImplicitNamingStrategy
     messages:
         basename: i18n/messages
     mvc:
@@ -229,6 +223,7 @@ application:
         max-size: 32767
         # used for FILE strategy FILE://{objectId}
         file-root: /home/xme
+        avatar-url-db-prefix-enabled: false
     avatar-default:
         default-avatar-url: /assets/img/anonymous.png
         default-avatar-url-prefix: http://xm-avatar.rgw.icthh.test:7480

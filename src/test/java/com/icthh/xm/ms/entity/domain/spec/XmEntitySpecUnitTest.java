@@ -3,8 +3,8 @@ package com.icthh.xm.ms.entity.domain.spec;
 import static com.icthh.xm.ms.entity.web.rest.XmEntitySaveIntTest.loadFile;
 import static org.junit.jupiter.api.Assertions.*;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import com.icthh.xm.commons.tenant.YamlMapperUtils;
+import tools.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Method;
@@ -47,7 +47,7 @@ public class XmEntitySpecUnitTest extends AbstractJupiterUnitTest {
 
     @Test
     public void testParseXmEntitySpecFromYml() throws IOException {
-        ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+        ObjectMapper mapper = YamlMapperUtils.yamlDefaultMapper();
         XmEntitySpec xmEntitySpec = mapper.readValue(loadFile("config/specs/xmentityspec-test.yml"), XmEntitySpec.class);
 
         assertNotNull(xmEntitySpec);
@@ -101,7 +101,7 @@ public class XmEntitySpecUnitTest extends AbstractJupiterUnitTest {
     @Test
     @SneakyThrows
     public void testEquals() {
-        ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+        ObjectMapper mapper = YamlMapperUtils.yamlDefaultMapper();
         for(val fileName: SPEC_MAIN_FILES) {
 
             XmEntitySpec xmEntitySpecFirst = mapper.readValue(XmEntitySpecUnitTest.class.getClassLoader().getResourceAsStream(fileName), XmEntitySpec.class);
@@ -193,7 +193,7 @@ public class XmEntitySpecUnitTest extends AbstractJupiterUnitTest {
 
     @Test
     public void testParseXmEntitySpecFromYmlForSeveralTenants() throws IOException {
-        ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+        ObjectMapper mapper = YamlMapperUtils.yamlDefaultMapper();
         String[] tenants = {"test", "resinttest"};
         String configName;
 

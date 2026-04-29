@@ -16,7 +16,7 @@ import java.util.concurrent.CompletableFuture;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.ActiveProfiles;
 
 @ActiveProfiles("no-elastic")
@@ -25,7 +25,7 @@ public class XmEntityNoElasticIntTest extends AbstractJupiterSpringBootTest {
     @Autowired
     private XmEntityService xmEntityService;
 
-    @MockBean
+    @MockitoBean
     private ElasticIndexManagerService elasticIndexManagerService;
 
     @Autowired

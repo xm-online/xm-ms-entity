@@ -1,14 +1,14 @@
 package com.icthh.xm.ms.entity.domain.converter;
 
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectWriter;
-import com.fasterxml.jackson.dataformat.csv.CsvMapper;
-import com.fasterxml.jackson.dataformat.csv.CsvSchema;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import static tools.jackson.core.StreamWriteFeature.IGNORE_UNKNOWN;
+
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectWriter;
 
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
+import tools.jackson.dataformat.csv.CsvMapper;
+import tools.jackson.dataformat.csv.CsvSchema;
 
 /**
  * Convert {@link com.icthh.xm.ms.entity.domain.XmEntity} to csv file.
@@ -34,7 +34,7 @@ public class EntityToCsvConverterUtils {
                                                             : createCsvSchemaBasedOnClass(mapper, clazz));
         try {
             return csvWriter.writeValueAsBytes(o);
-        } catch (JsonProcessingException e) {
+        } catch (JacksonException e) {
             throw new IllegalStateException("Exception while writing data to csv file", e);
         }
     }
@@ -55,7 +55,7 @@ public class EntityToCsvConverterUtils {
         ObjectWriter csvWriter = mapper.writer(schema);
         try {
             return csvWriter.writeValueAsBytes(o);
-        } catch (JsonProcessingException e) {
+        } catch (JacksonException e) {
             throw new IllegalStateException("Exception while writing data to csv file", e);
         }
     }
@@ -65,10 +65,9 @@ public class EntityToCsvConverterUtils {
     }
 
     private static CsvMapper createDefaultCsvMapper() {
-        CsvMapper mapper = new CsvMapper();
-        mapper.configure(JsonGenerator.Feature.IGNORE_UNKNOWN, true);
-        mapper.registerModule(new JavaTimeModule());
-        return mapper;
+        return CsvMapper.builder()
+        .configure(IGNORE_UNKNOWN, true)
+        .build();
     }
 
 }

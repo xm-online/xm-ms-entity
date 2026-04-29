@@ -1,18 +1,21 @@
 package com.icthh.xm.ms.entity.config;
 
+import java.util.Arrays;
+import java.util.List;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.AbstractHttpMessageConverter;
 import org.springframework.http.converter.HttpMessageConverter;
-import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
+import org.springframework.http.converter.HttpMessageConverters;
+import org.springframework.http.converter.json.JacksonJsonHttpMessageConverter;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.List;
+import tools.jackson.databind.json.JsonMapper;
 
 @Configuration
 @Slf4j
@@ -25,12 +28,18 @@ public class WebMvcConfiguration implements WebMvcConfigurer {
         return JSON_FILTER_APPLIED_URI.toArray(new String[]{});
     }
 
+    @Bean
+    public JacksonJsonHttpMessageConverter converter(JsonMapper jsonMapper) {
+        return new JacksonJsonHttpMessageConverter(jsonMapper);
+    }
+
     @Override
-    public void configureMessageConverters(List<HttpMessageConverter<?>> converters) {
-        // add text/csv and xlsx media types to MappingJackson2HttpMessageConverter
-        addSupportedMediaTypesTo(converters, MappingJackson2HttpMessageConverter.class,
-            MediaType.parseMediaType("text/csv"),
-            MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"));
+    public void configureMessageConverters(HttpMessageConverters.ServerBuilder builder) {
+        builder.configureMessageConvertersList(converters -> {
+            addSupportedMediaTypesTo(converters, JacksonJsonHttpMessageConverter.class,
+                    MediaType.parseMediaType("text/csv"),
+                    MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"));
+        });
     }
 
     private void addSupportedMediaTypesTo(List<HttpMessageConverter<?>> converters,

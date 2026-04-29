@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonIdentityReference;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.icthh.xm.ms.entity.domain.idresolver.XmEntityObjectIdResolver;
+import com.icthh.xm.ms.entity.domain.serializer.NewSimpleLinkSerializer;
 import com.icthh.xm.ms.entity.domain.serializer.SimpleLinkSerializer;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -31,6 +32,7 @@ import java.util.Objects;
 @Table(name = "link")
 @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
 @JsonSerialize(using = SimpleLinkSerializer.class)
+@tools.jackson.databind.annotation.JsonSerialize(using = NewSimpleLinkSerializer.class)
 public class Link implements Serializable {
 
     private static final long serialVersionUID = 1L;
