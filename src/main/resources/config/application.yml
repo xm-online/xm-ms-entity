@@ -50,20 +50,11 @@ management:
             logback: true
             process: true
             system: true
-            disk: true
-        export:
-            otlp:
+    prometheus:
+        metrics:
+            export:
                 enabled: true
-                endpoint: http://localhost:4317
-            prometheus:
                 step: 60
-                enabled: true
-    tracing:
-        sampling:
-            probability: 1.0
-    otlp:
-        tracing:
-            endpoint: http://localhost:4317
 
 spring:
     application:
@@ -117,8 +108,6 @@ spring:
             max-file-size: ${application.maxUploadFileSize:20MB}
             max-request-size: ${application.maxUploadSize:20MB}
     kafka:
-        template:
-            observation-enabled: true
         consumer:
             group-id: entity
             key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
@@ -128,8 +117,6 @@ spring:
         producer:
             key-serializer: org.apache.kafka.common.serialization.StringSerializer
             value-serializer: org.apache.kafka.common.serialization.StringSerializer
-            properties:
-                interceptor.classes: io.opentelemetry.instrumentation.kafka.TracingProducerInterceptor
     mail:
         host: localhost
         port: 25
