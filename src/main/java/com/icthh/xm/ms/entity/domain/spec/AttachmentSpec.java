@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.Map;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonPropertyOrder({ "key", "name", "contentTypes", "max", "size", "storeType", "expireLinkTimeInMillis"})
+@JsonPropertyOrder({ "key", "name", "contentTypes", "max", "size", "storeType", "expireLinkTimeInMillis", "contentTypeValidationEnabled"})
 @Data
 public class AttachmentSpec {
 
@@ -29,4 +29,6 @@ public class AttachmentSpec {
     private AttachmentStoreType storeType;
     @JsonProperty("expireLinkTimeInMillis")
     private Long expireLinkTimeInMillis;
+    @JsonProperty("contentTypeValidationEnabled")
+    private Boolean contentTypeValidationEnabled;
 }

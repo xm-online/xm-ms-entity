@@ -16,14 +16,17 @@ import com.icthh.xm.ms.entity.service.AttachmentService;
 import com.icthh.xm.ms.entity.service.ContentService;
 import com.icthh.xm.ms.entity.service.XmEntitySpecService;
 import com.icthh.xm.ms.entity.service.impl.StartUpdateDateGenerationStrategy;
+import com.icthh.xm.ms.entity.validator.AttachmentContentTypeValidator;
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
+import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.http.converter.json.JacksonJsonHttpMessageConverter;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
@@ -133,6 +136,9 @@ public class AttachmentResourceFsIntTest extends AbstractJupiterSpringBootTest {
     @Autowired
     private AttachmentMapper attachmentMapper;
 
+    @Autowired
+    private AttachmentContentTypeValidator attachmentContentTypeValidator;
+
     @BeforeTransaction
     public void beforeTransaction() {
         TenantContextUtils.setTenant(tenantContextHolder, "RESINTTEST");
@@ -155,7 +161,7 @@ public class AttachmentResourceFsIntTest extends AbstractJupiterSpringBootTest {
                                                   permittedRepository,
                                                   startUpdateDateGenerationStrategy,
                                                   xmEntityRepository,
-                                                  xmEntitySpecService);
+                                                  xmEntitySpecService, attachmentContentTypeValidator);
 
         AttachmentFacade attachmentFacade = new AttachmentFacade(attachmentService, attachmentMapper);
         AttachmentResource attachmentResourceMock = new AttachmentResource(attachmentFacade, attachmentResource);

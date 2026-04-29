@@ -1,0 +1,6 @@
+spring:
+    docker:
+        compose:
+            enabled: true
+            file: src/main/docker/postgresql.yml
+            lifecycle-management: start_and_stop

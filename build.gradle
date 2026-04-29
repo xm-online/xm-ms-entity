@@ -288,6 +288,7 @@ dependencies {
     implementation 'javax.persistence:javax.persistence-api:2.2'
     implementation "com.zaxxer:HikariCP"
     implementation "org.apache.commons:commons-lang3"
+    implementation("org.apache.tika:tika-core:${apacheTikaVersion}")
     implementation "commons-io:commons-io"
     implementation "org.hibernate.validator:hibernate-validator"
     implementation "org.liquibase:liquibase-core"
@@ -336,7 +337,6 @@ dependencies {
     implementation 'io.micrometer:micrometer-observation'
     implementation "io.micrometer:micrometer-tracing-bridge-brave"
     implementation "io.springfox:springfox-bean-validators:${springfoxVersion}"
-    implementation "com.h2database:h2"
     implementation "org.postgresql:postgresql:${postgresqlVersion}"
     liquibaseRuntime "org.postgresql:postgresql:${postgresqlVersion}"
     implementation "org.mapstruct:mapstruct:${mapstructVersion}"

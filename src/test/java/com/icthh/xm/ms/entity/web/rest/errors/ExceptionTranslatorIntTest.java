@@ -9,6 +9,7 @@ import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
 import com.icthh.xm.lep.api.LepManager;
 import com.icthh.xm.ms.entity.AbstractJupiterSpringBootTest;
+import com.icthh.xm.ms.entity.validator.AttachmentContentTypeValidator;
 import com.icthh.xm.ms.entity.web.rest.error.EntityExceptionTranslator;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;

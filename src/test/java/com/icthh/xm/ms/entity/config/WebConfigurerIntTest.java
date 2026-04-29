@@ -85,7 +85,7 @@ public class WebConfigurerIntTest extends AbstractJupiterSpringBootTest {
         env.setActiveProfiles(JHipsterConstants.SPRING_PROFILE_DEVELOPMENT);
         webConfigurer.onStartup(servletContext);
 
-        verify(servletContext).addServlet(eq("H2Console"), any(JakartaWebServlet.class));
+        verify(servletContext, never()).addServlet(eq("H2Console"), any(JakartaWebServlet.class));
     }
 
     @Test

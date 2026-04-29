@@ -20,16 +20,21 @@ import com.icthh.xm.commons.permission.repository.PermittedRepository;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
 import com.icthh.xm.ms.entity.AbstractJupiterSpringBootTest;
+import com.icthh.xm.ms.entity.config.ApplicationProperties;
+import com.icthh.xm.ms.entity.config.XmEntityTenantConfigService;
 import com.icthh.xm.ms.entity.domain.Attachment;
 import com.icthh.xm.ms.entity.domain.Content;
 import com.icthh.xm.ms.entity.domain.XmEntity;
+import com.icthh.xm.ms.entity.domain.spec.AttachmentSpec;
 import com.icthh.xm.ms.entity.repository.AttachmentRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
 import com.icthh.xm.ms.entity.service.AttachmentService;
 import com.icthh.xm.ms.entity.service.ContentService;
 import com.icthh.xm.ms.entity.service.XmEntitySpecService;
 import com.icthh.xm.ms.entity.service.impl.StartUpdateDateGenerationStrategy;
+import com.icthh.xm.ms.entity.validator.AttachmentContentTypeValidator;
 import jakarta.persistence.EntityManager;
+import java.util.Optional;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -37,6 +42,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
 import org.springframework.http.converter.json.JacksonJsonHttpMessageConverter;
@@ -46,6 +52,9 @@ import org.springframework.test.context.transaction.BeforeTransaction;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Arrays;
+import java.util.Base64;
 import org.springframework.validation.Validator;
 
 import java.time.Instant;
@@ -97,14 +106,23 @@ public class AttachmentResourceExtendedIntTest extends AbstractJupiterSpringBoot
     @Autowired
     private XmEntityRepository xmEntityRepository;
 
-    @Autowired
+    @SpyBean
     private XmEntitySpecService xmEntitySpecService;
 
     @Autowired
     private ContentService contentService;
 
     @Autowired
+    private ApplicationProperties applicationProperties;
+
+    @SpyBean
+    private XmEntityTenantConfigService xmEntityTenantConfigService;
+
+    @Autowired
     private AttachmentMapper attachmentMapper;
+
+    @Autowired
+    private AttachmentContentTypeValidator attachmentContentTypeValidator;
 
     @Spy
     private StartUpdateDateGenerationStrategy startUpdateDateGenerationStrategy;
@@ -132,7 +150,7 @@ public class AttachmentResourceExtendedIntTest extends AbstractJupiterSpringBoot
             permittedRepository,
             startUpdateDateGenerationStrategy,
             xmEntityRepository,
-            xmEntitySpecService);
+            xmEntitySpecService, attachmentContentTypeValidator);
 
         AttachmentFacade attachmentFacade = new AttachmentFacade(attachmentService, attachmentMapper);
         AttachmentResource attachmentResourceMock = new AttachmentResource(attachmentFacade, attachmentResource);
@@ -262,5 +280,75 @@ public class AttachmentResourceExtendedIntTest extends AbstractJupiterSpringBoot
         assertThat(testAttachment.getValueContentType()).isEqualTo(DEFAULT_VALUE_CONTENT_TYPE);
         assertThat(testAttachment.getValueContentSize()).isEqualTo((long) CONTENT.getBytes().length);
         assertThat(testAttachment.getContentChecksum()).isEqualTo(CONTENT_CHECKSUM);
+    }
+
+    @Test
+    @Transactional
+    public void shouldCreateAttachmentWithValidContent() throws Exception {
+        XmEntityTenantConfigService.XmEntityTenantConfig tenantConfig = new XmEntityTenantConfigService.XmEntityTenantConfig();
+        tenantConfig.getAttachmentValidation().setContentTypeValidationEnabled(true);
+        when(xmEntityTenantConfigService.getXmEntityTenantConfig()).thenReturn(tenantConfig);
+
+        byte[] jpegBytes = {(byte) 0xFF, (byte) 0xD8, (byte) 0xFF, 0x00};
+        String contentBase64 = Base64.getEncoder().encodeToString(jpegBytes);
+
+        String checkSum = DigestUtils.sha256Hex(contentBase64);
+        int databaseSizeBeforeCreate = attachmentRepository.findAll().size();
+        Attachment attachmentWithContent = createEntity(em);
+        attachmentWithContent.setContent(new Content().value(contentBase64.getBytes()));
+
+
+        restAttachmentMockMvc.perform(post("/api/attachments")
+            .contentType(TestUtil.APPLICATION_JSON_UTF8)
+            .content(TestUtil.convertObjectToJsonBytes(attachmentWithContent)))
+                .andDo(print())
+            .andExpect(status().isCreated());
+
+        List<Attachment> attachmentList = attachmentRepository.findAll();
+        assertThat(attachmentList).hasSize(databaseSizeBeforeCreate + 1);
+        Attachment testAttachment = attachmentList.getLast();
+
+        assertThat(testAttachment.getTypeKey()).isEqualTo(attachmentWithContent.getTypeKey());
+        assertThat(testAttachment.getName()).isEqualTo(attachmentWithContent.getName());
+        assertThat(testAttachment.getContentUrl()).isEqualTo(attachmentWithContent.getContentUrl());
+        assertThat(testAttachment.getDescription()).isEqualTo(attachmentWithContent.getDescription());
+        assertThat(testAttachment.getEndDate()).isEqualTo(attachmentWithContent.getEndDate());
+        assertThat(testAttachment.getContent().getValue()).isEqualTo(attachmentWithContent.getContent().getValue());
+        assertThat(testAttachment.getValueContentType()).isEqualTo(attachmentWithContent.getValueContentType());
+        assertThat(testAttachment.getValueContentSize()).isEqualTo(attachmentWithContent.getValueContentSize());
+        assertThat(testAttachment.getContentChecksum()).isEqualTo(checkSum);
+    }
+
+    @Test
+    @Transactional
+    public void shouldFailCreateAttachmentWithInvalidContent() throws Exception {
+        XmEntityTenantConfigService.XmEntityTenantConfig tenantConfig = new XmEntityTenantConfigService.XmEntityTenantConfig();
+        tenantConfig.getAttachmentValidation().setContentTypeValidationEnabled(true);
+        when(xmEntityTenantConfigService.getXmEntityTenantConfig()).thenReturn(tenantConfig);
+
+        byte[] jpegBytes = {(byte) 0xFF, (byte) 0xD8, (byte) 0xFF, 0x00};
+        String contentBase64 = Base64.getEncoder().encodeToString(jpegBytes);
+
+        Attachment attachmentWithContent = createEntity(em);
+        attachmentWithContent.setContent(new Content().value(contentBase64.getBytes()));
+
+        AttachmentSpec spec = new AttachmentSpec();
+        spec.setContentTypes(Arrays.asList("application/pdf"));
+        spec.setKey("ENTITY_TYPE_SPEC");
+        spec.setMax(5000);
+        spec.setSize("1");
+
+        when(xmEntitySpecService.findAttachment(attachmentWithContent.getXmEntity().getTypeKey(), attachmentWithContent.getTypeKey())).thenReturn(Optional.of(spec));
+
+        int databaseSizeBeforeCreate = attachmentRepository.findAll().size();
+
+        restAttachmentMockMvc.perform(post("/api/attachments")
+            .contentType(TestUtil.APPLICATION_JSON_UTF8)
+            .content(TestUtil.convertObjectToJsonBytes(attachmentWithContent)))
+                .andDo(print())
+            .andExpect(status().isBadRequest());
+
+        List<Attachment> attachmentList = attachmentRepository.findAll();
+        assertThat(attachmentList).hasSize(databaseSizeBeforeCreate);
     }
 }

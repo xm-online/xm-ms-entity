@@ -10,7 +10,6 @@ import org.springframework.boot.web.servlet.ServletContextInitializer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
-import org.springframework.core.env.Profiles;
 import org.springframework.http.MediaType;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.cors.CorsConfiguration;
@@ -18,9 +17,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.CorsFilter;
 
 import java.nio.charset.StandardCharsets;
-import tech.jhipster.config.JHipsterConstants;
 import tech.jhipster.config.JHipsterProperties;
-import tech.jhipster.config.h2.H2ConfigurationHelper;
 
 /**
  * Configuration of web application with Servlet 3.0 APIs.
@@ -42,9 +39,6 @@ public class WebConfigurer implements ServletContextInitializer, WebServerFactor
     public void onStartup(ServletContext servletContext) {
         if (env.getActiveProfiles().length != 0) {
             log.info("Web application configuration, using profiles: {}", (Object[]) env.getActiveProfiles());
-        }
-        if (env.acceptsProfiles(Profiles.of(JHipsterConstants.SPRING_PROFILE_DEVELOPMENT))) {
-            initH2Console(servletContext);
         }
         log.info("Web application fully configured");
     }
@@ -80,14 +74,6 @@ public class WebConfigurer implements ServletContextInitializer, WebServerFactor
             source.registerCorsConfiguration("/swagger-ui/**", config);
         }
         return new CorsFilter(source);
-    }
-
-    /**
-     * Initializes H2 console.
-     */
-    private void initH2Console(ServletContext servletContext) {
-        log.debug("Initialize H2 console");
-        H2ConfigurationHelper.initH2Console(servletContext);
     }
 
 }

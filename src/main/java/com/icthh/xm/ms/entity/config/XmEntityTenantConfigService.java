@@ -117,6 +117,12 @@ public class XmEntityTenantConfigService extends TenantConfigService {
             private Boolean enableDataSpecInheritance = false;
             private Boolean enableDataFromInheritance = false;
         }
+
+        private AttachmentValidation attachmentValidation = new AttachmentValidation();
+        @Data
+        public static class AttachmentValidation {
+            private Boolean contentTypeValidationEnabled = false;
+        }
     }
 
 }
