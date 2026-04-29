@@ -1,6 +1,6 @@
 package com.icthh.xm.ms.entity.web.rest;
 
-import com.codahale.metrics.annotation.Timed;
+
 import com.icthh.xm.commons.permission.annotation.PrivilegeDescription;
 import com.icthh.xm.ms.entity.service.dto.XmEntityDto;
 import com.icthh.xm.ms.entity.web.rest.facade.ProfileFacade;
@@ -35,7 +35,7 @@ public class ProfileResource {
      * @return the ResponseEntity with status 200 (OK) and with body the profile, or with status 404 (Not Found)
      */
     @GetMapping("/profile")
-    @Timed
+    
     @PostAuthorize("hasPermission({'returnObject': returnObject.body}, 'ENTITY.PROFILE.SELF.GET')")
     @PrivilegeDescription("Privilege to get current user profile")
     public ResponseEntity<XmEntityDto> getProfile() {
@@ -51,7 +51,7 @@ public class ProfileResource {
      * Server Error) if the xmEntity couldn't be updated
      */
     @PutMapping("/profile")
-    @Timed
+    
     @PostAuthorize("hasPermission({'returnObject': returnObject.body}, 'ENTITY.PROFILE.SELF.UPDATE')")
     @PrivilegeDescription("Privilege to update the profile of current user")
     public ResponseEntity<XmEntityDto> updateProfile(@Valid @RequestBody XmEntityDto xmEntity) {
@@ -61,7 +61,7 @@ public class ProfileResource {
     }
 
     @GetMapping("/profile/{userKey}")
-    @Timed
+    
     @PostAuthorize("hasPermission({'returnObject': returnObject.body}, 'ENTITY.PROFILE.GET_LIST.ITEM')")
     @PrivilegeDescription("Privilege to get the profile by userKey")
     public ResponseEntity<XmEntityDto> getProfile(@PathVariable("userKey") String userKey) {

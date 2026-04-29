@@ -1,6 +1,6 @@
 package com.icthh.xm.ms.entity.web.rest;
 
-import com.codahale.metrics.annotation.Timed;
+
 import com.icthh.xm.commons.exceptions.BusinessException;
 import com.icthh.xm.commons.exceptions.ErrorConstants;
 import com.icthh.xm.commons.permission.annotation.PrivilegeDescription;
@@ -56,7 +56,7 @@ public class LinkResource extends TransactionPropagationService<LinkResource> {
      * @throws URISyntaxException if the Location URI syntax is incorrect
      */
     @PostMapping("/links")
-    @Timed
+    
     @PreAuthorize("hasPermission({'link': #link}, 'LINK.CREATE')")
     @PrivilegeDescription("Privilege to create a new link")
     public ResponseEntity<LinkDto> createLink(@Valid @RequestBody LinkDto link) throws URISyntaxException {
@@ -80,7 +80,7 @@ public class LinkResource extends TransactionPropagationService<LinkResource> {
      * @throws URISyntaxException if the Location URI syntax is incorrect
      */
     @PutMapping("/links")
-    @Timed
+    
     @PreAuthorize("hasPermission({'id': #link.id, 'newLink': #link}, 'link', 'LINK.UPDATE')")
     @PrivilegeDescription("Privilege to updates an existing link")
     public ResponseEntity<LinkDto> updateLink(@Valid @RequestBody LinkDto link) throws URISyntaxException {
@@ -101,7 +101,7 @@ public class LinkResource extends TransactionPropagationService<LinkResource> {
      * @return the ResponseEntity with status 200 (OK) and the list of links in body
      */
     @GetMapping("/links")
-    @Timed
+    
     public ResponseEntity<List<LinkDto>> getAllLinks(@ApiParam Pageable pageable) {
         Page<LinkDto> page = linkFacade.findAll(pageable, null);
         HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(page, "/api/links");
@@ -115,7 +115,7 @@ public class LinkResource extends TransactionPropagationService<LinkResource> {
      * @return the ResponseEntity with status 200 (OK) and with body the link, or with status 404 (Not Found)
      */
     @GetMapping("/links/{id}")
-    @Timed
+    
     @PostAuthorize("hasPermission({'returnObject': returnObject.body}, 'LINK.GET_LIST.ITEM')")
     @PrivilegeDescription("Privilege to get the link by id")
     public ResponseEntity<LinkDto> getLink(@PathVariable Long id) {
@@ -130,7 +130,7 @@ public class LinkResource extends TransactionPropagationService<LinkResource> {
      * @return the ResponseEntity with status 200 (OK)
      */
     @DeleteMapping("/links/{id}")
-    @Timed
+    
     @PreAuthorize("hasPermission({'id': #id}, 'link', 'LINK.DELETE')")
     @PrivilegeDescription("Privilege to delete the link by id")
     public ResponseEntity<Void> deleteLink(@PathVariable Long id) {

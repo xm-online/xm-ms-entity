@@ -5,7 +5,7 @@ import com.icthh.xm.commons.search.ElasticsearchOperations;
 import com.icthh.xm.ms.entity.repository.search.XmEntitySearchRepository;
 import static org.apache.commons.lang3.ObjectUtils.defaultIfNull;
 
-import com.codahale.metrics.annotation.Timed;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.icthh.xm.commons.logging.util.MdcUtils;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
@@ -101,7 +101,7 @@ public class ElasticsearchIndexServiceImpl extends TransactionPropagationService
      * Recreates index and then reindexes ALL entities from database asynchronously.
      * @return @{@link CompletableFuture<Long>} with a number of reindexed entities.
      */
-    @Timed
+    
     public CompletableFuture<Long> reindexAllAsync() {
         TenantKey tenantKey = TenantContextUtils.getRequiredTenantKey(tenantContextHolder);
         String rid = MdcUtils.getRid();
@@ -117,7 +117,7 @@ public class ElasticsearchIndexServiceImpl extends TransactionPropagationService
      * @param typeKey typeKey to filter source entities.
      * @return @{@link CompletableFuture<Long>} with a number of reindexed entities.
      */
-    @Timed
+    
     public CompletableFuture<Long> reindexByTypeKeyAsync(@Nonnull String typeKey) {
 
         Objects.requireNonNull(typeKey, "typeKey should not be null");
@@ -136,7 +136,7 @@ public class ElasticsearchIndexServiceImpl extends TransactionPropagationService
      * @param ids - collection of IDs of entities to be reindexed.
      * @return @{@link CompletableFuture<Long>} with a number of reindexed entities.
      */
-    @Timed
+    
     public CompletableFuture<Long> reindexByIdsAsync(@Nonnull Iterable<Long> ids) {
 
         Objects.requireNonNull(ids, "ids should not be null");
@@ -152,7 +152,7 @@ public class ElasticsearchIndexServiceImpl extends TransactionPropagationService
      * Recreates index and then reindexes ALL entities from database.
      * @return number of reindexed entities.
      */
-    @Timed
+    
     @Transactional(readOnly = true)
     public long reindexAll() {
         long reindexed = 0L;
@@ -177,7 +177,7 @@ public class ElasticsearchIndexServiceImpl extends TransactionPropagationService
      * @param typeKey typeKey to filter source entities.
      * @return number of reindexed entities.
      */
-    @Timed
+    
     @Transactional(readOnly = true)
     public long reindexByTypeKey(@Nonnull String typeKey){
 
@@ -190,7 +190,7 @@ public class ElasticsearchIndexServiceImpl extends TransactionPropagationService
 
     }
 
-    @Timed
+    
     @Transactional(readOnly = true)
     public long reindexByTypeKey(@Nonnull String typeKey, Integer startFrom) {
         Objects.requireNonNull(typeKey, "typeKey should not be null");
@@ -208,7 +208,7 @@ public class ElasticsearchIndexServiceImpl extends TransactionPropagationService
      * @param ids - collection of IDs of entities to be reindexed.
      * @return number of reindexed entities.
      */
-    @Timed
+    
     @Transactional(readOnly = true)
     public long reindexByIds(@Nonnull Iterable<Long> ids) {
 

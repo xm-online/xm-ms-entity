@@ -1,6 +1,6 @@
 package com.icthh.xm.ms.entity.web.rest;
 
-import com.codahale.metrics.annotation.Timed;
+
 import com.icthh.xm.commons.exceptions.BusinessException;
 import com.icthh.xm.commons.exceptions.ErrorConstants;
 import com.icthh.xm.commons.permission.annotation.PrivilegeDescription;
@@ -55,7 +55,7 @@ public class LocationResource {
      * @throws URISyntaxException if the Location URI syntax is incorrect
      */
     @PostMapping("/locations")
-    @Timed
+    
     @PreAuthorize("hasPermission({'location': #location}, 'LOCATION.CREATE')")
     @PrivilegeDescription("Privilege to create a new location")
     public ResponseEntity<LocationDto> createLocation(@Valid @RequestBody LocationDto location) throws URISyntaxException {
@@ -79,7 +79,7 @@ public class LocationResource {
      * @throws URISyntaxException if the Location URI syntax is incorrect
      */
     @PutMapping("/locations")
-    @Timed
+    
     @PreAuthorize("hasPermission({'id': #location.id, 'newLocation': #location}, 'location', 'LOCATION.UPDATE')")
     @PrivilegeDescription("Privilege to updates an existing location")
     public ResponseEntity<LocationDto> updateLocation(@Valid @RequestBody LocationDto location) throws URISyntaxException {
@@ -99,7 +99,7 @@ public class LocationResource {
      * @return the ResponseEntity with status 200 (OK) and the list of locations in body
      */
     @GetMapping("/locations")
-    @Timed
+    
     public List<LocationDto> getAllLocations() {
         return locationFacade.findAll(null);
     }
@@ -111,7 +111,7 @@ public class LocationResource {
      * @return the ResponseEntity with status 200 (OK) and with body the location, or with status 404 (Not Found)
      */
     @GetMapping("/locations/{id}")
-    @Timed
+    
     @PostAuthorize("hasPermission({'returnObject': returnObject.body}, 'LOCATION.GET_LIST.ITEM')")
     @PrivilegeDescription("Privilege to get the location by id")
     public ResponseEntity<LocationDto> getLocation(@PathVariable Long id) {
@@ -125,7 +125,7 @@ public class LocationResource {
      * @return the ResponseEntity with status 200 (OK)
      */
     @DeleteMapping("/locations/{id}")
-    @Timed
+    
     @PreAuthorize("hasPermission({'id': #id}, 'location', 'LOCATION.DELETE')")
     @PrivilegeDescription("Privilege to delete the location by id")
     public ResponseEntity<Void> deleteLocation(@PathVariable Long id) {

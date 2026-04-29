@@ -1,6 +1,6 @@
 package com.icthh.xm.ms.entity.config;
 
-import com.fasterxml.jackson.datatype.hibernate6.Hibernate6Module;
+import com.fasterxml.jackson.datatype.hibernate7.Hibernate7Module;
 import com.icthh.xm.commons.config.client.repository.CommonConfigRepository;
 import com.icthh.xm.commons.config.client.service.CommonConfigService;
 import com.icthh.xm.commons.domain.FunctionSpecWithFileName;
@@ -79,8 +79,8 @@ public class LepConfiguration extends GroovyLepEngineConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
-    public Hibernate6Module hibernate6Module() {
-        return new Hibernate6Module();
+    public Hibernate7Module hibernate6Module() {
+        return new Hibernate7Module();
     }
 
 }
