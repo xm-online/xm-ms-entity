@@ -1,0 +1,14 @@
+# ===================================================================
+# OpenTelemetry Configuration
+# ===================================================================
+
+management:
+  otlp:
+    metrics:
+      export:
+        url: ${OTEL_EXPORTER_OTLP_ENDPOINT:http://otel-collector:4318}/v1/metrics
+        step: 30s
+        resource-attributes:
+          service.name: ${spring.application.name}
+          service.namespace: xm
+          deployment.environment: ${SPRING_PROFILES_ACTIVE:local}

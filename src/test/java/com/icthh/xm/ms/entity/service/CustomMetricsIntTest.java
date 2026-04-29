@@ -5,13 +5,12 @@ import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_TENANT_
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.awaitility.Awaitility.await;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.Mockito.when;
 
-import com.codahale.metrics.Gauge;
-import com.codahale.metrics.MetricRegistry;
+import io.micrometer.core.instrument.Gauge;
+import io.micrometer.core.instrument.MeterRegistry;
 import com.icthh.xm.commons.lep.XmLepScriptConfigServerResourceLoader;
 import com.icthh.xm.commons.security.XmAuthenticationContext;
 import com.icthh.xm.commons.security.XmAuthenticationContextHolder;
@@ -27,6 +26,7 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
@@ -58,7 +58,7 @@ public class CustomMetricsIntTest extends AbstractJupiterSpringBootTest {
     private LepManager lepManager;
 
     @Autowired
-    private MetricRegistry metricRegistry;
+    private MeterRegistry meterRegistry;
 
     @Autowired
     private CustomMetricsConfiguration customMetricsConfiguration;
@@ -112,32 +112,35 @@ public class CustomMetricsIntTest extends AbstractJupiterSpringBootTest {
         customMetricsConfiguration.onRefresh("/config/tenants/RESINTTEST/entity/metrics.yml",
                                              loadFile("config/metrics.yml"));
 
-        Gauge everyTimeMetric = metricRegistry.getGauges().get("custom.metrics.resinttest.my.every.call.metric");
-        Gauge periodicMetric = metricRegistry.getGauges().get("custom.metrics.resinttest.my.periodic.metric");
+        Gauge everyTimeMetric = meterRegistry.find("custom.metrics.resinttest.my.every.call.metric").gauge();
+        Gauge periodicMetric = meterRegistry.find("custom.metrics.resinttest.my.periodic.metric").gauge();
 
-        assertNull(periodicMetric.getValue());
-        assertNull(periodicMetric.getValue());
+        assertNull(periodicMetric.value());
+        assertNull(periodicMetric.value());
 
         waitValue(periodicMetric, 1);
-        assertEquals(1, periodicMetric.getValue());
-        assertEquals(1, periodicMetric.getValue());
-        assertEquals(1, periodicMetric.getValue());
+        assertEquals(1, periodicMetric.value());
+        assertEquals(1, periodicMetric.value());
+        assertEquals(1, periodicMetric.value());
         waitValue(periodicMetric, 2);
-        assertEquals(2, periodicMetric.getValue());
+        assertEquals(2, periodicMetric.value());
         long time = waitValue(periodicMetric, 3);
-        assertEquals(3, periodicMetric.getValue());
+        assertEquals(3, periodicMetric.value());
         log.info("result time -> {}", time);
-        assertTrue(time + " less than 2000", (time/1000_000L) > 1900);
-        assertTrue(time + " more than 2100", (time/1000_000L) < 2100);
+        Assertions.assertTrue((time/1000_000L) > 1900, time + " less than 2000");
+        Assertions.assertTrue((time/1000_000L) < 2100, time + " more than 2100");
 
-        assertEquals(1, everyTimeMetric.getValue());
-        assertEquals(2, everyTimeMetric.getValue());
-        assertEquals(3, everyTimeMetric.getValue());
+        assertEquals(1, everyTimeMetric.value());
+        assertEquals(2, everyTimeMetric.value());
+        assertEquals(3, everyTimeMetric.value());
     }
 
     private long waitValue(Gauge periodicMetric, Integer value) {
         long startTime = System.nanoTime();
-        await().atMost(5, SECONDS).until(() -> value.equals(periodicMetric.getValue()));
+        await().atMost(5, SECONDS).until(() -> {
+            periodicMetric.value();
+            return false;
+        });
         return System.nanoTime() - startTime;
     }
 
