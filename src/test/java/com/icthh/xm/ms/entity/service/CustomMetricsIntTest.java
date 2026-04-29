@@ -6,7 +6,6 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.Mockito.when;
 
 import io.micrometer.core.instrument.Gauge;
@@ -115,16 +114,15 @@ public class CustomMetricsIntTest extends AbstractJupiterSpringBootTest {
         Gauge everyTimeMetric = meterRegistry.find("custom.metrics.resinttest.my.every.call.metric").gauge();
         Gauge periodicMetric = meterRegistry.find("custom.metrics.resinttest.my.periodic.metric").gauge();
 
-        assertNull(periodicMetric.value());
-        assertNull(periodicMetric.value());
+        assertEquals(periodicMetric.value(), 0d);
 
-        waitValue(periodicMetric, 1);
+        waitValue(periodicMetric, 1d);
         assertEquals(1, periodicMetric.value());
         assertEquals(1, periodicMetric.value());
         assertEquals(1, periodicMetric.value());
-        waitValue(periodicMetric, 2);
+        waitValue(periodicMetric, 2d);
         assertEquals(2, periodicMetric.value());
-        long time = waitValue(periodicMetric, 3);
+        long time = waitValue(periodicMetric, 3d);
         assertEquals(3, periodicMetric.value());
         log.info("result time -> {}", time);
         Assertions.assertTrue((time/1000_000L) > 1900, time + " less than 2000");
@@ -135,12 +133,9 @@ public class CustomMetricsIntTest extends AbstractJupiterSpringBootTest {
         assertEquals(3, everyTimeMetric.value());
     }
 
-    private long waitValue(Gauge periodicMetric, Integer value) {
+    private long waitValue(Gauge periodicMetric, Double value) {
         long startTime = System.nanoTime();
-        await().atMost(5, SECONDS).until(() -> {
-            periodicMetric.value();
-            return false;
-        });
+        await().atMost(5, SECONDS).until(() -> value.equals(periodicMetric.value()));
         return System.nanoTime() - startTime;
     }
 
