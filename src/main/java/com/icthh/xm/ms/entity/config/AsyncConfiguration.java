@@ -5,6 +5,7 @@ import java.util.concurrent.Executors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.aop.interceptor.AsyncUncaughtExceptionHandler;
 import org.springframework.aop.interceptor.SimpleAsyncUncaughtExceptionHandler;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
@@ -15,6 +16,7 @@ import org.springframework.scheduling.annotation.SchedulingConfigurer;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.scheduling.config.ScheduledTaskRegistrar;
+import org.springframework.context.annotation.Primary;
 import tech.jhipster.async.ExceptionHandlingAsyncTaskExecutor;
 import tech.jhipster.config.JHipsterProperties;
 
@@ -59,6 +61,7 @@ public class AsyncConfiguration implements AsyncConfigurer, SchedulingConfigurer
     }
 
     @Bean(name = "periodicMetricsTaskScheduler")
+    @Primary
     public ThreadPoolTaskScheduler periodicMetricsTaskScheduler(ApplicationProperties applicationProperties) {
         ThreadPoolTaskScheduler taskScheduler = new ThreadPoolTaskScheduler();
         taskScheduler.setPoolSize(applicationProperties.getPeriodicMetricPoolSize());
