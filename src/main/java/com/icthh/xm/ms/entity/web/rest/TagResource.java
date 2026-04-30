@@ -1,6 +1,6 @@
 package com.icthh.xm.ms.entity.web.rest;
 
-import com.codahale.metrics.annotation.Timed;
+
 import com.icthh.xm.commons.exceptions.BusinessException;
 import com.icthh.xm.commons.exceptions.ErrorConstants;
 import com.icthh.xm.commons.permission.annotation.PrivilegeDescription;
@@ -54,7 +54,7 @@ public class TagResource {
      * @throws URISyntaxException if the Location URI syntax is incorrect
      */
     @PostMapping("/tags")
-    @Timed
+    
     @PreAuthorize("hasPermission({'tag': #tag}, 'TAG.CREATE')")
     @PrivilegeDescription("Privilege to create a new tag")
     public ResponseEntity<TagDto> createTag(@Valid @RequestBody TagDto tag) throws URISyntaxException {
@@ -78,7 +78,7 @@ public class TagResource {
      * @throws URISyntaxException if the Location URI syntax is incorrect
      */
     @PutMapping("/tags")
-    @Timed
+    
     @PreAuthorize("hasPermission({'id': #tag.id, 'newTag': #tag}, 'tag', 'TAG.UPDATE')")
     @PrivilegeDescription("Privilege to updates an existing tag")
     public ResponseEntity<TagDto> updateTag(@Valid @RequestBody TagDto tag) throws URISyntaxException {
@@ -98,7 +98,7 @@ public class TagResource {
      * @return the ResponseEntity with status 200 (OK) and the list of tags in body
      */
     @GetMapping("/tags")
-    @Timed
+    
     public List<TagDto> getAllTags() {
         return tagFacade.findAll(null);
     }
@@ -110,7 +110,7 @@ public class TagResource {
      * @return the ResponseEntity with status 200 (OK) and with body the tag, or with status 404 (Not Found)
      */
     @GetMapping("/tags/{id}")
-    @Timed
+    
     @PostAuthorize("hasPermission({'returnObject': returnObject.body}, 'TAG.GET_LIST.ITEM')")
     @PrivilegeDescription("Privilege to get the tag by id")
     public ResponseEntity<TagDto> getTag(@PathVariable Long id) {
@@ -125,7 +125,7 @@ public class TagResource {
      * @return the ResponseEntity with status 200 (OK)
      */
     @DeleteMapping("/tags/{id}")
-    @Timed
+    
     @PreAuthorize("hasPermission({'id': #id}, 'tag', 'TAG.DELETE')")
     @PrivilegeDescription("Privilege to delete the tag by id")
     public ResponseEntity<Void> deleteTag(@PathVariable Long id) {

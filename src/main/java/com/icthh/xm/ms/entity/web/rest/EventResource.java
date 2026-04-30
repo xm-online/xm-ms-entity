@@ -1,6 +1,6 @@
 package com.icthh.xm.ms.entity.web.rest;
 
-import com.codahale.metrics.annotation.Timed;
+
 import com.icthh.xm.commons.exceptions.BusinessException;
 import com.icthh.xm.commons.exceptions.ErrorConstants;
 import com.icthh.xm.commons.permission.annotation.PrivilegeDescription;
@@ -55,7 +55,7 @@ public class EventResource {
      * @throws URISyntaxException if the Location URI syntax is incorrect
      */
     @PostMapping("/events")
-    @Timed
+    
     @PreAuthorize("hasPermission({'event': #event}, 'EVENT.CREATE')")
     @PrivilegeDescription("Privilege to create a new event")
     public ResponseEntity<EventDto> createEvent(@Valid @RequestBody EventDto event) throws URISyntaxException {
@@ -79,7 +79,7 @@ public class EventResource {
      * @throws URISyntaxException if the Location URI syntax is incorrect
      */
     @PutMapping("/events")
-    @Timed
+    
     @PreAuthorize("hasPermission({'id': #event.id, 'newEvent': #event}, 'event', 'EVENT.UPDATE')")
     @PrivilegeDescription("Privilege to updates an existing event")
     public ResponseEntity<EventDto> updateEvent(@Valid @RequestBody EventDto event) throws URISyntaxException {
@@ -99,7 +99,7 @@ public class EventResource {
      * @return the ResponseEntity with status 200 (OK) and the list of events in body
      */
     @GetMapping("/events")
-    @Timed
+    
     public List<EventDto> getAllEvents(EventFilter eventFilter) {
         return eventFilter == null ? eventFacade.findAll(null) : eventFacade.findAllByFilter(eventFilter);
     }
@@ -111,7 +111,7 @@ public class EventResource {
      * @return the ResponseEntity with status 200 (OK) and with body the event, or with status 404 (Not Found)
      */
     @GetMapping("/events/{id}")
-    @Timed
+    
     @PostAuthorize("hasPermission({'returnObject': returnObject.body}, 'EVENT.GET_LIST.ITEM')")
     @PrivilegeDescription("Privilege to get the event by id")
     public ResponseEntity<EventDto> getEvent(@PathVariable Long id) {
@@ -126,7 +126,7 @@ public class EventResource {
      * @return the ResponseEntity with status 200 (OK)
      */
     @DeleteMapping("/events/{id}")
-    @Timed
+    
     @PreAuthorize("hasPermission({'id': #id}, 'event', 'EVENT.DELETE')")
     @PrivilegeDescription("Privilege to delete the event by id")
     public ResponseEntity<Void> deleteEvent(@PathVariable Long id) {

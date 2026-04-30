@@ -39,6 +39,10 @@ management:
                 logback: true
                 process: true
                 system: true
+                disk: true
+                lep.execution.time: true
+            percentiles:
+                lep.execution.time: 0.5, 0.75, 0.95, 0.99
         enable:
             http: true
             jvm: true
@@ -54,9 +58,8 @@ management:
 spring:
     application:
         name: entity
-    spring:
-        profiles:
-            include: swagger
+    profiles:
+        include: swagger
     main:
       allow-bean-definition-overriding: true
     cloud:

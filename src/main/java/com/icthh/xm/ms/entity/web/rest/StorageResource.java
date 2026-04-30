@@ -2,7 +2,7 @@ package com.icthh.xm.ms.entity.web.rest;
 
 import static com.icthh.xm.commons.exceptions.ErrorConstants.ERR_VALIDATION;
 
-import com.codahale.metrics.annotation.Timed;
+
 import com.icthh.xm.commons.exceptions.BusinessException;
 import com.icthh.xm.commons.permission.annotation.PrivilegeDescription;
 import com.icthh.xm.ms.entity.config.ApplicationProperties;
@@ -36,7 +36,7 @@ public class StorageResource {
      * @param size used to resize avatar (legacy)
      */
     @PostMapping("/objects")
-    @Timed
+    
     @PreAuthorize("hasPermission({'size': #size, 'multipartFile': #multipartFile}, 'STORAGE.OBJECT.CREATE')")
     @PrivilegeDescription("Privilege to create object on S3 or other supported storage")
     public ResponseEntity<String> createContent(@RequestParam(required = false) Integer size,

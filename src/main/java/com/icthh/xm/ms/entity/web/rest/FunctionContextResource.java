@@ -1,7 +1,7 @@
 package com.icthh.xm.ms.entity.web.rest;
 
 import com.amazonaws.services.kms.model.NotFoundException;
-import com.codahale.metrics.annotation.Timed;
+
 import com.icthh.xm.commons.exceptions.BusinessException;
 import com.icthh.xm.commons.exceptions.ErrorConstants;
 import com.icthh.xm.commons.permission.annotation.PrivilegeDescription;
@@ -59,7 +59,7 @@ public class FunctionContextResource {
      * @throws URISyntaxException if the Location URI syntax is incorrect
      */
     @PostMapping("/function-contexts")
-    @Timed
+    
     @PreAuthorize("hasPermission({'functionContext': #functionContext}, 'FUNCTION_CONTEXT.CREATE')")
     @PrivilegeDescription("Privilege to create a new functionContext")
     public ResponseEntity<FunctionContextDto> createFunctionContext(@Valid @RequestBody FunctionContextDto functionContext) throws URISyntaxException {
@@ -82,7 +82,7 @@ public class FunctionContextResource {
      * @throws URISyntaxException if the Location URI syntax is incorrect
      */
     @PutMapping("/function-contexts")
-    @Timed
+    
     @PreAuthorize("hasPermission({'id': #functionContext.id, 'newFunctionContext': #functionContext}, 'functionContext', 'FUNCTION_CONTEXT.UPDATE')")
     @PrivilegeDescription("Privilege to updates an existing functionContext")
     public ResponseEntity<FunctionContextDto> updateFunctionContext(@Valid @RequestBody FunctionContextDto functionContext) throws URISyntaxException {
@@ -102,7 +102,7 @@ public class FunctionContextResource {
      * @return the ResponseEntity with status 200 (OK) and the list of functionContexts in body
      */
     @GetMapping("/function-contexts")
-    @Timed
+    
     public List<FunctionContextDto> getAllFunctionContexts() {
         return functionContextFacade.findAll(null);
     }
@@ -114,7 +114,7 @@ public class FunctionContextResource {
      * @return the ResponseEntity with status 200 (OK) and with body the functionContext, or with status 404 (Not Found)
      */
     @GetMapping("/function-contexts/{id}")
-    @Timed
+    
     @PostAuthorize("hasPermission({'returnObject': returnObject.body}, 'FUNCTION_CONTEXT.GET_LIST.ITEM')")
     @PrivilegeDescription("Privilege to get the functionContext by id")
     public ResponseEntity<FunctionContextDto> getFunctionContext(@PathVariable Long id) {
@@ -129,7 +129,7 @@ public class FunctionContextResource {
      * @return the ResponseEntity with status 200 (OK)
      */
     @DeleteMapping("/function-contexts/{id}")
-    @Timed
+    
     @PreAuthorize("hasPermission({'id': #id}, 'functionContext', 'FUNCTION_CONTEXT.DELETE')")
     @PrivilegeDescription("Privilege to delete the functionContext by id")
     public ResponseEntity<Void> deleteFunctionContext(@PathVariable Long id) {

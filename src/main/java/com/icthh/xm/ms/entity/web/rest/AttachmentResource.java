@@ -1,6 +1,5 @@
 package com.icthh.xm.ms.entity.web.rest;
 
-import com.codahale.metrics.annotation.Timed;
 import com.icthh.xm.commons.exceptions.BusinessException;
 import com.icthh.xm.commons.exceptions.ErrorConstants;
 import com.icthh.xm.commons.permission.annotation.PrivilegeDescription;
@@ -54,7 +53,6 @@ public class AttachmentResource {
      * @throws URISyntaxException if the Location URI syntax is incorrect
      */
     @PostMapping("/attachments")
-    @Timed
     @PreAuthorize("hasPermission({'attachment': #attachment}, 'ATTACHMENT.CREATE')")
     @PrivilegeDescription("Privilege to create a new attachment")
     public ResponseEntity<AttachmentDto> createAttachment(@Valid @RequestBody AttachmentDto attachment) throws URISyntaxException {
@@ -78,7 +76,6 @@ public class AttachmentResource {
      * @throws URISyntaxException if the Location URI syntax is incorrect
      */
     @PutMapping("/attachments")
-    @Timed
     @PreAuthorize("hasPermission({'id': #attachment.id, 'newAttachment': #attachment}, 'attachment', 'ATTACHMENT.UPDATE')")
     @PrivilegeDescription("Privilege to update an existing attachment")
     public ResponseEntity<AttachmentDto> updateAttachment(@Valid @RequestBody AttachmentDto attachment) throws URISyntaxException {
@@ -98,7 +95,6 @@ public class AttachmentResource {
      * @return the ResponseEntity with status 200 (OK) and the list of attachments in body
      */
     @GetMapping("/attachments")
-    @Timed
     public List<AttachmentDto> getAllAttachments() {
         return attachmentFacade.findAll(null);
     }
@@ -110,7 +106,6 @@ public class AttachmentResource {
      * @return the ResponseEntity with status 200 (OK) and with body the attachment, or with status 404 (Not Found)
      */
     @GetMapping("/attachments/{id}")
-    @Timed
     @PostAuthorize("hasPermission({'returnObject': returnObject.body}, 'ATTACHMENT.GET_LIST.ITEM')")
     @PrivilegeDescription("Privilege to get attachment by id")
     public ResponseEntity<AttachmentDto> getAttachment(@PathVariable Long id) {
@@ -125,7 +120,6 @@ public class AttachmentResource {
      * @return the ResponseEntity with status 200 (OK)
      */
     @DeleteMapping("/attachments/{id}")
-    @Timed
     @PreAuthorize("hasPermission({'id': #id}, 'attachment', 'ATTACHMENT.DELETE')")
     @PrivilegeDescription("Privilege to delete attachment by id")
     public ResponseEntity<Void> deleteAttachment(@PathVariable Long id) {
@@ -140,7 +134,6 @@ public class AttachmentResource {
      * @return the ResponseEntity with status 200 (OK) and url for attachment download, or with status 404 (Not Found)
      */
     @GetMapping("/attachments/{id}/download-link")
-    @Timed
     @PostAuthorize("hasPermission({'returnObject': returnObject.body}, 'ATTACHMENT.GET_LIST.ITEM')")
     @PrivilegeDescription("Privilege to get attachment by id")
     public ResponseEntity<String> getAttachmentDownloadLink(@PathVariable Long id) {

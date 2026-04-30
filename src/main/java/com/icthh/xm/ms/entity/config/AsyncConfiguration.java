@@ -15,6 +15,7 @@ import org.springframework.scheduling.annotation.SchedulingConfigurer;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.scheduling.config.ScheduledTaskRegistrar;
+import org.springframework.context.annotation.Primary;
 import tech.jhipster.async.ExceptionHandlingAsyncTaskExecutor;
 import tech.jhipster.config.JHipsterProperties;
 
@@ -59,6 +60,7 @@ public class AsyncConfiguration implements AsyncConfigurer, SchedulingConfigurer
     }
 
     @Bean(name = "periodicMetricsTaskScheduler")
+    @Primary
     public ThreadPoolTaskScheduler periodicMetricsTaskScheduler(ApplicationProperties applicationProperties) {
         ThreadPoolTaskScheduler taskScheduler = new ThreadPoolTaskScheduler();
         taskScheduler.setPoolSize(applicationProperties.getPeriodicMetricPoolSize());

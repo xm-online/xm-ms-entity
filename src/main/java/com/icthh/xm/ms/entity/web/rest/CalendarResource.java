@@ -1,6 +1,5 @@
 package com.icthh.xm.ms.entity.web.rest;
 
-import com.codahale.metrics.annotation.Timed;
 import com.icthh.xm.commons.exceptions.BusinessException;
 import com.icthh.xm.commons.exceptions.ErrorConstants;
 import com.icthh.xm.commons.permission.annotation.PrivilegeDescription;
@@ -62,7 +61,6 @@ public class CalendarResource {
      * @throws URISyntaxException if the Location URI syntax is incorrect
      */
     @PostMapping("/calendars")
-    @Timed
     @PreAuthorize("hasPermission({'calendar': #calendar}, 'CALENDAR.CREATE')")
     @PrivilegeDescription("Privilege to create a new calendar")
     public ResponseEntity<CalendarDto> createCalendar(@Valid @RequestBody CalendarDto calendar) throws URISyntaxException {
@@ -86,7 +84,6 @@ public class CalendarResource {
      * @throws URISyntaxException if the Location URI syntax is incorrect
      */
     @PutMapping("/calendars")
-    @Timed
     @PreAuthorize("hasPermission({'id': #calendar.id, 'newCalendar': #calendar}, 'calendar', 'CALENDAR.UPDATE')")
     @PrivilegeDescription("Privilege to updates an existing calendar")
     public ResponseEntity<CalendarDto> updateCalendar(@Valid @RequestBody CalendarDto calendar) throws URISyntaxException {
@@ -106,7 +103,6 @@ public class CalendarResource {
      * @return the ResponseEntity with status 200 (OK) and the list of calendars in body
      */
     @GetMapping("/calendars")
-    @Timed
     public List<CalendarDto> getAllCalendars() {
         return calendarFacade.findAll(null);
     }
@@ -118,7 +114,6 @@ public class CalendarResource {
      * @return the ResponseEntity with status 200 (OK) and with body the calendar, or with status 404 (Not Found)
      */
     @GetMapping("/calendars/{id}")
-    @Timed
     @PostAuthorize("hasPermission({'returnObject': returnObject.body}, 'CALENDAR.GET_LIST.ITEM')")
     @PrivilegeDescription("Privilege to get the calendar by id")
     public ResponseEntity<CalendarDto> getCalendar(@PathVariable Long id) {
@@ -133,7 +128,6 @@ public class CalendarResource {
      * @return the ResponseEntity with status 200 (OK) and with body events
      */
     @GetMapping("/calendars/{calendarId}/events")
-    @Timed
     @PreAuthorize("hasPermission({'calendarId': #calendarId}, 'calendar', 'CALENDAR.GET_LIST.ITEM.EVENTS')")
     @PrivilegeDescription("Privilege to get events for specific calendar")
     public ResponseEntity<List<EventDto>> getCalendarEvents(@PathVariable Long calendarId,
@@ -151,7 +145,6 @@ public class CalendarResource {
      * @return the ResponseEntity with status 200 (OK)
      */
     @DeleteMapping("/calendars/{id}")
-    @Timed
     @PreAuthorize("hasPermission({'id': #id}, 'calendar', 'CALENDAR.DELETE')")
     @PrivilegeDescription("Privilege to delete the calendar by id")
     public ResponseEntity<Void> deleteCalendar(@PathVariable Long id) {

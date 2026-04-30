@@ -1,6 +1,6 @@
 package com.icthh.xm.ms.entity.web.rest;
 
-import com.codahale.metrics.annotation.Timed;
+
 import com.icthh.xm.commons.permission.annotation.PrivilegeDescription;
 import com.icthh.xm.ms.entity.service.ElasticsearchIndexServiceImpl;
 import lombok.RequiredArgsConstructor;
@@ -28,7 +28,7 @@ public class ElasticsearchIndexResource {
      * POST  /elasticsearch/index -> Reindex all Elasticsearch documents
      */
     @PostMapping("/elasticsearch/index")
-    @Timed
+    
     @PreAuthorize("hasPermission(null, 'ELASTICSEARCH.INDEX')")
     @PrivilegeDescription("Privilege to reindex all Elasticsearch documents")
     public ResponseEntity<Void> reindexAll() {

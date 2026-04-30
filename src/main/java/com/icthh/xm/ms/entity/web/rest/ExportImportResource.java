@@ -1,6 +1,6 @@
 package com.icthh.xm.ms.entity.web.rest;
 
-import com.codahale.metrics.annotation.Timed;
+
 import com.icthh.xm.commons.exceptions.BusinessException;
 import com.icthh.xm.commons.logging.LoggingAspectConfig;
 import com.icthh.xm.commons.permission.annotation.PrivilegeDescription;
@@ -29,7 +29,7 @@ public class ExportImportResource {
 
     private final ExportImportService exportImportService;
 
-    @Timed
+    
     @PreAuthorize("hasPermission({'exportDto': #exportDto}, 'XMENTITY.EXPORT')")
     @PrivilegeDescription("Privilege to export xmEntities by export specification")
     @PostMapping("/export/xm-entities")
@@ -42,7 +42,7 @@ public class ExportImportResource {
         return ResponseEntity.ok().contentLength(media.length).headers(headers).body(media);
     }
 
-    @Timed
+    
     @PreAuthorize("hasPermission({'importDto': #importDto}, 'XMENTITY.IMPORT')")
     @PrivilegeDescription("Privilege to import xmEntities by import specification")
     @LoggingAspectConfig(inputExcludeParams = "importDto")
