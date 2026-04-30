@@ -59,9 +59,8 @@ management:
 spring:
     application:
         name: entity
-    spring:
-        profiles:
-            include: swagger
+    profiles:
+        include: swagger
     main:
       allow-bean-definition-overriding: true
     cloud:
