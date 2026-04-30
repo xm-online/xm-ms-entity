@@ -54,7 +54,6 @@ public class TagResource {
      * @throws URISyntaxException if the Location URI syntax is incorrect
      */
     @PostMapping("/tags")
-    
     @PreAuthorize("hasPermission({'tag': #tag}, 'TAG.CREATE')")
     @PrivilegeDescription("Privilege to create a new tag")
     public ResponseEntity<TagDto> createTag(@Valid @RequestBody TagDto tag) throws URISyntaxException {
@@ -98,7 +97,6 @@ public class TagResource {
      * @return the ResponseEntity with status 200 (OK) and the list of tags in body
      */
     @GetMapping("/tags")
-    
     public List<TagDto> getAllTags() {
         return tagFacade.findAll(null);
     }
@@ -110,7 +108,6 @@ public class TagResource {
      * @return the ResponseEntity with status 200 (OK) and with body the tag, or with status 404 (Not Found)
      */
     @GetMapping("/tags/{id}")
-    
     @PostAuthorize("hasPermission({'returnObject': returnObject.body}, 'TAG.GET_LIST.ITEM')")
     @PrivilegeDescription("Privilege to get the tag by id")
     public ResponseEntity<TagDto> getTag(@PathVariable Long id) {
@@ -125,7 +122,6 @@ public class TagResource {
      * @return the ResponseEntity with status 200 (OK)
      */
     @DeleteMapping("/tags/{id}")
-    
     @PreAuthorize("hasPermission({'id': #id}, 'tag', 'TAG.DELETE')")
     @PrivilegeDescription("Privilege to delete the tag by id")
     public ResponseEntity<Void> deleteTag(@PathVariable Long id) {

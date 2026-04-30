@@ -79,7 +79,7 @@ public class LepConfiguration extends GroovyLepEngineConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
-    public Hibernate7Module hibernate6Module() {
+    public Hibernate7Module hibernate7Module() {
         return new Hibernate7Module();
     }
 

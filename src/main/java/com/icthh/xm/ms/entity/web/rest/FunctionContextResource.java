@@ -59,7 +59,6 @@ public class FunctionContextResource {
      * @throws URISyntaxException if the Location URI syntax is incorrect
      */
     @PostMapping("/function-contexts")
-    
     @PreAuthorize("hasPermission({'functionContext': #functionContext}, 'FUNCTION_CONTEXT.CREATE')")
     @PrivilegeDescription("Privilege to create a new functionContext")
     public ResponseEntity<FunctionContextDto> createFunctionContext(@Valid @RequestBody FunctionContextDto functionContext) throws URISyntaxException {

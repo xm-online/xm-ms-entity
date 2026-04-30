@@ -84,7 +84,6 @@ public class XmEntitySpecResource {
      * @return the ResponseEntity with status 200 (OK) and the list of xmEntitySpecs in body
      */
     @GetMapping("/xm-entity-specs")
-    
     @PostFilter("hasPermission({'returnObject': filterObject, 'log': false}, 'XMENTITY_SPEC.GET')")
     @PrivilegeDescription("Privilege to get the xmEntity specification by filter")
     public List<TypeSpec> getTypeSpecs(@ApiParam XmEntitySpecResource.Filter filter) {
@@ -96,7 +95,6 @@ public class XmEntitySpecResource {
     }
 
     @GetMapping(value = "/xm-entity-specs/schema", produces = MediaType.APPLICATION_JSON_VALUE)
-    
     @PostAuthorize("hasPermission({'returnObject': returnObject.body}, 'XMENTITY_SPEC.SCHEMA.GET')")
     @PrivilegeDescription("Privilege to get the xmEntity specification json schema")
     public ResponseEntity<String> getSpecSchema() {
@@ -104,7 +102,6 @@ public class XmEntitySpecResource {
     }
 
     @GetMapping(value = "/xm-entity-specs/dataschemas", produces = MediaType.APPLICATION_JSON_VALUE)
-    
     @PostAuthorize("hasPermission({'returnObject': returnObject.body}, 'XMENTITY_SPEC.DATA_SCHEMA.GET')")
     @PrivilegeDescription("Privilege to get the xmEntity specification data schema")
     public ResponseEntity<List<DataSchema>> getDataSpecSchemas() {
@@ -118,7 +115,6 @@ public class XmEntitySpecResource {
      * @return the ResponseEntity with status 200 (OK) and with body the typeSpec, or with status 404 (Not Found)
      */
     @GetMapping("/xm-entity-specs/{key}")
-    
     @PostAuthorize("hasPermission({'returnObject': returnObject.body}, 'XMENTITY_SPEC.GET_LIST.ITEM')")
     @PrivilegeDescription("Privilege to get the xmEntity specification by key")
     public ResponseEntity<TypeSpec> getTypeSpec(@PathVariable String key) {
@@ -133,7 +129,6 @@ public class XmEntitySpecResource {
      * @throws URISyntaxException if the Location URI syntax is incorrect
      */
     @PostMapping("/xm-entity-specs/generate-xm-entity")
-    
     @PreAuthorize("hasPermission({'rootTypeKey': #rootTypeKey}, 'XMENTITY_SPEC.GENERATE')")
     @PrivilegeDescription("Privilege to generate a new random xmEntity with passed type. Used for demo")
     public ResponseEntity<XmEntityDto> generateXmEntity(@ApiParam String rootTypeKey) throws URISyntaxException {
@@ -153,7 +148,6 @@ public class XmEntitySpecResource {
      */
     @LoggingAspectConfig(inputExcludeParams = "xmEntitySpec")
     @PostMapping(value = "/xm-entity-specs", consumes = {TEXT_PLAIN_VALUE})
-    
     @PreAuthorize("hasPermission({'xmEntitySpec': #xmEntitySpec}, 'XMENTITY_SPEC.UPDATE')")
     @PrivilegeDescription("Privilege to update an existing xmEntity specification")
     public ResponseEntity<Void> updateXmEntitySpec(@RequestBody String xmEntitySpec) {

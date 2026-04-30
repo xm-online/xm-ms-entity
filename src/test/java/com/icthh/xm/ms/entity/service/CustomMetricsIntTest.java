@@ -4,8 +4,10 @@ import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_AUTH_CO
 import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_TENANT_CONTEXT;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.Mockito.when;
 
 import io.micrometer.core.instrument.Gauge;
@@ -114,7 +116,8 @@ public class CustomMetricsIntTest extends AbstractJupiterSpringBootTest {
         Gauge everyTimeMetric = meterRegistry.find("custom.metrics.resinttest.my.every.call.metric").gauge();
         Gauge periodicMetric = meterRegistry.find("custom.metrics.resinttest.my.periodic.metric").gauge();
 
-        assertEquals(periodicMetric.value(), 0d);
+        assertThat(everyTimeMetric).isNull();
+        assertThat(periodicMetric).isNull();
 
         waitValue(periodicMetric, 1d);
         assertEquals(1, periodicMetric.value());

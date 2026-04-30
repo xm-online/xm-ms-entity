@@ -40,9 +40,6 @@ management:
                 process: true
                 system: true
                 disk: true
-                lep.execution.time: true
-            percentiles:
-                lep.execution.time: 0.5, 0.75, 0.95, 0.99
         enable:
             http: true
             jvm: true

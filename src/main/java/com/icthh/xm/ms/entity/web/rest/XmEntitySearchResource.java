@@ -49,7 +49,6 @@ public class XmEntitySearchResource {
      * @return the result of the search
      */
     @GetMapping(value = "/_search/xm-entities", produces = MediaType.APPLICATION_JSON_VALUE)
-    
     @PreAuthorize("hasPermission({'query': #query}, 'XMENTITY.SEARCH.QUERY')")
     @PrivilegeDescription("Privilege to search for the xmEntity corresponding to the query")
     public ResponseEntity<List<XmEntityDto>> searchXmEntities(
@@ -63,7 +62,6 @@ public class XmEntitySearchResource {
     }
 
     @GetMapping("/_search/v2/xm-entities")
-    
     @PreAuthorize("hasPermission({'query': #query}, 'XMENTITY.SEARCH.QUERY')")
     @PrivilegeDescription("Privilege to search for the xmEntity corresponding to the query")
     public ResponseEntity<List<XmEntityDto>> searchXmEntitiesV2(
@@ -84,7 +82,6 @@ public class XmEntitySearchResource {
     }
 
     @GetMapping("/_search-with-template/xm-entities")
-    
     @PreAuthorize("hasPermission({'template': #template}, 'XMENTITY.SEARCH.TEMPLATE')")
     @PrivilegeDescription("Privilege to search for the xmEntity by query template")
     public ResponseEntity<List<XmEntityDto>> searchXmEntities(
@@ -99,7 +96,6 @@ public class XmEntitySearchResource {
     }
 
     @GetMapping("/_search-with-typekey/xm-entities")
-    
     @PreAuthorize("hasPermission({'typeKey': #typeKey, 'query': #query}, 'XMENTITY.SEARCH.TYPEKEY.QUERY')")
     @PrivilegeDescription("Privilege to search for the xmEntity corresponding to the query(not required) and typeKey")
     public ResponseEntity<List<XmEntityDto>> searchByTypeKeyAndQuery(
@@ -114,7 +110,6 @@ public class XmEntitySearchResource {
     }
 
     @GetMapping("/_search-with-typekey-and-template/xm-entities")
-    
     @PreAuthorize("hasPermission({'typeKey': #typeKey, 'template': #template}, 'XMENTITY.SEARCH.TYPEKEY.TEMPLATE')")
     @PrivilegeDescription("Privilege to search for the xmEntity corresponding to the template(not required) and typeKey")
     public ResponseEntity<List<XmEntityDto>> searchByTypeKeyAndQuery(

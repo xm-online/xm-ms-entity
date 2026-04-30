@@ -28,7 +28,6 @@ public class ElasticsearchIndexResource {
      * POST  /elasticsearch/index -> Reindex all Elasticsearch documents
      */
     @PostMapping("/elasticsearch/index")
-    
     @PreAuthorize("hasPermission(null, 'ELASTICSEARCH.INDEX')")
     @PrivilegeDescription("Privilege to reindex all Elasticsearch documents")
     public ResponseEntity<Void> reindexAll() {
