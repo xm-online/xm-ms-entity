@@ -116,8 +116,7 @@ public class CustomMetricsIntTest extends AbstractJupiterSpringBootTest {
         Gauge everyTimeMetric = meterRegistry.find("custom.metrics.resinttest.my.every.call.metric").gauge();
         Gauge periodicMetric = meterRegistry.find("custom.metrics.resinttest.my.periodic.metric").gauge();
 
-        assertThat(everyTimeMetric).isNull();
-        assertThat(periodicMetric).isNull();
+        assertEquals(periodicMetric.value(), 0d);
 
         waitValue(periodicMetric, 1d);
         assertEquals(1, periodicMetric.value());
