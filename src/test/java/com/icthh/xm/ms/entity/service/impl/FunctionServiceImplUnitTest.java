@@ -20,6 +20,7 @@ import com.icthh.xm.ms.entity.service.XmEntitySpecService;
 import com.icthh.xm.ms.entity.service.json.JsonValidationService;
 import com.icthh.xm.ms.entity.service.mapper.FunctionResultMapper;
 import com.icthh.xm.ms.entity.service.mapper.FunctionResultMapperImpl;
+import java.util.Locale;
 import org.assertj.core.util.Lists;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeEach;
@@ -519,6 +520,7 @@ public class FunctionServiceImplUnitTest extends AbstractJupiterUnitTest {
 
     @Test
     public void validationFailOnInvalidFunctionInputWhenValidationEnabled() {
+        Locale.setDefault(Locale.US);
         String exceptionMessage = "$.numberArgument: string found, number expected";
 
         FunctionSpec spec = generateFunctionSpec(true);
@@ -535,6 +537,7 @@ public class FunctionServiceImplUnitTest extends AbstractJupiterUnitTest {
 
     @Test
     public void validationFailOnInvalidFunctionWithEntityIdInputWhenValidationEnabled() {
+        Locale.setDefault(Locale.US);
         String exceptionMessage = "$.numberArgument: string found, number expected";
 
         FunctionSpec spec = generateFunctionSpec(true);
