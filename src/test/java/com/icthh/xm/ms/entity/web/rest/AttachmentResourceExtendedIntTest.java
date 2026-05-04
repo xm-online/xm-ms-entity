@@ -42,12 +42,12 @@ import org.junit.jupiter.api.Test;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
 import org.springframework.http.converter.json.JacksonJsonHttpMessageConverter;
 
 import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import org.springframework.test.context.transaction.BeforeTransaction;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -106,7 +106,7 @@ public class AttachmentResourceExtendedIntTest extends AbstractJupiterSpringBoot
     @Autowired
     private XmEntityRepository xmEntityRepository;
 
-    @SpyBean
+    @MockitoSpyBean
     private XmEntitySpecService xmEntitySpecService;
 
     @Autowired
@@ -115,7 +115,7 @@ public class AttachmentResourceExtendedIntTest extends AbstractJupiterSpringBoot
     @Autowired
     private ApplicationProperties applicationProperties;
 
-    @SpyBean
+    @MockitoSpyBean
     private XmEntityTenantConfigService xmEntityTenantConfigService;
 
     @Autowired
