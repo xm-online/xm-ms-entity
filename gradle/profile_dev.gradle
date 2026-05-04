@@ -26,6 +26,7 @@ bootRun {
 processResources {
     inputs.property('version', version)
     inputs.property('springProfiles', springProfiles)
+    inputs.property('logbackLoglevel', 'DEBUG')
     filesMatching("**/application.yml") {
         filter {
             it.replace("@project.version@", version)
@@ -34,6 +35,11 @@ processResources {
     filesMatching("**/bootstrap.yml") {
         filter {
             it.replace("@spring.profiles.active@", springProfiles)
+        }
+    }
+    filesMatching("**/logback-spring.xml") {
+        filter {
+            it.replace("#logback.loglevel#", "DEBUG")
         }
     }
 }
