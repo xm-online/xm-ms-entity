@@ -6,7 +6,7 @@ spring:
 management:
   tracing:
     propagation:
-      type: b3
+      type: w3c
     enabled: true
     sampling:
       probability: 1.0 # report 100% of traces

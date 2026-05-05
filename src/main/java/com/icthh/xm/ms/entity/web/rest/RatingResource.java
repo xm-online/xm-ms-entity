@@ -1,6 +1,6 @@
 package com.icthh.xm.ms.entity.web.rest;
 
-import com.codahale.metrics.annotation.Timed;
+
 import com.icthh.xm.commons.exceptions.BusinessException;
 import com.icthh.xm.commons.exceptions.ErrorConstants;
 import com.icthh.xm.commons.permission.annotation.PrivilegeDescription;
@@ -55,7 +55,7 @@ public class RatingResource {
      * @throws URISyntaxException if the Location URI syntax is incorrect
      */
     @PostMapping("/ratings")
-    @Timed
+    
     @PreAuthorize("hasPermission({'rating': #rating}, 'RATING.CREATE')")
     @PrivilegeDescription("Privilege to create a new rating")
     public ResponseEntity<RatingDto> createRating(@Valid @RequestBody RatingDto rating) throws URISyntaxException {
@@ -79,7 +79,7 @@ public class RatingResource {
      * @throws URISyntaxException if the Location URI syntax is incorrect
      */
     @PutMapping("/ratings")
-    @Timed
+    
     @PreAuthorize("hasPermission({'id': #rating.id, 'newRating': #rating}, 'rating', 'RATING.UPDATE')")
     @PrivilegeDescription("Privilege to updates an existing rating")
     public ResponseEntity<RatingDto> updateRating(@Valid @RequestBody RatingDto rating) throws URISyntaxException {
@@ -99,7 +99,7 @@ public class RatingResource {
      * @return the ResponseEntity with status 200 (OK) and the list of ratings in body
      */
     @GetMapping("/ratings")
-    @Timed
+    
     public List<RatingDto> getAllRatings() {
         return ratingFacade.findAll(null);
     }
@@ -111,7 +111,7 @@ public class RatingResource {
      * @return the ResponseEntity with status 200 (OK) and with body the rating, or with status 404 (Not Found)
      */
     @GetMapping("/ratings/{id}")
-    @Timed
+    
     @PostAuthorize("hasPermission({'returnObject': returnObject.body}, 'RATING.GET_LIST.ITEM')")
     @PrivilegeDescription("Privilege to get the rating by id")
     public ResponseEntity<RatingDto> getRating(@PathVariable Long id) {
@@ -120,7 +120,7 @@ public class RatingResource {
     }
 
     @GetMapping("/ratings/{id}/votes/count")
-    @Timed
+    
     @PostAuthorize("hasPermission({'returnObject': returnObject.body}, 'RATING.GET_LIST.ITEM.VOTES.COUNT')")
     @PrivilegeDescription("Privilege to get the rating by id")
     public ResponseEntity<RatingCountDto> getVotesCount(@PathVariable Long id) {
@@ -135,7 +135,7 @@ public class RatingResource {
      * @return the ResponseEntity with status 200 (OK)
      */
     @DeleteMapping("/ratings/{id}")
-    @Timed
+    
     @PreAuthorize("hasPermission({'id': #id}, 'rating', 'RATING.DELETE')")
     @PrivilegeDescription("Privilege to delete the rating by id")
     public ResponseEntity<Void> deleteRating(@PathVariable Long id) {

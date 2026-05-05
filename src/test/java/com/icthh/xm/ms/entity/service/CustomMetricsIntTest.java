@@ -5,13 +5,11 @@ import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_TENANT_
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.awaitility.Awaitility.await;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.when;
 
-import com.codahale.metrics.Gauge;
-import com.codahale.metrics.MetricRegistry;
+import io.micrometer.core.instrument.Gauge;
+import io.micrometer.core.instrument.MeterRegistry;
 import com.icthh.xm.commons.lep.XmLepScriptConfigServerResourceLoader;
 import com.icthh.xm.commons.security.XmAuthenticationContext;
 import com.icthh.xm.commons.security.XmAuthenticationContextHolder;
@@ -27,6 +25,7 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
@@ -45,6 +44,8 @@ import org.springframework.test.context.transaction.BeforeTransaction;
 @WithMockUser(authorities = {"SUPER-ADMIN"})
 public class CustomMetricsIntTest extends AbstractJupiterSpringBootTest {
 
+    private static final String METRICS_PATH_CONFIG = "/config/tenants/RESINTTEST/entity/metrics.yml";
+
     @Autowired
     private TenantContextHolder tenantContextHolder;
 
@@ -58,7 +59,7 @@ public class CustomMetricsIntTest extends AbstractJupiterSpringBootTest {
     private LepManager lepManager;
 
     @Autowired
-    private MetricRegistry metricRegistry;
+    private MeterRegistry meterRegistry;
 
     @Autowired
     private CustomMetricsConfiguration customMetricsConfiguration;
@@ -86,18 +87,41 @@ public class CustomMetricsIntTest extends AbstractJupiterSpringBootTest {
             ctx.setValue(THREAD_CONTEXT_KEY_AUTH_CONTEXT, authContextHolder.getContext());
         });
 
+        cleanupMetrics();
     }
 
     @AfterEach
     public void tearDown() {
         lepManager.endThreadContext();
         tenantContextHolder.getPrivilegedContext().destroyCurrentContext();
+        cleanupMetrics();
+    }
+
+    private void cleanupMetrics() {
+        customMetricsConfiguration.onRefresh(METRICS_PATH_CONFIG, null);
     }
 
     @SneakyThrows
     public static String loadFile(String path) {
         InputStream cfgInputStream = new ClassPathResource(path).getInputStream();
         return IOUtils.toString(cfgInputStream, UTF_8);
+    }
+
+    @Test
+    @SneakyThrows
+    public void testCustomMetricsReturnNaNWhenSchedulerNotRun() {
+        lepResourceLoader.onRefresh("/config/tenants/RESINTTEST/entity/lep/metrics/Metric$$my$periodic$metric$$around.groovy",
+                                    loadFile("config/testlep/metrics/Metric$$my$periodic$metric$$around.groovy"));
+
+        String newConfig = "---\n" +
+                "- name: my.periodic.metric.second\n" +
+                "  updatePeriodSeconds: 2\n";
+
+        customMetricsConfiguration.onRefresh(METRICS_PATH_CONFIG, newConfig);
+
+        Gauge periodicMetric = meterRegistry.find("custom.metrics.resinttest.my.periodic.metric.second").gauge();
+        
+        assertEquals(Double.NaN, periodicMetric.value(), "Periodic metric should return NaN before scheduler runs");
     }
 
     @Test
@@ -109,35 +133,37 @@ public class CustomMetricsIntTest extends AbstractJupiterSpringBootTest {
         lepResourceLoader.onRefresh("/config/tenants/RESINTTEST/entity/lep/metrics/Metric$$my$periodic$metric$$around.groovy",
                                     loadFile("config/testlep/metrics/Metric$$my$periodic$metric$$around.groovy"));
 
-        customMetricsConfiguration.onRefresh("/config/tenants/RESINTTEST/entity/metrics.yml",
+        customMetricsConfiguration.onRefresh(METRICS_PATH_CONFIG,
                                              loadFile("config/metrics.yml"));
 
-        Gauge everyTimeMetric = metricRegistry.getGauges().get("custom.metrics.resinttest.my.every.call.metric");
-        Gauge periodicMetric = metricRegistry.getGauges().get("custom.metrics.resinttest.my.periodic.metric");
+        Gauge everyTimeMetric = meterRegistry.find("custom.metrics.resinttest.my.every.call.metric").gauge();
+        Gauge periodicMetric = meterRegistry.find("custom.metrics.resinttest.my.periodic.metric").gauge();
 
-        assertNull(periodicMetric.getValue());
-        assertNull(periodicMetric.getValue());
+        assertEquals(Double.NaN, periodicMetric.value());
 
-        waitValue(periodicMetric, 1);
-        assertEquals(1, periodicMetric.getValue());
-        assertEquals(1, periodicMetric.getValue());
-        assertEquals(1, periodicMetric.getValue());
-        waitValue(periodicMetric, 2);
-        assertEquals(2, periodicMetric.getValue());
-        long time = waitValue(periodicMetric, 3);
-        assertEquals(3, periodicMetric.getValue());
+        waitValue(periodicMetric, 1d);
+        assertEquals(1, periodicMetric.value());
+        assertEquals(1, periodicMetric.value());
+        assertEquals(1, periodicMetric.value());
+        waitValue(periodicMetric, 2d);
+        assertEquals(2, periodicMetric.value());
+        long time = waitValue(periodicMetric, 3d);
+        assertEquals(3, periodicMetric.value());
         log.info("result time -> {}", time);
-        assertTrue(time + " less than 2000", (time/1000_000L) > 1900);
-        assertTrue(time + " more than 2100", (time/1000_000L) < 2100);
+        Assertions.assertTrue((time/1000_000L) > 1900, time + " less than 2000");
+        Assertions.assertTrue((time/1000_000L) < 2100, time + " more than 2100");
 
-        assertEquals(1, everyTimeMetric.getValue());
-        assertEquals(2, everyTimeMetric.getValue());
-        assertEquals(3, everyTimeMetric.getValue());
+        assertEquals(1, everyTimeMetric.value());
+        assertEquals(2, everyTimeMetric.value());
+        assertEquals(3, everyTimeMetric.value());
     }
 
-    private long waitValue(Gauge periodicMetric, Integer value) {
+    private long waitValue(Gauge periodicMetric, Double value) {
         long startTime = System.nanoTime();
-        await().atMost(5, SECONDS).until(() -> value.equals(periodicMetric.getValue()));
+        await().atMost(5, SECONDS).until(() -> {
+            Double currentValue = periodicMetric.value();
+            return !currentValue.isNaN() && value.equals(currentValue);
+        });
         return System.nanoTime() - startTime;
     }
 
