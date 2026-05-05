@@ -157,11 +157,6 @@ test {
     include '**/*UnitTest*'
     include '**/*IntTest*'
 
-    // to run all test that was not categorized
-//    useJUnit {
-//        excludeCategories(testCategories)
-//    }
-
     // uncomment if the tests reports are not generated
     // see https://github.com/jhipster/generator-jhipster/pull/2771 and https://github.com/jhipster/generator-jhipster/pull/4484
     // ignoreFailures true
@@ -444,8 +439,8 @@ dependencies {
     liquibaseRuntime "com.h2database:h2"
     testImplementation "com.adobe.testing:s3mock-junit4:${s3mockVersion}"
     testImplementation "org.awaitility:awaitility:${awaitilityVersion}"
-    testImplementation "com.squareup.okhttp3:okhttp:4.12.0"
-    testImplementation "com.squareup.okhttp3:mockwebserver:4.12.0"
+    testImplementation "com.squareup.okhttp3:okhttp:${ohHttp3Version}"
+    testImplementation "com.squareup.okhttp3:mockwebserver:${ohHttp3Version}"
     testImplementation "org.testcontainers:testcontainers:${testcontainersVersion}"
     testImplementation "org.testcontainers:junit-jupiter:${testcontainersVersion}"
     testImplementation "org.testcontainers:postgresql:${testcontainersVersion}"
