@@ -6,6 +6,7 @@ import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
 import com.icthh.xm.commons.tenant.TenantKey;
 import com.icthh.xm.ms.entity.AbstractJupiterSpringBootTest;
+import java.util.concurrent.Executor;
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -54,6 +55,9 @@ public class MailServiceIntTest extends AbstractJupiterSpringBootTest {
      */
     @MockitoBean
     ThreadPoolTaskScheduler periodicMetricsTaskScheduler;
+
+    @MockitoBean(name = "applicationTaskExecutor")
+    private Executor applicationTaskExecutor;
 
     @Autowired
     private TenantContextHolder tenantContextHolder;
