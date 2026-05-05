@@ -6,7 +6,6 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.Mockito.when;
 
 import io.micrometer.core.instrument.Gauge;
@@ -44,6 +43,8 @@ import org.springframework.test.context.transaction.BeforeTransaction;
 @Slf4j
 @WithMockUser(authorities = {"SUPER-ADMIN"})
 public class CustomMetricsIntTest extends AbstractJupiterSpringBootTest {
+
+    private static final String METRICS_PATH_CONFIG = "/config/tenants/RESINTTEST/entity/metrics.yml";
 
     @Autowired
     private TenantContextHolder tenantContextHolder;
@@ -86,18 +87,41 @@ public class CustomMetricsIntTest extends AbstractJupiterSpringBootTest {
             ctx.setValue(THREAD_CONTEXT_KEY_AUTH_CONTEXT, authContextHolder.getContext());
         });
 
+        cleanupMetrics();
     }
 
     @AfterEach
     public void tearDown() {
         lepManager.endThreadContext();
         tenantContextHolder.getPrivilegedContext().destroyCurrentContext();
+        cleanupMetrics();
+    }
+
+    private void cleanupMetrics() {
+        customMetricsConfiguration.onRefresh(METRICS_PATH_CONFIG, null);
     }
 
     @SneakyThrows
     public static String loadFile(String path) {
         InputStream cfgInputStream = new ClassPathResource(path).getInputStream();
         return IOUtils.toString(cfgInputStream, UTF_8);
+    }
+
+    @Test
+    @SneakyThrows
+    public void testCustomMetricsReturnNaNWhenSchedulerNotRun() {
+        lepResourceLoader.onRefresh("/config/tenants/RESINTTEST/entity/lep/metrics/Metric$$my$periodic$metric$$around.groovy",
+                                    loadFile("config/testlep/metrics/Metric$$my$periodic$metric$$around.groovy"));
+
+        String newConfig = "---\n" +
+                "- name: my.periodic.metric.second\n" +
+                "  updatePeriodSeconds: 2\n";
+
+        customMetricsConfiguration.onRefresh(METRICS_PATH_CONFIG, newConfig);
+
+        Gauge periodicMetric = meterRegistry.find("custom.metrics.resinttest.my.periodic.metric.second").gauge();
+        
+        assertEquals(Double.NaN, periodicMetric.value(), "Periodic metric should return NaN before scheduler runs");
     }
 
     @Test
@@ -109,13 +133,13 @@ public class CustomMetricsIntTest extends AbstractJupiterSpringBootTest {
         lepResourceLoader.onRefresh("/config/tenants/RESINTTEST/entity/lep/metrics/Metric$$my$periodic$metric$$around.groovy",
                                     loadFile("config/testlep/metrics/Metric$$my$periodic$metric$$around.groovy"));
 
-        customMetricsConfiguration.onRefresh("/config/tenants/RESINTTEST/entity/metrics.yml",
+        customMetricsConfiguration.onRefresh(METRICS_PATH_CONFIG,
                                              loadFile("config/metrics.yml"));
 
         Gauge everyTimeMetric = meterRegistry.find("custom.metrics.resinttest.my.every.call.metric").gauge();
         Gauge periodicMetric = meterRegistry.find("custom.metrics.resinttest.my.periodic.metric").gauge();
 
-        assertEquals(periodicMetric.value(), Double.NaN);
+        assertEquals(Double.NaN, periodicMetric.value());
 
         waitValue(periodicMetric, 1d);
         assertEquals(1, periodicMetric.value());
@@ -136,7 +160,10 @@ public class CustomMetricsIntTest extends AbstractJupiterSpringBootTest {
 
     private long waitValue(Gauge periodicMetric, Double value) {
         long startTime = System.nanoTime();
-        await().atMost(5, SECONDS).until(() -> value.equals(periodicMetric.value()));
+        await().atMost(5, SECONDS).until(() -> {
+            Double currentValue = periodicMetric.value();
+            return !currentValue.isNaN() && value.equals(currentValue);
+        });
         return System.nanoTime() - startTime;
     }
 
