@@ -322,16 +322,12 @@ dependencies {
     implementation "org.springdoc:springdoc-openapi-starter-webmvc-ui:${springdocVersion}"
     implementation "org.springframework.cloud:spring-cloud-starter-loadbalancer"
     implementation "org.springframework.cloud:spring-cloud-starter-circuitbreaker-resilience4j"
-    implementation "org.springframework.boot:spring-boot-micrometer-tracing-brave"
 
 
     implementation("io.springfox:springfox-swagger2:${springfoxVersion}") {
         exclude module: "mapstruct"
     }
-    implementation 'io.micrometer:micrometer-tracing'
-    implementation 'io.micrometer:micrometer-core'
-    implementation 'io.micrometer:micrometer-observation'
-    implementation "io.micrometer:micrometer-tracing-bridge-brave"
+    implementation 'org.springframework.boot:spring-boot-starter-opentelemetry'
     implementation "io.springfox:springfox-bean-validators:${springfoxVersion}"
     implementation "org.postgresql:postgresql:${postgresqlVersion}"
     liquibaseRuntime "org.postgresql:postgresql:${postgresqlVersion}"
