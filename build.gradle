@@ -263,12 +263,12 @@ dependencies {
         }
     }
 
-    implementation "tools.jackson.core:jackson-databind:3.0.0"
+    implementation "tools.jackson.core:jackson-databind"
 
     // Source: https://mvnrepository.com/artifact/tools.jackson.dataformat/jackson-dataformat-csv
-    implementation("tools.jackson.dataformat:jackson-dataformat-csv:3.1.1")
+    implementation("tools.jackson.dataformat:jackson-dataformat-csv:${jacksonCsvVersion}")
     /// Source: https://mvnrepository.com/artifact/tools.jackson.module/jackson-module-jsonSchema
-    implementation("tools.jackson.module:jackson-module-jsonSchema:3.1.1")
+    implementation("tools.jackson.module:jackson-module-jsonSchema:${jacksonModuleVersion}")
 
     implementation "io.micrometer:micrometer-registry-prometheus"
     implementation "net.logstash.logback:logstash-logback-encoder"
