@@ -46,6 +46,9 @@ public class CustomMetricsConfiguration implements RefreshableConfiguration {
     public void onRefresh(final String updatedKey, final String config) {
         try {
             String tenant = this.matcher.extractUriTemplateVariables(mappingPath, updatedKey).get("tenantName");
+            String metricsNamePrefix = METRICS_PREFIX + tenant.toLowerCase();
+            removeMetrics(metricsNamePrefix);
+            
             if (isBlank(config)) {
                 this.configuration.remove(tenant);
                 periodMetricsService.scheduleCustomMetric(emptyList(), tenant);
@@ -56,9 +59,6 @@ public class CustomMetricsConfiguration implements RefreshableConfiguration {
             this.configuration.put(tenant, metrics);
 
             log.info("Metric configuration was updated for tenant [{}] by key [{}]", tenant, updatedKey);
-            String metricsNamePrefix = METRICS_PREFIX + tenant.toLowerCase();
-
-            removeMetrics(metricsNamePrefix);
             registerMetrics(metrics, metricsNamePrefix, tenant);
 
             periodMetricsService.scheduleCustomMetric(metrics, tenant);
@@ -69,7 +69,8 @@ public class CustomMetricsConfiguration implements RefreshableConfiguration {
 
     private void removeMetrics(String metricsNamePrefix) {
         meterRegistry.getMeters().stream()
-            .filter(meter -> meter.getId().getName().startsWith(metricsNamePrefix))
+            .filter(meter -> meter.getId().getName().equals(metricsNamePrefix) ||
+                          meter.getId().getName().startsWith(metricsNamePrefix + "."))
             .forEach(meterRegistry::remove);
     }
 
