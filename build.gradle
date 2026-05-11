@@ -327,7 +327,6 @@ dependencies {
     implementation("io.springfox:springfox-swagger2:${springfoxVersion}") {
         exclude module: "mapstruct"
     }
-    implementation 'org.springframework.boot:spring-boot-starter-opentelemetry'
     implementation "io.springfox:springfox-bean-validators:${springfoxVersion}"
     implementation "org.postgresql:postgresql:${postgresqlVersion}"
     liquibaseRuntime "org.postgresql:postgresql:${postgresqlVersion}"
