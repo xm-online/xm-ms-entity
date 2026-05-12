@@ -1,7 +1,8 @@
 package com.icthh.xm.ms.entity.service.spec;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import com.icthh.xm.commons.tenant.YamlMapperUtils;
+import tools.jackson.databind.MapperFeature;
+import tools.jackson.databind.ObjectMapper;
 import com.icthh.xm.commons.config.domain.Configuration;
 import com.icthh.xm.commons.domain.DefinitionSpec;
 import com.icthh.xm.commons.lep.spring.LepService;
@@ -29,6 +30,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
+import tools.jackson.dataformat.yaml.YAMLMapper;
 
 import static com.icthh.xm.ms.entity.service.json.JsonConfigurationListener.XM_ENTITY_SPEC_KEY;
 import static com.icthh.xm.ms.entity.util.CustomCollectionUtils.nullSafe;
@@ -54,7 +56,7 @@ public class XmEntitySpecContextService {
     // now we have cycle entitySpecService -> EntityService -> LepContextFactory -> <lep-s related> -> entitySpecCustomizer -> entitySpecService
     private final AtomicBoolean initialized = new AtomicBoolean(false);
 
-    private final ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+    private final ObjectMapper mapper = YamlMapperUtils.yamlDefaultMapper();
     private final ConcurrentHashMap<String, Map<String, TypeSpec>> typesByTenant = new ConcurrentHashMap<>();
     // tenant -> filePath -> fileContent
     private final ConcurrentHashMap<String, Map<String, String>> typesByTenantByFile = new ConcurrentHashMap<>();

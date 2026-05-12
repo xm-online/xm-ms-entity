@@ -1,6 +1,6 @@
 package com.icthh.xm.ms.entity.web.rest;
 
-import com.codahale.metrics.annotation.Timed;
+
 import com.icthh.xm.commons.exceptions.BusinessException;
 import com.icthh.xm.commons.exceptions.ErrorConstants;
 import com.icthh.xm.commons.permission.annotation.PrivilegeDescription;
@@ -60,7 +60,7 @@ public class VoteResource {
      * @throws URISyntaxException if the Location URI syntax is incorrect
      */
     @PostMapping("/votes")
-    @Timed
+    
     @PreAuthorize("hasPermission({'vote': #vote}, 'VOTE.CREATE')")
     @PrivilegeDescription("Privilege to create a new vote")
     public ResponseEntity<VoteDto> createVote(@Valid @RequestBody VoteDto vote) throws URISyntaxException {
@@ -84,7 +84,7 @@ public class VoteResource {
      * @throws URISyntaxException if the Location URI syntax is incorrect
      */
     @PutMapping("/votes")
-    @Timed
+    
     @PreAuthorize("hasPermission({'id': #vote.id, 'newVote': #vote}, 'vote', 'VOTE.UPDATE')")
     @PrivilegeDescription("Privilege to updates an existing vote")
     public ResponseEntity<VoteDto> updateVote(@Valid @RequestBody VoteDto vote) throws URISyntaxException {
@@ -105,7 +105,7 @@ public class VoteResource {
      * @return the ResponseEntity with status 200 (OK) and the list of votes in body
      */
     @GetMapping("/votes")
-    @Timed
+    
     public ResponseEntity<List<VoteDto>> getAllVotes(@ApiParam Pageable pageable) {
         Page<VoteDto> page = voteFacade.findAll(pageable, null);
         HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(page, "/api/votes");
@@ -119,7 +119,7 @@ public class VoteResource {
      * @return the ResponseEntity with status 200 (OK) and with body the vote, or with status 404 (Not Found)
      */
     @GetMapping("/votes/{id}")
-    @Timed
+    
     @PostAuthorize("hasPermission({'returnObject': returnObject.body}, 'VOTE.GET_LIST.ITEM')")
     @PrivilegeDescription("Privilege to get vote by id")
     public ResponseEntity<VoteDto> getVote(@PathVariable Long id) {
@@ -134,7 +134,7 @@ public class VoteResource {
      * @return the ResponseEntity with status 200 (OK)
      */
     @DeleteMapping("/votes/{id}")
-    @Timed
+    
     @PreAuthorize("hasPermission({'id': #id}, 'vote', 'VOTE.DELETE')")
     @PrivilegeDescription("Privilege to delete the vote by id")
     public ResponseEntity<Void> deleteVote(@PathVariable Long id) {

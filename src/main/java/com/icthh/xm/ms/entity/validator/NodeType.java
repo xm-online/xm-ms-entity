@@ -1,7 +1,7 @@
 package com.icthh.xm.ms.entity.validator;
 
-import com.fasterxml.jackson.core.JsonToken;
-import com.fasterxml.jackson.databind.JsonNode;
+import tools.jackson.core.JsonToken;
+import tools.jackson.databind.JsonNode;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import lombok.AllArgsConstructor;

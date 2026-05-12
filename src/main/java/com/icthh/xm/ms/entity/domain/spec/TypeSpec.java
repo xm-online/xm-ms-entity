@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import tools.jackson.databind.annotation.JsonDeserialize;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({"key", "name", "namePattern", "nameValidationPattern", "descriptionPattern", "pluralName", "isApp", "isAbstract",
@@ -25,6 +26,7 @@ import java.util.Set;
 @Builder(toBuilder = true)
 @AllArgsConstructor
 @NoArgsConstructor
+@JsonDeserialize(builder = TypeSpec.TypeSpecBuilder.class)
 public class TypeSpec implements DataSpec, SpecificationItem {
 
     @JsonProperty("key")

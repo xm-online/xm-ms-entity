@@ -18,8 +18,6 @@ spring:
         name: entity
     main:
       allow-bean-definition-overriding: true
-    jackson:
-        serialization.write_dates_as_timestamps: false
     cache:
         type: none
     datasource:

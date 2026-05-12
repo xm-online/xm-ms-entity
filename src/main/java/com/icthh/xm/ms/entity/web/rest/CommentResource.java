@@ -1,6 +1,6 @@
 package com.icthh.xm.ms.entity.web.rest;
 
-import com.codahale.metrics.annotation.Timed;
+
 import com.icthh.xm.commons.exceptions.BusinessException;
 import com.icthh.xm.commons.exceptions.ErrorConstants;
 import com.icthh.xm.commons.permission.annotation.PrivilegeDescription;
@@ -60,7 +60,7 @@ public class CommentResource {
      * @throws URISyntaxException if the Location URI syntax is incorrect
      */
     @PostMapping("/comments")
-    @Timed
+    
     @PreAuthorize("hasPermission({'comment': #comment}, 'COMMENT.CREATE')")
     @PrivilegeDescription("Privilege to create a new comment")
     public ResponseEntity<CommentDto> createComment(@Valid @RequestBody CommentDto comment) throws URISyntaxException {
@@ -84,7 +84,7 @@ public class CommentResource {
      * @throws URISyntaxException if the Location URI syntax is incorrect
      */
     @PutMapping("/comments")
-    @Timed
+    
     @PreAuthorize("hasPermission({'id': #comment.id, 'newComment': #comment}, 'comment', 'COMMENT.UPDATE')")
     @PrivilegeDescription("Privilege to updates an existing comment")
     public ResponseEntity<CommentDto> updateComment(@Valid @RequestBody CommentDto comment) throws URISyntaxException {
@@ -105,7 +105,7 @@ public class CommentResource {
      * @return the ResponseEntity with status 200 (OK) and the list of comments in body
      */
     @GetMapping("/comments")
-    @Timed
+    
     public ResponseEntity<List<CommentDto>> getAllComments(@ApiParam Pageable pageable) {
         Page<CommentDto> page = commentFacade.findAll(pageable, null);
         HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(page, "/api/comments");
@@ -119,7 +119,7 @@ public class CommentResource {
      * @return the ResponseEntity with status 200 (OK) and with body the comment, or with status 404 (Not Found)
      */
     @GetMapping("/comments/{id}")
-    @Timed
+    
     @PostAuthorize("hasPermission({'returnObject': returnObject.body}, 'COMMENT.GET_LIST.ITEM')")
     @PrivilegeDescription("Privilege to get the comment by id")
     public ResponseEntity<CommentDto> getComment(@PathVariable Long id) {
@@ -134,7 +134,7 @@ public class CommentResource {
      * @return the ResponseEntity with status 200 (OK)
      */
     @DeleteMapping("/comments/{id}")
-    @Timed
+    
     @PreAuthorize("hasPermission({'id': #id}, 'comment', 'COMMENT.DELETE')")
     @PrivilegeDescription("Privilege to delete the comment by id")
     public ResponseEntity<Void> deleteComment(@PathVariable Long id) {
@@ -143,7 +143,7 @@ public class CommentResource {
     }
 
     @GetMapping("/xm-entities/{id}/comments")
-    @Timed
+    
     public ResponseEntity<List<CommentDto>> getCommentsByXmEntity(@PathVariable Long id, @ApiParam Pageable pageable) {
         Page<CommentDto> page = commentFacade.findByXmEntity(id, pageable, null);
         HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(page, "/xm-entities/" + id + "/comments");

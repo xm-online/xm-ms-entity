@@ -326,7 +326,7 @@ public class MultipartMixedConverter implements HttpMessageConverter<MultiValueM
 
         private void writeHeaders() throws IOException {
             if (!this.headersWritten) {
-                for (Map.Entry<String, List<String>> entry : this.headers.entrySet()) {
+                for (Map.Entry<String, List<String>> entry : this.headers.headerSet()) {
                     byte[] headerName = getAsciiBytes(entry.getKey());
                     for (String headerValueString : entry.getValue()) {
                         byte[] headerValue = getAsciiBytes(headerValueString);

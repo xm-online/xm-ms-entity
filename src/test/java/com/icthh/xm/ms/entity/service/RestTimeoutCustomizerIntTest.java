@@ -1,20 +1,19 @@
 package com.icthh.xm.ms.entity.service;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
-import static com.github.tomakehurst.wiremock.client.WireMock.get;
-import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
-import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching;
-import static com.github.tomakehurst.wiremock.client.WireMock.verify;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-import com.github.tomakehurst.wiremock.junit5.WireMockTest;
 import com.icthh.xm.ms.entity.AbstractJupiterSpringBootTest;
 import com.icthh.xm.ms.entity.config.LoadBalancerConfiguration;
 import com.icthh.xm.ms.entity.config.RestTemplateConfiguration.PathTimeoutHttpComponentsClientHttpRequestFactory;
 import com.icthh.xm.ms.entity.config.RestTemplateConfiguration.PathTimeoutHttpComponentsClientHttpRequestFactory.PathTimeoutConfig;
 import lombok.extern.slf4j.Slf4j;
+import okhttp3.mockwebserver.MockWebServer;
+import okhttp3.mockwebserver.MockResponse;
+import okhttp3.mockwebserver.RecordedRequest;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,9 +23,10 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
 
+import java.io.IOException;
+
 @Slf4j
 @ContextConfiguration(classes = {LoadBalancerConfiguration.class})
-@WireMockTest(httpPort = 8081)
 @Disabled
 //TODO Migrate to test container
 public class RestTimeoutCustomizerIntTest extends AbstractJupiterSpringBootTest {
@@ -38,12 +38,27 @@ public class RestTimeoutCustomizerIntTest extends AbstractJupiterSpringBootTest 
     @Autowired
     PathTimeoutHttpComponentsClientHttpRequestFactory requestFactory;
 
+    private MockWebServer mockWebServer;
+
+    @BeforeEach
+    public void setUp() throws IOException {
+        mockWebServer = new MockWebServer();
+        mockWebServer.start(8081);
+    }
+
+    @AfterEach
+    public void tearDown() throws IOException {
+        if (mockWebServer != null) {
+            mockWebServer.shutdown();
+        }
+    }
+
     @Test
     public void testCallWithTimeout() {
         Assertions.assertThrows(ResourceAccessException.class, () -> {
             String expectedUri = "http://entity/test/sleep";
 
-            stubFor(get(urlEqualTo("/test/sleep")).willReturn(aResponse().withFixedDelay(100).withStatus(200)));
+            mockWebServer.enqueue(new MockResponse().setResponseCode(200).setBodyDelay(100, java.util.concurrent.TimeUnit.MILLISECONDS));
             requestFactory.addPathTimeoutConfig(PathTimeoutConfig.builder()
                 .httpMethod(HttpMethod.GET)
                 .pathPattern("/test/sleep")
@@ -56,13 +71,16 @@ public class RestTimeoutCustomizerIntTest extends AbstractJupiterSpringBootTest 
     @Test
     public void testCallWithoutTimeout() throws Exception {
         String expectedUri = "http://entity/test/sleep";
-        stubFor(get(urlEqualTo("/test/sleep")).willReturn(aResponse().withStatus(200)));
+        mockWebServer.enqueue(new MockResponse().setResponseCode(200));
         requestFactory.addPathTimeoutConfig(PathTimeoutConfig.builder()
                                                              .httpMethod(HttpMethod.GET)
                                                              .pathPattern("/test/sleep")
                                                              .readTimeout(50).build());
         restTemplate.getForObject(expectedUri, Void.class);
-        verify(getRequestedFor(urlMatching("/test/sleep")));
+        
+        RecordedRequest recordedRequest = mockWebServer.takeRequest();
+        assertNotNull(recordedRequest);
+        assertEquals("/test/sleep", recordedRequest.getPath());
     }
 
 }

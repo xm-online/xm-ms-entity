@@ -1,6 +1,8 @@
 package com.icthh.xm.ms.entity.lep.transform;
 
 
+import static groovyjarjarasm.asm.Opcodes.ACC_PUBLIC;
+import static groovyjarjarasm.asm.Opcodes.ACC_TRANSIENT;
 import static org.codehaus.groovy.ast.ClassHelper.STRING_TYPE;
 import static org.codehaus.groovy.ast.ClassHelper.make;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.args;
@@ -25,7 +27,6 @@ import static org.codehaus.groovy.ast.tools.GeneralUtils.stmt;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.ternaryX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.varX;
 
-import aj.org.objectweb.asm.Opcodes;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -105,7 +106,7 @@ public class LepDataClassTransformation extends AbstractASTTransformation {
         }
 
         if (!hasEmptyConstructor(classNode)) {
-            classNode.addConstructor(Opcodes.ACC_PUBLIC, new Parameter[0], ClassNode.EMPTY_ARRAY, new BlockStatement());
+            classNode.addConstructor(ACC_PUBLIC, new Parameter[0], ClassNode.EMPTY_ARRAY, new BlockStatement());
         }
 
         Parameter mapParam = new Parameter(new ClassNode(Map.class), "data");
@@ -122,8 +123,7 @@ public class LepDataClassTransformation extends AbstractASTTransformation {
 
         callMapCustomization(classNode, mapParam, body);
 
-        classNode.addConstructor(
-            Opcodes.ACC_PUBLIC,
+        classNode.addConstructor(ACC_PUBLIC,
             new Parameter[]{mapParam},
             ClassNode.EMPTY_ARRAY,
             body
@@ -148,7 +148,7 @@ public class LepDataClassTransformation extends AbstractASTTransformation {
 
         MethodNode method = new MethodNode(
             "toMap",
-            Opcodes.ACC_PUBLIC,
+            ACC_PUBLIC,
             new ClassNode(Map.class),
             new Parameter[0],
             ClassNode.EMPTY_ARRAY,
@@ -175,7 +175,7 @@ public class LepDataClassTransformation extends AbstractASTTransformation {
     }
 
     private boolean isDataField(FieldNode field) {
-        return !field.isStatic() && !field.getName().contains(DOLLAR) && (field.getModifiers() & Opcodes.ACC_TRANSIENT) == 0 && !isIgnored(field);
+        return !field.isStatic() && !field.getName().contains(DOLLAR) && (field.getModifiers() & ACC_TRANSIENT) == 0 && !isIgnored(field);
     }
 
     private void addPutFieldToMapStatement(FieldNode field, BlockStatement body) {

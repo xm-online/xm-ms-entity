@@ -4,7 +4,6 @@ import static com.jayway.jsonpath.Configuration.defaultConfiguration;
 import static com.jayway.jsonpath.Option.SUPPRESS_EXCEPTIONS;
 import static org.apache.commons.text.StringSubstitutor.DEFAULT_VAR_DEFAULT;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jayway.jsonpath.DocumentContext;
 import com.jayway.jsonpath.JsonPath;
 import lombok.RequiredArgsConstructor;
@@ -14,6 +13,7 @@ import org.apache.commons.text.StringSubstitutor;
 import org.springframework.stereotype.Component;
 
 import java.util.UUID;
+import tools.jackson.databind.ObjectMapper;
 
 @Slf4j
 @Component

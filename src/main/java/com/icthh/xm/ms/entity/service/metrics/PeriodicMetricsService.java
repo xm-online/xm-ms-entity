@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledFuture;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.stereotype.Component;
 
@@ -20,7 +21,7 @@ public class PeriodicMetricsService {
     private final ThreadPoolTaskScheduler periodicMetricsTaskScheduler;
     private final CustomMetricsService customMetricsService;
 
-    public PeriodicMetricsService(CustomMetricsService customMetricsService, ThreadPoolTaskScheduler periodicMetricsTaskScheduler) {
+    public PeriodicMetricsService(CustomMetricsService customMetricsService, @Qualifier("periodicMetricsTaskScheduler") ThreadPoolTaskScheduler periodicMetricsTaskScheduler) {
         this.customMetricsService = customMetricsService;
         this.periodicMetricsTaskScheduler = periodicMetricsTaskScheduler;
     }

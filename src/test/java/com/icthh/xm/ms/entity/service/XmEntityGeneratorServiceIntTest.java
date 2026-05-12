@@ -10,7 +10,8 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import tools.jackson.databind.ObjectMapper;
 import com.icthh.xm.commons.security.XmAuthenticationContext;
 import com.icthh.xm.commons.security.XmAuthenticationContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
@@ -31,7 +32,6 @@ import lombok.val;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.List;
@@ -57,10 +57,10 @@ public class XmEntityGeneratorServiceIntTest extends AbstractJupiterSpringBootTe
     @Autowired
     private ObjectMapper objectMapper;
 
-    @Mock
+    @MockitoBean
     private XmAuthenticationContextHolder authContextHolder;
 
-    @Mock
+    @MockitoBean
     private XmAuthenticationContext context;
 
     @BeforeEach

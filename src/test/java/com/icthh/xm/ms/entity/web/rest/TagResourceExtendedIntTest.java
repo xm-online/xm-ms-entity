@@ -26,7 +26,8 @@ import org.mockito.Spy;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
-import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
+
+import org.springframework.http.converter.json.JacksonJsonHttpMessageConverter;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.transaction.BeforeTransaction;
 import org.springframework.test.web.servlet.MockMvc;
@@ -50,7 +51,7 @@ public class TagResourceExtendedIntTest extends AbstractJupiterSpringBootTest {
     private static final Instant MOCKED_START_DATE = Instant.ofEpochMilli(42L);
 
     @Autowired
-    private MappingJackson2HttpMessageConverter jacksonMessageConverter;
+    private JacksonJsonHttpMessageConverter jacksonMessageConverter;
 
     @Autowired
     private PageableHandlerMethodArgumentResolver pageableArgumentResolver;
@@ -136,7 +137,7 @@ public class TagResourceExtendedIntTest extends AbstractJupiterSpringBootTest {
 
         restTagMockMvc.perform(post("/api/tags")
                                    .contentType(TestUtil.APPLICATION_JSON_UTF8)
-                                   .content(TestUtil.convertObjectToJsonBytes(tag)))
+                                   .content(TestUtil.assertObjectsAndConvertToJsonBytesDto(tag, tagMapper.toDto(tag))))
                       .andExpect(status().isCreated())
                       .andExpect(jsonPath("$.startDate").value(MOCKED_START_DATE.toString()))
         ;
@@ -157,7 +158,7 @@ public class TagResourceExtendedIntTest extends AbstractJupiterSpringBootTest {
         // Create the Tag
         restTagMockMvc.perform(post("/api/tags")
                                    .contentType(TestUtil.APPLICATION_JSON_UTF8)
-                                   .content(TestUtil.convertObjectToJsonBytes(tag)))
+                                   .content(TestUtil.assertObjectsAndConvertToJsonBytesDto(tag, tagMapper.toDto(tag))))
                       .andExpect(status().isCreated())
                       .andExpect(jsonPath("$.startDate").value(MOCKED_START_DATE.toString()));
 

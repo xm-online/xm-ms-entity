@@ -13,7 +13,7 @@ import org.apache.hc.client5.http.config.RequestConfig;
 import org.apache.hc.client5.http.protocol.HttpClientContext;
 import org.apache.hc.core5.http.protocol.HttpContext;
 import org.apache.hc.core5.util.Timeout;
-import org.springframework.boot.web.client.RestTemplateBuilder;
+import org.springframework.boot.restclient.RestTemplateBuilder;
 import org.springframework.cloud.client.loadbalancer.LoadBalanced;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -38,9 +38,9 @@ public class RestTemplateConfiguration {
     @Bean
     public RestTemplate loadBalancedRestTemplateWithTimeout(RestTemplateBuilder builder,
                                                             PathTimeoutHttpComponentsClientHttpRequestFactory requestFactory) {
-        RestTemplate restTemplate = builder.build();
-        restTemplate.setRequestFactory(requestFactory);
-        return restTemplate;
+        return builder
+            .requestFactory(() -> requestFactory)
+            .build();
     }
 
     /**

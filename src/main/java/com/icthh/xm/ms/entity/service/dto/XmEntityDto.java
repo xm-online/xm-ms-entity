@@ -121,7 +121,6 @@ public class XmEntityDto implements Serializable, WithId, WithTypeKey, EntityBas
     @JsonIgnore
     private Set<EventDto> events = new HashSet<>();
 
-    @JsonIgnore
     public Set<LinkDto> getSources() {
         return sources;
     }

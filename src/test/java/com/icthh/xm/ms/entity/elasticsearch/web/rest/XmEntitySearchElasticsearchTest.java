@@ -1,9 +1,8 @@
 package com.icthh.xm.ms.entity.elasticsearch.web.rest;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.DeserializationFeature;
+import tools.jackson.databind.ObjectMapper;
 import com.icthh.xm.commons.exceptions.BusinessException;
 import com.icthh.xm.commons.i18n.error.web.ExceptionTranslator;
 import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_AUTH_CONTEXT;
@@ -55,6 +54,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
 import com.icthh.xm.ms.entity.web.rest.facade.XmEntityFacade;
+import tools.jackson.databind.json.JsonMapper;
 
 /**
  * Test class for the XmEntitySpecResource REST controller.
@@ -317,9 +317,8 @@ public class XmEntitySearchElasticsearchTest extends AbstractElasticSpringBootTe
     }
 
     private ObjectMapper buildObjectMapper() {
-        ObjectMapper objectMapper = new ObjectMapper();
-        objectMapper.registerModule(new JavaTimeModule());
-        objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-        return objectMapper;
+        return JsonMapper.builder()
+                        .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+                                .build();
     }
 }

@@ -12,6 +12,17 @@
 # Full reference is available at:
 # http://docs.spring.io/spring-boot/docs/current/reference/html/common-application-properties.html
 # ===================================================================
+management:
+    opentelemetry:
+        tracing:
+            export:
+                otlp:
+                    endpoint: http://localhost:4318/v1/traces
+    otlp:
+        metrics:
+            export:
+                enabled: false
+
 logging:
     level:
         ROOT: INFO
@@ -27,7 +38,7 @@ spring:
             enabled: false # we use Webpack dev server + BrowserSync for livereload
     jackson:
         serialization:
-            indent-output: true
+            INDENT_OUTPUT: true
     cloud:
         consul:
             discovery:

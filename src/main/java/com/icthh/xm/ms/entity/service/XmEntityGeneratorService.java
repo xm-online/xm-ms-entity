@@ -12,8 +12,6 @@ import static java.util.stream.Collectors.toList;
 import static org.apache.commons.collections.CollectionUtils.isEmpty;
 import static org.apache.commons.lang.StringUtils.isEmpty;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.type.CollectionType;
 import com.icthh.xm.commons.exceptions.BusinessException;
 import com.icthh.xm.commons.security.XmAuthenticationContextHolder;
 import com.icthh.xm.ms.entity.config.Constants;
@@ -42,6 +40,8 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.RandomUtils;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.type.CollectionType;
 
 @Service
 @Slf4j
