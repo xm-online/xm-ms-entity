@@ -18,7 +18,7 @@ plugins {
     id "jacoco"
     id "checkstyle"
     id "eclipse"
-    id "org.springframework.boot" version "${springBootVersion}"
+    id "org.springframework.boot"
     id "com.google.cloud.tools.jib"
     id "com.gorylenko.gradle-git-properties"
     id "org.liquibase.gradle"
@@ -26,7 +26,7 @@ plugins {
     id "io.spring.nohttp"
     id "war"
     id "pmd"
-    id "io.spring.dependency-management" version "${springDependencyManagement}"
+    id "io.spring.dependency-management"
     //jhipster-needle-gradle-plugins - JHipster will add additional gradle plugins here
 }
 
