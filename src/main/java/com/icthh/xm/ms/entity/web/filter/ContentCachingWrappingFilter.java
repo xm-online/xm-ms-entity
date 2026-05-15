@@ -36,7 +36,7 @@ public class ContentCachingWrappingFilter extends OncePerRequestFilter {
         Integer cacheLimit = applicationProperties.getRequestCacheLimit();
         ContentCachingRequestWrapper requestWrapper = cacheLimit != null ?
                                                       new ContentCachingRequestWrapper(request, cacheLimit) :
-                                                      new ContentCachingRequestWrapper(request);
+                                                      new ContentCachingRequestWrapper(request, 0);
 
         ContentCachingResponseWrapper responseWrapper = new ContentCachingResponseWrapper(response);
         try {

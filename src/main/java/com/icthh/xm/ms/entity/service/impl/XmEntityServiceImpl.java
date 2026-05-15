@@ -1,6 +1,5 @@
 package com.icthh.xm.ms.entity.service.impl;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.icthh.xm.commons.exceptions.BusinessException;
 import com.icthh.xm.commons.exceptions.EntityNotFoundException;
 import com.icthh.xm.commons.exceptions.ErrorConstants;
@@ -66,6 +65,7 @@ import jakarta.annotation.Nullable;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.text.StrSubstitutor;
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.collection.spi.PersistentCollection;
@@ -93,6 +93,7 @@ import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import tools.jackson.databind.ObjectMapper;
 
 import static com.icthh.xm.ms.entity.domain.spec.LinkSpec.NEW_BUILDER_TYPE;
 import static com.icthh.xm.ms.entity.domain.spec.LinkSpec.SEARCH_BUILDER_TYPE;
@@ -325,7 +326,7 @@ public class XmEntityServiceImpl implements XmEntityService {
     @PrivilegeDescription("Privilege to get all the xmEntities")
     public Page<XmEntity> findAll(Pageable pageable, String typeKey, String privilegeKey) {
         log.debug("Request to get all XmEntities");
-        if (StringUtils.isNoneBlank(typeKey)) {
+        if (isNoneBlank(typeKey)) {
             Set<String> typeKeys = getTypeKeyHierarchy(typeKey);
             return xmEntityPermittedRepository.findAllByTypeKeyIn(pageable, typeKeys, privilegeKey);
         } else {
@@ -849,7 +850,7 @@ public class XmEntityServiceImpl implements XmEntityService {
     private String findFirstStateForTypeKey(String typeKey) {
         return xmEntitySpecService.getTypeSpecByKey(typeKey)
             .map(TypeSpec::getStates)
-            .filter(org.apache.commons.collections.CollectionUtils::isNotEmpty)
+            .filter(CollectionUtils::isNotEmpty)
             .map(it -> it.get(0))
             .map(StateSpec::getKey)
             .orElse(null);
@@ -872,5 +873,4 @@ public class XmEntityServiceImpl implements XmEntityService {
         }
         return xmEntityId;
     }
-
 }

@@ -34,7 +34,8 @@ import org.mockito.Spy;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
 import org.springframework.http.MediaType;
-import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
+
+import org.springframework.http.converter.json.JacksonJsonHttpMessageConverter;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.transaction.BeforeTransaction;
 import org.springframework.test.web.servlet.MockMvc;
@@ -81,7 +82,7 @@ public class RatingResourceIntTest extends AbstractJupiterSpringBootTest {
     private PermittedRepository permittedRepository;
 
     @Autowired
-    private MappingJackson2HttpMessageConverter jacksonMessageConverter;
+    private JacksonJsonHttpMessageConverter jacksonMessageConverter;
 
     @Autowired
     private PageableHandlerMethodArgumentResolver pageableArgumentResolver;
@@ -180,7 +181,7 @@ public class RatingResourceIntTest extends AbstractJupiterSpringBootTest {
         // Create the Rating
         restRatingMockMvc.perform(post("/api/ratings")
                                       .contentType(TestUtil.APPLICATION_JSON_UTF8)
-                                      .content(TestUtil.convertObjectToJsonBytes(rating)))
+                                      .content(TestUtil.assertObjectsAndConvertToJsonBytesDto(rating, ratingMapper.toDto(rating))))
             .andExpect(status().isCreated());
 
         // Validate the Rating in the database
@@ -204,7 +205,7 @@ public class RatingResourceIntTest extends AbstractJupiterSpringBootTest {
         // An entity with an existing ID cannot be created, so this API call must fail
         restRatingMockMvc.perform(post("/api/ratings")
                                       .contentType(TestUtil.APPLICATION_JSON_UTF8)
-                                      .content(TestUtil.convertObjectToJsonBytes(rating)))
+                                      .content(TestUtil.assertObjectsAndConvertToJsonBytesDto(rating, ratingMapper.toDto(rating))))
             .andExpect(status().isBadRequest())
             .andExpect(jsonPath("$.error").value("error.business.idexists"))
             .andExpect(jsonPath("$.error_description").value(notNullValue()))
@@ -226,7 +227,7 @@ public class RatingResourceIntTest extends AbstractJupiterSpringBootTest {
 
         restRatingMockMvc.perform(post("/api/ratings")
                                       .contentType(TestUtil.APPLICATION_JSON_UTF8)
-                                      .content(TestUtil.convertObjectToJsonBytes(rating)))
+                                      .content(TestUtil.assertObjectsAndConvertToJsonBytesDto(rating, ratingMapper.toDto(rating))))
             .andExpect(status().isBadRequest())
             .andExpect(jsonPath("$.error").value("error.validation"))
             .andExpect(jsonPath("$.error_description").value(notNullValue()))
@@ -251,7 +252,7 @@ public class RatingResourceIntTest extends AbstractJupiterSpringBootTest {
 
         restRatingMockMvc.perform(post("/api/ratings")
                                       .contentType(TestUtil.APPLICATION_JSON_UTF8)
-                                      .content(TestUtil.convertObjectToJsonBytes(rating)))
+                                      .content(TestUtil.assertObjectsAndConvertToJsonBytesDto(rating, ratingMapper.toDto(rating))))
             .andExpect(status().isBadRequest())
             .andExpect(jsonPath("$.error").value("error.validation"))
             .andExpect(jsonPath("$.error_description").value(notNullValue()))
@@ -329,7 +330,7 @@ public class RatingResourceIntTest extends AbstractJupiterSpringBootTest {
 
         restRatingMockMvc.perform(put("/api/ratings")
                                       .contentType(TestUtil.APPLICATION_JSON_UTF8)
-                                      .content(TestUtil.convertObjectToJsonBytes(updatedRating)))
+                                      .content(TestUtil.assertObjectsAndConvertToJsonBytesDto(updatedRating, ratingMapper.toDto(updatedRating))))
             .andExpect(status().isOk());
 
         // Validate the Rating in the database
@@ -352,7 +353,7 @@ public class RatingResourceIntTest extends AbstractJupiterSpringBootTest {
         // If the entity doesn't have an ID, it will be created instead of just being updated
         restRatingMockMvc.perform(put("/api/ratings")
                                       .contentType(TestUtil.APPLICATION_JSON_UTF8)
-                                      .content(TestUtil.convertObjectToJsonBytes(rating)))
+                                      .content(TestUtil.assertObjectsAndConvertToJsonBytesDto(rating, ratingMapper.toDto(rating))))
             .andExpect(status().isCreated());
 
         // Validate the Rating in the database

@@ -1,8 +1,12 @@
 package com.icthh.xm.ms.entity.service;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import com.icthh.xm.commons.tenant.TenantContext;
+import com.icthh.xm.commons.tenant.YamlMapperUtils;
+import com.icthh.xm.ms.entity.web.rest.TestUtil;
+import com.networknt.schema.SchemaRegistryConfig;
+import java.util.HashSet;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 import com.icthh.xm.commons.config.client.config.XmConfigProperties;
 import com.icthh.xm.commons.config.client.repository.CommonConfigRepository;
 import com.icthh.xm.commons.config.client.repository.TenantConfigRepository;
@@ -12,7 +16,7 @@ import com.icthh.xm.commons.listener.JsonListenerService;
 import com.icthh.xm.commons.permission.domain.Role;
 import com.icthh.xm.commons.permission.service.RoleService;
 import com.icthh.xm.commons.tenant.PrivilegedTenantContext;
-import com.icthh.xm.commons.tenant.TenantContext;
+import com.icthh.xm.commons.tenant.JsonMapperUtils;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantKey;
 import com.icthh.xm.ms.entity.AbstractJupiterUnitTest;
@@ -44,6 +48,7 @@ import com.icthh.xm.ms.entity.service.spec.DataSpecJsonSchemaService;
 import com.icthh.xm.ms.entity.service.spec.XmEntitySpecCustomizer;
 import com.networknt.schema.Schema;
 import com.networknt.schema.SchemaRegistry;
+import com.networknt.schema.Error;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
@@ -71,6 +76,7 @@ import static com.icthh.xm.ms.entity.security.access.XmEntityDynamicPermissionCh
 import static com.icthh.xm.ms.entity.util.CustomCollectionUtils.nullSafe;
 import static com.icthh.xm.ms.entity.web.rest.XmEntitySaveIntTest.loadFile;
 import static com.networknt.schema.SpecificationVersion.DRAFT_4;
+import static com.networknt.schema.path.PathType.LEGACY;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
 import static java.util.function.Function.identity;
@@ -284,7 +290,7 @@ public class XmEntitySpecServiceUnitTest extends AbstractJupiterUnitTest {
 
     @SneakyThrows
     public void prepareConfig(Map<String, Object> map) {
-        tenantConfig.onRefresh("/config/tenants/XM/tenant-config.yml", new ObjectMapper().writeValueAsString(map));
+        tenantConfig.onRefresh("/config/tenants/XM/tenant-config.yml", JsonMapperUtils.getDefaultJsonMapper().writeValueAsString(map));
     }
 
     @Test
@@ -531,7 +537,7 @@ public class XmEntitySpecServiceUnitTest extends AbstractJupiterUnitTest {
     @SneakyThrows
     public void testUpdateCustomXmEntityDeletePrivileges() {
         Map<String, Object> configMap = Map.of("dynamicTypeKeyPermission", Map.of("entityDeletion", Boolean.TRUE.toString()));
-        tenantConfig.onRefresh("/config/tenants/XM/tenant-config.yml", new ObjectMapper().writeValueAsString(configMap));
+        tenantConfig.onRefresh("/config/tenants/XM/tenant-config.yml", JsonMapperUtils.getDefaultJsonMapper().writeValueAsString(configMap));
 
         String customPrivileges = readFile("config/privileges/custom-privileges.yml");
         String expectedCustomPrivileges = readFile("config/privileges/expected-custom-privileges-with-xm-entity.yml");
@@ -989,7 +995,7 @@ public class XmEntitySpecServiceUnitTest extends AbstractJupiterUnitTest {
 
     @Test
     public void testUpdateTenantByStateWithDefinitionsAndForms() throws Exception {
-        ObjectMapper objectMapper = new ObjectMapper(new YAMLFactory());
+        ObjectMapper objectMapper = YamlMapperUtils.yamlDefaultMapper();
         String config = getXmEntitySpec("specifications");
         String key = SPEC_FOLDER_URL.replace("{tenantName}", "RESINTTEST") + "/file.yml";
         mockTenant("RESINTTEST");
@@ -1018,7 +1024,7 @@ public class XmEntitySpecServiceUnitTest extends AbstractJupiterUnitTest {
 
     @Test
     public void testUpdateTenantByStateWithDefinitionsAndFormsAndUpdatedJsonFile() throws Exception {
-        ObjectMapper objectMapper = new ObjectMapper(new YAMLFactory());
+        ObjectMapper objectMapper = YamlMapperUtils.yamlDefaultMapper();
         String config = getXmEntitySpec("specifications");
         String key = SPEC_FOLDER_URL.replace("{tenantName}", "RESINTTEST") + "/file.yml";
         mockTenant("RESINTTEST");
@@ -1073,7 +1079,7 @@ public class XmEntitySpecServiceUnitTest extends AbstractJupiterUnitTest {
 
     @SneakyThrows
     private void assertEqualsTypeSpecFields(String expectedField, String actualField) {
-        ObjectMapper objectMapper = new ObjectMapper();
+        ObjectMapper objectMapper = TestUtil.getJsonMapper();
         Map expected = objectMapper.readValue(expectedField, Map.class);
         Map actual = objectMapper.readValue(actualField, Map.class);
 
@@ -1082,7 +1088,8 @@ public class XmEntitySpecServiceUnitTest extends AbstractJupiterUnitTest {
 
     @SneakyThrows
     private void assertEqualsJson(Map<String, ?> expected, String actual) {
-        ObjectMapper objectMapper = new ObjectMapper();
+
+        ObjectMapper objectMapper = TestUtil.getJsonMapper();
         JsonNode expectedTree = objectMapper.readTree(objectMapper.writeValueAsString(expected));
         JsonNode actualTree = objectMapper.readTree(actual);
         assertEquals(expectedTree, actualTree);
@@ -1090,13 +1097,13 @@ public class XmEntitySpecServiceUnitTest extends AbstractJupiterUnitTest {
 
     @SneakyThrows
     private boolean validateByJsonSchema(String schema, Map<String, Object> value) {
-        ObjectMapper objectMapper = new ObjectMapper();
+        ObjectMapper objectMapper = JsonMapperUtils.getDefaultJsonMapper();
         JsonNode valueJsonNode = objectMapper.readTree(objectMapper.writeValueAsString(value));
-        JsonNode schemaNode = new ObjectMapper().readTree(schema);
-
-        SchemaRegistry factory = SchemaRegistry.withDefaultDialect(DRAFT_4);
+        JsonNode schemaNode = JsonMapperUtils.getDefaultJsonMapper().readTree(schema);
+        SchemaRegistry factory = SchemaRegistry.withDefaultDialect(DRAFT_4,
+        builder -> builder.schemaRegistryConfig(SchemaRegistryConfig.builder().pathType(LEGACY).build()));
         Schema jsonSchema = factory.getSchema(schemaNode);
-        var report = jsonSchema.validate(valueJsonNode);
+        Set<Error> report = new HashSet<>(jsonSchema.validate(valueJsonNode));
         log.info("Validation: {}", report.toString());
         return report.isEmpty();
     }

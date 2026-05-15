@@ -2,37 +2,29 @@ package com.icthh.xm.ms.entity.domain.idresolver;
 
 import com.fasterxml.jackson.annotation.ObjectIdGenerator;
 import com.fasterxml.jackson.annotation.ObjectIdResolver;
-import com.fasterxml.jackson.annotation.SimpleObjectIdResolver;
 import com.icthh.xm.commons.exceptions.BusinessException;
 import com.icthh.xm.commons.exceptions.ErrorConstants;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
-
-import java.util.Map;
 
 /**
  * XmEntity object ID resolver.
  * Resolves XmEntity object from database bi ID provided in JSON.
  * see https://stackoverflow.com/questions/41989906/jackson-referencing-an-object-as-a-property
  */
-@Slf4j
 @Component
 @Scope("prototype")
-public class XmEntityObjectIdResolver extends SimpleObjectIdResolver {
-    protected Map<ObjectIdGenerator.IdKey,Object> items;
-
-    private XmEntityRepository repository;
+public class XmEntityObjectIdResolver extends AbstractXmEntityObjectIdResolver {
 
     @Autowired
     public XmEntityObjectIdResolver(XmEntityRepository repository) {
-        this.repository = repository;
+        super(repository);
     }
 
     public XmEntityObjectIdResolver() {
-        log.debug("XmEntity object id resolver inited");
+        super();
     }
 
     /**
@@ -57,11 +49,6 @@ public class XmEntityObjectIdResolver extends SimpleObjectIdResolver {
     @Override
     public ObjectIdResolver newForDeserialization(final Object context) {
         return new XmEntityObjectIdResolver(repository);
-    }
-
-    @Override
-    public boolean canUseFor(ObjectIdResolver resolverType) {
-        return resolverType.getClass() == getClass();
     }
 
 }

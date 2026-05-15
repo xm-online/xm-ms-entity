@@ -1,6 +1,6 @@
 package com.icthh.xm.ms.entity.web.rest;
 
-import com.codahale.metrics.annotation.Timed;
+
 import com.icthh.xm.commons.exceptions.BusinessException;
 import com.icthh.xm.commons.exceptions.ErrorConstants;
 import com.icthh.xm.commons.permission.annotation.PrivilegeDescription;
@@ -54,7 +54,7 @@ public class ContentResource {
      * @throws URISyntaxException if the Location URI syntax is incorrect
      */
     @PostMapping("/contents")
-    @Timed
+    
     @PreAuthorize("hasPermission({'content': #content}, 'CONTENT.CREATE')")
     @PrivilegeDescription("Privilege to create a new content")
     public ResponseEntity<ContentDto> createContent(@Valid @RequestBody ContentDto content) throws URISyntaxException {
@@ -78,7 +78,7 @@ public class ContentResource {
      * @throws URISyntaxException if the Location URI syntax is incorrect
      */
     @PutMapping("/contents")
-    @Timed
+    
     @PreAuthorize("hasPermission({'id': #content.id, 'newContent': #content}, 'content', 'CONTENT.UPDATE')")
     @PrivilegeDescription("Privilege to updates an existing content")
     public ResponseEntity<ContentDto> updateContent(@Valid @RequestBody ContentDto content) throws URISyntaxException {
@@ -98,7 +98,7 @@ public class ContentResource {
      * @return the ResponseEntity with status 200 (OK) and the list of contents in body
      */
     @GetMapping("/contents")
-    @Timed
+    
     public List<ContentDto> getAllContents() {
         return contentFacade.findAll(null);
     }
@@ -110,7 +110,7 @@ public class ContentResource {
      * @return the ResponseEntity with status 200 (OK) and with body the content, or with status 404 (Not Found)
      */
     @GetMapping("/contents/{id}")
-    @Timed
+    
     @PostAuthorize("hasPermission({'returnObject': returnObject.body}, 'CONTENT.GET_LIST.ITEM')")
     @PrivilegeDescription("Privilege to get the content by id")
     public ResponseEntity<ContentDto> getContent(@PathVariable Long id) {
@@ -124,7 +124,7 @@ public class ContentResource {
      * @return the ResponseEntity with status 200 (OK)
      */
     @DeleteMapping("/contents/{id}")
-    @Timed
+    
     @PreAuthorize("hasPermission({'id': #id}, 'content', 'CONTENT.DELETE')")
     @PrivilegeDescription("Privilege to delete the content by id")
     public ResponseEntity<Void> deleteContent(@PathVariable Long id) {

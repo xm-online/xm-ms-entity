@@ -13,8 +13,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
+import tools.jackson.databind.ObjectMapper;
 import com.icthh.xm.commons.i18n.error.web.ExceptionTranslator;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
@@ -38,7 +37,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
 import org.springframework.http.MediaType;
-import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
+import org.springframework.http.converter.json.JacksonJsonHttpMessageConverter;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.transaction.BeforeTransaction;
 import org.springframework.test.web.servlet.MockMvc;
@@ -62,9 +61,6 @@ import com.icthh.xm.ms.entity.service.mapper.LinkMapper;
 public class LinkResourceExtendedIntTest extends AbstractJupiterSpringBootTest {
 
     private static final Instant MOCKED_START_DATE = Instant.ofEpochMilli(42L);
-
-    @Autowired
-    private MappingJackson2HttpMessageConverter jacksonMessageConverter;
 
     @Autowired
     private PageableHandlerMethodArgumentResolver pageableArgumentResolver;
@@ -91,13 +87,14 @@ public class LinkResourceExtendedIntTest extends AbstractJupiterSpringBootTest {
     private XmEntityRepository xmEntityRepository;
 
     @Autowired
-    private ObjectMapper objectMapper;
-
-    @Autowired
     private XmEntityDynamicPermissionCheckService dynamicPermissionCheckService;
 
     @Autowired
     private LinkMapper linkMapper;
+
+    @Autowired
+    private JacksonJsonHttpMessageConverter jacksonMessageConverter;
+
 
     @Spy
     private StartUpdateDateGenerationStrategy startUpdateDateGenerationStrategy;
@@ -138,7 +135,7 @@ public class LinkResourceExtendedIntTest extends AbstractJupiterSpringBootTest {
 
         link = LinkResourceIntTest.createEntity(em);
 
-        objectMapper.configure(SerializationFeature.INDENT_OUTPUT, true);
+
 
     }
 
@@ -158,7 +155,7 @@ public class LinkResourceExtendedIntTest extends AbstractJupiterSpringBootTest {
 
         restLinkMockMvc.perform(post("/api/links")
                                     .contentType(TestUtil.APPLICATION_JSON_UTF8)
-                                    .content(TestUtil.convertObjectToJsonBytes(link)))
+                                    .content(TestUtil.assertObjectsAndConvertToJsonBytesDto(link, linkMapper.toDto(link))))
                        .andExpect(status().isCreated())
                        .andExpect(jsonPath("$.startDate").value(MOCKED_START_DATE.toString()))
         ;
@@ -179,7 +176,7 @@ public class LinkResourceExtendedIntTest extends AbstractJupiterSpringBootTest {
         // Create the Link
         restLinkMockMvc.perform(post("/api/links")
                                     .contentType(TestUtil.APPLICATION_JSON_UTF8)
-                                    .content(TestUtil.convertObjectToJsonBytes(link)))
+                                    .content(TestUtil.assertObjectsAndConvertToJsonBytesDto(link, linkMapper.toDto(link))))
                        .andDo(this::printMvcResult)
                        .andExpect(status().isCreated())
                        .andExpect(jsonPath("$.startDate").value(MOCKED_START_DATE.toString()));

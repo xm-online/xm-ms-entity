@@ -1,6 +1,6 @@
 package com.icthh.xm.ms.entity.service.impl;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.icthh.xm.commons.tenant.JsonMapperUtils;
 import com.google.common.collect.Maps;
 import com.icthh.xm.commons.service.FunctionTxControl;
 import com.icthh.xm.commons.service.impl.FunctionTxControlImpl;
@@ -20,6 +20,7 @@ import com.icthh.xm.ms.entity.service.XmEntitySpecService;
 import com.icthh.xm.ms.entity.service.json.JsonValidationService;
 import com.icthh.xm.ms.entity.service.mapper.FunctionResultMapper;
 import com.icthh.xm.ms.entity.service.mapper.FunctionResultMapperImpl;
+import java.util.Locale;
 import org.assertj.core.util.Lists;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeEach;
@@ -82,7 +83,7 @@ public class FunctionServiceImplUnitTest extends AbstractJupiterUnitTest {
         functionContextService = Mockito.mock(FunctionContextService.class);
         dynamicPermissionCheckService = Mockito.mock(XmEntityDynamicPermissionCheckService.class);
         xmEntityTenantConfigService = Mockito.mock(XmEntityTenantConfigService.class);
-        jsonValidationService = spy(new JsonValidationService(new ObjectMapper()));
+        jsonValidationService = spy(new JsonValidationService(JsonMapperUtils.getDefaultJsonMapper()));
         functionResultMapper = spy(new FunctionResultMapperImpl());
         functionResultProcessor = new FunctionResultProcessorImpl(xmEntityService, functionContextService, functionResultMapper);
         functionService = new XmEntityFunctionServiceImpl(dynamicPermissionCheckService, xmEntitySpecService,
@@ -519,6 +520,7 @@ public class FunctionServiceImplUnitTest extends AbstractJupiterUnitTest {
 
     @Test
     public void validationFailOnInvalidFunctionInputWhenValidationEnabled() {
+        Locale.setDefault(Locale.US);
         String exceptionMessage = "$.numberArgument: string found, number expected";
 
         FunctionSpec spec = generateFunctionSpec(true);
@@ -535,6 +537,7 @@ public class FunctionServiceImplUnitTest extends AbstractJupiterUnitTest {
 
     @Test
     public void validationFailOnInvalidFunctionWithEntityIdInputWhenValidationEnabled() {
+        Locale.setDefault(Locale.US);
         String exceptionMessage = "$.numberArgument: string found, number expected";
 
         FunctionSpec spec = generateFunctionSpec(true);

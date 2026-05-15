@@ -13,6 +13,11 @@ import java.util.List;
 public class XmFreeMarkerConfiguration {
 
     @Bean
+    public freemarker.template.Configuration freeMarkerConfiguration(XmFreeMarkerConfigurer xmFreeMarkerConfigurer) {
+        return xmFreeMarkerConfigurer.getConfiguration();
+    }
+
+    @Bean
     public XmFreeMarkerConfigurer xmFreeMarkerConfigurer(StringTemplateLoader emailTemplates) {
         return new XmFreeMarkerConfigurer(emailTemplates);
     }

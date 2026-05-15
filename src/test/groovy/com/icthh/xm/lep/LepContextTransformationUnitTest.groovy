@@ -7,7 +7,7 @@ import com.icthh.xm.ms.entity.lep.helpers.LepContextConstructor
 import com.icthh.xm.ms.entity.repository.XmEntityRepository
 import com.icthh.xm.ms.entity.service.XmEntityService
 import groovy.transform.ToString
-import org.junit.Test
+import org.junit.jupiter.api.Test
 import org.springframework.web.client.RestTemplate
 
 import static org.mockito.ArgumentMatchers.eq

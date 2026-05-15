@@ -18,7 +18,9 @@ import com.icthh.xm.ms.entity.AbstractJupiterSpringBootTest;
 import com.icthh.xm.ms.entity.domain.Content;
 import com.icthh.xm.ms.entity.repository.ContentRepository;
 import com.icthh.xm.ms.entity.service.ContentService;
+import com.icthh.xm.ms.entity.service.mapper.ContentMapper;
 import jakarta.persistence.EntityManager;
+import java.util.Base64;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -26,13 +28,13 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
 import org.springframework.http.MediaType;
-import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
+
+import org.springframework.http.converter.json.JacksonJsonHttpMessageConverter;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.transaction.BeforeTransaction;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.Base64Utils;
 
 import java.util.List;
 import com.icthh.xm.ms.entity.web.rest.facade.ContentFacade;
@@ -55,7 +57,7 @@ public class ContentResourceIntTest extends AbstractJupiterSpringBootTest {
     private ContentRepository contentRepository;
 
     @Autowired
-    private MappingJackson2HttpMessageConverter jacksonMessageConverter;
+    private JacksonJsonHttpMessageConverter jacksonMessageConverter;
 
     @Autowired
     private PageableHandlerMethodArgumentResolver pageableArgumentResolver;
@@ -78,6 +80,9 @@ public class ContentResourceIntTest extends AbstractJupiterSpringBootTest {
 
     @Autowired
     private ContentFacade contentFacade;
+
+    @Autowired
+    private ContentMapper contentMapper;
 
     @BeforeTransaction
     public void beforeTransaction() {
@@ -124,7 +129,7 @@ public class ContentResourceIntTest extends AbstractJupiterSpringBootTest {
         // Create the Content
         restContentMockMvc.perform(post("/api/contents")
             .contentType(TestUtil.APPLICATION_JSON_UTF8)
-            .content(TestUtil.convertObjectToJsonBytes(content)))
+            .content(TestUtil.assertObjectsAndConvertToJsonBytesDto(content, contentMapper.toDto(content))))
             .andExpect(status().isCreated());
 
         // Validate the Content in the database
@@ -145,7 +150,7 @@ public class ContentResourceIntTest extends AbstractJupiterSpringBootTest {
         // An entity with an existing ID cannot be created, so this API call must fail
         restContentMockMvc.perform(post("/api/contents")
             .contentType(TestUtil.APPLICATION_JSON_UTF8)
-            .content(TestUtil.convertObjectToJsonBytes(content)))
+            .content(TestUtil.assertObjectsAndConvertToJsonBytesDto(content, contentMapper.toDto(content))))
             .andExpect(status().isBadRequest())
             .andExpect(jsonPath("$.error").value("error.business.idexists"))
             .andExpect(jsonPath("$.error_description").value(notNullValue()))
@@ -167,7 +172,7 @@ public class ContentResourceIntTest extends AbstractJupiterSpringBootTest {
 
         restContentMockMvc.perform(post("/api/contents")
             .contentType(TestUtil.APPLICATION_JSON_UTF8)
-            .content(TestUtil.convertObjectToJsonBytes(content)))
+            .content(TestUtil.assertObjectsAndConvertToJsonBytesDto(content, contentMapper.toDto(content))))
             .andExpect(status().isBadRequest())
             .andExpect(jsonPath("$.error").value("error.validation"))
             .andExpect(jsonPath("$.error_description").value(notNullValue()))
@@ -192,7 +197,7 @@ public class ContentResourceIntTest extends AbstractJupiterSpringBootTest {
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON))
             .andExpect(jsonPath("$.[*].id").value(hasItem(content.getId().intValue())))
-            .andExpect(jsonPath("$.[*].value").value(hasItem(Base64Utils.encodeToString(DEFAULT_VALUE))));
+            .andExpect(jsonPath("$.[*].value").value(hasItem(Base64.getEncoder().encodeToString(DEFAULT_VALUE))));
     }
 
     @Test
@@ -206,7 +211,7 @@ public class ContentResourceIntTest extends AbstractJupiterSpringBootTest {
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON))
             .andExpect(jsonPath("$.id").value(content.getId().intValue()))
-            .andExpect(jsonPath("$.value").value(Base64Utils.encodeToString(DEFAULT_VALUE)));
+            .andExpect(jsonPath("$.value").value(Base64.getEncoder().encodeToString(DEFAULT_VALUE)));
     }
 
     @Test
@@ -235,7 +240,7 @@ public class ContentResourceIntTest extends AbstractJupiterSpringBootTest {
 
         restContentMockMvc.perform(put("/api/contents")
             .contentType(TestUtil.APPLICATION_JSON_UTF8)
-            .content(TestUtil.convertObjectToJsonBytes(updatedContent)))
+            .content(TestUtil.assertObjectsAndConvertToJsonBytesDto(updatedContent, contentMapper.toDto(updatedContent))))
             .andExpect(status().isOk());
 
         // Validate the Content in the database
@@ -255,7 +260,7 @@ public class ContentResourceIntTest extends AbstractJupiterSpringBootTest {
         // If the entity doesn't have an ID, it will be created instead of just being updated
         restContentMockMvc.perform(put("/api/contents")
             .contentType(TestUtil.APPLICATION_JSON_UTF8)
-            .content(TestUtil.convertObjectToJsonBytes(content)))
+            .content(TestUtil.assertObjectsAndConvertToJsonBytesDto(content, contentMapper.toDto(content))))
             .andExpect(status().isCreated());
 
         // Validate the Content in the database

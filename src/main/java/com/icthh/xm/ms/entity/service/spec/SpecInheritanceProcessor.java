@@ -1,10 +1,10 @@
 package com.icthh.xm.ms.entity.service.spec;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.ObjectReader;
+import tools.jackson.databind.ObjectMapper;
 import com.icthh.xm.ms.entity.config.XmEntityTenantConfigService;
 import com.icthh.xm.ms.entity.domain.ext.TypeSpecParameter;
 import com.icthh.xm.ms.entity.domain.spec.TypeSpec;
+import com.icthh.xm.commons.tenant.JsonMapperUtils;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
@@ -15,6 +15,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import tools.jackson.databind.ObjectReader;
 
 import static com.icthh.xm.ms.entity.domain.ext.TypeSpecParameter.ACCESS;
 import static com.icthh.xm.ms.entity.domain.ext.TypeSpecParameter.ATTACHMENTS;
@@ -93,7 +94,7 @@ public class SpecInheritanceProcessor {
         XmEntityTenantConfigService.XmEntityTenantConfig entityTenantConfig = this.tenantConfigService.getXmEntityTenantConfig(tenant);
         Boolean isInheritanceEnabled = entityTenantConfig.getEntitySpec().getEnableDataSpecInheritance();
         if (isFeatureEnabled(isInheritanceEnabled, type.getDataSpecInheritance()) && hasDataSpec(type, parentType)) {
-            ObjectMapper objectMapper = new ObjectMapper();
+            ObjectMapper objectMapper = JsonMapperUtils.getDefaultJsonMapper();
             Map<String, Object> target = objectMapper.readValue(nullSafeReadJson(type.getDataSpec()), Map.class);
             Map<String, Object> parent = objectMapper.readValue(nullSafeReadJson(parentType.getDataSpec()), Map.class);
             if (parent.containsKey("additionalProperties")) {
@@ -130,7 +131,7 @@ public class SpecInheritanceProcessor {
         XmEntityTenantConfigService.XmEntityTenantConfig entityTenantConfig = this.tenantConfigService.getXmEntityTenantConfig(tenant);
         Boolean isInheritanceEnabled = entityTenantConfig.getEntitySpec().getEnableDataFromInheritance();
         if (isFeatureEnabled(isInheritanceEnabled, type.getDataFormInheritance()) && hasDataForm(type, parentType)) {
-            ObjectMapper objectMapper = new ObjectMapper();
+            ObjectMapper objectMapper = JsonMapperUtils.getDefaultJsonMapper();
             var defaults = objectMapper.readValue(nullSafeReadJson(parentType.getDataForm()), Map.class);
             ObjectReader updater = objectMapper.readerForUpdating(defaults);
             Map<String, Object> merged = updater.readValue(nullSafeReadJson(type.getDataForm()));

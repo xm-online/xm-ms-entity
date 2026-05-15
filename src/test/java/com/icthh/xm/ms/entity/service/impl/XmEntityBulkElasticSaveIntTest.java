@@ -18,7 +18,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.stubbing.Answer;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -35,7 +35,7 @@ import static org.mockito.Mockito.when;
 @Slf4j
 public class XmEntityBulkElasticSaveIntTest extends AbstractJupiterSpringBootTest {
 
-    @MockBean
+    @MockitoBean
     private XmEntitySearchRepository searchRepository;
     @Autowired
     private TenantContextHolder tenantContextHolder;

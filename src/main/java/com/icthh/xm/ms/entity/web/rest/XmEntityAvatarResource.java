@@ -1,6 +1,6 @@
 package com.icthh.xm.ms.entity.web.rest;
 
-import com.codahale.metrics.annotation.Timed;
+
 import com.icthh.xm.commons.permission.annotation.PrivilegeDescription;
 import com.icthh.xm.ms.entity.domain.ext.IdOrKey;
 import com.icthh.xm.ms.entity.service.XmEntityService;
@@ -42,7 +42,7 @@ public class XmEntityAvatarResource {
      * @return HTTP response
      * @throws IOException when IO error
      */
-    @Timed
+    
     @PostMapping("/xm-entities/{idOrKey}/avatar")
     @PreAuthorize("hasPermission({'idOrKey':#idOrKey, 'multipartFile':#multipartFile}, 'XMENTITY.AVATAR.UPDATE')")
     @PrivilegeDescription("Privilege to update avatar")
@@ -54,7 +54,7 @@ public class XmEntityAvatarResource {
     }
 
     // TODO remove this method after deal with hasPermission check for self
-    @Timed
+    
     @PostMapping("/xm-entities/self/avatar")
     @PreAuthorize("hasPermission({'multipartFile': #multipartFile}, 'XMENTITY.SELF.AVATAR.UPDATE')")
     @PrivilegeDescription("Privilege to update avatar of current user")
@@ -73,7 +73,7 @@ public class XmEntityAvatarResource {
      * @return HTTP response
      * @throws IOException when IO error
      */
-    @Timed
+    
     @PutMapping(path = "/xm-entities/{idOrKey}/avatar", consumes = "image/*")
     @PreAuthorize("hasPermission({'idOrKey':#idOrKey, 'fileName':#fileName, 'request':#request}, 'XMENTITY.AVATAR.UPDATE')")
     @PrivilegeDescription("Privilege to update avatar")
@@ -87,7 +87,7 @@ public class XmEntityAvatarResource {
     }
 
     // TODO remove this method after deal with hasPermission check for self
-    @Timed
+    
     @PutMapping(path = "/xm-entities/self/avatar", consumes = "image/*")
     @PreAuthorize("hasPermission({'fileName':#fileName, 'request':#request}, 'XMENTITY.SELF.AVATAR.UPDATE')")
     @PrivilegeDescription("Privilege to update avatar of current user")
@@ -99,7 +99,7 @@ public class XmEntityAvatarResource {
         return buildAvatarUpdateResponse(uri);
     }
 
-    @Timed
+    
     @GetMapping(path = "/xm-entities/self/avatar", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
     @PreAuthorize("hasPermission(null, 'XMENTITY.SELF.AVATAR.GET')")
     @PrivilegeDescription("Privilege to get avatar of current user")
@@ -112,7 +112,7 @@ public class XmEntityAvatarResource {
         writeRedirectResponse(response, avatarStorageResponse);
     }
 
-    @Timed
+    
     @GetMapping(path = "/xm-entities/{idOrKey}/avatar")
     @PreAuthorize("hasPermission({'idOrKey':#idOrKey}, 'XMENTITY.AVATAR.GET')")
     @PrivilegeDescription("Privilege to get avatar of current user")

@@ -9,15 +9,21 @@ import org.mapstruct.Mapping;
 import org.mapstruct.Named;
 
 import java.util.Set;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 
 @Mapper(componentModel = "spring", uses = {XmEntityRefMapper.class})
 public abstract class VoteMapper extends LazyLoadingAwareMapper {
 
-    @Mapping(target = "xmEntity", qualifiedByName = "shallowXmEntityToDto")
+    @Autowired
+    @Lazy
+    private RatingMapper ratingMapper;
+
+    @Mapping(target = "xmEntity", qualifiedByName = "fullXmEntityToDto")
     @Mapping(target = "rating", qualifiedByName = "shallowRatingToDto")
     public abstract VoteDto toDto(Vote entity);
 
-    @Mapping(target = "xmEntity", qualifiedByName = "shallowXmEntityToEntity")
+    @Mapping(target = "xmEntity", qualifiedByName = "fullXmEntityToEntity")
     @Mapping(target = "rating", qualifiedByName = "shallowRatingToEntity")
     public abstract Vote toEntity(VoteDto dto);
 
@@ -30,10 +36,8 @@ public abstract class VoteMapper extends LazyLoadingAwareMapper {
         if (entity == null) {
             return null;
         }
-        RatingDto dto = new RatingDto();
-        dto.setId(entity.getId());
-        dto.setTypeKey(entity.getTypeKey());
-        return dto;
+
+        return ratingMapper.toDtoWithoutVotes(entity);
     }
 
     @Named("shallowRatingToEntity")
@@ -41,9 +45,7 @@ public abstract class VoteMapper extends LazyLoadingAwareMapper {
         if (dto == null) {
             return null;
         }
-        Rating entity = new Rating();
-        entity.setId(dto.getId());
-        entity.setTypeKey(dto.getTypeKey());
-        return entity;
+
+        return ratingMapper.toEntityWithoutVotes(dto);
     }
 }

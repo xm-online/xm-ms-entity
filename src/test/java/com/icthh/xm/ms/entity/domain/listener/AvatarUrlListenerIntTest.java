@@ -11,6 +11,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.util.ReflectionTestUtils;
 
 @Slf4j
 public class AvatarUrlListenerIntTest extends AbstractJupiterSpringBootTest {
@@ -108,6 +109,7 @@ public class AvatarUrlListenerIntTest extends AbstractJupiterSpringBootTest {
 
     @Test
     public void testPostLoadXmeStoreSuccess() {
+        ReflectionTestUtils.setField(target, "isAvatarUrlDbPrefixEnabled", true);
         XmEntity entity = new XmEntity().avatarUrl(applicationProperties.getObjectStorage().getDbFilePrefix() + "hello.jpg");
 
         target.postLoad(entity);
