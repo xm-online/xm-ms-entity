@@ -5,8 +5,8 @@
     <springProperty scope="context" name="springAppName" source="spring.application.name"/>
     <!--<include resource="org/springframework/boot/logging/logback/base.xml"/>-->
 
-<!-- The FILE and ASYNC appenders are here as examples for a production configuration -->
-<!--
+    <springProperty scope="context" name="asyncLoggingEnabled" source="logging.async.enabled" defaultValue="true"/>
+
     <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
             <fileNamePattern>logFile.%d{yyyy-MM-dd}.log</fileNamePattern>
@@ -18,11 +18,15 @@
         </encoder>
     </appender>
 
-    <appender name="ASYNC" class="ch.qos.logback.classic.AsyncAppender">
-        <queueSize>512</queueSize>
-        <appender-ref ref="FILE"/>
-    </appender>
--->
+    <if condition='property("asyncLoggingEnabled").equals("true")'>
+        <then>
+            <appender name="ASYNC"
+                      class="ch.qos.logback.classic.AsyncAppender">
+                <queueSize>512</queueSize>
+                <appender-ref ref="FILE"/>
+            </appender>
+        </then>
+    </if>
 
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
