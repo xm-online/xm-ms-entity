@@ -178,10 +178,6 @@ xm-config:
     xm-config-url: http://config
     kafka-config-topic: config_topic
 
-logging:
-    async:
-        enabled: true
-
 application:
     elastic-enabled: false
     dynamic-permission-check:
