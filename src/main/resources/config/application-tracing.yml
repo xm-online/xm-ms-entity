@@ -4,6 +4,15 @@ spring:
       observation-enabled: true # set kafka producer headers
 
 management:
+  opentelemetry:
+    tracing:
+      export:
+        otlp:
+          endpoint: http://localhost:4318/v1/traces
+  otlp:
+    metrics:
+      export:
+        enabled: false
   tracing:
     propagation:
       type: w3c
