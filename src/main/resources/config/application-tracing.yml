@@ -12,7 +12,7 @@ management:
   otlp:
     metrics:
       export:
-        enabled: false
+        enabled: true
   tracing:
     propagation:
       type: w3c
