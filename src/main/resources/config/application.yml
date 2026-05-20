@@ -15,6 +15,13 @@
 # ===================================================================
 
 management:
+    tracing:
+        export:
+            enabled: false
+    otlp:
+        metrics:
+            export:
+                enabled: false
     endpoints:
         web:
             base-path: /management

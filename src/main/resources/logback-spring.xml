@@ -30,6 +30,7 @@
 
     <logger name="io.github.jhipster" level="#logback.loglevel#"/>
 
+    <logger name="io.opentelemetry.sdk.trace" level="WARN"/>
     <logger name="jakarta.annotation" level="WARN"/>
     <logger name="jakarta.servlet" level="WARN"/>
     <logger name="jakarta.persistence" level="WARN"/>
