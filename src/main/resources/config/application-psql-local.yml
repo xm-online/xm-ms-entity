@@ -1,7 +1,7 @@
 spring:
   datasource:
     type: com.zaxxer.hikari.HikariDataSource
-    url: jdbc:postgresql://localhost:5432/entity
+    url: jdbc:postgresql://localhost:${POSTGRES_PORT:5432}/entity
     username: postgres
     password: postgres
   jpa:

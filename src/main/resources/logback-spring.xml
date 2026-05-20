@@ -66,6 +66,7 @@
     <logger name="org.reflections" level="INFO"/>
     <logger name="org.springframework.boot.actuate.endpoint.EndpointId" level="ERROR"/>
     <logger name="com.netflix.config.sources.URLConfigurationSource" level="ERROR"/>
+    <logger name="java.lang.ProcessBuilder" level="INFO"/>
 
     <contextListener class="ch.qos.logback.classic.jul.LevelChangePropagator">
         <resetJUL>true</resetJUL>

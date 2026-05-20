@@ -12,6 +12,14 @@
 # Full reference is available at:
 # http://docs.spring.io/spring-boot/docs/current/reference/html/common-application-properties.html
 # ===================================================================
+management:
+    tracing:
+        export:
+            enabled: false
+    otlp:
+        metrics:
+            export:
+                enabled: false
 logging:
     level:
         ROOT: INFO
@@ -40,7 +48,7 @@ spring:
                     brokers: ${spring.kafka.bootstrap-servers}
     datasource:
         type: com.zaxxer.hikari.HikariDataSource
-        url: jdbc:postgresql://localhost:15432/entity
+        url: jdbc:postgresql://localhost:${POSTGRES_PORT:15432}/entity
         username: entity
         password: entity
         hikari:
