@@ -1,6 +1,6 @@
 language: java
 jdk:
-    - oraclejdk25
+    - openjdk25
 install: true
 dist: jammy
 addons:

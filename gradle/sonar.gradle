@@ -17,3 +17,6 @@ sonarqube {
         property 'sonar.exclusions', "**/com/icthh/xm/ms/entity/domain/*,**/com/icthh/xm/ms/entity/config/*"
     }
 }
+
+test.finalizedBy jacocoTestReport
+jacocoTestReport.dependsOn test

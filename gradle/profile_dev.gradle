@@ -20,6 +20,8 @@ springBoot {
 
 bootRun {
     args = ["--spring.profiles.active=${springProfiles}"]
+    systemProperty 'user.timezone', 'UTC'
+    environment 'POSTGRES_PORT', '0'
 }
 
 
