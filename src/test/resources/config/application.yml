@@ -91,6 +91,13 @@ server:
 # Full reference is available at: https://www.jhipster.tech/common-application-properties/
 # ===================================================================
 management:
+    tracing:
+        export:
+            enabled: false
+    otlp:
+        metrics:
+            export:
+                enabled: false
     prometheus:
         metrics:
             export:
