@@ -5,40 +5,32 @@
     <springProperty scope="context" name="springAppName" source="spring.application.name"/>
     <!--<include resource="org/springframework/boot/logging/logback/base.xml"/>-->
 
-<!-- The FILE and ASYNC appenders are here as examples for a production configuration -->
-<!--
-    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>logFile.%d{yyyy-MM-dd}.log</fileNamePattern>
-            <maxHistory>90</maxHistory>
-        </rollingPolicy>
+    <appender name="STDOUT_SYNC" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
             <charset>utf-8</charset>
-            <Pattern>%d %-5level [%thread] %logger{0}: %msg%n</Pattern>
+            <Pattern>%d %-5level [%thread] [${springAppName:-}] [%X{traceId:-}] [%X{rid}] %logger{0}: %msg%n</Pattern>
         </encoder>
     </appender>
 
-    <appender name="ASYNC" class="ch.qos.logback.classic.AsyncAppender">
-        <queueSize>512</queueSize>
-        <appender-ref ref="FILE"/>
-    </appender>
--->
-
-    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
-        <encoder>
-            <charset>utf-8</charset>
-            <Pattern>%d %-5level [%thread] [${springAppName:-}] [%X{traceId:-}] [%X{spanId:-}] [%X{rid}] %logger{0}: %msg%n</Pattern>
-        </encoder>
-    </appender>
-
-    <appender name="STDOUT_JSON" class="ch.qos.logback.core.ConsoleAppender">
+    <appender name="STDOUT_JSON_SYNC" class="ch.qos.logback.core.ConsoleAppender">
         <encoder class="net.logstash.logback.encoder.LogstashEncoder"/>
+    </appender>
+
+    <appender name="STDOUT" class="ch.qos.logback.classic.AsyncAppender">
+        <queueSize>512</queueSize>
+        <appender-ref ref="STDOUT_SYNC"/>
+    </appender>
+
+    <appender name="STDOUT_JSON" class="ch.qos.logback.classic.AsyncAppender">
+        <queueSize>512</queueSize>
+        <appender-ref ref="STDOUT_JSON_SYNC"/>
     </appender>
 
     <logger name="com.icthh.xm.ms.entity" level="#logback.loglevel#"/>
 
     <logger name="io.github.jhipster" level="#logback.loglevel#"/>
 
+    <logger name="io.opentelemetry.sdk.trace" level="WARN"/>
     <logger name="jakarta.annotation" level="WARN"/>
     <logger name="jakarta.servlet" level="WARN"/>
     <logger name="jakarta.persistence" level="WARN"/>
@@ -74,6 +66,7 @@
     <logger name="org.reflections" level="INFO"/>
     <logger name="org.springframework.boot.actuate.endpoint.EndpointId" level="ERROR"/>
     <logger name="com.netflix.config.sources.URLConfigurationSource" level="ERROR"/>
+    <logger name="java.lang.ProcessBuilder" level="INFO"/>
 
     <contextListener class="ch.qos.logback.classic.jul.LevelChangePropagator">
         <resetJUL>true</resetJUL>
