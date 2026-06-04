@@ -69,7 +69,7 @@ import static com.icthh.xm.lep.LepTestConstants.LEP_CUSTOM_TEST_PATH
  *  </pre>
  * </ol>
  */
-@Tag("com.icthh.xm.lep.AbstractUnitTest")
+@Tag("com.icthh.xm.lep.AbstractGroovyUnitTest")
 abstract class AbstractGroovyUnitTest {
 
     private GroovyShell groovyShell = new GroovyShell()
