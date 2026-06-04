@@ -178,6 +178,11 @@ tasks.register('runCategorizedTests', Test) {
     useJUnitPlatform {
         includeTags(testCategories)
     }
+
+    dependsOn testClasses
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+
     testLogging testLoggingConf
 }
 
