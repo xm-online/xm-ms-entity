@@ -171,6 +171,10 @@ test {
 
 tasks.register('runCategorizedTests', Test) {
 
+    dependsOn testClasses
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+
     jvmArgs '-XX:+HeapDumpOnOutOfMemoryError', '-Xmx2048m', '-Xms512m'
 
     exclude '**/JsonbCriteriaBuilderIntTest.class'// todo: excluded until pipeline problem fixed
@@ -441,6 +445,9 @@ dependencies {
     testImplementation "org.testcontainers:postgresql:${testcontainersVersion}"
     testImplementation "org.testcontainers:elasticsearch:${testcontainersVersion}"
     testImplementation "co.elastic.clients:elasticsearch-java:${elastic_client_version}"
+
+    implementation 'com.flipkart.zjsonpatch:zjsonpatch:0.4.16'
+
 
 }
 

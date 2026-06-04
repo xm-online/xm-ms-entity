@@ -1,9 +1,8 @@
 package com.icthh.xm.lep
 
-import com.icthh.xm.ms.entity.AbstractUnitTest
 import groovy.test.GroovyAssert
-import org.junit.Before
-import org.junit.experimental.categories.Category
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Tag
 
 import static com.icthh.xm.lep.LepTestConstants.LEP_CUSTOM_TEST_PATH
 
@@ -70,7 +69,7 @@ import static com.icthh.xm.lep.LepTestConstants.LEP_CUSTOM_TEST_PATH
  *  </pre>
  * </ol>
  */
-@Category(AbstractUnitTest.class)
+@Tag("com.icthh.xm.ms.entity.AbstractUnitTest")
 abstract class AbstractGroovyUnitTest {
 
     private GroovyShell groovyShell = new GroovyShell()
@@ -82,7 +81,7 @@ abstract class AbstractGroovyUnitTest {
      */
     abstract Object setLepContext()
 
-    @Before
+    @BeforeEach
     void setUp() {
         lepContext = setLepContext()
         groovyShell.setVariable('lepContext', lepContext)
