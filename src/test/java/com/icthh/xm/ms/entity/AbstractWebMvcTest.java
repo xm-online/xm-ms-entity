@@ -1,15 +1,13 @@
 package com.icthh.xm.ms.entity;
 
-import org.junit.experimental.categories.Category;
-import org.junit.runner.RunWith;
-import org.springframework.test.context.junit4.SpringRunner;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 /**
  * Abstract test for extension for any WebMvc test.
  * Marks test with junit @Category
  */
-@RunWith(SpringRunner.class)
-@Category(AbstractWebMvcTest.class)
+@ExtendWith(SpringExtension.class)
 @Deprecated
 public abstract class AbstractWebMvcTest {
 }

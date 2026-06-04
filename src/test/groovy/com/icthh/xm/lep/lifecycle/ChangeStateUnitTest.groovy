@@ -6,7 +6,7 @@ import com.icthh.xm.ms.entity.domain.XmEntity
 import com.icthh.xm.ms.entity.domain.ext.IdOrKey
 import com.icthh.xm.ms.entity.service.XmEntityService
 import com.icthh.xm.ms.entity.service.XmTenantLifecycleService
-import org.junit.Test
+import org.junit.jupiter.api.Test
 
 import static com.icthh.xm.lep.LepTestConstants.LEP_DEFAULT_PATH
 import static org.mockito.Mockito.*
