@@ -64,6 +64,7 @@ public class SimpleLinkSerializer extends StdSerializer<Link> {
             write(jsonGenerator, provider, "removed", value.getTarget().isRemoved());
             write(jsonGenerator, provider, "data", value.getTarget().getData());
         }
+        jsonGenerator.writeEndObject();
 
         if (value.getSource() != null) {
             write(jsonGenerator, provider, "source", value.getSource().getId());
