@@ -134,7 +134,7 @@ String[] testCategories = ['com.icthh.xm.ms.entity.AbstractSpringBootTest',
                            'com.icthh.xm.ms.entity.AbstractWebMvcTest']
 
 Closure testLoggingConf = {
-    exceptionFormat = 'full'
+    exceptionFormat = 'short'
     events "failed"//, "standardError" //, "standardOut"
 }
 
