@@ -6,10 +6,6 @@ import com.amazonaws.client.builder.AwsClientBuilder;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import com.amazonaws.services.s3.model.Region;
-import com.github.dockerjava.api.command.CreateContainerCmd;
-import com.github.dockerjava.api.model.ExposedPort;
-import com.github.dockerjava.api.model.PortBinding;
-import com.github.dockerjava.api.model.Ports;
 import com.icthh.xm.commons.security.XmAuthenticationContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
@@ -42,7 +38,6 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
-import java.util.function.Consumer;
 
 import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_AUTH_CONTEXT;
 import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_TENANT_CONTEXT;
@@ -67,14 +62,7 @@ public class S3StorageRepositoryIntTest extends AbstractJupiterSpringBootTest {
 
     @Container
     public static GenericContainer<?> mockS3 = new GenericContainer<>("adobe/s3mock")
-        .withCreateContainerCmdModifier(getContainerModifier())
         .withExposedPorts(9090);
-
-    private static Consumer<CreateContainerCmd> getContainerModifier() {
-        return containerCmd -> containerCmd
-            .withPortBindings(new PortBinding(Ports.Binding.bindPort(9191), new ExposedPort(9191)))
-            .withPortBindings(new PortBinding(Ports.Binding.bindPort(9090), new ExposedPort(9090)));
-    }
 
     public AmazonS3 createS3Client() {
         final BasicAWSCredentials credentials = new BasicAWSCredentials("foo", "bar");
@@ -84,7 +72,7 @@ public class S3StorageRepositoryIntTest extends AbstractJupiterSpringBootTest {
             .enablePathStyleAccess()
             .withEndpointConfiguration(
                 new AwsClientBuilder.EndpointConfiguration(
-                    "http://127.0.0.1:9090",
+                    "http://" + mockS3.getHost() + ":" + mockS3.getMappedPort(9090),
                     Region.US_Standard.getFirstRegionId()
                 )).build();
     }
