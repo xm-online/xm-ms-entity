@@ -134,9 +134,8 @@ String[] testCategories = ['com.icthh.xm.ms.entity.AbstractSpringBootTest',
                            'com.icthh.xm.ms.entity.AbstractWebMvcTest']
 
 Closure testLoggingConf = {
-    exceptionFormat = 'full'
-    showStandardStreams = true
-    events "passed", "skipped", "failed"//, "standardError" //, "standardOut"
+    exceptionFormat = 'short'
+    events "failed"//, "standardError" //, "standardOut"
 }
 
 test {
@@ -178,6 +177,11 @@ tasks.register('runCategorizedTests', Test) {
     useJUnitPlatform {
         includeTags(testCategories)
     }
+
+    dependsOn testClasses
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+
     testLogging testLoggingConf
 }
 

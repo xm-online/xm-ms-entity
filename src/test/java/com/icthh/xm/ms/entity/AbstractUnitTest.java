@@ -1,12 +1,12 @@
 package com.icthh.xm.ms.entity;
 
-import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.Tag;
 
 /**
  * Abstract test for extension for any Unit test.
  * Marks test with junit @Category
  */
-@Category(AbstractUnitTest.class)
+@Tag("com.icthh.xm.ms.entity.AbstractUnitTest")
 @Deprecated
 public abstract class AbstractUnitTest {
 }
