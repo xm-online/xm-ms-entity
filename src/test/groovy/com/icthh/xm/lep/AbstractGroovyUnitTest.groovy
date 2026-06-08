@@ -97,7 +97,7 @@ abstract class AbstractGroovyUnitTest {
      * Default LEP scripts reside under {@code src/main/resources} and are therefore available on the
      * test classpath. Resolving them via {@link ClassLoader#getResource} makes tests independent of the
      * current working directory, which differs between a standalone microservice and a microservice
-     * nested as a gradle module (e.g. xm-ms-ee-entity). Falls back to a plain {@link File} lookup for
+     * nested as a gradle module. Falls back to a plain {@link File} lookup for
      * scripts that are not on the classpath (e.g. tenant LEPs linked under {@code src/main/lep}).
      */
     protected File resolveScriptFile(String scriptName) {
