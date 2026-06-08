@@ -8,12 +8,17 @@ import com.icthh.xm.ms.entity.service.XmEntityService
 import com.icthh.xm.ms.entity.service.XmTenantLifecycleService
 import org.junit.jupiter.api.Test
 
-import static com.icthh.xm.lep.LepTestConstants.LEP_DEFAULT_PATH
 import static org.mockito.Mockito.*
 
 class ChangeStateUnitTest extends AbstractGroovyUnitTest {
 
-    String scriptName = LEP_DEFAULT_PATH + '/lifecycle/ChangeState.groovy'
+    // Resolve the script via classloader so the test is independent of the project structure:
+    // default LEP scripts live under src/main/resources and are available on the test classpath.
+    String scriptName = resolveScriptPath('lep/default/lifecycle/ChangeState.groovy')
+
+    private String resolveScriptPath(String resource) {
+        new File(getClass().getClassLoader().getResource(resource).toURI()).path
+    }
 
     @Override
     Object setLepContext() {
