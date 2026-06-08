@@ -88,29 +88,7 @@ abstract class AbstractGroovyUnitTest {
     }
 
     def <T> T evaluateScript(String scriptName) {
-        groovyShell.evaluate(resolveScriptFile(scriptName)) as T
-    }
-
-    /**
-     * Resolves the script location independently of the project structure.
-     * <p>
-     * Default LEP scripts reside under {@code src/main/resources} and are therefore available on the
-     * test classpath. Resolving them via {@link ClassLoader#getResource} makes tests independent of the
-     * current working directory, which differs between a standalone microservice and a microservice
-     * nested as a gradle module. Falls back to a plain {@link File} lookup for
-     * scripts that are not on the classpath (e.g. tenant LEPs linked under {@code src/main/lep}).
-     */
-    protected File resolveScriptFile(String scriptName) {
-        String resourcePath = scriptName.replaceFirst(/^src\/(main|test)\/resources\//, '')
-        URL resource = this.class.getClassLoader().getResource(resourcePath)
-        if (resource != null) {
-            return new File(resource.toURI())
-        }
-        File file = new File(scriptName)
-        if (file.exists()) {
-            return file
-        }
-        throw new IllegalStateException("LEP script not found on classpath or filesystem: " + scriptName)
+        groovyShell.evaluate(new File(scriptName)) as T
     }
 
     static <T extends Throwable> T shouldFail(Class clazz, Closure code) {
