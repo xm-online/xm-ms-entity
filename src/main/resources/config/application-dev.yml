@@ -13,13 +13,6 @@
 # http://docs.spring.io/spring-boot/docs/current/reference/html/common-application-properties.html
 # ===================================================================
 management:
-    tracing:
-        export:
-            enabled: false
-    otlp:
-        metrics:
-            export:
-                enabled: false
 logging:
     level:
         ROOT: INFO
