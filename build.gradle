@@ -131,7 +131,8 @@ springBoot {
 
 String[] testCategories = ['com.icthh.xm.ms.entity.AbstractSpringBootTest',
                            'com.icthh.xm.ms.entity.AbstractUnitTest',
-                           'com.icthh.xm.ms.entity.AbstractWebMvcTest']
+                           'com.icthh.xm.ms.entity.AbstractWebMvcTest',
+                           'com.icthh.xm.lep.AbstractGroovyUnitTest']
 
 Closure testLoggingConf = {
     exceptionFormat = 'short'
