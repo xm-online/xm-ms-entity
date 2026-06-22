@@ -73,6 +73,7 @@ spring:
                 - 10.
         consul:
             discovery:
+                query-passing: true
                 healthCheckPath: /management/health
                 instanceId: ${spring.application.name}:${spring.application.instance-id:${random.value}}
             config:
