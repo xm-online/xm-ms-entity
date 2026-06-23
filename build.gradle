@@ -495,6 +495,7 @@ compileJava {
     dependsOn processResources
     // add method parameters names to .class (used by LEP scripts)
     options.compilerArgs << '-parameters'
+    options.compilerArgs << '-Amapstruct.unmappedTargetPolicy=IGNORE'
 }
 processResources.dependsOn cleanResources, bootBuildInfo
 bootBuildInfo.mustRunAfter cleanResources
