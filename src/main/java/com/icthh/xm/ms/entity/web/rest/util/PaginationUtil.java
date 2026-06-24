@@ -2,12 +2,12 @@ package com.icthh.xm.ms.entity.web.rest.util;
 
 import static java.lang.String.format;
 import static java.util.stream.Collectors.joining;
-import static org.apache.commons.lang.StringUtils.EMPTY;
+import static org.apache.commons.lang3.StringUtils.EMPTY;
 
 import com.icthh.xm.ms.entity.domain.template.TemplateParamsHolder;
 import lombok.SneakyThrows;
 import lombok.experimental.UtilityClass;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpHeaders;
 import org.springframework.web.util.UriComponentsBuilder;

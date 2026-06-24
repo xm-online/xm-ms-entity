@@ -289,6 +289,7 @@ dependencies {
     implementation 'javax.persistence:javax.persistence-api:2.2'
     implementation "com.zaxxer:HikariCP"
     implementation "org.apache.commons:commons-lang3"
+    implementation "commons-lang:commons-lang:${commonsLangVersion}" //for lep
     implementation("org.apache.tika:tika-core:${apacheTikaVersion}")
     implementation "commons-io:commons-io"
     implementation "org.hibernate.validator:hibernate-validator"
@@ -352,7 +353,6 @@ dependencies {
     implementation "org.jsoup:jsoup:1.18.1" // for LinkedIn LEP
     implementation "com.jayway.jsonpath:json-path"
     implementation "com.mortennobel:java-image-scaling:${mortennobelVersion}"
-    implementation "org.codehaus.groovy.modules.http-builder:http-builder:${codehausVersion}"
 
 
     implementation("com.icthh.xm.commons:xm-commons-ms-web:${xm_commons_version}") {
