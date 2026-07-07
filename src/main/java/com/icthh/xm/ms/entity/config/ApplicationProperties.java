@@ -132,6 +132,8 @@ public class ApplicationProperties {
         private String lepResourcePathPattern;
         private Boolean warmupScripts;
         private List<String> tenantsWithLepWarmup;
+        private Boolean precompiledMode;
+        private String pathToWorkingDirectory;
     }
 
     @Getter

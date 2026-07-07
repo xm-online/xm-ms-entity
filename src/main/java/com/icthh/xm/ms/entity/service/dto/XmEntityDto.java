@@ -87,35 +87,35 @@ public class XmEntityDto implements Serializable, WithId, WithTypeKey, EntityBas
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private Integer version;
 
-    @JsonInclude(JsonInclude.Include.NON_NULL)
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private Set<AttachmentDto> attachments = new HashSet<>();
 
-    @JsonInclude(JsonInclude.Include.NON_NULL)
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private Set<CalendarDto> calendars = new HashSet<>();
 
-    @JsonInclude(JsonInclude.Include.NON_NULL)
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private Set<LocationDto> locations = new HashSet<>();
 
-    @JsonInclude(JsonInclude.Include.NON_NULL)
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private Set<RatingDto> ratings = new HashSet<>();
 
     @Valid
-    @JsonInclude(JsonInclude.Include.NON_NULL)
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private Set<TagDto> tags = new HashSet<>();
 
-    @JsonInclude(JsonInclude.Include.NON_NULL)
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private Set<CommentDto> comments = new HashSet<>();
 
     @JsonIgnore
     private Set<VoteDto> votes = new HashSet<>();
 
-    @JsonInclude(JsonInclude.Include.NON_NULL)
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private Set<LinkDto> sources = new HashSet<>();
 
-    @JsonInclude(JsonInclude.Include.NON_NULL)
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private Set<LinkDto> targets = new HashSet<>();
 
-    @JsonInclude(JsonInclude.Include.NON_NULL)
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private Set<FunctionContextDto> functionContexts = new HashSet<>();
 
     @JsonIgnore
