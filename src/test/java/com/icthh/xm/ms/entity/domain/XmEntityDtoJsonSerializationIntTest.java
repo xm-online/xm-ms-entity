@@ -173,7 +173,7 @@ public class XmEntityDtoJsonSerializationIntTest extends AbstractJupiterSpringBo
     // ==================== GROUP 1: Serialization - Scalar Fields ====================
 
     @Test
-    void serialize_minimalEntity_emptyCollectionsPresent() throws Exception {
+    void serialize_minimalEntity_emptyCollectionsOmitted() throws Exception {
         XmEntity entity = createMinimalEntity();
         entity.setData(new HashMap<>());
 
@@ -186,17 +186,17 @@ public class XmEntityDtoJsonSerializationIntTest extends AbstractJupiterSpringBo
         assertThat(json.has("startDate")).isTrue();
         assertThat(json.has("updateDate")).isTrue();
 
-        // Empty collections present as empty arrays
-        assertThat(json.get("tags").isArray()).isTrue();
-        assertThat(json.get("tags").size()).isEqualTo(0);
-        assertThat(json.get("locations").isArray()).isTrue();
-        assertThat(json.get("locations").size()).isEqualTo(0);
-        assertThat(json.get("attachments").isArray()).isTrue();
-        assertThat(json.get("comments").isArray()).isTrue();
-        assertThat(json.get("ratings").isArray()).isTrue();
-        assertThat(json.get("calendars").isArray()).isTrue();
-        assertThat(json.get("functionContexts").isArray()).isTrue();
-        assertThat(json.get("targets").isArray()).isTrue();
+        // Empty collections are omitted (same as pre-DTO behavior with
+        // spring.jackson.default-property-inclusion=non_empty)
+        assertThat(json.has("tags")).isFalse();
+        assertThat(json.has("locations")).isFalse();
+        assertThat(json.has("attachments")).isFalse();
+        assertThat(json.has("comments")).isFalse();
+        assertThat(json.has("ratings")).isFalse();
+        assertThat(json.has("calendars")).isFalse();
+        assertThat(json.has("functionContexts")).isFalse();
+        assertThat(json.has("targets")).isFalse();
+        assertThat(json.has("sources")).isFalse();
 
         // Empty data map present
         assertThat(json.has("data")).isTrue();

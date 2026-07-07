@@ -74,8 +74,9 @@ public class TestUtil {
         return JsonMapper.builder()
                 .disable(DeserializationFeature.FAIL_ON_TRAILING_TOKENS)
                 .enable(StreamReadFeature.INCLUDE_SOURCE_IN_LOCATION)
+                // mirrors production spring.jackson.default-property-inclusion=non_empty
                 .changeDefaultPropertyInclusion(incl ->
-                        incl.withValueInclusion(JsonInclude.Include.NON_NULL)
+                        incl.withValueInclusion(JsonInclude.Include.NON_EMPTY)
                 )
                 .disable(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY)
                 .build();

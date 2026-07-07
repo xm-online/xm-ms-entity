@@ -62,7 +62,10 @@ public class SimpleLinkSerializer extends StdSerializer<Link> {
             write(jsonGenerator, provider, "description", value.getTarget().getDescription());
             write(jsonGenerator, provider, "createdBy", value.getTarget().getCreatedBy());
             write(jsonGenerator, provider, "removed", value.getTarget().isRemoved());
-            write(jsonGenerator, provider, "data", value.getTarget().getData());
+            // skip empty data to match non_empty inclusion of the DTO serialization path
+            if (value.getTarget().getData() != null && !value.getTarget().getData().isEmpty()) {
+                write(jsonGenerator, provider, "data", value.getTarget().getData());
+            }
         }
         jsonGenerator.writeEndObject();
 

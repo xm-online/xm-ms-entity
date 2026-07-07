@@ -18,8 +18,8 @@ logging:
         ROOT: INFO
         io.github.jhipster: INFO
         com.icthh.xm: DEBUG
-        com.fasterxml.jackson: DEBUG
-        org.springframework.web: DEBUG
+        com.fasterxml.jackson: INFO
+        org.springframework.web: INFO
 spring:
     devtools:
         restart:
