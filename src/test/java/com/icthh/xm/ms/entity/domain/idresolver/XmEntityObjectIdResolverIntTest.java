@@ -12,6 +12,7 @@ import com.icthh.xm.commons.i18n.error.web.ExceptionTranslator;
 import com.icthh.xm.commons.i18n.spring.service.LocalizationMessageService;
 import com.icthh.xm.commons.web.spring.config.JacksonConfiguration;
 import com.icthh.xm.ms.entity.AbstractJupiterWebMvcTest;
+import com.icthh.xm.ms.entity.config.TestJacksonJsonConverterConfiguration;
 import com.icthh.xm.ms.entity.config.WebMvcConfiguration;
 import com.icthh.xm.ms.entity.domain.Link;
 import com.icthh.xm.ms.entity.domain.XmEntity;
@@ -42,7 +43,7 @@ import java.util.Optional;
 
 @Slf4j
 @WebMvcTest(controllers = LinkResource.class)
-@ContextConfiguration(classes = {LinkResource.class, LinkMapperImpl.class, LinkFacade.class, XmEntityRefMapperImpl.class, ExceptionTranslator.class, WebMvcConfiguration.class, JacksonConfiguration.class})
+@ContextConfiguration(classes = {LinkResource.class, LinkMapperImpl.class, LinkFacade.class, XmEntityRefMapperImpl.class, ExceptionTranslator.class, WebMvcConfiguration.class, JacksonConfiguration.class, TestJacksonJsonConverterConfiguration.class})
 public class XmEntityObjectIdResolverIntTest extends AbstractJupiterWebMvcTest {
 
     private static final String DEFAULT_TYPE_KEY = "ACCOUNT.ADMIN";

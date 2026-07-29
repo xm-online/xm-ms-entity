@@ -15,7 +15,6 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import tools.jackson.databind.json.JsonMapper;
 
 @Configuration
 @Slf4j
@@ -26,11 +25,6 @@ public class WebMvcConfiguration implements WebMvcConfigurer {
 
     public static String[] getJsonFilterAllowedURIs() {
         return JSON_FILTER_APPLIED_URI.toArray(new String[]{});
-    }
-
-    @Bean
-    public JacksonJsonHttpMessageConverter converter(JsonMapper jsonMapper) {
-        return new JacksonJsonHttpMessageConverter(jsonMapper);
     }
 
     @Override

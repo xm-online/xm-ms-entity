@@ -2,6 +2,7 @@ package com.icthh.xm.ms.entity;
 
 import com.icthh.xm.ms.entity.config.LepConfiguration;
 import com.icthh.xm.ms.entity.config.SecurityBeanOverrideConfiguration;
+import com.icthh.xm.ms.entity.config.TestJacksonJsonConverterConfiguration;
 import com.icthh.xm.ms.entity.config.TestLepUpdateModeConfiguration;
 import com.icthh.xm.ms.entity.config.tenant.WebappTenantOverrideConfiguration;
 import lombok.extern.slf4j.Slf4j;
@@ -21,7 +22,8 @@ import org.springframework.boot.test.context.SpringBootTest;
     LepConfiguration.class,
     EntityApp.class,
     SecurityBeanOverrideConfiguration.class,
-    WebappTenantOverrideConfiguration.class
+    WebappTenantOverrideConfiguration.class,
+    TestJacksonJsonConverterConfiguration.class
 })
 @Tag("com.icthh.xm.ms.entity.AbstractSpringBootTest")
 @TestInstance(Lifecycle.PER_CLASS)

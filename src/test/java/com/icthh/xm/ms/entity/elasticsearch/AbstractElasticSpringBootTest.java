@@ -6,6 +6,7 @@ import com.icthh.xm.commons.tenant.TenantContextUtils;
 import com.icthh.xm.ms.entity.EntityApp;
 import com.icthh.xm.ms.entity.config.LepConfiguration;
 import com.icthh.xm.ms.entity.config.SecurityBeanOverrideConfiguration;
+import com.icthh.xm.ms.entity.config.TestJacksonJsonConverterConfiguration;
 import com.icthh.xm.ms.entity.config.TestLepUpdateModeConfiguration;
 import com.icthh.xm.ms.entity.elasticsearch.config.ElasticsearchTestContainer;
 import com.icthh.xm.ms.entity.elasticsearch.config.ElasticsearchTestContainerConfiguration;
@@ -33,7 +34,8 @@ import static java.nio.charset.StandardCharsets.UTF_8;
     LepConfiguration.class,
     EntityApp.class,
     SecurityBeanOverrideConfiguration.class,
-    WebappTenantOverrideConfiguration.class
+    WebappTenantOverrideConfiguration.class,
+    TestJacksonJsonConverterConfiguration.class
 })
 @Tag("elastic-spring-boot")
 @Testcontainers
