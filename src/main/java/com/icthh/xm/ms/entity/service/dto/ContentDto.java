@@ -1,14 +1,13 @@
 package com.icthh.xm.ms.entity.service.dto;
 
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 
 import java.io.Serializable;
 
-@ApiModel(description = "Represents Attachment content. Content can be extracted separately from the attachment.")
+@Schema(description = "Represents Attachment content. Content can be extracted separately from the attachment.")
 @Getter
 @Setter
 public class ContentDto implements Serializable {
@@ -18,6 +17,6 @@ public class ContentDto implements Serializable {
     private Long id;
 
     @NotNull
-    @ApiModelProperty(value = "Content value as byte array", required = true)
+    @Schema(description = "Content value as byte array", requiredMode = Schema.RequiredMode.REQUIRED)
     private byte[] value;
 }

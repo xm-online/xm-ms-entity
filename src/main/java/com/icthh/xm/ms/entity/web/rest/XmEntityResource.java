@@ -26,7 +26,8 @@ import com.icthh.xm.ms.entity.web.rest.facade.XmEntityFacade;
 import com.icthh.xm.ms.entity.web.rest.util.HeaderUtil;
 import com.icthh.xm.ms.entity.web.rest.util.PaginationUtil;
 import com.icthh.xm.ms.entity.web.rest.util.RespContentUtil;
-import io.swagger.annotations.ApiParam;
+import io.swagger.v3.oas.annotations.Parameter;
+import org.springdoc.core.annotations.ParameterObject;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.context.annotation.Lazy;
@@ -157,7 +158,7 @@ public class XmEntityResource {
      * @return the ResponseEntity with status 200 (OK) and the list of xmEntities in body
      */
     @GetMapping("/xm-entities")
-    public ResponseEntity<List<XmEntityDto>> getAllXmEntities(@ApiParam Pageable pageable,
+    public ResponseEntity<List<XmEntityDto>> getAllXmEntities(@ParameterObject Pageable pageable,
                                                               @RequestParam(required = false) String typeKey) {
         Page<XmEntityDto> page = xmEntityFacade.findAll(pageable, typeKey, null);
         HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(page, "/api/xm-entities");
@@ -165,7 +166,7 @@ public class XmEntityResource {
     }
 
     @GetMapping("/xm-entities-by-ids")
-    public ResponseEntity<List<XmEntityDto>> getXmEntitiesByIds(@ApiParam Pageable pageable,
+    public ResponseEntity<List<XmEntityDto>> getXmEntitiesByIds(@ParameterObject Pageable pageable,
                                                                 @RequestParam Set<Long> ids,
                                                                 @RequestParam(required = false) Set<String> embed) {
         Page<XmEntityDto> page = xmEntityFacade.findByIds(pageable, ids, embed, null);
@@ -321,7 +322,7 @@ public class XmEntityResource {
     public ResponseEntity<List<LinkSourceDto>> getLinkSourcesInverted(@PathVariable String idOrKey,
                                                                       @RequestParam(required = false) Set<String>
                                                                           typeKeys,
-                                                                      @ApiParam Pageable pageable) {
+                                                                      @ParameterObject Pageable pageable) {
 
         Page<LinkSourceDto> page = xmEntityFacade.getLinkSourcesInverted(pageable,
                                                                          IdOrKey.of(idOrKey),
@@ -374,7 +375,7 @@ public class XmEntityResource {
     @PreAuthorize("hasPermission({'fileFormat':#fileFormat, 'typeKey':#typeKey}, 'XMENTITY.EXPORT.FILE')")
     @PrivilegeDescription("Privilege to export all xmEntities by typeKey in specific file format")
     public ResponseEntity<byte[]> exportEntities(
-                    @ApiParam(name = "fileFormat", value = "Specify file format to download(csv, xlsx, etc)")
+                    @Parameter(name = "fileFormat", description = "Specify file format to download(csv, xlsx, etc)")
                     @RequestParam String fileFormat,
                     @RequestParam String typeKey) throws IOException {
         byte[] media = xmEntityFacade.exportEntities(fileFormat, typeKey);

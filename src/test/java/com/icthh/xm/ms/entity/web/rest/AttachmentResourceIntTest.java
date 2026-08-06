@@ -465,7 +465,9 @@ public class AttachmentResourceIntTest extends AbstractJupiterSpringBootTest {
             .andExpect(jsonPath("$.startDate").value(DEFAULT_START_DATE.toString()))
             .andExpect(jsonPath("$.endDate").value(DEFAULT_END_DATE.toString()))
             .andExpect(jsonPath("$.valueContentType").value(DEFAULT_VALUE_CONTENT_TYPE.toString()))
-            .andExpect(jsonPath("$.valueContentSize").value(DEFAULT_VALUE_CONTENT_SIZE.intValue()));
+            .andExpect(jsonPath("$.valueContentSize").value(DEFAULT_VALUE_CONTENT_SIZE.intValue()))
+            // content must round-trip as base64 of the stored bytes, "A" -> "QQ=="
+            .andExpect(jsonPath("$.content.value").value("QQ=="));
     }
 
     @Test

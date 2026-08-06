@@ -1,6 +1,6 @@
 package com.icthh.xm.ms.entity.service.dto;
 
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
@@ -17,17 +17,17 @@ public class VoteDto implements Serializable {
     private Long id;
 
     @NotNull
-    @ApiModelProperty(value = "Vote author user key", required = true)
+    @Schema(description = "Vote author user key", requiredMode = Schema.RequiredMode.REQUIRED)
     private String userKey;
 
     @NotNull
-    @ApiModelProperty(value = "Vote value", required = true)
+    @Schema(description = "Vote value", requiredMode = Schema.RequiredMode.REQUIRED)
     private Double value;
 
-    @ApiModelProperty(value = "Vote message")
+    @Schema(description = "Vote message")
     private String message;
 
-    @ApiModelProperty(value = "Entry date")
+    @Schema(description = "Entry date")
     private Instant entryDate;
 
     private RatingDto rating;

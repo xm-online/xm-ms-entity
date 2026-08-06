@@ -101,9 +101,11 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.dao.DataIntegrityViolationException;
+import java.nio.charset.StandardCharsets;
 import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
 import org.springframework.http.MediaType;
 
+import org.springframework.http.converter.ByteArrayHttpMessageConverter;
 import org.springframework.http.converter.json.JacksonJsonHttpMessageConverter;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -417,7 +419,8 @@ public class XmEntityResourceExtendedIntTest extends AbstractJupiterSpringBootTe
                                                   .setCustomArgumentResolvers(pageableArgumentResolver)
                                                   .setControllerAdvice(exceptionTranslator)
                                                   .setValidator(validator)
-                                                  .setMessageConverters(new JacksonJsonHttpMessageConverter(jsonMapper))
+                                                  .setMessageConverters(new ByteArrayHttpMessageConverter(),
+                                                                       new JacksonJsonHttpMessageConverter(jsonMapper))
                                                   .addMappedInterceptors(WebMvcConfiguration.getJsonFilterAllowedURIs())
                                                   .build();
 
@@ -425,7 +428,8 @@ public class XmEntityResourceExtendedIntTest extends AbstractJupiterSpringBootTe
                                                   .setCustomArgumentResolvers(pageableArgumentResolver)
                                                   .setControllerAdvice(exceptionTranslator)
                                                   .setValidator(validator)
-                                                  .setMessageConverters(new JacksonJsonHttpMessageConverter(jsonMapper))
+                                                  .setMessageConverters(new ByteArrayHttpMessageConverter(),
+                                                                       new JacksonJsonHttpMessageConverter(jsonMapper))
                                                   .addMappedInterceptors(WebMvcConfiguration.getJsonFilterAllowedURIs())
                                                   .build();
 
@@ -1489,21 +1493,29 @@ public class XmEntityResourceExtendedIntTest extends AbstractJupiterSpringBootTe
     @WithMockUser(authorities = "SUPER-ADMIN")
     public void testExportCsvFile() throws Exception {
         createEntityComplexPersisted(em);
-        performGet("/api/xm-entities/export?typeKey=ACCOUNT&fileFormat=csv").andExpect(
+        byte[] body = performGet("/api/xm-entities/export?typeKey=ACCOUNT&fileFormat=csv").andExpect(
             status().isOk()).andExpect(
-            content().contentType(MediaType.parseMediaType("text/csv")));
+            content().contentType(MediaType.parseMediaType("text/csv")))
+            .andReturn().getResponse().getContentAsByteArray();
+
+        // the body must be the raw CSV, not a base64 JSON string produced by the JSON converter
+        assertThat(new String(body, StandardCharsets.UTF_8)).startsWith("avatarUrl,createdBy,description");
     }
 
     @Test
     @WithMockUser(authorities = "SUPER-ADMIN")
     public void testExportExcelFile() throws Exception {
         createEntityComplexPersisted(em);
-        performGet("/api/xm-entities/export?typeKey=ACCOUNT&fileFormat=xlsx")
+        byte[] body = performGet("/api/xm-entities/export?typeKey=ACCOUNT&fileFormat=xlsx")
             .andExpect(status().isOk())
             .andExpect(content()
                            .contentType(MediaType
                                             .parseMediaType(
-                                                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")));
+                                                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")))
+            .andReturn().getResponse().getContentAsByteArray();
+
+        // the body must be a real xlsx (zip) file, not a base64 JSON string
+        assertThat(body).startsWith(new byte[]{0x50, 0x4B, 0x03, 0x04});
     }
 
     @SneakyThrows

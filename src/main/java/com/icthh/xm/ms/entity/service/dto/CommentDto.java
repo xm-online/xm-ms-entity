@@ -5,7 +5,7 @@ import com.fasterxml.jackson.annotation.JsonIdentityReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import com.icthh.xm.ms.entity.domain.idresolver.XmEntityDtoObjectIdResolver;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
@@ -23,19 +23,19 @@ public class CommentDto implements Serializable {
 
     private Long id;
 
-    @ApiModelProperty(value = "Comment author user key")
+    @Schema(description = "Comment author user key")
     private String userKey;
 
-    @ApiModelProperty(value = "Comment author client id")
+    @Schema(description = "Comment author client id")
     private String clientId;
 
-    @ApiModelProperty(value = "Display name")
+    @Schema(description = "Display name")
     private String displayName;
 
-    @ApiModelProperty(value = "Message content")
+    @Schema(description = "Message content")
     private String message;
 
-    @ApiModelProperty(value = "Entry date")
+    @Schema(description = "Entry date")
     private Instant entryDate;
 
     private CommentDto comment;

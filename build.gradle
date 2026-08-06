@@ -324,16 +324,10 @@ dependencies {
     implementation "org.springframework.security:spring-security-web"
     implementation "org.springframework.security:spring-security-jwt:${securityJwtVersion}"
     implementation "org.glassfish.jaxb:jaxb-runtime:${jaxb_runtime_version}"
-    implementation "io.swagger:swagger-annotations:${swaggerVersion}"
     implementation "org.springdoc:springdoc-openapi-starter-webmvc-ui:${springdocVersion}"
     implementation "org.springframework.cloud:spring-cloud-starter-loadbalancer"
     implementation "org.springframework.cloud:spring-cloud-starter-circuitbreaker-resilience4j"
 
-
-    implementation("io.springfox:springfox-swagger2:${springfoxVersion}") {
-        exclude module: "mapstruct"
-    }
-    implementation "io.springfox:springfox-bean-validators:${springfoxVersion}"
     implementation "org.postgresql:postgresql:${postgresqlVersion}"
     liquibaseRuntime "org.postgresql:postgresql:${postgresqlVersion}"
     implementation "org.mapstruct:mapstruct:${mapstructVersion}"

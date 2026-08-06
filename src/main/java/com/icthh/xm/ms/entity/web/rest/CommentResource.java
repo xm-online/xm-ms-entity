@@ -9,7 +9,7 @@ import com.icthh.xm.ms.entity.web.rest.facade.CommentFacade;
 import com.icthh.xm.ms.entity.web.rest.util.HeaderUtil;
 import com.icthh.xm.ms.entity.web.rest.util.PaginationUtil;
 import com.icthh.xm.ms.entity.web.rest.util.RespContentUtil;
-import io.swagger.annotations.ApiParam;
+import org.springdoc.core.annotations.ParameterObject;
 import jakarta.validation.Valid;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Page;
@@ -106,7 +106,7 @@ public class CommentResource {
      */
     @GetMapping("/comments")
     
-    public ResponseEntity<List<CommentDto>> getAllComments(@ApiParam Pageable pageable) {
+    public ResponseEntity<List<CommentDto>> getAllComments(@ParameterObject Pageable pageable) {
         Page<CommentDto> page = commentFacade.findAll(pageable, null);
         HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(page, "/api/comments");
         return new ResponseEntity<>(page.getContent(), headers, HttpStatus.OK);
@@ -144,7 +144,7 @@ public class CommentResource {
 
     @GetMapping("/xm-entities/{id}/comments")
     
-    public ResponseEntity<List<CommentDto>> getCommentsByXmEntity(@PathVariable Long id, @ApiParam Pageable pageable) {
+    public ResponseEntity<List<CommentDto>> getCommentsByXmEntity(@PathVariable Long id, @ParameterObject Pageable pageable) {
         Page<CommentDto> page = commentFacade.findByXmEntity(id, pageable, null);
         HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(page, "/xm-entities/" + id + "/comments");
         return new ResponseEntity<>(page.getContent(), headers, HttpStatus.OK);
