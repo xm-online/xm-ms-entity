@@ -5,8 +5,7 @@ import com.fasterxml.jackson.annotation.JsonIdentityReference;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import com.icthh.xm.ms.entity.domain.idresolver.XmEntityDtoObjectIdResolver;
 import com.icthh.xm.ms.entity.validator.TypeKey;
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
@@ -14,7 +13,7 @@ import lombok.Setter;
 import java.io.Serializable;
 import java.time.Instant;
 
-@ApiModel(description = "Represents any XM entity file attachment. It could be image, zip archive, pdf document or other file formats (List of available file formats should be configured). Files should be verified on: - size - zip bombs - viruses")
+@Schema(description = "Represents any XM entity file attachment. It could be image, zip archive, pdf document or other file formats (List of available file formats should be configured). Files should be verified on: - size - zip bombs - viruses")
 @Getter
 @Setter
 @TypeKey
@@ -25,32 +24,32 @@ public class AttachmentDto implements Serializable {
     private Long id;
 
     @NotNull
-    @ApiModelProperty(value = "String typeKey with tree-like structure.", required = true)
+    @Schema(description = "String typeKey with tree-like structure.", requiredMode = Schema.RequiredMode.REQUIRED)
     private String typeKey;
 
     @NotNull
-    @ApiModelProperty(value = "Attachment name", required = true)
+    @Schema(description = "Attachment name", requiredMode = Schema.RequiredMode.REQUIRED)
     private String name;
 
-    @ApiModelProperty(value = "Content retrieving URL")
+    @Schema(description = "Content retrieving URL")
     private String contentUrl;
 
-    @ApiModelProperty(value = "Content description")
+    @Schema(description = "Content description")
     private String description;
 
-    @ApiModelProperty(value = "Start date")
+    @Schema(description = "Start date")
     private Instant startDate;
 
-    @ApiModelProperty(value = "End date")
+    @Schema(description = "End date")
     private Instant endDate;
 
-    @ApiModelProperty(value = "Content type")
+    @Schema(description = "Content type")
     private String valueContentType;
 
-    @ApiModelProperty(value = "Content size in bytes")
+    @Schema(description = "Content size in bytes")
     private Long valueContentSize;
 
-    @ApiModelProperty(value = "Content checksum")
+    @Schema(description = "Content checksum")
     private String contentChecksum;
 
     private ContentDto content;

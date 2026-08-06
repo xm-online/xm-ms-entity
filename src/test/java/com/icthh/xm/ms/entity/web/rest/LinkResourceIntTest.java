@@ -42,6 +42,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.json.JacksonJsonHttpMessageConverter;
+import tools.jackson.databind.json.JsonMapper;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import org.springframework.test.context.transaction.BeforeTransaction;
@@ -126,7 +127,7 @@ public class LinkResourceIntTest extends AbstractJupiterSpringBootTest {
     private LinkFacade linkFacade;
 
     @Autowired
-    private JacksonJsonHttpMessageConverter converter;
+    private JsonMapper jsonMapper;
 
     @BeforeTransaction
     public void beforeTransaction() {
@@ -155,7 +156,7 @@ public class LinkResourceIntTest extends AbstractJupiterSpringBootTest {
         this.restLinkMockMvc = MockMvcBuilders.standaloneSetup(linkResourceMock)
             .setCustomArgumentResolvers(pageableArgumentResolver)
             .setControllerAdvice(exceptionTranslator)
-            .setMessageConverters(converter).build();
+            .setMessageConverters(new JacksonJsonHttpMessageConverter(jsonMapper)).build();
 
         linkResourceMock.setSelf(linkResourceMock);
 

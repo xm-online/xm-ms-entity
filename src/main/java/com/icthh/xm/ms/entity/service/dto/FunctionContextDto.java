@@ -5,8 +5,7 @@ import com.fasterxml.jackson.annotation.JsonIdentityReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import com.icthh.xm.ms.entity.domain.idresolver.XmEntityDtoObjectIdResolver;
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
@@ -16,7 +15,7 @@ import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 
-@ApiModel(description = "Represents function context with result of function execution.")
+@Schema(description = "Represents function context with result of function execution.")
 @Getter
 @Setter
 public class FunctionContextDto implements Serializable {
@@ -26,26 +25,26 @@ public class FunctionContextDto implements Serializable {
     private Long id;
 
     @NotNull
-    @ApiModelProperty(value = "Function context alphanumeric alias.", required = true)
+    @Schema(description = "Function context alphanumeric alias.", requiredMode = Schema.RequiredMode.REQUIRED)
     private String key;
 
     @NotNull
-    @ApiModelProperty(value = "String typeKey with tree-like structure.", required = true)
+    @Schema(description = "String typeKey with tree-like structure.", requiredMode = Schema.RequiredMode.REQUIRED)
     private String typeKey;
 
-    @ApiModelProperty(value = "Function context description.")
+    @Schema(description = "Function context description.")
     private String description;
 
-    @ApiModelProperty(value = "Start date.")
+    @Schema(description = "Start date.")
     private Instant startDate;
 
-    @ApiModelProperty(value = "Update date.")
+    @Schema(description = "Update date.")
     private Instant updateDate;
 
-    @ApiModelProperty(value = "End date.")
+    @Schema(description = "End date.")
     private Instant endDate;
 
-    @ApiModelProperty(value = "Function context execution related data in JSON format. On DTO level data type should be Map<String,Object>")
+    @Schema(description = "Function context execution related data in JSON format. On DTO level data type should be Map<String,Object>")
     private Map<String, Object> data = new HashMap<>();
 
     @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id", resolver = XmEntityDtoObjectIdResolver.class)

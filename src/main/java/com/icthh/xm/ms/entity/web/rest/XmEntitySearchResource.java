@@ -10,7 +10,7 @@ import com.icthh.xm.ms.entity.domain.template.TemplateParamsHolder;
 import com.icthh.xm.ms.entity.service.dto.XmEntityDto;
 import com.icthh.xm.ms.entity.web.rest.facade.XmEntityFacade;
 import com.icthh.xm.ms.entity.web.rest.util.PaginationUtil;
-import io.swagger.annotations.ApiParam;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
@@ -53,7 +53,7 @@ public class XmEntitySearchResource {
     @PrivilegeDescription("Privilege to search for the xmEntity corresponding to the query")
     public ResponseEntity<List<XmEntityDto>> searchXmEntities(
         @RequestParam String query,
-        @ApiParam Pageable pageable) {
+        @ParameterObject Pageable pageable) {
         Page<XmEntityDto> page = xmEntityFacade.search(query, pageable, null);
         HttpHeaders headers = PaginationUtil
             .generateSearchPaginationHttpHeaders(query, page,
@@ -66,8 +66,8 @@ public class XmEntitySearchResource {
     @PrivilegeDescription("Privilege to search for the xmEntity corresponding to the query")
     public ResponseEntity<List<XmEntityDto>> searchXmEntitiesV2(
         @RequestParam String query,
-        @ApiParam Pageable pageable,
-        @ApiParam ElasticFetchSourceFilterDto fetchSourceFilterDto) {
+        @ParameterObject Pageable pageable,
+        @ParameterObject ElasticFetchSourceFilterDto fetchSourceFilterDto) {
         SearchDto searchDto = SearchDto.builder()
             .query(query)
             .pageable(pageable)
@@ -86,8 +86,8 @@ public class XmEntitySearchResource {
     @PrivilegeDescription("Privilege to search for the xmEntity by query template")
     public ResponseEntity<List<XmEntityDto>> searchXmEntities(
         @RequestParam String template,
-        @ApiParam TemplateParamsHolder templateParamsHolder,
-        @ApiParam Pageable pageable) {
+        @ParameterObject TemplateParamsHolder templateParamsHolder,
+        @ParameterObject Pageable pageable) {
         Page<XmEntityDto> page = xmEntityFacade.search(template, templateParamsHolder, pageable, null);
         HttpHeaders headers = PaginationUtil
             .generateSearchWithTemplatePaginationHttpHeaders(template, templateParamsHolder, page,
@@ -101,7 +101,7 @@ public class XmEntitySearchResource {
     public ResponseEntity<List<XmEntityDto>> searchByTypeKeyAndQuery(
         @RequestParam String typeKey,
         @RequestParam(required = false) String query,
-        @ApiParam Pageable pageable) {
+        @ParameterObject Pageable pageable) {
         Page<XmEntityDto> page = xmEntityFacade.searchByQueryAndTypeKey(query, typeKey, pageable, null);
         HttpHeaders headers = PaginationUtil
             .generateSearchByTypeKeyPaginationHttpHeaders(typeKey, query, page,
@@ -115,8 +115,8 @@ public class XmEntitySearchResource {
     public ResponseEntity<List<XmEntityDto>> searchByTypeKeyAndQuery(
         @RequestParam String typeKey,
         @RequestParam(required = false) String template,
-        @ApiParam TemplateParamsHolder templateParamsHolder,
-        @ApiParam Pageable pageable) {
+        @ParameterObject TemplateParamsHolder templateParamsHolder,
+        @ParameterObject Pageable pageable) {
         Page<XmEntityDto> page = xmEntityFacade.searchByQueryAndTypeKey(template, templateParamsHolder, typeKey, pageable, null);
         HttpHeaders headers = PaginationUtil
             .generateSearchByTypeKeyWithTemplatePaginationHttpHeaders(typeKey, template, templateParamsHolder, page,
@@ -133,7 +133,7 @@ public class XmEntitySearchResource {
         @PathVariable String entityTypeKey,
         @PathVariable String linkTypeKey,
         @RequestParam String query,
-        @ApiParam Pageable pageable) {
+        @ParameterObject Pageable pageable) {
         Page<XmEntityDto> page = xmEntityFacade
             .searchXmEntitiesToLink(IdOrKey.of(idOrKey), entityTypeKey, linkTypeKey, query, pageable, null);
         HttpHeaders headers = PaginationUtil

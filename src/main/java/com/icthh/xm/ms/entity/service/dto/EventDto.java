@@ -7,7 +7,7 @@ import com.icthh.xm.ms.entity.domain.WithTypeKey;
 import com.icthh.xm.ms.entity.domain.idresolver.CalendarDtoObjectIdResolver;
 import com.icthh.xm.ms.entity.domain.idresolver.XmEntityDtoObjectIdResolver;
 import com.icthh.xm.ms.entity.validator.EventDataTypeKey;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
@@ -25,23 +25,23 @@ public class EventDto implements Serializable, WithTypeKey {
     private Long id;
 
     @NotNull
-    @ApiModelProperty(value = "String typeKey with tree-like structure.")
+    @Schema(description = "String typeKey with tree-like structure.")
     private String typeKey;
 
-    @ApiModelProperty(value = "Configuration for event repetition")
+    @Schema(description = "Configuration for event repetition")
     private String repeatRuleKey;
 
     @NotNull
-    @ApiModelProperty(value = "Event title", required = true)
+    @Schema(description = "Event title", requiredMode = Schema.RequiredMode.REQUIRED)
     private String title;
 
-    @ApiModelProperty(value = "Event description")
+    @Schema(description = "Event description")
     private String description;
 
-    @ApiModelProperty(value = "Start date")
+    @Schema(description = "Start date")
     private Instant startDate;
 
-    @ApiModelProperty(value = "End date")
+    @Schema(description = "End date")
     private Instant endDate;
 
     @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id", resolver = CalendarDtoObjectIdResolver.class)
@@ -52,9 +52,9 @@ public class EventDto implements Serializable, WithTypeKey {
     @JsonIdentityReference(alwaysAsId = true)
     private XmEntityDto assigned;
 
-    @ApiModelProperty(value = "Reference to event's extra data")
+    @Schema(description = "Reference to event's extra data")
     private XmEntityDto eventDataRef;
 
-    @ApiModelProperty(value = "Event color")
+    @Schema(description = "Event color")
     private String color;
 }

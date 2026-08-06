@@ -38,6 +38,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.http.converter.json.JacksonJsonHttpMessageConverter;
+import tools.jackson.databind.json.JsonMapper;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -92,7 +93,7 @@ public class JsonResponseFilteringUnitTest extends AbstractJupiterWebMvcTest {
     private LinkResource linkResource;
 
     @Autowired
-    private JacksonJsonHttpMessageConverter jacksonMessageConverter;
+    private JsonMapper jsonMapper;
 
     @Autowired
     private PageableHandlerMethodArgumentResolver pageableArgumentResolver;
@@ -114,7 +115,7 @@ public class JsonResponseFilteringUnitTest extends AbstractJupiterWebMvcTest {
 
         this.mockMvc = MockMvcBuilders.standaloneSetup(xmEntityResource, linkResource)
                                       .setControllerAdvice(exceptionTranslator)
-                                      .setMessageConverters(jacksonMessageConverter)
+                                      .setMessageConverters(new JacksonJsonHttpMessageConverter(jsonMapper))
                                       .setCustomArgumentResolvers(pageableArgumentResolver)
                                       .addMappedInterceptors(WebMvcConfiguration.getJsonFilterAllowedURIs())
                                       .build();

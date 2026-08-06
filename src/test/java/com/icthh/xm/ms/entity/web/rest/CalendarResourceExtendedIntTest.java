@@ -38,6 +38,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
 
 import org.springframework.http.converter.json.JacksonJsonHttpMessageConverter;
+import tools.jackson.databind.json.JsonMapper;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.transaction.BeforeTransaction;
 import org.springframework.test.web.servlet.MockMvc;
@@ -59,7 +60,7 @@ public class CalendarResourceExtendedIntTest extends AbstractJupiterSpringBootTe
     private static final Instant MOCKED_START_DATE = Instant.ofEpochMilli(42L);
 
     @Autowired
-    private JacksonJsonHttpMessageConverter jacksonMessageConverter;
+    private JsonMapper jsonMapper;
 
     @Autowired
     private PageableHandlerMethodArgumentResolver pageableArgumentResolver;
@@ -140,7 +141,7 @@ public class CalendarResourceExtendedIntTest extends AbstractJupiterSpringBootTe
                                               .setCustomArgumentResolvers(pageableArgumentResolver)
                                               .setControllerAdvice(exceptionTranslator)
                                               .setValidator(validator)
-                                              .setMessageConverters(jacksonMessageConverter).build();
+                                              .setMessageConverters(new JacksonJsonHttpMessageConverter(jsonMapper)).build();
 
         calendar = CalendarResourceIntTest.createEntity(em);
 

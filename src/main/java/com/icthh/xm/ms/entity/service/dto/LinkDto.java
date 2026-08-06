@@ -4,8 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.JsonIdentityReference;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import com.icthh.xm.ms.entity.domain.idresolver.XmEntityDtoObjectIdResolver;
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
@@ -13,7 +12,7 @@ import lombok.Setter;
 import java.io.Serializable;
 import java.time.Instant;
 
-@ApiModel(description = "Bidirectional link between two XmEntites.")
+@Schema(description = "Bidirectional link between two XmEntites.")
 @Getter
 @Setter
 public class LinkDto implements Serializable {
@@ -23,19 +22,19 @@ public class LinkDto implements Serializable {
     private Long id;
 
     @NotNull
-    @ApiModelProperty(value = "String typeKey with tree-like structure.", required = true)
+    @Schema(description = "String typeKey with tree-like structure.", requiredMode = Schema.RequiredMode.REQUIRED)
     private String typeKey;
 
-    @ApiModelProperty(value = "Link name")
+    @Schema(description = "Link name")
     private String name;
 
-    @ApiModelProperty(value = "Link description")
+    @Schema(description = "Link description")
     private String description;
 
-    @ApiModelProperty(value = "Start date")
+    @Schema(description = "Start date")
     private Instant startDate;
 
-    @ApiModelProperty(value = "End date")
+    @Schema(description = "End date")
     private Instant endDate;
 
     @NotNull
@@ -46,6 +45,6 @@ public class LinkDto implements Serializable {
     @JsonIdentityReference(alwaysAsId = true)
     private XmEntityDto source;
 
-    @ApiModelProperty(value = "Order")
+    @Schema(description = "Order")
     private Integer order;
 }

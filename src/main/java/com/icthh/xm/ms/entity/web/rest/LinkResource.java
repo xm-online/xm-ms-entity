@@ -10,7 +10,7 @@ import com.icthh.xm.ms.entity.service.TransactionPropagationService;
 import com.icthh.xm.ms.entity.web.rest.util.HeaderUtil;
 import com.icthh.xm.ms.entity.web.rest.util.PaginationUtil;
 import com.icthh.xm.ms.entity.web.rest.util.RespContentUtil;
-import io.swagger.annotations.ApiParam;
+import org.springdoc.core.annotations.ParameterObject;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -99,7 +99,7 @@ public class LinkResource extends TransactionPropagationService<LinkResource> {
      * @return the ResponseEntity with status 200 (OK) and the list of links in body
      */
     @GetMapping("/links")
-    public ResponseEntity<List<LinkDto>> getAllLinks(@ApiParam Pageable pageable) {
+    public ResponseEntity<List<LinkDto>> getAllLinks(@ParameterObject Pageable pageable) {
         Page<LinkDto> page = linkFacade.findAll(pageable, null);
         HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(page, "/api/links");
         return new ResponseEntity<>(page.getContent(), headers, HttpStatus.OK);

@@ -1,14 +1,13 @@
 package com.icthh.xm.ms.entity.service.dto;
 
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 
 import java.io.Serializable;
 
-@ApiModel(description = "Represents User's profile on Entity microservice. Contains relation to XmEntity by foreign key. Profile will be creatid in LEP code as a reaction to event for new user registration.")
+@Schema(description = "Represents User's profile on Entity microservice. Contains relation to XmEntity by foreign key. Profile will be creatid in LEP code as a reaction to event for new user registration.")
 @Getter
 @Setter
 public class ProfileDto implements Serializable {
@@ -18,7 +17,7 @@ public class ProfileDto implements Serializable {
     private Long id;
 
     @NotNull
-    @ApiModelProperty(value = "User identifier from UAA.", required = true)
+    @Schema(description = "User identifier from UAA.", requiredMode = Schema.RequiredMode.REQUIRED)
     private String userKey;
 
     @NotNull

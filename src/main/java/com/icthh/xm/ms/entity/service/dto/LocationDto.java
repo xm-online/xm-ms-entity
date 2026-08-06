@@ -5,7 +5,7 @@ import com.fasterxml.jackson.annotation.JsonIdentityReference;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import com.icthh.xm.ms.entity.domain.idresolver.XmEntityDtoObjectIdResolver;
 import com.icthh.xm.ms.entity.validator.TypeKey;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
@@ -21,38 +21,38 @@ public class LocationDto implements Serializable {
 
     private Long id;
 
-    @ApiModelProperty(value = "Additional lateral identification for this location, could be used as reference to the external system")
+    @Schema(description = "Additional lateral identification for this location, could be used as reference to the external system")
     private String key;
 
     @NotNull
-    @ApiModelProperty(value = "String typeKey with tree-like structure.", required = true)
+    @Schema(description = "String typeKey with tree-like structure.", requiredMode = Schema.RequiredMode.REQUIRED)
     private String typeKey;
 
-    @ApiModelProperty(value = "Country code.")
+    @Schema(description = "Country code.")
     private String countryKey;
 
-    @ApiModelProperty(value = "GPS longityde in decimal format")
+    @Schema(description = "GPS longityde in decimal format")
     private Double longitude;
 
-    @ApiModelProperty(value = "GPS latitude in decimal format")
+    @Schema(description = "GPS latitude in decimal format")
     private Double latitude;
 
-    @ApiModelProperty(value = "Full address name")
+    @Schema(description = "Full address name")
     private String name;
 
-    @ApiModelProperty(value = "Street and number, P.O. box, c/o")
+    @Schema(description = "Street and number, P.O. box, c/o")
     private String addressLine1;
 
-    @ApiModelProperty(value = "Apartment, suite, unit, building, floor, etc.")
+    @Schema(description = "Apartment, suite, unit, building, floor, etc.")
     private String addressLine2;
 
-    @ApiModelProperty(value = "City name")
+    @Schema(description = "City name")
     private String city;
 
-    @ApiModelProperty(value = "State, Province, Region")
+    @Schema(description = "State, Province, Region")
     private String region;
 
-    @ApiModelProperty(value = "ZIP code")
+    @Schema(description = "ZIP code")
     private String zip;
 
     @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id", resolver = XmEntityDtoObjectIdResolver.class)

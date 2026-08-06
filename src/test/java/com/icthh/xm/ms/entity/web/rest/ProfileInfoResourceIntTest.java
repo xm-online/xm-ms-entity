@@ -15,6 +15,7 @@ import org.springframework.core.env.Environment;
 import org.springframework.http.MediaType;
 
 import org.springframework.http.converter.json.JacksonJsonHttpMessageConverter;
+import tools.jackson.databind.json.JsonMapper;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
@@ -29,7 +30,7 @@ public class ProfileInfoResourceIntTest extends AbstractJupiterSpringBootTest {
     private Environment environment;
 
     @Autowired
-    private JacksonJsonHttpMessageConverter jacksonMessageConverter;
+    private JsonMapper jsonMapper;
 
     private MockMvc restProfileMockMvc;
 
@@ -45,7 +46,7 @@ public class ProfileInfoResourceIntTest extends AbstractJupiterSpringBootTest {
         ProfileInfoResource profileInfoResource = new ProfileInfoResource(environment);
         this.restProfileMockMvc = MockMvcBuilders
             .standaloneSetup(profileInfoResource)
-            .setMessageConverters(jacksonMessageConverter)
+            .setMessageConverters(new JacksonJsonHttpMessageConverter(jsonMapper))
             .build();
     }
 

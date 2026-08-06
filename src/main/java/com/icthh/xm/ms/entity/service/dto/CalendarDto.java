@@ -6,8 +6,7 @@ import com.fasterxml.jackson.annotation.JsonIdentityReference;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import com.icthh.xm.ms.entity.domain.idresolver.XmEntityDtoObjectIdResolver;
 import com.icthh.xm.ms.entity.validator.TypeKey;
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
@@ -17,7 +16,7 @@ import java.time.Instant;
 import java.util.HashSet;
 import java.util.Set;
 
-@ApiModel(description = "Represents calendar instance related to XmEntity.")
+@Schema(description = "Represents calendar instance related to XmEntity.")
 @Getter
 @Setter
 @TypeKey
@@ -28,20 +27,20 @@ public class CalendarDto implements Serializable {
     private Long id;
 
     @NotNull
-    @ApiModelProperty(value = "String typeKey with tree-like structure.", required = true)
+    @Schema(description = "String typeKey with tree-like structure.", requiredMode = Schema.RequiredMode.REQUIRED)
     private String typeKey;
 
     @NotNull
-    @ApiModelProperty(value = "Calendar name.", required = true)
+    @Schema(description = "Calendar name.", requiredMode = Schema.RequiredMode.REQUIRED)
     private String name;
 
-    @ApiModelProperty(value = "Calendar description")
+    @Schema(description = "Calendar description")
     private String description;
 
-    @ApiModelProperty(value = "Start date")
+    @Schema(description = "Start date")
     private Instant startDate;
 
-    @ApiModelProperty(value = "End date")
+    @Schema(description = "End date")
     private Instant endDate;
 
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
@@ -52,6 +51,6 @@ public class CalendarDto implements Serializable {
     @JsonIdentityReference(alwaysAsId = true)
     private XmEntityDto xmEntity;
 
-    @ApiModelProperty(value = "Timezone id")
+    @Schema(description = "Timezone id")
     private String timeZoneId;
 }

@@ -6,7 +6,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import com.icthh.xm.ms.entity.domain.idresolver.XmEntityDtoObjectIdResolver;
 import com.icthh.xm.ms.entity.validator.TypeKey;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
@@ -26,16 +26,16 @@ public class RatingDto implements Serializable {
     private Long id;
 
     @NotNull
-    @ApiModelProperty(value = "String typeKey with tree-like structure.", required = true)
+    @Schema(description = "String typeKey with tree-like structure.", requiredMode = Schema.RequiredMode.REQUIRED)
     private String typeKey;
 
-    @ApiModelProperty(value = "Rating value")
+    @Schema(description = "Rating value")
     private Double value;
 
-    @ApiModelProperty(value = "Start date")
+    @Schema(description = "Start date")
     private Instant startDate;
 
-    @ApiModelProperty(value = "End date")
+    @Schema(description = "End date")
     private Instant endDate;
 
     @JsonIgnore

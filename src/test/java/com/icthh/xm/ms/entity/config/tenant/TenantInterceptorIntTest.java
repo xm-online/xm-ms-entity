@@ -25,6 +25,7 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
 import org.springframework.http.converter.json.JacksonJsonHttpMessageConverter;
+import tools.jackson.databind.json.JsonMapper;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -62,7 +63,7 @@ public class TenantInterceptorIntTest extends AbstractJupiterSpringBootTest {
     private XmAuthenticationDetails details;
 
     @Autowired
-    private JacksonJsonHttpMessageConverter converter;
+    private JsonMapper jsonMapper;
 
     private MockMvc restXmEntityMockMvc;
 
@@ -74,7 +75,7 @@ public class TenantInterceptorIntTest extends AbstractJupiterSpringBootTest {
             .addInterceptors(tenantInterceptor)
             .setCustomArgumentResolvers(pageableArgumentResolver)
             .setControllerAdvice(exceptionTranslator)
-            .setMessageConverters(converter).build();
+            .setMessageConverters(new JacksonJsonHttpMessageConverter(jsonMapper)).build();
     }
 
     @Test

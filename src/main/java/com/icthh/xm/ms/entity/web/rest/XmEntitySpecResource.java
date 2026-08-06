@@ -13,7 +13,7 @@ import com.icthh.xm.ms.entity.service.XmEntitySpecService;
 import com.icthh.xm.ms.entity.service.mapper.XmEntityMapper;
 import com.icthh.xm.ms.entity.web.rest.util.HeaderUtil;
 import com.icthh.xm.ms.entity.web.rest.util.RespContentUtil;
-import io.swagger.annotations.ApiParam;
+import org.springdoc.core.annotations.ParameterObject;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
@@ -86,7 +86,7 @@ public class XmEntitySpecResource {
     @GetMapping("/xm-entity-specs")
     @PostFilter("hasPermission({'returnObject': filterObject, 'log': false}, 'XMENTITY_SPEC.GET')")
     @PrivilegeDescription("Privilege to get the xmEntity specification by filter")
-    public List<TypeSpec> getTypeSpecs(@ApiParam XmEntitySpecResource.Filter filter) {
+    public List<TypeSpec> getTypeSpecs(@ParameterObject XmEntitySpecResource.Filter filter) {
         log.debug("REST request to get a list of TypeSpec");
 
         return Optional.ofNullable(filter).orElse(Filter.ALL)
@@ -131,7 +131,7 @@ public class XmEntitySpecResource {
     @PostMapping("/xm-entity-specs/generate-xm-entity")
     @PreAuthorize("hasPermission({'rootTypeKey': #rootTypeKey}, 'XMENTITY_SPEC.GENERATE')")
     @PrivilegeDescription("Privilege to generate a new random xmEntity with passed type. Used for demo")
-    public ResponseEntity<XmEntityDto> generateXmEntity(@ApiParam String rootTypeKey) throws URISyntaxException {
+    public ResponseEntity<XmEntityDto> generateXmEntity( String rootTypeKey) throws URISyntaxException {
         log.debug("REST request to generate XmEntity");
         XmEntity result = xmEntityGeneratorService.generateXmEntity(rootTypeKey != null ? rootTypeKey : "");
         XmEntityDto dto = xmEntityMapper.toDto(result);

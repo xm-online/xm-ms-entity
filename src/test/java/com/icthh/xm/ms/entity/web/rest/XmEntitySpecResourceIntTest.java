@@ -22,6 +22,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 
 import org.springframework.http.converter.json.JacksonJsonHttpMessageConverter;
+import tools.jackson.databind.json.JsonMapper;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -93,7 +94,7 @@ public class XmEntitySpecResourceIntTest extends AbstractJupiterSpringBootTest {
     private XmLepScriptConfigServerResourceLoader lepResourceLoader;
 
     @Autowired
-    private JacksonJsonHttpMessageConverter jacksonMessageConverter;
+    private JsonMapper jsonMapper;
 
     @Autowired
     private XmEntityMapper xmEntityMapper;
@@ -118,7 +119,7 @@ public class XmEntitySpecResourceIntTest extends AbstractJupiterSpringBootTest {
         XmEntitySpecResource xmEntitySpecResource = new XmEntitySpecResource(xmEntitySpecService,
             xmEntityGeneratorService, jsonSchemaGenerationService, xmEntityMapper);
         this.restXmEntitySpecMockMvc = MockMvcBuilders.standaloneSetup(xmEntitySpecResource)
-            .setMessageConverters(jacksonMessageConverter)
+            .setMessageConverters(new JacksonJsonHttpMessageConverter(jsonMapper))
             .setControllerAdvice(exceptionTranslator).build();
     }
 

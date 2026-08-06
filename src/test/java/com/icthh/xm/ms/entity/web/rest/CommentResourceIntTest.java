@@ -17,6 +17,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static software.amazon.awssdk.utils.StringUtils.repeat;
 import org.springframework.http.converter.json.JacksonJsonHttpMessageConverter;
+import tools.jackson.databind.json.JsonMapper;
 import com.icthh.xm.commons.i18n.error.web.ExceptionTranslator;
 import com.icthh.xm.commons.lep.XmLepScriptConfigServerResourceLoader;
 import com.icthh.xm.commons.permission.repository.PermittedRepository;
@@ -84,7 +85,7 @@ public class CommentResourceIntTest extends AbstractJupiterSpringBootTest {
     private CommentRepository commentRepository;
 
     @Autowired
-    private JacksonJsonHttpMessageConverter jacksonMessageConverter;
+    private JsonMapper jsonMapper;
 
     @Autowired
     private PageableHandlerMethodArgumentResolver pageableArgumentResolver;
@@ -162,13 +163,13 @@ public class CommentResourceIntTest extends AbstractJupiterSpringBootTest {
         this.restCommentMockMvc = MockMvcBuilders.standaloneSetup(commentResourceMock)
             .setCustomArgumentResolvers(pageableArgumentResolver)
             .setControllerAdvice(exceptionTranslator)
-            .setMessageConverters(jacksonMessageConverter).build();
+            .setMessageConverters(new JacksonJsonHttpMessageConverter(jsonMapper)).build();
 
         this.restCommentMockMvcForLep = MockMvcBuilders
             .standaloneSetup(new CommentResource(commentFacadeForLep, commentResource))
             .setCustomArgumentResolvers(pageableArgumentResolver)
             .setControllerAdvice(exceptionTranslator)
-            .setMessageConverters(jacksonMessageConverter).build();
+            .setMessageConverters(new JacksonJsonHttpMessageConverter(jsonMapper)).build();
 
         comment = createEntity(em);
 

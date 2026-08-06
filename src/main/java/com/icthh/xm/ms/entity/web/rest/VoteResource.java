@@ -9,7 +9,7 @@ import com.icthh.xm.ms.entity.web.rest.facade.VoteFacade;
 import com.icthh.xm.ms.entity.web.rest.util.HeaderUtil;
 import com.icthh.xm.ms.entity.web.rest.util.PaginationUtil;
 import com.icthh.xm.ms.entity.web.rest.util.RespContentUtil;
-import io.swagger.annotations.ApiParam;
+import org.springdoc.core.annotations.ParameterObject;
 import jakarta.validation.Valid;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Page;
@@ -106,7 +106,7 @@ public class VoteResource {
      */
     @GetMapping("/votes")
     
-    public ResponseEntity<List<VoteDto>> getAllVotes(@ApiParam Pageable pageable) {
+    public ResponseEntity<List<VoteDto>> getAllVotes(@ParameterObject Pageable pageable) {
         Page<VoteDto> page = voteFacade.findAll(pageable, null);
         HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(page, "/api/votes");
         return new ResponseEntity<>(page.getContent(), headers, HttpStatus.OK);

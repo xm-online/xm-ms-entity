@@ -31,6 +31,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.http.converter.json.JacksonJsonHttpMessageConverter;
+import tools.jackson.databind.json.JsonMapper;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
@@ -63,7 +64,7 @@ public class XmEntityObjectIdResolverIntTest extends AbstractJupiterWebMvcTest {
     private LinkResource linkResource;
 
     @Autowired
-    private JacksonJsonHttpMessageConverter jacksonMessageConverter;
+    private JsonMapper jsonMapper;
 
     @Autowired
     private ExceptionTranslator exceptionTranslator;
@@ -79,7 +80,7 @@ public class XmEntityObjectIdResolverIntTest extends AbstractJupiterWebMvcTest {
     public void setup() {
         this.mockMvc = MockMvcBuilders.standaloneSetup(linkResource)
                                       .setControllerAdvice(exceptionTranslator)
-            .setMessageConverters(jacksonMessageConverter).build();
+            .setMessageConverters(new JacksonJsonHttpMessageConverter(jsonMapper)).build();
     }
 
     @SneakyThrows
