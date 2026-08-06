@@ -231,7 +231,7 @@ public class XmEntityResourceExtendedElasticsearchTest extends AbstractElasticSp
     private XmEntitySearchRepository xmEntitySearchRepository;
 
     @Autowired
-    private JacksonJsonHttpMessageConverter jacksonMessageConverter;
+    private JsonMapper jsonMapper;
 
     @Autowired
     private PageableHandlerMethodArgumentResolver pageableArgumentResolver;
@@ -396,7 +396,7 @@ public class XmEntityResourceExtendedElasticsearchTest extends AbstractElasticSp
                                                   .setCustomArgumentResolvers(pageableArgumentResolver)
                                                   .setControllerAdvice(exceptionTranslator)
                                                   .setValidator(validator)
-                                                  .setMessageConverters(jacksonMessageConverter)
+                                                  .setMessageConverters(new JacksonJsonHttpMessageConverter(jsonMapper))
                                                   .addMappedInterceptors(WebMvcConfiguration.getJsonFilterAllowedURIs())
                                                   .build();
 
@@ -404,7 +404,7 @@ public class XmEntityResourceExtendedElasticsearchTest extends AbstractElasticSp
                                                   .setCustomArgumentResolvers(pageableArgumentResolver)
                                                   .setControllerAdvice(exceptionTranslator)
                                                   .setValidator(validator)
-                                                  .setMessageConverters(jacksonMessageConverter)
+                                                  .setMessageConverters(new JacksonJsonHttpMessageConverter(jsonMapper))
                                                   .addMappedInterceptors(WebMvcConfiguration.getJsonFilterAllowedURIs())
                                                   .build();
 
@@ -961,7 +961,7 @@ public class XmEntityResourceExtendedElasticsearchTest extends AbstractElasticSp
 
     @SneakyThrows
     private XmEntity readValue(MvcResult r) {
-        return jacksonMessageConverter.getMapper()
+        return jsonMapper
                                       .readValue(r.getResponse().getContentAsString(), XmEntity.class);
     }
 

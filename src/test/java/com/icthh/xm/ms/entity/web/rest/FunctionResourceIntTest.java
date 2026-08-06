@@ -28,6 +28,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.converter.ByteArrayHttpMessageConverter;
 
 import org.springframework.http.converter.json.JacksonJsonHttpMessageConverter;
+import tools.jackson.databind.json.JsonMapper;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.transaction.BeforeTransaction;
@@ -91,7 +92,7 @@ public class FunctionResourceIntTest extends AbstractJupiterSpringBootTest {
     private XmEntityServiceImpl xmEntityService;
 
     @Autowired
-    private JacksonJsonHttpMessageConverter jacksonMessageConverter;
+    private JsonMapper jsonMapper;
 
     @Autowired
     private PageableHandlerMethodArgumentResolver pageableArgumentResolver;
@@ -124,7 +125,7 @@ public class FunctionResourceIntTest extends AbstractJupiterSpringBootTest {
         this.mockMvc = MockMvcBuilders.standaloneSetup(functionResource, functionApiDocsResource, functionMvcResource, functionUploadResource, xmEntityResource)
                                                   .setCustomArgumentResolvers(pageableArgumentResolver)
                                                   .setControllerAdvice(exceptionTranslator)
-                                                  .setMessageConverters(jacksonMessageConverter, new ByteArrayHttpMessageConverter()).build();
+                                                  .setMessageConverters(new JacksonJsonHttpMessageConverter(jsonMapper), new ByteArrayHttpMessageConverter()).build();
 
         initLeps(true);
     }

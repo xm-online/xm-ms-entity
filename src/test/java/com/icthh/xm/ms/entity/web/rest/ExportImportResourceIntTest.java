@@ -74,6 +74,7 @@ import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.ByteArrayHttpMessageConverter;
 import org.springframework.http.converter.json.JacksonJsonHttpMessageConverter;
+import tools.jackson.databind.json.JsonMapper;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.transaction.BeforeTransaction;
 import org.springframework.test.web.servlet.MockMvc;
@@ -112,7 +113,7 @@ public class ExportImportResourceIntTest extends AbstractJupiterSpringBootTest {
     private static final String TEST_EXPORT_RATING_2 = "TEST_EXPORT_RATING_2";
 
     @Autowired
-    private JacksonJsonHttpMessageConverter jacksonMessageConverter;
+    private JsonMapper jsonMapper;
     @Autowired
     private PageableHandlerMethodArgumentResolver pageableArgumentResolver;
     @Autowired
@@ -184,7 +185,7 @@ public class ExportImportResourceIntTest extends AbstractJupiterSpringBootTest {
         this.restExportImportMockMvc = MockMvcBuilders.standaloneSetup(exportImportResourceTest)
                 .setCustomArgumentResolvers(pageableArgumentResolver)
                 .setControllerAdvice(exceptionTranslator)
-                .setMessageConverters(jacksonMessageConverter, new ByteArrayHttpMessageConverter()).build();
+                .setMessageConverters(new JacksonJsonHttpMessageConverter(jsonMapper), new ByteArrayHttpMessageConverter()).build();
     }
 
     @AfterEach

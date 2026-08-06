@@ -44,6 +44,7 @@ import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
 import org.springframework.http.MediaType;
 
 import org.springframework.http.converter.json.JacksonJsonHttpMessageConverter;
+import tools.jackson.databind.json.JsonMapper;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.transaction.BeforeTransaction;
 import org.springframework.test.web.servlet.MockMvc;
@@ -106,7 +107,7 @@ public class ElasticsearchIndexResourceElasticsearchTest extends AbstractElastic
     private XmEntityResource xmEntityResource;
 
     @Autowired
-    private JacksonJsonHttpMessageConverter jacksonMessageConverter;
+    private JsonMapper jsonMapper;
 
     @Autowired
     private PageableHandlerMethodArgumentResolver pageableArgumentResolver;
@@ -212,12 +213,12 @@ public class ElasticsearchIndexResourceElasticsearchTest extends AbstractElastic
         this.mockMvc = MockMvcBuilders.standaloneSetup(elasticsearchIndexResource, xmEntityResource)
                                       .setCustomArgumentResolvers(pageableArgumentResolver)
                                       .setControllerAdvice(exceptionTranslator)
-                                      .setMessageConverters(jacksonMessageConverter).build();
+                                      .setMessageConverters(new JacksonJsonHttpMessageConverter(jsonMapper)).build();
 
         this.restXmEntitySearchMockMvc = MockMvcBuilders.standaloneSetup(new XmEntitySearchResource(xmEntityFacade))
                                       .setCustomArgumentResolvers(pageableArgumentResolver)
                                       .setControllerAdvice(exceptionTranslator)
-                                      .setMessageConverters(jacksonMessageConverter).build();
+                                      .setMessageConverters(new JacksonJsonHttpMessageConverter(jsonMapper)).build();
 
         // make executor run task immediately
         doAnswer(a -> {

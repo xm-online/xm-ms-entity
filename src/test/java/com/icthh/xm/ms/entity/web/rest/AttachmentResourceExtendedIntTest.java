@@ -45,6 +45,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
 import org.springframework.http.converter.json.JacksonJsonHttpMessageConverter;
+import tools.jackson.databind.json.JsonMapper;
 
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
@@ -77,7 +78,7 @@ public class AttachmentResourceExtendedIntTest extends AbstractJupiterSpringBoot
     private static final String CONTENT_CHECKSUM = DigestUtils.sha256Hex(CONTENT);
 
     @Autowired
-    private JacksonJsonHttpMessageConverter jacksonMessageConverter;
+    private JsonMapper jsonMapper;
 
     @Autowired
     private PageableHandlerMethodArgumentResolver pageableArgumentResolver;
@@ -158,7 +159,7 @@ public class AttachmentResourceExtendedIntTest extends AbstractJupiterSpringBoot
                                                     .setCustomArgumentResolvers(pageableArgumentResolver)
                                                     .setControllerAdvice(exceptionTranslator)
                                                     .setValidator(validator)
-                                                    .setMessageConverters(jacksonMessageConverter).build();
+                                                    .setMessageConverters(new JacksonJsonHttpMessageConverter(jsonMapper)).build();
 
         attachment = createEntity(em);
 

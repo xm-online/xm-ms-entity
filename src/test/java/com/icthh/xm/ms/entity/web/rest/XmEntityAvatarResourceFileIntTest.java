@@ -28,6 +28,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.json.JacksonJsonHttpMessageConverter;
+import tools.jackson.databind.json.JsonMapper;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.ActiveProfiles;
@@ -88,7 +89,7 @@ public class XmEntityAvatarResourceFileIntTest extends AbstractJupiterSpringBoot
     private ProfileService profileService;
 
     @Autowired
-    private JacksonJsonHttpMessageConverter converter;
+    private JsonMapper jsonMapper;
 
     @BeforeAll
     public void setup() {
@@ -102,7 +103,7 @@ public class XmEntityAvatarResourceFileIntTest extends AbstractJupiterSpringBoot
         this.avatarResourceMockMvc = MockMvcBuilders.standaloneSetup(xmEntityAvatarResource)
             .setCustomArgumentResolvers(pageableArgumentResolver)
             .setControllerAdvice(exceptionTranslator)
-            .setMessageConverters(converter).build();
+            .setMessageConverters(new JacksonJsonHttpMessageConverter(jsonMapper)).build();
     }
 
     @AfterAll

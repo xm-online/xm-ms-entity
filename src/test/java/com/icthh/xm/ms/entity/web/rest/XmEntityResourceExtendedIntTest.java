@@ -250,7 +250,7 @@ public class XmEntityResourceExtendedIntTest extends AbstractJupiterSpringBootTe
     private XmEntitySearchRepository xmEntitySearchRepository;
 
     @Autowired
-    private JacksonJsonHttpMessageConverter jacksonMessageConverter;
+    private JsonMapper jsonMapper;
 
     @Autowired
     private PageableHandlerMethodArgumentResolver pageableArgumentResolver;
@@ -417,7 +417,7 @@ public class XmEntityResourceExtendedIntTest extends AbstractJupiterSpringBootTe
                                                   .setCustomArgumentResolvers(pageableArgumentResolver)
                                                   .setControllerAdvice(exceptionTranslator)
                                                   .setValidator(validator)
-                                                  .setMessageConverters(jacksonMessageConverter)
+                                                  .setMessageConverters(new JacksonJsonHttpMessageConverter(jsonMapper))
                                                   .addMappedInterceptors(WebMvcConfiguration.getJsonFilterAllowedURIs())
                                                   .build();
 
@@ -425,7 +425,7 @@ public class XmEntityResourceExtendedIntTest extends AbstractJupiterSpringBootTe
                                                   .setCustomArgumentResolvers(pageableArgumentResolver)
                                                   .setControllerAdvice(exceptionTranslator)
                                                   .setValidator(validator)
-                                                  .setMessageConverters(jacksonMessageConverter)
+                                                  .setMessageConverters(new JacksonJsonHttpMessageConverter(jsonMapper))
                                                   .addMappedInterceptors(WebMvcConfiguration.getJsonFilterAllowedURIs())
                                                   .build();
 
@@ -1396,9 +1396,9 @@ public class XmEntityResourceExtendedIntTest extends AbstractJupiterSpringBootTe
         XmEntityDto targetDto = xmEntityMapper.toDto(target);
         XmEntityDto sourceDto = xmEntityMapper.toDto(source);
 
-        String targetJson = jacksonMessageConverter.getMapper().writeValueAsString(targetDto);
+        String targetJson = jsonMapper.writeValueAsString(targetDto);
         log.info("Target JSON {}", targetJson);
-        String sourceJson = jacksonMessageConverter.getMapper().writeValueAsString(sourceDto);
+        String sourceJson = jsonMapper.writeValueAsString(sourceDto);
         log.info("Source JSON {}", sourceJson);
         assertEquals(Integer.valueOf(1), JsonPath.read(targetJson, "$.targets[0].target.id"));
         assertEquals(Integer.valueOf(2), JsonPath.read(targetJson, "$.id"));
@@ -1423,9 +1423,9 @@ public class XmEntityResourceExtendedIntTest extends AbstractJupiterSpringBootTe
         XmEntityDto targetDto = xmEntityMapper.toDto(target);
         XmEntityDto sourceDto = xmEntityMapper.toDto(source);
 
-        String targetJson = jacksonMessageConverter.getMapper().writeValueAsString(targetDto);
+        String targetJson = jsonMapper.writeValueAsString(targetDto);
         log.info("Target JSON {}", targetDto);
-        String sourceJson = jacksonMessageConverter.getMapper().writeValueAsString(sourceDto);
+        String sourceJson = jsonMapper.writeValueAsString(sourceDto);
         log.info("Source JSON {}", sourceDto);
         restXmEntityMockMvc.perform(put("/api/xm-entities")
                                         .contentType(TestUtil.APPLICATION_JSON_UTF8)
@@ -1508,7 +1508,7 @@ public class XmEntityResourceExtendedIntTest extends AbstractJupiterSpringBootTe
 
     @SneakyThrows
     private XmEntity readValue(MvcResult r) {
-        return jacksonMessageConverter.getMapper()
+        return jsonMapper
                                       .readValue(r.getResponse().getContentAsString(), XmEntity.class);
     }
 

@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 
 import org.springframework.http.converter.json.JacksonJsonHttpMessageConverter;
+import tools.jackson.databind.json.JsonMapper;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
@@ -25,7 +26,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 public class LogsResourceIntTest extends AbstractJupiterSpringBootTest {
 
     @Autowired
-    private JacksonJsonHttpMessageConverter jacksonMessageConverter;
+    private JsonMapper jsonMapper;
 
     private MockMvc restLogsMockMvc;
 
@@ -34,7 +35,7 @@ public class LogsResourceIntTest extends AbstractJupiterSpringBootTest {
         LogsResource logsResource = new LogsResource();
         this.restLogsMockMvc = MockMvcBuilders
             .standaloneSetup(logsResource)
-            .setMessageConverters(jacksonMessageConverter)
+            .setMessageConverters(new JacksonJsonHttpMessageConverter(jsonMapper))
             .build();
     }
 

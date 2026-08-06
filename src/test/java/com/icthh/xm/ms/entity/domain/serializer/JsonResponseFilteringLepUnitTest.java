@@ -37,6 +37,7 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.http.converter.json.JacksonJsonHttpMessageConverter;
+import tools.jackson.databind.json.JsonMapper;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.context.annotation.EnableAspectJAutoProxy;
 import org.springframework.core.io.ClassPathResource;
@@ -112,7 +113,7 @@ public class JsonResponseFilteringLepUnitTest extends AbstractJupiterWebMvcTest 
     private XmEntityResource xmEntityResource;
 
     @Autowired
-    private JacksonJsonHttpMessageConverter jacksonMessageConverter;
+    private JsonMapper jsonMapper;
 
     @Autowired
     private ExceptionTranslator exceptionTranslator;
@@ -152,7 +153,7 @@ public class JsonResponseFilteringLepUnitTest extends AbstractJupiterWebMvcTest 
 
         this.mockMvc = MockMvcBuilders.standaloneSetup(xmEntityResource)
                                       .setControllerAdvice(exceptionTranslator)
-                                      .setMessageConverters(jacksonMessageConverter)
+                                      .setMessageConverters(new JacksonJsonHttpMessageConverter(jsonMapper))
                                       .setCustomArgumentResolvers(pageableArgumentResolver)
                                       .addMappedInterceptors(WebMvcConfiguration.getJsonFilterAllowedURIs())
                                       .build();
