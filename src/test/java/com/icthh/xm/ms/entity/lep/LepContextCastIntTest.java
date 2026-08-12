@@ -8,6 +8,7 @@ import com.icthh.xm.lep.api.LepManager;
 import com.icthh.xm.ms.entity.AbstractJupiterSpringBootTest;
 import com.icthh.xm.ms.entity.service.XmEntityFunctionExecutorService;
 import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -24,6 +25,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 
+@Slf4j
 @Transactional
 public class LepContextCastIntTest extends AbstractJupiterSpringBootTest {
 
@@ -91,6 +93,43 @@ public class LepContextCastIntTest extends AbstractJupiterSpringBootTest {
         Object context = result.get("context");
         assertEquals("GroovyMapLepContextWrapper", context.getClass().getSimpleName());
         assertTrue(context instanceof Map);
+        leps.onRefresh(funcKey, null);
+    }
+
+
+    @Test
+    @Transactional
+    @SneakyThrows
+    public void testIsKey() {
+        String functionPrefix = "/config/tenants/RESINTTEST/entity/lep/function/";
+        String functionKey = "LEP-CONTEXT-TEST";
+        String funcKey = functionPrefix + "Function$$LEP_CONTEXT_TEST$$tenant.groovy";
+        String function = "def idOrKey = com.icthh.xm.ms.entity.domain.ext.IdOrKey.of(123L)\nreturn ['id':idOrKey.id, 'getId':idOrKey.getId(), 'isId': idOrKey.isId()]";
+        leps.onRefresh(funcKey, function);
+        Map<String, Object> result = (Map<String, Object>) functionExecutorServiceImpl.execute(functionKey, Map.of(), null);
+        Object id = result.get("id");
+        log.info("result: {}", result);
+        assertTrue(id instanceof Long);
+        assertEquals(123L, id);
+        leps.onRefresh(funcKey, null);
+    }
+
+    @Test
+    @Transactional
+    @SneakyThrows
+    public void testKeyProperty() {
+        String functionPrefix = "/config/tenants/RESINTTEST/entity/lep/function/";
+        String functionKey = "LEP-CONTEXT-TEST";
+        String funcKey = functionPrefix + "Function$$LEP_CONTEXT_TEST$$tenant.groovy";
+        String function = "def idOrKey = com.icthh.xm.ms.entity.domain.ext.IdOrKey.ofKey('KEY')\n"
+            + "return ['key':idOrKey.key, 'id':idOrKey.id, 'isKey':idOrKey.isKey(), 'isId':idOrKey.isId()]";
+        leps.onRefresh(funcKey, function);
+        Map<String, Object> result = (Map<String, Object>) functionExecutorServiceImpl.execute(functionKey, Map.of(), null);
+        log.info("result: {}", result);
+        assertEquals("KEY", result.get("key"));
+        assertEquals(null, result.get("id"));
+        assertEquals(true, result.get("isKey"));
+        assertEquals(false, result.get("isId"));
         leps.onRefresh(funcKey, null);
     }
 
