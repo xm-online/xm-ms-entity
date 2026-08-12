@@ -64,6 +64,12 @@ public class IdOrKeyMetaClass extends DelegatingMetaClass {
         return properties;
     }
 
+    @Override
+    public MetaProperty hasProperty(Object obj, String name) {
+        MetaProperty getterProperty = valueProperty(name);
+        return getterProperty != null ? getterProperty : super.hasProperty(obj, name);
+    }
+
     /**
      * Property bound to the {@code getX()} getter for the names shadowed by an {@code isX()} one.
      */
