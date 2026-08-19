@@ -15,6 +15,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 
+import jakarta.annotation.Nullable;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.FlushModeType;
 import jakarta.persistence.LockModeType;
@@ -40,7 +41,7 @@ import org.springframework.stereotype.Component;
 
 import static java.util.Collections.emptyList;
 import static org.apache.commons.collections.CollectionUtils.isEmpty;
-import static org.hibernate.jpa.QueryHints.SPEC_HINT_TIMEOUT;
+import static org.hibernate.jpa.AvailableHints.HINT_SPEC_QUERY_TIMEOUT;
 
 @Slf4j
 @Component
@@ -55,6 +56,7 @@ public class XmEntityRepositoryInternalImpl implements XmEntityRepositoryInterna
 
     @Override
     @Transactional
+    @Nullable
     public XmEntity findOneByIdForUpdate(Long id) {
         CriteriaBuilder builder = entityManager.getCriteriaBuilder();
         CriteriaQuery<XmEntity> criteriaQuery = builder.createQuery(XmEntity.class);
@@ -64,13 +66,13 @@ public class XmEntityRepositoryInternalImpl implements XmEntityRepositoryInterna
         TypedQuery<XmEntity> query = entityManager
             .createQuery(criteriaQuery)
             .setLockMode(LockModeType.PESSIMISTIC_WRITE)
-            .setHint(SPEC_HINT_TIMEOUT, applicationProperties.getJpa().getFindOneByIdForUpdateTimeout());
+            .setHint(HINT_SPEC_QUERY_TIMEOUT, applicationProperties.getJpa().getFindOneByIdForUpdateTimeout());
 
         List<XmEntity> resultList = query.getResultList();
         if (isEmpty(resultList)) {
             return null;
         }
-        return resultList.get(0);
+        return resultList.getFirst();
     }
 
     /**
