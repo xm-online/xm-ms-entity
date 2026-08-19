@@ -129,6 +129,9 @@ public class LinkResourceIntTest extends AbstractJupiterSpringBootTest {
     @Autowired
     private JsonMapper jsonMapper;
 
+    @Autowired
+    private EntityManager entityManager;
+
     @BeforeTransaction
     public void beforeTransaction() {
         TenantContextUtils.setTenant(tenantContextHolder, "RESINTTEST");
@@ -149,7 +152,8 @@ public class LinkResourceIntTest extends AbstractJupiterSpringBootTest {
                                       permittedRepository,
                                       startUpdateDateGenerationStrategy,
                                       xmEntityRepository,
-                                      dynamicPermissionCheckService);
+                                      dynamicPermissionCheckService,
+                                      entityManager);
         linkService.setSelf(linkService);
 
         LinkResource linkResourceMock = new LinkResource(linkFacade);

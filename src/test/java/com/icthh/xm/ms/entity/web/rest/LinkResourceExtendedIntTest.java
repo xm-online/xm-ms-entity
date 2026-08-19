@@ -96,6 +96,8 @@ public class LinkResourceExtendedIntTest extends AbstractJupiterSpringBootTest {
     @Autowired
     private JsonMapper jsonMapper;
 
+    @Autowired
+    private EntityManager entityManager;
 
     @Spy
     private StartUpdateDateGenerationStrategy startUpdateDateGenerationStrategy;
@@ -122,7 +124,8 @@ public class LinkResourceExtendedIntTest extends AbstractJupiterSpringBootTest {
             permittedRepository,
             startUpdateDateGenerationStrategy,
             xmEntityRepository,
-            dynamicPermissionCheckService);
+            dynamicPermissionCheckService,
+            entityManager);
 
         linkService.setSelf(linkService);
 

@@ -8,6 +8,8 @@ import com.icthh.xm.lep.api.LepManager;
 import com.icthh.xm.ms.entity.AbstractJupiterSpringBootTest;
 import com.icthh.xm.ms.entity.domain.Link;
 import com.icthh.xm.ms.entity.domain.Link_;
+import com.icthh.xm.ms.entity.domain.XmEntity;
+import com.icthh.xm.ms.entity.repository.XmEntityRepository;
 import com.icthh.xm.ms.entity.security.access.XmEntityDynamicPermissionCheckService;
 import com.icthh.xm.ms.entity.web.rest.LinkResourceIntTest;
 import jakarta.persistence.EntityManager;
@@ -31,7 +33,11 @@ import java.util.List;
 import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_AUTH_CONTEXT;
 import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_TENANT_CONTEXT;
 import static com.icthh.xm.ms.entity.security.access.FeatureContext.LINK_DELETE;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -52,6 +58,8 @@ public class LinkServiceIntTest extends AbstractJupiterSpringBootTest {
     private XmEntityDynamicPermissionCheckService dynamicPermissionCheckService;
     @Autowired
     private XmAuthenticationContextHolder authContextHolder;
+    @Autowired
+    private XmEntityRepository xmEntityRepository;
 
     private List<Link> expected;
 
@@ -77,7 +85,7 @@ public class LinkServiceIntTest extends AbstractJupiterSpringBootTest {
         Page<Link> actual = linkService.findAll(Specification.where((root, query, criteriaBuilder)
             -> criteriaBuilder.isNotNull(root.get(Link_.id))), PageRequest.of(0, expected.size()));
         Assertions.assertNotNull(actual);
-        Assertions.assertEquals(expected.size(), actual.getContent().size());
+        assertEquals(expected.size(), actual.getContent().size());
         Assertions.assertTrue(actual.getContent().containsAll(expected));
     }
 
@@ -110,6 +118,59 @@ public class LinkServiceIntTest extends AbstractJupiterSpringBootTest {
         });
     }
 
+    @Test
+    @Transactional
+    void deleteInBatchShouldDeleteLinks() {
+        List<Link> linksToDelete = expected.subList(0, 2);
+
+        linkService.deleteInBatch(linksToDelete);
+
+        List<Link> actual = linkService.findAll(
+            Specification.where((root, query, cb) ->
+                cb.isNotNull(root.get(Link_.id))),
+            PageRequest.of(0, expected.size())
+        ).getContent();
+
+        assertEquals(expected.size() - linksToDelete.size(), actual.size());
+        assertFalse(actual.containsAll(linksToDelete));
+    }
+
+    @Test
+    @Transactional
+    void deleteInBatchShouldDetachDeletedLinks() {
+        Link linkToDelete = expected.getFirst();
+        XmEntity targetToDelete = linkToDelete.getTarget();
+
+        assertTrue(em.contains(linkToDelete));
+        assertTrue(em.contains(targetToDelete));
+
+        linkService.deleteInBatch(List.of(linkToDelete));
+
+        assertFalse(em.contains(linkToDelete));
+
+        xmEntityRepository.deleteAll(List.of(targetToDelete));
+
+        assertDoesNotThrow(() -> em.flush());
+    }
+
+    @Test
+    @Transactional
+    void deleteInBatchShouldNotFailOnNextQueryAfterTargetDeletion() {
+        Link linkToDelete = expected.getFirst();
+        XmEntity targetToDelete = linkToDelete.getTarget();
+
+        linkService.deleteInBatch(List.of(linkToDelete));
+
+        xmEntityRepository.deleteAll(List.of(targetToDelete));
+
+        assertDoesNotThrow(() ->
+            linkService.findAll(
+                Specification.where((root, query, cb) ->
+                    cb.isNotNull(root.get(Link_.id))),
+                PageRequest.of(0, 10)
+            )
+        );
+    }
 
     @BeforeTransaction
     public void beforeTransaction() {
