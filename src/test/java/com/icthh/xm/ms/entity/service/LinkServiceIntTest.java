@@ -132,7 +132,7 @@ public class LinkServiceIntTest extends AbstractJupiterSpringBootTest {
         ).getContent();
 
         assertEquals(expected.size() - linksToDelete.size(), actual.size());
-        assertFalse(actual.containsAll(linksToDelete));
+        assertTrue(actual.stream().noneMatch(linksToDelete::contains));
     }
 
     @Test
