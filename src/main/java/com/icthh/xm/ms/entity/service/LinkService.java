@@ -14,6 +14,7 @@ import com.icthh.xm.ms.entity.repository.LinkRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
 import com.icthh.xm.ms.entity.security.access.XmEntityDynamicPermissionCheckService;
 import com.icthh.xm.ms.entity.service.impl.StartUpdateDateGenerationStrategy;
+import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.Hibernate;
@@ -47,6 +48,8 @@ public class LinkService extends TransactionPropagationService<LinkService> {
     private final XmEntityRepository xmEntityRepository;
 
     private final XmEntityDynamicPermissionCheckService permissionCheckService;
+
+    private final EntityManager entityManager;
 
     /**
      * Save a link.
@@ -85,8 +88,14 @@ public class LinkService extends TransactionPropagationService<LinkService> {
         return linkRepository.saveAll(list);
     }
 
-    public void deleteInBatch(List<Link> list) {
-        linkRepository.deleteInBatch(list);
+    /**
+     * Deletes links using bulk operation and detaches deleted entities
+     * from the persistence context to prevent stale Link entities
+     * from participating in subsequent flush operations.
+     */
+    public void deleteInBatch(List<Link> links) {
+        linkRepository.deleteAllInBatch(links);
+        links.forEach(entityManager::detach);
     }
 
     private Long entityId(XmEntity entity) {
