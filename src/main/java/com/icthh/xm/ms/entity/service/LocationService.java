@@ -52,9 +52,10 @@ public class LocationService {
     @Transactional(readOnly = true)
     @FindWithPermission("LOCATION.GET_LIST.BY_XM_ENTITY")
     @LogicExtensionPoint(value = "FindByXmEntity", resolver = TypeKeyResolver.class)
-    @PrivilegeDescription("Privilege to search for the location by xmEntity id")
+    @PrivilegeDescription("Privilege to search for the location by xmEntity id and typeKey")
     public Page<Location> findByXmEntity(Long id, String typeKey, Pageable pageable, String privilegeKey) {
-        return permittedRepository.findByCondition("returnObject.xmEntity.id = :id", of("id", id), pageable, Location.class, privilegeKey);
+        return permittedRepository.findByCondition("returnObject.xmEntity.id = :id and returnObject.typeKey = :typeKey",
+            of("id", id, "typeKey", typeKey), pageable, Location.class, privilegeKey);
     }
 
     /**

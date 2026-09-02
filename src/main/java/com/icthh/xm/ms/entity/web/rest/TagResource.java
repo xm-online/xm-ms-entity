@@ -136,18 +136,18 @@ public class TagResource {
     }
 
     /**
-     * GET  /xm-entities/{id}/{typeKey}/tags : get the tags of a specific xmEntity.
+     * GET  /xm-entities/{id}/tags/{typeKey} : get the tags of a specific xmEntity, filtered by tag typeKey.
      *
      * @param id the id of the xmEntity
-     * @param typeKey the typeKey of the xmEntity
+     * @param typeKey the typeKey of the tag
      * @param pageable the pagination information
      * @return the ResponseEntity with status 200 (OK) and the list of tags in body
      */
-    @GetMapping("/xm-entities/{id}/{typeKey}/tags")
+    @GetMapping("/xm-entities/{id}/tags/{typeKey}")
     public ResponseEntity<List<TagDto>> getTagsByXmEntity(@PathVariable Long id, @PathVariable String typeKey,
                                                             @ParameterObject Pageable pageable) {
         Page<TagDto> page = tagFacade.findByXmEntity(id, typeKey, pageable, null);
-        HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(page, "/xm-entities/" + id + "/" + typeKey + "/tags");
+        HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(page, "/xm-entities/" + id + "/tags/" + typeKey);
         return new ResponseEntity<>(page.getContent(), headers, HttpStatus.OK);
     }
 }

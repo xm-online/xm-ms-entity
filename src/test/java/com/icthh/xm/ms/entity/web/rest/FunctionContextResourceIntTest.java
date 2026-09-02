@@ -3,12 +3,15 @@ package com.icthh.xm.ms.entity.web.rest;
 import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_TENANT_CONTEXT;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.hasItems;
+import static org.hamcrest.Matchers.not;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -312,17 +315,41 @@ public class FunctionContextResourceIntTest extends AbstractJupiterSpringBootTes
     @Transactional
     @WithMockUser(authorities = "SUPER-ADMIN")
     public void getFunctionContextsByXmEntity() throws Exception {
-        // Initialize the database
-        functionContextRepository.saveAndFlush(functionContext);
+        XmEntity entity1 = XmEntityResourceIntTest.createEntity();
+        em.persist(entity1);
+        XmEntity entity2 = XmEntityResourceIntTest.createEntity();
+        em.persist(entity2);
+        em.flush();
 
-        // Get all the functionContextList scoped to the xmEntity
-        restFunctionContextMockMvc.perform(get("/api/xm-entities/" + functionContext.getXmEntity().getId() + "/"
-            + functionContext.getXmEntity().getTypeKey() + "/function-contexts?sort=id,desc"))
+        // wrong entity, right typeKey - must NOT be returned
+        FunctionContext wrongEntity = functionContextRepository.saveAndFlush(
+            new FunctionContext().key("wrong-entity").typeKey("B").startDate(DEFAULT_START_DATE).xmEntity(entity1));
+        // right entity, wrong typeKey - must NOT be returned
+        FunctionContext wrongTypeKey = functionContextRepository.saveAndFlush(
+            new FunctionContext().key("wrong-typeKey").typeKey("A").startDate(DEFAULT_START_DATE).xmEntity(entity2));
+        // right entity, right typeKey - the actual matches (3, to span 2 pages of size 2)
+        FunctionContext match1 = functionContextRepository.saveAndFlush(
+            new FunctionContext().key("match-1").typeKey("B").startDate(DEFAULT_START_DATE).xmEntity(entity2));
+        FunctionContext match2 = functionContextRepository.saveAndFlush(
+            new FunctionContext().key("match-2").typeKey("B").startDate(DEFAULT_START_DATE).xmEntity(entity2));
+        FunctionContext match3 = functionContextRepository.saveAndFlush(
+            new FunctionContext().key("match-3").typeKey("B").startDate(DEFAULT_START_DATE).xmEntity(entity2));
+
+        // first page: only matches, none of the excluded ones
+        restFunctionContextMockMvc.perform(get("/api/xm-entities/" + entity2.getId() + "/function-contexts/B?sort=id,asc&page=0&size=2"))
             .andExpect(status().isOk())
-            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-            .andExpect(jsonPath("$.[*].id").value(hasItem(functionContext.getId().intValue())))
-            .andExpect(jsonPath("$.[*].key").value(hasItem(DEFAULT_KEY.toString())))
-            .andExpect(jsonPath("$.[*].typeKey").value(hasItem(DEFAULT_TYPE_KEY.toString())));
+            .andExpect(header().string("X-Total-Count", "3"))
+            .andExpect(jsonPath("$.length()").value(2))
+            .andExpect(jsonPath("$.[*].id").value(hasItems(match1.getId().intValue(), match2.getId().intValue())))
+            .andExpect(jsonPath("$.[*].id").value(not(hasItem(wrongEntity.getId().intValue()))))
+            .andExpect(jsonPath("$.[*].id").value(not(hasItem(wrongTypeKey.getId().intValue()))));
+
+        // second page: the third match, proving pagination actually advances
+        restFunctionContextMockMvc.perform(get("/api/xm-entities/" + entity2.getId() + "/function-contexts/B?sort=id,asc&page=1&size=2"))
+            .andExpect(status().isOk())
+            .andExpect(header().string("X-Total-Count", "3"))
+            .andExpect(jsonPath("$.length()").value(1))
+            .andExpect(jsonPath("$.[0].id").value(match3.getId().intValue()));
     }
 
     @Test

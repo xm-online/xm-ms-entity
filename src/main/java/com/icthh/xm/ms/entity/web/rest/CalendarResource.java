@@ -153,18 +153,18 @@ public class CalendarResource {
     }
 
     /**
-     * GET  /xm-entities/{id}/{typeKey}/calendars : get the calendars of a specific xmEntity.
+     * GET  /xm-entities/{id}/calendars/{typeKey} : get the calendars of a specific xmEntity, filtered by calendar typeKey.
      *
      * @param id the id of the xmEntity
-     * @param typeKey the typeKey of the xmEntity
+     * @param typeKey the typeKey of the calendar
      * @param pageable the pagination information
      * @return the ResponseEntity with status 200 (OK) and the list of calendars in body
      */
-    @GetMapping("/xm-entities/{id}/{typeKey}/calendars")
+    @GetMapping("/xm-entities/{id}/calendars/{typeKey}")
     public ResponseEntity<List<CalendarDto>> getCalendarsByXmEntity(@PathVariable Long id, @PathVariable String typeKey,
                                                                       Pageable pageable) {
         Page<CalendarDto> page = calendarFacade.findByXmEntity(id, typeKey, pageable, null);
-        HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(page, "/xm-entities/" + id + "/" + typeKey + "/calendars");
+        HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(page, "/xm-entities/" + id + "/calendars/" + typeKey);
         return new ResponseEntity<>(page.getContent(), headers, HttpStatus.OK);
     }
 }

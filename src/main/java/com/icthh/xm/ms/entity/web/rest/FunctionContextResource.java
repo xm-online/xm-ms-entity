@@ -142,18 +142,19 @@ public class FunctionContextResource {
     }
 
     /**
-     * GET  /xm-entities/{id}/{typeKey}/function-contexts : get the functionContexts of a specific xmEntity.
+     * GET  /xm-entities/{id}/function-contexts/{typeKey} : get the functionContexts of a specific xmEntity,
+     * filtered by functionContext typeKey.
      *
      * @param id the id of the xmEntity
-     * @param typeKey the typeKey of the xmEntity
+     * @param typeKey the typeKey of the functionContext
      * @param pageable the pagination information
      * @return the ResponseEntity with status 200 (OK) and the list of functionContexts in body
      */
-    @GetMapping("/xm-entities/{id}/{typeKey}/function-contexts")
+    @GetMapping("/xm-entities/{id}/function-contexts/{typeKey}")
     public ResponseEntity<List<FunctionContextDto>> getFunctionContextsByXmEntity(@PathVariable Long id, @PathVariable String typeKey,
                                                                                     @ParameterObject Pageable pageable) {
         Page<FunctionContextDto> page = functionContextFacade.findByXmEntity(id, typeKey, pageable, null);
-        HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(page, "/xm-entities/" + id + "/" + typeKey + "/function-contexts");
+        HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(page, "/xm-entities/" + id + "/function-contexts/" + typeKey);
         return new ResponseEntity<>(page.getContent(), headers, HttpStatus.OK);
     }
 }

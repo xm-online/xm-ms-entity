@@ -97,9 +97,10 @@ public class CalendarService {
     @Transactional(readOnly = true)
     @FindWithPermission("CALENDAR.GET_LIST.BY_XM_ENTITY")
     @LogicExtensionPoint(value = "FindByXmEntity", resolver = TypeKeyResolver.class)
-    @PrivilegeDescription("Privilege to search for the calendar by xmEntity id")
+    @PrivilegeDescription("Privilege to search for the calendar by xmEntity id and typeKey")
     public Page<Calendar> findByXmEntity(Long id, String typeKey, Pageable pageable, String privilegeKey) {
-        return permittedRepository.findByCondition("returnObject.xmEntity.id = :id", of("id", id), pageable, Calendar.class, privilegeKey);
+        return permittedRepository.findByCondition("returnObject.xmEntity.id = :id and returnObject.typeKey = :typeKey",
+            of("id", id, "typeKey", typeKey), pageable, Calendar.class, privilegeKey);
     }
 
     /**

@@ -93,4 +93,6 @@
     <include file="classpath:config/liquibase/changelog/20251013000000_add_key_to_location.xml" relativeToChangelogFile="false"/>
 
     <include file="classpath:config/liquibase/changelog/20251117000000_add_client_id_display_name_to_comment.xml" relativeToChangelogFile="false"/>
+
+    <include file="classpath:config/liquibase/changelog/20260902000000_add_type_key_to_comment.xml" relativeToChangelogFile="false"/>
 </databaseChangeLog>

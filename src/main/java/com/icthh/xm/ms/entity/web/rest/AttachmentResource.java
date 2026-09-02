@@ -148,18 +148,18 @@ public class AttachmentResource {
     }
 
     /**
-     * GET  /xm-entities/{id}/{typeKey}/attachments : get the attachments of a specific xmEntity.
+     * GET  /xm-entities/{id}/attachments/{typeKey} : get the attachments of a specific xmEntity, filtered by attachment typeKey.
      *
      * @param id the id of the xmEntity
-     * @param typeKey the typeKey of the xmEntity
+     * @param typeKey the typeKey of the attachment
      * @param pageable the pagination information
      * @return the ResponseEntity with status 200 (OK) and the list of attachments in body
      */
-    @GetMapping("/xm-entities/{id}/{typeKey}/attachments")
+    @GetMapping("/xm-entities/{id}/attachments/{typeKey}")
     public ResponseEntity<List<AttachmentDto>> getAttachmentsByXmEntity(@PathVariable Long id, @PathVariable String typeKey,
                                                                           @ParameterObject Pageable pageable) {
         Page<AttachmentDto> page = attachmentFacade.findByXmEntity(id, typeKey, pageable, null);
-        HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(page, "/xm-entities/" + id + "/" + typeKey + "/attachments");
+        HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(page, "/xm-entities/" + id + "/attachments/" + typeKey);
         return new ResponseEntity<>(page.getContent(), headers, HttpStatus.OK);
     }
 

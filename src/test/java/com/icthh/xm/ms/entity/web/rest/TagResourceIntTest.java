@@ -2,6 +2,8 @@ package com.icthh.xm.ms.entity.web.rest;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.hasItems;
+import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
@@ -10,6 +12,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -279,18 +282,38 @@ public class TagResourceIntTest extends AbstractJupiterSpringBootTest {
     @Test
     @Transactional
     public void getTagsByXmEntity() throws Exception {
-        // Initialize the database
-        tagRepository.saveAndFlush(tag);
+        XmEntity entity1 = XmEntityResourceIntTest.createEntity();
+        em.persist(entity1);
+        XmEntity entity2 = XmEntityResourceIntTest.createEntity();
+        em.persist(entity2);
+        em.flush();
 
-        // Get all the tagList scoped to the xmEntity
-        restTagMockMvc.perform(get("/api/xm-entities/" + tag.getXmEntity().getId() + "/"
-            + tag.getXmEntity().getTypeKey() + "/tags?sort=id,desc"))
+        // wrong entity, right typeKey - must NOT be returned
+        Tag wrongEntity = tagRepository.saveAndFlush(
+            new Tag().typeKey("TEST").name("wrong-entity").startDate(DEFAULT_START_DATE).xmEntity(entity1));
+        // right entity, wrong typeKey - must NOT be returned
+        Tag wrongTypeKey = tagRepository.saveAndFlush(
+            new Tag().typeKey("FAVORIT").name("wrong-typeKey").startDate(DEFAULT_START_DATE).xmEntity(entity2));
+        // right entity, right typeKey - the actual matches (3, to span 2 pages of size 2)
+        Tag match1 = tagRepository.saveAndFlush(new Tag().typeKey("TEST").name("match-1").startDate(DEFAULT_START_DATE).xmEntity(entity2));
+        Tag match2 = tagRepository.saveAndFlush(new Tag().typeKey("TEST").name("match-2").startDate(DEFAULT_START_DATE).xmEntity(entity2));
+        Tag match3 = tagRepository.saveAndFlush(new Tag().typeKey("TEST").name("match-3").startDate(DEFAULT_START_DATE).xmEntity(entity2));
+
+        // first page: only matches, none of the excluded ones
+        restTagMockMvc.perform(get("/api/xm-entities/" + entity2.getId() + "/tags/TEST?sort=id,asc&page=0&size=2"))
             .andExpect(status().isOk())
-            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-            .andExpect(jsonPath("$.[*].id").value(hasItem(tag.getId().intValue())))
-            .andExpect(jsonPath("$.[*].typeKey").value(hasItem(DEFAULT_TYPE_KEY.toString())))
-            .andExpect(jsonPath("$.[*].name").value(hasItem(DEFAULT_NAME.toString())))
-            .andExpect(jsonPath("$.[*].startDate").value(hasItem(DEFAULT_START_DATE.toString())));
+            .andExpect(header().string("X-Total-Count", "3"))
+            .andExpect(jsonPath("$.length()").value(2))
+            .andExpect(jsonPath("$.[*].id").value(hasItems(match1.getId().intValue(), match2.getId().intValue())))
+            .andExpect(jsonPath("$.[*].id").value(not(hasItem(wrongEntity.getId().intValue()))))
+            .andExpect(jsonPath("$.[*].id").value(not(hasItem(wrongTypeKey.getId().intValue()))));
+
+        // second page: the third match, proving pagination actually advances
+        restTagMockMvc.perform(get("/api/xm-entities/" + entity2.getId() + "/tags/TEST?sort=id,asc&page=1&size=2"))
+            .andExpect(status().isOk())
+            .andExpect(header().string("X-Total-Count", "3"))
+            .andExpect(jsonPath("$.length()").value(1))
+            .andExpect(jsonPath("$.[0].id").value(match3.getId().intValue()));
     }
 
     @Test

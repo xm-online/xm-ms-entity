@@ -53,7 +53,9 @@ import static java.time.Instant.now;
 import static java.util.UUID.randomUUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.hasItems;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -64,6 +66,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import com.icthh.xm.ms.entity.web.rest.facade.EventFacade;
@@ -522,17 +525,38 @@ public class EventResourceIntTest extends AbstractJupiterSpringBootTest {
     @Transactional
     @WithMockUser(authorities = "SUPER-ADMIN")
     public void getEventsByXmEntity() throws Exception {
-        // Initialize the database
-        eventRepository.saveAndFlush(event);
+        XmEntity entity1 = new XmEntity().typeKey("TARGET_ENTITY").startDate(now()).updateDate(now())
+            .name(DEFAULT_XM_ENTITY_NAME).key(randomUUID());
+        em.persist(entity1);
+        XmEntity entity2 = new XmEntity().typeKey("TARGET_ENTITY").startDate(now()).updateDate(now())
+            .name(DEFAULT_XM_ENTITY_NAME).key(randomUUID());
+        em.persist(entity2);
+        em.flush();
 
-        // Get all the eventList scoped to the assigned xmEntity
-        restEventMockMvc.perform(get("/api/xm-entities/" + event.getAssigned().getId() + "/"
-            + event.getAssigned().getTypeKey() + "/events?sort=id,desc"))
+        // wrong entity, right typeKey - must NOT be returned
+        Event wrongEntity = eventRepository.saveAndFlush(new Event().typeKey("B").title("wrong-entity").assigned(entity1));
+        // right entity, wrong typeKey - must NOT be returned
+        Event wrongTypeKey = eventRepository.saveAndFlush(new Event().typeKey("A").title("wrong-typeKey").assigned(entity2));
+        // right entity, right typeKey - the actual matches (3, to span 2 pages of size 2)
+        Event match1 = eventRepository.saveAndFlush(new Event().typeKey("B").title("match-1").assigned(entity2));
+        Event match2 = eventRepository.saveAndFlush(new Event().typeKey("B").title("match-2").assigned(entity2));
+        Event match3 = eventRepository.saveAndFlush(new Event().typeKey("B").title("match-3").assigned(entity2));
+
+        // first page: only matches, none of the excluded ones
+        restEventMockMvc.perform(get("/api/xm-entities/" + entity2.getId() + "/events/B?sort=id,asc&page=0&size=2"))
             .andExpect(status().isOk())
-            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-            .andExpect(jsonPath("$.[*].id").value(hasItem(event.getId().intValue())))
-            .andExpect(jsonPath("$.[*].typeKey").value(hasItem(DEFAULT_TYPE_KEY)))
-            .andExpect(jsonPath("$.[*].title").value(hasItem(DEFAULT_TITLE)));
+            .andExpect(header().string("X-Total-Count", "3"))
+            .andExpect(jsonPath("$.length()").value(2))
+            .andExpect(jsonPath("$.[*].id").value(hasItems(match1.getId().intValue(), match2.getId().intValue())))
+            .andExpect(jsonPath("$.[*].id").value(not(hasItem(wrongEntity.getId().intValue()))))
+            .andExpect(jsonPath("$.[*].id").value(not(hasItem(wrongTypeKey.getId().intValue()))));
+
+        // second page: the third match, proving pagination actually advances
+        restEventMockMvc.perform(get("/api/xm-entities/" + entity2.getId() + "/events/B?sort=id,asc&page=1&size=2"))
+            .andExpect(status().isOk())
+            .andExpect(header().string("X-Total-Count", "3"))
+            .andExpect(jsonPath("$.length()").value(1))
+            .andExpect(jsonPath("$.[0].id").value(match3.getId().intValue()));
     }
 
     @Test

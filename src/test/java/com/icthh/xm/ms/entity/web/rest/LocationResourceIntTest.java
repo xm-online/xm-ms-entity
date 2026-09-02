@@ -4,12 +4,15 @@ import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_AUTH_CO
 import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_TENANT_CONTEXT;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.hasItems;
+import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -292,17 +295,36 @@ public class LocationResourceIntTest extends AbstractJupiterSpringBootTest {
     @Transactional
     @WithMockUser(authorities = "SUPER-ADMIN")
     public void getLocationsByXmEntity() throws Exception {
-        // Initialize the database
-        locationRepository.saveAndFlush(location);
+        XmEntity entity1 = XmEntityResourceIntTest.createEntity();
+        em.persist(entity1);
+        XmEntity entity2 = XmEntityResourceIntTest.createEntity();
+        em.persist(entity2);
+        em.flush();
 
-        // Get all the locationList scoped to the xmEntity
-        restLocationMockMvc.perform(get("/api/xm-entities/" + location.getXmEntity().getId() + "/"
-            + location.getXmEntity().getTypeKey() + "/locations?sort=id,desc"))
+        // wrong entity, right typeKey - must NOT be returned
+        Location wrongEntity = locationRepository.saveAndFlush(new Location().typeKey("AAAAAAAAAA").name("wrong-entity").xmEntity(entity1));
+        // right entity, wrong typeKey - must NOT be returned
+        Location wrongTypeKey = locationRepository.saveAndFlush(new Location().typeKey("BBBBBBBBBB").name("wrong-typeKey").xmEntity(entity2));
+        // right entity, right typeKey - the actual matches (3, to span 2 pages of size 2)
+        Location match1 = locationRepository.saveAndFlush(new Location().typeKey("AAAAAAAAAA").name("match-1").xmEntity(entity2));
+        Location match2 = locationRepository.saveAndFlush(new Location().typeKey("AAAAAAAAAA").name("match-2").xmEntity(entity2));
+        Location match3 = locationRepository.saveAndFlush(new Location().typeKey("AAAAAAAAAA").name("match-3").xmEntity(entity2));
+
+        // first page: only matches, none of the excluded ones
+        restLocationMockMvc.perform(get("/api/xm-entities/" + entity2.getId() + "/locations/AAAAAAAAAA?sort=id,asc&page=0&size=2"))
             .andExpect(status().isOk())
-            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-            .andExpect(jsonPath("$.[*].id").value(hasItem(location.getId().intValue())))
-            .andExpect(jsonPath("$.[*].key").value(hasItem(DEFAULT_KEY.toString())))
-            .andExpect(jsonPath("$.[*].typeKey").value(hasItem(DEFAULT_TYPE_KEY.toString())));
+            .andExpect(header().string("X-Total-Count", "3"))
+            .andExpect(jsonPath("$.length()").value(2))
+            .andExpect(jsonPath("$.[*].id").value(hasItems(match1.getId().intValue(), match2.getId().intValue())))
+            .andExpect(jsonPath("$.[*].id").value(not(hasItem(wrongEntity.getId().intValue()))))
+            .andExpect(jsonPath("$.[*].id").value(not(hasItem(wrongTypeKey.getId().intValue()))));
+
+        // second page: the third match, proving pagination actually advances
+        restLocationMockMvc.perform(get("/api/xm-entities/" + entity2.getId() + "/locations/AAAAAAAAAA?sort=id,asc&page=1&size=2"))
+            .andExpect(status().isOk())
+            .andExpect(header().string("X-Total-Count", "3"))
+            .andExpect(jsonPath("$.length()").value(1))
+            .andExpect(jsonPath("$.[0].id").value(match3.getId().intValue()));
     }
 
     @Test

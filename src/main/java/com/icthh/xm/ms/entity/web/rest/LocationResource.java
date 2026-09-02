@@ -135,18 +135,18 @@ public class LocationResource {
     }
 
     /**
-     * GET  /xm-entities/{id}/{typeKey}/locations : get the locations of a specific xmEntity.
+     * GET  /xm-entities/{id}/locations/{typeKey} : get the locations of a specific xmEntity, filtered by location typeKey.
      *
      * @param id the id of the xmEntity
-     * @param typeKey the typeKey of the xmEntity
+     * @param typeKey the typeKey of the location
      * @param pageable the pagination information
      * @return the ResponseEntity with status 200 (OK) and the list of locations in body
      */
-    @GetMapping("/xm-entities/{id}/{typeKey}/locations")
+    @GetMapping("/xm-entities/{id}/locations/{typeKey}")
     public ResponseEntity<List<LocationDto>> getLocationsByXmEntity(@PathVariable Long id, @PathVariable String typeKey,
                                                                       @ParameterObject Pageable pageable) {
         Page<LocationDto> page = locationFacade.findByXmEntity(id, typeKey, pageable, null);
-        HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(page, "/xm-entities/" + id + "/" + typeKey + "/locations");
+        HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(page, "/xm-entities/" + id + "/locations/" + typeKey);
         return new ResponseEntity<>(page.getContent(), headers, HttpStatus.OK);
     }
 }

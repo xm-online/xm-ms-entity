@@ -72,9 +72,10 @@ public class TagService {
     @Transactional(readOnly = true)
     @FindWithPermission("TAG.GET_LIST.BY_XM_ENTITY")
     @LogicExtensionPoint(value = "FindByXmEntity", resolver = TypeKeyResolver.class)
-    @PrivilegeDescription("Privilege to search for the tag by xmEntity id")
+    @PrivilegeDescription("Privilege to search for the tag by xmEntity id and typeKey")
     public Page<Tag> findByXmEntity(Long id, String typeKey, Pageable pageable, String privilegeKey) {
-        return permittedRepository.findByCondition("returnObject.xmEntity.id = :id", of("id", id), pageable, Tag.class, privilegeKey);
+        return permittedRepository.findByCondition("returnObject.xmEntity.id = :id and returnObject.typeKey = :typeKey",
+            of("id", id, "typeKey", typeKey), pageable, Tag.class, privilegeKey);
     }
 
     /**

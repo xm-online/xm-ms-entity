@@ -134,34 +134,36 @@ public class LinkResource extends TransactionPropagationService<LinkResource> {
     }
 
     /**
-     * GET  /xm-entities/{id}/{typeKey}/sources : get the links where the given xmEntity is the target.
+     * GET  /xm-entities/{id}/sources/{typeKey} : get the links where the given xmEntity is the target,
+     * filtered by link typeKey.
      *
      * @param id the id of the xmEntity
-     * @param typeKey the typeKey of the xmEntity
+     * @param typeKey the typeKey of the link
      * @param pageable the pagination information
      * @return the ResponseEntity with status 200 (OK) and the list of links in body
      */
-    @GetMapping("/xm-entities/{id}/{typeKey}/sources")
+    @GetMapping("/xm-entities/{id}/sources/{typeKey}")
     public ResponseEntity<List<LinkDto>> getSourcesByXmEntity(@PathVariable Long id, @PathVariable String typeKey,
                                                                 @ParameterObject Pageable pageable) {
         Page<LinkDto> page = linkFacade.findSourcesByXmEntity(id, typeKey, pageable, null);
-        HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(page, "/xm-entities/" + id + "/" + typeKey + "/sources");
+        HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(page, "/xm-entities/" + id + "/sources/" + typeKey);
         return new ResponseEntity<>(page.getContent(), headers, HttpStatus.OK);
     }
 
     /**
-     * GET  /xm-entities/{id}/{typeKey}/targets : get the links where the given xmEntity is the source.
+     * GET  /xm-entities/{id}/targets/{typeKey} : get the links where the given xmEntity is the source,
+     * filtered by link typeKey.
      *
      * @param id the id of the xmEntity
-     * @param typeKey the typeKey of the xmEntity
+     * @param typeKey the typeKey of the link
      * @param pageable the pagination information
      * @return the ResponseEntity with status 200 (OK) and the list of links in body
      */
-    @GetMapping("/xm-entities/{id}/{typeKey}/targets")
+    @GetMapping("/xm-entities/{id}/targets/{typeKey}")
     public ResponseEntity<List<LinkDto>> getTargetsByXmEntity(@PathVariable Long id, @PathVariable String typeKey,
                                                                 @ParameterObject Pageable pageable) {
         Page<LinkDto> page = linkFacade.findTargetsByXmEntity(id, typeKey, pageable, null);
-        HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(page, "/xm-entities/" + id + "/" + typeKey + "/targets");
+        HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(page, "/xm-entities/" + id + "/targets/" + typeKey);
         return new ResponseEntity<>(page.getContent(), headers, HttpStatus.OK);
     }
 }

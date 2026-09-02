@@ -73,9 +73,10 @@ public class FunctionContextServiceImpl implements FunctionContextService {
     @Transactional(readOnly = true)
     @FindWithPermission("FUNCTION_CONTEXT.GET_LIST.BY_XM_ENTITY")
     @LogicExtensionPoint(value = "FindByXmEntity", resolver = TypeKeyResolver.class)
-    @PrivilegeDescription("Privilege to search for the functionContext by xmEntity id")
+    @PrivilegeDescription("Privilege to search for the functionContext by xmEntity id and typeKey")
     public Page<FunctionContext> findByXmEntity(Long id, String typeKey, Pageable pageable, String privilegeKey) {
-        return permittedRepository.findByCondition("returnObject.xmEntity.id = :id", of("id", id), pageable, FunctionContext.class, privilegeKey);
+        return permittedRepository.findByCondition("returnObject.xmEntity.id = :id and returnObject.typeKey = :typeKey",
+            of("id", id, "typeKey", typeKey), pageable, FunctionContext.class, privilegeKey);
     }
 
     /**

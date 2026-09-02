@@ -151,18 +151,18 @@ public class CommentResource {
     }
 
     /**
-     * GET  /xm-entities/{id}/{typeKey}/comments : get the comments of a specific xmEntity.
+     * GET  /xm-entities/{id}/comments/{typeKey} : get the comments of a specific xmEntity, filtered by comment typeKey.
      *
      * @param id the id of the xmEntity
-     * @param typeKey the typeKey of the xmEntity
+     * @param typeKey the typeKey of the comment
      * @param pageable the pagination information
      * @return the ResponseEntity with status 200 (OK) and the list of comments in body
      */
-    @GetMapping("/xm-entities/{id}/{typeKey}/comments")
+    @GetMapping("/xm-entities/{id}/comments/{typeKey}")
     public ResponseEntity<List<CommentDto>> getCommentsByXmEntity(@PathVariable Long id, @PathVariable String typeKey,
                                                                     @ParameterObject Pageable pageable) {
         Page<CommentDto> page = commentFacade.findByXmEntity(id, typeKey, pageable, null);
-        HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(page, "/xm-entities/" + id + "/" + typeKey + "/comments");
+        HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(page, "/xm-entities/" + id + "/comments/" + typeKey);
         return new ResponseEntity<>(page.getContent(), headers, HttpStatus.OK);
     }
 }

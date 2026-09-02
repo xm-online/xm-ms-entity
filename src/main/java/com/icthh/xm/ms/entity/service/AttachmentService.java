@@ -122,9 +122,10 @@ public class AttachmentService {
     @Transactional(readOnly = true)
     @FindWithPermission("ATTACHMENT.GET_LIST.BY_XM_ENTITY")
     @LogicExtensionPoint(value = "FindByXmEntity", resolver = TypeKeyResolver.class)
-    @PrivilegeDescription("Privilege to search for the attachment by xmEntity id")
+    @PrivilegeDescription("Privilege to search for the attachment by xmEntity id and typeKey")
     public Page<Attachment> findByXmEntity(Long id, String typeKey, Pageable pageable, String privilegeKey) {
-        return permittedRepository.findByCondition("returnObject.xmEntity.id = :id", of("id", id), pageable, Attachment.class, privilegeKey);
+        return permittedRepository.findByCondition("returnObject.xmEntity.id = :id and returnObject.typeKey = :typeKey",
+            of("id", id, "typeKey", typeKey), pageable, Attachment.class, privilegeKey);
     }
 
     /**

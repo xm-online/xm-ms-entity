@@ -141,18 +141,18 @@ public class EventResource {
     }
 
     /**
-     * GET  /xm-entities/{id}/{typeKey}/events : get the events of a specific xmEntity.
+     * GET  /xm-entities/{id}/events/{typeKey} : get the events of a specific xmEntity, filtered by event typeKey.
      *
      * @param id the id of the xmEntity
-     * @param typeKey the typeKey of the xmEntity
+     * @param typeKey the typeKey of the event
      * @param pageable the pagination information
      * @return the ResponseEntity with status 200 (OK) and the list of events in body
      */
-    @GetMapping("/xm-entities/{id}/{typeKey}/events")
+    @GetMapping("/xm-entities/{id}/events/{typeKey}")
     public ResponseEntity<List<EventDto>> getEventsByXmEntity(@PathVariable Long id, @PathVariable String typeKey,
                                                                 @ParameterObject Pageable pageable) {
         Page<EventDto> page = eventFacade.findByXmEntity(id, typeKey, pageable, null);
-        HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(page, "/xm-entities/" + id + "/" + typeKey + "/events");
+        HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(page, "/xm-entities/" + id + "/events/" + typeKey);
         return new ResponseEntity<>(page.getContent(), headers, HttpStatus.OK);
     }
 }

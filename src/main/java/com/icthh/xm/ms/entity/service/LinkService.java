@@ -199,9 +199,10 @@ public class LinkService extends TransactionPropagationService<LinkService> {
     @Transactional(readOnly = true)
     @FindWithPermission("LINK.SOURCES.GET_LIST.BY_XM_ENTITY")
     @LogicExtensionPoint(value = "FindSourcesByXmEntity", resolver = TypeKeyResolver.class)
-    @PrivilegeDescription("Privilege to search for the source links by xmEntity id")
+    @PrivilegeDescription("Privilege to search for the source links by xmEntity id and typeKey")
     public Page<Link> findSourcesByXmEntity(Long id, String typeKey, Pageable pageable, String privilegeKey) {
-        return permittedRepository.findByCondition("returnObject.target.id = :id", of("id", id), pageable, Link.class, privilegeKey);
+        return permittedRepository.findByCondition("returnObject.target.id = :id and returnObject.typeKey = :typeKey",
+            of("id", id, "typeKey", typeKey), pageable, Link.class, privilegeKey);
     }
 
     /**
@@ -216,9 +217,10 @@ public class LinkService extends TransactionPropagationService<LinkService> {
     @Transactional(readOnly = true)
     @FindWithPermission("LINK.TARGETS.GET_LIST.BY_XM_ENTITY")
     @LogicExtensionPoint(value = "FindTargetsByXmEntity", resolver = TypeKeyResolver.class)
-    @PrivilegeDescription("Privilege to search for the target links by xmEntity id")
+    @PrivilegeDescription("Privilege to search for the target links by xmEntity id and typeKey")
     public Page<Link> findTargetsByXmEntity(Long id, String typeKey, Pageable pageable, String privilegeKey) {
-        return permittedRepository.findByCondition("returnObject.source.id = :id", of("id", id), pageable, Link.class, privilegeKey);
+        return permittedRepository.findByCondition("returnObject.source.id = :id and returnObject.typeKey = :typeKey",
+            of("id", id, "typeKey", typeKey), pageable, Link.class, privilegeKey);
     }
 
     /**
