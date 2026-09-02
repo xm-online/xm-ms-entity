@@ -389,6 +389,23 @@ public class CalendarResourceIntTest extends AbstractJupiterSpringBootTest {
 
     @Test
     @Transactional
+    @WithMockUser(authorities = "SUPER-ADMIN")
+    public void getCalendarsByXmEntity() throws Exception {
+        // Initialize the database
+        calendarRepository.saveAndFlush(calendar);
+
+        // Get all the calendarList scoped to the xmEntity
+        restCalendarMockMvc.perform(get("/api/xm-entities/" + calendar.getXmEntity().getId() + "/"
+            + calendar.getXmEntity().getTypeKey() + "/calendars?sort=id,desc"))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+            .andExpect(jsonPath("$.[*].id").value(hasItem(calendar.getId().intValue())))
+            .andExpect(jsonPath("$.[*].typeKey").value(hasItem(DEFAULT_TYPE_KEY)))
+            .andExpect(jsonPath("$.[*].name").value(hasItem(DEFAULT_NAME)));
+    }
+
+    @Test
+    @Transactional
     public void getCalendar() throws Exception {
         // Initialize the database
         calendarRepository.saveAndFlush(calendar);

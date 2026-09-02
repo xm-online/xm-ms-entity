@@ -278,6 +278,23 @@ public class TagResourceIntTest extends AbstractJupiterSpringBootTest {
 
     @Test
     @Transactional
+    public void getTagsByXmEntity() throws Exception {
+        // Initialize the database
+        tagRepository.saveAndFlush(tag);
+
+        // Get all the tagList scoped to the xmEntity
+        restTagMockMvc.perform(get("/api/xm-entities/" + tag.getXmEntity().getId() + "/"
+            + tag.getXmEntity().getTypeKey() + "/tags?sort=id,desc"))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+            .andExpect(jsonPath("$.[*].id").value(hasItem(tag.getId().intValue())))
+            .andExpect(jsonPath("$.[*].typeKey").value(hasItem(DEFAULT_TYPE_KEY.toString())))
+            .andExpect(jsonPath("$.[*].name").value(hasItem(DEFAULT_NAME.toString())))
+            .andExpect(jsonPath("$.[*].startDate").value(hasItem(DEFAULT_START_DATE.toString())));
+    }
+
+    @Test
+    @Transactional
     public void getTag() throws Exception {
         // Initialize the database
         tagRepository.saveAndFlush(tag);

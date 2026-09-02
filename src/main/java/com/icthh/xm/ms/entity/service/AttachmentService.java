@@ -1,5 +1,7 @@
 package com.icthh.xm.ms.entity.service;
 
+import static com.google.common.collect.ImmutableMap.of;
+
 import com.icthh.xm.commons.exceptions.BusinessException;
 import com.icthh.xm.commons.exceptions.EntityNotFoundException;
 import com.icthh.xm.commons.lep.LogicExtensionPoint;
@@ -11,6 +13,7 @@ import com.icthh.xm.ms.entity.domain.Attachment;
 import com.icthh.xm.ms.entity.domain.Content;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.domain.spec.AttachmentSpec;
+import com.icthh.xm.ms.entity.lep.keyresolver.TypeKeyResolver;
 import com.icthh.xm.ms.entity.repository.AttachmentRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
 import com.icthh.xm.ms.entity.service.impl.StartUpdateDateGenerationStrategy;
@@ -114,6 +117,14 @@ public class AttachmentService {
     @PrivilegeDescription("Privilege to get all the attachments")
     public List<Attachment> findAll(String privilegeKey) {
         return permittedRepository.findAll(Attachment.class, privilegeKey);
+    }
+
+    @Transactional(readOnly = true)
+    @FindWithPermission("ATTACHMENT.GET_LIST.BY_XM_ENTITY")
+    @LogicExtensionPoint(value = "FindByXmEntity", resolver = TypeKeyResolver.class)
+    @PrivilegeDescription("Privilege to search for the attachment by xmEntity id")
+    public Page<Attachment> findByXmEntity(Long id, String typeKey, Pageable pageable, String privilegeKey) {
+        return permittedRepository.findByCondition("returnObject.xmEntity.id = :id", of("id", id), pageable, Attachment.class, privilegeKey);
     }
 
     /**

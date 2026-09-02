@@ -310,6 +310,23 @@ public class FunctionContextResourceIntTest extends AbstractJupiterSpringBootTes
 
     @Test
     @Transactional
+    @WithMockUser(authorities = "SUPER-ADMIN")
+    public void getFunctionContextsByXmEntity() throws Exception {
+        // Initialize the database
+        functionContextRepository.saveAndFlush(functionContext);
+
+        // Get all the functionContextList scoped to the xmEntity
+        restFunctionContextMockMvc.perform(get("/api/xm-entities/" + functionContext.getXmEntity().getId() + "/"
+            + functionContext.getXmEntity().getTypeKey() + "/function-contexts?sort=id,desc"))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+            .andExpect(jsonPath("$.[*].id").value(hasItem(functionContext.getId().intValue())))
+            .andExpect(jsonPath("$.[*].key").value(hasItem(DEFAULT_KEY.toString())))
+            .andExpect(jsonPath("$.[*].typeKey").value(hasItem(DEFAULT_TYPE_KEY.toString())));
+    }
+
+    @Test
+    @Transactional
     public void getFunctionContext() throws Exception {
         // Initialize the database
         functionContext = functionContextRepository.saveAndFlush(functionContext);

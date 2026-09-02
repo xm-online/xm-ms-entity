@@ -7,9 +7,15 @@ import com.icthh.xm.commons.permission.annotation.PrivilegeDescription;
 import com.icthh.xm.ms.entity.service.dto.LocationDto;
 import com.icthh.xm.ms.entity.web.rest.facade.LocationFacade;
 import com.icthh.xm.ms.entity.web.rest.util.HeaderUtil;
+import com.icthh.xm.ms.entity.web.rest.util.PaginationUtil;
 import com.icthh.xm.ms.entity.web.rest.util.RespContentUtil;
+import org.springdoc.core.annotations.ParameterObject;
 import jakarta.validation.Valid;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PostAuthorize;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -126,5 +132,21 @@ public class LocationResource {
     public ResponseEntity<Void> deleteLocation(@PathVariable Long id) {
         locationFacade.delete(id);
         return ResponseEntity.ok().headers(HeaderUtil.createEntityDeletionAlert(ENTITY_NAME, id.toString())).build();
+    }
+
+    /**
+     * GET  /xm-entities/{id}/{typeKey}/locations : get the locations of a specific xmEntity.
+     *
+     * @param id the id of the xmEntity
+     * @param typeKey the typeKey of the xmEntity
+     * @param pageable the pagination information
+     * @return the ResponseEntity with status 200 (OK) and the list of locations in body
+     */
+    @GetMapping("/xm-entities/{id}/{typeKey}/locations")
+    public ResponseEntity<List<LocationDto>> getLocationsByXmEntity(@PathVariable Long id, @PathVariable String typeKey,
+                                                                      @ParameterObject Pageable pageable) {
+        Page<LocationDto> page = locationFacade.findByXmEntity(id, typeKey, pageable, null);
+        HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(page, "/xm-entities/" + id + "/" + typeKey + "/locations");
+        return new ResponseEntity<>(page.getContent(), headers, HttpStatus.OK);
     }
 }

@@ -449,6 +449,23 @@ public class AttachmentResourceIntTest extends AbstractJupiterSpringBootTest {
 
     @Test
     @Transactional
+    @WithMockUser(authorities = "SUPER-ADMIN")
+    public void getAttachmentsByXmEntity() throws Exception {
+        // Initialize the database
+        attachmentRepository.saveAndFlush(attachment);
+
+        // Get all the attachmentList scoped to the xmEntity
+        restAttachmentMockMvc.perform(get("/api/xm-entities/" + attachment.getXmEntity().getId() + "/"
+            + attachment.getXmEntity().getTypeKey() + "/attachments?sort=id,desc"))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+            .andExpect(jsonPath("$.[*].id").value(hasItem(attachment.getId().intValue())))
+            .andExpect(jsonPath("$.[*].typeKey").value(hasItem(DEFAULT_TYPE_KEY.toString())))
+            .andExpect(jsonPath("$.[*].name").value(hasItem(DEFAULT_NAME.toString())));
+    }
+
+    @Test
+    @Transactional
     public void getAttachment() throws Exception {
         // Initialize the database
         attachmentRepository.saveAndFlush(attachment);

@@ -520,6 +520,23 @@ public class EventResourceIntTest extends AbstractJupiterSpringBootTest {
 
     @Test
     @Transactional
+    @WithMockUser(authorities = "SUPER-ADMIN")
+    public void getEventsByXmEntity() throws Exception {
+        // Initialize the database
+        eventRepository.saveAndFlush(event);
+
+        // Get all the eventList scoped to the assigned xmEntity
+        restEventMockMvc.perform(get("/api/xm-entities/" + event.getAssigned().getId() + "/"
+            + event.getAssigned().getTypeKey() + "/events?sort=id,desc"))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+            .andExpect(jsonPath("$.[*].id").value(hasItem(event.getId().intValue())))
+            .andExpect(jsonPath("$.[*].typeKey").value(hasItem(DEFAULT_TYPE_KEY)))
+            .andExpect(jsonPath("$.[*].title").value(hasItem(DEFAULT_TITLE)));
+    }
+
+    @Test
+    @Transactional
     public void getEvent() throws Exception {
         // Initialize the database
         eventRepository.saveAndFlush(event);

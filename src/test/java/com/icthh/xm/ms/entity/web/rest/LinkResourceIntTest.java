@@ -316,6 +316,38 @@ public class LinkResourceIntTest extends AbstractJupiterSpringBootTest {
 
     @Test
     @Transactional
+    @WithMockUser(authorities = "SUPER-ADMIN")
+    public void getSourcesByXmEntity() throws Exception {
+        // Initialize the database
+        linkRepository.saveAndFlush(link);
+
+        // Get all the links where the target xmEntity is link.getTarget()
+        restLinkMockMvc.perform(get("/api/xm-entities/" + link.getTarget().getId() + "/"
+            + link.getTarget().getTypeKey() + "/sources?sort=id,desc"))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+            .andExpect(jsonPath("$.[*].id").value(hasItem(link.getId().intValue())))
+            .andExpect(jsonPath("$.[*].typeKey").value(hasItem(DEFAULT_TYPE_KEY.toString())));
+    }
+
+    @Test
+    @Transactional
+    @WithMockUser(authorities = "SUPER-ADMIN")
+    public void getTargetsByXmEntity() throws Exception {
+        // Initialize the database
+        linkRepository.saveAndFlush(link);
+
+        // Get all the links where the source xmEntity is link.getSource()
+        restLinkMockMvc.perform(get("/api/xm-entities/" + link.getSource().getId() + "/"
+            + link.getSource().getTypeKey() + "/targets?sort=id,desc"))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+            .andExpect(jsonPath("$.[*].id").value(hasItem(link.getId().intValue())))
+            .andExpect(jsonPath("$.[*].typeKey").value(hasItem(DEFAULT_TYPE_KEY.toString())));
+    }
+
+    @Test
+    @Transactional
     public void getLink() throws Exception {
         // Initialize the database
         linkRepository.saveAndFlush(link);

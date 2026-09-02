@@ -1,5 +1,7 @@
 package com.icthh.xm.ms.entity.service;
 
+import static com.google.common.collect.ImmutableMap.of;
+
 import com.icthh.xm.commons.exceptions.BusinessException;
 import com.icthh.xm.commons.lep.LogicExtensionPoint;
 import com.icthh.xm.commons.lep.spring.LepService;
@@ -9,6 +11,7 @@ import com.icthh.xm.commons.permission.repository.PermittedRepository;
 import com.icthh.xm.ms.entity.domain.Calendar;
 import com.icthh.xm.ms.entity.domain.Event;
 import com.icthh.xm.ms.entity.domain.spec.CalendarSpec;
+import com.icthh.xm.ms.entity.lep.keyresolver.TypeKeyResolver;
 import com.icthh.xm.ms.entity.repository.CalendarRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
 import com.icthh.xm.ms.entity.service.impl.StartUpdateDateGenerationStrategy;
@@ -89,6 +92,14 @@ public class CalendarService {
     @PrivilegeDescription("Privilege to get all the calendars")
     public List<Calendar> findAll(String privilegeKey) {
         return permittedRepository.findAll(Calendar.class, privilegeKey);
+    }
+
+    @Transactional(readOnly = true)
+    @FindWithPermission("CALENDAR.GET_LIST.BY_XM_ENTITY")
+    @LogicExtensionPoint(value = "FindByXmEntity", resolver = TypeKeyResolver.class)
+    @PrivilegeDescription("Privilege to search for the calendar by xmEntity id")
+    public Page<Calendar> findByXmEntity(Long id, String typeKey, Pageable pageable, String privilegeKey) {
+        return permittedRepository.findByCondition("returnObject.xmEntity.id = :id", of("id", id), pageable, Calendar.class, privilegeKey);
     }
 
     /**

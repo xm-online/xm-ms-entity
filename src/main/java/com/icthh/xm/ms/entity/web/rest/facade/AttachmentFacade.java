@@ -5,6 +5,8 @@ import com.icthh.xm.ms.entity.service.AttachmentService;
 import com.icthh.xm.ms.entity.service.dto.AttachmentDto;
 import com.icthh.xm.ms.entity.service.mapper.AttachmentMapper;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -39,5 +41,9 @@ public class AttachmentFacade {
 
     public String getAttachmentDownloadLink(Long id) {
         return attachmentService.getAttachmentDownloadLink(id);
+    }
+
+    public Page<AttachmentDto> findByXmEntity(Long id, String typeKey, Pageable pageable, String privilegeKey) {
+        return attachmentService.findByXmEntity(id, typeKey, pageable, privilegeKey).map(attachmentMapper::toDto);
     }
 }

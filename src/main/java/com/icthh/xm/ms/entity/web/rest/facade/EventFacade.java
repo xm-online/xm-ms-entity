@@ -44,4 +44,8 @@ public class EventFacade {
     public void delete(Long id) {
         eventService.delete(id);
     }
+
+    public Page<EventDto> findByXmEntity(Long id, String typeKey, Pageable pageable, String privilegeKey) {
+        return eventService.findByXmEntity(id, typeKey, pageable, privilegeKey).map(eventMapper::toDto);
+    }
 }

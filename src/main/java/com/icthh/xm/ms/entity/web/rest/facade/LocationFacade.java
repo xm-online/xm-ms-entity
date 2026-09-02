@@ -5,6 +5,8 @@ import com.icthh.xm.ms.entity.service.LocationService;
 import com.icthh.xm.ms.entity.service.dto.LocationDto;
 import com.icthh.xm.ms.entity.service.mapper.LocationMapper;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -35,5 +37,9 @@ public class LocationFacade {
 
     public void delete(Long id) {
         locationService.delete(id);
+    }
+
+    public Page<LocationDto> findByXmEntity(Long id, String typeKey, Pageable pageable, String privilegeKey) {
+        return locationService.findByXmEntity(id, typeKey, pageable, privilegeKey).map(locationMapper::toDto);
     }
 }

@@ -318,6 +318,26 @@ public class CommentResourceIntTest extends AbstractJupiterSpringBootTest {
 
     @Test
     @Transactional
+    @WithMockUser(authorities = "SUPER-ADMIN")
+    public void getCommentsByEntityAndTypeKey() throws Exception {
+        // Initialize the database
+        commentRepository.saveAndFlush(comment);
+
+        // Get all the commentList
+        restCommentMockMvc.perform(get("/api/xm-entities/" + comment.getXmEntity().getId() + "/"
+            + comment.getXmEntity().getTypeKey() + "/comments?sort=id,desc"))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+            .andExpect(jsonPath("$.[*].id").value(hasItem(comment.getId().intValue())))
+            .andExpect(jsonPath("$.[*].userKey").value(hasItem(DEFAULT_USER_KEY)))
+            .andExpect(jsonPath("$.[*].clientId").value(hasItem(DEFAULT_CLIENT_ID)))
+            .andExpect(jsonPath("$.[*].displayName").value(hasItem(DEFAULT_DISPLAY_NAME)))
+            .andExpect(jsonPath("$.[*].message").value(hasItem(DEFAULT_MESSAGE)))
+            .andExpect(jsonPath("$.[*].entryDate").value(hasItem(DEFAULT_ENTRY_DATE.toString())));
+    }
+
+    @Test
+    @Transactional
     public void getComment() throws Exception {
         // Initialize the database
         commentRepository.saveAndFlush(comment);

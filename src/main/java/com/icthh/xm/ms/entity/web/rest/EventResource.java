@@ -8,9 +8,15 @@ import com.icthh.xm.ms.entity.service.dto.EventDto;
 import com.icthh.xm.ms.entity.web.rest.facade.EventFacade;
 import com.icthh.xm.ms.entity.service.query.filter.EventFilter;
 import com.icthh.xm.ms.entity.web.rest.util.HeaderUtil;
+import com.icthh.xm.ms.entity.web.rest.util.PaginationUtil;
 import com.icthh.xm.ms.entity.web.rest.util.RespContentUtil;
+import org.springdoc.core.annotations.ParameterObject;
 import jakarta.validation.Valid;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PostAuthorize;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -132,5 +138,21 @@ public class EventResource {
     public ResponseEntity<Void> deleteEvent(@PathVariable Long id) {
         eventFacade.delete(id);
         return ResponseEntity.ok().headers(HeaderUtil.createEntityDeletionAlert(ENTITY_NAME, id.toString())).build();
+    }
+
+    /**
+     * GET  /xm-entities/{id}/{typeKey}/events : get the events of a specific xmEntity.
+     *
+     * @param id the id of the xmEntity
+     * @param typeKey the typeKey of the xmEntity
+     * @param pageable the pagination information
+     * @return the ResponseEntity with status 200 (OK) and the list of events in body
+     */
+    @GetMapping("/xm-entities/{id}/{typeKey}/events")
+    public ResponseEntity<List<EventDto>> getEventsByXmEntity(@PathVariable Long id, @PathVariable String typeKey,
+                                                                @ParameterObject Pageable pageable) {
+        Page<EventDto> page = eventFacade.findByXmEntity(id, typeKey, pageable, null);
+        HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(page, "/xm-entities/" + id + "/" + typeKey + "/events");
+        return new ResponseEntity<>(page.getContent(), headers, HttpStatus.OK);
     }
 }

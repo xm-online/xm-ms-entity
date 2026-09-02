@@ -1,5 +1,7 @@
 package com.icthh.xm.ms.entity.service;
 
+import static com.google.common.collect.ImmutableMap.of;
+
 import com.icthh.xm.commons.lep.LogicExtensionPoint;
 import com.icthh.xm.commons.lep.spring.LepService;
 import com.icthh.xm.commons.permission.annotation.FindWithPermission;
@@ -7,10 +9,13 @@ import com.icthh.xm.commons.permission.annotation.PrivilegeDescription;
 import com.icthh.xm.commons.permission.repository.PermittedRepository;
 import com.icthh.xm.ms.entity.domain.Location;
 import com.icthh.xm.ms.entity.lep.keyresolver.LocationTypeKeyResolver;
+import com.icthh.xm.ms.entity.lep.keyresolver.TypeKeyResolver;
 import com.icthh.xm.ms.entity.repository.LocationRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -42,6 +47,14 @@ public class LocationService {
     @PrivilegeDescription("Privilege to get all the locations")
     public List<Location> findAll(String privilegeKey) {
         return permittedRepository.findAll(Location.class, privilegeKey);
+    }
+
+    @Transactional(readOnly = true)
+    @FindWithPermission("LOCATION.GET_LIST.BY_XM_ENTITY")
+    @LogicExtensionPoint(value = "FindByXmEntity", resolver = TypeKeyResolver.class)
+    @PrivilegeDescription("Privilege to search for the location by xmEntity id")
+    public Page<Location> findByXmEntity(Long id, String typeKey, Pageable pageable, String privilegeKey) {
+        return permittedRepository.findByCondition("returnObject.xmEntity.id = :id", of("id", id), pageable, Location.class, privilegeKey);
     }
 
     /**

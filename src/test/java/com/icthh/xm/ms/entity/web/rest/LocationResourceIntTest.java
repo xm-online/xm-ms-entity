@@ -290,6 +290,23 @@ public class LocationResourceIntTest extends AbstractJupiterSpringBootTest {
 
     @Test
     @Transactional
+    @WithMockUser(authorities = "SUPER-ADMIN")
+    public void getLocationsByXmEntity() throws Exception {
+        // Initialize the database
+        locationRepository.saveAndFlush(location);
+
+        // Get all the locationList scoped to the xmEntity
+        restLocationMockMvc.perform(get("/api/xm-entities/" + location.getXmEntity().getId() + "/"
+            + location.getXmEntity().getTypeKey() + "/locations?sort=id,desc"))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+            .andExpect(jsonPath("$.[*].id").value(hasItem(location.getId().intValue())))
+            .andExpect(jsonPath("$.[*].key").value(hasItem(DEFAULT_KEY.toString())))
+            .andExpect(jsonPath("$.[*].typeKey").value(hasItem(DEFAULT_TYPE_KEY.toString())));
+    }
+
+    @Test
+    @Transactional
     public void getLocation() throws Exception {
         // Initialize the database
         locationRepository.saveAndFlush(location);

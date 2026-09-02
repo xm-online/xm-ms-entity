@@ -42,6 +42,10 @@ public class CalendarFacade {
         calendarService.delete(id);
     }
 
+    public Page<CalendarDto> findByXmEntity(Long id, String typeKey, Pageable pageable, String privilegeKey) {
+        return calendarService.findByXmEntity(id, typeKey, pageable, privilegeKey).map(calendarMapper::toDto);
+    }
+
     public Page<EventDto> findEvents(Long calendarId, EventFilter filter, Pageable pageable) {
         return calendarService.findEvents(calendarId, filter, pageable).map(eventMapper::toDto);
     }

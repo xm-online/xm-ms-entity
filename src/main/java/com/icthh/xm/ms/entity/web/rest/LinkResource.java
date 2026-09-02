@@ -132,4 +132,36 @@ public class LinkResource extends TransactionPropagationService<LinkResource> {
         linkFacade.delete(id);
         return ResponseEntity.ok().headers(HeaderUtil.createEntityDeletionAlert(ENTITY_NAME, id.toString())).build();
     }
+
+    /**
+     * GET  /xm-entities/{id}/{typeKey}/sources : get the links where the given xmEntity is the target.
+     *
+     * @param id the id of the xmEntity
+     * @param typeKey the typeKey of the xmEntity
+     * @param pageable the pagination information
+     * @return the ResponseEntity with status 200 (OK) and the list of links in body
+     */
+    @GetMapping("/xm-entities/{id}/{typeKey}/sources")
+    public ResponseEntity<List<LinkDto>> getSourcesByXmEntity(@PathVariable Long id, @PathVariable String typeKey,
+                                                                @ParameterObject Pageable pageable) {
+        Page<LinkDto> page = linkFacade.findSourcesByXmEntity(id, typeKey, pageable, null);
+        HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(page, "/xm-entities/" + id + "/" + typeKey + "/sources");
+        return new ResponseEntity<>(page.getContent(), headers, HttpStatus.OK);
+    }
+
+    /**
+     * GET  /xm-entities/{id}/{typeKey}/targets : get the links where the given xmEntity is the source.
+     *
+     * @param id the id of the xmEntity
+     * @param typeKey the typeKey of the xmEntity
+     * @param pageable the pagination information
+     * @return the ResponseEntity with status 200 (OK) and the list of links in body
+     */
+    @GetMapping("/xm-entities/{id}/{typeKey}/targets")
+    public ResponseEntity<List<LinkDto>> getTargetsByXmEntity(@PathVariable Long id, @PathVariable String typeKey,
+                                                                @ParameterObject Pageable pageable) {
+        Page<LinkDto> page = linkFacade.findTargetsByXmEntity(id, typeKey, pageable, null);
+        HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(page, "/xm-entities/" + id + "/" + typeKey + "/targets");
+        return new ResponseEntity<>(page.getContent(), headers, HttpStatus.OK);
+    }
 }

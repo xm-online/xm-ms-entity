@@ -1,5 +1,6 @@
 package com.icthh.xm.ms.entity.service;
 
+import static com.google.common.collect.ImmutableMap.of;
 import static java.util.Optional.ofNullable;
 
 import com.icthh.xm.commons.lep.LogicExtensionPoint;
@@ -10,6 +11,7 @@ import com.icthh.xm.commons.permission.repository.PermittedRepository;
 import com.icthh.xm.ms.entity.domain.Event;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.lep.keyresolver.EventTypeKeyResolver;
+import com.icthh.xm.ms.entity.lep.keyresolver.TypeKeyResolver;
 import com.icthh.xm.ms.entity.repository.EventRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
 import com.icthh.xm.ms.entity.service.query.EventQueryService;
@@ -88,6 +90,23 @@ public class EventService extends TransactionPropagationService<EventService> {
     @PrivilegeDescription("Privilege to get all the events")
     public List<Event> findAll(String privilegeKey) {
         return permittedRepository.findAll(Event.class, privilegeKey);
+    }
+
+    /**
+     *  Get the events of a specific xmEntity.
+     *
+     *  @param id the id of the xmEntity
+     *  @param typeKey the typeKey of the xmEntity
+     *  @param pageable the pagination information
+     *  @param privilegeKey the privilege key
+     *  @return the page of entities
+     */
+    @Transactional(readOnly = true)
+    @FindWithPermission("EVENT.GET_LIST.BY_XM_ENTITY")
+    @LogicExtensionPoint(value = "FindByXmEntity", resolver = TypeKeyResolver.class)
+    @PrivilegeDescription("Privilege to search for the event by xmEntity id")
+    public Page<Event> findByXmEntity(Long id, String typeKey, Pageable pageable, String privilegeKey) {
+        return permittedRepository.findByCondition("returnObject.assigned.id = :id", of("id", id), pageable, Event.class, privilegeKey);
     }
 
     /**

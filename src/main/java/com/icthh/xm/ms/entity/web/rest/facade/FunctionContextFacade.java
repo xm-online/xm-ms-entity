@@ -5,6 +5,8 @@ import com.icthh.xm.ms.entity.service.FunctionContextService;
 import com.icthh.xm.ms.entity.service.dto.FunctionContextDto;
 import com.icthh.xm.ms.entity.service.mapper.FunctionContextMapper;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -34,5 +36,9 @@ public class FunctionContextFacade {
 
     public void delete(Long id) {
         functionContextService.delete(id);
+    }
+
+    public Page<FunctionContextDto> findByXmEntity(Long id, String typeKey, Pageable pageable, String privilegeKey) {
+        return functionContextService.findByXmEntity(id, typeKey, pageable, privilegeKey).map(functionContextMapper::toDto);
     }
 }

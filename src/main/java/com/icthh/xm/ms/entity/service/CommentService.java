@@ -9,6 +9,7 @@ import com.icthh.xm.commons.permission.annotation.PrivilegeDescription;
 import com.icthh.xm.commons.permission.repository.PermittedRepository;
 import com.icthh.xm.commons.security.XmAuthenticationContextHolder;
 import com.icthh.xm.ms.entity.domain.Comment;
+import com.icthh.xm.ms.entity.lep.keyresolver.TypeKeyResolver;
 import com.icthh.xm.ms.entity.repository.CommentRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
 import lombok.RequiredArgsConstructor;
@@ -97,6 +98,14 @@ public class CommentService {
     @LogicExtensionPoint("FindByXmEntity")
     @PrivilegeDescription("Privilege to search for the comment by xmEntity id")
     public Page<Comment> findByXmEntity(Long id, Pageable pageable, String privilegeKey) {
+        return permittedRepository.findByCondition("returnObject.xmEntity.id = :id", of("id", id), pageable, Comment.class, privilegeKey);
+    }
+
+    @Transactional(readOnly = true)
+    @FindWithPermission("COMMENT.GET_LIST.BY_XM_ENTITY")
+    @LogicExtensionPoint(value = "FindByXmEntityAndTypeKey", resolver = TypeKeyResolver.class)
+    @PrivilegeDescription("Privilege to search for the comment by xmEntity id")
+    public Page<Comment> findByXmEntity(Long id, String typeKey, Pageable pageable, String privilegeKey) {
         return permittedRepository.findByCondition("returnObject.xmEntity.id = :id", of("id", id), pageable, Comment.class, privilegeKey);
     }
 }
