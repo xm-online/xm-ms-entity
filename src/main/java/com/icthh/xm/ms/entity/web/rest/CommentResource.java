@@ -143,10 +143,28 @@ public class CommentResource {
     }
 
     @GetMapping("/xm-entities/{id}/comments")
-    
+
     public ResponseEntity<List<CommentDto>> getCommentsByXmEntity(@PathVariable Long id, @ParameterObject Pageable pageable) {
         Page<CommentDto> page = commentFacade.findByXmEntity(id, pageable, null);
         HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(page, "/xm-entities/" + id + "/comments");
+        return new ResponseEntity<>(page.getContent(), headers, HttpStatus.OK);
+    }
+
+    /**
+     * GET  /xm-entities/{id}/comments/{typeKey} : get the comments of a specific xmEntity, filtered by comment typeKey.
+     *
+     * @param id the id of the xmEntity
+     * @param typeKey the typeKey of the comment
+     * @param pageable the pagination information
+     * @return the ResponseEntity with status 200 (OK) and the list of comments in body
+     */
+    @GetMapping("/xm-entities/{id}/comments/{typeKey}")
+    @PreAuthorize("hasPermission({'id': #id, 'typeKey': #typeKey}, 'COMMENT.GET_LIST.BY_XM_ENTITY.BY_TYPE_KEY')")
+    @PrivilegeDescription("Privilege to get the comments by xmEntity id and typeKey")
+    public ResponseEntity<List<CommentDto>> getCommentsByXmEntity(@PathVariable Long id, @PathVariable String typeKey,
+                                                                    @ParameterObject Pageable pageable) {
+        Page<CommentDto> page = commentFacade.findByXmEntity(id, typeKey, pageable, null);
+        HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(page, "/xm-entities/" + id + "/comments/" + typeKey);
         return new ResponseEntity<>(page.getContent(), headers, HttpStatus.OK);
     }
 }

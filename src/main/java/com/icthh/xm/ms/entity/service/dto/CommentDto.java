@@ -29,6 +29,9 @@ public class CommentDto implements Serializable {
     @Schema(description = "Comment author client id")
     private String clientId;
 
+    @Schema(description = "Optional type key, used to distinguish comment variants")
+    private String typeKey;
+
     @Schema(description = "Display name")
     private String displayName;
 

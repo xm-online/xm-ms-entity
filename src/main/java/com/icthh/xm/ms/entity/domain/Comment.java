@@ -54,6 +54,12 @@ public class Comment implements Serializable {
     @Column(name = "client_id")
     private String clientId;
 
+    /**
+     * Optional type key, used to distinguish comment variants (e.g. for LEP dispatch or filtering).
+     */
+    @Column(name = "type_key")
+    private String typeKey;
+
     @Column(name = "display_name")
     private String displayName;
 
@@ -92,6 +98,11 @@ public class Comment implements Serializable {
 
     public Comment clientId(String clientId) {
         this.clientId = clientId;
+        return this;
+    }
+
+    public Comment typeKey(String typeKey) {
+        this.typeKey = typeKey;
         return this;
     }
 

@@ -151,4 +151,22 @@ public class CalendarResource {
         calendarFacade.delete(id);
         return ResponseEntity.ok().headers(HeaderUtil.createEntityDeletionAlert(ENTITY_NAME, id.toString())).build();
     }
+
+    /**
+     * GET  /xm-entities/{id}/calendars/{typeKey} : get the calendars of a specific xmEntity, filtered by calendar typeKey.
+     *
+     * @param id the id of the xmEntity
+     * @param typeKey the typeKey of the calendar
+     * @param pageable the pagination information
+     * @return the ResponseEntity with status 200 (OK) and the list of calendars in body
+     */
+    @GetMapping("/xm-entities/{id}/calendars/{typeKey}")
+    @PreAuthorize("hasPermission({'id': #id, 'typeKey': #typeKey}, 'CALENDAR.GET_LIST.BY_XM_ENTITY.BY_TYPE_KEY')")
+    @PrivilegeDescription("Privilege to get the calendars by xmEntity id and typeKey")
+    public ResponseEntity<List<CalendarDto>> getCalendarsByXmEntity(@PathVariable Long id, @PathVariable String typeKey,
+                                                                      Pageable pageable) {
+        Page<CalendarDto> page = calendarFacade.findByXmEntity(id, typeKey, pageable, null);
+        HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(page, "/xm-entities/" + id + "/calendars/" + typeKey);
+        return new ResponseEntity<>(page.getContent(), headers, HttpStatus.OK);
+    }
 }

@@ -5,6 +5,8 @@ import com.icthh.xm.ms.entity.service.TagService;
 import com.icthh.xm.ms.entity.service.dto.TagDto;
 import com.icthh.xm.ms.entity.service.mapper.TagMapper;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -30,6 +32,10 @@ public class TagFacade {
 
     public TagDto findOne(Long id) {
         return tagMapper.toDto(tagService.findOne(id));
+    }
+
+    public Page<TagDto> findByXmEntity(Long id, String typeKey, Pageable pageable, String privilegeKey) {
+        return tagService.findByXmEntity(id, typeKey, pageable, privilegeKey).map(tagMapper::toDto);
     }
 
     public void delete(Long id) {

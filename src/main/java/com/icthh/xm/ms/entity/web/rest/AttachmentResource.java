@@ -6,9 +6,15 @@ import com.icthh.xm.commons.permission.annotation.PrivilegeDescription;
 import com.icthh.xm.ms.entity.service.dto.AttachmentDto;
 import com.icthh.xm.ms.entity.web.rest.facade.AttachmentFacade;
 import com.icthh.xm.ms.entity.web.rest.util.HeaderUtil;
+import com.icthh.xm.ms.entity.web.rest.util.PaginationUtil;
 import com.icthh.xm.ms.entity.web.rest.util.RespContentUtil;
+import org.springdoc.core.annotations.ParameterObject;
 import jakarta.validation.Valid;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PostAuthorize;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -139,6 +145,24 @@ public class AttachmentResource {
     public ResponseEntity<String> getAttachmentDownloadLink(@PathVariable Long id) {
         String downloadLink = attachmentFacade.getAttachmentDownloadLink(id);
         return RespContentUtil.wrapOrNotFound(Optional.ofNullable(downloadLink));
+    }
+
+    /**
+     * GET  /xm-entities/{id}/attachments/{typeKey} : get the attachments of a specific xmEntity, filtered by attachment typeKey.
+     *
+     * @param id the id of the xmEntity
+     * @param typeKey the typeKey of the attachment
+     * @param pageable the pagination information
+     * @return the ResponseEntity with status 200 (OK) and the list of attachments in body
+     */
+    @GetMapping("/xm-entities/{id}/attachments/{typeKey}")
+    @PreAuthorize("hasPermission({'id': #id, 'typeKey': #typeKey}, 'ATTACHMENT.GET_LIST.BY_XM_ENTITY.BY_TYPE_KEY')")
+    @PrivilegeDescription("Privilege to get the attachments by xmEntity id and typeKey")
+    public ResponseEntity<List<AttachmentDto>> getAttachmentsByXmEntity(@PathVariable Long id, @PathVariable String typeKey,
+                                                                          @ParameterObject Pageable pageable) {
+        Page<AttachmentDto> page = attachmentFacade.findByXmEntity(id, typeKey, pageable, null);
+        HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(page, "/xm-entities/" + id + "/attachments/" + typeKey);
+        return new ResponseEntity<>(page.getContent(), headers, HttpStatus.OK);
     }
 
 }

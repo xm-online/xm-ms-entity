@@ -33,4 +33,12 @@ public class LinkFacade {
     public void delete(Long id) {
         linkService.delete(id);
     }
+
+    public Page<LinkDto> findSourcesByXmEntity(Long id, String typeKey, Pageable pageable, String privilegeKey) {
+        return linkService.findSourcesByXmEntity(id, typeKey, pageable, privilegeKey).map(linkMapper::toDto);
+    }
+
+    public Page<LinkDto> findTargetsByXmEntity(Long id, String typeKey, Pageable pageable, String privilegeKey) {
+        return linkService.findTargetsByXmEntity(id, typeKey, pageable, privilegeKey).map(linkMapper::toDto);
+    }
 }

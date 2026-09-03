@@ -37,4 +37,8 @@ public class CommentFacade {
     public Page<CommentDto> findByXmEntity(Long id, Pageable pageable, String privilegeKey) {
         return commentService.findByXmEntity(id, pageable, privilegeKey).map(commentMapper::toDto);
     }
+
+    public Page<CommentDto> findByXmEntity(Long id, String typeKey, Pageable pageable, String privilegeKey) {
+        return commentService.findByXmEntity(id, typeKey, pageable, privilegeKey).map(commentMapper::toDto);
+    }
 }

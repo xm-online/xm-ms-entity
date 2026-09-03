@@ -7,9 +7,15 @@ import com.icthh.xm.commons.permission.annotation.PrivilegeDescription;
 import com.icthh.xm.ms.entity.service.dto.TagDto;
 import com.icthh.xm.ms.entity.web.rest.facade.TagFacade;
 import com.icthh.xm.ms.entity.web.rest.util.HeaderUtil;
+import com.icthh.xm.ms.entity.web.rest.util.PaginationUtil;
 import com.icthh.xm.ms.entity.web.rest.util.RespContentUtil;
+import org.springdoc.core.annotations.ParameterObject;
 import jakarta.validation.Valid;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PostAuthorize;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -127,5 +133,23 @@ public class TagResource {
     public ResponseEntity<Void> deleteTag(@PathVariable Long id) {
         tagFacade.delete(id);
         return ResponseEntity.ok().headers(HeaderUtil.createEntityDeletionAlert(ENTITY_NAME, id.toString())).build();
+    }
+
+    /**
+     * GET  /xm-entities/{id}/tags/{typeKey} : get the tags of a specific xmEntity, filtered by tag typeKey.
+     *
+     * @param id the id of the xmEntity
+     * @param typeKey the typeKey of the tag
+     * @param pageable the pagination information
+     * @return the ResponseEntity with status 200 (OK) and the list of tags in body
+     */
+    @GetMapping("/xm-entities/{id}/tags/{typeKey}")
+    @PreAuthorize("hasPermission({'id': #id, 'typeKey': #typeKey}, 'TAG.GET_LIST.BY_XM_ENTITY.BY_TYPE_KEY')")
+    @PrivilegeDescription("Privilege to get the tags by xmEntity id and typeKey")
+    public ResponseEntity<List<TagDto>> getTagsByXmEntity(@PathVariable Long id, @PathVariable String typeKey,
+                                                            @ParameterObject Pageable pageable) {
+        Page<TagDto> page = tagFacade.findByXmEntity(id, typeKey, pageable, null);
+        HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(page, "/xm-entities/" + id + "/tags/" + typeKey);
+        return new ResponseEntity<>(page.getContent(), headers, HttpStatus.OK);
     }
 }

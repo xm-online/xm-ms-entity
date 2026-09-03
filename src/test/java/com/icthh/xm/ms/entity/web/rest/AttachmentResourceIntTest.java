@@ -4,6 +4,8 @@ import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_AUTH_CO
 import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_TENANT_CONTEXT;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.hasItems;
+import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
@@ -11,6 +13,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -445,6 +448,42 @@ public class AttachmentResourceIntTest extends AbstractJupiterSpringBootTest {
             .andExpect(jsonPath("$.[*].endDate").value(hasItem(DEFAULT_END_DATE.toString())))
             .andExpect(jsonPath("$.[*].valueContentType").value(hasItem(DEFAULT_VALUE_CONTENT_TYPE.toString())))
             .andExpect(jsonPath("$.[*].valueContentSize").value(hasItem(DEFAULT_VALUE_CONTENT_SIZE.intValue())));
+    }
+
+    @Test
+    @Transactional
+    @WithMockUser(authorities = "SUPER-ADMIN")
+    public void getAttachmentsByXmEntity() throws Exception {
+        XmEntity entity1 = XmEntityResourceIntTest.createEntity();
+        em.persist(entity1);
+        XmEntity entity2 = XmEntityResourceIntTest.createEntity();
+        em.persist(entity2);
+        em.flush();
+
+        // wrong entity, right typeKey - must NOT be returned
+        Attachment wrongEntity = attachmentRepository.saveAndFlush(createAttachment("AAAAAAAAAA").xmEntity(entity1));
+        // right entity, wrong typeKey - must NOT be returned
+        Attachment wrongTypeKey = attachmentRepository.saveAndFlush(createAttachment("BBBBBBBBBB").xmEntity(entity2));
+        // right entity, right typeKey - the actual matches (3, to span 2 pages of size 2)
+        Attachment match1 = attachmentRepository.saveAndFlush(createAttachment("AAAAAAAAAA").xmEntity(entity2));
+        Attachment match2 = attachmentRepository.saveAndFlush(createAttachment("AAAAAAAAAA").xmEntity(entity2));
+        Attachment match3 = attachmentRepository.saveAndFlush(createAttachment("AAAAAAAAAA").xmEntity(entity2));
+
+        // first page: only matches, none of the excluded ones
+        restAttachmentMockMvc.perform(get("/api/xm-entities/" + entity2.getId() + "/attachments/AAAAAAAAAA?sort=id,asc&page=0&size=2"))
+            .andExpect(status().isOk())
+            .andExpect(header().string("X-Total-Count", "3"))
+            .andExpect(jsonPath("$.length()").value(2))
+            .andExpect(jsonPath("$.[*].id").value(hasItems(match1.getId().intValue(), match2.getId().intValue())))
+            .andExpect(jsonPath("$.[*].id").value(not(hasItem(wrongEntity.getId().intValue()))))
+            .andExpect(jsonPath("$.[*].id").value(not(hasItem(wrongTypeKey.getId().intValue()))));
+
+        // second page: the third match, proving pagination actually advances
+        restAttachmentMockMvc.perform(get("/api/xm-entities/" + entity2.getId() + "/attachments/AAAAAAAAAA?sort=id,asc&page=1&size=2"))
+            .andExpect(status().isOk())
+            .andExpect(header().string("X-Total-Count", "3"))
+            .andExpect(jsonPath("$.length()").value(1))
+            .andExpect(jsonPath("$.[0].id").value(match3.getId().intValue()));
     }
 
     @Test

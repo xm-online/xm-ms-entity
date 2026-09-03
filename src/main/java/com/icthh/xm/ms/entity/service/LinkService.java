@@ -1,5 +1,7 @@
 package com.icthh.xm.ms.entity.service;
 
+import static com.google.common.collect.ImmutableMap.of;
+
 import com.icthh.xm.commons.exceptions.EntityNotFoundException;
 import com.icthh.xm.commons.lep.LogicExtensionPoint;
 import com.icthh.xm.commons.lep.spring.LepService;
@@ -8,6 +10,7 @@ import com.icthh.xm.commons.permission.annotation.PrivilegeDescription;
 import com.icthh.xm.ms.entity.domain.Link;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.lep.keyresolver.LinkTypeKeyResolver;
+import com.icthh.xm.ms.entity.lep.keyresolver.TypeKeyResolver;
 import com.icthh.xm.ms.entity.projection.LinkProjection;
 import com.icthh.xm.ms.entity.repository.LinkPermittedRepository;
 import com.icthh.xm.ms.entity.repository.LinkRepository;
@@ -182,6 +185,42 @@ public class LinkService extends TransactionPropagationService<LinkService> {
     public Page<Link> findSourceByTargetIdAndTypeKey(Pageable pageable, Long id, Set<String> typeKey, String
         privilegeKey) {
         return permittedRepository.findAllByTargetIdAndTypeKeyIn(pageable, id, typeKey, privilegeKey);
+    }
+
+    /**
+     * Get all links where the given xmEntity is the target (i.e. the incoming/"sources" side).
+     *
+     * @param id the xmEntity id
+     * @param typeKey the xmEntity typeKey
+     * @param pageable the pagination information
+     * @param privilegeKey the privilege key
+     * @return the page of entities
+     */
+    @Transactional(readOnly = true)
+    @FindWithPermission("LINK.SOURCES.GET_LIST.BY_XM_ENTITY")
+    @LogicExtensionPoint(value = "FindSourcesByXmEntity", resolver = TypeKeyResolver.class)
+    @PrivilegeDescription("Privilege to search for the source links by xmEntity id and typeKey")
+    public Page<Link> findSourcesByXmEntity(Long id, String typeKey, Pageable pageable, String privilegeKey) {
+        return permittedRepository.findByCondition("returnObject.target.id = :id and returnObject.typeKey = :typeKey",
+            of("id", id, "typeKey", typeKey), pageable, Link.class, privilegeKey);
+    }
+
+    /**
+     * Get all links where the given xmEntity is the source (i.e. the outgoing/"targets" side).
+     *
+     * @param id the xmEntity id
+     * @param typeKey the xmEntity typeKey
+     * @param pageable the pagination information
+     * @param privilegeKey the privilege key
+     * @return the page of entities
+     */
+    @Transactional(readOnly = true)
+    @FindWithPermission("LINK.TARGETS.GET_LIST.BY_XM_ENTITY")
+    @LogicExtensionPoint(value = "FindTargetsByXmEntity", resolver = TypeKeyResolver.class)
+    @PrivilegeDescription("Privilege to search for the target links by xmEntity id and typeKey")
+    public Page<Link> findTargetsByXmEntity(Long id, String typeKey, Pageable pageable, String privilegeKey) {
+        return permittedRepository.findByCondition("returnObject.source.id = :id and returnObject.typeKey = :typeKey",
+            of("id", id, "typeKey", typeKey), pageable, Link.class, privilegeKey);
     }
 
     /**

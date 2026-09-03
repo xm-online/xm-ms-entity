@@ -4,6 +4,8 @@ import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_AUTH_CO
 import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_TENANT_CONTEXT;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.hasItems;
+import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
@@ -12,6 +14,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import org.springframework.http.converter.json.JacksonJsonHttpMessageConverter;
@@ -385,6 +388,42 @@ public class CalendarResourceIntTest extends AbstractJupiterSpringBootTest {
             .andExpect(jsonPath("$.[*].startDate").value(hasItem(DEFAULT_START_DATE.toString())))
             .andExpect(jsonPath("$.[*].endDate").value(hasItem(DEFAULT_END_DATE.toString())))
             .andExpect(jsonPath("$.[*].timeZoneId").value(hasItem(DEFAULT_TIMEZONE_ID)));
+    }
+
+    @Test
+    @Transactional
+    @WithMockUser(authorities = "SUPER-ADMIN")
+    public void getCalendarsByXmEntity() throws Exception {
+        XmEntity entity1 = XmEntityResourceIntTest.createEntity();
+        em.persist(entity1);
+        XmEntity entity2 = XmEntityResourceIntTest.createEntity();
+        em.persist(entity2);
+        em.flush();
+
+        // wrong entity, right typeKey - must NOT be returned
+        Calendar wrongEntity = calendarRepository.saveAndFlush(new Calendar().typeKey("AAAAAAAAAA").name("wrong-entity").xmEntity(entity1));
+        // right entity, wrong typeKey - must NOT be returned
+        Calendar wrongTypeKey = calendarRepository.saveAndFlush(new Calendar().typeKey("BBBBBBBBBB").name("wrong-typeKey").xmEntity(entity2));
+        // right entity, right typeKey - the actual matches (3, to span 2 pages of size 2)
+        Calendar match1 = calendarRepository.saveAndFlush(new Calendar().typeKey("AAAAAAAAAA").name("match-1").xmEntity(entity2));
+        Calendar match2 = calendarRepository.saveAndFlush(new Calendar().typeKey("AAAAAAAAAA").name("match-2").xmEntity(entity2));
+        Calendar match3 = calendarRepository.saveAndFlush(new Calendar().typeKey("AAAAAAAAAA").name("match-3").xmEntity(entity2));
+
+        // first page: only matches, none of the excluded ones
+        restCalendarMockMvc.perform(get("/api/xm-entities/" + entity2.getId() + "/calendars/AAAAAAAAAA?sort=id,asc&page=0&size=2"))
+            .andExpect(status().isOk())
+            .andExpect(header().string("X-Total-Count", "3"))
+            .andExpect(jsonPath("$.length()").value(2))
+            .andExpect(jsonPath("$.[*].id").value(hasItems(match1.getId().intValue(), match2.getId().intValue())))
+            .andExpect(jsonPath("$.[*].id").value(not(hasItem(wrongEntity.getId().intValue()))))
+            .andExpect(jsonPath("$.[*].id").value(not(hasItem(wrongTypeKey.getId().intValue()))));
+
+        // second page: the third match, proving pagination actually advances
+        restCalendarMockMvc.perform(get("/api/xm-entities/" + entity2.getId() + "/calendars/AAAAAAAAAA?sort=id,asc&page=1&size=2"))
+            .andExpect(status().isOk())
+            .andExpect(header().string("X-Total-Count", "3"))
+            .andExpect(jsonPath("$.length()").value(1))
+            .andExpect(jsonPath("$.[0].id").value(match3.getId().intValue()));
     }
 
     @Test

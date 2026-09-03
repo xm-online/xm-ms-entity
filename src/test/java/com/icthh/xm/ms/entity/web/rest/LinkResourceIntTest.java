@@ -4,6 +4,8 @@ import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_AUTH_CO
 import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_TENANT_CONTEXT;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.hasItems;
+import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
@@ -11,6 +13,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -312,6 +315,88 @@ public class LinkResourceIntTest extends AbstractJupiterSpringBootTest {
             .andExpect(jsonPath("$.[*].description").value(hasItem(DEFAULT_DESCRIPTION.toString())))
             .andExpect(jsonPath("$.[*].startDate").value(hasItem(DEFAULT_START_DATE.toString())))
             .andExpect(jsonPath("$.[*].endDate").value(hasItem(DEFAULT_END_DATE.toString())));
+    }
+
+    @Test
+    @Transactional
+    @WithMockUser(authorities = "SUPER-ADMIN")
+    public void getSourcesByXmEntity() throws Exception {
+        // an arbitrary shared source entity - irrelevant to this endpoint's filtering
+        XmEntity someSource = XmEntityResourceIntTest.createEntity();
+        em.persist(someSource);
+        XmEntity target1 = XmEntityResourceIntTest.createEntity();
+        em.persist(target1);
+        XmEntity target2 = XmEntityResourceIntTest.createEntity();
+        em.persist(target2);
+        em.flush();
+
+        // wrong target entity, right typeKey - must NOT be returned
+        Link wrongEntity = linkRepository.saveAndFlush(
+            new Link().typeKey("B").name("wrong-entity").source(someSource).target(target1));
+        // right target entity, wrong typeKey - must NOT be returned
+        Link wrongTypeKey = linkRepository.saveAndFlush(
+            new Link().typeKey("A").name("wrong-typeKey").source(someSource).target(target2));
+        // right target entity, right typeKey - the actual matches (3, to span 2 pages of size 2)
+        Link match1 = linkRepository.saveAndFlush(new Link().typeKey("B").name("match-1").source(someSource).target(target2));
+        Link match2 = linkRepository.saveAndFlush(new Link().typeKey("B").name("match-2").source(someSource).target(target2));
+        Link match3 = linkRepository.saveAndFlush(new Link().typeKey("B").name("match-3").source(someSource).target(target2));
+
+        // first page: only matches, none of the excluded ones
+        restLinkMockMvc.perform(get("/api/xm-entities/" + target2.getId() + "/sources/B?sort=id,asc&page=0&size=2"))
+            .andExpect(status().isOk())
+            .andExpect(header().string("X-Total-Count", "3"))
+            .andExpect(jsonPath("$.length()").value(2))
+            .andExpect(jsonPath("$.[*].id").value(hasItems(match1.getId().intValue(), match2.getId().intValue())))
+            .andExpect(jsonPath("$.[*].id").value(not(hasItem(wrongEntity.getId().intValue()))))
+            .andExpect(jsonPath("$.[*].id").value(not(hasItem(wrongTypeKey.getId().intValue()))));
+
+        // second page: the third match, proving pagination actually advances
+        restLinkMockMvc.perform(get("/api/xm-entities/" + target2.getId() + "/sources/B?sort=id,asc&page=1&size=2"))
+            .andExpect(status().isOk())
+            .andExpect(header().string("X-Total-Count", "3"))
+            .andExpect(jsonPath("$.length()").value(1))
+            .andExpect(jsonPath("$.[0].id").value(match3.getId().intValue()));
+    }
+
+    @Test
+    @Transactional
+    @WithMockUser(authorities = "SUPER-ADMIN")
+    public void getTargetsByXmEntity() throws Exception {
+        // an arbitrary shared target entity - irrelevant to this endpoint's filtering
+        XmEntity someTarget = XmEntityResourceIntTest.createEntity();
+        em.persist(someTarget);
+        XmEntity source1 = XmEntityResourceIntTest.createEntity();
+        em.persist(source1);
+        XmEntity source2 = XmEntityResourceIntTest.createEntity();
+        em.persist(source2);
+        em.flush();
+
+        // wrong source entity, right typeKey - must NOT be returned
+        Link wrongEntity = linkRepository.saveAndFlush(
+            new Link().typeKey("B").name("wrong-entity").source(source1).target(someTarget));
+        // right source entity, wrong typeKey - must NOT be returned
+        Link wrongTypeKey = linkRepository.saveAndFlush(
+            new Link().typeKey("A").name("wrong-typeKey").source(source2).target(someTarget));
+        // right source entity, right typeKey - the actual matches (3, to span 2 pages of size 2)
+        Link match1 = linkRepository.saveAndFlush(new Link().typeKey("B").name("match-1").source(source2).target(someTarget));
+        Link match2 = linkRepository.saveAndFlush(new Link().typeKey("B").name("match-2").source(source2).target(someTarget));
+        Link match3 = linkRepository.saveAndFlush(new Link().typeKey("B").name("match-3").source(source2).target(someTarget));
+
+        // first page: only matches, none of the excluded ones
+        restLinkMockMvc.perform(get("/api/xm-entities/" + source2.getId() + "/targets/B?sort=id,asc&page=0&size=2"))
+            .andExpect(status().isOk())
+            .andExpect(header().string("X-Total-Count", "3"))
+            .andExpect(jsonPath("$.length()").value(2))
+            .andExpect(jsonPath("$.[*].id").value(hasItems(match1.getId().intValue(), match2.getId().intValue())))
+            .andExpect(jsonPath("$.[*].id").value(not(hasItem(wrongEntity.getId().intValue()))))
+            .andExpect(jsonPath("$.[*].id").value(not(hasItem(wrongTypeKey.getId().intValue()))));
+
+        // second page: the third match, proving pagination actually advances
+        restLinkMockMvc.perform(get("/api/xm-entities/" + source2.getId() + "/targets/B?sort=id,asc&page=1&size=2"))
+            .andExpect(status().isOk())
+            .andExpect(header().string("X-Total-Count", "3"))
+            .andExpect(jsonPath("$.length()").value(1))
+            .andExpect(jsonPath("$.[0].id").value(match3.getId().intValue()));
     }
 
     @Test

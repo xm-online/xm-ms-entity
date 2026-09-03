@@ -8,10 +8,15 @@ import com.icthh.xm.commons.permission.annotation.PrivilegeDescription;
 import com.icthh.xm.ms.entity.service.dto.FunctionContextDto;
 import com.icthh.xm.ms.entity.web.rest.facade.FunctionContextFacade;
 import com.icthh.xm.ms.entity.web.rest.util.HeaderUtil;
+import com.icthh.xm.ms.entity.web.rest.util.PaginationUtil;
 import com.icthh.xm.ms.entity.web.rest.util.RespContentUtil;
+import org.springdoc.core.annotations.ParameterObject;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PostAuthorize;
@@ -134,5 +139,24 @@ public class FunctionContextResource {
     public ResponseEntity<Void> deleteFunctionContext(@PathVariable Long id) {
         functionContextFacade.delete(id);
         return ResponseEntity.ok().headers(HeaderUtil.createEntityDeletionAlert(ENTITY_NAME, id.toString())).build();
+    }
+
+    /**
+     * GET  /xm-entities/{id}/function-contexts/{typeKey} : get the functionContexts of a specific xmEntity,
+     * filtered by functionContext typeKey.
+     *
+     * @param id the id of the xmEntity
+     * @param typeKey the typeKey of the functionContext
+     * @param pageable the pagination information
+     * @return the ResponseEntity with status 200 (OK) and the list of functionContexts in body
+     */
+    @GetMapping("/xm-entities/{id}/function-contexts/{typeKey}")
+    @PreAuthorize("hasPermission({'id': #id, 'typeKey': #typeKey}, 'FUNCTION_CONTEXT.GET_LIST.BY_XM_ENTITY.BY_TYPE_KEY')")
+    @PrivilegeDescription("Privilege to get the function contexts by xmEntity id and typeKey")
+    public ResponseEntity<List<FunctionContextDto>> getFunctionContextsByXmEntity(@PathVariable Long id, @PathVariable String typeKey,
+                                                                                    @ParameterObject Pageable pageable) {
+        Page<FunctionContextDto> page = functionContextFacade.findByXmEntity(id, typeKey, pageable, null);
+        HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(page, "/xm-entities/" + id + "/function-contexts/" + typeKey);
+        return new ResponseEntity<>(page.getContent(), headers, HttpStatus.OK);
     }
 }
