@@ -143,6 +143,8 @@ public class LinkResource extends TransactionPropagationService<LinkResource> {
      * @return the ResponseEntity with status 200 (OK) and the list of links in body
      */
     @GetMapping("/xm-entities/{id}/sources/{typeKey}")
+    @PreAuthorize("hasPermission({'id': #id, 'typeKey': #typeKey}, 'LINK.SOURCES.GET_LIST.BY_XM_ENTITY.BY_TYPE_KEY')")
+    @PrivilegeDescription("Privilege to get the source links by xmEntity id and typeKey")
     public ResponseEntity<List<LinkDto>> getSourcesByXmEntity(@PathVariable Long id, @PathVariable String typeKey,
                                                                 @ParameterObject Pageable pageable) {
         Page<LinkDto> page = linkFacade.findSourcesByXmEntity(id, typeKey, pageable, null);
@@ -160,6 +162,8 @@ public class LinkResource extends TransactionPropagationService<LinkResource> {
      * @return the ResponseEntity with status 200 (OK) and the list of links in body
      */
     @GetMapping("/xm-entities/{id}/targets/{typeKey}")
+    @PreAuthorize("hasPermission({'id': #id, 'typeKey': #typeKey}, 'LINK.TARGETS.GET_LIST.BY_XM_ENTITY.BY_TYPE_KEY')")
+    @PrivilegeDescription("Privilege to get the target links by xmEntity id and typeKey")
     public ResponseEntity<List<LinkDto>> getTargetsByXmEntity(@PathVariable Long id, @PathVariable String typeKey,
                                                                 @ParameterObject Pageable pageable) {
         Page<LinkDto> page = linkFacade.findTargetsByXmEntity(id, typeKey, pageable, null);

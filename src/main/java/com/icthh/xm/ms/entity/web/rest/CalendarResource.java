@@ -161,6 +161,8 @@ public class CalendarResource {
      * @return the ResponseEntity with status 200 (OK) and the list of calendars in body
      */
     @GetMapping("/xm-entities/{id}/calendars/{typeKey}")
+    @PreAuthorize("hasPermission({'id': #id, 'typeKey': #typeKey}, 'CALENDAR.GET_LIST.BY_XM_ENTITY.BY_TYPE_KEY')")
+    @PrivilegeDescription("Privilege to get the calendars by xmEntity id and typeKey")
     public ResponseEntity<List<CalendarDto>> getCalendarsByXmEntity(@PathVariable Long id, @PathVariable String typeKey,
                                                                       Pageable pageable) {
         Page<CalendarDto> page = calendarFacade.findByXmEntity(id, typeKey, pageable, null);

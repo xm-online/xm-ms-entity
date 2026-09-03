@@ -144,6 +144,8 @@ public class TagResource {
      * @return the ResponseEntity with status 200 (OK) and the list of tags in body
      */
     @GetMapping("/xm-entities/{id}/tags/{typeKey}")
+    @PreAuthorize("hasPermission({'id': #id, 'typeKey': #typeKey}, 'TAG.GET_LIST.BY_XM_ENTITY.BY_TYPE_KEY')")
+    @PrivilegeDescription("Privilege to get the tags by xmEntity id and typeKey")
     public ResponseEntity<List<TagDto>> getTagsByXmEntity(@PathVariable Long id, @PathVariable String typeKey,
                                                             @ParameterObject Pageable pageable) {
         Page<TagDto> page = tagFacade.findByXmEntity(id, typeKey, pageable, null);

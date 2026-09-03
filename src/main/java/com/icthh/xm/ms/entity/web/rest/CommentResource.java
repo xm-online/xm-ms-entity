@@ -159,6 +159,8 @@ public class CommentResource {
      * @return the ResponseEntity with status 200 (OK) and the list of comments in body
      */
     @GetMapping("/xm-entities/{id}/comments/{typeKey}")
+    @PreAuthorize("hasPermission({'id': #id, 'typeKey': #typeKey}, 'COMMENT.GET_LIST.BY_XM_ENTITY.BY_TYPE_KEY')")
+    @PrivilegeDescription("Privilege to get the comments by xmEntity id and typeKey")
     public ResponseEntity<List<CommentDto>> getCommentsByXmEntity(@PathVariable Long id, @PathVariable String typeKey,
                                                                     @ParameterObject Pageable pageable) {
         Page<CommentDto> page = commentFacade.findByXmEntity(id, typeKey, pageable, null);

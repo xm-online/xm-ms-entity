@@ -151,6 +151,8 @@ public class FunctionContextResource {
      * @return the ResponseEntity with status 200 (OK) and the list of functionContexts in body
      */
     @GetMapping("/xm-entities/{id}/function-contexts/{typeKey}")
+    @PreAuthorize("hasPermission({'id': #id, 'typeKey': #typeKey}, 'FUNCTION_CONTEXT.GET_LIST.BY_XM_ENTITY.BY_TYPE_KEY')")
+    @PrivilegeDescription("Privilege to get the function contexts by xmEntity id and typeKey")
     public ResponseEntity<List<FunctionContextDto>> getFunctionContextsByXmEntity(@PathVariable Long id, @PathVariable String typeKey,
                                                                                     @ParameterObject Pageable pageable) {
         Page<FunctionContextDto> page = functionContextFacade.findByXmEntity(id, typeKey, pageable, null);

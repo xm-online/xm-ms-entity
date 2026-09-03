@@ -143,6 +143,8 @@ public class LocationResource {
      * @return the ResponseEntity with status 200 (OK) and the list of locations in body
      */
     @GetMapping("/xm-entities/{id}/locations/{typeKey}")
+    @PreAuthorize("hasPermission({'id': #id, 'typeKey': #typeKey}, 'LOCATION.GET_LIST.BY_XM_ENTITY.BY_TYPE_KEY')")
+    @PrivilegeDescription("Privilege to get the locations by xmEntity id and typeKey")
     public ResponseEntity<List<LocationDto>> getLocationsByXmEntity(@PathVariable Long id, @PathVariable String typeKey,
                                                                       @ParameterObject Pageable pageable) {
         Page<LocationDto> page = locationFacade.findByXmEntity(id, typeKey, pageable, null);

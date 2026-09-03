@@ -149,6 +149,8 @@ public class EventResource {
      * @return the ResponseEntity with status 200 (OK) and the list of events in body
      */
     @GetMapping("/xm-entities/{id}/events/{typeKey}")
+    @PreAuthorize("hasPermission({'id': #id, 'typeKey': #typeKey}, 'EVENT.GET_LIST.BY_XM_ENTITY.BY_TYPE_KEY')")
+    @PrivilegeDescription("Privilege to get the events by xmEntity id and typeKey")
     public ResponseEntity<List<EventDto>> getEventsByXmEntity(@PathVariable Long id, @PathVariable String typeKey,
                                                                 @ParameterObject Pageable pageable) {
         Page<EventDto> page = eventFacade.findByXmEntity(id, typeKey, pageable, null);

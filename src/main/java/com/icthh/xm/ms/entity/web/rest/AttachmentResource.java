@@ -156,6 +156,8 @@ public class AttachmentResource {
      * @return the ResponseEntity with status 200 (OK) and the list of attachments in body
      */
     @GetMapping("/xm-entities/{id}/attachments/{typeKey}")
+    @PreAuthorize("hasPermission({'id': #id, 'typeKey': #typeKey}, 'ATTACHMENT.GET_LIST.BY_XM_ENTITY.BY_TYPE_KEY')")
+    @PrivilegeDescription("Privilege to get the attachments by xmEntity id and typeKey")
     public ResponseEntity<List<AttachmentDto>> getAttachmentsByXmEntity(@PathVariable Long id, @PathVariable String typeKey,
                                                                           @ParameterObject Pageable pageable) {
         Page<AttachmentDto> page = attachmentFacade.findByXmEntity(id, typeKey, pageable, null);
