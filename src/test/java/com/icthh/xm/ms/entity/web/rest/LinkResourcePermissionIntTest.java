@@ -1,17 +1,15 @@
 package com.icthh.xm.ms.entity.web.rest;
 
-import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_AUTH_CONTEXT;
-import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_TENANT_CONTEXT;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.verifyNoInteractions;
 
+import com.icthh.xm.commons.lep.api.LepEngineSession;
+import com.icthh.xm.commons.lep.api.LepManagementService;
 import com.icthh.xm.commons.permission.service.PermissionService;
 import com.icthh.xm.commons.permission.service.RoleService;
-import com.icthh.xm.commons.security.XmAuthenticationContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
-import com.icthh.xm.lep.api.LepManager;
 import com.icthh.xm.ms.entity.AbstractJupiterSpringBootTest;
 import com.icthh.xm.ms.entity.domain.Link;
 import com.icthh.xm.ms.entity.web.rest.facade.LinkFacade;
@@ -73,10 +71,9 @@ public class LinkResourcePermissionIntTest extends AbstractJupiterSpringBootTest
     private TenantContextHolder tenantContextHolder;
 
     @Autowired
-    private LepManager lepManager;
+    private LepManagementService lepManagementService;
 
-    @Autowired
-    private XmAuthenticationContextHolder authContextHolder;
+    private LepEngineSession lepEngineSession;
 
     @BeforeTransaction
     public void beforeTransaction() {
@@ -85,10 +82,7 @@ public class LinkResourcePermissionIntTest extends AbstractJupiterSpringBootTest
 
     @BeforeEach
     public void setup() {
-        lepManager.beginThreadContext(ctx -> {
-            ctx.setValue(THREAD_CONTEXT_KEY_TENANT_CONTEXT, tenantContextHolder.getContext());
-            ctx.setValue(THREAD_CONTEXT_KEY_AUTH_CONTEXT, authContextHolder.getContext());
-        });
+        lepEngineSession = lepManagementService.beginThreadContext();
         roleService.onRefresh(ROLES_CONFIG_KEY, ROLES_YML);
     }
 
@@ -96,7 +90,7 @@ public class LinkResourcePermissionIntTest extends AbstractJupiterSpringBootTest
     public void tearDown() {
         roleService.onRefresh(ROLES_CONFIG_KEY, null);
         permissionService.onRefresh(PERMISSIONS_CONFIG_KEY, null);
-        lepManager.endThreadContext();
+        lepEngineSession.close();
         tenantContextHolder.getPrivilegedContext().destroyCurrentContext();
     }
 
