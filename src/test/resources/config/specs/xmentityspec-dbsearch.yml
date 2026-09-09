@@ -24,5 +24,7 @@ types:
       name: { en: "Express order" }
     - key: PRODUCT
       name: { en: "Product" }
+      dataSpec: '{ "type": "object" }'
     - key: SILENT
       name: { en: "No text search" }
+      dataSpec: '{ "type": "object" }' 
