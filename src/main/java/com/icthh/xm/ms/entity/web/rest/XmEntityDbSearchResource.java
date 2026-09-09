@@ -1,0 +1,95 @@
+package com.icthh.xm.ms.entity.web.rest;
+
+import com.icthh.xm.commons.permission.annotation.PrivilegeDescription;
+import com.icthh.xm.ms.entity.service.dto.XmEntityDto;
+import com.icthh.xm.ms.entity.service.search.db.dto.XmEntityDbSearchRequest;
+import com.icthh.xm.ms.entity.service.search.db.filter.FilterParser;
+import com.icthh.xm.ms.entity.web.rest.facade.XmEntityDbSearchFacade;
+import com.icthh.xm.ms.entity.web.rest.util.PaginationUtil;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import lombok.RequiredArgsConstructor;
+import org.springdoc.core.annotations.ParameterObject;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.util.MultiValueMap;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+/** Search endpoints backed by the relational DB (no Elasticsearch). */
+@RestController
+@RequestMapping("/api")
+@RequiredArgsConstructor
+public class XmEntityDbSearchResource {
+
+    static final String SEARCH_URL = "/api/_search-db/xm-entities";
+
+    private final XmEntityDbSearchFacade facade;
+
+    @GetMapping(value = "/_search-db/xm-entities", produces = MediaType.APPLICATION_JSON_VALUE)
+    @PreAuthorize("hasPermission({'typeKey': #typeKey, 'query': #query, 'filter': #params}, 'XMENTITY.SEARCH.DB.QUERY')")
+    @PrivilegeDescription("Privilege to search xm entities in DB by typeKey, full text query and filters (GET)")
+    public ResponseEntity<List<XmEntityDto>> searchGet(@RequestParam String typeKey,
+                                                       @RequestParam(required = false) String query,
+                                                       @RequestParam(required = false) Boolean includeSubTypes,
+                                                       @RequestParam MultiValueMap<String, String> params,
+                                                       @ParameterObject Pageable pageable) {
+        XmEntityDbSearchRequest request = new XmEntityDbSearchRequest();
+        request.setTypeKey(typeKey);
+        request.setQuery(query);
+        request.setIncludeSubTypes(includeSubTypes);
+        request.setFilter(toFilterBody(params));
+        request.setRawStringValues(true);
+        return respond(request, pageable);
+    }
+
+    @PostMapping(value = "/_search-db/xm-entities", produces = MediaType.APPLICATION_JSON_VALUE)
+    @PreAuthorize("hasPermission({'typeKey': #request.typeKey, 'query': #request.query, 'filter': #request.filter}, 'XMENTITY.SEARCH.DB.QUERY')")
+    @PrivilegeDescription("Privilege to search xm entities in DB by typeKey, full text query and filters (POST)")
+    public ResponseEntity<List<XmEntityDto>> searchPost(@RequestBody XmEntityDbSearchRequest request,
+                                                        @ParameterObject Pageable pageable) {
+        return respond(request, pageable);
+    }
+
+    private ResponseEntity<List<XmEntityDto>> respond(XmEntityDbSearchRequest request, Pageable pageable) {
+        Page<XmEntityDto> page = facade.search(request, pageable, null);
+        HttpHeaders headers = PaginationUtil.generateDbSearchPaginationHttpHeaders(linkParams(request, pageable), page, SEARCH_URL);
+        return new ResponseEntity<>(page.getContent(), headers, HttpStatus.OK);
+    }
+
+    /** Keeps GET filter params as raw strings; the service infers their types. */
+    static Map<String, Object> toFilterBody(MultiValueMap<String, String> params) {
+        Map<String, Object> filter = new LinkedHashMap<>();
+        params.forEach((key, values) -> {
+            if (!FilterParser.RESERVED_PARAMS.contains(key) && values != null && !values.isEmpty()) {
+                filter.put(key, values.get(0));
+            }
+        });
+        return filter;
+    }
+
+    static Map<String, Object> linkParams(XmEntityDbSearchRequest request, Pageable pageable) {
+        Map<String, Object> params = new LinkedHashMap<>();
+        params.put("typeKey", request.getTypeKey());
+        params.put("query", request.getQuery());
+        params.put("includeSubTypes", request.getIncludeSubTypes());
+        if (request.getFilter() != null) {
+            params.putAll(request.getFilter());
+        }
+        if (pageable.getSort().isSorted()) {
+            params.put("sort", pageable.getSort().stream()
+                .map(o -> o.getProperty() + "," + o.getDirection().name().toLowerCase()).toList());
+        }
+        return params;
+    }
+}

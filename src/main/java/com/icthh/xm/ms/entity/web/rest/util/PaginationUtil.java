@@ -14,6 +14,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
+import java.util.Collection;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -93,6 +94,25 @@ public final class PaginationUtil {
             + TEMPLATE_GET_PARAM + escapedTemplate + escapedTemplateParams;
 
         return generatePagination(queryString, page, baseUrl);
+    }
+
+    /**
+     * Pagination headers for DB search endpoints. Every entry of {@code queryParams} (typeKey, query, filters, sort)
+     * is repeated in the Link URLs; list values are joined with a comma; null values are skipped.
+     */
+    @SneakyThrows
+    public static HttpHeaders generateDbSearchPaginationHttpHeaders(Map<String, ?> queryParams, Page page, String baseUrl) {
+        StringBuilder queryString = new StringBuilder();
+        for (Map.Entry<String, ?> entry : queryParams.entrySet()) {
+            Object value = entry.getValue();
+            if (value == null) {
+                continue;
+            }
+            String text = value instanceof Collection<?> c ? StringUtils.join(c, ",") : String.valueOf(value);
+            queryString.append('&').append(URLEncoder.encode(entry.getKey(), "UTF-8"))
+                .append('=').append(URLEncoder.encode(text, "UTF-8"));
+        }
+        return generatePagination(queryString.toString(), page, baseUrl);
     }
 
     private static HttpHeaders generatePagination(String query, Page page, String baseUrl) {
