@@ -186,6 +186,8 @@ application:
     specification-folder-path-pattern: /config/tenants/{tenantName}/entity/xmentityspec/*.yml
     specification-path-pattern: /config/tenants/{tenantName}/entity/specs/xmentityspecs.yml
     specification-templates-path-pattern: /config/tenants/{tenantName}/entity/templates/${application.specification-templates-name}
+    jpql-templates-path-pattern: /config/tenants/{tenantName}/entity/jpql-templates.yml
+    jpql-templates-folder-path-pattern: /config/tenants/{tenantName}/entity/jpql-templates/*.yml
     specification-webapp-name: settings-public.yml
     specification-name: xmentityspec.yml
     webapp-name: webapp

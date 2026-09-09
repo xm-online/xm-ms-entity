@@ -1,0 +1,18 @@
+ACTIVE_BY_ORDER:
+  query: "entity.typeKey = :typeKey and entity.stateKey = :stateKey and json_query(entity.data, '$.orderNo') = to_json_b(:orderNo)"
+  params:
+    orderNo: number
+MY_ORDERS:
+  query: "entity.typeKey = 'ORDER' and entity.createdBy = :subjectUserKey"
+ORDERS_SUMMARY:
+  type: RAW
+  query: >
+    select e.id as id, e.name as name, json_query(e.data, '$.orderNo') as orderNo
+    from XmEntity e where e.typeKey = :typeKey order by e.name asc
+  countQuery: "select count(e) from XmEntity e where e.typeKey = :typeKey"
+ORDER_ENTITIES_RAW:
+  type: RAW
+  query: "select e from XmEntity e where e.typeKey = :typeKey order by e.name asc"
+MIXED_RAW:
+  type: RAW
+  query: "select e, e.name from XmEntity e where e.typeKey = :typeKey order by e.name asc"
