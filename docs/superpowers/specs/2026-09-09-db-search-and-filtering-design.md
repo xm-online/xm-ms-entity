@@ -303,9 +303,17 @@ alongside the new `*.BY_XM_ENTITY*` keys from this branch.
 
 ### 5.5 LEP
 
-`XmEntityDbSearchService` methods carry `@LogicExtensionPoint` with `TypeKeyResolver`
-(`SearchDb`, `SearchDbToLink`, `SearchDbTargets`) and a plain `SearchDbByTemplate`, mirroring the
-Elasticsearch service methods.
+Every public method of `XmEntityDbSearchService` and `XmEntitySearchTextReindexService` is a
+`@LogicExtensionPoint` with a key resolver (`com.icthh.xm.ms.entity.lep.keyresolver`):
+
+| LEP key | Resolver | Key segments |
+|---|---|---|
+| `SearchDb` | `DbSearchRequestTypeKeyResolver` | `request.typeKey` |
+| `SearchDbToLink` | `EntityTypeKeyAndLinkTypeKeyResolver` | `entityTypeKey`, `linkTypeKey` |
+| `SearchDbTargets` | `LinkTypeKeyParamResolver` | `linkTypeKey` |
+| `SearchDbByEntityTemplate` | `JpqlTemplateKeyResolver` | `template.key` |
+| `SearchDbByRawTemplate` | `JpqlTemplateKeyResolver` | `template.key` |
+| `ReindexSearchText` | existing `TypeKeyResolver` | `typeKey` (none when null) |
 
 ## 6. Error handling
 
