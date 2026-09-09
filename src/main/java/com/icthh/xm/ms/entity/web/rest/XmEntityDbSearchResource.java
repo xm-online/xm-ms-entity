@@ -4,6 +4,7 @@ import com.icthh.xm.commons.permission.annotation.PrivilegeDescription;
 import com.icthh.xm.ms.entity.domain.ext.IdOrKey;
 import com.icthh.xm.ms.entity.service.dto.LinkDto;
 import com.icthh.xm.ms.entity.service.dto.XmEntityDto;
+import com.icthh.xm.ms.entity.service.search.db.XmEntitySearchTextReindexService;
 import com.icthh.xm.ms.entity.service.search.db.dto.XmEntityDbSearchRequest;
 import com.icthh.xm.ms.entity.service.search.db.filter.FilterParser;
 import com.icthh.xm.ms.entity.service.search.db.template.JpqlTemplate;
@@ -44,6 +45,7 @@ public class XmEntityDbSearchResource {
     private static final Set<String> PAGE_PARAMS = Set.of("page", "size", "sort");
 
     private final XmEntityDbSearchFacade facade;
+    private final XmEntitySearchTextReindexService reindexService;
 
     @GetMapping(value = "/_search-db/xm-entities", produces = MediaType.APPLICATION_JSON_VALUE)
     @PreAuthorize("hasPermission({'typeKey': #typeKey, 'query': #query, 'filter': #params}, 'XMENTITY.SEARCH.DB.QUERY')")
@@ -194,6 +196,13 @@ public class XmEntityDbSearchResource {
         Page<XmEntityDto> page = facade.searchByEntityTemplate(template, params, pageable, null);
         HttpHeaders headers = PaginationUtil.generateDbSearchPaginationHttpHeaders(linkParams, page, url);
         return new ResponseEntity<>(page.getContent(), headers, HttpStatus.OK);
+    }
+
+    @PostMapping(value = "/_search-db/xm-entities/reindex", produces = MediaType.APPLICATION_JSON_VALUE)
+    @PreAuthorize("hasPermission({'typeKey': #typeKey}, 'XMENTITY.SEARCH.DB.REINDEX')")
+    @PrivilegeDescription("Privilege to rebuild search_text of xm entities for DB full text search")
+    public ResponseEntity<Map<String, Long>> reindex(@RequestParam(required = false) String typeKey) {
+        return ResponseEntity.ok(Map.of("processed", reindexService.reindex(typeKey)));
     }
 
     /** Keeps GET filter params as raw strings; the service infers their types. */

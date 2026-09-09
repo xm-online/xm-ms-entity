@@ -4,6 +4,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.icthh.xm.ms.entity.AbstractPostgresIntTest;
 import com.icthh.xm.ms.entity.domain.XmEntity;
+import com.icthh.xm.ms.entity.web.rest.XmEntityDbSearchResource;
+import org.springframework.security.test.context.support.WithMockUser;
 import jakarta.persistence.EntityManager;
 import java.util.Map;
 import org.junit.jupiter.api.AfterEach;
@@ -16,6 +18,8 @@ public class XmEntitySearchTextReindexServiceIntTest extends AbstractPostgresInt
 
     @Autowired
     private XmEntitySearchTextReindexService reindexService;
+    @Autowired
+    private XmEntityDbSearchResource resource;
     @Autowired
     private TransactionTemplate tx;
     @Autowired
@@ -49,6 +53,18 @@ public class XmEntitySearchTextReindexServiceIntTest extends AbstractPostgresInt
         return tx.execute(s -> (String) em.createNativeQuery("select search_text from xm_entity where id = :id")
             .setParameter("id", id)
             .getSingleResult());
+    }
+
+    @Test
+    @WithMockUser(authorities = "SUPER-ADMIN")
+    public void reindexEndpointReturnsProcessedCount() {
+        assertThat(searchText()).isNull();
+
+        var response = resource.reindex("ORDER");
+
+        assertThat(response.getBody()).containsKey("processed");
+        assertThat(response.getBody().get("processed")).isGreaterThanOrEqualTo(1L);
+        assertThat(searchText()).isEqualTo("Legacy\n7");
     }
 
     @Test
