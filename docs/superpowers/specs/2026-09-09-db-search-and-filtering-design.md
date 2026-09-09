@@ -17,7 +17,7 @@ functionality backed by the relational DB (Postgres primary, Oracle fallback).
 | Full text storage | Nullable column `xm_entity.search_text`, filled by a JPA listener only for types with `fullTextSearch: true`. No side table. |
 | Match semantics (Postgres) | Substring, case-insensitive: `ILIKE '%q%'` on `search_text` with a partial GIN `gin_trgm_ops` index (`pg_trgm`). Oracle: `lower(search_text) like lower('%q%')`, no index. |
 | Execution mechanism | JPA Criteria `Specification`s built with the existing `JsonbCriteriaBuilder` / xm-commons `CustomExpression`; row-level permissions merged by parsing the xm-commons permission JPQL with Hibernate 7 `HibernateCriteriaBuilder.createQuery(hql, Class)`. |
-| JPQL templates | WHERE-fragment only, alias `returnObject`, XmEntity results only, named params bound via `setParameter`. Resource-level privilege carries `templateKey` and params so tenants can restrict per template. |
+| JPQL templates | Full JPQL including the `select` part; results are returned as rows (objects), not entities. Named params bound via `setParameter`. No row-level permission wrapping; access is controlled per template through the resource-level privilege (`templateKey` + params in the resource map) and by subject params the template may reference. |
 | Privileges | New family `XMENTITY.SEARCH.DB.*`. Do not reuse `XMENTITY.SEARCH`. |
 | typeKey matching | Default includes dotted subtypes (`ORDER`, `ORDER.*`). `includeSubTypes=false` matches the exact typeKey only. |
 | Tests | No H2 emulation of json functions. All new integration tests run on Postgres via Testcontainers (`pg-test` profile). |
@@ -116,7 +116,7 @@ sort properties are also resolved on the target. Resource privilege
 ### 3.6 JPQL templates
 
 ```
-GET  /api/_search-db/xm-entities/template/{templateKey}?stateKey=ACTIVE&order=5&page=0&size=20&sort=name,asc
+GET  /api/_search-db/xm-entities/template/{templateKey}?stateKey=ACTIVE&order=5&page=0&size=20
 POST /api/_search-db/xm-entities/template/{templateKey}?page=0&size=20
 { "stateKey": "ACTIVE", "order": 5 }
 ```
@@ -127,30 +127,52 @@ clash logged as warning):
 
 ```yaml
 templates:
-  - key: ACTIVE_BY_ORDER
-    query: "returnObject.stateKey = :stateKey and json_query(returnObject.data, '$.order') = to_json_b(:order)"
-    params:            # optional, used to coerce GET string values
-      order: number    # number | string | boolean | instant | list
+  - key: ACTIVE_ORDERS_SUMMARY
+    query: >
+      select e.id as id, e.name as name, json_query(e.data, '$.order') as orderNo
+      from XmEntity e
+      where e.typeKey = :typeKey and e.stateKey = :stateKey
+        and json_query(e.data, '$.order') > to_json_b(:minOrder)
+      order by e.startDate desc
+    countQuery: >                       # optional; enables X-Total-Count and Link headers
+      select count(e) from XmEntity e
+      where e.typeKey = :typeKey and e.stateKey = :stateKey
+        and json_query(e.data, '$.order') > to_json_b(:minOrder)
+    params:                             # optional, used to coerce GET string values
+      minOrder: number                  # number | string | boolean | instant | list
+  - key: MY_ENTITIES
+    query: "select e from XmEntity e where e.createdBy = :subjectUserKey"
 ```
 
 Rules:
-- Templates are HQL and may use the dialect functions xm-commons registers: `json_query(col, '$.path')`
-  exists on both Postgres and Oracle; `to_json_b`, `to_json_b_text`, `jsonb_to_string` are
-  Postgres-only, so a template using them fails on Oracle. Template authors own DB portability.
-- The template is a JPQL WHERE fragment over alias `returnObject` (XmEntity). The service
-  wraps it: `select returnObject from XmEntity returnObject where (<template>) and (<permission>)`.
+- The template is complete HQL: `select`, `from`, optional `where`, `group by`, `order by`. It may
+  select entities, scalars, or any mix. It may use the dialect functions xm-commons registers:
+  `json_query(col, '$.path')` exists on both Postgres and Oracle; `to_json_b`, `to_json_b_text`,
+  `jsonb_to_string` are Postgres-only, so templates using them fail on Oracle. Template authors
+  own DB portability.
+- Result rows are returned as `List<Map<String, Object>>`. Keys are the selection aliases; a
+  selection without alias gets the positional key `col0`, `col1`, ... Entity-valued selections
+  are mapped to their DTO (`XmEntityDto`, `LinkDto`, ...); scalars are returned as-is
+  (jsonb values are returned as parsed JSON, not as strings).
 - Parameters are bound with `setParameter`; there is no string substitution. Every `:name` in
-  the template must be supplied, otherwise `400`. Extra supplied params are ignored.
-- On GET, values come from query params (excluding `page`, `size`, `sort`) and are coerced by
-  the `params` declaration, defaulting to string. On POST, the body is the params map.
-- Sort is validated and translated as in 3.3 (property whitelist plus `data.<path>`).
+  the template must be supplied or be a subject param, otherwise `400`. Extra supplied params
+  are ignored. Subject params are bound automatically when referenced: `:subjectUserKey`,
+  `:subjectLogin`, `:subjectRoleKey`, `:subjectTenant`.
+- On GET, values come from query params (excluding `page`, `size`) and are coerced by the
+  `params` declaration, defaulting to string. On POST, the body is the params map.
+- Paging uses `setFirstResult`/`setMaxResults`. Sorting is owned by the template's `order by`;
+  a `sort` query parameter is rejected with `400`.
+- `X-Total-Count` and `Link` headers are produced only when `countQuery` is defined. Without
+  it the response has the body only.
 - Unknown template: `404`.
-- Resource privilege `XMENTITY.SEARCH.DB.TEMPLATE`, resource map `{templateKey, params}`.
-  Row-level `XMENTITY.SEARCH.DB`.
+- Permissions: resource privilege `XMENTITY.SEARCH.DB.TEMPLATE`, resource map
+  `{templateKey, params}`, so tenants restrict templates per role via `resourceCondition`.
+  There is no row-level permission wrapping: templates are trusted tenant configuration, like
+  LEP scripts. Templates that need per-user filtering use the subject params above.
 
-Execution uses xm-commons `PermittedRepository.findByCondition(template, params, pageable,
-XmEntity.class, privilegeKey)`; the translated sort is passed as a `Sort` whose property strings
-are already valid JPQL expressions.
+Execution: `entityManager.createQuery(query, Tuple.class)` for rows (Hibernate supports
+`Tuple` for entity and scalar selections alike), `createQuery(countQuery, Long.class)` for
+the count. Template text is parsed once per config refresh to extract the `:param` names.
 
 ### 3.7 Reindex
 
@@ -193,7 +215,6 @@ service/search/db/filter/XmEntityFilterSpecificationBuilder
                                              FilterCondition list -> Specification<XmEntity>
                                              (also builds Specification<Link> over target for 3.5)
 service/search/db/filter/SortTranslator      Sort -> List<jakarta.persistence.criteria.Order> (Criteria)
-                                             Sort -> Sort with JPQL expressions (templates)
 service/search/db/dialect/JsonValueStrategy  Postgres / Oracle differences (value wrapping,
                                              text extraction). Chosen from spring.datasource.url,
                                              same rule as xm-commons JsonbExpression/OracleExpression.
@@ -201,7 +222,11 @@ config/jsonb/JsonbCriteriaBuilder            existing; refactor to depend on Cus
 repository/search/db/PermittedSpecificationRepository
                                              Specification + permission JPQL -> Page<T>
 service/search/db/template/XmEntityJpqlTemplatesService
-                                             RefreshableConfiguration for jpql-templates(.yml|/*.yml)
+                                             RefreshableConfiguration for jpql-templates(.yml|/*.yml),
+                                             param-name extraction, GET value coercion
+service/search/db/template/JpqlTemplateExecutor
+                                             binds params + subject params, runs Tuple query and
+                                             optional count query, maps rows to List<Map>
 domain/listener/XmEntitySearchTextListener   @PrePersist/@PreUpdate -> XmEntity.searchText
 service/search/db/SearchTextBuilder          TypeSpec + XmEntity -> String (null when disabled)
 ```
@@ -280,6 +305,7 @@ Elasticsearch service methods.
 | Unknown entity typeKey or link typeKey (3.4, 3.5) | `400` |
 | Template not found | `404` |
 | Template param missing | `400` with param name |
+| `sort` passed to a template endpoint | `400` |
 | Permission denied | `403` via existing `hasPermission` handling |
 
 ## 7. Testing
@@ -291,7 +317,8 @@ of this work rather than excluding new tests.
 
 - Unit: `FilterParser` (grammar, GET value parsing, errors), `SortTranslator` (whitelist,
   data paths), `SearchTextBuilder` (flag off, scalars, lists, objects, missing paths),
-  `XmEntityJpqlTemplatesService` (merge of file and folder, param extraction).
+  `XmEntityJpqlTemplatesService` (merge of file and folder, param extraction, coercion),
+  `JpqlTemplateExecutor` row mapping (aliases, positional keys, entity to DTO).
 - Integration (Postgres):
   - spike/proof for `PermittedSpecificationRepository` with a tenant `resourceCondition`;
   - 3.1: text query hits name/description/data field, misses when flag off; numeric `in`/`gt`
@@ -299,8 +326,11 @@ of this work rather than excluding new tests.
     desc; `includeSubTypes` true/false; `removed` exclusion; headers;
   - 3.4: `isUnique` true excludes linked targets and self; false does not;
   - 3.5: links filtered by target `data.*` and `name.contains`;
-  - 3.6: GET with coerced `number` param, POST with JSON types, missing param `400`,
-    unknown template `404`, permission `resourceCondition` restricting `templateKey`;
+  - 3.6: entity selection mapped to DTO, scalar projection with aliases and positional keys,
+    jsonb scalar returned as JSON, GET with coerced `number` param, POST with JSON types,
+    subject param `:subjectUserKey`, `countQuery` headers present/absent, missing param `400`,
+    `sort` rejected, unknown template `404`, permission `resourceCondition` restricting
+    `templateKey`;
   - 3.7: reindex fills `search_text` for pre-existing rows;
   - liquibase: column exists, index exists when `pg_trgm` available;
   - permission tests per endpoint in the style of `LinkResourcePermissionIntTest`.
