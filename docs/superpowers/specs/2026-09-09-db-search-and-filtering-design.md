@@ -367,3 +367,32 @@ of this work rather than excluding new tests.
   unless fixed in the same util.
 - Oracle numeric comparison of JSON values is textual; a `json_value(... RETURNING NUMBER)`
   function registration in xm-commons `CustomOracleDialect` would fix it.
+
+## Implementation notes (2026-09-09)
+
+Deviations and findings from the implementation, all tests on Postgres 14 via Testcontainers:
+
+- `JsonbCriteriaBuilder` is untouched. Filters build predicates directly with `cb.function(...)` through
+  `JsonValueStrategy` (Postgres / Oracle beans selected by datasource URL), because the Link target search
+  needs a `Path<XmEntity>`, not a `Root<XmEntity>`.
+- `contains` on a data field uses Hibernate's built-in `json_value(data, '$.path')` (text on Postgres)
+  with `ilike`; a cast of `json_query` is a no-op in Hibernate because the function is typed as String.
+- The trgm index is created without `CONCURRENTLY`: it waits for every open transaction and the
+  application start-up holds one during migration (observed hang in tests).
+- `XmEntitySearchTextListener` is a Spring bean with constructor injection (Hibernate bean container);
+  the spec service is injected `@Lazy` to break the cycle with the `EntityManagerFactory`.
+- HQL-string use of `json_query` (ENTITY and RAW templates) requires
+  `hibernate.query.hql.json_functions_enabled: true`; it is set in the main `application.yml` and was
+  added to the `pg-test` profile. Criteria `cb.function` calls do not need it.
+- Subject params: `:subjectUserKey`, `:subjectLogin`, `:subjectTenant`. `:subjectRoleKey` was dropped
+  (the auth context exposes an authority set, not one role). A referenced subject param that is not
+  available for the current principal (for example no user key) is a `400`, not a silent null match.
+- Template `params` coercion: `boolean` accepts only `true`/`false` (400 otherwise).
+- RAW template scalars are returned as the JDBC driver returns them (a `json_query` value arrives as a
+  JSON string); no re-parsing.
+- `PermittedSpecificationRepository` (spike) works on Hibernate 7.3.1: `HibernateCriteriaBuilder.createQuery(hql, Class)`
+  yields a query whose root and `getRestriction()` can be combined with a Specification predicate.
+- Postgres test infrastructure: `AbstractPostgresIntTest` + singleton `PostgresTestContainer`. The tenant
+  `TEST` spec fixture is pushed via the spec folder pattern (`entity/xmentityspec/dbsearch.yml`), because the
+  test-scoped `LocalXmEntitySpecService` resets the main spec file to the classpath fixture.
+- Privilege keys added to `src/test/resources/config/privileges/permissions.yml` (entity, ROLE_ADMIN).
