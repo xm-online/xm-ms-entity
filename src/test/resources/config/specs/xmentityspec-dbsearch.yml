@@ -1,0 +1,28 @@
+---
+types:
+    - key: ORDER
+      name: { en: "Order" }
+      isApp: true
+      dataSpec: |
+          { "type": "object", "properties": {
+              "orderNo": { "type": "number" },
+              "position": { "type": "number" },
+              "customer": { "type": "object", "properties": { "city": { "type": "string" } } },
+              "tags": { "type": "array", "items": { "type": "string" } } } }
+      links:
+          - key: ORDER.ITEM
+            builderType: SEARCH
+            typeKey: PRODUCT
+            isUnique: true
+            name: { en: "Items (unique)" }
+          - key: ORDER.NOTE
+            builderType: SEARCH
+            typeKey: PRODUCT
+            isUnique: false
+            name: { en: "Notes" }
+    - key: ORDER.EXPRESS
+      name: { en: "Express order" }
+    - key: PRODUCT
+      name: { en: "Product" }
+    - key: SILENT
+      name: { en: "No text search" }
