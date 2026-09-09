@@ -171,6 +171,15 @@ public class XmEntity implements Serializable, Persistable<Long>, EntityBaseFiel
     private String description;
 
     /**
+     * Denormalized text for DB full text search (name, description, configured data fields).
+     * Maintained by {@link com.icthh.xm.ms.entity.domain.listener.XmEntitySearchTextListener}; null when the type has
+     * no {@code fullTextSearch: true}.
+     */
+    @JsonIgnore
+    @Column(name = "search_text")
+    private String searchText;
+
+    /**
      * Data property represents entity fields as JSON structure. Fields specified by
      * Formly and could use them for form building.
      *
@@ -408,6 +417,11 @@ public class XmEntity implements Serializable, Persistable<Long>, EntityBaseFiel
 
     public XmEntity description(String description) {
         this.description = description;
+        return this;
+    }
+
+    public XmEntity searchText(String searchText) {
+        this.searchText = searchText;
         return this;
     }
 

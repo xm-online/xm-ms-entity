@@ -28,3 +28,6 @@ types:
     - key: SILENT
       name: { en: "No text search" }
       dataSpec: '{ "type": "object" }' 
+    - key: ORDERX
+      name: { en: "Lookalike, not a subtype of ORDER" }
+      dataSpec: '{ "type": "object" }'
