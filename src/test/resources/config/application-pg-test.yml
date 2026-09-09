@@ -14,5 +14,6 @@ spring:
             hibernate.generate_statistics: true
             hibernate.hbm2ddl.auto: none
             hibernate.dialect: com.icthh.xm.commons.migration.db.jsonb.CustomPostgreSQLDialect
+            hibernate.query.hql.json_functions_enabled: true
     liquibase:
         change-log: config/liquibase/master.xml

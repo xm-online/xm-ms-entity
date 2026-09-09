@@ -15,6 +15,7 @@ import com.icthh.xm.ms.entity.domain.ext.IdOrKey;
 import com.icthh.xm.ms.entity.domain.spec.LinkSpec;
 import com.icthh.xm.ms.entity.lep.keyresolver.DbSearchRequestTypeKeyResolver;
 import com.icthh.xm.ms.entity.lep.keyresolver.EntityTypeKeyAndLinkTypeKeyResolver;
+import com.icthh.xm.ms.entity.lep.keyresolver.JpqlTemplateKeyResolver;
 import com.icthh.xm.ms.entity.lep.keyresolver.LinkTypeKeyParamResolver;
 import com.icthh.xm.ms.entity.repository.search.db.PermittedSpecificationRepository;
 import com.icthh.xm.ms.entity.service.LinkService;
@@ -25,6 +26,9 @@ import com.icthh.xm.ms.entity.service.search.db.filter.FilterCondition;
 import com.icthh.xm.ms.entity.service.search.db.filter.FilterParser;
 import com.icthh.xm.ms.entity.service.search.db.filter.SortTranslator;
 import com.icthh.xm.ms.entity.service.search.db.filter.XmEntityFilterSpecificationBuilder;
+import com.icthh.xm.ms.entity.service.search.db.template.JpqlTemplate;
+import com.icthh.xm.ms.entity.service.search.db.template.JpqlTemplateExecutor;
+import com.icthh.xm.ms.entity.service.search.db.template.JpqlTemplateType;
 import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Root;
 import java.util.HashSet;
@@ -60,6 +64,7 @@ public class XmEntityDbSearchService {
     private final XmEntitySpecService xmEntitySpecService;
     private final XmEntityService xmEntityService;
     private final LinkService linkService;
+    private final JpqlTemplateExecutor templateExecutor;
 
     @Transactional(readOnly = true)
     @LogicExtensionPoint(value = "SearchDb", resolver = DbSearchRequestTypeKeyResolver.class)
@@ -126,6 +131,31 @@ public class XmEntityDbSearchService {
         }
         return permittedSpecificationRepository.findAll(Link.class, spec,
             sortTranslator.toOrderProvider(pageable.getSort(), target), pageable, privilegeKey);
+    }
+
+    @Transactional(readOnly = true)
+    @LogicExtensionPoint(value = "SearchDbByEntityTemplate", resolver = JpqlTemplateKeyResolver.class)
+    @FindWithPermission(ROW_PRIVILEGE)
+    @PrivilegeDescription("Privilege to search xm entities in DB by an ENTITY JPQL template")
+    public Page<XmEntity> searchByEntityTemplate(JpqlTemplate template, Map<String, Object> params,
+                                                 Pageable pageable, String privilegeKey) {
+        if (template.getType() != JpqlTemplateType.ENTITY) {
+            throw new BusinessException(ERR_VALIDATION, "Template is not of type ENTITY: " + template.getKey());
+        }
+        Map<String, Object> bound = templateExecutor.bindParams(template, params);
+        return permittedSpecificationRepository.findAll(XmEntity.class, template.getQuery(), bound, null,
+            sortTranslator.toOrderProvider(pageable.getSort()), pageable, privilegeKey);
+    }
+
+    /** RAW templates: full JPQL from tenant config, rows as maps, no row-level permission wrapping. */
+    @Transactional(readOnly = true)
+    @LogicExtensionPoint(value = "SearchDbByRawTemplate", resolver = JpqlTemplateKeyResolver.class)
+    public JpqlTemplateExecutor.RawResult searchByRawTemplate(JpqlTemplate template, Map<String, Object> params,
+                                                              Pageable pageable, Function<Object, Object> entityToDto) {
+        if (template.getType() != JpqlTemplateType.RAW) {
+            throw new BusinessException(ERR_VALIDATION, "Template is not of type RAW: " + template.getKey());
+        }
+        return templateExecutor.executeRaw(template, params, pageable, entityToDto);
     }
 
     /** Shared by entity search, link-dialog search and link target search. */

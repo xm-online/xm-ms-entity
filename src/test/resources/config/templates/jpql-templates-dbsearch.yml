@@ -3,7 +3,7 @@ ACTIVE_BY_ORDER:
   params:
     orderNo: number
 MY_ORDERS:
-  query: "entity.typeKey = 'ORDER' and entity.createdBy = :subjectUserKey"
+  query: "entity.typeKey = 'ORDER' and entity.createdBy = :subjectLogin"
 ORDERS_SUMMARY:
   type: RAW
   query: >

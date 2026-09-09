@@ -83,7 +83,8 @@ public class XmEntityJpqlTemplatesServiceUnitTest extends AbstractJupiterUnitTes
     @Test
     public void coerceRejectsBadValue() {
         JpqlTemplate t = new JpqlTemplate();
-        t.setParams(Map.of("n", "number"));
+        t.setParams(Map.of("n", "number", "b", "boolean"));
         assertThatThrownBy(() -> service.coerce(t, Map.of("n", "abc"))).isInstanceOf(BusinessException.class).hasMessageContaining("n");
+        assertThatThrownBy(() -> service.coerce(t, Map.of("b", "yes"))).isInstanceOf(BusinessException.class).hasMessageContaining("b");
     }
 }

@@ -69,7 +69,7 @@ public class XmEntityJpqlTemplatesService implements RefreshableConfiguration {
         try {
             return switch (type) {
                 case "number" -> s.contains(".") ? (Object) Double.valueOf(s) : (Object) Long.valueOf(s);
-                case "boolean" -> Boolean.valueOf(s);
+                case "boolean" -> parseBoolean(name, s);
                 case "instant" -> Instant.parse(s);
                 case "list" -> Arrays.stream(s.split(",")).map(String::trim).toList();
                 default -> s;
@@ -77,6 +77,13 @@ public class XmEntityJpqlTemplatesService implements RefreshableConfiguration {
         } catch (NumberFormatException | DateTimeParseException e) {
             throw new BusinessException(ERR_VALIDATION, "Invalid value for template param " + name + ": " + value);
         }
+    }
+
+    private static Boolean parseBoolean(String name, String s) {
+        if ("true".equalsIgnoreCase(s) || "false".equalsIgnoreCase(s)) {
+            return Boolean.valueOf(s);
+        }
+        throw new BusinessException(ERR_VALIDATION, "Invalid value for template param " + name + ": " + s);
     }
 
     @Override
