@@ -21,7 +21,8 @@ import tools.jackson.databind.annotation.JsonDeserialize;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({"key", "name", "namePattern", "nameValidationPattern", "descriptionPattern", "pluralName", "isApp", "isAbstract",
     "isAvatarEnabled", "isKeyRequired", "isNameRequired", "fastSearch", "icon", "dataSpec", "dataForm", "functions", "access", "attachments", "calendars",
-    "links", "locations", "ratings", "states", "tags", "dataSpecInheritance", "dataFormInheritance", "disablePersistentReferenceProcessingOnSave"})
+    "links", "locations", "ratings", "states", "tags", "dataSpecInheritance", "dataFormInheritance", "disablePersistentReferenceProcessingOnSave",
+    "fullTextSearch", "fullTextSearchDataFields"})
 @Data
 @Builder(toBuilder = true)
 @AllArgsConstructor
@@ -114,6 +115,16 @@ public class TypeSpec implements DataSpec, SpecificationItem {
     @Builder.Default
     @JsonProperty("disablePersistentReferenceProcessingOnSave")
     private Boolean disablePersistentReferenceProcessingOnSave = null;
+
+    /** Enables DB full text search: name, description and {@link #fullTextSearchDataFields} are stored in xm_entity.search_text. */
+    @Builder.Default
+    @JsonProperty("fullTextSearch")
+    private Boolean fullTextSearch = null;
+
+    /** Data paths included into search text, e.g. {@code data.order}, {@code data.customer.city}. Prefix {@code data.} is optional. */
+    @Builder.Default
+    @JsonProperty("fullTextSearchDataFields")
+    private List<String> fullTextSearchDataFields = null;
 
     public Optional<LinkSpec> findLinkSpec(String typeKey) {
         if (links == null) {

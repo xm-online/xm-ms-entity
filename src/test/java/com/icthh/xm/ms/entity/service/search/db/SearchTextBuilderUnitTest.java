@@ -1,0 +1,49 @@
+package com.icthh.xm.ms.entity.service.search.db;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+import com.icthh.xm.ms.entity.AbstractJupiterUnitTest;
+import com.icthh.xm.ms.entity.domain.XmEntity;
+import com.icthh.xm.ms.entity.domain.spec.TypeSpec;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import org.junit.jupiter.api.Test;
+
+public class SearchTextBuilderUnitTest extends AbstractJupiterUnitTest {
+
+    private final SearchTextBuilder builder = new SearchTextBuilder();
+
+    private static XmEntity entity(Map<String, Object> data) {
+        return new XmEntity().name("Alpha order").description("Big <b>one</b>").data(new HashMap<>(data));
+    }
+
+    @Test
+    public void returnsNullWhenFlagOffOrSpecMissing() {
+        assertThat(builder.build(null, entity(Map.of()))).isNull();
+        assertThat(builder.build(TypeSpec.builder().key("T").build(), entity(Map.of()))).isNull();
+        assertThat(builder.build(TypeSpec.builder().key("T").fullTextSearch(false).build(), entity(Map.of()))).isNull();
+    }
+
+    @Test
+    public void joinsNameDescriptionAndConfiguredDataFields() {
+        TypeSpec spec = TypeSpec.builder().key("T").fullTextSearch(true)
+            .fullTextSearchDataFields(List.of("data.orderNo", "customer.city", "data.tags", "data.customer", "data.missing"))
+            .build();
+        XmEntity e = entity(Map.of(
+            "orderNo", 42,
+            "customer", Map.of("city", "Kyiv"),
+            "tags", List.of("vip", "urgent")));
+
+        String text = builder.build(spec, e);
+
+        assertThat(text).isEqualTo("Alpha order\nBig <b>one</b>\n42\nKyiv\nvip urgent");
+    }
+
+    @Test
+    public void nameAndDescriptionOnlyWhenNoDataFields() {
+        TypeSpec spec = TypeSpec.builder().key("T").fullTextSearch(true).build();
+        assertThat(builder.build(spec, entity(Map.of("x", 1)))).isEqualTo("Alpha order\nBig <b>one</b>");
+        assertThat(builder.build(spec, new XmEntity().name("only"))).isEqualTo("only");
+    }
+}
