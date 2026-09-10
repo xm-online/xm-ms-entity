@@ -71,8 +71,14 @@ public class XmEntityFilterSpecificationBuilder {
             entityPath.apply(root).get(XmEntity_.searchText), "%" + escapeLike(query) + "%", ESCAPE);
     }
 
-    public static boolean hasRemovedCondition(List<FilterCondition> conditions) {
-        return conditions.stream().anyMatch(c -> XmEntity_.REMOVED.equals(c.field()));
+    /**
+     * Only {@code removed.eq=true} opts into soft-deleted rows; any other {@code removed.*} filter keeps the
+     * default "not removed" predicate, so a deleted row can never leak through, for example, {@code removed.specified}.
+     */
+    public static boolean includesRemoved(List<FilterCondition> conditions) {
+        return conditions.stream().anyMatch(c -> XmEntity_.REMOVED.equals(c.field())
+            && c.operator() == FilterOperator.EQ
+            && Boolean.TRUE.equals(c.singleValue()));
     }
 
     static String escapeLike(String value) {
@@ -110,8 +116,7 @@ public class XmEntityFilterSpecificationBuilder {
 
     @SuppressWarnings({"unchecked", "rawtypes"})
     private Predicate columnPredicate(CriteriaBuilder cb, Path<XmEntity> entity, FilterCondition c) {
-        columns.assertColumn(c.field());
-        Path path = entity.get(c.field());
+        Path path = entity.get(columns.attribute(c.field()));
         Class<?> javaType = path.getJavaType();
         List<Object> values = c.values().stream().map(v -> convert(c.field(), javaType, v)).toList();
         Object value = values.isEmpty() ? null : values.get(0);
@@ -143,10 +148,7 @@ public class XmEntityFilterSpecificationBuilder {
                 return Integer.valueOf(s);
             }
             if (javaType == Boolean.class) {
-                if (!"true".equalsIgnoreCase(s) && !"false".equalsIgnoreCase(s)) {
-                    throw new BusinessException(ERR_VALIDATION, "Invalid value for filter field " + field + ": " + value);
-                }
-                return Boolean.valueOf(s);
+                return BooleanValues.parse(field, s);
             }
             if (javaType == Instant.class) {
                 return Instant.parse(s);

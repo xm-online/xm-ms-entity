@@ -51,6 +51,15 @@ public class XmEntitySearchTextListenerIntTest extends AbstractPostgresIntTest {
     }
 
     @Test
+    public void subTypeInheritsFullTextSearchSettings() {
+        // ORDER.EXPRESS declares neither fullTextSearch nor data fields: both come from ORDER
+        XmEntity express = repository.save(newEntity("ORDER.EXPRESS", "Express", Map.of(
+            "orderNo", 5, "customer", Map.of("city", "Lviv"))));
+
+        assertThat(storedSearchText(express.getId())).isEqualTo("Express\n5\nLviv");
+    }
+
+    @Test
     public void leavesNullForDisabledType() {
         XmEntity silent = repository.save(newEntity("SILENT", "Quiet", Map.of("orderNo", 1)));
         assertThat(storedSearchText(silent.getId())).isNull();

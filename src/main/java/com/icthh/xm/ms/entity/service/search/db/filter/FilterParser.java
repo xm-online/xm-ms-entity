@@ -48,6 +48,9 @@ public class FilterParser {
 
     private static FilterCondition toCondition(String key, Object value) {
         ParsedKey parsed = parseKey(key);
+        if (DataPath.isDataPath(parsed.field)) {
+            DataPath.assertValid(parsed.field);
+        }
         List<Object> values = parsed.operator.isMultiValue()
             ? assertCollection(key, parsed.operator, value)
             : List.of(assertScalar(key, parsed.operator, value));

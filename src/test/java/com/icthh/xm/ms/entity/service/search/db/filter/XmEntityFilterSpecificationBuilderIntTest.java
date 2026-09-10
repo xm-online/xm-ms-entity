@@ -49,6 +49,10 @@ public class XmEntityFilterSpecificationBuilderIntTest extends AbstractPostgresI
             .stream().map(XmEntity::getId).toList();
     }
 
+    private boolean includesRemoved(Map<String, Object> body) {
+        return XmEntityFilterSpecificationBuilder.includesRemoved(parser.parseBody(body));
+    }
+
     private Specification<XmEntity> filter(Map<String, Object> body) {
         return builder.build(parser.parseBody(body));
     }
@@ -105,8 +109,12 @@ public class XmEntityFilterSpecificationBuilderIntTest extends AbstractPostgresI
     @Test
     public void notRemovedExcludesSoftDeleted() {
         assertThat(ids(builder.notRemoved(root -> root))).containsExactlyInAnyOrder(e1.getId(), e2.getId());
-        assertThat(XmEntityFilterSpecificationBuilder.hasRemovedCondition(parser.parseBody(Map.of("removed.eq", true)))).isTrue();
-        assertThat(XmEntityFilterSpecificationBuilder.hasRemovedCondition(parser.parseBody(Map.of("name.eq", "x")))).isFalse();
+        // only removed.eq=true opts into soft-deleted rows
+        assertThat(includesRemoved(Map.of("removed.eq", true))).isTrue();
+        assertThat(includesRemoved(Map.of("removed.eq", false))).isFalse();
+        assertThat(includesRemoved(Map.of("removed.notEq", false))).isFalse();
+        assertThat(includesRemoved(Map.of("removed.specified", true))).isFalse();
+        assertThat(includesRemoved(Map.of("name.eq", "x"))).isFalse();
     }
 
     @Test
@@ -122,5 +130,10 @@ public class XmEntityFilterSpecificationBuilderIntTest extends AbstractPostgresI
         // "invalid" must not silently become false and match non-removed rows
         assertThatThrownBy(() -> ids(filter(Map.of("removed.eq", "invalid"))))
             .isInstanceOf(BusinessException.class).hasMessageContaining("removed");
+        assertThatThrownBy(() -> ids(filter(Map.of("data..orderNo.eq", 1))))
+            .isInstanceOf(BusinessException.class).hasMessageContaining("data.");
+        // "data" itself is not a column: it is addressed through data.<path>
+        assertThatThrownBy(() -> ids(filter(Map.of("data.eq", 1))))
+            .isInstanceOf(BusinessException.class).hasMessageContaining("data");
     }
 }

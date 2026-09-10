@@ -416,3 +416,32 @@ Deviations and findings from the implementation, all tests on Postgres 14 via Te
 - `fullTextSearchDataFields` are SpEL paths evaluated against the entity (`data.customer.city`), compiled once
   and cached; list and object values are rendered with `String.valueOf`.
 - Postgres integration tests run on `postgres:18`.
+
+## Review iteration (2026-09-10, review-vs-master)
+
+- `fullTextSearch` and `fullTextSearchDataFields` now take part in type-spec inheritance:
+  the flag is "child value if set, otherwise parent"; the field list follows the existing list semantics
+  (`ignorableUnion`, so `ignoreInheritanceFor: [fullTextSearchDataFields]` opts out).
+- Soft delete: only `removed.eq=true` returns deleted rows. Any other `removed.*` filter
+  (`notEq`, `specified`, `in`, ...) keeps the default "not removed" predicate.
+- Data paths are validated in one place (`DataPath`): `data.<segment>(.<segment>)*`, letters, digits and
+  underscore per segment. Filters and sort share it, so `data..x` is a 400 instead of a DB error.
+- Boolean values are strict everywhere (`BooleanValues`): only `true` / `false`, case-insensitive, else 400.
+  This covers both column filters and template params.
+- Target link search validates `linkTypeKey` against the link spec of the resolved source entity: an unknown
+  link type is a 400, not an empty page. The endpoint also accepts optional `typeKey` / `includeSubTypes`
+  that restrict the link target type.
+- RAW templates map `XmEntity` and `Link` selections to their DTOs; any other JPA entity in the selection is
+  rejected with 400 instead of being serialized as a JPA object.
+- Unique-link candidate search excludes already linked targets with a `not exists` subquery over `Link`
+  instead of loading target ids into an `in` list.
+- Reindex without `typeKey` processes exactly the types whose effective spec has `fullTextSearch: true`;
+  a subtype that turned the flag off is not touched. With an explicit `typeKey` the type and its subtypes
+  are processed, as before.
+- GET endpoints normalize the query string into the request object and delegate to the POST method through
+  the Spring proxy, so `hasPermission` evaluates the same `filter` / `params` map the service executes.
+- `search_text` is recomputed in one place (`SearchTextUpdater`), used by the JPA listener and by reindex.
+- The `Link` header statement in section 3 is superseded by the PR #558 amendment above: responses carry
+  `X-Total-Count` and the payload only.
+- Oracle remains covered by unit-level dialect code only; there is no Oracle instance in CI, so its numeric
+  jsonb comparison stays a documented limitation.

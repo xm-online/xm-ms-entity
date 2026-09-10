@@ -1,7 +1,9 @@
 package com.icthh.xm.ms.entity.web.rest;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.icthh.xm.commons.exceptions.BusinessException;
 import com.icthh.xm.ms.entity.AbstractPostgresIntTest;
 import com.icthh.xm.ms.entity.domain.Link;
 import com.icthh.xm.ms.entity.domain.XmEntity;
@@ -73,6 +75,18 @@ public class XmEntityDbSearchTargetsResourceIntTest extends AbstractPostgresIntT
         XmEntityDbSearchRequest byName = new XmEntityDbSearchRequest();
         byName.setFilter(Map.of("name.contains", "product"));
         assertThat(ids(byName, Sort.by(Sort.Direction.DESC, "data.price"))).containsExactly(toB.getId(), toA.getId());
+    }
+
+    @Test
+    public void unknownLinkTypeIsRejected() {
+        assertThatThrownBy(() -> resource.searchTargetsPost(order.getId().toString(), "NOPE",
+            new XmEntityDbSearchRequest(), PageRequest.of(0, 10)))
+            .isInstanceOf(BusinessException.class).hasMessageContaining("NOPE");
+
+        var params = new org.springframework.util.LinkedMultiValueMap<String, String>();
+        assertThatThrownBy(() -> resource.searchTargetsGet(order.getId().toString(), "NOPE", null, null, null,
+            params, PageRequest.of(0, 10)))
+            .isInstanceOf(BusinessException.class).hasMessageContaining("NOPE");
     }
 
     @Test

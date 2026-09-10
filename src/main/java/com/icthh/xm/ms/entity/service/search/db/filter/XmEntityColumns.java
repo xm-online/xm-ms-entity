@@ -7,8 +7,11 @@ import com.icthh.xm.commons.exceptions.BusinessException;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.domain.XmEntity_;
 import jakarta.persistence.EntityManager;
-import jakarta.persistence.metamodel.Attribute;
+import jakarta.persistence.metamodel.SingularAttribute;
+import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -22,25 +25,31 @@ import org.springframework.stereotype.Component;
 public class XmEntityColumns {
 
     private final EntityManager em;
-    private volatile Set<String> columns;
+    private volatile Map<String, SingularAttribute<? super XmEntity, ?>> attributes;
 
     public boolean isColumn(String field) {
-        return columns().contains(field);
+        return attributes().containsKey(field);
     }
 
-    public void assertColumn(String field) {
-        if (!isColumn(field)) {
+    /** Metamodel attribute of a filterable / sortable field; 400 when the field is not one. */
+    public SingularAttribute<? super XmEntity, ?> attribute(String field) {
+        SingularAttribute<? super XmEntity, ?> attribute = attributes().get(field);
+        if (attribute == null) {
             throw new BusinessException(ERR_VALIDATION, "Unknown filter field: " + field);
         }
+        return attribute;
     }
 
-    private Set<String> columns() {
-        if (columns == null) {
-            columns = em.getMetamodel().entity(XmEntity.class).getSingularAttributes().stream()
-                .map(Attribute::getName)
-                .filter(name -> !XmEntity_.DATA.equals(name))
-                .collect(toUnmodifiableSet());
+    public Set<String> columns() {
+        return attributes().keySet().stream().collect(toUnmodifiableSet());
+    }
+
+    private Map<String, SingularAttribute<? super XmEntity, ?>> attributes() {
+        if (attributes == null) {
+            attributes = em.getMetamodel().entity(XmEntity.class).getSingularAttributes().stream()
+                .filter(attribute -> !XmEntity_.DATA.equals(attribute.getName()))
+                .collect(Collectors.toUnmodifiableMap(SingularAttribute::getName, Function.identity()));
         }
-        return columns;
+        return attributes;
     }
 }

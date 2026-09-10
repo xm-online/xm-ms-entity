@@ -75,6 +75,14 @@ public class FilterParserUnitTest extends AbstractJupiterUnitTest {
     }
 
     @Test
+    public void rejectsMalformedDataPath() {
+        for (String key : List.of("data..orderNo.eq", "data.order-no.eq", "data.a b.eq")) {
+            assertThatThrownBy(() -> parser.parseBody(Map.of(key, 1)))
+                .isInstanceOf(BusinessException.class);
+        }
+    }
+
+    @Test
     public void rejectsNullScalarValue() {
         java.util.Map<String, Object> filter = new java.util.HashMap<>();
         filter.put("name.eq", null);

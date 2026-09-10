@@ -11,22 +11,19 @@ import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Root;
 import java.util.function.Function;
-import java.util.regex.Pattern;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Component;
 
 /**
  * Translates a Spring {@link Sort} into criteria {@link jakarta.persistence.criteria.Order}s. Allowed properties are
- * the whitelisted XmEntity columns ({@link XmEntityFilterSpecificationBuilder#COLUMN_FIELDS}) and {@code data.<path>}
+ * the persisted XmEntity columns ({@link XmEntityColumns}) and {@code data.<path>}
  * json paths resolved through {@link JsonValueStrategy}. {@code entityPath} resolves the XmEntity from the query root
  * (identity for XmEntity queries, {@code root.get("target")} for Link queries).
  */
 @Component
 @RequiredArgsConstructor
 public class SortTranslator {
-
-    private static final Pattern DATA_PATH = Pattern.compile("^data(\\.[A-Za-z0-9_]+)+$");
 
     private final JsonValueStrategy jsonValueStrategy;
     private final XmEntityColumns columns;
@@ -40,10 +37,9 @@ public class SortTranslator {
         return (root, cb) -> {
             Path<XmEntity> entity = entityPath.apply(root);
             return sort.stream().map(order -> {
-                Expression<?> expression = order.getProperty().startsWith(FilterCondition.DATA_PREFIX)
-                    ? jsonValueStrategy.jsonValue(cb, entity.get(XmEntity_.data),
-                        "$." + order.getProperty().substring(FilterCondition.DATA_PREFIX.length()))
-                    : entity.get(order.getProperty());
+                Expression<?> expression = DataPath.isDataPath(order.getProperty())
+                    ? jsonValueStrategy.jsonValue(cb, entity.get(XmEntity_.data), DataPath.toJsonPath(order.getProperty()))
+                    : entity.get(columns.attribute(order.getProperty()));
                 return order.isAscending() ? cb.asc(expression) : cb.desc(expression);
             }).toList();
         };
@@ -55,9 +51,7 @@ public class SortTranslator {
         }
         for (Sort.Order order : sort) {
             String property = order.getProperty();
-            boolean column = columns.isColumn(property);
-            boolean dataPath = DATA_PATH.matcher(property).matches();
-            if (!column && !dataPath) {
+            if (!columns.isColumn(property) && !DataPath.isValid(property)) {
                 throw new BusinessException(ERR_VALIDATION, "Unknown sort property: " + property);
             }
         }

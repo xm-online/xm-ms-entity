@@ -8,15 +8,13 @@ import java.util.List;
  */
 public record FilterCondition(String field, FilterOperator operator, List<Object> values) {
 
-    public static final String DATA_PREFIX = "data.";
-
     public boolean isDataField() {
-        return field.startsWith(DATA_PREFIX);
+        return DataPath.isDataPath(field);
     }
 
     /** {@code data.a.b} → {@code $.a.b} (SQL/JSON path used by {@code json_query}). */
     public String dataJsonPath() {
-        return "$." + field.substring(DATA_PREFIX.length());
+        return DataPath.toJsonPath(field);
     }
 
     public Object singleValue() {

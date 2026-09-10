@@ -23,7 +23,8 @@ public enum TypeSpecParameter {
     LOCATIONS("locations", TypeSpec::getLocations),
     RATINGS("ratings", TypeSpec::getRatings),
     STATES("states", TypeSpec::getStates),
-    TAGS("tags", TypeSpec::getTags);
+    TAGS("tags", TypeSpec::getTags),
+    FULL_TEXT_SEARCH_DATA_FIELDS("fullTextSearchDataFields", TypeSpec::getFullTextSearchDataFields);
 
     private final String type;
     private final Function<TypeSpec, ?> parameterResolver;

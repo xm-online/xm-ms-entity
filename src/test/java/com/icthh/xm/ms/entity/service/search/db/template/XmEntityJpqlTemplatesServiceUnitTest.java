@@ -89,10 +89,15 @@ public class XmEntityJpqlTemplatesServiceUnitTest extends AbstractJupiterUnitTes
     }
 
     @Test
-    public void applyParamTypesRejectsBadNumber() {
+    public void applyParamTypesRejectsBadNumberAndBoolean() {
         JpqlTemplate t = new JpqlTemplate();
-        t.setParams(Map.of("n", "number"));
+        t.setParams(Map.of("n", "number", "b", "boolean"));
         assertThatThrownBy(() -> service.applyParamTypes(t, Map.of("n", "abc")))
             .isInstanceOf(BusinessException.class).hasMessageContaining("n");
+        for (String invalid : List.of("yes", "1", "")) {
+            assertThatThrownBy(() -> service.applyParamTypes(t, Map.of("b", invalid)))
+                .isInstanceOf(BusinessException.class).hasMessageContaining("b");
+        }
+        assertThat(service.applyParamTypes(t, Map.of("b", "TRUE"))).containsEntry("b", true);
     }
 }

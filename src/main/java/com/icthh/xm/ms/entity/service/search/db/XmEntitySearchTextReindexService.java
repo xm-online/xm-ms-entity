@@ -31,24 +31,28 @@ public class XmEntitySearchTextReindexService {
 
     private final XmEntityRepository xmEntityRepository;
     private final XmEntitySpecService xmEntitySpecService;
-    private final SearchTextBuilder searchTextBuilder;
+    private final SearchTextUpdater searchTextUpdater;
     private final TransactionTemplate transactionTemplate;
 
     /** @param typeKey type (with subtypes) to process; {@code null} → every type with fullTextSearch: true */
     @LogicExtensionPoint(value = "ReindexSearchText", resolver = TypeKeyResolver.class)
     public long reindex(String typeKey) {
-        List<String> typeKeys = typeKey != null ? List.of(typeKey) : enabledTypeKeys();
-        long processed = 0;
-        for (String key : typeKeys) {
-            processed += reindexType(key);
+        if (typeKey != null) {
+            // explicit type: the type itself and its subtypes
+            return reindexType(typeKey, (root, query, cb) -> cb.or(
+                cb.equal(root.get(XmEntity_.typeKey), typeKey),
+                cb.like(root.get(XmEntity_.typeKey), typeKey + ".%")));
         }
-        return processed;
+        // no type given: exactly the types with fullTextSearch, so a subtype that disabled it is left alone
+        List<String> enabled = enabledTypeKeys();
+        if (enabled.isEmpty()) {
+            return 0;
+        }
+        return reindexType(String.join(", ", enabled),
+            (root, query, cb) -> root.get(XmEntity_.typeKey).in(enabled));
     }
 
-    private long reindexType(String type) {
-        Specification<XmEntity> ofType = (root, query, cb) -> cb.or(
-            cb.equal(root.get(XmEntity_.typeKey), type),
-            cb.like(root.get(XmEntity_.typeKey), type + ".%"));
+    private long reindexType(String type, Specification<XmEntity> ofType) {
         long processed = 0;
         for (int pageNumber = 0; ; pageNumber++) {
             PageRequest page = PageRequest.of(pageNumber, BATCH_SIZE, Sort.by(ID));
@@ -64,24 +68,16 @@ public class XmEntitySearchTextReindexService {
 
     private int reindexBatch(Specification<XmEntity> ofType, PageRequest page) {
         Page<XmEntity> entities = xmEntityRepository.findAll(ofType, page);
-        entities.getContent().forEach(this::refreshSearchText);
+        entities.getContent().forEach(searchTextUpdater::refresh);
         xmEntityRepository.saveAll(entities.getContent());
         return entities.getNumberOfElements();
     }
 
-    private void refreshSearchText(XmEntity entity) {
-        TypeSpec spec = xmEntitySpecService.getTypeSpecByKeyWithoutFunctionFilter(entity.getTypeKey()).orElse(null);
-        entity.setSearchText(searchTextBuilder.build(spec, entity));
-    }
-
-    /** Enabled types without those already covered by an enabled ancestor (A covers A.B). */
+    /** Every type whose effective spec has fullTextSearch: true (inheritance is already applied by the spec service). */
     private List<String> enabledTypeKeys() {
-        List<String> enabled = xmEntitySpecService.findAllTypes().stream()
+        return xmEntitySpecService.findAllTypes().stream()
             .filter(spec -> Boolean.TRUE.equals(spec.getFullTextSearch()))
             .map(TypeSpec::getKey)
-            .toList();
-        return enabled.stream()
-            .filter(key -> enabled.stream().noneMatch(other -> key.startsWith(other + ".")))
             .toList();
     }
 }

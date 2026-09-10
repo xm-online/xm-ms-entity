@@ -1,9 +1,7 @@
 package com.icthh.xm.ms.entity.domain.listener;
 
 import com.icthh.xm.ms.entity.domain.XmEntity;
-import com.icthh.xm.ms.entity.domain.spec.TypeSpec;
-import com.icthh.xm.ms.entity.service.XmEntitySpecService;
-import com.icthh.xm.ms.entity.service.search.db.SearchTextBuilder;
+import com.icthh.xm.ms.entity.service.search.db.SearchTextUpdater;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import lombok.extern.slf4j.Slf4j;
@@ -15,23 +13,20 @@ import org.springframework.stereotype.Component;
 @Component
 public class XmEntitySearchTextListener {
 
-    private final XmEntitySpecService xmEntitySpecService;
-    private final SearchTextBuilder searchTextBuilder;
+    private final SearchTextUpdater searchTextUpdater;
 
     /**
-     * {@code @Lazy} on the spec service is required: entity listeners are instantiated while the
-     * EntityManagerFactory is being built, and the spec service transitively depends on JPA repositories.
+     * The updater is injected {@code @Lazy} (and therefore by an explicit constructor, not Lombok): entity
+     * listeners are created while the EntityManagerFactory is being built, and the updater transitively
+     * depends on JPA repositories.
      */
-    public XmEntitySearchTextListener(@Lazy XmEntitySpecService xmEntitySpecService,
-                                      SearchTextBuilder searchTextBuilder) {
-        this.xmEntitySpecService = xmEntitySpecService;
-        this.searchTextBuilder = searchTextBuilder;
+    public XmEntitySearchTextListener(@Lazy SearchTextUpdater searchTextUpdater) {
+        this.searchTextUpdater = searchTextUpdater;
     }
 
     @PrePersist
     @PreUpdate
     void onPrePersistOrUpdate(XmEntity entity) {
-        TypeSpec spec = xmEntitySpecService.getTypeSpecByKeyWithoutFunctionFilter(entity.getTypeKey()).orElse(null);
-        entity.setSearchText(searchTextBuilder.build(spec, entity));
+        searchTextUpdater.refresh(entity);
     }
 }

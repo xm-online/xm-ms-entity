@@ -4,6 +4,7 @@ import com.icthh.xm.commons.permission.annotation.PrivilegeDescription;
 import com.icthh.xm.ms.entity.domain.ext.IdOrKey;
 import com.icthh.xm.ms.entity.service.dto.LinkDto;
 import com.icthh.xm.ms.entity.service.dto.XmEntityDto;
+import com.icthh.xm.ms.entity.service.TransactionPropagationService;
 import com.icthh.xm.ms.entity.service.search.db.XmEntitySearchTextReindexService;
 import com.icthh.xm.ms.entity.service.search.db.dto.XmEntityDbSearchRequest;
 import com.icthh.xm.ms.entity.service.search.db.filter.FilterParser;
@@ -32,11 +33,15 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-/** Search endpoints backed by the relational DB (no Elasticsearch). */
+/**
+ * Search endpoints backed by the relational DB (no Elasticsearch).
+ * Each GET normalizes its query string into a request object and then calls the POST method through the
+ * Spring proxy, so {@code @PreAuthorize} evaluates exactly the data that the service executes.
+ */
 @RestController
 @RequestMapping("/api")
 @RequiredArgsConstructor
-public class XmEntityDbSearchResource {
+public class XmEntityDbSearchResource extends TransactionPropagationService<XmEntityDbSearchResource> {
 
     static final String TOTAL_COUNT_HEADER = "X-Total-Count";
     private static final Set<String> PAGE_PARAMS = Set.of("page", "size", "sort");
@@ -45,8 +50,6 @@ public class XmEntityDbSearchResource {
     private final XmEntitySearchTextReindexService reindexService;
 
     @GetMapping(value = "/_search-db/xm-entities", produces = MediaType.APPLICATION_JSON_VALUE)
-    @PreAuthorize("hasPermission({'typeKey': #typeKey, 'query': #query, 'filter': #params}, 'XMENTITY.SEARCH.DB.QUERY')")
-    @PrivilegeDescription("Privilege to search xm entities in DB by typeKey, full text query and filters (GET)")
     public ResponseEntity<List<XmEntityDto>> searchGet(@RequestParam String typeKey,
                                                        @RequestParam(required = false) String query,
                                                        @RequestParam(required = false) Boolean includeSubTypes,
@@ -58,12 +61,12 @@ public class XmEntityDbSearchResource {
         request.setIncludeSubTypes(includeSubTypes);
         request.setFilter(toFilterBody(params));
         request.setRawStringValues(true);
-        return respond(request, pageable);
+        return self.searchPost(request, pageable);
     }
 
     @PostMapping(value = "/_search-db/xm-entities", produces = MediaType.APPLICATION_JSON_VALUE)
     @PreAuthorize("hasPermission({'typeKey': #request.typeKey, 'query': #request.query, 'filter': #request.filter}, 'XMENTITY.SEARCH.DB.QUERY')")
-    @PrivilegeDescription("Privilege to search xm entities in DB by typeKey, full text query and filters (POST)")
+    @PrivilegeDescription("Privilege to search xm entities in DB by typeKey, full text query and filters")
     public ResponseEntity<List<XmEntityDto>> searchPost(@RequestBody XmEntityDbSearchRequest request,
                                                         @ParameterObject Pageable pageable) {
         return respond(request, pageable);
@@ -75,8 +78,6 @@ public class XmEntityDbSearchResource {
     }
 
     @GetMapping(value = "/_search-db/xm-entities/{entityTypeKey}/{idOrKey}/links/{linkTypeKey}", produces = MediaType.APPLICATION_JSON_VALUE)
-    @PreAuthorize("hasPermission({'entityTypeKey': #entityTypeKey, 'idOrKey': #idOrKey, 'linkTypeKey': #linkTypeKey, 'query': #query, 'filter': #params}, 'XMENTITY.SEARCH.DB.TO_LINK')")
-    @PrivilegeDescription("Privilege to search link candidates in DB for an xm entity and link type (GET)")
     public ResponseEntity<List<XmEntityDto>> searchToLinkGet(@PathVariable String entityTypeKey,
                                                              @PathVariable String idOrKey,
                                                              @PathVariable String linkTypeKey,
@@ -89,12 +90,12 @@ public class XmEntityDbSearchResource {
         request.setIncludeSubTypes(includeSubTypes);
         request.setFilter(toFilterBody(params));
         request.setRawStringValues(true);
-        return respondToLink(entityTypeKey, idOrKey, linkTypeKey, request, pageable);
+        return self.searchToLinkPost(entityTypeKey, idOrKey, linkTypeKey, request, pageable);
     }
 
     @PostMapping(value = "/_search-db/xm-entities/{entityTypeKey}/{idOrKey}/links/{linkTypeKey}", produces = MediaType.APPLICATION_JSON_VALUE)
     @PreAuthorize("hasPermission({'entityTypeKey': #entityTypeKey, 'idOrKey': #idOrKey, 'linkTypeKey': #linkTypeKey, 'query': #request.query, 'filter': #request.filter}, 'XMENTITY.SEARCH.DB.TO_LINK')")
-    @PrivilegeDescription("Privilege to search link candidates in DB for an xm entity and link type (POST)")
+    @PrivilegeDescription("Privilege to search link candidates in DB for an xm entity and link type")
     public ResponseEntity<List<XmEntityDto>> searchToLinkPost(@PathVariable String entityTypeKey,
                                                               @PathVariable String idOrKey,
                                                               @PathVariable String linkTypeKey,
@@ -104,8 +105,6 @@ public class XmEntityDbSearchResource {
     }
 
     @GetMapping(value = "/_search-db/xm-entities/{idOrKey}/targets/{linkTypeKey}", produces = MediaType.APPLICATION_JSON_VALUE)
-    @PreAuthorize("hasPermission({'idOrKey': #idOrKey, 'linkTypeKey': #linkTypeKey, 'query': #query, 'filter': #params}, 'LINK.SEARCH.DB.TARGETS')")
-    @PrivilegeDescription("Privilege to search links of a source xm entity in DB filtered by target fields (GET)")
     public ResponseEntity<List<LinkDto>> searchTargetsGet(@PathVariable String idOrKey,
                                                           @PathVariable String linkTypeKey,
                                                           @RequestParam(required = false) String typeKey,
@@ -119,12 +118,12 @@ public class XmEntityDbSearchResource {
         request.setIncludeSubTypes(includeSubTypes);
         request.setFilter(toFilterBody(params));
         request.setRawStringValues(true);
-        return respondTargets(idOrKey, linkTypeKey, request, pageable);
+        return self.searchTargetsPost(idOrKey, linkTypeKey, request, pageable);
     }
 
     @PostMapping(value = "/_search-db/xm-entities/{idOrKey}/targets/{linkTypeKey}", produces = MediaType.APPLICATION_JSON_VALUE)
     @PreAuthorize("hasPermission({'idOrKey': #idOrKey, 'linkTypeKey': #linkTypeKey, 'query': #request.query, 'filter': #request.filter}, 'LINK.SEARCH.DB.TARGETS')")
-    @PrivilegeDescription("Privilege to search links of a source xm entity in DB filtered by target fields (POST)")
+    @PrivilegeDescription("Privilege to search links of a source xm entity in DB filtered by target fields")
     public ResponseEntity<List<LinkDto>> searchTargetsPost(@PathVariable String idOrKey,
                                                            @PathVariable String linkTypeKey,
                                                            @RequestBody XmEntityDbSearchRequest request,
@@ -145,8 +144,6 @@ public class XmEntityDbSearchResource {
     }
 
     @GetMapping(value = "/_search-db/xm-entities/template/{templateKey}", produces = MediaType.APPLICATION_JSON_VALUE)
-    @PreAuthorize("hasPermission({'templateKey': #templateKey, 'params': #params}, 'XMENTITY.SEARCH.DB.TEMPLATE')")
-    @PrivilegeDescription("Privilege to search xm entities in DB by a JPQL template (GET)")
     public ResponseEntity<List<?>> searchByTemplateGet(@PathVariable String templateKey,
                                                        @RequestParam MultiValueMap<String, String> params,
                                                        @ParameterObject Pageable pageable) {
@@ -156,12 +153,12 @@ public class XmEntityDbSearchResource {
                 templateParams.put(k, v.get(0));
             }
         });
-        return respondTemplate(templateKey, templateParams, pageable);
+        return self.searchByTemplatePost(templateKey, templateParams, pageable);
     }
 
     @PostMapping(value = "/_search-db/xm-entities/template/{templateKey}", produces = MediaType.APPLICATION_JSON_VALUE)
     @PreAuthorize("hasPermission({'templateKey': #templateKey, 'params': #params}, 'XMENTITY.SEARCH.DB.TEMPLATE')")
-    @PrivilegeDescription("Privilege to search xm entities in DB by a JPQL template (POST)")
+    @PrivilegeDescription("Privilege to search xm entities in DB by a JPQL template")
     public ResponseEntity<List<?>> searchByTemplatePost(@PathVariable String templateKey,
                                                         @RequestBody(required = false) Map<String, Object> params,
                                                         @ParameterObject Pageable pageable) {

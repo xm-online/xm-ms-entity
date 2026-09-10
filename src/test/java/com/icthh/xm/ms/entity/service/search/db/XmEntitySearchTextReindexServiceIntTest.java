@@ -68,6 +68,23 @@ public class XmEntitySearchTextReindexServiceIntTest extends AbstractPostgresInt
     }
 
     @Test
+    public void reindexWithoutTypeKeySkipsExplicitlyDisabledSubtype() {
+        Long quietId = tx.execute(status -> {
+            XmEntity quiet = newEntity("ORDER.QUIET", "Quiet", Map.of("orderNo", 3));
+            em.persist(quiet);
+            em.flush();
+            return quiet.getId();
+        });
+
+        long withSubtypes = reindexService.reindex("ORDER");
+        long enabledOnly = reindexService.reindex(null);
+
+        assertThat(enabledOnly).isLessThan(withSubtypes);
+        tx.executeWithoutResult(s -> em.createNativeQuery("delete from xm_entity where id = :id")
+            .setParameter("id", quietId).executeUpdate());
+    }
+
+    @Test
     public void reindexFillsMissingSearchText() {
         assertThat(searchText()).isNull();
 

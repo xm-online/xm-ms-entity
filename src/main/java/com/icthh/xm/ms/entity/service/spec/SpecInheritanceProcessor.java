@@ -20,6 +20,7 @@ import tools.jackson.databind.ObjectReader;
 import static com.icthh.xm.ms.entity.domain.ext.TypeSpecParameter.ACCESS;
 import static com.icthh.xm.ms.entity.domain.ext.TypeSpecParameter.ATTACHMENTS;
 import static com.icthh.xm.ms.entity.domain.ext.TypeSpecParameter.CALENDARS;
+import static com.icthh.xm.ms.entity.domain.ext.TypeSpecParameter.FULL_TEXT_SEARCH_DATA_FIELDS;
 import static com.icthh.xm.ms.entity.domain.ext.TypeSpecParameter.FUNCTIONS;
 import static com.icthh.xm.ms.entity.domain.ext.TypeSpecParameter.LINKS;
 import static com.icthh.xm.ms.entity.domain.ext.TypeSpecParameter.LOCATIONS;
@@ -86,6 +87,8 @@ public class SpecInheritanceProcessor {
         type.setRatings(ignorableUnion(RATINGS, type, parentType));
         type.setStates(ignorableUnion(STATES, type, parentType));
         type.setTags(ignorableUnion(TAGS, type, parentType));
+        type.setFullTextSearch(type.getFullTextSearch() != null ? type.getFullTextSearch() : parentType.getFullTextSearch());
+        type.setFullTextSearchDataFields(ignorableUnion(FULL_TEXT_SEARCH_DATA_FIELDS, type, parentType));
         return type;
     }
 

@@ -9,6 +9,7 @@ import com.icthh.xm.commons.exceptions.BusinessException;
 import com.icthh.xm.commons.exceptions.EntityNotFoundException;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.YamlMapperUtils;
+import com.icthh.xm.ms.entity.service.search.db.filter.BooleanValues;
 import java.time.Instant;
 import java.time.format.DateTimeParseException;
 import java.util.Arrays;
@@ -70,7 +71,7 @@ public class XmEntityJpqlTemplatesService implements RefreshableConfiguration {
         try {
             return switch (type) {
                 case "number" -> text.contains(".") ? (Object) Double.valueOf(text) : (Object) Long.valueOf(text);
-                case "boolean" -> Boolean.valueOf(text);
+                case "boolean" -> BooleanValues.parse(name, text);
                 case "instant" -> Instant.parse(text);
                 case "list" -> Arrays.stream(text.split(",")).map(String::trim).toList();
                 default -> text;

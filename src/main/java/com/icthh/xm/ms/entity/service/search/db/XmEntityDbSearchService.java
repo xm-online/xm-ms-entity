@@ -19,7 +19,6 @@ import com.icthh.xm.ms.entity.lep.keyresolver.EntityTypeKeyAndLinkTypeKeyResolve
 import com.icthh.xm.ms.entity.lep.keyresolver.JpqlTemplateKeyResolver;
 import com.icthh.xm.ms.entity.lep.keyresolver.LinkTypeKeyParamResolver;
 import com.icthh.xm.ms.entity.repository.search.db.PermittedSpecificationRepository;
-import com.icthh.xm.ms.entity.service.LinkService;
 import com.icthh.xm.ms.entity.service.XmEntityService;
 import com.icthh.xm.ms.entity.service.XmEntitySpecService;
 import com.icthh.xm.ms.entity.service.search.db.dto.XmEntityDbSearchRequest;
@@ -34,13 +33,11 @@ import com.icthh.xm.ms.entity.service.search.db.template.XmEntityJpqlTemplatesSe
 import com.icthh.xm.ms.entity.service.search.db.template.JpqlTemplateType;
 import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Root;
-import java.util.HashSet;
+import jakarta.persistence.criteria.Subquery;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -66,7 +63,6 @@ public class XmEntityDbSearchService {
     private final FilterParser filterParser;
     private final XmEntitySpecService xmEntitySpecService;
     private final XmEntityService xmEntityService;
-    private final LinkService linkService;
     private final JpqlTemplateExecutor templateExecutor;
     private final JpqlTemplateParamsService templateParamsService;
     private final XmEntityJpqlTemplatesService jpqlTemplatesService;
@@ -105,12 +101,7 @@ public class XmEntityDbSearchService {
             request.getQuery(), conditions, root -> root);
 
         if (Boolean.TRUE.equals(linkSpec.getIsUnique())) {
-            Long sourceId = source.getId();
-            Set<Long> excluded = linkService.findLinkProjectionsBySourceIdAndTypeKey(sourceId, linkTypeKey).stream()
-                .map(link -> link.getTarget().getId())
-                .collect(Collectors.toCollection(HashSet::new));
-            excluded.add(sourceId);
-            spec = spec.and((root, query, cb) -> cb.not(root.get(XmEntity_.id).in(excluded)));
+            spec = spec.and(notLinkedYet(source.getId(), linkTypeKey));
         }
         return permittedSpecificationRepository.findAll(XmEntity.class, spec,
             sortTranslator.toOrderProvider(pageable.getSort()), pageable, privilegeKey);
@@ -122,7 +113,11 @@ public class XmEntityDbSearchService {
     @PrivilegeDescription("Privilege to search links of a source xm entity in DB, filtered by target fields")
     public Page<Link> searchTargets(IdOrKey idOrKey, String linkTypeKey, XmEntityDbSearchRequest request,
                                     Pageable pageable, String privilegeKey) {
-        Long sourceId = xmEntityService.getXmEntityIdKeyTypeKey(idOrKey).getId();
+        XmEntityIdKeyTypeKey source = xmEntityService.getXmEntityIdKeyTypeKey(idOrKey);
+        Long sourceId = source.getId();
+        xmEntitySpecService.getLinkSpec(source.getTypeKey(), linkTypeKey)
+            .orElseThrow(() -> new BusinessException(ERR_VALIDATION,
+                "Link spec not found for entity type " + source.getTypeKey() + " and link type " + linkTypeKey));
         List<FilterCondition> conditions = parseConditions(request);
         Function<Root<Link>, Path<XmEntity>> target = root -> root.get(Link_.target);
 
@@ -133,7 +128,7 @@ public class XmEntityDbSearchService {
         if (StringUtils.isNotBlank(request.getTypeKey())) {
             spec = spec.and(specificationBuilder.typeKey(request.getTypeKey(), request.includeSubTypes(), target));
         }
-        if (!XmEntityFilterSpecificationBuilder.hasRemovedCondition(conditions)) {
+        if (!XmEntityFilterSpecificationBuilder.includesRemoved(conditions)) {
             spec = spec.and(specificationBuilder.notRemoved(target));
         }
         if (StringUtils.isNotBlank(request.getQuery())) {
@@ -169,6 +164,19 @@ public class XmEntityDbSearchService {
         return templateExecutor.executeRaw(template, params, pageable, entityToDto);
     }
 
+    /** Entities of the target type that this source is not linked to yet, and not the source itself. */
+    private static Specification<XmEntity> notLinkedYet(Long sourceId, String linkTypeKey) {
+        return (root, query, cb) -> {
+            Subquery<Integer> linked = query.subquery(Integer.class);
+            Root<Link> link = linked.from(Link.class);
+            linked.select(cb.literal(1)).where(
+                cb.equal(link.get(Link_.source).get(XmEntity_.id), sourceId),
+                cb.equal(link.get(Link_.typeKey), linkTypeKey),
+                cb.equal(link.get(Link_.target), root));
+            return cb.and(cb.notEqual(root.get(XmEntity_.id), sourceId), cb.not(cb.exists(linked)));
+        };
+    }
+
     private static boolean isSameOrSubType(String actualTypeKey, String expectedTypeKey) {
         return actualTypeKey != null
             && (actualTypeKey.equals(expectedTypeKey) || actualTypeKey.startsWith(expectedTypeKey + "."));
@@ -180,7 +188,7 @@ public class XmEntityDbSearchService {
                                             Function<Root<T>, Path<XmEntity>> entityPath) {
         Specification<T> spec = specificationBuilder.typeKey(typeKey, includeSubTypes, entityPath)
             .and(specificationBuilder.build(conditions, entityPath));
-        if (!XmEntityFilterSpecificationBuilder.hasRemovedCondition(conditions)) {
+        if (!XmEntityFilterSpecificationBuilder.includesRemoved(conditions)) {
             spec = spec.and(specificationBuilder.notRemoved(entityPath));
         }
         if (StringUtils.isNotBlank(query)) {

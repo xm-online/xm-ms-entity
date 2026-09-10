@@ -23,7 +23,7 @@
 - Errors: unknown field/op/sort, bad value, missing template param → `400` `BusinessException(ERR_VALIDATION, ...)`; unknown template → `404` (`EntityNotFoundException`).
 - Java code style follows the repo: Lombok `@RequiredArgsConstructor`, `@Slf4j`, 4-space indent, JPA metamodel constants (`XmEntity_.DATA`), MapStruct mappers for DTOs.
 - Every public method of `XmEntityDbSearchService` and `XmEntitySearchTextReindexService` carries `@LogicExtensionPoint(value = ..., resolver = ...)` with a key resolver from `com.icthh.xm.ms.entity.lep.keyresolver` (existing `LepKeyResolver` pattern: `segments(LepMethod)` reads named params via `method.getParameter(name, Class)`).
-- Commit messages are plain imperative sentences. Do not add `Co-Authored-By` or generated-with footers.
+- Commit messages are plain imperative sentences; attribution trailers follow the session policy in effect.
 
 ## Spec deviations decided in this plan
 
