@@ -42,6 +42,15 @@ public class XmEntitySearchTextListenerIntTest extends AbstractPostgresIntTest {
     }
 
     @Test
+    public void spelDataFieldsFromSpecAreEvaluated() {
+        XmEntity invoice = repository.save(newEntity("INVOICE", "Inv-1", Map.of(
+            "lines", List.of(Map.of("sku", "SKU-9")), "total", 10)));
+
+        // customer is absent → safe navigation yields null → skipped
+        assertThat(storedSearchText(invoice.getId())).isEqualTo("Inv-1\nSKU-9\n20");
+    }
+
+    @Test
     public void leavesNullForDisabledType() {
         XmEntity silent = repository.save(newEntity("SILENT", "Quiet", Map.of("orderNo", 1)));
         assertThat(storedSearchText(silent.getId())).isNull();

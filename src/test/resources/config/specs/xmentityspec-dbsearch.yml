@@ -37,3 +37,11 @@ types:
     - key: ORDERX
       name: { en: "Lookalike, not a subtype of ORDER" }
       dataSpec: '{ "type": "object" }'
+    - key: INVOICE
+      name: { en: "Invoice, SpEL search fields" }
+      fullTextSearch: true
+      fullTextSearchDataFields:
+          - data.lines[0].sku
+          - data.customer?.city
+          - data.total * 2
+      dataSpec: '{ "type": "object" }'

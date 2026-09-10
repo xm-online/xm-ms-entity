@@ -42,6 +42,22 @@ public class SearchTextBuilderUnitTest extends AbstractJupiterUnitTest {
     }
 
     @Test
+    public void dataFieldsAreSpelExpressions() {
+        TypeSpec spec = TypeSpec.builder().key("T").fullTextSearch(true)
+            .fullTextSearchDataFields(List.of(
+                "data.lines[0].sku",          // index into a list of objects
+                "data.customer?.city",        // safe navigation: customer missing → skipped
+                "data.total * 2"))            // arithmetic
+            .build();
+        XmEntity e = entity(Map.of(
+            "lines", List.of(Map.of("sku", "SKU-1"), Map.of("sku", "SKU-2")),
+            "total", 21,
+            "tags", List.of("a", "b")));
+
+        assertThat(builder.build(spec, e)).isEqualTo("Alpha order\nBig <b>one</b>\nSKU-1\n42");
+    }
+
+    @Test
     public void nameAndDescriptionOnlyWhenNoDataFields() {
         TypeSpec spec = TypeSpec.builder().key("T").fullTextSearch(true).build();
         assertThat(builder.build(spec, entity(Map.of("x", 1)))).isEqualTo("Alpha order\nBig <b>one</b>");
