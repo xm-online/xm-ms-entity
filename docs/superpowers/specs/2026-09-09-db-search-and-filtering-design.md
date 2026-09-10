@@ -443,5 +443,6 @@ Deviations and findings from the implementation, all tests on Postgres 14 via Te
 - `search_text` is recomputed in one place (`SearchTextUpdater`), used by the JPA listener and by reindex.
 - The `Link` header statement in section 3 is superseded by the PR #558 amendment above: responses carry
   `X-Total-Count` and the payload only.
+- Commit messages carry no attribution trailers of any kind: the account rule forbids them in every repo.
 - Oracle remains covered by unit-level dialect code only; there is no Oracle instance in CI, so its numeric
   jsonb comparison stays a documented limitation.
