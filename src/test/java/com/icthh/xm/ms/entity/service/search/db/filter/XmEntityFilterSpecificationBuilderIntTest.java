@@ -119,5 +119,8 @@ public class XmEntityFilterSpecificationBuilderIntTest extends AbstractPostgresI
             .isInstanceOf(BusinessException.class).hasMessageContaining("startDate");
         assertThatThrownBy(() -> ids(filter(Map.of("id.eq", "abc"))))
             .isInstanceOf(BusinessException.class).hasMessageContaining("id");
+        // "invalid" must not silently become false and match non-removed rows
+        assertThatThrownBy(() -> ids(filter(Map.of("removed.eq", "invalid"))))
+            .isInstanceOf(BusinessException.class).hasMessageContaining("removed");
     }
 }

@@ -71,6 +71,9 @@ public class FilterParser {
     }
 
     private static Object assertScalar(String key, FilterOperator operator, Object value) {
+        if (value == null) {
+            throw new BusinessException(ERR_VALIDATION, "Filter value must not be null: " + key);
+        }
         if (value instanceof Collection<?>) {
             throw new BusinessException(ERR_VALIDATION,
                 "Filter operator " + operator.suffix() + " requires a scalar value: " + key);

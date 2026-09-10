@@ -75,6 +75,15 @@ public class FilterParserUnitTest extends AbstractJupiterUnitTest {
     }
 
     @Test
+    public void rejectsNullScalarValue() {
+        java.util.Map<String, Object> filter = new java.util.HashMap<>();
+        filter.put("name.eq", null);
+        assertThatThrownBy(() -> parser.parseBody(filter))
+            .isInstanceOf(BusinessException.class)
+            .hasMessageContaining("name.eq");
+    }
+
+    @Test
     public void rejectsNonBooleanForSpecified() {
         assertThatThrownBy(() -> parser.parseQueryParams(Map.of("name.specified", List.of("yes"))))
             .isInstanceOf(BusinessException.class)

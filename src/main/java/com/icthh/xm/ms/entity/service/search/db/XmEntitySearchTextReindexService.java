@@ -74,10 +74,14 @@ public class XmEntitySearchTextReindexService {
         entity.setSearchText(searchTextBuilder.build(spec, entity));
     }
 
+    /** Enabled types without those already covered by an enabled ancestor (A covers A.B). */
     private List<String> enabledTypeKeys() {
-        return xmEntitySpecService.findAllTypes().stream()
+        List<String> enabled = xmEntitySpecService.findAllTypes().stream()
             .filter(spec -> Boolean.TRUE.equals(spec.getFullTextSearch()))
             .map(TypeSpec::getKey)
+            .toList();
+        return enabled.stream()
+            .filter(key -> enabled.stream().noneMatch(other -> key.startsWith(other + ".")))
             .toList();
     }
 }

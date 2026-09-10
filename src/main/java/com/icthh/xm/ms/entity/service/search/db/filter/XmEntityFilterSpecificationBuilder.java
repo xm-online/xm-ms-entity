@@ -143,6 +143,9 @@ public class XmEntityFilterSpecificationBuilder {
                 return Integer.valueOf(s);
             }
             if (javaType == Boolean.class) {
+                if (!"true".equalsIgnoreCase(s) && !"false".equalsIgnoreCase(s)) {
+                    throw new BusinessException(ERR_VALIDATION, "Invalid value for filter field " + field + ": " + value);
+                }
                 return Boolean.valueOf(s);
             }
             if (javaType == Instant.class) {

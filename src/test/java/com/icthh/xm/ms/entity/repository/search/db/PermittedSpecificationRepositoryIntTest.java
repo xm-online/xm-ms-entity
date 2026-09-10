@@ -97,6 +97,16 @@ public class PermittedSpecificationRepositoryIntTest extends AbstractPostgresInt
     }
 
     @Test
+    public void aliasIsRewrittenAsWholeWordOnly() {
+        XmEntity named = xmEntityRepository.save(newEntity(TYPE, "returnObject", Map.of()).createdBy("user-3"));
+        permissionCondition("returnObject.name = 'returnObject'");
+
+        Page<XmEntity> page = repository.findAll(XmEntity.class, typeKey(TYPE), null, PageRequest.of(0, 10), "PRIV");
+
+        assertThat(page.getContent()).extracting(XmEntity::getId).containsExactly(named.getId());
+    }
+
+    @Test
     public void nullPrivilegeKeySkipsPermissionCondition() {
         Page<XmEntity> page = repository.findAll(XmEntity.class, typeKey(TYPE), null, PageRequest.of(0, 10), null);
         assertThat(page.getTotalElements()).isEqualTo(2);

@@ -58,6 +58,14 @@ public class SearchTextBuilderUnitTest extends AbstractJupiterUnitTest {
     }
 
     @Test
+    public void nullAndBlankDataFieldEntriesAreSkipped() {
+        TypeSpec spec = TypeSpec.builder().key("T").fullTextSearch(true)
+            .fullTextSearchDataFields(java.util.Arrays.asList(null, " ", "data.orderNo"))
+            .build();
+        assertThat(builder.build(spec, entity(Map.of("orderNo", 7)))).isEqualTo("Alpha order\nBig <b>one</b>\n7");
+    }
+
+    @Test
     public void nameAndDescriptionOnlyWhenNoDataFields() {
         TypeSpec spec = TypeSpec.builder().key("T").fullTextSearch(true).build();
         assertThat(builder.build(spec, entity(Map.of("x", 1)))).isEqualTo("Alpha order\nBig <b>one</b>");

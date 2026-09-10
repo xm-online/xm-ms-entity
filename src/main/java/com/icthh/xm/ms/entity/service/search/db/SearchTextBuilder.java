@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.expression.spel.support.MapAccessor;
 import org.springframework.expression.EvaluationContext;
 import org.springframework.expression.EvaluationException;
@@ -47,7 +48,7 @@ public class SearchTextBuilder {
                 .forPropertyAccessors(new MapAccessor(), DataBindingPropertyAccessor.forReadOnlyAccess())
                 .withRootObject(entity)
                 .build();
-            fields.forEach(field -> addIfNotBlank(parts, evaluate(field, context)));
+            fields.stream().filter(StringUtils::isNotBlank).forEach(field -> addIfNotBlank(parts, evaluate(field, context)));
         }
         return String.join(SEPARATOR, parts);
     }

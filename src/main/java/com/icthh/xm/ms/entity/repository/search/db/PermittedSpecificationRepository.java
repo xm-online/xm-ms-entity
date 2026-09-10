@@ -11,6 +11,7 @@ import jakarta.persistence.criteria.Root;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
@@ -34,7 +35,8 @@ import org.springframework.stereotype.Repository;
 public class PermittedSpecificationRepository {
 
     public static final String ALIAS = "entity";
-    private static final String COMMONS_ALIAS = "returnObject";
+    /** xm-commons alias only where it is used as a path root (followed by '.'), so literals stay untouched. */
+    private static final Pattern COMMONS_ALIAS = Pattern.compile("\\breturnObject(?=\\.)");
 
     private final EntityManager em;
     private final PermissionCheckService permissionCheckService;
@@ -81,7 +83,7 @@ public class PermittedSpecificationRepository {
         TypedQuery<R> query = em.createQuery(criteria);
         QueryParams.bind(query, params);
         if (pageable != null && pageable.isPaged()) {
-            query.setFirstResult((int) pageable.getOffset());
+            query.setFirstResult(QueryParams.offset(pageable));
             query.setMaxResults(pageable.getPageSize());
         }
         log.debug("DB search query: {} params: {}", criteria, params);
@@ -95,7 +97,7 @@ public class PermittedSpecificationRepository {
         }
         String permission = permissionCondition(privilegeKey);
         if (isNotBlank(permission)) {
-            parts.add("(" + permission.replace(COMMONS_ALIAS, ALIAS) + ")");
+            parts.add("(" + COMMONS_ALIAS.matcher(permission).replaceAll(ALIAS) + ")");
         }
         return parts.isEmpty() ? "" : " where " + String.join(" and ", parts);
     }
