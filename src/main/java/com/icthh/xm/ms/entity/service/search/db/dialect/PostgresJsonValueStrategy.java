@@ -12,14 +12,15 @@ import org.springframework.stereotype.Component;
 
 /**
  * Postgres: {@code json_query(data, '$.path')} renders {@code jsonb_path_query_first(...)} and returns jsonb, so
- * comparisons are jsonb-to-jsonb (numbers compare numerically). Literals are wrapped with {@code to_jsonb}.
+ * comparisons are jsonb-to-jsonb and numbers compare numerically without any type hint. Literals are wrapped
+ * with {@code to_jsonb}, which is why {@code operand} is not needed here.
  */
 @Component
 @ConditionalOnExpression("'${spring.datasource.url}'.startsWith('jdbc:postgresql:')")
 public class PostgresJsonValueStrategy implements JsonValueStrategy {
 
     @Override
-    public Expression<String> jsonValue(CriteriaBuilder cb, Path<?> dataColumn, String jsonPath) {
+    public Expression<?> jsonValue(CriteriaBuilder cb, Path<?> dataColumn, String jsonPath, Object operand) {
         return cb.function(JSON_QUERY, String.class, dataColumn, cb.literal(jsonPath));
     }
 

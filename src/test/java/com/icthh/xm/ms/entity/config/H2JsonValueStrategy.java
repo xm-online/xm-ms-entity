@@ -19,7 +19,7 @@ public class H2JsonValueStrategy implements JsonValueStrategy {
     private static final String MESSAGE = "jsonb filtering is not implemented for H2; use the pg-test profile";
 
     @Override
-    public Expression<String> jsonValue(CriteriaBuilder cb, Path<?> dataColumn, String jsonPath) {
+    public Expression<?> jsonValue(CriteriaBuilder cb, Path<?> dataColumn, String jsonPath, Object operand) {
         throw new NotImplementedException(MESSAGE);
     }
 

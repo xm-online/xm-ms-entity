@@ -87,10 +87,12 @@ public class XmEntityFilterSpecificationBuilder {
 
     // ---- data.* ----
 
+    @SuppressWarnings({"unchecked", "rawtypes"})
     private Predicate dataPredicate(CriteriaBuilder cb, Path<XmEntity> entity, FilterCondition c) {
         Path<?> data = entity.get(XmEntity_.data);
         String jsonPath = c.dataJsonPath();
-        Expression<String> value = jsonValueStrategy.jsonValue(cb, data, jsonPath);
+        // the compared value drives the SQL type on dialects that extract json as scalars (Oracle)
+        Expression value = jsonValueStrategy.jsonValue(cb, data, jsonPath, c.singleValue());
         return switch (c.operator()) {
             case EQ -> cb.equal(value, jsonValueStrategy.literal(cb, c.singleValue()));
             case NOT_EQ -> cb.notEqual(value, jsonValueStrategy.literal(cb, c.singleValue()));
@@ -99,17 +101,11 @@ public class XmEntityFilterSpecificationBuilder {
             case CONTAINS -> ((HibernateCriteriaBuilder) cb).ilike(jsonValueStrategy.jsonText(cb, data, jsonPath),
                 "%" + escapeLike(String.valueOf(c.singleValue())) + "%", ESCAPE);
             case SPECIFIED -> Boolean.TRUE.equals(c.singleValue()) ? cb.isNotNull(value) : cb.isNull(value);
-            case GT -> cb.greaterThan(value, literalString(cb, c.singleValue()));
-            case GTE -> cb.greaterThanOrEqualTo(value, literalString(cb, c.singleValue()));
-            case LT -> cb.lessThan(value, literalString(cb, c.singleValue()));
-            case LTE -> cb.lessThanOrEqualTo(value, literalString(cb, c.singleValue()));
+            case GT -> cb.greaterThan(value, (Expression) jsonValueStrategy.literal(cb, c.singleValue()));
+            case GTE -> cb.greaterThanOrEqualTo(value, (Expression) jsonValueStrategy.literal(cb, c.singleValue()));
+            case LT -> cb.lessThan(value, (Expression) jsonValueStrategy.literal(cb, c.singleValue()));
+            case LTE -> cb.lessThanOrEqualTo(value, (Expression) jsonValueStrategy.literal(cb, c.singleValue()));
         };
-    }
-
-    @SuppressWarnings("unchecked")
-    private Expression<String> literalString(CriteriaBuilder cb, Object value) {
-        // declared type is String because jsonValue is declared String; the DB compares jsonb (Postgres) or text (Oracle)
-        return (Expression<String>) jsonValueStrategy.literal(cb, value);
     }
 
     // ---- columns ----

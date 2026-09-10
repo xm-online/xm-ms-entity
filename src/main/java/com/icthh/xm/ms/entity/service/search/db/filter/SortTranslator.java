@@ -37,8 +37,9 @@ public class SortTranslator {
         return (root, cb) -> {
             Path<XmEntity> entity = entityPath.apply(root);
             return sort.stream().map(order -> {
+                // no operand: ordering has no compared value, so text-extracting dialects order lexically
                 Expression<?> expression = DataPath.isDataPath(order.getProperty())
-                    ? jsonValueStrategy.jsonValue(cb, entity.get(XmEntity_.data), DataPath.toJsonPath(order.getProperty()))
+                    ? jsonValueStrategy.jsonValue(cb, entity.get(XmEntity_.data), DataPath.toJsonPath(order.getProperty()), null)
                     : entity.get(columns.attribute(order.getProperty()));
                 return order.isAscending() ? cb.asc(expression) : cb.desc(expression);
             }).toList();

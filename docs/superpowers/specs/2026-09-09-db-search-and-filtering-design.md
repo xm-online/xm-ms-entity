@@ -444,5 +444,8 @@ Deviations and findings from the implementation, all tests on Postgres 14 via Te
 - The `Link` header statement in section 3 is superseded by the PR #558 amendment above: responses carry
   `X-Total-Count` and the payload only.
 - Commit messages carry no attribution trailers of any kind: the account rule forbids them in every repo.
-- Oracle remains covered by unit-level dialect code only; there is no Oracle instance in CI, so its numeric
-  jsonb comparison stays a documented limitation.
+- Oracle comparisons are type-aware now: `JsonValueStrategy.jsonValue` takes the value being compared, and the
+  Oracle strategy asks Hibernate for `JSON_VALUE(data, '$.path' RETURNING <type>)` (Long, Double, BigDecimal,
+  Boolean, else text). Numeric filters therefore compare numerically, not lexically. Sorting by a data path has
+  no operand and stays text ordering on Oracle. There is no Oracle instance in CI, so the behaviour is covered
+  by a unit test on the type selection, not by an integration test.
