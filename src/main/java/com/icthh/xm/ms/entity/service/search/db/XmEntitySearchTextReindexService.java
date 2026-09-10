@@ -1,5 +1,7 @@
 package com.icthh.xm.ms.entity.service.search.db;
 
+import static com.icthh.xm.ms.entity.domain.XmEntity_.ID;
+
 import com.icthh.xm.commons.lep.LogicExtensionPoint;
 import com.icthh.xm.commons.lep.spring.LepService;
 import com.icthh.xm.ms.entity.domain.XmEntity;
@@ -18,10 +20,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionTemplate;
 
-/**
- * Rebuilds {@code xm_entity.search_text} for rows that were created before DB full text search
- * was enabled (or before the type spec started to declare {@code fullTextSearch}).
- */
+/** Rebuilds xm_entity.search_text for existing rows, in batches, one transaction per batch. */
 @Slf4j
 @Service
 @LepService(group = "service.entity.dbsearch")
@@ -35,13 +34,7 @@ public class XmEntitySearchTextReindexService {
     private final SearchTextBuilder searchTextBuilder;
     private final TransactionTemplate transactionTemplate;
 
-    /**
-     * Recomputes search_text for entities of the given type (dotted subtypes included).
-     * {@code typeKey == null} processes every type of the current tenant with {@code fullTextSearch: true}.
-     * Each batch of {@link #BATCH_SIZE} entities is its own transaction.
-     *
-     * @return number of processed entities
-     */
+    /** @param typeKey type (with subtypes) to process; {@code null} → every type with fullTextSearch: true */
     @LogicExtensionPoint(value = "ReindexSearchText", resolver = TypeKeyResolver.class)
     public long reindex(String typeKey) {
         List<String> typeKeys = typeKey != null ? List.of(typeKey) : enabledTypeKeys();
@@ -52,38 +45,38 @@ public class XmEntitySearchTextReindexService {
         return processed;
     }
 
-    private long reindexType(String typeKey) {
-        Specification<XmEntity> spec = (root, query, cb) -> cb.or(
-            cb.equal(root.get(XmEntity_.typeKey), typeKey),
-            cb.like(root.get(XmEntity_.typeKey), typeKey + ".%"));
+    private long reindexType(String type) {
+        Specification<XmEntity> ofType = (root, query, cb) -> cb.or(
+            cb.equal(root.get(XmEntity_.typeKey), type),
+            cb.like(root.get(XmEntity_.typeKey), type + ".%"));
         long processed = 0;
-        int pageNumber = 0;
-        while (true) {
-            int current = pageNumber;
-            Integer handled = transactionTemplate.execute(status -> {
-                Page<XmEntity> page = xmEntityRepository.findAll(spec,
-                    PageRequest.of(current, BATCH_SIZE, Sort.by(XmEntity_.ID)));
-                page.getContent().forEach(entity -> {
-                    TypeSpec typeSpec = xmEntitySpecService
-                        .getTypeSpecByKeyWithoutFunctionFilter(entity.getTypeKey()).orElse(null);
-                    entity.setSearchText(searchTextBuilder.build(typeSpec, entity));
-                });
-                xmEntityRepository.saveAll(page.getContent());
-                return page.getNumberOfElements();
-            });
-            processed += handled == null ? 0 : handled;
-            if (handled == null || handled < BATCH_SIZE) {
+        for (int pageNumber = 0; ; pageNumber++) {
+            PageRequest page = PageRequest.of(pageNumber, BATCH_SIZE, Sort.by(ID));
+            int handled = transactionTemplate.execute(status -> reindexBatch(ofType, page));
+            processed += handled;
+            log.info("Reindex search_text: type {}, batch {}, processed {} entities so far", type, pageNumber, processed);
+            if (handled < BATCH_SIZE) {
                 break;
             }
-            pageNumber++;
         }
-        log.info("Reindexed search_text for {} entities of type {}", processed, typeKey);
         return processed;
+    }
+
+    private int reindexBatch(Specification<XmEntity> ofType, PageRequest page) {
+        Page<XmEntity> entities = xmEntityRepository.findAll(ofType, page);
+        entities.getContent().forEach(this::refreshSearchText);
+        xmEntityRepository.saveAll(entities.getContent());
+        return entities.getNumberOfElements();
+    }
+
+    private void refreshSearchText(XmEntity entity) {
+        TypeSpec spec = xmEntitySpecService.getTypeSpecByKeyWithoutFunctionFilter(entity.getTypeKey()).orElse(null);
+        entity.setSearchText(searchTextBuilder.build(spec, entity));
     }
 
     private List<String> enabledTypeKeys() {
         return xmEntitySpecService.findAllTypes().stream()
-            .filter(t -> Boolean.TRUE.equals(t.getFullTextSearch()))
+            .filter(spec -> Boolean.TRUE.equals(spec.getFullTextSearch()))
             .map(TypeSpec::getKey)
             .toList();
     }

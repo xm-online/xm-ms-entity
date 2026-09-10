@@ -29,6 +29,7 @@ public class SortTranslator {
     private static final Pattern DATA_PATH = Pattern.compile("^data(\\.[A-Za-z0-9_]+)+$");
 
     private final JsonValueStrategy jsonValueStrategy;
+    private final XmEntityColumns columns;
 
     public OrderProvider<XmEntity> toOrderProvider(Sort sort) {
         return toOrderProvider(sort, root -> root);
@@ -54,7 +55,7 @@ public class SortTranslator {
         }
         for (Sort.Order order : sort) {
             String property = order.getProperty();
-            boolean column = XmEntityFilterSpecificationBuilder.COLUMN_FIELDS.contains(property);
+            boolean column = columns.isColumn(property);
             boolean dataPath = DATA_PATH.matcher(property).matches();
             if (!column && !dataPath) {
                 throw new BusinessException(ERR_VALIDATION, "Unknown sort property: " + property);

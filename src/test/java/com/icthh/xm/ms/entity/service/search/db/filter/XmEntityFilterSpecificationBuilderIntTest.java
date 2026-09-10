@@ -111,8 +111,10 @@ public class XmEntityFilterSpecificationBuilderIntTest extends AbstractPostgresI
 
     @Test
     public void rejectsUnknownColumnAndBadValue() {
-        assertThatThrownBy(() -> ids(filter(Map.of("avatarUrlRelative.eq", "x"))))
-            .isInstanceOf(BusinessException.class).hasMessageContaining("avatarUrlRelative");
+        assertThatThrownBy(() -> ids(filter(Map.of("nope.eq", "x"))))
+            .isInstanceOf(BusinessException.class).hasMessageContaining("nope");
+        // every persisted scalar column is filterable, e.g. version
+        assertThat(ids(filter(Map.of("version.gte", 0)))).containsExactlyInAnyOrder(e1.getId(), e2.getId(), e3.getId());
         assertThatThrownBy(() -> ids(filter(Map.of("startDate.eq", "not-a-date"))))
             .isInstanceOf(BusinessException.class).hasMessageContaining("startDate");
         assertThatThrownBy(() -> ids(filter(Map.of("id.eq", "abc"))))

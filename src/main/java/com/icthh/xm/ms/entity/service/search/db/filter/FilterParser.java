@@ -4,6 +4,7 @@ import static com.icthh.xm.commons.exceptions.ErrorConstants.ERR_VALIDATION;
 
 import com.icthh.xm.commons.exceptions.BusinessException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -23,55 +24,56 @@ public class FilterParser {
     private static final Pattern DOUBLE = Pattern.compile("-?\\d+\\.\\d+");
 
     public List<FilterCondition> parseBody(Map<String, Object> filter) {
-        List<FilterCondition> result = new ArrayList<>();
         if (filter == null) {
-            return result;
+            return List.of();
         }
-        filter.forEach((key, value) -> {
-            ParsedKey parsed = parseKey(key);
-            List<Object> values;
-            if (parsed.operator.isMultiValue()) {
-                if (!(value instanceof Collection<?> collection)) {
-                    throw new BusinessException(ERR_VALIDATION, "Filter operator " + parsed.operator.suffix()
-                        + " requires a list value: " + key);
-                }
-                values = new ArrayList<>(collection);
-            } else {
-                values = List.of(requireScalar(key, parsed.operator, value));
-            }
-            result.add(new FilterCondition(parsed.field, parsed.operator, values));
-        });
-        return result;
+        return filter.entrySet().stream()
+            .map(entry -> toCondition(entry.getKey(), entry.getValue()))
+            .toList();
     }
 
     public List<FilterCondition> parseQueryParams(Map<String, List<String>> queryParams) {
-        List<FilterCondition> result = new ArrayList<>();
         if (queryParams == null) {
-            return result;
+            return List.of();
         }
-        queryParams.forEach((key, rawValues) -> {
-            if (RESERVED_PARAMS.contains(key) || rawValues == null || rawValues.isEmpty()) {
-                return;
-            }
-            ParsedKey parsed = parseKey(key);
-            String raw = rawValues.get(0);
-            List<Object> values = new ArrayList<>();
-            if (parsed.operator.isMultiValue()) {
-                for (String part : raw.split(",")) {
-                    values.add(inferType(part.trim()));
-                }
-            } else {
-                values.add(requireScalar(key, parsed.operator, inferType(raw)));
-            }
-            result.add(new FilterCondition(parsed.field, parsed.operator, values));
-        });
-        return result;
+        return queryParams.entrySet().stream()
+            .filter(entry -> isFilterParam(entry.getKey(), entry.getValue()))
+            .map(entry -> toCondition(entry.getKey(), inferValue(entry.getKey(), entry.getValue().get(0))))
+            .toList();
     }
 
-    private static Object requireScalar(String key, FilterOperator operator, Object value) {
+    private static boolean isFilterParam(String key, List<String> values) {
+        return !RESERVED_PARAMS.contains(key) && values != null && !values.isEmpty();
+    }
+
+    private static FilterCondition toCondition(String key, Object value) {
+        ParsedKey parsed = parseKey(key);
+        List<Object> values = parsed.operator.isMultiValue()
+            ? assertCollection(key, parsed.operator, value)
+            : List.of(assertScalar(key, parsed.operator, value));
+        return new FilterCondition(parsed.field, parsed.operator, values);
+    }
+
+    /** GET values are text: split lists on comma and infer scalar types before the common path. */
+    private static Object inferValue(String key, String raw) {
+        if (parseKey(key).operator.isMultiValue()) {
+            return Arrays.stream(raw.split(",")).map(String::trim).map(FilterParser::inferType).toList();
+        }
+        return inferType(raw);
+    }
+
+    private static List<Object> assertCollection(String key, FilterOperator operator, Object value) {
+        if (!(value instanceof Collection<?> collection)) {
+            throw new BusinessException(ERR_VALIDATION,
+                "Filter operator " + operator.suffix() + " requires a list value: " + key);
+        }
+        return new ArrayList<>(collection);
+    }
+
+    private static Object assertScalar(String key, FilterOperator operator, Object value) {
         if (value instanceof Collection<?>) {
-            throw new BusinessException(ERR_VALIDATION, "Filter operator " + operator.suffix()
-                + " requires a scalar value: " + key);
+            throw new BusinessException(ERR_VALIDATION,
+                "Filter operator " + operator.suffix() + " requires a scalar value: " + key);
         }
         if (operator == FilterOperator.SPECIFIED && !(value instanceof Boolean)) {
             throw new BusinessException(ERR_VALIDATION, "Filter operator specified requires true or false: " + key);
@@ -97,10 +99,9 @@ public class FilterParser {
         if (dot <= 0 || dot == key.length() - 1) {
             throw new BusinessException(ERR_VALIDATION, "Filter key must be <field>.<operator>: " + key);
         }
-        String field = key.substring(0, dot);
         FilterOperator operator = FilterOperator.bySuffix(key.substring(dot + 1))
             .orElseThrow(() -> new BusinessException(ERR_VALIDATION, "Unknown filter operator in key: " + key));
-        return new ParsedKey(field, operator);
+        return new ParsedKey(key.substring(0, dot), operator);
     }
 
     private record ParsedKey(String field, FilterOperator operator) {

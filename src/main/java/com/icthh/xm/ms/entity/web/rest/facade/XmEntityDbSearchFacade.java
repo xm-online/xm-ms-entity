@@ -9,7 +9,7 @@ import com.icthh.xm.ms.entity.service.mapper.LinkMapper;
 import com.icthh.xm.ms.entity.service.mapper.XmEntityMapper;
 import com.icthh.xm.ms.entity.service.search.db.XmEntityDbSearchService;
 import com.icthh.xm.ms.entity.service.search.db.dto.XmEntityDbSearchRequest;
-import com.icthh.xm.ms.entity.service.search.db.template.JpqlTemplate;
+import com.icthh.xm.ms.entity.service.search.db.template.JpqlTemplateType;
 import com.icthh.xm.ms.entity.service.search.db.template.JpqlTemplateExecutor;
 import com.icthh.xm.ms.entity.service.search.db.template.XmEntityJpqlTemplatesService;
 import java.util.Map;
@@ -17,8 +17,11 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
+/** Maps DB search results to DTOs. Read-only transactional so lazy associations are still open while mapping. */
 @Component
+@Transactional(readOnly = true)
 @RequiredArgsConstructor
 public class XmEntityDbSearchFacade {
 
@@ -42,19 +45,17 @@ public class XmEntityDbSearchFacade {
         return xmEntityDbSearchService.searchTargets(idOrKey, linkTypeKey, request, pageable, privilegeKey).map(linkMapper::toDto);
     }
 
-    public JpqlTemplate template(String templateKey) {
-        return jpqlTemplatesService.getTemplate(templateKey);
+    public JpqlTemplateType templateType(String templateKey) {
+        return jpqlTemplatesService.getTemplate(templateKey).getType();
     }
 
-    public Page<XmEntityDto> searchByEntityTemplate(JpqlTemplate template, Map<String, Object> rawParams,
-                                                    Pageable pageable, String privilegeKey) {
-        Map<String, Object> params = jpqlTemplatesService.coerce(template, rawParams);
-        return xmEntityDbSearchService.searchByEntityTemplate(template, params, pageable, privilegeKey).map(xmEntityMapper::toDto);
+    public Page<XmEntityDto> searchByEntityTemplate(String templateKey, Map<String, Object> requestParams, Pageable pageable) {
+        return xmEntityDbSearchService.searchByEntityTemplate(templateKey, requestParams, pageable).map(xmEntityMapper::toDto);
     }
 
-    public JpqlTemplateExecutor.RawResult searchByRawTemplate(JpqlTemplate template, Map<String, Object> rawParams, Pageable pageable) {
-        Map<String, Object> params = jpqlTemplatesService.coerce(template, rawParams);
-        return xmEntityDbSearchService.searchByRawTemplate(template, params, pageable, value -> {
+    public JpqlTemplateExecutor.RawResult searchByRawTemplate(String templateKey, Map<String, Object> requestParams,
+                                                              Pageable pageable) {
+        return xmEntityDbSearchService.searchByRawTemplate(templateKey, requestParams, pageable, value -> {
             if (value instanceof XmEntity xmEntity) {
                 return xmEntityMapper.toDto(xmEntity);
             }

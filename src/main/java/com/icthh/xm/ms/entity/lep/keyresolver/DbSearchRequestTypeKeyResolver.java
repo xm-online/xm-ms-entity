@@ -4,6 +4,7 @@ import com.icthh.xm.lep.api.LepKeyResolver;
 import com.icthh.xm.lep.api.LepMethod;
 import com.icthh.xm.ms.entity.service.search.db.dto.XmEntityDbSearchRequest;
 import java.util.List;
+import java.util.Optional;
 import org.springframework.stereotype.Component;
 
 /** LEP key from {@code request.typeKey} of a DB search request. */
@@ -12,7 +13,9 @@ public class DbSearchRequestTypeKeyResolver implements LepKeyResolver {
 
     @Override
     public List<String> segments(LepMethod method) {
-        XmEntityDbSearchRequest request = method.getParameter("request", XmEntityDbSearchRequest.class);
-        return request != null && request.getTypeKey() != null ? List.of(request.getTypeKey()) : List.of();
+        return Optional.ofNullable(method.getParameter("request", XmEntityDbSearchRequest.class))
+            .map(XmEntityDbSearchRequest::getTypeKey)
+            .map(List::of)
+            .orElse(List.of());
     }
 }

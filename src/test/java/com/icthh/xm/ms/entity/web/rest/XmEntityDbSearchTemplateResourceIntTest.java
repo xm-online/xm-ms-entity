@@ -41,7 +41,9 @@ public class XmEntityDbSearchTemplateResourceIntTest extends AbstractPostgresInt
     public void seed() {
         pushDbSearchSpec();
         String yml = IOUtils.toString(new ClassPathResource("config/templates/jpql-templates-dbsearch.yml").getInputStream(), UTF_8);
-        templatesService.onRefresh(applicationProperties.getJpqlTemplatesPathPattern().replace("{tenantName}", TENANT), yml);
+        String key = XmEntityJpqlTemplatesService.TEMPLATES_PATH_PATTERN.replace("{tenantName}", TENANT);
+        templatesService.onRefresh(key, yml);
+        templatesService.refreshFinished(List.of(key));
 
         active1 = repository.save(newEntity("ORDER", "B order", Map.of("orderNo", 1)).stateKey("ACTIVE"));
         active2 = repository.save(newEntity("ORDER", "A order", Map.of("orderNo", 1)).stateKey("ACTIVE"));

@@ -15,7 +15,6 @@ import java.time.Instant;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 import java.util.function.Function;
 import lombok.RequiredArgsConstructor;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
@@ -30,13 +29,10 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class XmEntityFilterSpecificationBuilder {
 
-    public static final Set<String> COLUMN_FIELDS = Set.of(
-        XmEntity_.ID, XmEntity_.KEY, XmEntity_.TYPE_KEY, XmEntity_.STATE_KEY, XmEntity_.NAME, XmEntity_.DESCRIPTION,
-        XmEntity_.START_DATE, XmEntity_.UPDATE_DATE, XmEntity_.END_DATE, XmEntity_.CREATED_BY, XmEntity_.UPDATED_BY,
-        XmEntity_.REMOVED);
     private static final char ESCAPE = '\\';
 
     private final JsonValueStrategy jsonValueStrategy;
+    private final XmEntityColumns columns;
 
     public Specification<XmEntity> build(List<FilterCondition> conditions) {
         return build(conditions, root -> root);
@@ -114,9 +110,7 @@ public class XmEntityFilterSpecificationBuilder {
 
     @SuppressWarnings({"unchecked", "rawtypes"})
     private Predicate columnPredicate(CriteriaBuilder cb, Path<XmEntity> entity, FilterCondition c) {
-        if (!COLUMN_FIELDS.contains(c.field())) {
-            throw new BusinessException(ERR_VALIDATION, "Unknown filter field: " + c.field());
-        }
+        columns.assertColumn(c.field());
         Path path = entity.get(c.field());
         Class<?> javaType = path.getJavaType();
         List<Object> values = c.values().stream().map(v -> convert(c.field(), javaType, v)).toList();

@@ -38,7 +38,7 @@ public class XmEntitySearchTextListenerIntTest extends AbstractPostgresIntTest {
         XmEntity order = repository.save(newEntity("ORDER", "Alpha", Map.of(
             "orderNo", 42, "customer", Map.of("city", "Kyiv"), "tags", List.of("vip"))));
 
-        assertThat(storedSearchText(order.getId())).isEqualTo("Alpha\n42\nKyiv\nvip");
+        assertThat(storedSearchText(order.getId())).isEqualTo("Alpha\n42\nKyiv\n[vip]");
     }
 
     @Test

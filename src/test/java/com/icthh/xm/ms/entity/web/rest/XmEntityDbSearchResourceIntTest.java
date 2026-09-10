@@ -65,7 +65,7 @@ public class XmEntityDbSearchResourceIntTest extends AbstractPostgresIntTest {
 
         assertThat(ids(response)).containsExactly(kyiv.getId(), lviv.getId(), express.getId());
         assertThat(response.getHeaders().getFirst("X-Total-Count")).isEqualTo("3");
-        assertThat(response.getHeaders().getFirst("Link")).contains("/api/_search-db/xm-entities").contains("typeKey=ORDER");
+        assertThat(response.getHeaders().containsHeader("Link")).isFalse();
     }
 
     @Test

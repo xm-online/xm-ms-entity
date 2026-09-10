@@ -29,6 +29,8 @@ import com.icthh.xm.ms.entity.service.search.db.filter.SortTranslator;
 import com.icthh.xm.ms.entity.service.search.db.filter.XmEntityFilterSpecificationBuilder;
 import com.icthh.xm.ms.entity.service.search.db.template.JpqlTemplate;
 import com.icthh.xm.ms.entity.service.search.db.template.JpqlTemplateExecutor;
+import com.icthh.xm.ms.entity.service.search.db.template.JpqlTemplateParamsService;
+import com.icthh.xm.ms.entity.service.search.db.template.XmEntityJpqlTemplatesService;
 import com.icthh.xm.ms.entity.service.search.db.template.JpqlTemplateType;
 import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Root;
@@ -66,6 +68,8 @@ public class XmEntityDbSearchService {
     private final XmEntityService xmEntityService;
     private final LinkService linkService;
     private final JpqlTemplateExecutor templateExecutor;
+    private final JpqlTemplateParamsService templateParamsService;
+    private final XmEntityJpqlTemplatesService jpqlTemplatesService;
 
     @Transactional(readOnly = true)
     @LogicExtensionPoint(value = "SearchDb", resolver = DbSearchRequestTypeKeyResolver.class)
@@ -139,28 +143,29 @@ public class XmEntityDbSearchService {
             sortTranslator.toOrderProvider(pageable.getSort(), target), pageable, privilegeKey);
     }
 
+    /** ENTITY template: JPQL WHERE fragment over alias {@code entity}. Access is controlled on the API level only. */
     @Transactional(readOnly = true)
     @LogicExtensionPoint(value = "SearchDbByEntityTemplate", resolver = JpqlTemplateKeyResolver.class)
-    @FindWithPermission(ROW_PRIVILEGE)
-    @PrivilegeDescription("Privilege to search xm entities in DB by an ENTITY JPQL template")
-    public Page<XmEntity> searchByEntityTemplate(JpqlTemplate template, Map<String, Object> params,
-                                                 Pageable pageable, String privilegeKey) {
+    public Page<XmEntity> searchByEntityTemplate(String templateKey, Map<String, Object> requestParams, Pageable pageable) {
+        JpqlTemplate template = jpqlTemplatesService.getTemplate(templateKey);
         if (template.getType() != JpqlTemplateType.ENTITY) {
-            throw new BusinessException(ERR_VALIDATION, "Template is not of type ENTITY: " + template.getKey());
+            throw new BusinessException(ERR_VALIDATION, "Template is not of type ENTITY: " + templateKey);
         }
-        Map<String, Object> bound = templateExecutor.bindParams(template, params);
-        return permittedSpecificationRepository.findAll(XmEntity.class, template.getQuery(), bound, null,
-            sortTranslator.toOrderProvider(pageable.getSort()), pageable, privilegeKey);
+        Map<String, Object> params = templateParamsService.getParams(templateKey, requestParams);
+        return permittedSpecificationRepository.findAll(XmEntity.class, template.getQuery(), params, null,
+            sortTranslator.toOrderProvider(pageable.getSort()), pageable, null);
     }
 
-    /** RAW templates: full JPQL from tenant config, rows as maps, no row-level permission wrapping. */
+    /** RAW template: full JPQL from tenant config, rows as maps. Access is controlled on the API level only. */
     @Transactional(readOnly = true)
     @LogicExtensionPoint(value = "SearchDbByRawTemplate", resolver = JpqlTemplateKeyResolver.class)
-    public JpqlTemplateExecutor.RawResult searchByRawTemplate(JpqlTemplate template, Map<String, Object> params,
+    public JpqlTemplateExecutor.RawResult searchByRawTemplate(String templateKey, Map<String, Object> requestParams,
                                                               Pageable pageable, Function<Object, Object> entityToDto) {
+        JpqlTemplate template = jpqlTemplatesService.getTemplate(templateKey);
         if (template.getType() != JpqlTemplateType.RAW) {
-            throw new BusinessException(ERR_VALIDATION, "Template is not of type RAW: " + template.getKey());
+            throw new BusinessException(ERR_VALIDATION, "Template is not of type RAW: " + templateKey);
         }
+        Map<String, Object> params = templateParamsService.getParams(templateKey, requestParams);
         return templateExecutor.executeRaw(template, params, pageable, entityToDto);
     }
 

@@ -64,8 +64,8 @@ public class SortTranslatorIntTest extends AbstractPostgresIntTest {
 
     @Test
     public void rejectsUnknownProperty() {
-        assertThatThrownBy(() -> sortTranslator.validate(Sort.by("avatarUrlRelative")))
-            .isInstanceOf(BusinessException.class).hasMessageContaining("avatarUrlRelative");
+        assertThatThrownBy(() -> sortTranslator.validate(Sort.by("nope")))
+            .isInstanceOf(BusinessException.class).hasMessageContaining("nope");
         assertThatThrownBy(() -> sortTranslator.validate(Sort.by("1=1; drop table xm_entity")))
             .isInstanceOf(BusinessException.class);
         assertThatThrownBy(() -> namesSortedBy(Sort.by("data")))

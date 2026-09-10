@@ -37,7 +37,8 @@ public class SearchTextBuilderUnitTest extends AbstractJupiterUnitTest {
 
         String text = builder.build(spec, e);
 
-        assertThat(text).isEqualTo("Alpha order\nBig <b>one</b>\n42\nKyiv\nvip urgent");
+        // lists and objects are rendered with String.valueOf; missing paths are skipped
+        assertThat(text).isEqualTo("Alpha order\nBig <b>one</b>\n42\nKyiv\n[vip, urgent]\n{city=Kyiv}");
     }
 
     @Test

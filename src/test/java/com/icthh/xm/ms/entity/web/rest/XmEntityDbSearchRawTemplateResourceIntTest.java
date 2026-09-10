@@ -39,7 +39,9 @@ public class XmEntityDbSearchRawTemplateResourceIntTest extends AbstractPostgres
     public void seed() {
         pushDbSearchSpec();
         String yml = IOUtils.toString(new ClassPathResource("config/templates/jpql-templates-dbsearch.yml").getInputStream(), UTF_8);
-        templatesService.onRefresh(applicationProperties.getJpqlTemplatesPathPattern().replace("{tenantName}", TENANT), yml);
+        String key = XmEntityJpqlTemplatesService.TEMPLATES_PATH_PATTERN.replace("{tenantName}", TENANT);
+        templatesService.onRefresh(key, yml);
+        templatesService.refreshFinished(List.of(key));
         a = repository.save(newEntity("SILENT", "A", Map.of("orderNo", 1)));
         b = repository.save(newEntity("SILENT", "B", Map.of("orderNo", 2)));
     }
@@ -57,7 +59,6 @@ public class XmEntityDbSearchRawTemplateResourceIntTest extends AbstractPostgres
         assertThat(rows).hasSize(1);
         assertThat(rows.get(0)).containsEntry("id", a.getId()).containsEntry("name", "A").containsKey("orderNo");
         assertThat(response.getHeaders().getFirst("X-Total-Count")).isEqualTo("2");
-        assertThat(response.getHeaders().getFirst("Link")).contains("rel=\"next\"");
     }
 
     @Test

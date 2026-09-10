@@ -1,5 +1,7 @@
 package com.icthh.xm.ms.entity.service.search.db.dto;
 
+import static java.lang.Boolean.FALSE;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.util.HashMap;
 import java.util.Map;
@@ -14,11 +16,21 @@ public class XmEntityDbSearchRequest {
     private String query;
     /** {@code <field>.<op>} → value(s); see FilterParser. */
     private Map<String, Object> filter = new HashMap<>();
-    /** Set by the GET endpoints: filter values are raw strings whose types must be inferred. Not settable by clients. */
+    /**
+     * Set by the GET endpoints only, never by clients: filter values arrived as query-string text and their
+     * types are inferred before comparison. Examples:
+     * <ul>
+     *     <li>{@code ?data.orderNo.in=1,2,3} → {@code [1L, 2L, 3L]} (comma-separated list, numbers)</li>
+     *     <li>{@code ?data.price.gt=10.5} → {@code 10.5d}</li>
+     *     <li>{@code ?data.active.eq=true} → {@code Boolean.TRUE}</li>
+     *     <li>{@code ?stateKey.eq=ACTIVE} → {@code "ACTIVE"}</li>
+     * </ul>
+     * With the flag off (POST body) values keep their JSON types: {@code "filter": {"data.orderNo.in": [1, 2, 3]}}.
+     */
     @JsonIgnore
     private boolean rawStringValues;
 
     public boolean includeSubTypes() {
-        return includeSubTypes == null || includeSubTypes;
+        return !FALSE.equals(includeSubTypes);
     }
 }

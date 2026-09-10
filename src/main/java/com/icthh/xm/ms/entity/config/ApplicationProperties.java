@@ -63,8 +63,6 @@ public class ApplicationProperties {
     private String specificationTemplatesPathPattern;
     private String specificationTemplatesName;
 
-    private String jpqlTemplatesPathPattern;
-    private String jpqlTemplatesFolderPathPattern;
 
     private String specificationWebappName;
     private String webappName;

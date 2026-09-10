@@ -396,3 +396,23 @@ Deviations and findings from the implementation, all tests on Postgres 14 via Te
   `TEST` spec fixture is pushed via the spec folder pattern (`entity/xmentityspec/dbsearch.yml`), because the
   test-scoped `LocalXmEntitySpecService` resets the main spec file to the classpath fixture.
 - Privilege keys added to `src/test/resources/config/privileges/permissions.yml` (entity, ROLE_ADMIN).
+
+## PR review changes (2026-09-10, PR #558)
+
+- Responses carry `X-Total-Count` and the payload only; no `Link` header.
+- Templates have no row-level permission wrapping (ENTITY or RAW); access is the API privilege
+  `XMENTITY.SEARCH.DB.TEMPLATE` with `templateKey` and params in the resource map. The permission
+  repository is still used for ENTITY templates (paging, sorting, alias `entity`) with a null privilege.
+- Template config paths are constants in `XmEntityJpqlTemplatesService`
+  (`/config/tenants/{tenantName}/entity/jpql-templates.yml`, `.../jpql-templates/*.yml`), not application properties.
+  `onRefresh` stores files as configured; `refreshFinished` builds the tenant → key → template map and drops
+  templates without a query.
+- Template params come from `JpqlTemplateParamsService`, three LEPs resolved by template key:
+  `GetTemplateRequestParams` (typed client params, subject names rejected), `GetTemplateSubjectParams`
+  (`subjectUserKey`, `subjectLogin` when present, `subjectTenant`), `GetTemplateParams` (join, subject wins).
+  A named parameter without a value is a 400 at bind time; no regex parsing of the template text.
+- Filterable and sortable columns are every persisted single-valued attribute of `XmEntity` except `data`
+  (JPA metamodel), so `avatarUrlRelative` and `version` are included.
+- `fullTextSearchDataFields` are SpEL paths evaluated against the entity (`data.customer.city`), compiled once
+  and cached; list and object values are rendered with `String.valueOf`.
+- Postgres integration tests run on `postgres:18`.

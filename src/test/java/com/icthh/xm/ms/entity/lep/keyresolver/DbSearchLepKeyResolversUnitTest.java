@@ -7,7 +7,6 @@ import static org.mockito.Mockito.when;
 import com.icthh.xm.lep.api.LepMethod;
 import com.icthh.xm.ms.entity.AbstractJupiterUnitTest;
 import com.icthh.xm.ms.entity.service.search.db.dto.XmEntityDbSearchRequest;
-import com.icthh.xm.ms.entity.service.search.db.template.JpqlTemplate;
 import org.junit.jupiter.api.Test;
 
 public class DbSearchLepKeyResolversUnitTest extends AbstractJupiterUnitTest {
@@ -36,9 +35,7 @@ public class DbSearchLepKeyResolversUnitTest extends AbstractJupiterUnitTest {
     @Test
     public void templateKeyResolver() {
         LepMethod method = mock(LepMethod.class);
-        JpqlTemplate template = new JpqlTemplate();
-        template.setKey("MY_TPL");
-        when(method.getParameter("template", JpqlTemplate.class)).thenReturn(template);
+        when(method.getParameter("templateKey", String.class)).thenReturn("MY_TPL");
         assertThat(new JpqlTemplateKeyResolver().segments(method)).containsExactly("MY_TPL");
     }
 }

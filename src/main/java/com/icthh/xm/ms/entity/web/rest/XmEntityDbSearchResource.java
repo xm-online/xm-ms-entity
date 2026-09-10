@@ -7,11 +7,9 @@ import com.icthh.xm.ms.entity.service.dto.XmEntityDto;
 import com.icthh.xm.ms.entity.service.search.db.XmEntitySearchTextReindexService;
 import com.icthh.xm.ms.entity.service.search.db.dto.XmEntityDbSearchRequest;
 import com.icthh.xm.ms.entity.service.search.db.filter.FilterParser;
-import com.icthh.xm.ms.entity.service.search.db.template.JpqlTemplate;
 import com.icthh.xm.ms.entity.service.search.db.template.JpqlTemplateExecutor;
 import com.icthh.xm.ms.entity.service.search.db.template.JpqlTemplateType;
 import com.icthh.xm.ms.entity.web.rest.facade.XmEntityDbSearchFacade;
-import com.icthh.xm.ms.entity.web.rest.util.PaginationUtil;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -19,7 +17,6 @@ import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -41,7 +38,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class XmEntityDbSearchResource {
 
-    static final String SEARCH_URL = "/api/_search-db/xm-entities";
+    static final String TOTAL_COUNT_HEADER = "X-Total-Count";
     private static final Set<String> PAGE_PARAMS = Set.of("page", "size", "sort");
 
     private final XmEntityDbSearchFacade facade;
@@ -74,8 +71,7 @@ public class XmEntityDbSearchResource {
 
     private ResponseEntity<List<XmEntityDto>> respond(XmEntityDbSearchRequest request, Pageable pageable) {
         Page<XmEntityDto> page = facade.search(request, pageable, null);
-        HttpHeaders headers = PaginationUtil.generateDbSearchPaginationHttpHeaders(linkParams(request, pageable), page, SEARCH_URL);
-        return new ResponseEntity<>(page.getContent(), headers, HttpStatus.OK);
+        return new ResponseEntity<>(page.getContent(), totalCount(page.getTotalElements()), HttpStatus.OK);
     }
 
     @GetMapping(value = "/_search-db/xm-entities/{entityTypeKey}/{idOrKey}/links/{linkTypeKey}", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -139,17 +135,13 @@ public class XmEntityDbSearchResource {
     private ResponseEntity<List<XmEntityDto>> respondToLink(String entityTypeKey, String idOrKey, String linkTypeKey,
                                                             XmEntityDbSearchRequest request, Pageable pageable) {
         Page<XmEntityDto> page = facade.searchToLink(IdOrKey.of(idOrKey), entityTypeKey, linkTypeKey, request, pageable, null);
-        String url = String.format("/api/_search-db/xm-entities/%s/%s/links/%s", entityTypeKey, idOrKey, linkTypeKey);
-        HttpHeaders headers = PaginationUtil.generateDbSearchPaginationHttpHeaders(linkParams(request, pageable), page, url);
-        return new ResponseEntity<>(page.getContent(), headers, HttpStatus.OK);
+        return new ResponseEntity<>(page.getContent(), totalCount(page.getTotalElements()), HttpStatus.OK);
     }
 
     private ResponseEntity<List<LinkDto>> respondTargets(String idOrKey, String linkTypeKey,
                                                          XmEntityDbSearchRequest request, Pageable pageable) {
         Page<LinkDto> page = facade.searchTargets(IdOrKey.of(idOrKey), linkTypeKey, request, pageable, null);
-        String url = String.format("/api/_search-db/xm-entities/%s/targets/%s", idOrKey, linkTypeKey);
-        HttpHeaders headers = PaginationUtil.generateDbSearchPaginationHttpHeaders(linkParams(request, pageable), page, url);
-        return new ResponseEntity<>(page.getContent(), headers, HttpStatus.OK);
+        return new ResponseEntity<>(page.getContent(), totalCount(page.getTotalElements()), HttpStatus.OK);
     }
 
     @GetMapping(value = "/_search-db/xm-entities/template/{templateKey}", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -176,33 +168,27 @@ public class XmEntityDbSearchResource {
         return respondTemplate(templateKey, params == null ? Map.of() : params, pageable);
     }
 
-    private ResponseEntity<List<?>> respondTemplate(String templateKey, Map<String, Object> params, Pageable pageable) {
-        JpqlTemplate template = facade.template(templateKey);
-        String url = "/api/_search-db/xm-entities/template/" + templateKey;
-        Map<String, Object> linkParams = new LinkedHashMap<>(params);
-        if (pageable.getSort().isSorted()) {
-            linkParams.put("sort", pageable.getSort().stream()
-                .map(o -> o.getProperty() + "," + o.getDirection().name().toLowerCase()).toList());
-        }
-        if (template.getType() == JpqlTemplateType.RAW) {
-            JpqlTemplateExecutor.RawResult result = facade.searchByRawTemplate(template, params, pageable);
-            if (result.total() == null) {
-                return ResponseEntity.ok(result.rows());
-            }
-            Page<Map<String, Object>> page = new PageImpl<>(result.rows(), pageable, result.total());
-            HttpHeaders headers = PaginationUtil.generateDbSearchPaginationHttpHeaders(linkParams, page, url);
-            return new ResponseEntity<>(result.rows(), headers, HttpStatus.OK);
-        }
-        Page<XmEntityDto> page = facade.searchByEntityTemplate(template, params, pageable, null);
-        HttpHeaders headers = PaginationUtil.generateDbSearchPaginationHttpHeaders(linkParams, page, url);
-        return new ResponseEntity<>(page.getContent(), headers, HttpStatus.OK);
-    }
-
     @PostMapping(value = "/_search-db/xm-entities/reindex", produces = MediaType.APPLICATION_JSON_VALUE)
     @PreAuthorize("hasPermission({'typeKey': #typeKey}, 'XMENTITY.SEARCH.DB.REINDEX')")
     @PrivilegeDescription("Privilege to rebuild search_text of xm entities for DB full text search")
     public ResponseEntity<Map<String, Long>> reindex(@RequestParam(required = false) String typeKey) {
         return ResponseEntity.ok(Map.of("processed", reindexService.reindex(typeKey)));
+    }
+
+    private ResponseEntity<List<?>> respondTemplate(String templateKey, Map<String, Object> params, Pageable pageable) {
+        if (facade.templateType(templateKey) == JpqlTemplateType.RAW) {
+            JpqlTemplateExecutor.RawResult result = facade.searchByRawTemplate(templateKey, params, pageable);
+            HttpHeaders headers = result.total() == null ? new HttpHeaders() : totalCount(result.total());
+            return new ResponseEntity<>(result.rows(), headers, HttpStatus.OK);
+        }
+        Page<XmEntityDto> page = facade.searchByEntityTemplate(templateKey, params, pageable);
+        return new ResponseEntity<>(page.getContent(), totalCount(page.getTotalElements()), HttpStatus.OK);
+    }
+
+    private static HttpHeaders totalCount(long total) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.add(TOTAL_COUNT_HEADER, Long.toString(total));
+        return headers;
     }
 
     /** Keeps GET filter params as raw strings; the service infers their types. */
@@ -214,20 +200,5 @@ public class XmEntityDbSearchResource {
             }
         });
         return filter;
-    }
-
-    static Map<String, Object> linkParams(XmEntityDbSearchRequest request, Pageable pageable) {
-        Map<String, Object> params = new LinkedHashMap<>();
-        params.put("typeKey", request.getTypeKey());
-        params.put("query", request.getQuery());
-        params.put("includeSubTypes", request.getIncludeSubTypes());
-        if (request.getFilter() != null) {
-            params.putAll(request.getFilter());
-        }
-        if (pageable.getSort().isSorted()) {
-            params.put("sort", pageable.getSort().stream()
-                .map(o -> o.getProperty() + "," + o.getDirection().name().toLowerCase()).toList());
-        }
-        return params;
     }
 }

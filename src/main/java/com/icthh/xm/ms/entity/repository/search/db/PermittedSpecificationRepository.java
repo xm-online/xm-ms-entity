@@ -1,5 +1,7 @@
 package com.icthh.xm.ms.entity.repository.search.db;
 
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
+
 import com.icthh.xm.commons.permission.service.PermissionCheckService;
 import com.icthh.xm.commons.permission.service.translator.SpelToJpqlTranslator;
 import jakarta.persistence.EntityManager;
@@ -11,7 +13,6 @@ import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaCriteriaQuery;
 import org.springframework.data.domain.Page;
@@ -44,54 +45,67 @@ public class PermittedSpecificationRepository {
         return findAll(entityClass, null, Map.of(), spec, orders, pageable, privilegeKey);
     }
 
+    /**
+     * @param whereFragment optional JPQL condition over alias {@value #ALIAS} with named params
+     * @param params        values for the named params of {@code whereFragment}
+     * @param spec          optional criteria specification, ANDed to the parsed HQL
+     * @param orders        optional ordering
+     * @param privilegeKey  row-level privilege; {@code null} disables the permission condition
+     */
     public <T> Page<T> findAll(Class<T> entityClass, String whereFragment, Map<String, Object> params,
                                Specification<T> spec, OrderProvider<T> orders, Pageable pageable,
                                String privilegeKey) {
-        String where = buildWhere(whereFragment, privilegeKey);
-        String entityName = em.getMetamodel().entity(entityClass).getName();
-        HibernateCriteriaBuilder cb = (HibernateCriteriaBuilder) em.getCriteriaBuilder();
+        String from = " from " + em.getMetamodel().entity(entityClass).getName() + " " + ALIAS
+            + where(whereFragment, privilegeKey);
 
-        JpaCriteriaQuery<T> select = cb.createQuery(
-            "select " + ALIAS + " from " + entityName + " " + ALIAS + where, entityClass);
-        Root<T> root = singleRoot(select);
-        applySpec(select, root, spec, cb);
-        if (orders != null) {
-            select.orderBy(orders.orders(root, cb));
-        }
-        TypedQuery<T> selectQuery = em.createQuery(select);
-        bind(selectQuery, params);
-        if (pageable != null && pageable.isPaged()) {
-            selectQuery.setFirstResult((int) pageable.getOffset());
-            selectQuery.setMaxResults(pageable.getPageSize());
-        }
-        log.debug("Executing DB search '{}' with params {}", select, params);
-        List<T> content = selectQuery.getResultList();
-
+        List<T> content = createQuery("select " + ALIAS + from, entityClass, spec, orders, params, pageable)
+            .getResultList();
         if (pageable == null || pageable.isUnpaged()) {
             return new PageImpl<>(content);
         }
-        JpaCriteriaQuery<Long> count = cb.createQuery(
-            "select count(" + ALIAS + ") from " + entityName + " " + ALIAS + where, Long.class);
-        applySpec(count, singleRoot(count), spec, cb);
-        TypedQuery<Long> countQuery = em.createQuery(count);
-        bind(countQuery, params);
-        long total = countQuery.getSingleResult();
+        long total = createQuery("select count(" + ALIAS + ")" + from, Long.class, spec, null, params, null)
+            .getSingleResult();
         return new PageImpl<>(content, pageable, total);
     }
 
-    private String buildWhere(String whereFragment, String privilegeKey) {
+    private <T, R> TypedQuery<R> createQuery(String hql, Class<R> resultClass, Specification<T> spec,
+                                             OrderProvider<T> orders, Map<String, Object> params,
+                                             Pageable pageable) {
+        HibernateCriteriaBuilder cb = (HibernateCriteriaBuilder) em.getCriteriaBuilder();
+        JpaCriteriaQuery<R> criteria = cb.createQuery(hql, resultClass);
+        Root<T> root = singleRoot(criteria);
+        applySpec(criteria, root, spec, cb);
+        if (orders != null) {
+            criteria.orderBy(orders.orders(root, cb));
+        }
+        TypedQuery<R> query = em.createQuery(criteria);
+        QueryParams.bind(query, params);
+        if (pageable != null && pageable.isPaged()) {
+            query.setFirstResult((int) pageable.getOffset());
+            query.setMaxResults(pageable.getPageSize());
+        }
+        log.debug("DB search query: {} params: {}", criteria, params);
+        return query;
+    }
+
+    private String where(String whereFragment, String privilegeKey) {
         List<String> parts = new ArrayList<>();
-        if (StringUtils.isNotBlank(whereFragment)) {
+        if (isNotBlank(whereFragment)) {
             parts.add("(" + whereFragment + ")");
         }
-        if (privilegeKey != null) {
-            String condition = permissionCheckService.createCondition(
-                SecurityContextHolder.getContext().getAuthentication(), privilegeKey, spelToJpqlTranslator);
-            if (StringUtils.isNotBlank(condition)) {
-                parts.add("(" + condition.replace(COMMONS_ALIAS, ALIAS) + ")");
-            }
+        String permission = permissionCondition(privilegeKey);
+        if (isNotBlank(permission)) {
+            parts.add("(" + permission.replace(COMMONS_ALIAS, ALIAS) + ")");
         }
         return parts.isEmpty() ? "" : " where " + String.join(" and ", parts);
+    }
+
+    private String permissionCondition(String privilegeKey) {
+        if (privilegeKey == null) {
+            return null;
+        }
+        return permissionCheckService.createCondition(
+            SecurityContextHolder.getContext().getAuthentication(), privilegeKey, spelToJpqlTranslator);
     }
 
     @SuppressWarnings("unchecked")
@@ -110,13 +124,5 @@ public class PermittedSpecificationRepository {
         }
         Predicate existing = query.getRestriction();
         query.where(existing == null ? predicate : cb.and(existing, predicate));
-    }
-
-    private static void bind(TypedQuery<?> query, Map<String, Object> params) {
-        query.getParameters().forEach(p -> {
-            if (p.getName() != null && params.containsKey(p.getName())) {
-                query.setParameter(p.getName(), params.get(p.getName()));
-            }
-        });
     }
 }
