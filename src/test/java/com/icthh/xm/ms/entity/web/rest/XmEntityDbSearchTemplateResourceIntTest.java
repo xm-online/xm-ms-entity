@@ -100,6 +100,20 @@ public class XmEntityDbSearchTemplateResourceIntTest extends AbstractPostgresInt
 
     @Test
     @WithMockUser(username = "u1", authorities = "SUPER-ADMIN")
+    public void subjectParamsCanNotBeSpoofedByClient() {
+        repository.save(newEntity("ORDER", "victim", Map.of()).createdBy("victim"));
+
+        assertThatThrownBy(() -> resource.searchByTemplatePost("MY_ORDERS", Map.of("subjectLogin", "victim"), PageRequest.of(0, 10)))
+            .isInstanceOf(BusinessException.class).hasMessageContaining("subjectLogin");
+
+        var params = new LinkedMultiValueMap<String, String>();
+        params.add("subjectLogin", "victim");
+        assertThatThrownBy(() -> resource.searchByTemplateGet("MY_ORDERS", params, PageRequest.of(0, 10)))
+            .isInstanceOf(BusinessException.class).hasMessageContaining("subjectLogin");
+    }
+
+    @Test
+    @WithMockUser(username = "u1", authorities = "SUPER-ADMIN")
     public void subjectLoginIsBoundAutomatically() {
         XmEntity mine = repository.save(newEntity("ORDER", "mine", Map.of()).createdBy("u1"));
         repository.save(newEntity("ORDER", "not mine", Map.of()).createdBy("somebody-else"));

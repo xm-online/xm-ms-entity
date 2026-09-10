@@ -83,6 +83,23 @@ public class XmEntityDbSearchToLinkResourceIntTest extends AbstractPostgresIntTe
     }
 
     @Test
+    public void sourceEntityOfAnotherTypeIsRejected() {
+        // a PRODUCT id passed with entityTypeKey=ORDER must not yield ORDER link candidates
+        assertThatThrownBy(() -> resource.searchToLinkPost("ORDER", freeProduct.getId().toString(), "ORDER.NOTE",
+            new XmEntityDbSearchRequest(), PageRequest.of(0, 10)))
+            .isInstanceOf(BusinessException.class).hasMessageContaining("PRODUCT");
+    }
+
+    @Test
+    public void subTypeSourceIsAccepted() {
+        XmEntity express = repository.save(newEntity("ORDER.EXPRESS", "Express", Map.of()));
+        var response = resource.searchToLinkPost("ORDER", express.getId().toString(), "ORDER.NOTE",
+            new XmEntityDbSearchRequest(), PageRequest.of(0, 10));
+        assertThat(response.getBody()).extracting(XmEntityDto::getId)
+            .containsExactlyInAnyOrder(linkedProduct.getId(), freeProduct.getId());
+    }
+
+    @Test
     public void unknownLinkTypeIsRejected() {
         assertThatThrownBy(() -> ids("NOPE", new XmEntityDbSearchRequest()))
             .isInstanceOf(BusinessException.class).hasMessageContaining("NOPE");

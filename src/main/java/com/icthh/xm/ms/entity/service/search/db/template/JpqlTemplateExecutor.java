@@ -38,18 +38,24 @@ public class JpqlTemplateExecutor {
     public record RawResult(List<Map<String, Object>> rows, Long total) {
     }
 
-    /** Returns exactly the params the template references: supplied values plus subject params. */
+    /**
+     * Returns exactly the params the template references: supplied values plus subject params.
+     * Subject params always come from the security context; a client attempt to supply one is rejected.
+     */
     public Map<String, Object> bindParams(JpqlTemplate template, Map<String, Object> supplied) {
+        supplied.keySet().stream().filter(SUBJECT_PARAMS::contains).findFirst().ifPresent(name -> {
+            throw new BusinessException(ERR_VALIDATION, "Subject param can not be supplied by client: " + name);
+        });
         Map<String, Object> bound = new HashMap<>();
         for (String name : template.paramNames()) {
-            if (supplied.containsKey(name)) {
-                bound.put(name, supplied.get(name));
-            } else if (SUBJECT_PARAMS.contains(name)) {
+            if (SUBJECT_PARAMS.contains(name)) {
                 Object value = subjectValue(name);
                 if (value == null) {
                     throw new BusinessException(ERR_VALIDATION, "Subject param is not available for current user: " + name);
                 }
                 bound.put(name, value);
+            } else if (supplied.containsKey(name)) {
+                bound.put(name, supplied.get(name));
             } else {
                 throw new BusinessException(ERR_VALIDATION, "Template param is required: " + name);
             }

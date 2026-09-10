@@ -13,6 +13,7 @@ import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.domain.XmEntity_;
 import com.icthh.xm.ms.entity.domain.ext.IdOrKey;
 import com.icthh.xm.ms.entity.domain.spec.LinkSpec;
+import com.icthh.xm.ms.entity.projection.XmEntityIdKeyTypeKey;
 import com.icthh.xm.ms.entity.lep.keyresolver.DbSearchRequestTypeKeyResolver;
 import com.icthh.xm.ms.entity.lep.keyresolver.EntityTypeKeyAndLinkTypeKeyResolver;
 import com.icthh.xm.ms.entity.lep.keyresolver.JpqlTemplateKeyResolver;
@@ -90,12 +91,17 @@ public class XmEntityDbSearchService {
         LinkSpec linkSpec = xmEntitySpecService.getLinkSpec(entityTypeKey, linkTypeKey)
             .orElseThrow(() -> new BusinessException(ERR_VALIDATION,
                 "Link spec not found for entity type " + entityTypeKey + " and link type " + linkTypeKey));
+        XmEntityIdKeyTypeKey source = xmEntityService.getXmEntityIdKeyTypeKey(idOrKey);
+        if (!isSameOrSubType(source.getTypeKey(), entityTypeKey)) {
+            throw new BusinessException(ERR_VALIDATION, "Entity " + idOrKey + " has type " + source.getTypeKey()
+                + ", not " + entityTypeKey);
+        }
         List<FilterCondition> conditions = parseConditions(request);
         Specification<XmEntity> spec = buildSpecification(linkSpec.getTypeKey(), request.includeSubTypes(),
             request.getQuery(), conditions, root -> root);
 
         if (Boolean.TRUE.equals(linkSpec.getIsUnique())) {
-            Long sourceId = xmEntityService.getXmEntityIdKeyTypeKey(idOrKey).getId();
+            Long sourceId = source.getId();
             Set<Long> excluded = linkService.findLinkProjectionsBySourceIdAndTypeKey(sourceId, linkTypeKey).stream()
                 .map(link -> link.getTarget().getId())
                 .collect(Collectors.toCollection(HashSet::new));
@@ -156,6 +162,11 @@ public class XmEntityDbSearchService {
             throw new BusinessException(ERR_VALIDATION, "Template is not of type RAW: " + template.getKey());
         }
         return templateExecutor.executeRaw(template, params, pageable, entityToDto);
+    }
+
+    private static boolean isSameOrSubType(String actualTypeKey, String expectedTypeKey) {
+        return actualTypeKey != null
+            && (actualTypeKey.equals(expectedTypeKey) || actualTypeKey.startsWith(expectedTypeKey + "."));
     }
 
     /** Shared by entity search, link-dialog search and link target search. */
