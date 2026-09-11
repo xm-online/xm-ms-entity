@@ -14,6 +14,9 @@ types:
               "position": { "type": "number" },
               "customer": { "type": "object", "properties": { "city": { "type": "string" } } },
               "tags": { "type": "array", "items": { "type": "string" } } } }
+      tags:
+          - key: VIP
+            name: { en: "VIP" }
       links:
           - key: ORDER.ITEM
             builderType: SEARCH

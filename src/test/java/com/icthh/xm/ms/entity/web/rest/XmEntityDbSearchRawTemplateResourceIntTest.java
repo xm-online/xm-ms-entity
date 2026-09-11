@@ -6,10 +6,13 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.icthh.xm.commons.exceptions.BusinessException;
 import com.icthh.xm.ms.entity.AbstractPostgresIntTest;
+import com.icthh.xm.ms.entity.domain.Tag;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
 import com.icthh.xm.ms.entity.service.dto.XmEntityDto;
 import com.icthh.xm.ms.entity.service.search.db.template.XmEntityJpqlTemplatesService;
+import jakarta.persistence.EntityManager;
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import lombok.SneakyThrows;
@@ -30,6 +33,7 @@ public class XmEntityDbSearchRawTemplateResourceIntTest extends AbstractPostgres
     @Autowired private XmEntityDbSearchResource resource;
     @Autowired private XmEntityRepository repository;
     @Autowired private XmEntityJpqlTemplatesService templatesService;
+    @Autowired private EntityManager em;
 
     private XmEntity a;
     private XmEntity b;
@@ -78,6 +82,33 @@ public class XmEntityDbSearchRawTemplateResourceIntTest extends AbstractPostgres
         var rows = rows(resource.searchByTemplatePost("MIXED_RAW", Map.of("typeKey", "SILENT"), PageRequest.of(0, 10)).getBody());
         assertThat(rows.get(1).get("col0")).isInstanceOf(XmEntityDto.class);
         assertThat(rows.get(1).get("col1")).isEqualTo("B");
+    }
+
+    @Test
+    public void scalarOnlyProjectionReturnsPlainValues() {
+        var rows = rows(resource.searchByTemplatePost("IDS_RAW", Map.of("typeKey", "SILENT"), PageRequest.of(0, 10)).getBody());
+
+        assertThat(rows).hasSize(2);
+        assertThat(rows.get(0).get("col0")).isEqualTo(a.getId());
+        assertThat(rows.get(1).get("col0")).isEqualTo(b.getId());
+    }
+
+    @Test
+    public void entityWithoutDtoMapperIsReturnedAsIs() {
+        XmEntity order = repository.save(newEntity("ORDER", "With tag", Map.of()));
+        Tag tag = new Tag();
+        tag.setTypeKey("VIP");
+        tag.setName("vip");
+        tag.setStartDate(Instant.now());
+        tag.setXmEntity(order);
+        em.persist(tag);
+        em.flush();
+
+        var rows = rows(resource.searchByTemplatePost("TAGS_RAW", Map.of("tagTypeKey", "VIP"), PageRequest.of(0, 10)).getBody());
+
+        assertThat(rows).hasSize(1);
+        assertThat(rows.get(0).get("col0")).isInstanceOf(Tag.class);
+        assertThat(((Tag) rows.get(0).get("col0")).getId()).isEqualTo(tag.getId());
     }
 
     @Test

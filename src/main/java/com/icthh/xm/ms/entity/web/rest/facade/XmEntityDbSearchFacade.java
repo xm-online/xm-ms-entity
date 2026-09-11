@@ -1,11 +1,8 @@
 package com.icthh.xm.ms.entity.web.rest.facade;
 
-import com.icthh.xm.commons.exceptions.BusinessException;
 import com.icthh.xm.ms.entity.domain.Link;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.domain.ext.IdOrKey;
-import static com.icthh.xm.commons.exceptions.ErrorConstants.ERR_VALIDATION;
-
 import com.icthh.xm.ms.entity.service.dto.LinkDto;
 import com.icthh.xm.ms.entity.service.dto.XmEntityDto;
 import com.icthh.xm.ms.entity.service.mapper.LinkMapper;
@@ -17,7 +14,6 @@ import com.icthh.xm.ms.entity.service.search.db.template.JpqlTemplateExecutor;
 import com.icthh.xm.ms.entity.service.search.db.template.XmEntityJpqlTemplatesService;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
-import jakarta.persistence.Entity;
 import org.hibernate.Hibernate;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -67,12 +63,8 @@ public class XmEntityDbSearchFacade {
             if (value instanceof Link link) {
                 return linkMapper.toDto(link);
             }
-            if (Hibernate.getClass(value).isAnnotationPresent(Entity.class)) {
-                // other JPA entities have no DTO here: returning them would expose internals and lazy proxies
-                throw new BusinessException(ERR_VALIDATION,
-                    "RAW template selects unsupported entity type: " + Hibernate.getClass(value).getSimpleName());
-            }
-            return value;
+            // RAW templates may select anything: ids, field pairs, any entity of the service
+            return Hibernate.unproxy(value);
         });
     }
 }

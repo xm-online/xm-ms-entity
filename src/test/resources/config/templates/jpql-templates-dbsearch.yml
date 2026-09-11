@@ -16,3 +16,9 @@ ORDER_ENTITIES_RAW:
 MIXED_RAW:
   type: RAW
   query: "select e, e.name from XmEntity e where e.typeKey = :typeKey order by e.name asc"
+IDS_RAW:
+  type: RAW
+  query: "select e.id from XmEntity e where e.typeKey = :typeKey order by e.name asc"
+TAGS_RAW:
+  type: RAW
+  query: "select t from Tag t where t.typeKey = :tagTypeKey order by t.id asc"
