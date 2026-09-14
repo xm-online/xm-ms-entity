@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.icthh.xm.commons.exceptions.BusinessException;
 import com.icthh.xm.ms.entity.AbstractPostgresIntTest;
+import com.icthh.xm.ms.entity.config.SqlCaptureStatementInspector;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
 import java.time.Instant;
@@ -76,6 +77,25 @@ public class XmEntityFilterSpecificationBuilderIntTest extends AbstractPostgresI
         assertThat(ids(filter(Map.of("data.city.eq", "Kyiv")))).containsExactly(e1.getId());
         assertThat(ids(filter(Map.of("data.city.contains", "YI")))).containsExactly(e1.getId());
         assertThat(ids(filter(Map.of("data.city.notIn", List.of("Kyiv"))))).containsExactly(e2.getId());
+    }
+
+    /**
+     * ee-entity's CREATE_JSONPATH_INDEX patch builds btree indexes on
+     * {@code jsonb_path_query_first(data, '$.path'::jsonpath)}. Postgres uses an expression index only when the
+     * query contains that exact expression, so the filters must not fall back to Hibernate's built-in json_query
+     * (a scalar subquery over jsonb_path_query, which no index can serve).
+     */
+    @Test
+    public void dataFiltersRenderTheIndexedJsonbExpression() {
+        SqlCaptureStatementInspector.clear();
+        ids(filter(Map.of("data.sub.position.eq", 7, "data.orderNo.gt", 1, "data.city.specified", true)));
+
+        String sql = SqlCaptureStatementInspector.lastSelect();
+        assertThat(sql)
+            .containsPattern("jsonb_path_query_first\\(\\w+\\.data, '\\$\\.sub\\.position'::jsonpath\\)=to_jsonb\\(")
+            .containsPattern("jsonb_path_query_first\\(\\w+\\.data, '\\$\\.orderNo'::jsonpath\\)>to_jsonb\\(")
+            .containsPattern("jsonb_path_query_first\\(\\w+\\.data, '\\$\\.city'::jsonpath\\) is not null")
+            .doesNotContain("jsonb_path_query(");
     }
 
     @Test

@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.icthh.xm.commons.exceptions.BusinessException;
 import com.icthh.xm.ms.entity.AbstractPostgresIntTest;
+import com.icthh.xm.ms.entity.config.SqlCaptureStatementInspector;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
 import com.icthh.xm.ms.entity.repository.search.db.PermittedSpecificationRepository;
@@ -49,6 +50,17 @@ public class SortTranslatorIntTest extends AbstractPostgresIntTest {
     public void sortsByColumn() {
         assertThat(namesSortedBy(Sort.by(Sort.Direction.ASC, "name"))).containsExactly("a", "b", "c");
         assertThat(namesSortedBy(Sort.by(Sort.Direction.DESC, "name"))).containsExactly("c", "b", "a");
+    }
+
+    /** Same expression as the CREATE_JSONPATH_INDEX btree index, so an ordered index scan is possible. */
+    @Test
+    public void sortByDataPathRendersTheIndexedJsonbExpression() {
+        SqlCaptureStatementInspector.clear();
+        namesSortedBy(Sort.by(Sort.Direction.ASC, "data.orderNo"));
+
+        assertThat(SqlCaptureStatementInspector.lastSelect())
+            .containsPattern("order by jsonb_path_query_first\\(\\w+\\.data, '\\$\\.orderNo'::jsonpath\\)")
+            .doesNotContain("jsonb_path_query(");
     }
 
     @Test

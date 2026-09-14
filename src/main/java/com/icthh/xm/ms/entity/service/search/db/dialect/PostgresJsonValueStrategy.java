@@ -1,8 +1,8 @@
 package com.icthh.xm.ms.entity.service.search.db.dialect;
 
-import static com.icthh.xm.commons.migration.db.jsonb.CustomDialect.JSON_QUERY;
 import static com.icthh.xm.commons.migration.db.jsonb.CustomPostgreSQLDialect.TO_JSON_B;
 import static com.icthh.xm.commons.migration.db.jsonb.CustomPostgreSQLDialect.TO_JSON_B_TEXT;
+import static com.icthh.xm.ms.entity.config.jsonb.PostgresJsonFunctionContributor.JSON_QUERY;
 
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.Expression;
@@ -12,9 +12,11 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.stereotype.Component;
 
 /**
- * Postgres: {@code json_query(data, '$.path')} renders {@code jsonb_path_query_first(...)} and returns jsonb, so
+ * Postgres: {@code xm_json_query(data, '$.path')} renders {@code jsonb_path_query_first(data, '$.path'::jsonpath)}
+ * (see {@link com.icthh.xm.ms.entity.config.jsonb.PostgresJsonFunctionContributor}) and returns jsonb, so
  * comparisons are jsonb-to-jsonb and numbers compare numerically without any type hint. Literals are wrapped
- * with {@code to_jsonb}, which is why {@code operand} is not needed here.
+ * with {@code to_jsonb}, which is why {@code operand} is not needed here. The expression is the one the tenant
+ * db patches build btree indexes on, so filters and sorts by a data path can use those indexes.
  */
 @Component
 @ConditionalOnExpression("'${spring.datasource.url}'.startsWith('jdbc:postgresql:')")

@@ -15,8 +15,14 @@ import org.junit.platform.launcher.TestPlan;
 
 /**
  * Releases the resources shared by the database-backed integration tests as early as possible: once the last
- * test class extending a given base class has finished, its Spring context is closed and its container stopped,
- * so the rest of the suite does not run next to an idle Oracle or PostgreSQL and a second cached context.
+ * test class extending any of the database base classes has finished, the Spring contexts are closed and the
+ * containers stopped, so the rest of the suite (the H2-backed classes) does not run next to an idle Oracle or
+ * PostgreSQL and two more cached contexts.
+ *
+ * <p>The contexts are released together, not per database. JPA entity listeners such as
+ * {@code XmEntityElasticSearchListener} reach their Spring beans through static fields that the most recently
+ * refreshed context overwrites, so closing the Oracle context while PostgreSQL classes are still pending would
+ * make those classes call into a closed context.
  *
  * <p>Registered through {@code META-INF/services/org.junit.platform.launcher.TestExecutionListener}, so it applies
  * to Gradle and IDE runs alike. Everything is also released when the test plan ends, as a safety net.
@@ -56,11 +62,13 @@ public class DatabaseTestResourcesListener implements TestExecutionListener {
     }
 
     private void classDone(TestIdentifier identifier) {
-        pendingClasses.forEach((base, pending) -> {
-            if (pending.remove(identifier.getUniqueIdObject()) && pending.isEmpty()) {
-                RELEASERS.get(base).run();
-            }
-        });
+        boolean removed = false;
+        for (Set<UniqueId> pending : pendingClasses.values()) {
+            removed |= pending.remove(identifier.getUniqueIdObject());
+        }
+        if (removed && pendingClasses.values().stream().allMatch(Set::isEmpty)) {
+            RELEASERS.values().forEach(Runnable::run);
+        }
     }
 
     @Override
