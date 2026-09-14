@@ -1,6 +1,7 @@
 package com.icthh.xm.ms.entity.service.search.db.filter;
 
 import static com.icthh.xm.commons.exceptions.ErrorConstants.ERR_VALIDATION;
+import static org.apache.commons.lang3.StringUtils.unwrap;
 
 import com.icthh.xm.commons.exceptions.BusinessException;
 import java.util.ArrayList;
@@ -88,6 +89,11 @@ public class FilterParser {
     }
 
     private static Object inferType(String raw) {
+        String unquoted = unquote(raw);
+        if (!unquoted.equals(raw)) {
+            // quoted text stays text, so "true" or "5" can be matched against a string field
+            return unquoted;
+        }
         if (LONG.matcher(raw).matches()) {
             return Long.valueOf(raw);
         }
@@ -98,6 +104,12 @@ public class FilterParser {
             return Boolean.valueOf(raw);
         }
         return raw;
+    }
+
+    /** Strips one layer of double or single quotes; unquoted text is returned as is. */
+    private static String unquote(String raw) {
+        String unwrapped = unwrap(raw, '"');
+        return unwrapped.equals(raw) ? unwrap(raw, '\'') : unwrapped;
     }
 
     private static ParsedKey parseKey(String key) {

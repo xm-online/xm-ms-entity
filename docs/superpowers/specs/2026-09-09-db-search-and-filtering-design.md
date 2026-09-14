@@ -20,7 +20,7 @@ functionality backed by the relational DB (Postgres primary, Oracle fallback).
 | JPQL templates | Two template types. `ENTITY` (default): WHERE-fragment over alias `entity`, returns XmEntity, row-level permissions applied, sortable. `RAW`: full JPQL with its own `select`, rows returned as maps, no row-level wrapping. Named params bound via `setParameter`. Resource-level privilege carries `templateKey` and params so tenants can restrict per template. |
 | Alias | The alias exposed to tenant templates and to the permission merge is `entity` (not xm-commons' `returnObject`). The translated permission condition has `returnObject` rewritten to `entity` before merging. |
 | Privileges | New family `XMENTITY.SEARCH.DB.*`. Do not reuse `XMENTITY.SEARCH`. |
-| typeKey matching | Default includes dotted subtypes (`ORDER`, `ORDER.*`). `includeSubTypes=false` matches the exact typeKey only. |
+| typeKey matching | Default includes dotted subtypes: `type_key in (...)` over the non-abstract type keys the spec declares under the prefix, so the `type_key` index is used and a type key absent from the spec never matches. `includeSubTypes=false` matches the exact typeKey only. |
 | Tests | No H2 emulation of json functions. All new integration tests run on Postgres via Testcontainers (`pg-test` profile). |
 | Backfill | Admin endpoint `POST /_search-db/xm-entities/reindex` recomputes `search_text` for existing rows. |
 
@@ -75,6 +75,7 @@ Operators:
 | `eq`, `notEq` | `=` / `<>` | `json_query(data,path) = to_jsonb(:v)` | `json_value(data,path) = :v` (text) |
 | `in`, `notIn` | `in (...)` | jsonb `in (to_jsonb(:v1), ...)` | text `in (...)` |
 | `contains` | `lower(col) like lower('%v%')` | `jsonb_extract_path_text(...) ilike '%v%'` | `lower(json_value(...)) like` |
+| `startsWith`, `endsWith` | as `contains`, pattern anchored `'v%'` / `'%v'` | same | same |
 | `specified` | `is [not] null` | `json_query(...) is [not] null` | same |
 | `gt`, `gte`, `lt`, `lte` | typed comparison | jsonb comparison (numeric for numbers) | text comparison (documented limitation) |
 | `has` | not supported (400) | `jsonb_path_exists(data, '$.path[*]?(@ == $v)', jsonb_build_object('v', :v))` | not supported (400) |
@@ -87,7 +88,9 @@ like `eq`; a missing path is no match. Postgres only: Hibernate 7.3 cannot bind 
 `json_exists ... passing` clause, so Oracle rejects `has` with 400.
 
 Value typing for data fields: POST keeps JSON types (number, string, boolean). GET values are
-parsed as number, then boolean, then string. Unknown field, unknown op, unparsable value or
+parsed as number, then boolean, then string. A GET value wrapped in double or single quotes keeps one
+layer off and stays a string, so `data.flag.eq="true"` compares with the text `true` and
+`data.code.eq='42'` with the text `42`. Unknown field, unknown op, unparsable value or
 non-whitelisted sort property produce `400 ERR_VALIDATION`.
 
 ### 3.3 Sorting

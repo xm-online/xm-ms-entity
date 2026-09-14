@@ -36,7 +36,7 @@ public class JpqlTemplateExecutor {
         TypedQuery<Tuple> query = em.createQuery(template.getQuery(), Tuple.class);
         QueryParams.bind(query, params);
         if (pageable != null && pageable.isPaged()) {
-            query.setFirstResult(QueryParams.offset(pageable));
+            query.setFirstResult((int) pageable.getOffset());
             query.setMaxResults(pageable.getPageSize());
         }
         List<Map<String, Object>> rows = query.getResultList().stream().map(tuple -> toRow(tuple, entityToDto)).toList();

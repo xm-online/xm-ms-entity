@@ -102,16 +102,17 @@ public class XmEntityDbSearchTemplateResourceIntTest extends AbstractPostgresInt
 
     @Test
     @WithMockUser(username = "u1", authorities = "SUPER-ADMIN")
-    public void subjectParamsCanNotBeSpoofedByClient() {
+    public void subjectParamsOverwriteTheSameNamesSentByClient() {
+        XmEntity mine = repository.save(newEntity("ORDER", "mine", Map.of()).createdBy("u1"));
         repository.save(newEntity("ORDER", "victim", Map.of()).createdBy("victim"));
 
-        assertThatThrownBy(() -> resource.searchByTemplatePost("MY_ORDERS", Map.of("subjectLogin", "victim"), PageRequest.of(0, 10)))
-            .isInstanceOf(BusinessException.class).hasMessageContaining("subjectLogin");
+        var post = resource.searchByTemplatePost("MY_ORDERS", Map.of("subjectLogin", "victim"), PageRequest.of(0, 10));
+        assertThat(entities(post.getBody())).extracting(XmEntityDto::getId).containsExactly(mine.getId());
 
         var params = new LinkedMultiValueMap<String, String>();
         params.add("subjectLogin", "victim");
-        assertThatThrownBy(() -> resource.searchByTemplateGet("MY_ORDERS", params, PageRequest.of(0, 10)))
-            .isInstanceOf(BusinessException.class).hasMessageContaining("subjectLogin");
+        var get = resource.searchByTemplateGet("MY_ORDERS", params, PageRequest.of(0, 10));
+        assertThat(entities(get.getBody())).extracting(XmEntityDto::getId).containsExactly(mine.getId());
     }
 
     @Test

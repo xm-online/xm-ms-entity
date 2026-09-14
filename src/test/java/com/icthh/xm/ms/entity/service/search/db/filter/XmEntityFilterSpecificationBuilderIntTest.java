@@ -141,6 +141,18 @@ public class XmEntityFilterSpecificationBuilderIntTest extends AbstractPostgresI
     }
 
     @Test
+    public void startsWithAndEndsWithOnColumnsAndData() {
+        assertThat(ids(filter(Map.of("name.startsWith", "alpha")))).containsExactly(e1.getId());
+        assertThat(ids(filter(Map.of("name.endsWith", "ORDER")))).containsExactlyInAnyOrder(e1.getId(), e2.getId());
+        assertThat(ids(filter(Map.of("name.startsWith", "lpha")))).isEmpty();
+        assertThat(ids(filter(Map.of("data.city.startsWith", "ky")))).containsExactly(e1.getId());
+        assertThat(ids(filter(Map.of("data.city.endsWith", "VIV")))).containsExactly(e2.getId());
+        assertThat(ids(filter(Map.of("data.city.startsWith", "yiv")))).isEmpty();
+        // the pattern is escaped, so wildcards typed by the client are literal
+        assertThat(ids(filter(Map.of("name.startsWith", "%")))).isEmpty();
+    }
+
+    @Test
     public void typeKeyWithAndWithoutSubTypes() {
         XmEntity sub = repository.save(newEntity("ORDER.EXPRESS", "Sub", Map.of()));
         XmEntity parent = repository.save(newEntity("ORDER", "Parent", Map.of()));
@@ -151,6 +163,13 @@ public class XmEntityFilterSpecificationBuilderIntTest extends AbstractPostgresI
 
         assertThat(withSub).contains(parent.getId(), sub.getId()).doesNotContain(lookalike.getId());
         assertThat(exact).contains(parent.getId()).doesNotContain(sub.getId(), lookalike.getId());
+    }
+
+    /** Subtypes come from the spec, so a prefix with no declared type matches nothing instead of scanning by like. */
+    @Test
+    public void typeKeyWithoutDeclaredTypesMatchesNothing() {
+        repository.save(newEntity("ORDER", "Parent", Map.of()));
+        assertThat(repository.findAll(builder.<XmEntity>typeKey("NO_SUCH_TYPE", true, root -> root))).isEmpty();
     }
 
     @Test

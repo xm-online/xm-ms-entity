@@ -65,7 +65,8 @@ public class XmEntityDbSearchResource extends TransactionPropagationService<XmEn
     }
 
     @PostMapping(value = "/_search-db/xm-entities", produces = MediaType.APPLICATION_JSON_VALUE)
-    @PreAuthorize("hasPermission({'typeKey': #request.typeKey, 'query': #request.query, 'filter': #request.filter}, 'XMENTITY.SEARCH.DB.QUERY')")
+    @PreAuthorize("hasPermission({'typeKey': #request.typeKey, 'includeSubTypes': #request.includeSubTypes(),"
+        + " 'query': #request.query, 'filter': #request.filter}, 'XMENTITY.SEARCH.DB.QUERY')")
     @PrivilegeDescription("Privilege to search xm entities in DB by typeKey, full text query and filters")
     public ResponseEntity<List<XmEntityDto>> searchPost(@RequestBody XmEntityDbSearchRequest request,
                                                         @ParameterObject Pageable pageable) {
@@ -94,7 +95,9 @@ public class XmEntityDbSearchResource extends TransactionPropagationService<XmEn
     }
 
     @PostMapping(value = "/_search-db/xm-entities/{entityTypeKey}/{idOrKey}/links/{linkTypeKey}", produces = MediaType.APPLICATION_JSON_VALUE)
-    @PreAuthorize("hasPermission({'entityTypeKey': #entityTypeKey, 'idOrKey': #idOrKey, 'linkTypeKey': #linkTypeKey, 'query': #request.query, 'filter': #request.filter}, 'XMENTITY.SEARCH.DB.TO_LINK')")
+    @PreAuthorize("hasPermission({'entityTypeKey': #entityTypeKey, 'idOrKey': #idOrKey, 'linkTypeKey': #linkTypeKey,"
+        + " 'includeSubTypes': #request.includeSubTypes(), 'query': #request.query, 'filter': #request.filter},"
+        + " 'XMENTITY.SEARCH.DB.TO_LINK')")
     @PrivilegeDescription("Privilege to search link candidates in DB for an xm entity and link type")
     public ResponseEntity<List<XmEntityDto>> searchToLinkPost(@PathVariable String entityTypeKey,
                                                               @PathVariable String idOrKey,
@@ -122,7 +125,9 @@ public class XmEntityDbSearchResource extends TransactionPropagationService<XmEn
     }
 
     @PostMapping(value = "/_search-db/xm-entities/{idOrKey}/targets/{linkTypeKey}", produces = MediaType.APPLICATION_JSON_VALUE)
-    @PreAuthorize("hasPermission({'idOrKey': #idOrKey, 'linkTypeKey': #linkTypeKey, 'query': #request.query, 'filter': #request.filter}, 'LINK.SEARCH.DB.TARGETS')")
+    @PreAuthorize("hasPermission({'idOrKey': #idOrKey, 'linkTypeKey': #linkTypeKey, 'typeKey': #request.typeKey,"
+        + " 'includeSubTypes': #request.includeSubTypes(), 'query': #request.query, 'filter': #request.filter},"
+        + " 'LINK.SEARCH.DB.TARGETS')")
     @PrivilegeDescription("Privilege to search links of a source xm entity in DB filtered by target fields")
     public ResponseEntity<List<LinkDto>> searchTargetsPost(@PathVariable String idOrKey,
                                                            @PathVariable String linkTypeKey,

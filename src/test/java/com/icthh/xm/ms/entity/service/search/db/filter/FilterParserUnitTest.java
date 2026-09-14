@@ -48,6 +48,30 @@ public class FilterParserUnitTest extends AbstractJupiterUnitTest {
     }
 
     @Test
+    public void quotedQueryParamValuesStayStrings() {
+        List<FilterCondition> conditions = parser.parseQueryParams(Map.of(
+            "data.flag.eq", List.of("\"true\""),
+            "data.code.eq", List.of("'42'"),
+            "data.tags.in", List.of("\"1\",two"),
+            "data.quote.eq", List.of("\"")));
+
+        assertThat(conditions).containsExactlyInAnyOrder(
+            new FilterCondition("data.flag", FilterOperator.EQ, List.of("true")),
+            new FilterCondition("data.code", FilterOperator.EQ, List.of("42")),
+            new FilterCondition("data.tags", FilterOperator.IN, List.of("1", "two")),
+            // a lone quote is not a wrapper and is kept as is
+            new FilterCondition("data.quote", FilterOperator.EQ, List.of("\"")));
+    }
+
+    @Test
+    public void parsesStartsWithAndEndsWith() {
+        assertThat(parser.parseQueryParams(Map.of("name.startsWith", List.of("Al"))))
+            .containsExactly(new FilterCondition("name", FilterOperator.STARTS_WITH, List.of("Al")));
+        assertThat(parser.parseBody(Map.of("data.city.endsWith", "iv")))
+            .containsExactly(new FilterCondition("data.city", FilterOperator.ENDS_WITH, List.of("iv")));
+    }
+
+    @Test
     public void dataJsonPathIsDerivedFromField() {
         FilterCondition c = new FilterCondition("data.subObject.position", FilterOperator.EQ, List.of(5));
         assertThat(c.isDataField()).isTrue();

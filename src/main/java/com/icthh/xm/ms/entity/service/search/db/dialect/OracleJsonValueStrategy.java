@@ -19,8 +19,8 @@ import org.springframework.stereotype.Component;
  * {@code jsonValue} renders {@code JSON_VALUE(data, '$.path' RETURNING <type>)}. Without the type Oracle would
  * compare numbers as text and rank {@code 10} before {@code 2}.
  *
- * <p>The type comes from the value being compared with. An expression without an operand (a null check, or an
- * {@code order by}) falls back to text, so ordering by a numeric json path is lexical on Oracle.
+ * <p>The type comes from the value being compared with. An expression without an operand (a null check) falls
+ * back to text; ordering has no operand either and is handled by {@link #orderExpressions}.
  */
 @Component
 @ConditionalOnExpression("'${spring.datasource.url}'.startsWith('jdbc:oracle:')")

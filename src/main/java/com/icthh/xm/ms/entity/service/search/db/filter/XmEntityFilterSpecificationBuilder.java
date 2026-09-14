@@ -5,6 +5,8 @@ import static com.icthh.xm.commons.exceptions.ErrorConstants.ERR_VALIDATION;
 import com.icthh.xm.commons.exceptions.BusinessException;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.domain.XmEntity_;
+import com.icthh.xm.ms.entity.domain.spec.TypeSpec;
+import com.icthh.xm.ms.entity.service.XmEntitySpecService;
 import com.icthh.xm.ms.entity.service.search.db.dialect.JsonValueStrategy;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.Expression;
@@ -33,6 +35,7 @@ public class XmEntityFilterSpecificationBuilder {
 
     private final JsonValueStrategy jsonValueStrategy;
     private final XmEntityColumns columns;
+    private final XmEntitySpecService xmEntitySpecService;
 
     public Specification<XmEntity> build(List<FilterCondition> conditions) {
         return build(conditions, root -> root);
@@ -51,12 +54,23 @@ public class XmEntityFilterSpecificationBuilder {
         };
     }
 
+    /**
+     * Subtypes are matched by {@code in} over the type keys declared in the spec, not by a {@code like} on the
+     * column, so the type_key index is used. A prefix with no concrete type below it matches nothing.
+     */
     public <T> Specification<T> typeKey(String typeKey, boolean includeSubTypes, Function<Root<T>, Path<XmEntity>> entityPath) {
         return (root, query, cb) -> {
             Path<String> path = entityPath.apply(root).get(XmEntity_.typeKey);
-            Predicate exact = cb.equal(path, typeKey);
-            return includeSubTypes ? cb.or(exact, cb.like(path, typeKey + ".%")) : exact;
+            if (!includeSubTypes) {
+                return cb.equal(path, typeKey);
+            }
+            List<String> typeKeys = subTypeKeys(typeKey);
+            return typeKeys.isEmpty() ? cb.disjunction() : path.in(typeKeys);
         };
+    }
+
+    private List<String> subTypeKeys(String typeKey) {
+        return xmEntitySpecService.findNonAbstractTypesByPrefix(typeKey).stream().map(TypeSpec::getKey).toList();
     }
 
     public <T> Specification<T> notRemoved(Function<Root<T>, Path<XmEntity>> entityPath) {
@@ -67,8 +81,8 @@ public class XmEntityFilterSpecificationBuilder {
     }
 
     public <T> Specification<T> fullText(String query, Function<Root<T>, Path<XmEntity>> entityPath) {
-        return (root, cq, cb) -> ((HibernateCriteriaBuilder) cb).ilike(
-            entityPath.apply(root).get(XmEntity_.searchText), "%" + escapeLike(query) + "%", ESCAPE);
+        return (root, cq, cb) -> ilike(cb, entityPath.apply(root).get(XmEntity_.searchText),
+            "%" + escapeLike(query) + "%");
     }
 
     /**
@@ -85,6 +99,20 @@ public class XmEntityFilterSpecificationBuilder {
         return value.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_");
     }
 
+    private static Predicate ilike(CriteriaBuilder cb, Expression<String> text, String pattern) {
+        return ((HibernateCriteriaBuilder) cb).ilike(text, pattern, ESCAPE);
+    }
+
+    /** {@code contains} matches anywhere, {@code startsWith} and {@code endsWith} anchor one side. */
+    private static String likePattern(FilterOperator operator, Object value) {
+        String escaped = escapeLike(String.valueOf(value));
+        return switch (operator) {
+            case STARTS_WITH -> escaped + "%";
+            case ENDS_WITH -> "%" + escaped;
+            default -> "%" + escaped + "%";
+        };
+    }
+
     // ---- data.* ----
 
     @SuppressWarnings({"unchecked", "rawtypes"})
@@ -98,8 +126,8 @@ public class XmEntityFilterSpecificationBuilder {
             case NOT_EQ -> cb.notEqual(value, jsonValueStrategy.literal(cb, c.singleValue()));
             case IN -> value.in(c.values().stream().map(v -> jsonValueStrategy.literal(cb, v)).toList());
             case NOT_IN -> cb.not(value.in(c.values().stream().map(v -> jsonValueStrategy.literal(cb, v)).toList()));
-            case CONTAINS -> ((HibernateCriteriaBuilder) cb).ilike(jsonValueStrategy.jsonText(cb, data, jsonPath),
-                "%" + escapeLike(String.valueOf(c.singleValue())) + "%", ESCAPE);
+            case CONTAINS, STARTS_WITH, ENDS_WITH -> ilike(cb, jsonValueStrategy.jsonText(cb, data, jsonPath),
+                likePattern(c.operator(), c.singleValue()));
             case HAS -> jsonValueStrategy.arrayHas(cb, data, jsonPath, c.singleValue());
             case SPECIFIED -> Boolean.TRUE.equals(c.singleValue()) ? cb.isNotNull(value) : cb.isNull(value);
             case GT -> cb.greaterThan(value, (Expression) jsonValueStrategy.literal(cb, c.singleValue()));
@@ -122,8 +150,8 @@ public class XmEntityFilterSpecificationBuilder {
             case NOT_EQ -> cb.notEqual(path, value);
             case IN -> path.in(values);
             case NOT_IN -> cb.not(path.in(values));
-            case CONTAINS -> ((HibernateCriteriaBuilder) cb).ilike(path.as(String.class),
-                "%" + escapeLike(String.valueOf(c.singleValue())) + "%", ESCAPE);
+            case CONTAINS, STARTS_WITH, ENDS_WITH -> ilike(cb, path.as(String.class),
+                likePattern(c.operator(), c.singleValue()));
             case HAS -> throw new BusinessException(ERR_VALIDATION,
                 "Filter operator has is supported for data fields only: " + c.field());
             case SPECIFIED -> Boolean.TRUE.equals(c.singleValue()) ? cb.isNotNull(path) : cb.isNull(path);

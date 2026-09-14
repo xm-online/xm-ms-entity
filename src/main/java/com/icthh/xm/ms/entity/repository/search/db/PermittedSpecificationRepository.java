@@ -83,7 +83,7 @@ public class PermittedSpecificationRepository {
         TypedQuery<R> query = em.createQuery(criteria);
         QueryParams.bind(query, params);
         if (pageable != null && pageable.isPaged()) {
-            query.setFirstResult(QueryParams.offset(pageable));
+            query.setFirstResult((int) pageable.getOffset());
             query.setMaxResults(pageable.getPageSize());
         }
         log.debug("DB search query: {} params: {}", criteria, params);

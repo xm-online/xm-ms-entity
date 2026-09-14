@@ -1,18 +1,12 @@
 package com.icthh.xm.ms.entity.service.search.db.template;
 
-import static com.icthh.xm.commons.exceptions.ErrorConstants.ERR_VALIDATION;
 import static com.icthh.xm.commons.tenant.TenantContextUtils.getRequiredTenantKeyValue;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import com.icthh.xm.commons.config.client.api.RefreshableConfiguration;
-import com.icthh.xm.commons.exceptions.BusinessException;
 import com.icthh.xm.commons.exceptions.EntityNotFoundException;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.YamlMapperUtils;
-import com.icthh.xm.ms.entity.service.search.db.filter.BooleanValues;
-import java.time.Instant;
-import java.time.format.DateTimeParseException;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -54,31 +48,6 @@ public class XmEntityJpqlTemplatesService implements RefreshableConfiguration {
             throw new EntityNotFoundException("JPQL template not found: " + templateKey);
         }
         return template;
-    }
-
-    /** Converts String values (GET query params) to the types declared in {@link JpqlTemplate#getParams()}. */
-    public Map<String, Object> applyParamTypes(JpqlTemplate template, Map<String, ?> params) {
-        Map<String, String> types = template.getParams() == null ? Map.of() : template.getParams();
-        Map<String, Object> result = new HashMap<>();
-        params.forEach((name, value) -> result.put(name, convert(name, types.get(name), value)));
-        return result;
-    }
-
-    private static Object convert(String name, String type, Object value) {
-        if (type == null || !(value instanceof String text)) {
-            return value;
-        }
-        try {
-            return switch (type) {
-                case "number" -> text.contains(".") ? (Object) Double.valueOf(text) : (Object) Long.valueOf(text);
-                case "boolean" -> BooleanValues.parse(name, text);
-                case "instant" -> Instant.parse(text);
-                case "list" -> Arrays.stream(text.split(",")).map(String::trim).toList();
-                default -> text;
-            };
-        } catch (NumberFormatException | DateTimeParseException e) {
-            throw new BusinessException(ERR_VALIDATION, "Invalid value for template param " + name + ": " + value);
-        }
     }
 
     @Override
