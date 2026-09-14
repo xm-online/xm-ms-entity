@@ -4,6 +4,7 @@ import com.icthh.xm.ms.entity.service.search.db.dialect.JsonValueStrategy;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Path;
+import jakarta.persistence.criteria.Predicate;
 import org.apache.commons.lang3.NotImplementedException;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.stereotype.Component;
@@ -30,6 +31,11 @@ public class H2JsonValueStrategy implements JsonValueStrategy {
 
     @Override
     public Expression<String> jsonText(CriteriaBuilder cb, Path<?> dataColumn, String jsonPath) {
+        throw new NotImplementedException(MESSAGE);
+    }
+
+    @Override
+    public Predicate arrayHas(CriteriaBuilder cb, Path<?> dataColumn, String jsonPath, Object value) {
         throw new NotImplementedException(MESSAGE);
     }
 

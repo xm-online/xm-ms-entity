@@ -36,8 +36,10 @@ public class XmEntityFilterSpecificationBuilderIntTest extends AbstractPostgresI
     @BeforeEach
     public void seed() {
         pushDbSearchSpec();
-        e1 = repository.save(newEntity(TYPE, "Alpha order", Map.of("orderNo", 1, "sub", Map.of("position", 5), "city", "Kyiv")));
-        e2 = repository.save(newEntity(TYPE, "Beta order", Map.of("orderNo", 2, "sub", Map.of("position", 7), "city", "Lviv")));
+        e1 = repository.save(newEntity(TYPE, "Alpha order", Map.of("orderNo", 1, "sub", Map.of("position", 5), "city", "Kyiv",
+            "categories", List.of("tech", "ai", "claude"), "codes", List.of(7, 42))));
+        e2 = repository.save(newEntity(TYPE, "Beta order", Map.of("orderNo", 2, "sub", Map.of("position", 7), "city", "Lviv",
+            "categories", List.of("claude-code", "ai"), "codes", List.of("7"))));
         e3 = repository.save(newEntity(TYPE, "Gamma", Map.of("orderNo", 10)));
         e3.setRemoved(true);
         e3.setStateKey("CLOSED");
@@ -77,6 +79,31 @@ public class XmEntityFilterSpecificationBuilderIntTest extends AbstractPostgresI
         assertThat(ids(filter(Map.of("data.city.eq", "Kyiv")))).containsExactly(e1.getId());
         assertThat(ids(filter(Map.of("data.city.contains", "YI")))).containsExactly(e1.getId());
         assertThat(ids(filter(Map.of("data.city.notIn", List.of("Kyiv"))))).containsExactly(e2.getId());
+    }
+
+    @Test
+    public void dataArrayHasElement() {
+        assertThat(ids(filter(Map.of("data.categories.has", "claude")))).containsExactly(e1.getId());
+        assertThat(ids(filter(Map.of("data.categories.has", "ai")))).containsExactlyInAnyOrder(e1.getId(), e2.getId());
+        // exact element, not a substring: "claude" does not match "claude-code"
+        assertThat(ids(filter(Map.of("data.categories.has", "clau")))).isEmpty();
+        // contains on the same path is the substring match over the array text
+        assertThat(ids(filter(Map.of("data.categories.contains", "claude")))).containsExactlyInAnyOrder(e1.getId(), e2.getId());
+        // compared with the JSON type of the value: number 7 is not the string "7"
+        assertThat(ids(filter(Map.of("data.codes.has", 7)))).containsExactly(e1.getId());
+        assertThat(ids(filter(Map.of("data.codes.has", "7")))).containsExactly(e2.getId());
+        // a missing path is no match; a scalar at the path is a one-element array (lax json path mode)
+        assertThat(ids(filter(Map.of("data.missing.has", "x")))).isEmpty();
+        assertThat(ids(filter(Map.of("data.city.has", "Kyiv")))).containsExactly(e1.getId());
+        // GET form: string values keep their inferred type
+        assertThat(ids(builder.build(parser.parseQueryParams(Map.of("data.codes.has", List.of("42"))))))
+            .containsExactly(e1.getId());
+    }
+
+    @Test
+    public void hasIsRejectedForColumnFields() {
+        assertThatThrownBy(() -> ids(filter(Map.of("name.has", "x"))))
+            .isInstanceOf(BusinessException.class).hasMessageContaining("has");
     }
 
     /**

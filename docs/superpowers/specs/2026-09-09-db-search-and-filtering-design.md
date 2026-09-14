@@ -77,6 +77,14 @@ Operators:
 | `contains` | `lower(col) like lower('%v%')` | `jsonb_extract_path_text(...) ilike '%v%'` | `lower(json_value(...)) like` |
 | `specified` | `is [not] null` | `json_query(...) is [not] null` | same |
 | `gt`, `gte`, `lt`, `lte` | typed comparison | jsonb comparison (numeric for numbers) | text comparison (documented limitation) |
+| `has` | not supported (400) | `jsonb_path_exists(data, '$.path[*]?(@ == $v)', jsonb_build_object('v', :v))` | not supported (400) |
+
+`has` is array membership: `data.tags.has=vip` matches an entity whose `data.tags` array contains the element
+`"vip"` exactly (`contains` on the same path is a substring match over the array text and also matches `vip2`).
+The element is compared with the JSON type of the value, so `data.codes.has=7` matches the number `7`, not `"7"`.
+A scalar at the path is treated as a one-element array (lax JSON path mode), so `has` on a scalar field behaves
+like `eq`; a missing path is no match. Postgres only: Hibernate 7.3 cannot bind the value in the Oracle
+`json_exists ... passing` clause, so Oracle rejects `has` with 400.
 
 Value typing for data fields: POST keeps JSON types (number, string, boolean). GET values are
 parsed as number, then boolean, then string. Unknown field, unknown op, unparsable value or

@@ -1,8 +1,12 @@
 package com.icthh.xm.ms.entity.service.search.db.dialect;
 
+import static com.icthh.xm.commons.exceptions.ErrorConstants.ERR_VALIDATION;
+
+import com.icthh.xm.commons.exceptions.BusinessException;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Path;
+import jakarta.persistence.criteria.Predicate;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.List;
@@ -46,6 +50,15 @@ public class OracleJsonValueStrategy implements JsonValueStrategy {
     @Override
     public Expression<String> jsonText(CriteriaBuilder cb, Path<?> dataColumn, String jsonPath) {
         return ((HibernateCriteriaBuilder) cb).jsonValue(dataColumn, jsonPath, String.class);
+    }
+
+    /**
+     * Not supported on Oracle: Hibernate cannot bind the compared value in the {@code json_exists} passing clause
+     * (7.3), and an inlined value would force a hard parse per value. Use Postgres for array filters.
+     */
+    @Override
+    public Predicate arrayHas(CriteriaBuilder cb, Path<?> dataColumn, String jsonPath, Object value) {
+        throw new BusinessException(ERR_VALIDATION, "Filter operator has is not supported on Oracle");
     }
 
     /** SQL type of the RETURNING clause, derived from the value the json value is compared with. */

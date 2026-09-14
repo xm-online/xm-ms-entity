@@ -1,7 +1,9 @@
 package com.icthh.xm.ms.entity.web.rest;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.icthh.xm.commons.exceptions.BusinessException;
 import com.icthh.xm.ms.entity.AbstractOracleIntTest;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
 import com.icthh.xm.ms.entity.service.dto.XmEntityDto;
@@ -81,6 +83,12 @@ public class XmEntityDbSearchOracleIntTest extends AbstractOracleIntTest {
     public void stringDataFieldEqualityAndContains() {
         assertThat(names(Map.of("data.customer.city.eq", "Kyiv"), Sort.unsorted())).containsExactly("one");
         assertThat(names(Map.of("data.customer.city.contains", "HARK"), Sort.unsorted())).containsExactly("ten");
+    }
+
+    @Test
+    public void hasOperatorIsRejectedOnOracle() {
+        assertThatThrownBy(() -> names(Map.of("data.tags.has", "claude"), Sort.unsorted()))
+            .isInstanceOf(BusinessException.class).hasMessageContaining("not supported on Oracle");
     }
 
     @Test

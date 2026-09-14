@@ -5,7 +5,9 @@ import java.util.Optional;
 
 public enum FilterOperator {
     EQ("eq"), NOT_EQ("notEq"), IN("in"), NOT_IN("notIn"), CONTAINS("contains"),
-    SPECIFIED("specified"), GT("gt"), GTE("gte"), LT("lt"), LTE("lte");
+    SPECIFIED("specified"), GT("gt"), GTE("gte"), LT("lt"), LTE("lte"),
+    /** JSON array at the data path has an element equal to the value; data fields only. */
+    HAS("has");
 
     private final String suffix;
 

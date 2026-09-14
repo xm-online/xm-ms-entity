@@ -100,6 +100,7 @@ public class XmEntityFilterSpecificationBuilder {
             case NOT_IN -> cb.not(value.in(c.values().stream().map(v -> jsonValueStrategy.literal(cb, v)).toList()));
             case CONTAINS -> ((HibernateCriteriaBuilder) cb).ilike(jsonValueStrategy.jsonText(cb, data, jsonPath),
                 "%" + escapeLike(String.valueOf(c.singleValue())) + "%", ESCAPE);
+            case HAS -> jsonValueStrategy.arrayHas(cb, data, jsonPath, c.singleValue());
             case SPECIFIED -> Boolean.TRUE.equals(c.singleValue()) ? cb.isNotNull(value) : cb.isNull(value);
             case GT -> cb.greaterThan(value, (Expression) jsonValueStrategy.literal(cb, c.singleValue()));
             case GTE -> cb.greaterThanOrEqualTo(value, (Expression) jsonValueStrategy.literal(cb, c.singleValue()));
@@ -123,6 +124,8 @@ public class XmEntityFilterSpecificationBuilder {
             case NOT_IN -> cb.not(path.in(values));
             case CONTAINS -> ((HibernateCriteriaBuilder) cb).ilike(path.as(String.class),
                 "%" + escapeLike(String.valueOf(c.singleValue())) + "%", ESCAPE);
+            case HAS -> throw new BusinessException(ERR_VALIDATION,
+                "Filter operator has is supported for data fields only: " + c.field());
             case SPECIFIED -> Boolean.TRUE.equals(c.singleValue()) ? cb.isNotNull(path) : cb.isNull(path);
             case GT -> cb.greaterThan(path, (Comparable) value);
             case GTE -> cb.greaterThanOrEqualTo(path, (Comparable) value);

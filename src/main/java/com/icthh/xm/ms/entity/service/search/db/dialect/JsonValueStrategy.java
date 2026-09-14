@@ -3,6 +3,7 @@ package com.icthh.xm.ms.entity.service.search.db.dialect;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Path;
+import jakarta.persistence.criteria.Predicate;
 import java.util.List;
 
 /** DB-specific pieces of jsonb filtering. One bean is active, selected by the datasource URL. */
@@ -19,6 +20,14 @@ public interface JsonValueStrategy {
 
     /** Literal in the same representation as {@link #jsonValue} so {@code =}, {@code in}, {@code >} work. */
     Expression<?> literal(CriteriaBuilder cb, Object value);
+
+    /**
+     * The JSON array at {@code jsonPath} has an element equal to {@code value}, compared with the JSON type of
+     * the value (string to string, number to number). Backs the {@code has} operator; the value is bound.
+     * Lax JSON path mode: a scalar at the path counts as a one-element array, a missing path never matches.
+     * A dialect that cannot render it throws a validation {@code BusinessException}.
+     */
+    Predicate arrayHas(CriteriaBuilder cb, Path<?> dataColumn, String jsonPath, Object value);
 
     /** Text form of the JSON value for case-insensitive {@code contains}. */
     Expression<String> jsonText(CriteriaBuilder cb, Path<?> dataColumn, String jsonPath);

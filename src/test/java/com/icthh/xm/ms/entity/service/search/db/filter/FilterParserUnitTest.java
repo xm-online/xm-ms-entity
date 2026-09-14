@@ -19,12 +19,14 @@ public class FilterParserUnitTest extends AbstractJupiterUnitTest {
             "data.order.in", List.of(1, 2, 3),
             "data.subObject.position.eq", 5,
             "name.contains", "abc",
+            "data.tags.has", "vip",
             "removed.eq", true));
 
         assertThat(conditions).containsExactlyInAnyOrder(
             new FilterCondition("data.order", FilterOperator.IN, List.of(1, 2, 3)),
             new FilterCondition("data.subObject.position", FilterOperator.EQ, List.of(5)),
             new FilterCondition("name", FilterOperator.CONTAINS, List.of("abc")),
+            new FilterCondition("data.tags", FilterOperator.HAS, List.of("vip")),
             new FilterCondition("removed", FilterOperator.EQ, List.of(true)));
     }
 
