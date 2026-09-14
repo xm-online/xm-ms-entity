@@ -449,6 +449,19 @@ Deviations and findings from the implementation, all tests on Postgres 14 via Te
 - The `Link` header statement in section 3 is superseded by the PR #558 amendment above: responses carry
   `X-Total-Count` and the payload only.
 - Commit messages carry no attribution trailers of any kind: the account rule forbids them in every repo.
+## Oracle coverage (2026-09-14)
+
+- Oracle is covered by real integration tests: `AbstractOracleIntTest` plus a singleton
+  `OracleTestContainer` (`gvenzl/oracle-xe:18.4.0-slim`), profile `oracle-test`.
+- That profile creates the schema with Hibernate (`hbm2ddl.auto: create-drop`) instead of Liquibase, because
+  the tests cover query semantics, not the changelog. The container user is named `test` so that the tenant
+  schema switch (`alter session set current_schema = TEST`) resolves, and `hibernate_sequence` is created on
+  start because it normally comes from the initial changelog.
+- The driver flag `oracle.jdbc.timezoneAsRegion=false` is set before the datasource is built: a JVM zone the
+  database does not know otherwise fails every connection with ORA-01882.
+- Ordering by a `data.<path>` is numeric on Oracle now: the strategy returns two order keys, first
+  `JSON_VALUE(... RETURNING NUMBER)` (null for non-numeric values), then the text value. Postgres keeps one
+  jsonb key. Numeric return type is `NUMBER`, not `BINARY_DOUBLE`, which Oracle XE 18 rejects with ORA-40449.
 - Oracle comparisons are type-aware now: `JsonValueStrategy.jsonValue` takes the value being compared, and the
   Oracle strategy asks Hibernate for `JSON_VALUE(data, '$.path' RETURNING <type>)` (Long, Double, BigDecimal,
   Boolean, else text). Numeric filters therefore compare numerically, not lexically. Sorting by a data path has

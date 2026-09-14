@@ -32,4 +32,9 @@ public class H2JsonValueStrategy implements JsonValueStrategy {
     public Expression<String> jsonText(CriteriaBuilder cb, Path<?> dataColumn, String jsonPath) {
         throw new NotImplementedException(MESSAGE);
     }
+
+    @Override
+    public java.util.List<Expression<?>> orderExpressions(CriteriaBuilder cb, Path<?> dataColumn, String jsonPath) {
+        throw new NotImplementedException(MESSAGE);
+    }
 }

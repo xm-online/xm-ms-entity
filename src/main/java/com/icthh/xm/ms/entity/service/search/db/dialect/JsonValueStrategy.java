@@ -3,6 +3,7 @@ package com.icthh.xm.ms.entity.service.search.db.dialect;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Path;
+import java.util.List;
 
 /** DB-specific pieces of jsonb filtering. One bean is active, selected by the datasource URL. */
 public interface JsonValueStrategy {
@@ -21,4 +22,11 @@ public interface JsonValueStrategy {
 
     /** Text form of the JSON value for case-insensitive {@code contains}. */
     Expression<String> jsonText(CriteriaBuilder cb, Path<?> dataColumn, String jsonPath);
+
+    /**
+     * Expressions to order a {@code data.<path>} by. Ordering carries no compared value, so a dialect that
+     * extracts JSON as text returns several keys: a typed one first, then a text fallback, otherwise numbers
+     * would be ordered lexically and 10 would come before 2.
+     */
+    List<Expression<?>> orderExpressions(CriteriaBuilder cb, Path<?> dataColumn, String jsonPath);
 }

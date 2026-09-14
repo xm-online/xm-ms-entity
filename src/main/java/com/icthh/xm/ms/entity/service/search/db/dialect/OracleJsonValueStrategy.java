@@ -5,6 +5,7 @@ import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Path;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.util.List;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.stereotype.Component;
@@ -31,6 +32,17 @@ public class OracleJsonValueStrategy implements JsonValueStrategy {
         return cb.literal(value);
     }
 
+    /**
+     * Numeric key first, text key second: {@code JSON_VALUE(... RETURNING NUMBER)} yields null for values
+     * that are not numbers, so numeric fields are ordered numerically and text fields fall back to the text key.
+     */
+    @Override
+    public List<Expression<?>> orderExpressions(CriteriaBuilder cb, Path<?> dataColumn, String jsonPath) {
+        HibernateCriteriaBuilder builder = (HibernateCriteriaBuilder) cb;
+        return List.of(builder.jsonValue(dataColumn, jsonPath, BigDecimal.class),
+            builder.jsonValue(dataColumn, jsonPath, String.class));
+    }
+
     @Override
     public Expression<String> jsonText(CriteriaBuilder cb, Path<?> dataColumn, String jsonPath) {
         return ((HibernateCriteriaBuilder) cb).jsonValue(dataColumn, jsonPath, String.class);
@@ -42,8 +54,8 @@ public class OracleJsonValueStrategy implements JsonValueStrategy {
             case Long ignored -> Long.class;
             case Integer ignored -> Long.class;
             case BigInteger ignored -> Long.class;
-            case Double ignored -> Double.class;
-            case Float ignored -> Double.class;
+            case Double ignored -> BigDecimal.class;
+            case Float ignored -> BigDecimal.class;
             case BigDecimal ignored -> BigDecimal.class;
             case Boolean ignored -> Boolean.class;
             case null, default -> String.class;

@@ -7,6 +7,7 @@ import static com.icthh.xm.commons.migration.db.jsonb.CustomPostgreSQLDialect.TO
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Path;
+import java.util.List;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.stereotype.Component;
 
@@ -29,6 +30,12 @@ public class PostgresJsonValueStrategy implements JsonValueStrategy {
         // to_jsonb(?::text) for strings, to_jsonb(?) for numbers and booleans (JDBC binds them typed)
         String function = value instanceof String ? TO_JSON_B_TEXT : TO_JSON_B;
         return cb.function(function, String.class, cb.literal(value));
+    }
+
+    @Override
+    public List<Expression<?>> orderExpressions(CriteriaBuilder cb, Path<?> dataColumn, String jsonPath) {
+        // jsonb ordering already compares numbers as numbers
+        return List.of(jsonValue(cb, dataColumn, jsonPath, null));
     }
 
     @Override

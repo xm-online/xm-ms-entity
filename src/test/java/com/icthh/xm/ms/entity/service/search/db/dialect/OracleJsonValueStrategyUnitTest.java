@@ -25,8 +25,8 @@ public class OracleJsonValueStrategyUnitTest extends AbstractJupiterUnitTest {
         assertThat(OracleJsonValueStrategy.returningType(10L)).isEqualTo(Long.class);
         assertThat(OracleJsonValueStrategy.returningType(10)).isEqualTo(Long.class);
         assertThat(OracleJsonValueStrategy.returningType(BigInteger.TEN)).isEqualTo(Long.class);
-        assertThat(OracleJsonValueStrategy.returningType(10.5d)).isEqualTo(Double.class);
-        assertThat(OracleJsonValueStrategy.returningType(10.5f)).isEqualTo(Double.class);
+        assertThat(OracleJsonValueStrategy.returningType(10.5d)).isEqualTo(BigDecimal.class);
+        assertThat(OracleJsonValueStrategy.returningType(10.5f)).isEqualTo(BigDecimal.class);
         assertThat(OracleJsonValueStrategy.returningType(BigDecimal.ONE)).isEqualTo(BigDecimal.class);
         assertThat(OracleJsonValueStrategy.returningType(true)).isEqualTo(Boolean.class);
         assertThat(OracleJsonValueStrategy.returningType("Kyiv")).isEqualTo(String.class);
