@@ -17,7 +17,7 @@ functionality backed by the relational DB (Postgres primary, Oracle fallback).
 | Full text storage | Nullable column `xm_entity.search_text`, filled by a JPA listener only for types with `fullTextSearch: true`. No side table. |
 | Match semantics (Postgres) | Substring, case-insensitive: `ILIKE '%q%'` on `search_text` with a partial GIN `gin_trgm_ops` index (`pg_trgm`). Oracle: `lower(search_text) like lower('%q%')`, no index. |
 | Execution mechanism | JPA Criteria `Specification`s built with the existing `JsonbCriteriaBuilder` / xm-commons `CustomExpression`; row-level permissions merged by parsing the xm-commons permission JPQL with Hibernate 7 `HibernateCriteriaBuilder.createQuery(hql, Class)`. |
-| JPQL templates | Two template types. `ENTITY` (default): WHERE-fragment over alias `entity`, returns XmEntity, row-level permissions applied, sortable. `RAW`: full JPQL with its own `select`, rows returned as maps, no row-level wrapping. Named params bound via `setParameter`. Resource-level privilege carries `templateKey` and params so tenants can restrict per template. |
+| JPQL templates | Two template types. `ENTITY` (default): WHERE-fragment over alias `entity`, returns XmEntity, row-level permissions applied, sortable. `RAW`: full JPQL with its own `select`, rows returned as maps, sortable by selection alias, no row-level wrapping. Named params bound via `setParameter`. Resource-level privilege carries `templateKey` and params so tenants can restrict per template. |
 | Alias | The alias exposed to tenant templates and to the permission merge is `entity` (not xm-commons' `returnObject`). The translated permission condition has `returnObject` rewritten to `entity` before merging. |
 | Privileges | New family `XMENTITY.SEARCH.DB.*`. Do not reuse `XMENTITY.SEARCH`. |
 | typeKey matching | Default includes dotted subtypes: `type_key in (...)` over the non-abstract type keys the spec declares under the prefix, so the `type_key` index is used and a type key absent from the spec never matches. `includeSubTypes=false` matches the exact typeKey only. |
@@ -187,12 +187,18 @@ Common rules:
   without alias gets the positional key `col0`, `col1`, ... Entity-valued selections are mapped
   to their DTO (`XmEntityDto`, `LinkDto`, ...); scalars are returned as-is (jsonb values are
   returned as parsed JSON, not strings).
-- Sorting is owned by the template's `order by`; a `sort` query parameter is rejected with `400`.
+- Sorting: without a `sort` parameter the template's own `order by` is used. A `sort` parameter replaces it.
+  Sort properties are the selection aliases (the row keys), so only an aliased selection is sortable and the
+  positional `colN` keys are not; an unknown property is rejected with `400` listing the available aliases.
+  The template is parsed into a criteria query and the orders are added as criteria nodes, so nothing from
+  the request is concatenated into the HQL.
 - `X-Total-Count` and `Link` headers are produced only when `countQuery` is defined.
 - No row-level permission wrapping: RAW templates are trusted tenant configuration, like LEP
   scripts. Per-user filtering is done with the subject params above.
-- Execution: `entityManager.createQuery(query, Tuple.class)` with `setFirstResult`/`setMaxResults`;
-  `createQuery(countQuery, Long.class)` for the count.
+- Execution: `HibernateCriteriaBuilder.createQuery(query, Tuple.class)` parses the template, the selection
+  items give the row keys and the sortable expressions, then `entityManager.createQuery(criteria)` with
+  `setFirstResult`/`setMaxResults`; `createQuery(countQuery, Long.class)` for the count. Rows come back as
+  `Object[]`, or as the value itself when the template selects one thing.
 
 ### 3.7 Reindex
 
@@ -246,9 +252,9 @@ service/search/db/template/XmEntityJpqlTemplatesService
                                              param-name extraction, GET value coercion
 service/search/db/template/JpqlTemplateExecutor
                                              ENTITY: fragment + permission via PermittedSpecificationRepository;
-                                             RAW: Tuple query, optional count, rows -> List<Map>
+                                             RAW: parsed criteria + request sort, optional count, rows -> List<Map>
 domain/listener/XmEntitySearchTextListener   @PrePersist/@PreUpdate -> XmEntity.searchText
-service/search/db/SearchTextBuilder          TypeSpec + XmEntity -> String (null when disabled)
+service/search/db/SearchTextUpdater          XmEntity -> its spec -> XmEntity.searchText (null when disabled)
 ```
 
 ### 5.1 PermittedSpecificationRepository
@@ -281,9 +287,15 @@ stays unchanged otherwise.
 - New field `XmEntity.searchText` (`@Column(name = "search_text") @JsonIgnore`, not in DTO).
 - `XmEntitySearchTextListener` registered in `@EntityListeners`. Preferred wiring: Spring's
   Hibernate `BeanContainer` integration so the listener gets constructor injection of
-  `XmEntitySpecService` and `SearchTextBuilder`. If that does not work in this app context,
-  use the existing static-setter injection pattern from `XmEntityElasticSearchListener`.
-- `SearchTextBuilder.build(TypeSpec, XmEntity)`: `null` when `fullTextSearch` is not `true`;
+  `SearchTextUpdater`. If that does not work in this app context, use the existing static-setter
+  injection pattern from `XmEntityElasticSearchListener`.
+- `SearchTextUpdater.refresh(XmEntity)` looks up the type spec and stores the text on the entity.
+  It listens to `XmEntitySpecUpdatedEvent`, published per tenant by `XmEntitySpecService.refreshFinished`, and
+  parses the SpEL paths of `fullTextSearchDataFields` there rather than on save; a path that does not parse is
+  logged against the tenant config once and skipped instead of failing every persist. The event is used instead
+  of `EntitySpecUpdateListener` because the updater also needs the spec service itself, which collects those
+  listeners and would form a cycle.
+  The text is `null` when `fullTextSearch` is not `true`;
   otherwise `name`, `description`, then each configured data value (scalars via `toString`,
   lists of scalars joined with space, objects skipped) joined with `\n`. Deterministic order.
 - Predicate: `cb.ilike(root.get(XmEntity_.searchText), "%" + escape(q) + "%", '\\')`
@@ -335,7 +347,7 @@ Every public method of `XmEntityDbSearchService` and `XmEntitySearchTextReindexS
 | Unknown entity typeKey or link typeKey (3.4, 3.5) | `400` |
 | Template not found | `404` |
 | Template param missing | `400` with param name |
-| `sort` passed for a RAW template | `400` |
+| `sort` property is not a selection alias of the RAW template | `400` with the available aliases |
 | Permission denied | `403` via existing `hasPermission` handling |
 
 ## 7. Testing
@@ -346,7 +358,7 @@ problem" that excludes `JsonbCriteriaBuilderIntTest` still exists, fix or docume
 of this work rather than excluding new tests.
 
 - Unit: `FilterParser` (grammar, GET value parsing, errors), `SortTranslator` (whitelist,
-  data paths), `SearchTextBuilder` (flag off, scalars, lists, objects, missing paths),
+  data paths), `SearchTextUpdater` (flag off, scalars, lists, objects, missing paths),
   `XmEntityJpqlTemplatesService` (merge of file and folder, param extraction, coercion, type
   default), `JpqlTemplateExecutor` RAW row mapping (aliases, positional keys, entity to DTO).
 - Integration (Postgres):

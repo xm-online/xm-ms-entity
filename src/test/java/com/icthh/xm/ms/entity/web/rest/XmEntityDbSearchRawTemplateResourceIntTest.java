@@ -112,8 +112,40 @@ public class XmEntityDbSearchRawTemplateResourceIntTest extends AbstractPostgres
     }
 
     @Test
-    public void sortParamIsRejectedForRaw() {
-        assertThatThrownBy(() -> resource.searchByTemplatePost("ORDERS_SUMMARY", Map.of("typeKey", "SILENT"), PageRequest.of(0, 10, Sort.by("name"))))
-            .isInstanceOf(BusinessException.class).hasMessageContaining("sort");
+    public void sortFromRequestOverridesTheOrderByOfTheTemplate() {
+        // the template itself orders by e.name asc
+        var byName = rows(resource.searchByTemplatePost("ORDERS_SUMMARY", Map.of("typeKey", "SILENT"),
+            PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "name"))).getBody());
+        assertThat(byName).extracting(row -> row.get("name")).containsExactly("B", "A");
+
+        var ascending = rows(resource.searchByTemplatePost("ORDERS_SUMMARY", Map.of("typeKey", "SILENT"),
+            PageRequest.of(0, 10, Sort.by(Sort.Direction.ASC, "name"))).getBody());
+        assertThat(ascending).extracting(row -> row.get("name")).containsExactly("A", "B");
+    }
+
+    @Test
+    public void sortsByAJsonSelectionAliasAndPagesTheSortedResult() {
+        var descending = rows(resource.searchByTemplatePost("ORDERS_SUMMARY", Map.of("typeKey", "SILENT"),
+            PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "orderNo"))).getBody());
+        assertThat(descending).extracting(row -> row.get("name")).containsExactly("B", "A");
+
+        var firstPage = rows(resource.searchByTemplatePost("ORDERS_SUMMARY", Map.of("typeKey", "SILENT"),
+            PageRequest.of(0, 1, Sort.by(Sort.Direction.DESC, "orderNo"))).getBody());
+        assertThat(firstPage).extracting(row -> row.get("name")).containsExactly("B");
+    }
+
+    @Test
+    public void unknownSortPropertyIsRejectedAndNamesTheAliases() {
+        assertThatThrownBy(() -> resource.searchByTemplatePost("ORDERS_SUMMARY", Map.of("typeKey", "SILENT"),
+            PageRequest.of(0, 10, Sort.by("nope"))))
+            .isInstanceOf(BusinessException.class).hasMessageContaining("nope").hasMessageContaining("name");
+    }
+
+    @Test
+    public void positionalRowKeysAreNotSortable() {
+        // MIXED_RAW selects without aliases, so col0 / col1 are positions, not something to order by
+        assertThatThrownBy(() -> resource.searchByTemplatePost("MIXED_RAW", Map.of("typeKey", "SILENT"),
+            PageRequest.of(0, 10, Sort.by("col0"))))
+            .isInstanceOf(BusinessException.class).hasMessageContaining("col0");
     }
 }
