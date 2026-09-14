@@ -90,6 +90,15 @@ public class XmEntityDbSearchTargetsResourceIntTest extends AbstractPostgresIntT
     }
 
     @Test
+    public void unknownTargetTypeKeyIsRejected() {
+        XmEntityDbSearchRequest request = new XmEntityDbSearchRequest();
+        request.setTypeKey("NO_SUCH_TYPE");
+        assertThatThrownBy(() -> resource.searchTargetsPost(order.getId().toString(), "ORDER.ITEM", request,
+            PageRequest.of(0, 10)))
+            .isInstanceOf(BusinessException.class).hasMessageContaining("NO_SUCH_TYPE");
+    }
+
+    @Test
     public void bodyContainsTargetDto() {
         var body = resource.searchTargetsPost(order.getId().toString(), "ORDER.ITEM", new XmEntityDbSearchRequest(), PageRequest.of(0, 10)).getBody();
         assertThat(body).isNotEmpty().allSatisfy(link -> assertThat(link.getTarget()).isNotNull());

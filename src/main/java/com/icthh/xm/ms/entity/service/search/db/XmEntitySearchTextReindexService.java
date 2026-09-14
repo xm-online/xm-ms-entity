@@ -1,7 +1,9 @@
 package com.icthh.xm.ms.entity.service.search.db;
 
+import static com.icthh.xm.commons.exceptions.ErrorConstants.ERR_VALIDATION;
 import static com.icthh.xm.ms.entity.domain.XmEntity_.ID;
 
+import com.icthh.xm.commons.exceptions.BusinessException;
 import com.icthh.xm.commons.lep.LogicExtensionPoint;
 import com.icthh.xm.commons.lep.spring.LepService;
 import com.icthh.xm.ms.entity.domain.XmEntity;
@@ -38,6 +40,9 @@ public class XmEntitySearchTextReindexService {
     @LogicExtensionPoint(value = "ReindexSearchText", resolver = TypeKeyResolver.class)
     public long reindex(String typeKey) {
         if (typeKey != null) {
+            if (xmEntitySpecService.getTypeSpecByKeyWithoutFunctionFilter(typeKey).isEmpty()) {
+                throw new BusinessException(ERR_VALIDATION, "Unknown entity typeKey: " + typeKey);
+            }
             // explicit type: the type itself and its subtypes
             return reindexType(typeKey, (root, query, cb) -> cb.or(
                 cb.equal(root.get(XmEntity_.typeKey), typeKey),

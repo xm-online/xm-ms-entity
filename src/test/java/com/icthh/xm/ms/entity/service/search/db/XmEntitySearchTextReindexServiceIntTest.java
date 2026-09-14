@@ -85,6 +85,13 @@ public class XmEntitySearchTextReindexServiceIntTest extends AbstractPostgresInt
     }
 
     @Test
+    public void reindexRejectsTypeKeyThatIsNotInTheSpec() {
+        org.assertj.core.api.Assertions.assertThatThrownBy(() -> reindexService.reindex("NO_SUCH_TYPE"))
+            .isInstanceOf(com.icthh.xm.commons.exceptions.BusinessException.class)
+            .hasMessageContaining("NO_SUCH_TYPE");
+    }
+
+    @Test
     public void reindexFillsMissingSearchText() {
         assertThat(searchText()).isNull();
 

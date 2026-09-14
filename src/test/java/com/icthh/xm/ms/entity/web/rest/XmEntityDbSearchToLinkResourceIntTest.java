@@ -100,6 +100,13 @@ public class XmEntityDbSearchToLinkResourceIntTest extends AbstractPostgresIntTe
     }
 
     @Test
+    public void unknownEntityTypeKeyIsRejected() {
+        assertThatThrownBy(() -> resource.searchToLinkPost("NO_SUCH_TYPE", order.getId().toString(), "ORDER.ITEM",
+            new XmEntityDbSearchRequest(), PageRequest.of(0, 10)))
+            .isInstanceOf(BusinessException.class).hasMessageContaining("NO_SUCH_TYPE");
+    }
+
+    @Test
     public void unknownLinkTypeIsRejected() {
         assertThatThrownBy(() -> ids("NOPE", new XmEntityDbSearchRequest()))
             .isInstanceOf(BusinessException.class).hasMessageContaining("NOPE");

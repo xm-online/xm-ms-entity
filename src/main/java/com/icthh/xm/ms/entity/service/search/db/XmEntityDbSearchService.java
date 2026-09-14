@@ -75,6 +75,7 @@ public class XmEntityDbSearchService {
         if (StringUtils.isBlank(request.getTypeKey())) {
             throw new BusinessException(ERR_VALIDATION, "typeKey is required");
         }
+        assertTypeExists(request.getTypeKey());
         List<FilterCondition> conditions = parseConditions(request);
         Specification<XmEntity> spec = buildSpecification(request.getTypeKey(), request.includeSubTypes(),
             request.getQuery(), conditions, root -> root);
@@ -88,6 +89,7 @@ public class XmEntityDbSearchService {
     @PrivilegeDescription("Privilege to search link candidates in DB for an xm entity and link type")
     public Page<XmEntity> searchToLink(IdOrKey idOrKey, String entityTypeKey, String linkTypeKey,
                                        XmEntityDbSearchRequest request, Pageable pageable, String privilegeKey) {
+        assertTypeExists(entityTypeKey);
         LinkSpec linkSpec = xmEntitySpecService.getLinkSpec(entityTypeKey, linkTypeKey)
             .orElseThrow(() -> new BusinessException(ERR_VALIDATION,
                 "Link spec not found for entity type " + entityTypeKey + " and link type " + linkTypeKey));
@@ -118,6 +120,9 @@ public class XmEntityDbSearchService {
         xmEntitySpecService.getLinkSpec(source.getTypeKey(), linkTypeKey)
             .orElseThrow(() -> new BusinessException(ERR_VALIDATION,
                 "Link spec not found for entity type " + source.getTypeKey() + " and link type " + linkTypeKey));
+        if (StringUtils.isNotBlank(request.getTypeKey())) {
+            assertTypeExists(request.getTypeKey());
+        }
         List<FilterCondition> conditions = parseConditions(request);
         Function<Root<Link>, Path<XmEntity>> target = root -> root.get(Link_.target);
 
@@ -162,6 +167,13 @@ public class XmEntityDbSearchService {
         }
         Map<String, Object> params = templateParamsService.getParams(templateKey, requestParams);
         return templateExecutor.executeRaw(template, params, pageable, entityToDto);
+    }
+
+    /** A typeKey that no type spec declares is a client error, not an empty result. */
+    private void assertTypeExists(String typeKey) {
+        if (xmEntitySpecService.getTypeSpecByKeyWithoutFunctionFilter(typeKey).isEmpty()) {
+            throw new BusinessException(ERR_VALIDATION, "Unknown entity typeKey: " + typeKey);
+        }
     }
 
     /** Entities of the target type that this source is not linked to yet, and not the source itself. */

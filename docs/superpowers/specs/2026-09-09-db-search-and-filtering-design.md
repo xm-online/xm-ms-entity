@@ -431,6 +431,9 @@ Deviations and findings from the implementation, all tests on Postgres 14 via Te
 - Target link search validates `linkTypeKey` against the link spec of the resolved source entity: an unknown
   link type is a 400, not an empty page. The endpoint also accepts optional `typeKey` / `includeSubTypes`
   that restrict the link target type.
+- Every service method that takes an entity typeKey checks it against the type spec: an unknown typeKey is a 400
+  ("Unknown entity typeKey"), not an empty page. This covers search by typeKey, link-candidate search
+  (`entityTypeKey`), the optional target type of link search, and reindex with an explicit typeKey.
 - RAW templates may select anything: scalars, ids, field pairs, any entity of the service. `XmEntity` and `Link`
   selections are mapped to their DTOs for convenience; every other value is returned as it is (unproxied).
   Selecting a whole entity that has no DTO returns the JPA object, so such a template should select the fields

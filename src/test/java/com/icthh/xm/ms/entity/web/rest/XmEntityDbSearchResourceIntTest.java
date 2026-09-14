@@ -129,4 +129,10 @@ public class XmEntityDbSearchResourceIntTest extends AbstractPostgresIntTest {
         assertThatThrownBy(() -> resource.searchPost(request(null, null, Map.of()), PageRequest.of(0, 10)))
             .isInstanceOf(BusinessException.class).hasMessageContaining("typeKey");
     }
+
+    @Test
+    public void rejectsTypeKeyThatIsNotInTheSpec() {
+        assertThatThrownBy(() -> resource.searchPost(request("NO_SUCH_TYPE", null, Map.of()), PageRequest.of(0, 10)))
+            .isInstanceOf(BusinessException.class).hasMessageContaining("NO_SUCH_TYPE");
+    }
 }
