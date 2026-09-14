@@ -6,14 +6,15 @@ spring:
         database: ORACLE
         show-sql: true
         hibernate:
-            ddl-auto: create-drop
+            ddl-auto: none
         properties:
             hibernate.id.new_generator_mappings: true
             hibernate.cache.use_second_level_cache: false
             hibernate.cache.use_query_cache: false
             hibernate.generate_statistics: false
+            hibernate.hbm2ddl.auto: none
             hibernate.dialect: com.icthh.xm.commons.migration.db.jsonb.CustomOracleDialect
             hibernate.query.hql.json_functions_enabled: true
-            hibernate.hbm2ddl.auto: create-drop
     liquibase:
-        enabled: false
+        enabled: true
+        change-log: config/liquibase/master.xml

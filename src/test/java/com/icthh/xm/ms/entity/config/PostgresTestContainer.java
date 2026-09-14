@@ -22,4 +22,14 @@ public final class PostgresTestContainer {
         }
         return INSTANCE;
     }
+
+    /**
+     * Stops the container if it is running. Idempotent, so it may be called both when the last test of this
+     * kind finishes and as a safety net when the test plan ends.
+     */
+    public static void stop() {
+        if (INSTANCE.isRunning()) {
+            INSTANCE.stop();
+        }
+    }
 }

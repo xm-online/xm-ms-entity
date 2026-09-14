@@ -1,13 +1,11 @@
 package com.icthh.xm.ms.entity;
 
-import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_TENANT_CONTEXT;
-import static com.icthh.xm.commons.lep.XmLepScriptConstants.BINDING_KEY_AUTH_CONTEXT;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-import com.icthh.xm.commons.security.XmAuthenticationContextHolder;
+import com.icthh.xm.commons.lep.api.LepEngineSession;
+import com.icthh.xm.commons.lep.api.LepManagementService;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
-import com.icthh.xm.lep.api.LepManager;
 import com.icthh.xm.ms.entity.config.ApplicationProperties;
 import com.icthh.xm.ms.entity.config.PostgresTestContainer;
 import com.icthh.xm.ms.entity.domain.XmEntity;
@@ -16,11 +14,15 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicReference;
 import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
@@ -30,6 +32,7 @@ import org.springframework.test.context.transaction.BeforeTransaction;
 /**
  * Base class for integration tests that need a real PostgreSQL (jsonb functions, pg_trgm, ilike).
  */
+@Slf4j
 @ActiveProfiles("pg-test")
 public abstract class AbstractPostgresIntTest extends AbstractJupiterSpringBootTest {
 
@@ -46,28 +49,56 @@ public abstract class AbstractPostgresIntTest extends AbstractJupiterSpringBootT
     @Autowired
     protected TenantContextHolder tenantContextHolder;
     @Autowired
-    protected LepManager lepManager;
-    @Autowired
-    protected XmAuthenticationContextHolder xmAuthenticationContextHolder;
+    protected LepManagementService lepManagementService;
     @Autowired
     protected XmEntitySpecService xmEntitySpecService;
     @Autowired
     protected ApplicationProperties applicationProperties;
 
+    private static final AtomicReference<ConfigurableApplicationContext> SHARED_CONTEXT = new AtomicReference<>();
+
+    private LepEngineSession lepEngineSession;
+
+    @Autowired
+    void rememberSharedContext(ApplicationContext applicationContext) {
+        SHARED_CONTEXT.set((ConfigurableApplicationContext) applicationContext);
+    }
+
+    /**
+     * Closes the Spring context shared by these tests and stops the database container. Called by
+     * {@link com.icthh.xm.ms.entity.config.DatabaseTestResourcesListener} once the last test class of this kind
+     * has finished, so the rest of the suite does not pay for an idle context and container.
+     */
+    public static void releaseSharedResources() {
+        ConfigurableApplicationContext context = SHARED_CONTEXT.getAndSet(null);
+        if (context != null) {
+            context.close();
+        }
+        PostgresTestContainer.stop();
+        log.info("Released shared Postgres test resources: context {}, container stopped",
+            context != null ? "closed" : "was not created");
+    }
+
+    /**
+     * Runs both before the test transaction (the tenant must be known when the connection is taken) and before
+     * each test (for classes that are not transactional), hence idempotent.
+     */
     @BeforeEach
     @BeforeTransaction
     public void setUpTenantContext() {
         TenantContextUtils.setTenant(tenantContextHolder, TENANT);
-        lepManager.beginThreadContext(scopedContext -> {
-            scopedContext.setValue(THREAD_CONTEXT_KEY_TENANT_CONTEXT, tenantContextHolder.getContext());
-            scopedContext.setValue(BINDING_KEY_AUTH_CONTEXT, xmAuthenticationContextHolder.getContext());
-        });
+        if (lepEngineSession == null) {
+            lepEngineSession = lepManagementService.beginThreadContext();
+        }
     }
 
     @AfterEach
     public void tearDownTenantContext() {
+        if (lepEngineSession != null) {
+            lepEngineSession.close();
+            lepEngineSession = null;
+        }
         tenantContextHolder.getPrivilegedContext().destroyCurrentContext();
-        lepManager.endThreadContext();
     }
 
     @SneakyThrows

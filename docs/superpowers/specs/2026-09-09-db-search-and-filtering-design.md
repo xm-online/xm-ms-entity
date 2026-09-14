@@ -453,10 +453,15 @@ Deviations and findings from the implementation, all tests on Postgres 14 via Te
 
 - Oracle is covered by real integration tests: `AbstractOracleIntTest` plus a singleton
   `OracleTestContainer` (`gvenzl/oracle-xe:18.4.0-slim`), profile `oracle-test`.
-- That profile creates the schema with Hibernate (`hbm2ddl.auto: create-drop`) instead of Liquibase, because
-  the tests cover query semantics, not the changelog. The container user is named `test` so that the tenant
-  schema switch (`alter session set current_schema = TEST`) resolves, and `hibernate_sequence` is created on
-  start because it normally comes from the initial changelog.
+- The schema is built by Liquibase from `config/liquibase/master.xml`, exactly as in production, so the
+  changelog is covered as well. The container user is named `test` because a schema on Oracle is a user and
+  xm-commons does not create schemas there (`SchemaResolver` excludes Oracle); the Oracle context therefore
+  works with that single tenant.
+- Storing json on Oracle needed a fix: Hibernate binds `SqlTypes.JSON` as BLOB on Oracle releases without the
+  native JSON type, while the changelog creates `xm_entity.data` as CLOB. The document was written hex encoded,
+  and every `json_value` call returned null, which silently emptied all data filters and sorts on Oracle.
+  `OracleJsonAsClobTypeContributor` (a Hibernate `TypeContributor`, Oracle only) binds JSON as CLOB text, and
+  the Oracle integration tests fail without it.
 - The driver flag `oracle.jdbc.timezoneAsRegion=false` is set before the datasource is built: a JVM zone the
   database does not know otherwise fails every connection with ORA-01882.
 - Ordering by a `data.<path>` is numeric on Oracle now: the strategy returns two order keys, first

@@ -1,10 +1,5 @@
 package com.icthh.xm.ms.entity.config;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.Statement;
-import java.util.List;
-import lombok.SneakyThrows;
 import org.testcontainers.containers.OracleContainer;
 import org.testcontainers.utility.DockerImageName;
 
@@ -16,7 +11,7 @@ public final class OracleTestContainer {
 
     /**
      * The user is named after the tenant on purpose: the tenant resolver switches the session schema to the
-     * tenant key, and in Oracle a schema is a user, so the container user must be TEST.
+     * tenant key, and in Oracle a schema is a user, which the platform does not create for Oracle.
      */
     private static final OracleContainer INSTANCE = new OracleContainer(
         DockerImageName.parse("gvenzl/oracle-xe:18.4.0-slim"))
@@ -34,31 +29,17 @@ public final class OracleTestContainer {
     public static OracleContainer getInstance() {
         if (!INSTANCE.isRunning()) {
             INSTANCE.start();
-            createLegacySequences();
         }
         return INSTANCE;
     }
 
     /**
-     * Hibernate creates the sequences of the mapping, but {@code hibernate_sequence} comes from the initial
-     * Liquibase changelog, which this profile does not run.
+     * Stops the container if it is running. Idempotent, so it may be called both when the last test of this
+     * kind finishes and as a safety net when the test plan ends.
      */
-    @SneakyThrows
-    private static void createLegacySequences() {
-        try (Connection connection = DriverManager.getConnection(
-            INSTANCE.getJdbcUrl(), INSTANCE.getUsername(), INSTANCE.getPassword());
-             Statement statement = connection.createStatement()) {
-            for (String sequence : List.of("hibernate_sequence", "sequence_generator")) {
-                statement.execute("""
-                    declare
-                        found number;
-                    begin
-                        select count(*) into found from user_sequences where sequence_name = upper('%s');
-                        if found = 0 then
-                            execute immediate 'create sequence %s start with 1000 increment by 50';
-                        end if;
-                    end;""".formatted(sequence, sequence));
-            }
+    public static void stop() {
+        if (INSTANCE.isRunning()) {
+            INSTANCE.stop();
         }
     }
 }

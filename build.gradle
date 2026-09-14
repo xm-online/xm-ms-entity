@@ -427,6 +427,8 @@ dependencies {
     testImplementation "org.springframework.security:spring-security-test"
     testImplementation "com.tngtech.archunit:archunit-junit5-api:${archunitJunit5Version}"
     testRuntimeOnly "com.tngtech.archunit:archunit-junit5-engine:${archunitJunit5Version}"
+    // launcher API for test-plan level listeners (DatabaseTestResourcesListener); version from the Spring Boot BOM
+    testImplementation "org.junit.platform:junit-platform-launcher"
     testImplementation "org.assertj:assertj-core"
     testImplementation "org.hamcrest:hamcrest-library"
     testImplementation "com.h2database:h2"
