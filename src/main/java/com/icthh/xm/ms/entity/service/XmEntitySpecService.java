@@ -31,11 +31,13 @@ import com.icthh.xm.ms.entity.domain.spec.XmEntitySpec;
 import com.icthh.xm.ms.entity.security.access.XmEntityDynamicPermissionCheckService;
 import com.icthh.xm.ms.entity.service.spec.FunctionMetaInfo;
 import com.icthh.xm.ms.entity.service.spec.XmEntitySpecContextService;
+import com.icthh.xm.ms.entity.service.spec.XmEntitySpecUpdatedEvent;
 import com.networknt.schema.Schema;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.util.AntPathMatcher;
 
@@ -76,6 +78,7 @@ public class XmEntitySpecService implements RefreshableConfiguration {
     private final XmEntitySpecContextService xmEntitySpecContextService;
     private final List<EntitySpecUpdateListener> entitySpecUpdateListeners;
     private final XmEntityDynamicPermissionCheckService dynamicPermissionCheckService;
+    private final ApplicationEventPublisher applicationEventPublisher;
 
     /**
      * Search of all entity Type specifications.
@@ -129,8 +132,10 @@ public class XmEntitySpecService implements RefreshableConfiguration {
         Set<String> tenants = paths.stream().map(this::extractTenantName).collect(Collectors.toSet());
         tenants.forEach(tenantKey -> {
             Map<String, TypeSpec> tenantEntitySpec = xmEntitySpecContextService.typesByTenant(tenantKey);
-            tenantContextHolder.getPrivilegedContext().execute(tenantKey, () ->
-                entitySpecUpdateListeners.forEach(it -> it.onEntitySpecUpdate(tenantEntitySpec, tenantKey)));
+            tenantContextHolder.getPrivilegedContext().execute(tenantKey, () -> {
+                entitySpecUpdateListeners.forEach(it -> it.onEntitySpecUpdate(tenantEntitySpec, tenantKey));
+                applicationEventPublisher.publishEvent(new XmEntitySpecUpdatedEvent(tenantKey, tenantEntitySpec));
+            });
         });
     }
 

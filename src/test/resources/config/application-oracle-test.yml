@@ -1,0 +1,20 @@
+spring:
+    datasource:
+        driver-class-name: oracle.jdbc.OracleDriver
+    jpa:
+        database-platform: com.icthh.xm.commons.migration.db.jsonb.CustomOracleDialect
+        database: ORACLE
+        show-sql: true
+        hibernate:
+            ddl-auto: none
+        properties:
+            hibernate.id.new_generator_mappings: true
+            hibernate.cache.use_second_level_cache: false
+            hibernate.cache.use_query_cache: false
+            hibernate.generate_statistics: false
+            hibernate.hbm2ddl.auto: none
+            hibernate.dialect: com.icthh.xm.commons.migration.db.jsonb.CustomOracleDialect
+            hibernate.query.hql.json_functions_enabled: true
+    liquibase:
+        enabled: true
+        change-log: config/liquibase/master.xml

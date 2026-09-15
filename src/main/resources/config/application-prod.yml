@@ -53,6 +53,10 @@ spring:
             hibernate.format_sql: false
             hibernate.query.hql.json_functions_enabled: true
             hibernate.dialect: com.icthh.xm.commons.migration.db.jsonb.CustomPostgreSQLDialect
+            # Oracle only: uncomment together with the Oracle dialect. Hibernate reads Instant fields through
+            # OffsetDateTime by default, and on Oracle that fails with ORA-18716 for every TIMESTAMP column
+            # (start_date, update_date, end_date), so no entity can be loaded without this setting.
+            # hibernate.type.preferred_instant_jdbc_type: TIMESTAMP
     kafka:
         bootstrap-servers: localhost:9092
     security:

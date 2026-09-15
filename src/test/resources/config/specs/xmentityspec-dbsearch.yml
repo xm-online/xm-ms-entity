@@ -1,0 +1,53 @@
+---
+types:
+    - key: ORDER
+      name: { en: "Order" }
+      isApp: true
+      fullTextSearch: true
+      fullTextSearchDataFields:
+          - data.orderNo
+          - data.customer.city
+          - data.tags
+      dataSpec: |
+          { "type": "object", "properties": {
+              "orderNo": { "type": "number" },
+              "position": { "type": "number" },
+              "customer": { "type": "object", "properties": { "city": { "type": "string" } } },
+              "tags": { "type": "array", "items": { "type": "string" } } } }
+      tags:
+          - key: VIP
+            name: { en: "VIP" }
+      links:
+          - key: ORDER.ITEM
+            builderType: SEARCH
+            typeKey: PRODUCT
+            isUnique: true
+            name: { en: "Items (unique)" }
+          - key: ORDER.NOTE
+            builderType: SEARCH
+            typeKey: PRODUCT
+            isUnique: false
+            name: { en: "Notes" }
+    - key: ORDER.EXPRESS
+      name: { en: "Express order" }
+    - key: ORDER.QUIET
+      name: { en: "Order subtype with full text search turned off" }
+      fullTextSearch: false
+    - key: PRODUCT
+      name: { en: "Product" }
+      fullTextSearch: false
+      dataSpec: '{ "type": "object" }'
+    - key: SILENT
+      name: { en: "No text search" }
+      dataSpec: '{ "type": "object" }'
+    - key: ORDERX
+      name: { en: "Lookalike, not a subtype of ORDER" }
+      dataSpec: '{ "type": "object" }'
+    - key: INVOICE
+      name: { en: "Invoice, SpEL search fields" }
+      fullTextSearch: true
+      fullTextSearchDataFields:
+          - data.lines[0].sku
+          - data.customer?.city
+          - data.total * 2
+      dataSpec: '{ "type": "object" }'

@@ -275,6 +275,70 @@ public class LinkResourceIntTest extends AbstractJupiterSpringBootTest {
 
     @Test
     @Transactional
+    public void createLinksBulk() throws Exception {
+        int databaseSizeBeforeCreate = linkRepository.findAll().size();
+        Link secondLink = createEntity(em).typeKey(UPDATED_TYPE_KEY).name(UPDATED_NAME);
+
+        restLinkMockMvc.perform(post("/api/links/bulk")
+            .contentType(TestUtil.APPLICATION_JSON_UTF8)
+            .content(TestUtil.convertObjectToJsonBytes(List.of(linkMapper.toDto(link), linkMapper.toDto(secondLink)))))
+            .andDo(this::printMvcResult)
+            .andExpect(status().isCreated())
+            .andExpect(jsonPath("$.length()").value(2))
+            .andExpect(jsonPath("$[0].id").value(notNullValue()))
+            .andExpect(jsonPath("$[0].typeKey").value(DEFAULT_TYPE_KEY))
+            .andExpect(jsonPath("$[1].id").value(notNullValue()))
+            .andExpect(jsonPath("$[1].typeKey").value(UPDATED_TYPE_KEY))
+            .andExpect(jsonPath("$[1].name").value(UPDATED_NAME));
+
+        List<Link> linkList = linkRepository.findAll();
+        assertThat(linkList).hasSize(databaseSizeBeforeCreate + 2);
+        assertThat(linkList).extracting(Link::getTypeKey).contains(DEFAULT_TYPE_KEY, UPDATED_TYPE_KEY);
+    }
+
+    @Test
+    @Transactional
+    public void createLinksBulkWithExistingId() throws Exception {
+        int databaseSizeBeforeCreate = linkRepository.findAll().size();
+        Link secondLink = createEntity(em);
+        secondLink.setId(1L);
+
+        restLinkMockMvc.perform(post("/api/links/bulk")
+            .contentType(TestUtil.APPLICATION_JSON_UTF8)
+            .content(TestUtil.convertObjectToJsonBytes(List.of(linkMapper.toDto(link), linkMapper.toDto(secondLink)))))
+            .andDo(this::printMvcResult)
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.error").value("error.business.idexists"))
+            .andExpect(jsonPath("$.error_description").value(notNullValue()));
+
+        // no link from the batch should be persisted
+        List<Link> linkList = linkRepository.findAll();
+        assertThat(linkList).hasSize(databaseSizeBeforeCreate);
+    }
+
+    @Test
+    @Transactional
+    public void createLinksBulkWithInvalidElement() throws Exception {
+        int databaseSizeBeforeCreate = linkRepository.findAll().size();
+        Link secondLink = createEntity(em);
+        secondLink.setTypeKey(null);
+
+        restLinkMockMvc.perform(post("/api/links/bulk")
+            .contentType(TestUtil.APPLICATION_JSON_UTF8)
+            .content(TestUtil.convertObjectToJsonBytes(List.of(linkMapper.toDto(link), linkMapper.toDto(secondLink)))))
+            .andDo(this::printMvcResult)
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.error").value("error.validation"))
+            .andExpect(jsonPath("$.error_description").value(notNullValue()))
+            .andExpect(jsonPath("$.fieldErrors[0].field").value("typeKey"))
+            .andExpect(jsonPath("$.fieldErrors[0].message").value("NotNull"));
+
+        List<Link> linkList = linkRepository.findAll();
+        assertThat(linkList).hasSize(databaseSizeBeforeCreate);
+    }
+
+    @Test
+    @Transactional
     @Disabled("see LinkResourceExtendedIntTest.checkStartDateIsNotRequired instead")
     public void checkStartDateIsRequired() throws Exception {
         int databaseSizeBeforeTest = linkRepository.findAll().size();

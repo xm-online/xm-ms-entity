@@ -427,6 +427,8 @@ dependencies {
     testImplementation "org.springframework.security:spring-security-test"
     testImplementation "com.tngtech.archunit:archunit-junit5-api:${archunitJunit5Version}"
     testRuntimeOnly "com.tngtech.archunit:archunit-junit5-engine:${archunitJunit5Version}"
+    // launcher API for test-plan level listeners (DatabaseTestResourcesListener); version from the Spring Boot BOM
+    testImplementation "org.junit.platform:junit-platform-launcher"
     testImplementation "org.assertj:assertj-core"
     testImplementation "org.hamcrest:hamcrest-library"
     testImplementation "com.h2database:h2"
@@ -438,6 +440,8 @@ dependencies {
     testImplementation "org.testcontainers:testcontainers:${testcontainersVersion}"
     testImplementation "org.testcontainers:junit-jupiter:${testcontainersVersion}"
     testImplementation "org.testcontainers:postgresql:${testcontainersVersion}"
+    testImplementation "org.testcontainers:oracle-xe:${testcontainersVersion}"
+    testRuntimeOnly "com.oracle.database.jdbc:ojdbc11:${ojdbcVersion}"
     testImplementation "org.testcontainers:elasticsearch:${testcontainersVersion}"
     testImplementation "co.elastic.clients:elasticsearch-java:${elastic_client_version}"
 

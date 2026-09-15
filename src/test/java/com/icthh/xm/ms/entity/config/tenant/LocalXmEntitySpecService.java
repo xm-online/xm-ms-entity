@@ -16,6 +16,7 @@ import com.icthh.xm.ms.entity.service.spec.XmEntitySpecCustomizer;
 import java.util.Objects;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 
@@ -41,10 +42,11 @@ public class LocalXmEntitySpecService extends XmEntitySpecService {
                                     XmEntityTenantConfigService tenantConfigService,
                                     XmEntitySpecCustomizer xmEntitySpecCustomizer,
                                     DataSpecJsonSchemaService dataSpecJsonSchemaService,
+                                    ApplicationEventPublisher applicationEventPublisher,
                                     @Value("${spring.servlet.multipart.max-file-size:1MB}") String maxFileSize) {
         super(tenantConfigRepository, applicationProperties, tenantContextHolder,
             buildSpecService(tenantConfigService, xmEntitySpecCustomizer, dataSpecJsonSchemaService, maxFileSize),
-            List.of(entityCustomPrivilegeService), dynamicPermissionCheckService);
+            List.of(entityCustomPrivilegeService), dynamicPermissionCheckService, applicationEventPublisher);
 
         this.applicationProperties = applicationProperties;
         this.tenantContextHolder = tenantContextHolder;

@@ -2,7 +2,9 @@ package com.icthh.xm.ms.entity.service;
 
 import static com.google.common.collect.ImmutableMap.of;
 
+import com.icthh.xm.commons.exceptions.BusinessException;
 import com.icthh.xm.commons.exceptions.EntityNotFoundException;
+import com.icthh.xm.commons.exceptions.ErrorConstants;
 import com.icthh.xm.commons.lep.LogicExtensionPoint;
 import com.icthh.xm.commons.lep.spring.LepService;
 import com.icthh.xm.commons.permission.annotation.FindWithPermission;
@@ -28,7 +30,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static com.icthh.xm.ms.entity.security.access.FeatureContext.LINK_DELETE;
 
@@ -89,6 +96,51 @@ public class LinkService extends TransactionPropagationService<LinkService> {
 
     public List<Link> saveAll(List<Link> list) {
         return linkRepository.saveAll(list);
+    }
+
+    /**
+     * Create new links in bulk. Targets without id are created transitively (single saveAll),
+     * existing source/target entities are resolved with a single query, links are persisted with
+     * a single saveAll. No per-link LEP is triggered.
+     *
+     * @param links new links; every source must reference an existing entity by id
+     * @return persisted links with initialized source and target
+     */
+    public List<Link> createAll(List<Link> links) {
+        List<XmEntity> newTargets = links.stream()
+            .map(Link::getTarget)
+            .filter(target -> target != null && target.getId() == null)
+            .toList();
+        xmEntityRepository.saveAll(newTargets);
+
+        Set<Long> entityIds = links.stream()
+            .flatMap(link -> Stream.of(link.getSource(), link.getTarget()))
+            .map(entity -> {
+                Long id = entity == null ? null : entity.getId();
+                if (id == null) {
+                    throw new BusinessException(ErrorConstants.ERR_VALIDATION,
+                        "Link source must reference an existing entity by id");
+                }
+                return id;
+            })
+            .collect(Collectors.toSet());
+
+        Map<Long, XmEntity> entitiesById = xmEntityRepository.findAllById(entityIds).stream()
+            .collect(Collectors.toMap(XmEntity::getId, Function.identity()));
+        entityIds.stream()
+            .filter(id -> !entitiesById.containsKey(id))
+            .findFirst()
+            .ifPresent(id -> {
+                throw new EntityNotFoundException("XmEntity by id " + id + " not found");
+            });
+
+        links.forEach(link -> {
+            link.setStartDate(Objects.requireNonNullElseGet(link.getStartDate(),
+                startUpdateDateGenerationStrategy::generateStartDate));
+            link.setSource(entitiesById.get(link.getSource().getId()));
+            link.setTarget(entitiesById.get(link.getTarget().getId()));
+        });
+        return linkRepository.saveAll(links);
     }
 
     /**

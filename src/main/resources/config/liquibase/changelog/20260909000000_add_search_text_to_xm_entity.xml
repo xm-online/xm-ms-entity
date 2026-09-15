@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd
+        http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd">
+
+    <property name="searchTextType" value="text" dbms="postgresql"/>
+    <property name="searchTextType" value="varchar" dbms="h2"/>
+    <property name="searchTextType" value="clob" dbms="oracle"/>
+
+    <changeSet id="20260909000000-1" author="ssenko">
+        <addColumn tableName="xm_entity">
+            <column name="search_text" type="${searchTextType}">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
+    <!-- pg_trgm may need superuser rights; do not fail the migration when it cannot be created -->
+    <changeSet id="20260909000000-2" author="ssenko" dbms="postgresql" runInTransaction="false" failOnError="false">
+        <sql>CREATE EXTENSION IF NOT EXISTS pg_trgm</sql>
+    </changeSet>
+
+    <!-- not CONCURRENTLY: it waits for every open transaction, and the app start-up holds one during migration -->
+    <changeSet id="20260909000000-3" author="ssenko" dbms="postgresql">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="1">select count(*) from pg_extension where extname = 'pg_trgm'</sqlCheck>
+        </preConditions>
+        <sql>CREATE INDEX IF NOT EXISTS idx_xm_entity_search_text_trgm
+             ON xm_entity USING gin (search_text gin_trgm_ops) WHERE search_text IS NOT NULL</sql>
+    </changeSet>
+
+</databaseChangeLog>
