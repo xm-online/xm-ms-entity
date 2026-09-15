@@ -125,7 +125,7 @@ public class XmEntityDbSearchOracleE2eIntTest extends AbstractOracleIntTest {
             .andExpect(header().string("X-Total-Count", "2"))
             .andExpect(jsonPath("$[*].data.orderNo", contains(9, 10)));
 
-        mockMvc.perform(get(URL + "?typeKey=ORDER&data.orderNo.lt=3&stateKey.eq=ACTIVE&sort=data.orderNo,desc"))
+        mockMvc.perform(get(URL + "?typeKey=ORDER&data.orderNo.lt=3&stateKey.eq=ACTIVE&sort=data.orderNo,desc&sort=name,asc"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$[*].name", contains("Beta Kyiv", "Omega", "Alpha Kyiv")));
 
