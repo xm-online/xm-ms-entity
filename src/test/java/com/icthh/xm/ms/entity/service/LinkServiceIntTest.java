@@ -5,6 +5,8 @@ import com.icthh.xm.commons.security.XmAuthenticationContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
 import com.icthh.xm.lep.api.LepManager;
+import com.icthh.xm.commons.exceptions.BusinessException;
+import com.icthh.xm.commons.exceptions.EntityNotFoundException;
 import com.icthh.xm.ms.entity.AbstractJupiterSpringBootTest;
 import com.icthh.xm.ms.entity.domain.Link;
 import com.icthh.xm.ms.entity.domain.Link_;
@@ -12,6 +14,7 @@ import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
 import com.icthh.xm.ms.entity.security.access.XmEntityDynamicPermissionCheckService;
 import com.icthh.xm.ms.entity.web.rest.LinkResourceIntTest;
+import com.icthh.xm.ms.entity.web.rest.XmEntityResourceIntTest;
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
@@ -35,6 +38,7 @@ import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_TENANT_
 import static com.icthh.xm.ms.entity.security.access.FeatureContext.LINK_DELETE;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -175,6 +179,72 @@ public class LinkServiceIntTest extends AbstractJupiterSpringBootTest {
     @BeforeTransaction
     public void beforeTransaction() {
         TenantContextUtils.setTenant(tenantContextHolder, "RESINTTEST");
+    }
+
+    @Test
+    @Transactional
+    public void createAll_persistsEveryLinkAndGeneratesStartDate() {
+        Link first = LinkResourceIntTest.createEntity(em).startDate(null);
+        Link second = LinkResourceIntTest.createEntity(em).startDate(null).typeKey("BULK_TYPE");
+        // reference existing entities by id only, like a request body would
+        first.setSource(refOf(first.getSource()));
+        first.setTarget(refOf(first.getTarget()));
+        second.setSource(refOf(second.getSource()));
+        second.setTarget(refOf(second.getTarget()));
+
+        List<Link> saved = linkService.createAll(List.of(first, second));
+        em.flush();
+
+        assertEquals(2, saved.size());
+        saved.forEach(link -> {
+            assertNotNull(link.getId());
+            assertNotNull(link.getStartDate());
+            assertNotNull(link.getSource().getKey());
+            assertNotNull(link.getTarget().getKey());
+        });
+        assertEquals("BULK_TYPE", saved.get(1).getTypeKey());
+    }
+
+    @Test
+    @Transactional
+    public void createAll_failsWhenReferencedEntityDoesNotExist() {
+        Link link = LinkResourceIntTest.createEntity(em);
+        XmEntity missing = new XmEntity();
+        missing.setId(Long.MAX_VALUE);
+        link.setTarget(missing);
+
+        assertThrows(EntityNotFoundException.class, () -> linkService.createAll(List.of(link)));
+    }
+
+    @Test
+    @Transactional
+    public void createAll_createsNewTargetEntityTransitively() {
+        Link link = LinkResourceIntTest.createEntity(em);
+        link.setSource(refOf(link.getSource()));
+        XmEntity newTarget = XmEntityResourceIntTest.createEntity().key("NEW_TARGET_KEY");
+        link.setTarget(newTarget);
+
+        List<Link> saved = linkService.createAll(List.of(link));
+        em.flush();
+
+        Long targetId = saved.getFirst().getTarget().getId();
+        assertNotNull(targetId);
+        assertEquals("NEW_TARGET_KEY", xmEntityRepository.findById(targetId).orElseThrow().getKey());
+    }
+
+    @Test
+    @Transactional
+    public void createAll_failsWhenSourceHasNoId() {
+        Link link = LinkResourceIntTest.createEntity(em);
+        link.setSource(new XmEntity());
+
+        assertThrows(BusinessException.class, () -> linkService.createAll(List.of(link)));
+    }
+
+    private static XmEntity refOf(XmEntity entity) {
+        XmEntity ref = new XmEntity();
+        ref.setId(entity.getId());
+        return ref;
     }
 
     public List<Link> initLinks() {

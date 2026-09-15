@@ -70,6 +70,30 @@ public class LinkResource extends TransactionPropagationService<LinkResource> {
     }
 
     /**
+     * POST  /links/bulk : Create a list of new links in a single transaction.
+     *
+     * @param links the links to create
+     * @return the ResponseEntity with status 201 (Created) and with body the list of created links,
+     * or with status 400 (Bad Request) if any link already has an ID or fails validation
+     */
+    @PostMapping("/links/bulk")
+    @PreAuthorize("hasPermission({'links': #links}, 'LINK.CREATE.BULK')")
+    @PrivilegeDescription("Privilege to create a list of new links")
+    public ResponseEntity<List<LinkDto>> createLinks(@Valid @RequestBody List<@Valid LinkDto> links) {
+        links.stream()
+            .filter(link -> link.getId() != null)
+            .findFirst()
+            .ifPresent(link -> {
+                throw new BusinessException(ErrorConstants.ERR_BUSINESS_IDEXISTS,
+                                            "A new link cannot already have an ID: " + link.getId());
+            });
+        List<LinkDto> result = linkFacade.createAll(links);
+        return ResponseEntity.status(HttpStatus.CREATED)
+            .headers(HeaderUtil.createEntityCreationAlert(ENTITY_NAME, String.valueOf(result.size())))
+            .body(result);
+    }
+
+    /**
      * PUT  /links : Updates an existing link.
      *
      * @param link the link to update
