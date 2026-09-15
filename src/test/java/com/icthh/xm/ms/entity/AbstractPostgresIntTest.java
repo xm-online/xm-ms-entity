@@ -66,8 +66,10 @@ public abstract class AbstractPostgresIntTest extends AbstractJupiterSpringBootT
 
     /**
      * Closes the Spring context shared by these tests and stops the database container. Called by
-     * {@link com.icthh.xm.ms.entity.config.DatabaseTestResourcesListener} once the last test class of this kind
-     * has finished, so the rest of the suite does not pay for an idle context and container.
+     * {@link com.icthh.xm.ms.entity.config.DatabaseTestResourcesListener} when the test plan ends. It must not
+     * run earlier: entity listeners hold beans of the most recently refreshed context in static fields, so a
+     * class saving entities after this context is closed would fail. These classes are therefore ordered last,
+     * see {@link com.icthh.xm.ms.entity.config.DatabaseClassesLastOrderer}.
      */
     public static void releaseSharedResources() {
         ConfigurableApplicationContext context = SHARED_CONTEXT.getAndSet(null);
