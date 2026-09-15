@@ -150,6 +150,51 @@ public class XmEntityDbSearchResourceE2eIntTest extends AbstractPostgresIntTest 
         mockMvc.perform(get(URL + "?typeKey=ORDER&sort=nope,asc")).andExpect(status().isBadRequest());
     }
 
+    /** Same predicate as {@link #FILTERS}, as a typed POST body: alpha, beta, gamma match (3 of 6 orders). */
+    private static final String FILTERS_BODY = """
+        {"typeKey": "ORDER", "query": "kyi",
+         "filter": {"data.orderNo.in": [1, 2, 3], "data.position.gte": 5, "stateKey.eq": "ACTIVE"}%s}
+        """;
+
+    @Test
+    public void skipTotalCountOmitsTheHeaderAndTheCountQuery() throws Exception {
+        // GET: the query parameter; without it the header is there
+        mockMvc.perform(get(URL + "?" + FILTERS + "&size=2"))
+            .andExpect(status().isOk())
+            .andExpect(header().string("X-Total-Count", "3"))
+            .andExpect(jsonPath("$", hasSize(2)));
+        mockMvc.perform(get(URL + "?" + FILTERS + "&skip-total-count=true&size=2"))
+            .andExpect(status().isOk())
+            .andExpect(header().doesNotExist("X-Total-Count"))
+            .andExpect(jsonPath("$", hasSize(2)));
+
+        // POST: the body field; the query parameter is not read on POST
+        mockMvc.perform(post(URL + "?size=2").contentType(MediaType.APPLICATION_JSON)
+                .content(FILTERS_BODY.formatted("")))
+            .andExpect(status().isOk())
+            .andExpect(header().string("X-Total-Count", "3"))
+            .andExpect(jsonPath("$", hasSize(2)));
+        mockMvc.perform(post(URL + "?size=2").contentType(MediaType.APPLICATION_JSON)
+                .content(FILTERS_BODY.formatted(", \"skipTotalCount\": true")))
+            .andExpect(status().isOk())
+            .andExpect(header().doesNotExist("X-Total-Count"))
+            .andExpect(jsonPath("$", hasSize(2)));
+        mockMvc.perform(post(URL + "?size=2&skip-total-count=true").contentType(MediaType.APPLICATION_JSON)
+                .content(FILTERS_BODY.formatted("")))
+            .andExpect(status().isOk())
+            .andExpect(header().string("X-Total-Count", "3"));
+
+        // link candidates and links of a source: alpha has one ORDER.ITEM link to the only product
+        mockMvc.perform(get("/api/_search-db/xm-entities/ORDER/" + alpha.getId() + "/links/ORDER.NOTE?skip-total-count=true"))
+            .andExpect(status().isOk())
+            .andExpect(header().doesNotExist("X-Total-Count"))
+            .andExpect(jsonPath("$", hasSize(1)));
+        mockMvc.perform(get("/api/_search-db/xm-entities/" + alpha.getId() + "/targets/ORDER.ITEM?skip-total-count=true"))
+            .andExpect(status().isOk())
+            .andExpect(header().doesNotExist("X-Total-Count"))
+            .andExpect(jsonPath("$", hasSize(1)));
+    }
+
     @Test
     public void linkCandidatesAndTargetsByUrl() throws Exception {
         XmEntity free = repository.save(newEntity("PRODUCT", "Free product", Map.of("sku", "P-2")));

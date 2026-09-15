@@ -19,24 +19,13 @@
 #   6. clean up: links, then entities, then verify nothing is left
 
 @host = http://localhost:8082
-@uaa =
-
 ###############################################################################
 # 0. Token and preflight
 ###############################################################################
 
-### 0.1 Get token (admin of tenant T3C7D9636)
-# @name token
-POST {{uaa}}/oauth/token
-Authorization: Basic d2ViYXBwOndlYmFwcA==
-Content-Type: application/x-www-form-urlencoded
+### 0.1 Token
+@token = BearerToken
 
-grant_type=password&username=login&password=password
-
-> {%
-    client.global.set("token", response.body.access_token);
-    client.test("token received", () => client.assert(response.status === 200 && !!response.body.access_token, "no access_token"));
-%}
 
 ### 0.2 Preflight: the DBS-ORDER type is in the spec and has full text search on
 GET {{host}}/api/xm-entity-specs/DBS-ORDER

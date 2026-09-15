@@ -20,7 +20,8 @@ import org.springframework.stereotype.Component;
 @Component
 public class FilterParser {
 
-    public static final Set<String> RESERVED_PARAMS = Set.of("page", "size", "sort", "typeKey", "query", "includeSubTypes");
+    public static final Set<String> RESERVED_PARAMS = Set.of("page", "size", "sort", "typeKey", "query", "includeSubTypes",
+        "skip-total-count");
     private static final Pattern LONG = Pattern.compile("-?\\d+");
     private static final Pattern DOUBLE = Pattern.compile("-?\\d+\\.\\d+");
 

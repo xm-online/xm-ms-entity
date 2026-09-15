@@ -60,7 +60,7 @@ public class XmEntityDbSearchTemplateResourceIntTest extends AbstractPostgresInt
     public void postEntityTemplateBindsTypedParamsAndSorts() {
         var response = resource.searchByTemplatePost("ACTIVE_BY_ORDER",
             Map.of("typeKey", "ORDER", "stateKey", "ACTIVE", "orderNo", 1),
-            PageRequest.of(0, 10, Sort.by("name")));
+            null, PageRequest.of(0, 10, Sort.by("name")));
 
         assertThat(entities(response.getBody())).extracting(XmEntityDto::getId).containsExactly(active2.getId(), active1.getId());
         assertThat(response.getHeaders().getFirst("X-Total-Count")).isEqualTo("2");
@@ -75,28 +75,47 @@ public class XmEntityDbSearchTemplateResourceIntTest extends AbstractPostgresInt
         params.add("page", "0");
         params.add("size", "1");
 
-        var response = resource.searchByTemplateGet("ACTIVE_BY_ORDER", params, PageRequest.of(0, 1, Sort.by("name")));
+        var response = resource.searchByTemplateGet("ACTIVE_BY_ORDER", params, null, PageRequest.of(0, 1, Sort.by("name")));
 
         assertThat(entities(response.getBody())).extracting(XmEntityDto::getId).containsExactly(active2.getId());
         assertThat(response.getHeaders().getFirst("X-Total-Count")).isEqualTo("2");
     }
 
     @Test
+    public void skipTotalCountOmitsTheHeader() {
+        var response = resource.searchByTemplatePost("ACTIVE_BY_ORDER",
+            Map.of("typeKey", "ORDER", "stateKey", "ACTIVE", "orderNo", 1), true, PageRequest.of(0, 1, Sort.by("name")));
+
+        assertThat(entities(response.getBody())).extracting(XmEntityDto::getId).containsExactly(active2.getId());
+        assertThat(response.getHeaders().getFirst("X-Total-Count")).isNull();
+
+        var params = new LinkedMultiValueMap<String, String>();
+        params.add("typeKey", "ORDER");
+        params.add("stateKey", "ACTIVE");
+        params.add("orderNo", "1");
+        params.add("skip-total-count", "true");
+        var get = resource.searchByTemplateGet("ACTIVE_BY_ORDER", params, true, PageRequest.of(0, 1, Sort.by("name")));
+
+        assertThat(entities(get.getBody())).extracting(XmEntityDto::getId).containsExactly(active2.getId());
+        assertThat(get.getHeaders().getFirst("X-Total-Count")).isNull();
+    }
+
+    @Test
     public void missingParamIsRejected() {
-        assertThatThrownBy(() -> resource.searchByTemplatePost("ACTIVE_BY_ORDER", Map.of("typeKey", "ORDER"), PageRequest.of(0, 10)))
+        assertThatThrownBy(() -> resource.searchByTemplatePost("ACTIVE_BY_ORDER", Map.of("typeKey", "ORDER"), null, PageRequest.of(0, 10)))
             .isInstanceOf(BusinessException.class).hasMessageContaining("stateKey");
     }
 
     @Test
     public void unknownTemplateIs404() {
-        assertThatThrownBy(() -> resource.searchByTemplatePost("NOPE", Map.of(), PageRequest.of(0, 10)))
+        assertThatThrownBy(() -> resource.searchByTemplatePost("NOPE", Map.of(), null, PageRequest.of(0, 10)))
             .isInstanceOf(EntityNotFoundException.class);
     }
 
     @Test
     public void badSortIsRejected() {
         assertThatThrownBy(() -> resource.searchByTemplatePost("ACTIVE_BY_ORDER",
-            Map.of("typeKey", "ORDER", "stateKey", "ACTIVE", "orderNo", 1), PageRequest.of(0, 10, Sort.by("evil"))))
+            Map.of("typeKey", "ORDER", "stateKey", "ACTIVE", "orderNo", 1), null, PageRequest.of(0, 10, Sort.by("evil"))))
             .isInstanceOf(BusinessException.class);
     }
 
@@ -106,12 +125,12 @@ public class XmEntityDbSearchTemplateResourceIntTest extends AbstractPostgresInt
         XmEntity mine = repository.save(newEntity("ORDER", "mine", Map.of()).createdBy("u1"));
         repository.save(newEntity("ORDER", "victim", Map.of()).createdBy("victim"));
 
-        var post = resource.searchByTemplatePost("MY_ORDERS", Map.of("subjectLogin", "victim"), PageRequest.of(0, 10));
+        var post = resource.searchByTemplatePost("MY_ORDERS", Map.of("subjectLogin", "victim"), null, PageRequest.of(0, 10));
         assertThat(entities(post.getBody())).extracting(XmEntityDto::getId).containsExactly(mine.getId());
 
         var params = new LinkedMultiValueMap<String, String>();
         params.add("subjectLogin", "victim");
-        var get = resource.searchByTemplateGet("MY_ORDERS", params, PageRequest.of(0, 10));
+        var get = resource.searchByTemplateGet("MY_ORDERS", params, null, PageRequest.of(0, 10));
         assertThat(entities(get.getBody())).extracting(XmEntityDto::getId).containsExactly(mine.getId());
     }
 
@@ -121,7 +140,7 @@ public class XmEntityDbSearchTemplateResourceIntTest extends AbstractPostgresInt
         XmEntity mine = repository.save(newEntity("ORDER", "mine", Map.of()).createdBy("u1"));
         repository.save(newEntity("ORDER", "not mine", Map.of()).createdBy("somebody-else"));
 
-        var response = resource.searchByTemplatePost("MY_ORDERS", Map.of(), PageRequest.of(0, 10));
+        var response = resource.searchByTemplatePost("MY_ORDERS", Map.of(), null, PageRequest.of(0, 10));
 
         assertThat(entities(response.getBody())).extracting(XmEntityDto::getId).containsExactly(mine.getId());
     }

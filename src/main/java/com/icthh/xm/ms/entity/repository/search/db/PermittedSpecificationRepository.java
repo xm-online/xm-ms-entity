@@ -44,7 +44,13 @@ public class PermittedSpecificationRepository {
 
     public <T> Page<T> findAll(Class<T> entityClass, Specification<T> spec, OrderProvider<T> orders,
                                Pageable pageable, String privilegeKey) {
-        return findAll(entityClass, null, Map.of(), spec, orders, pageable, privilegeKey);
+        return findAll(entityClass, spec, orders, pageable, privilegeKey, true);
+    }
+
+    /** @param countTotal {@code false} skips the count query; the page total is then unknown (offset + page size) */
+    public <T> Page<T> findAll(Class<T> entityClass, Specification<T> spec, OrderProvider<T> orders,
+                               Pageable pageable, String privilegeKey, boolean countTotal) {
+        return findAll(entityClass, null, Map.of(), spec, orders, pageable, privilegeKey, countTotal);
     }
 
     /**
@@ -57,6 +63,13 @@ public class PermittedSpecificationRepository {
     public <T> Page<T> findAll(Class<T> entityClass, String whereFragment, Map<String, Object> params,
                                Specification<T> spec, OrderProvider<T> orders, Pageable pageable,
                                String privilegeKey) {
+        return findAll(entityClass, whereFragment, params, spec, orders, pageable, privilegeKey, true);
+    }
+
+    /** @param countTotal {@code false} skips the count query; the page total is then unknown (offset + page size) */
+    public <T> Page<T> findAll(Class<T> entityClass, String whereFragment, Map<String, Object> params,
+                               Specification<T> spec, OrderProvider<T> orders, Pageable pageable,
+                               String privilegeKey, boolean countTotal) {
         String from = " from " + em.getMetamodel().entity(entityClass).getName() + " " + ALIAS
             + where(whereFragment, privilegeKey);
 
@@ -64,6 +77,9 @@ public class PermittedSpecificationRepository {
             .getResultList();
         if (pageable == null || pageable.isUnpaged()) {
             return new PageImpl<>(content);
+        }
+        if (!countTotal) {
+            return new PageImpl<>(content, pageable, pageable.getOffset() + content.size());
         }
         long total = createQuery("select count(" + ALIAS + ")" + from, Long.class, spec, null, params, null)
             .getSingleResult();

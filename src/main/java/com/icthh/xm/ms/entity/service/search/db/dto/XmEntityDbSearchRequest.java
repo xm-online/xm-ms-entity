@@ -29,6 +29,12 @@ public class XmEntityDbSearchRequest {
      */
     @JsonIgnore
     private boolean rawStringValues;
+    /**
+     * Skip the {@code count} query and the {@code X-Total-Count} header: body field on POST, query parameter
+     * {@code skip-total-count} on GET. The count is the expensive part of a broad full text query over a large
+     * table, the page itself is cheap.
+     */
+    private boolean skipTotalCount;
 
     public boolean includeSubTypes() {
         return !FALSE.equals(includeSubTypes);

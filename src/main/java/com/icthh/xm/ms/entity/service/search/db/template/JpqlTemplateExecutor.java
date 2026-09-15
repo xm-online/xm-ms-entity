@@ -43,6 +43,12 @@ public class JpqlTemplateExecutor {
 
     public RawResult executeRaw(JpqlTemplate template, Map<String, Object> params, Pageable pageable,
                                 Function<Object, Object> entityToDto) {
+        return executeRaw(template, params, pageable, entityToDto, true);
+    }
+
+    /** @param countTotal {@code false} skips {@code countQuery} even when the template defines one */
+    public RawResult executeRaw(JpqlTemplate template, Map<String, Object> params, Pageable pageable,
+                                Function<Object, Object> entityToDto, boolean countTotal) {
         HibernateCriteriaBuilder cb = (HibernateCriteriaBuilder) em.getCriteriaBuilder();
         JpaCriteriaQuery<Tuple> criteria = cb.createQuery(template.getQuery(), Tuple.class);
         List<JpaSelection<?>> selections = selections(criteria);
@@ -60,7 +66,7 @@ public class JpqlTemplateExecutor {
         List<Map<String, Object>> rows = query.getResultList().stream()
             .map(row -> toRow(row, keys, entityToDto))
             .toList();
-        return new RawResult(rows, count(template, params));
+        return new RawResult(rows, countTotal ? count(template, params) : null);
     }
 
     /** A template selecting one thing has a plain selection, several make a compound one. */

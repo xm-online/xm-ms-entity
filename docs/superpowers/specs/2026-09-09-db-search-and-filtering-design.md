@@ -495,3 +495,11 @@ Deviations and findings from the implementation, all tests on Postgres 14 via Te
   Boolean, else text). Numeric filters therefore compare numerically, not lexically. Sorting by a data path has
   no operand and stays text ordering on Oracle. There is no Oracle instance in CI, so the behaviour is covered
   by a unit test on the type selection, not by an integration test.
+
+## skip-total-count (2026-09-15)
+
+- Every list endpoint of `XmEntityDbSearchResource` can skip the count: GET endpoints and both template endpoints
+  take the query parameter `skip-total-count=true`; the POST endpoints with a search request body take the body
+  field `skipTotalCount: true`. With it the count query is not executed and the response carries no `X-Total-Count`. Reason: on a 2M-row table a broad full text term (`query=ukr`, 66k hits)
+  costs 0.2 ms for the page and ~500 ms for the count, because the count must visit every matching heap row after
+  the trigram index; the page query stops after the first rows.

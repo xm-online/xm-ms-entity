@@ -80,7 +80,7 @@ public class XmEntityDbSearchService {
         Specification<XmEntity> spec = buildSpecification(request.getTypeKey(), request.includeSubTypes(),
             request.getQuery(), conditions, root -> root);
         return permittedSpecificationRepository.findAll(XmEntity.class, spec,
-            sortTranslator.toOrderProvider(pageable.getSort()), pageable, privilegeKey);
+            sortTranslator.toOrderProvider(pageable.getSort()), pageable, privilegeKey, !request.isSkipTotalCount());
     }
 
     @Transactional(readOnly = true)
@@ -106,7 +106,7 @@ public class XmEntityDbSearchService {
             spec = spec.and(notLinkedYet(source.getId(), linkTypeKey));
         }
         return permittedSpecificationRepository.findAll(XmEntity.class, spec,
-            sortTranslator.toOrderProvider(pageable.getSort()), pageable, privilegeKey);
+            sortTranslator.toOrderProvider(pageable.getSort()), pageable, privilegeKey, !request.isSkipTotalCount());
     }
 
     @Transactional(readOnly = true)
@@ -140,33 +140,36 @@ public class XmEntityDbSearchService {
             spec = spec.and(specificationBuilder.fullText(request.getQuery(), target));
         }
         return permittedSpecificationRepository.findAll(Link.class, spec,
-            sortTranslator.toOrderProvider(pageable.getSort(), target), pageable, privilegeKey);
+            sortTranslator.toOrderProvider(pageable.getSort(), target), pageable, privilegeKey,
+            !request.isSkipTotalCount());
     }
 
     /** ENTITY template: JPQL WHERE fragment over alias {@code entity}. Access is controlled on the API level only. */
     @Transactional(readOnly = true)
     @LogicExtensionPoint(value = "SearchDbByEntityTemplate", resolver = JpqlTemplateKeyResolver.class)
-    public Page<XmEntity> searchByEntityTemplate(String templateKey, Map<String, Object> requestParams, Pageable pageable) {
+    public Page<XmEntity> searchByEntityTemplate(String templateKey, Map<String, Object> requestParams, Pageable pageable,
+                                                 boolean countTotal) {
         JpqlTemplate template = jpqlTemplatesService.getTemplate(templateKey);
         if (template.getType() != JpqlTemplateType.ENTITY) {
             throw new BusinessException(ERR_VALIDATION, "Template is not of type ENTITY: " + templateKey);
         }
         Map<String, Object> params = templateParamsService.getParams(templateKey, requestParams);
         return permittedSpecificationRepository.findAll(XmEntity.class, template.getQuery(), params, null,
-            sortTranslator.toOrderProvider(pageable.getSort()), pageable, null);
+            sortTranslator.toOrderProvider(pageable.getSort()), pageable, null, countTotal);
     }
 
     /** RAW template: full JPQL from tenant config, rows as maps. Access is controlled on the API level only. */
     @Transactional(readOnly = true)
     @LogicExtensionPoint(value = "SearchDbByRawTemplate", resolver = JpqlTemplateKeyResolver.class)
     public JpqlTemplateExecutor.RawResult searchByRawTemplate(String templateKey, Map<String, Object> requestParams,
-                                                              Pageable pageable, Function<Object, Object> entityToDto) {
+                                                              Pageable pageable, Function<Object, Object> entityToDto,
+                                                              boolean countTotal) {
         JpqlTemplate template = jpqlTemplatesService.getTemplate(templateKey);
         if (template.getType() != JpqlTemplateType.RAW) {
             throw new BusinessException(ERR_VALIDATION, "Template is not of type RAW: " + templateKey);
         }
         Map<String, Object> params = templateParamsService.getParams(templateKey, requestParams);
-        return templateExecutor.executeRaw(template, params, pageable, entityToDto);
+        return templateExecutor.executeRaw(template, params, pageable, entityToDto, countTotal);
     }
 
     /** A typeKey that no type spec declares is a client error, not an empty result. */

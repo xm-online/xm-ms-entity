@@ -85,7 +85,7 @@ public class XmEntityDbSearchTargetsResourceIntTest extends AbstractPostgresIntT
 
         var params = new org.springframework.util.LinkedMultiValueMap<String, String>();
         assertThatThrownBy(() -> resource.searchTargetsGet(order.getId().toString(), "NOPE", null, null, null,
-            params, PageRequest.of(0, 10)))
+            params, null, PageRequest.of(0, 10)))
             .isInstanceOf(BusinessException.class).hasMessageContaining("NOPE");
     }
 

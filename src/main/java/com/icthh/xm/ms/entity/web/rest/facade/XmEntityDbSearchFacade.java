@@ -50,12 +50,14 @@ public class XmEntityDbSearchFacade {
         return jpqlTemplatesService.getTemplate(templateKey).getType();
     }
 
-    public Page<XmEntityDto> searchByEntityTemplate(String templateKey, Map<String, Object> requestParams, Pageable pageable) {
-        return xmEntityDbSearchService.searchByEntityTemplate(templateKey, requestParams, pageable).map(xmEntityMapper::toDto);
+    public Page<XmEntityDto> searchByEntityTemplate(String templateKey, Map<String, Object> requestParams, Pageable pageable,
+                                                    boolean countTotal) {
+        return xmEntityDbSearchService.searchByEntityTemplate(templateKey, requestParams, pageable, countTotal)
+            .map(xmEntityMapper::toDto);
     }
 
     public JpqlTemplateExecutor.RawResult searchByRawTemplate(String templateKey, Map<String, Object> requestParams,
-                                                              Pageable pageable) {
+                                                              Pageable pageable, boolean countTotal) {
         return xmEntityDbSearchService.searchByRawTemplate(templateKey, requestParams, pageable, value -> {
             if (value instanceof XmEntity xmEntity) {
                 return xmEntityMapper.toDto(xmEntity);
@@ -65,6 +67,6 @@ public class XmEntityDbSearchFacade {
             }
             // RAW templates may select anything: ids, field pairs, any entity of the service
             return Hibernate.unproxy(value);
-        });
+        }, countTotal);
     }
 }

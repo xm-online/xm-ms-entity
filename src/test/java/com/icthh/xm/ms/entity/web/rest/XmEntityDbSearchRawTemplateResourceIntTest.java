@@ -57,7 +57,7 @@ public class XmEntityDbSearchRawTemplateResourceIntTest extends AbstractPostgres
 
     @Test
     public void scalarProjectionUsesAliasesAndCountHeaders() {
-        var response = resource.searchByTemplatePost("ORDERS_SUMMARY", Map.of("typeKey", "SILENT"), PageRequest.of(0, 1));
+        var response = resource.searchByTemplatePost("ORDERS_SUMMARY", Map.of("typeKey", "SILENT"), null, PageRequest.of(0, 1));
 
         List<Map<String, Object>> rows = rows(response.getBody());
         assertThat(rows).hasSize(1);
@@ -66,8 +66,16 @@ public class XmEntityDbSearchRawTemplateResourceIntTest extends AbstractPostgres
     }
 
     @Test
+    public void skipTotalCountSkipsTheCountQueryOfTheTemplate() {
+        var response = resource.searchByTemplatePost("ORDERS_SUMMARY", Map.of("typeKey", "SILENT"), true, PageRequest.of(0, 1));
+
+        assertThat(rows(response.getBody())).hasSize(1);
+        assertThat(response.getHeaders().getFirst("X-Total-Count")).isNull();
+    }
+
+    @Test
     public void entitySelectionIsMappedToDtoAndNoCountHeaderWithoutCountQuery() {
-        var response = resource.searchByTemplatePost("ORDER_ENTITIES_RAW", Map.of("typeKey", "SILENT"), PageRequest.of(0, 10));
+        var response = resource.searchByTemplatePost("ORDER_ENTITIES_RAW", Map.of("typeKey", "SILENT"), null, PageRequest.of(0, 10));
 
         List<Map<String, Object>> rows = rows(response.getBody());
         assertThat(rows).hasSize(2);
@@ -79,14 +87,14 @@ public class XmEntityDbSearchRawTemplateResourceIntTest extends AbstractPostgres
 
     @Test
     public void mixedSelectionUsesPositionalKeys() {
-        var rows = rows(resource.searchByTemplatePost("MIXED_RAW", Map.of("typeKey", "SILENT"), PageRequest.of(0, 10)).getBody());
+        var rows = rows(resource.searchByTemplatePost("MIXED_RAW", Map.of("typeKey", "SILENT"), null, PageRequest.of(0, 10)).getBody());
         assertThat(rows.get(1).get("col0")).isInstanceOf(XmEntityDto.class);
         assertThat(rows.get(1).get("col1")).isEqualTo("B");
     }
 
     @Test
     public void scalarOnlyProjectionReturnsPlainValues() {
-        var rows = rows(resource.searchByTemplatePost("IDS_RAW", Map.of("typeKey", "SILENT"), PageRequest.of(0, 10)).getBody());
+        var rows = rows(resource.searchByTemplatePost("IDS_RAW", Map.of("typeKey", "SILENT"), null, PageRequest.of(0, 10)).getBody());
 
         assertThat(rows).hasSize(2);
         assertThat(rows.get(0).get("col0")).isEqualTo(a.getId());
@@ -104,7 +112,7 @@ public class XmEntityDbSearchRawTemplateResourceIntTest extends AbstractPostgres
         em.persist(tag);
         em.flush();
 
-        var rows = rows(resource.searchByTemplatePost("TAGS_RAW", Map.of("tagTypeKey", "VIP"), PageRequest.of(0, 10)).getBody());
+        var rows = rows(resource.searchByTemplatePost("TAGS_RAW", Map.of("tagTypeKey", "VIP"), null, PageRequest.of(0, 10)).getBody());
 
         assertThat(rows).hasSize(1);
         assertThat(rows.get(0).get("col0")).isInstanceOf(Tag.class);
@@ -115,29 +123,29 @@ public class XmEntityDbSearchRawTemplateResourceIntTest extends AbstractPostgres
     public void sortFromRequestOverridesTheOrderByOfTheTemplate() {
         // the template itself orders by e.name asc
         var byName = rows(resource.searchByTemplatePost("ORDERS_SUMMARY", Map.of("typeKey", "SILENT"),
-            PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "name"))).getBody());
+            null, PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "name"))).getBody());
         assertThat(byName).extracting(row -> row.get("name")).containsExactly("B", "A");
 
         var ascending = rows(resource.searchByTemplatePost("ORDERS_SUMMARY", Map.of("typeKey", "SILENT"),
-            PageRequest.of(0, 10, Sort.by(Sort.Direction.ASC, "name"))).getBody());
+            null, PageRequest.of(0, 10, Sort.by(Sort.Direction.ASC, "name"))).getBody());
         assertThat(ascending).extracting(row -> row.get("name")).containsExactly("A", "B");
     }
 
     @Test
     public void sortsByAJsonSelectionAliasAndPagesTheSortedResult() {
         var descending = rows(resource.searchByTemplatePost("ORDERS_SUMMARY", Map.of("typeKey", "SILENT"),
-            PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "orderNo"))).getBody());
+            null, PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "orderNo"))).getBody());
         assertThat(descending).extracting(row -> row.get("name")).containsExactly("B", "A");
 
         var firstPage = rows(resource.searchByTemplatePost("ORDERS_SUMMARY", Map.of("typeKey", "SILENT"),
-            PageRequest.of(0, 1, Sort.by(Sort.Direction.DESC, "orderNo"))).getBody());
+            null, PageRequest.of(0, 1, Sort.by(Sort.Direction.DESC, "orderNo"))).getBody());
         assertThat(firstPage).extracting(row -> row.get("name")).containsExactly("B");
     }
 
     @Test
     public void unknownSortPropertyIsRejectedAndNamesTheAliases() {
         assertThatThrownBy(() -> resource.searchByTemplatePost("ORDERS_SUMMARY", Map.of("typeKey", "SILENT"),
-            PageRequest.of(0, 10, Sort.by("nope"))))
+            null, PageRequest.of(0, 10, Sort.by("nope"))))
             .isInstanceOf(BusinessException.class).hasMessageContaining("nope").hasMessageContaining("name");
     }
 
@@ -145,7 +153,7 @@ public class XmEntityDbSearchRawTemplateResourceIntTest extends AbstractPostgres
     public void positionalRowKeysAreNotSortable() {
         // MIXED_RAW selects without aliases, so col0 / col1 are positions, not something to order by
         assertThatThrownBy(() -> resource.searchByTemplatePost("MIXED_RAW", Map.of("typeKey", "SILENT"),
-            PageRequest.of(0, 10, Sort.by("col0"))))
+            null, PageRequest.of(0, 10, Sort.by("col0"))))
             .isInstanceOf(BusinessException.class).hasMessageContaining("col0");
     }
 }

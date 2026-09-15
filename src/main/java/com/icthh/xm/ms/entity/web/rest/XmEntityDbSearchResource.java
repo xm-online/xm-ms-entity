@@ -44,7 +44,9 @@ import org.springframework.web.bind.annotation.RestController;
 public class XmEntityDbSearchResource extends TransactionPropagationService<XmEntityDbSearchResource> {
 
     static final String TOTAL_COUNT_HEADER = "X-Total-Count";
-    private static final Set<String> PAGE_PARAMS = Set.of("page", "size", "sort");
+    /** GET query parameter that skips the count query and the {@value #TOTAL_COUNT_HEADER} header; POST bodies use {@code skipTotalCount}. */
+    static final String SKIP_TOTAL_COUNT = "skip-total-count";
+    private static final Set<String> PAGE_PARAMS = Set.of("page", "size", "sort", SKIP_TOTAL_COUNT);
 
     private final XmEntityDbSearchFacade facade;
     private final XmEntitySearchTextReindexService reindexService;
@@ -54,6 +56,7 @@ public class XmEntityDbSearchResource extends TransactionPropagationService<XmEn
                                                        @RequestParam(required = false) String query,
                                                        @RequestParam(required = false) Boolean includeSubTypes,
                                                        @RequestParam MultiValueMap<String, String> params,
+                                                       @RequestParam(name = SKIP_TOTAL_COUNT, required = false) Boolean skipTotalCount,
                                                        @ParameterObject Pageable pageable) {
         XmEntityDbSearchRequest request = new XmEntityDbSearchRequest();
         request.setTypeKey(typeKey);
@@ -61,6 +64,7 @@ public class XmEntityDbSearchResource extends TransactionPropagationService<XmEn
         request.setIncludeSubTypes(includeSubTypes);
         request.setFilter(toFilterBody(params));
         request.setRawStringValues(true);
+        request.setSkipTotalCount(Boolean.TRUE.equals(skipTotalCount));
         return self.searchPost(request, pageable);
     }
 
@@ -75,7 +79,7 @@ public class XmEntityDbSearchResource extends TransactionPropagationService<XmEn
 
     private ResponseEntity<List<XmEntityDto>> respond(XmEntityDbSearchRequest request, Pageable pageable) {
         Page<XmEntityDto> page = facade.search(request, pageable, null);
-        return new ResponseEntity<>(page.getContent(), totalCount(page.getTotalElements()), HttpStatus.OK);
+        return new ResponseEntity<>(page.getContent(), totalCount(page, request), HttpStatus.OK);
     }
 
     @GetMapping(value = "/_search-db/xm-entities/{entityTypeKey}/{idOrKey}/links/{linkTypeKey}", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -85,12 +89,14 @@ public class XmEntityDbSearchResource extends TransactionPropagationService<XmEn
                                                              @RequestParam(required = false) String query,
                                                              @RequestParam(required = false) Boolean includeSubTypes,
                                                              @RequestParam MultiValueMap<String, String> params,
+                                                             @RequestParam(name = SKIP_TOTAL_COUNT, required = false) Boolean skipTotalCount,
                                                              @ParameterObject Pageable pageable) {
         XmEntityDbSearchRequest request = new XmEntityDbSearchRequest();
         request.setQuery(query);
         request.setIncludeSubTypes(includeSubTypes);
         request.setFilter(toFilterBody(params));
         request.setRawStringValues(true);
+        request.setSkipTotalCount(Boolean.TRUE.equals(skipTotalCount));
         return self.searchToLinkPost(entityTypeKey, idOrKey, linkTypeKey, request, pageable);
     }
 
@@ -114,6 +120,7 @@ public class XmEntityDbSearchResource extends TransactionPropagationService<XmEn
                                                           @RequestParam(required = false) String query,
                                                           @RequestParam(required = false) Boolean includeSubTypes,
                                                           @RequestParam MultiValueMap<String, String> params,
+                                                          @RequestParam(name = SKIP_TOTAL_COUNT, required = false) Boolean skipTotalCount,
                                                           @ParameterObject Pageable pageable) {
         XmEntityDbSearchRequest request = new XmEntityDbSearchRequest();
         request.setTypeKey(typeKey);
@@ -121,6 +128,7 @@ public class XmEntityDbSearchResource extends TransactionPropagationService<XmEn
         request.setIncludeSubTypes(includeSubTypes);
         request.setFilter(toFilterBody(params));
         request.setRawStringValues(true);
+        request.setSkipTotalCount(Boolean.TRUE.equals(skipTotalCount));
         return self.searchTargetsPost(idOrKey, linkTypeKey, request, pageable);
     }
 
@@ -139,18 +147,19 @@ public class XmEntityDbSearchResource extends TransactionPropagationService<XmEn
     private ResponseEntity<List<XmEntityDto>> respondToLink(String entityTypeKey, String idOrKey, String linkTypeKey,
                                                             XmEntityDbSearchRequest request, Pageable pageable) {
         Page<XmEntityDto> page = facade.searchToLink(IdOrKey.of(idOrKey), entityTypeKey, linkTypeKey, request, pageable, null);
-        return new ResponseEntity<>(page.getContent(), totalCount(page.getTotalElements()), HttpStatus.OK);
+        return new ResponseEntity<>(page.getContent(), totalCount(page, request), HttpStatus.OK);
     }
 
     private ResponseEntity<List<LinkDto>> respondTargets(String idOrKey, String linkTypeKey,
                                                          XmEntityDbSearchRequest request, Pageable pageable) {
         Page<LinkDto> page = facade.searchTargets(IdOrKey.of(idOrKey), linkTypeKey, request, pageable, null);
-        return new ResponseEntity<>(page.getContent(), totalCount(page.getTotalElements()), HttpStatus.OK);
+        return new ResponseEntity<>(page.getContent(), totalCount(page, request), HttpStatus.OK);
     }
 
     @GetMapping(value = "/_search-db/xm-entities/template/{templateKey}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<List<?>> searchByTemplateGet(@PathVariable String templateKey,
                                                        @RequestParam MultiValueMap<String, String> params,
+                                                       @RequestParam(name = SKIP_TOTAL_COUNT, required = false) Boolean skipTotalCount,
                                                        @ParameterObject Pageable pageable) {
         Map<String, Object> templateParams = new LinkedHashMap<>();
         params.forEach((k, v) -> {
@@ -158,7 +167,7 @@ public class XmEntityDbSearchResource extends TransactionPropagationService<XmEn
                 templateParams.put(k, v.get(0));
             }
         });
-        return self.searchByTemplatePost(templateKey, templateParams, pageable);
+        return self.searchByTemplatePost(templateKey, templateParams, skipTotalCount, pageable);
     }
 
     @PostMapping(value = "/_search-db/xm-entities/template/{templateKey}", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -166,8 +175,9 @@ public class XmEntityDbSearchResource extends TransactionPropagationService<XmEn
     @PrivilegeDescription("Privilege to search xm entities in DB by a JPQL template")
     public ResponseEntity<List<?>> searchByTemplatePost(@PathVariable String templateKey,
                                                         @RequestBody(required = false) Map<String, Object> params,
+                                                        @RequestParam(name = SKIP_TOTAL_COUNT, required = false) Boolean skipTotalCount,
                                                         @ParameterObject Pageable pageable) {
-        return respondTemplate(templateKey, params == null ? Map.of() : params, pageable);
+        return respondTemplate(templateKey, params == null ? Map.of() : params, !Boolean.TRUE.equals(skipTotalCount), pageable);
     }
 
     @PostMapping(value = "/_search-db/xm-entities/reindex", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -177,14 +187,20 @@ public class XmEntityDbSearchResource extends TransactionPropagationService<XmEn
         return ResponseEntity.ok(Map.of("processed", reindexService.reindex(typeKey)));
     }
 
-    private ResponseEntity<List<?>> respondTemplate(String templateKey, Map<String, Object> params, Pageable pageable) {
+    private ResponseEntity<List<?>> respondTemplate(String templateKey, Map<String, Object> params, boolean countTotal,
+                                                    Pageable pageable) {
         if (facade.templateType(templateKey) == JpqlTemplateType.RAW) {
-            JpqlTemplateExecutor.RawResult result = facade.searchByRawTemplate(templateKey, params, pageable);
+            JpqlTemplateExecutor.RawResult result = facade.searchByRawTemplate(templateKey, params, pageable, countTotal);
             HttpHeaders headers = result.total() == null ? new HttpHeaders() : totalCount(result.total());
             return new ResponseEntity<>(result.rows(), headers, HttpStatus.OK);
         }
-        Page<XmEntityDto> page = facade.searchByEntityTemplate(templateKey, params, pageable);
-        return new ResponseEntity<>(page.getContent(), totalCount(page.getTotalElements()), HttpStatus.OK);
+        Page<XmEntityDto> page = facade.searchByEntityTemplate(templateKey, params, pageable, countTotal);
+        return new ResponseEntity<>(page.getContent(), countTotal ? totalCount(page.getTotalElements()) : new HttpHeaders(),
+            HttpStatus.OK);
+    }
+
+    private static HttpHeaders totalCount(Page<?> page, XmEntityDbSearchRequest request) {
+        return request.isSkipTotalCount() ? new HttpHeaders() : totalCount(page.getTotalElements());
     }
 
     private static HttpHeaders totalCount(long total) {

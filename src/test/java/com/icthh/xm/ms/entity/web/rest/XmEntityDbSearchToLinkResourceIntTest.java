@@ -77,7 +77,7 @@ public class XmEntityDbSearchToLinkResourceIntTest extends AbstractPostgresIntTe
     public void getVariantAndEntityKeyResolution() {
         var params = new LinkedMultiValueMap<String, String>();
         params.add("data.sku.eq", "B2");
-        var response = resource.searchToLinkGet("ORDER", order.getKey(), "ORDER.ITEM", null, null, params, PageRequest.of(0, 10));
+        var response = resource.searchToLinkGet("ORDER", order.getKey(), "ORDER.ITEM", null, null, params, null, PageRequest.of(0, 10));
         assertThat(response.getBody()).extracting(XmEntityDto::getId).containsExactly(freeProduct.getId());
         assertThat(response.getHeaders().getFirst("X-Total-Count")).isEqualTo("1");
     }

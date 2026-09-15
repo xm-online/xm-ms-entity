@@ -105,7 +105,7 @@ public class XmEntityDbSearchResourceIntTest extends AbstractPostgresIntTest {
         params.add("page", "0");
         params.add("size", "10");
 
-        var response = resource.searchGet("ORDER", null, null, params, PageRequest.of(0, 10));
+        var response = resource.searchGet("ORDER", null, null, params, null, PageRequest.of(0, 10));
 
         assertThat(ids(response)).containsExactly(lviv.getId());
     }
@@ -115,7 +115,7 @@ public class XmEntityDbSearchResourceIntTest extends AbstractPostgresIntTest {
         MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
         params.add("data.orderNo.in", "1,3");
 
-        var response = resource.searchGet("ORDER", null, true, params, PageRequest.of(0, 10, Sort.by("data.orderNo")));
+        var response = resource.searchGet("ORDER", null, true, params, null, PageRequest.of(0, 10, Sort.by("data.orderNo")));
 
         assertThat(ids(response)).containsExactly(kyiv.getId(), express.getId());
     }
