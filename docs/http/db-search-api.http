@@ -1,0 +1,1515 @@
+# DB search API (/api/_search-db/**) end-to-end test flow for the entity microservice.
+#
+# Run the requests top to bottom (IntelliJ: "Run all requests in file", or CLI: ijhttp docs/http/db-search-api.http).
+# Every request carries assertions, so a failing case shows up in the test report.
+#
+# Prerequisites
+#   1. Tenant spec with the DBS-* test types: config/tenants/T3C7D9636/entity/xmentityspec/dbsearch-test.yml
+#   2. Entity started locally (8081 was busy with an ssh tunnel, hence 8082):
+#        ./gradlew bootRun --args='--spring.profiles.active=dev --server.port=8082'
+#   3. The token is taken from the remote UAA of the same tenant (as in wh.http).
+#
+# Sections
+#   0. token and preflight
+#   1. test data: 7 orders (3 typeKeys), 3 products, 2 customers, 6 links
+#   2. filtration: full text, every operator, column and data fields, typing, sort, paging, POST, errors
+#   3. search by linked entities: link candidates (to-link) and links of a source entity (targets)
+#   4. add new links and see how the searches change
+#   5. JPQL templates (ENTITY and RAW) from entity/jpql-templates.yml
+#   6. clean up: links, then entities, then verify nothing is left
+
+@host = http://localhost:8082
+@uaa =
+
+###############################################################################
+# 0. Token and preflight
+###############################################################################
+
+### 0.1 Get token (admin of tenant T3C7D9636)
+# @name token
+POST {{uaa}}/oauth/token
+Authorization: Basic d2ViYXBwOndlYmFwcA==
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=password&username=login&password=password
+
+> {%
+    client.global.set("token", response.body.access_token);
+    client.test("token received", () => client.assert(response.status === 200 && !!response.body.access_token, "no access_token"));
+%}
+
+### 0.2 Preflight: the DBS-ORDER type is in the spec and has full text search on
+GET {{host}}/api/xm-entity-specs/DBS-ORDER
+Authorization: Bearer {{token}}
+
+> {%
+    client.test("DBS-ORDER spec present", () => client.assert(response.status === 200, "status " + response.status));
+    client.test("fullTextSearch on", () => client.assert(response.body.fullTextSearch === true, "fullTextSearch=" + response.body.fullTextSearch));
+%}
+
+### 0.3 Preflight: no leftovers from a previous run (if this fails, run section 6 first or delete the listed ids)
+GET {{host}}/api/_search-db/xm-entities?typeKey=DBS-ORDER
+Authorization: Bearer {{token}}
+
+> {%
+    client.test("no leftover DBS-ORDER entities", () => client.assert(response.headers.valueOf("X-Total-Count") === "0", "leftover ids: " + response.body.map(e => e.id)));
+%}
+
+###############################################################################
+# 1. Test data
+###############################################################################
+
+### 1.1 Order 1: ACTIVE, Kyiv, tags vip+urgent, codes 7+42, nested address, has description
+POST {{host}}/api/xm-entities
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "key": "DBS-ORDER-1",
+  "typeKey": "DBS-ORDER",
+  "stateKey": "ACTIVE",
+  "name": "Alpha Kyiv",
+  "description": "Discounted order",
+  "data": {
+    "orderNo": 1,
+    "position": 5,
+    "amount": 100.5,
+    "active": true,
+    "note": "first",
+    "customer": { "city": "Kyiv", "email": "alpha@example.com", "address": { "zip": "01001", "street": "Khreshchatyk" } },
+    "tags": ["vip", "urgent"],
+    "codes": [7, 42]
+  }
+}
+
+> {%
+    client.global.set("o1", response.body.id);
+    client.test("o1 created", () => client.assert(response.status === 201, "status " + response.status));
+%}
+
+### 1.2 Order 2: ACTIVE, Kyiv, active=false, tag vip, code 42
+POST {{host}}/api/xm-entities
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "key": "DBS-ORDER-2",
+  "typeKey": "DBS-ORDER",
+  "stateKey": "ACTIVE",
+  "name": "Beta Kyiv",
+  "data": {
+    "orderNo": 2,
+    "position": 9,
+    "amount": 250,
+    "active": false,
+    "customer": { "city": "Kyiv", "email": "beta@example.com", "address": { "zip": "02002" } },
+    "tags": ["vip"],
+    "codes": [42]
+  }
+}
+
+> {%
+    client.global.set("o2", response.body.id);
+    client.test("o2 created", () => client.assert(response.status === 201, "status " + response.status));
+%}
+
+### 1.3 Order 3: NEW, Lviv, tag "vip-wholesale" (substring of vip, not an exact element), code 3
+POST {{host}}/api/xm-entities
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "key": "DBS-ORDER-3",
+  "typeKey": "DBS-ORDER",
+  "stateKey": "NEW",
+  "name": "Gamma Lviv",
+  "data": {
+    "orderNo": 3,
+    "position": 7,
+    "amount": 75.25,
+    "active": true,
+    "customer": { "city": "Lviv", "email": "gamma@example.com" },
+    "tags": ["vip-wholesale"],
+    "codes": [3]
+  }
+}
+
+> {%
+    client.global.set("o3", response.body.id);
+    client.test("o3 created", () => client.assert(response.status === 201, "status " + response.status));
+%}
+
+### 1.4 Order 4: CLOSED, Kyiv, no email, no codes, empty tags
+POST {{host}}/api/xm-entities
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "key": "DBS-ORDER-4",
+  "typeKey": "DBS-ORDER",
+  "stateKey": "CLOSED",
+  "name": "Delta Kyiv",
+  "data": {
+    "orderNo": 4,
+    "position": 1,
+    "amount": 0,
+    "active": false,
+    "customer": { "city": "Kyiv" },
+    "tags": []
+  }
+}
+
+> {%
+    client.global.set("o4", response.body.id);
+    client.test("o4 created", () => client.assert(response.status === 201, "status " + response.status));
+%}
+
+### 1.5 Order 5: subtype DBS-ORDER.EXPRESS (inherits fullTextSearch and links), Odesa
+POST {{host}}/api/xm-entities
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "key": "DBS-ORDER-5",
+  "typeKey": "DBS-ORDER.EXPRESS",
+  "stateKey": "ACTIVE",
+  "name": "Express Odesa",
+  "data": {
+    "orderNo": 5,
+    "position": 3,
+    "amount": 500,
+    "active": true,
+    "customer": { "city": "Odesa", "email": "express@example.com" },
+    "tags": ["express", "vip"],
+    "codes": [7]
+  }
+}
+
+> {%
+    client.global.set("o5", response.body.id);
+    client.test("o5 created", () => client.assert(response.status === 201, "status " + response.status));
+%}
+
+### 1.6 Order 6: subtype DBS-ORDER.QUIET (fullTextSearch: false), Kyiv, must never match a text query
+POST {{host}}/api/xm-entities
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "key": "DBS-ORDER-6",
+  "typeKey": "DBS-ORDER.QUIET",
+  "stateKey": "NEW",
+  "name": "Quiet Kyiv",
+  "data": {
+    "orderNo": 6,
+    "position": 2,
+    "amount": 20,
+    "active": false,
+    "customer": { "city": "Kyiv" },
+    "tags": ["quiet"]
+  }
+}
+
+> {%
+    client.global.set("o6", response.body.id);
+    client.test("o6 created", () => client.assert(response.status === 201, "status " + response.status));
+%}
+
+### 1.7 Order 7: DBS-ORDERX, a lookalike type that is NOT a subtype of DBS-ORDER (same orderNo 1)
+POST {{host}}/api/xm-entities
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "key": "DBS-ORDERX-7",
+  "typeKey": "DBS-ORDERX",
+  "name": "Lookalike Kyiv",
+  "data": { "orderNo": 1, "customer": { "city": "Kyiv" } }
+}
+
+> {%
+    client.global.set("o7", response.body.id);
+    client.test("o7 created", () => client.assert(response.status === 201, "status " + response.status));
+%}
+
+### 1.8 Product 1: Widget, tools, in stock
+POST {{host}}/api/xm-entities
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "key": "DBS-PRODUCT-1",
+  "typeKey": "DBS-PRODUCT",
+  "stateKey": "AVAILABLE",
+  "name": "Widget",
+  "data": { "sku": "W-100", "price": 9.99, "category": "tools", "inStock": true }
+}
+
+> {%
+    client.global.set("p1", response.body.id);
+    client.test("p1 created", () => client.assert(response.status === 201, "status " + response.status));
+%}
+
+### 1.9 Product 2: Gadget, electronics, out of stock
+POST {{host}}/api/xm-entities
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "key": "DBS-PRODUCT-2",
+  "typeKey": "DBS-PRODUCT",
+  "stateKey": "AVAILABLE",
+  "name": "Gadget",
+  "data": { "sku": "G-200", "price": 19.5, "category": "electronics", "inStock": false }
+}
+
+> {%
+    client.global.set("p2", response.body.id);
+    client.test("p2 created", () => client.assert(response.status === 201, "status " + response.status));
+%}
+
+### 1.10 Product 3: Gizmo Pro, electronics, discontinued
+POST {{host}}/api/xm-entities
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "key": "DBS-PRODUCT-3",
+  "typeKey": "DBS-PRODUCT",
+  "stateKey": "DISCONTINUED",
+  "name": "Gizmo Pro",
+  "data": { "sku": "G-300", "price": 99, "category": "electronics", "inStock": true }
+}
+
+> {%
+    client.global.set("p3", response.body.id);
+    client.test("p3 created", () => client.assert(response.status === 201, "status " + response.status));
+%}
+
+### 1.11 Customer 1: ACME Kyiv, vip
+POST {{host}}/api/xm-entities
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "key": "DBS-CUSTOMER-1",
+  "typeKey": "DBS-CUSTOMER",
+  "name": "ACME Kyiv",
+  "data": { "city": "Kyiv", "vip": true, "phones": ["+380501111111"] }
+}
+
+> {%
+    client.global.set("c1", response.body.id);
+    client.test("c1 created", () => client.assert(response.status === 201, "status " + response.status));
+%}
+
+### 1.12 Customer 2: Globex Lviv, not vip
+POST {{host}}/api/xm-entities
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "key": "DBS-CUSTOMER-2",
+  "typeKey": "DBS-CUSTOMER",
+  "name": "Globex Lviv",
+  "data": { "city": "Lviv", "vip": false, "phones": [] }
+}
+
+> {%
+    client.global.set("c2", response.body.id);
+    client.test("c2 created", () => client.assert(response.status === 201, "status " + response.status));
+%}
+
+### 1.13 Link 1: order1 -ITEM(unique)-> product1
+POST {{host}}/api/links
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{ "typeKey": "DBS-ORDER.ITEM", "source": { "id": {{o1}} }, "target": { "id": {{p1}} }, "startDate": "2026-09-15T00:00:00Z" }
+
+> {%
+    client.global.set("l1", response.body.id);
+    client.test("l1 created", () => client.assert(response.status === 201, "status " + response.status));
+%}
+
+### 1.14 Link 2: order1 -ITEM(unique)-> product2
+POST {{host}}/api/links
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{ "typeKey": "DBS-ORDER.ITEM", "source": { "id": {{o1}} }, "target": { "id": {{p2}} }, "startDate": "2026-09-15T00:00:00Z" }
+
+> {%
+    client.global.set("l2", response.body.id);
+    client.test("l2 created", () => client.assert(response.status === 201, "status " + response.status));
+%}
+
+### 1.15 Link 3: order1 -NOTE(not unique)-> product1
+POST {{host}}/api/links
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{ "typeKey": "DBS-ORDER.NOTE", "source": { "id": {{o1}} }, "target": { "id": {{p1}} }, "startDate": "2026-09-15T00:00:00Z" }
+
+> {%
+    client.global.set("l3", response.body.id);
+    client.test("l3 created", () => client.assert(response.status === 201, "status " + response.status));
+%}
+
+### 1.16 Link 4: order1 -CUSTOMER(unique)-> customer1
+POST {{host}}/api/links
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{ "typeKey": "DBS-ORDER.CUSTOMER", "source": { "id": {{o1}} }, "target": { "id": {{c1}} }, "startDate": "2026-09-15T00:00:00Z" }
+
+> {%
+    client.global.set("l4", response.body.id);
+    client.test("l4 created", () => client.assert(response.status === 201, "status " + response.status));
+%}
+
+### 1.17 Link 5: order2 -ITEM-> product1
+POST {{host}}/api/links
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{ "typeKey": "DBS-ORDER.ITEM", "source": { "id": {{o2}} }, "target": { "id": {{p1}} }, "startDate": "2026-09-15T00:00:00Z" }
+
+> {%
+    client.global.set("l5", response.body.id);
+    client.test("l5 created", () => client.assert(response.status === 201, "status " + response.status));
+%}
+
+### 1.18 Link 6: order2 -CUSTOMER-> customer2
+POST {{host}}/api/links
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{ "typeKey": "DBS-ORDER.CUSTOMER", "source": { "id": {{o2}} }, "target": { "id": {{c2}} }, "startDate": "2026-09-15T00:00:00Z" }
+
+> {%
+    client.global.set("l6", response.body.id);
+    client.test("l6 created", () => client.assert(response.status === 201, "status " + response.status));
+%}
+
+###############################################################################
+# 2. Filtration: GET /api/_search-db/xm-entities?typeKey=...&<field>.<op>=value
+#    Data set for DBS-ORDER (with subtypes): o1..o6 = 6 entities; o7 is DBS-ORDERX and must never appear here.
+###############################################################################
+
+### 2.1 typeKey only: all 6 (subtypes included by default), sorted by name
+GET {{host}}/api/_search-db/xm-entities?typeKey=DBS-ORDER&sort=name,asc
+Authorization: Bearer {{token}}
+
+> {%
+    client.test("total 6", () => client.assert(response.headers.valueOf("X-Total-Count") === "6", "total " + response.headers.valueOf("X-Total-Count")));
+    client.test("sorted by name", () => client.assert(response.body[0].name === "Alpha Kyiv" && response.body[5].name === "Quiet Kyiv", response.body.map(e => e.name).join(",")));
+    client.test("no DBS-ORDERX", () => client.assert(response.body.every(e => e.typeKey.startsWith("DBS-ORDER.") || e.typeKey === "DBS-ORDER"), "wrong type"));
+%}
+
+### 2.2 includeSubTypes=false: exact typeKey only (o1..o4)
+GET {{host}}/api/_search-db/xm-entities?typeKey=DBS-ORDER&includeSubTypes=false
+Authorization: Bearer {{token}}
+
+> {%
+    client.test("total 4", () => client.assert(response.headers.valueOf("X-Total-Count") === "4", "total " + response.headers.valueOf("X-Total-Count")));
+    client.test("only DBS-ORDER", () => client.assert(response.body.every(e => e.typeKey === "DBS-ORDER"), "subtype leaked"));
+%}
+
+### 2.3 lookalike type DBS-ORDERX is searchable on its own
+GET {{host}}/api/_search-db/xm-entities?typeKey=DBS-ORDERX&data.orderNo.eq=1
+Authorization: Bearer {{token}}
+
+> {%
+    client.test("total 1", () => client.assert(response.headers.valueOf("X-Total-Count") === "1", "total " + response.headers.valueOf("X-Total-Count")));
+    client.test("Lookalike Kyiv", () => client.assert(response.body[0].name === "Lookalike Kyiv", response.body[0].name));
+%}
+
+# ---------- 2.A Full text search (search_text = name, description, data.orderNo, data.customer.city, data.tags) ----------
+
+### 2.4 query=kyiv: name or city contains it, case-insensitive. o1,o2,o4; o6 (QUIET, full text off) excluded
+GET {{host}}/api/_search-db/xm-entities?typeKey=DBS-ORDER&query=kyiv&sort=name,asc
+Authorization: Bearer {{token}}
+
+> {%
+    client.test("total 3", () => client.assert(response.headers.valueOf("X-Total-Count") === "3", "total " + response.headers.valueOf("X-Total-Count")));
+    client.test("names", () => client.assert(response.body.map(e => e.name).join(",") === "Alpha Kyiv,Beta Kyiv,Delta Kyiv", response.body.map(e => e.name).join(",")));
+%}
+
+### 2.5 query=vip: matched in data.tags; substring, so "vip-wholesale" (o3) also matches: o1,o2,o3,o5
+GET {{host}}/api/_search-db/xm-entities?typeKey=DBS-ORDER&query=vip
+Authorization: Bearer {{token}}
+
+> {%
+    client.test("total 4", () => client.assert(response.headers.valueOf("X-Total-Count") === "4", "total " + response.headers.valueOf("X-Total-Count")));
+%}
+
+### 2.6 query=odesa: subtype DBS-ORDER.EXPRESS inherited fullTextSearch: true
+GET {{host}}/api/_search-db/xm-entities?typeKey=DBS-ORDER&query=odesa
+Authorization: Bearer {{token}}
+
+> {%
+    client.test("total 1", () => client.assert(response.headers.valueOf("X-Total-Count") === "1", "total " + response.headers.valueOf("X-Total-Count")));
+    client.test("Express Odesa", () => client.assert(response.body[0].typeKey === "DBS-ORDER.EXPRESS", response.body[0].typeKey));
+%}
+
+### 2.7 query=quiet: DBS-ORDER.QUIET has fullTextSearch: false, so its name and tags are not indexed
+GET {{host}}/api/_search-db/xm-entities?typeKey=DBS-ORDER&query=quiet
+Authorization: Bearer {{token}}
+
+> {%
+    client.test("total 0", () => client.assert(response.headers.valueOf("X-Total-Count") === "0", "total " + response.headers.valueOf("X-Total-Count")));
+%}
+
+### 2.8 query=discounted: description is part of search_text
+GET {{host}}/api/_search-db/xm-entities?typeKey=DBS-ORDER&query=discounted
+Authorization: Bearer {{token}}
+
+> {%
+    client.test("total 1", () => client.assert(response.headers.valueOf("X-Total-Count") === "1", "total " + response.headers.valueOf("X-Total-Count")));
+    client.test("Alpha Kyiv", () => client.assert(response.body[0].name === "Alpha Kyiv", response.body[0].name));
+%}
+
+### 2.9 query=lviv with a column filter: text and filters are AND-ed (o3 is NEW)
+GET {{host}}/api/_search-db/xm-entities?typeKey=DBS-ORDER&query=lviv&stateKey.eq=ACTIVE
+Authorization: Bearer {{token}}
+
+> {%
+    client.test("total 0", () => client.assert(response.headers.valueOf("X-Total-Count") === "0", "total " + response.headers.valueOf("X-Total-Count")));
+%}
+
+# ---------- 2.B Column fields (every persisted XmEntity column except data) ----------
+
+### 2.10 stateKey.eq: o1,o2,o5
+GET {{host}}/api/_search-db/xm-entities?typeKey=DBS-ORDER&stateKey.eq=ACTIVE
+Authorization: Bearer {{token}}
+
+> {%
+    client.test("total 3", () => client.assert(response.headers.valueOf("X-Total-Count") === "3", "total " + response.headers.valueOf("X-Total-Count")));
+%}
+
+### 2.11 stateKey.in (comma-separated on GET): o3,o4,o6
+GET {{host}}/api/_search-db/xm-entities?typeKey=DBS-ORDER&stateKey.in=NEW,CLOSED
+Authorization: Bearer {{token}}
+
+> {%
+    client.test("total 3", () => client.assert(response.headers.valueOf("X-Total-Count") === "3", "total " + response.headers.valueOf("X-Total-Count")));
+%}
+
+### 2.12 stateKey.notEq: o3,o4,o6
+GET {{host}}/api/_search-db/xm-entities?typeKey=DBS-ORDER&stateKey.notEq=ACTIVE
+Authorization: Bearer {{token}}
+
+> {%
+    client.test("total 3", () => client.assert(response.headers.valueOf("X-Total-Count") === "3", "total " + response.headers.valueOf("X-Total-Count")));
+%}
+
+### 2.13 stateKey.notIn: o1,o2,o5,o6
+GET {{host}}/api/_search-db/xm-entities?typeKey=DBS-ORDER&stateKey.notIn=NEW,CLOSED
+Authorization: Bearer {{token}}
+
+> {%
+    client.test("total 3", () => client.assert(response.headers.valueOf("X-Total-Count") === "3", "total " + response.headers.valueOf("X-Total-Count")));
+%}
+
+### 2.14 name.contains: case-insensitive substring: o1,o2,o4,o6
+GET {{host}}/api/_search-db/xm-entities?typeKey=DBS-ORDER&name.contains=KYIV
+Authorization: Bearer {{token}}
+
+> {%
+    client.test("total 4", () => client.assert(response.headers.valueOf("X-Total-Count") === "4", "total " + response.headers.valueOf("X-Total-Count")));
+%}
+
+### 2.15 name.startsWith / name.endsWith
+GET {{host}}/api/_search-db/xm-entities?typeKey=DBS-ORDER&name.startsWith=al&name.endsWith=KYIV
+Authorization: Bearer {{token}}
+
+> {%
+    client.test("total 1", () => client.assert(response.headers.valueOf("X-Total-Count") === "1", "total " + response.headers.valueOf("X-Total-Count")));
+    client.test("Alpha Kyiv", () => client.assert(response.body[0].name === "Alpha Kyiv", response.body[0].name));
+%}
+
+### 2.16 typeKey.eq on a subtype, typeKey.in on two subtypes
+GET {{host}}/api/_search-db/xm-entities?typeKey=DBS-ORDER&typeKey.in=DBS-ORDER.EXPRESS,DBS-ORDER.QUIET
+Authorization: Bearer {{token}}
+
+> {%
+    client.test("total 2", () => client.assert(response.headers.valueOf("X-Total-Count") === "2", "total " + response.headers.valueOf("X-Total-Count")));
+%}
+
+### 2.17 key.eq
+GET {{host}}/api/_search-db/xm-entities?typeKey=DBS-ORDER&key.eq=DBS-ORDER-3
+Authorization: Bearer {{token}}
+
+> {%
+    client.test("total 1", () => client.assert(response.headers.valueOf("X-Total-Count") === "1", "total " + response.headers.valueOf("X-Total-Count")));
+    client.test("Gamma Lviv", () => client.assert(response.body[0].name === "Gamma Lviv", response.body[0].name));
+%}
+
+### 2.18 id.in with ids captured in section 1
+GET {{host}}/api/_search-db/xm-entities?typeKey=DBS-ORDER&id.in={{o1}},{{o2}}&sort=id,asc
+Authorization: Bearer {{token}}
+
+> {%
+    client.test("total 2", () => client.assert(response.headers.valueOf("X-Total-Count") === "2", "total " + response.headers.valueOf("X-Total-Count")));
+%}
+
+### 2.19 startDate.gte / startDate.lt (Instant column): all 6 are newer than 2020
+GET {{host}}/api/_search-db/xm-entities?typeKey=DBS-ORDER&startDate.gte=2020-01-01T00:00:00Z&startDate.lt=2100-01-01T00:00:00Z
+Authorization: Bearer {{token}}
+
+> {%
+    client.test("total 6", () => client.assert(response.headers.valueOf("X-Total-Count") === "6", "total " + response.headers.valueOf("X-Total-Count")));
+%}
+
+### 2.20 description.specified=true: only o1 has a description
+GET {{host}}/api/_search-db/xm-entities?typeKey=DBS-ORDER&description.specified=true
+Authorization: Bearer {{token}}
+
+> {%
+    client.test("total 1", () => client.assert(response.headers.valueOf("X-Total-Count") === "1", "total " + response.headers.valueOf("X-Total-Count")));
+%}
+
+### 2.21 createdBy.specified=true and version.gte=0 (integer column)
+GET {{host}}/api/_search-db/xm-entities?typeKey=DBS-ORDER&createdBy.specified=true&version.gte=0
+Authorization: Bearer {{token}}
+
+> {%
+    client.test("total 6", () => client.assert(response.headers.valueOf("X-Total-Count") === "6", "total " + response.headers.valueOf("X-Total-Count")));
+%}
+
+### 2.22 removed.eq=true: only soft-deleted rows; there are none
+GET {{host}}/api/_search-db/xm-entities?typeKey=DBS-ORDER&removed.eq=true
+Authorization: Bearer {{token}}
+
+> {%
+    client.test("total 0", () => client.assert(response.headers.valueOf("X-Total-Count") === "0", "total " + response.headers.valueOf("X-Total-Count")));
+%}
+
+# ---------- 2.C Data (jsonb) fields: data.<path>.<op> ----------
+
+### 2.23 data.orderNo.eq (number): o1 only; o7 has orderNo 1 too but is DBS-ORDERX
+GET {{host}}/api/_search-db/xm-entities?typeKey=DBS-ORDER&data.orderNo.eq=1
+Authorization: Bearer {{token}}
+
+> {%
+    client.test("total 1", () => client.assert(response.headers.valueOf("X-Total-Count") === "1", "total " + response.headers.valueOf("X-Total-Count")));
+    client.test("Alpha Kyiv", () => client.assert(response.body[0].name === "Alpha Kyiv", response.body[0].name));
+%}
+
+### 2.24 data.orderNo.in: o1,o2,o3
+GET {{host}}/api/_search-db/xm-entities?typeKey=DBS-ORDER&data.orderNo.in=1,2,3
+Authorization: Bearer {{token}}
+
+> {%
+    client.test("total 3", () => client.assert(response.headers.valueOf("X-Total-Count") === "3", "total " + response.headers.valueOf("X-Total-Count")));
+%}
+
+### 2.25 data.orderNo.notIn: o3,o4,o5,o6
+GET {{host}}/api/_search-db/xm-entities?typeKey=DBS-ORDER&data.orderNo.notIn=1,2
+Authorization: Bearer {{token}}
+
+> {%
+    client.test("total 4", () => client.assert(response.headers.valueOf("X-Total-Count") === "4", "total " + response.headers.valueOf("X-Total-Count")));
+%}
+
+### 2.26 data.orderNo.gt / gte / lt / lte (numeric comparison of jsonb numbers)
+GET {{host}}/api/_search-db/xm-entities?typeKey=DBS-ORDER&data.orderNo.gt=3
+Authorization: Bearer {{token}}
+
+> {%
+    client.test("gt 3 -> 3", () => client.assert(response.headers.valueOf("X-Total-Count") === "3", "total " + response.headers.valueOf("X-Total-Count")));
+%}
+
+### 2.27 data.orderNo.gte=3 and data.orderNo.lte=5: o3,o4,o5
+GET {{host}}/api/_search-db/xm-entities?typeKey=DBS-ORDER&data.orderNo.gte=3&data.orderNo.lte=5
+Authorization: Bearer {{token}}
+
+> {%
+    client.test("total 3", () => client.assert(response.headers.valueOf("X-Total-Count") === "3", "total " + response.headers.valueOf("X-Total-Count")));
+%}
+
+### 2.28 data.orderNo.lt=3: o1,o2
+GET {{host}}/api/_search-db/xm-entities?typeKey=DBS-ORDER&data.orderNo.lt=3
+Authorization: Bearer {{token}}
+
+> {%
+    client.test("total 2", () => client.assert(response.headers.valueOf("X-Total-Count") === "2", "total " + response.headers.valueOf("X-Total-Count")));
+%}
+
+### 2.29 data.amount.gt=100 (decimal): o1 100.5, o2 250, o5 500
+GET {{host}}/api/_search-db/xm-entities?typeKey=DBS-ORDER&data.amount.gt=100
+Authorization: Bearer {{token}}
+
+> {%
+    client.test("total 3", () => client.assert(response.headers.valueOf("X-Total-Count") === "3", "total " + response.headers.valueOf("X-Total-Count")));
+%}
+
+### 2.30 data.amount.lte=75.25 (decimal boundary): o3 75.25, o4 0, o6 20
+GET {{host}}/api/_search-db/xm-entities?typeKey=DBS-ORDER&data.amount.lte=75.25
+Authorization: Bearer {{token}}
+
+> {%
+    client.test("total 3", () => client.assert(response.headers.valueOf("X-Total-Count") === "3", "total " + response.headers.valueOf("X-Total-Count")));
+%}
+
+### 2.31 data.active.eq=true (boolean, typed): o1,o3,o5
+GET {{host}}/api/_search-db/xm-entities?typeKey=DBS-ORDER&data.active.eq=true
+Authorization: Bearer {{token}}
+
+> {%
+    client.test("total 3", () => client.assert(response.headers.valueOf("X-Total-Count") === "3", "total " + response.headers.valueOf("X-Total-Count")));
+%}
+
+### 2.32 data.active.eq="true" (quoted on GET = string): compares with text "true", so no boolean matches
+GET {{host}}/api/_search-db/xm-entities?typeKey=DBS-ORDER&data.active.eq="true"
+Authorization: Bearer {{token}}
+
+> {%
+    client.test("total 0", () => client.assert(response.headers.valueOf("X-Total-Count") === "0", "total " + response.headers.valueOf("X-Total-Count")));
+%}
+
+### 2.33 nested path data.customer.city.eq: o1,o2,o4,o6
+GET {{host}}/api/_search-db/xm-entities?typeKey=DBS-ORDER&data.customer.city.eq=Kyiv
+Authorization: Bearer {{token}}
+
+> {%
+    client.test("total 4", () => client.assert(response.headers.valueOf("X-Total-Count") === "4", "total " + response.headers.valueOf("X-Total-Count")));
+%}
+
+### 2.34 data.customer.city.notEq / .in
+GET {{host}}/api/_search-db/xm-entities?typeKey=DBS-ORDER&data.customer.city.notEq=Kyiv&data.customer.city.in=Lviv,Odesa
+Authorization: Bearer {{token}}
+
+> {%
+    client.test("total 2", () => client.assert(response.headers.valueOf("X-Total-Count") === "2", "total " + response.headers.valueOf("X-Total-Count")));
+%}
+
+### 2.35 data.customer.city.contains / startsWith / endsWith (case-insensitive text on jsonb): "iv" ends Kyiv and Lviv
+GET {{host}}/api/_search-db/xm-entities?typeKey=DBS-ORDER&data.customer.city.endsWith=IV
+Authorization: Bearer {{token}}
+
+> {%
+    client.test("total 5", () => client.assert(response.headers.valueOf("X-Total-Count") === "5", "total " + response.headers.valueOf("X-Total-Count")));
+%}
+
+### 2.36 data.customer.city.startsWith=ky and contains=yi: o1,o2,o4,o6
+GET {{host}}/api/_search-db/xm-entities?typeKey=DBS-ORDER&data.customer.city.startsWith=ky&data.customer.city.contains=yi
+Authorization: Bearer {{token}}
+
+> {%
+    client.test("total 4", () => client.assert(response.headers.valueOf("X-Total-Count") === "4", "total " + response.headers.valueOf("X-Total-Count")));
+%}
+
+### 2.37 three-level path with a numeric-looking string: quote it, otherwise 01001 is parsed as the number 1001
+GET {{host}}/api/_search-db/xm-entities?typeKey=DBS-ORDER&data.customer.address.zip.eq='01001'
+Authorization: Bearer {{token}}
+
+> {%
+    client.test("quoted zip -> 1", () => client.assert(response.headers.valueOf("X-Total-Count") === "1", "total " + response.headers.valueOf("X-Total-Count")));
+%}
+
+### 2.38 same value unquoted: typed as number 1001, so it does not match the string "01001"
+GET {{host}}/api/_search-db/xm-entities?typeKey=DBS-ORDER&data.customer.address.zip.eq=01001
+Authorization: Bearer {{token}}
+
+> {%
+    client.test("unquoted zip -> 0", () => client.assert(response.headers.valueOf("X-Total-Count") === "0", "total " + response.headers.valueOf("X-Total-Count")));
+%}
+
+### 2.39 data.customer.email.specified=true: o1,o2,o3,o5
+GET {{host}}/api/_search-db/xm-entities?typeKey=DBS-ORDER&data.customer.email.specified=true
+Authorization: Bearer {{token}}
+
+> {%
+    client.test("total 4", () => client.assert(response.headers.valueOf("X-Total-Count") === "4", "total " + response.headers.valueOf("X-Total-Count")));
+%}
+
+### 2.40 data.customer.email.specified=false: o4,o6
+GET {{host}}/api/_search-db/xm-entities?typeKey=DBS-ORDER&data.customer.email.specified=false
+Authorization: Bearer {{token}}
+
+> {%
+    client.test("total 2", () => client.assert(response.headers.valueOf("X-Total-Count") === "2", "total " + response.headers.valueOf("X-Total-Count")));
+%}
+
+### 2.41 data.tags.has=vip: exact array element: o1,o2,o5 ("vip-wholesale" does not count)
+GET {{host}}/api/_search-db/xm-entities?typeKey=DBS-ORDER&data.tags.has=vip
+Authorization: Bearer {{token}}
+
+> {%
+    client.test("total 3", () => client.assert(response.headers.valueOf("X-Total-Count") === "3", "total " + response.headers.valueOf("X-Total-Count")));
+%}
+
+### 2.42 data.tags.contains=vip: substring over the array text: o1,o2,o3,o5
+GET {{host}}/api/_search-db/xm-entities?typeKey=DBS-ORDER&data.tags.contains=vip
+Authorization: Bearer {{token}}
+
+> {%
+    client.test("total 4", () => client.assert(response.headers.valueOf("X-Total-Count") === "4", "total " + response.headers.valueOf("X-Total-Count")));
+%}
+
+### 2.43 data.codes.has=7 (number element): o1,o5
+GET {{host}}/api/_search-db/xm-entities?typeKey=DBS-ORDER&data.codes.has=7
+Authorization: Bearer {{token}}
+
+> {%
+    client.test("total 2", () => client.assert(response.headers.valueOf("X-Total-Count") === "2", "total " + response.headers.valueOf("X-Total-Count")));
+%}
+
+### 2.44 data.codes.has='7' (string element): the arrays hold numbers, so nothing matches
+GET {{host}}/api/_search-db/xm-entities?typeKey=DBS-ORDER&data.codes.has='7'
+Authorization: Bearer {{token}}
+
+> {%
+    client.test("total 0", () => client.assert(response.headers.valueOf("X-Total-Count") === "0", "total " + response.headers.valueOf("X-Total-Count")));
+%}
+
+# ---------- 2.D Sorting and paging ----------
+
+### 2.45 sort by jsonb number desc: positions 9,7,5,3,2,1
+GET {{host}}/api/_search-db/xm-entities?typeKey=DBS-ORDER&sort=data.position,desc
+Authorization: Bearer {{token}}
+
+> {%
+    client.test("positions desc", () => client.assert(response.body.map(e => e.data.position).join(",") === "9,7,5,3,2,1", response.body.map(e => e.data.position).join(",")));
+%}
+
+### 2.46 multi sort: stateKey asc, then data.orderNo desc
+GET {{host}}/api/_search-db/xm-entities?typeKey=DBS-ORDER&sort=stateKey,asc&sort=data.orderNo,desc
+Authorization: Bearer {{token}}
+
+> {%
+    client.test("order", () => client.assert(response.body.map(e => e.name).join(",") === "Express Odesa,Beta Kyiv,Alpha Kyiv,Delta Kyiv,Quiet Kyiv,Gamma Lviv", response.body.map(e => e.name).join(",")));
+%}
+
+### 2.47 paging: page 1 of size 2 sorted by data.orderNo asc -> o3,o4; X-Total-Count still 6
+GET {{host}}/api/_search-db/xm-entities?typeKey=DBS-ORDER&sort=data.orderNo,asc&page=1&size=2
+Authorization: Bearer {{token}}
+
+> {%
+    client.test("total 6", () => client.assert(response.headers.valueOf("X-Total-Count") === "6", "total " + response.headers.valueOf("X-Total-Count")));
+    client.test("page content", () => client.assert(response.body.map(e => e.data.orderNo).join(",") === "3,4", response.body.map(e => e.data.orderNo).join(",")));
+%}
+
+### 2.48 everything together: text + column + jsonb in + sort + page size 1: total 2, first is Beta (position 9)
+GET {{host}}/api/_search-db/xm-entities?typeKey=DBS-ORDER&query=kyiv&stateKey.eq=ACTIVE&data.orderNo.in=1,2,3&sort=data.position,desc&page=0&size=1
+Authorization: Bearer {{token}}
+
+> {%
+    client.test("total 2", () => client.assert(response.headers.valueOf("X-Total-Count") === "2", "total " + response.headers.valueOf("X-Total-Count")));
+    client.test("one row, Beta first", () => client.assert(response.body.length === 1 && response.body[0].name === "Beta Kyiv", JSON.stringify(response.body.map(e => e.name))));
+%}
+
+# ---------- 2.E POST variant: same grammar, values keep their JSON types, page/size/sort stay in the URL ----------
+
+### 2.49 POST with typed filter values
+POST {{host}}/api/_search-db/xm-entities?sort=data.orderNo,desc&size=10
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "typeKey": "DBS-ORDER",
+  "query": "kyiv",
+  "filter": {
+    "data.orderNo.in": [1, 2, 3],
+    "data.position.gte": 5,
+    "stateKey.eq": "ACTIVE"
+  }
+}
+
+> {%
+    client.test("total 2", () => client.assert(response.headers.valueOf("X-Total-Count") === "2", "total " + response.headers.valueOf("X-Total-Count")));
+    client.test("orderNo desc", () => client.assert(response.body.map(e => e.data.orderNo).join(",") === "2,1", response.body.map(e => e.data.orderNo).join(",")));
+%}
+
+### 2.50 POST: boolean, nested string, has on numbers, includeSubTypes=false
+POST {{host}}/api/_search-db/xm-entities
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "typeKey": "DBS-ORDER",
+  "includeSubTypes": false,
+  "filter": {
+    "data.active.eq": true,
+    "data.customer.city.eq": "Kyiv",
+    "data.codes.has": 42
+  }
+}
+
+> {%
+    client.test("total 1 (Alpha)", () => client.assert(response.headers.valueOf("X-Total-Count") === "1" && response.body[0].name === "Alpha Kyiv", "total " + response.headers.valueOf("X-Total-Count")));
+%}
+
+### 2.51 POST: a numeric-looking string stays a string in JSON (no quoting tricks needed)
+POST {{host}}/api/_search-db/xm-entities
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{ "typeKey": "DBS-ORDER", "filter": { "data.customer.address.zip.eq": "01001" } }
+
+> {%
+    client.test("total 1", () => client.assert(response.headers.valueOf("X-Total-Count") === "1", "total " + response.headers.valueOf("X-Total-Count")));
+%}
+
+### 2.52 POST: startDate range with Instant strings and specified=false on a data path
+POST {{host}}/api/_search-db/xm-entities
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "typeKey": "DBS-ORDER",
+  "filter": { "startDate.gte": "2020-01-01T00:00:00Z", "data.codes.specified": false }
+}
+
+> {%
+    client.test("total 2 (o4, o6)", () => client.assert(response.headers.valueOf("X-Total-Count") === "2", "total " + response.headers.valueOf("X-Total-Count")));
+%}
+
+# ---------- 2.F Validation errors (400) ----------
+
+### 2.53 unknown operator
+GET {{host}}/api/_search-db/xm-entities?typeKey=DBS-ORDER&name.like=a
+Authorization: Bearer {{token}}
+
+> {% client.test("400", () => client.assert(response.status === 400, "status " + response.status)); %}
+
+### 2.54 unknown column
+GET {{host}}/api/_search-db/xm-entities?typeKey=DBS-ORDER&nope.eq=a
+Authorization: Bearer {{token}}
+
+> {% client.test("400", () => client.assert(response.status === 400, "status " + response.status)); %}
+
+### 2.55 unknown sort property
+GET {{host}}/api/_search-db/xm-entities?typeKey=DBS-ORDER&sort=nope,asc
+Authorization: Bearer {{token}}
+
+> {% client.test("400", () => client.assert(response.status === 400, "status " + response.status)); %}
+
+### 2.56 typeKey not in the spec
+GET {{host}}/api/_search-db/xm-entities?typeKey=NO_SUCH_TYPE
+Authorization: Bearer {{token}}
+
+> {% client.test("400", () => client.assert(response.status === 400, "status " + response.status)); %}
+
+### 2.57 typeKey missing
+GET {{host}}/api/_search-db/xm-entities?name.eq=a
+Authorization: Bearer {{token}}
+
+> {% client.test("400", () => client.assert(response.status === 400, "status " + response.status)); %}
+
+### 2.58 has on a column field (data fields only)
+GET {{host}}/api/_search-db/xm-entities?typeKey=DBS-ORDER&name.has=a
+Authorization: Bearer {{token}}
+
+> {% client.test("400", () => client.assert(response.status === 400, "status " + response.status)); %}
+
+### 2.59 invalid data path (empty segment)
+GET {{host}}/api/_search-db/xm-entities?typeKey=DBS-ORDER&data..x.eq=1
+Authorization: Bearer {{token}}
+
+> {% client.test("400", () => client.assert(response.status === 400, "status " + response.status)); %}
+
+### 2.60 specified needs true/false
+GET {{host}}/api/_search-db/xm-entities?typeKey=DBS-ORDER&name.specified=yes
+Authorization: Bearer {{token}}
+
+> {% client.test("400", () => client.assert(response.status === 400, "status " + response.status)); %}
+
+### 2.61 POST: in requires a list
+POST {{host}}/api/_search-db/xm-entities
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{ "typeKey": "DBS-ORDER", "filter": { "data.orderNo.in": 1 } }
+
+> {% client.test("400", () => client.assert(response.status === 400, "status " + response.status)); %}
+
+###############################################################################
+# 3. Search by linked entities
+#    3.A link candidates:  GET /api/_search-db/xm-entities/{entityTypeKey}/{idOrKey}/links/{linkTypeKey}
+#        target typeKey comes from the link spec; for isUnique links the already linked targets are excluded
+#    3.B links of a source: GET /api/_search-db/xm-entities/{idOrKey}/targets/{linkTypeKey}
+#        query / filter / sort apply to the target entity; response is a list of links
+###############################################################################
+
+### 3.1 candidates for o1 ITEM (unique): p1 and p2 already linked, so only p3
+GET {{host}}/api/_search-db/xm-entities/DBS-ORDER/{{o1}}/links/DBS-ORDER.ITEM
+Authorization: Bearer {{token}}
+
+> {%
+    client.test("total 1", () => client.assert(response.headers.valueOf("X-Total-Count") === "1", "total " + response.headers.valueOf("X-Total-Count")));
+    client.test("Gizmo Pro", () => client.assert(response.body[0].name === "Gizmo Pro", response.body[0].name));
+%}
+
+### 3.2 candidates for o1 NOTE (not unique): all 3 products, linked or not
+GET {{host}}/api/_search-db/xm-entities/DBS-ORDER/{{o1}}/links/DBS-ORDER.NOTE?sort=name,asc
+Authorization: Bearer {{token}}
+
+> {%
+    client.test("total 3", () => client.assert(response.headers.valueOf("X-Total-Count") === "3", "total " + response.headers.valueOf("X-Total-Count")));
+%}
+
+### 3.3 candidates for o3 ITEM (no links yet): all 3 products
+GET {{host}}/api/_search-db/xm-entities/DBS-ORDER/{{o3}}/links/DBS-ORDER.ITEM
+Authorization: Bearer {{token}}
+
+> {%
+    client.test("total 3", () => client.assert(response.headers.valueOf("X-Total-Count") === "3", "total " + response.headers.valueOf("X-Total-Count")));
+%}
+
+### 3.4 candidates with a jsonb boolean filter: in stock -> Widget, Gizmo Pro
+GET {{host}}/api/_search-db/xm-entities/DBS-ORDER/{{o3}}/links/DBS-ORDER.ITEM?data.inStock.eq=true&sort=name,asc
+Authorization: Bearer {{token}}
+
+> {%
+    client.test("total 2", () => client.assert(response.headers.valueOf("X-Total-Count") === "2", "total " + response.headers.valueOf("X-Total-Count")));
+    client.test("names", () => client.assert(response.body.map(e => e.name).join(",") === "Gizmo Pro,Widget", response.body.map(e => e.name).join(",")));
+%}
+
+### 3.5 candidates with full text query on the product (data.category is indexed): electronics -> Gadget, Gizmo Pro
+GET {{host}}/api/_search-db/xm-entities/DBS-ORDER/{{o3}}/links/DBS-ORDER.ITEM?query=electro
+Authorization: Bearer {{token}}
+
+> {%
+    client.test("total 2", () => client.assert(response.headers.valueOf("X-Total-Count") === "2", "total " + response.headers.valueOf("X-Total-Count")));
+%}
+
+### 3.6 candidates: numeric filter + jsonb sort: price > 10 sorted by price desc -> Gizmo Pro (99), Gadget (19.5)
+GET {{host}}/api/_search-db/xm-entities/DBS-ORDER/{{o3}}/links/DBS-ORDER.ITEM?data.price.gt=10&sort=data.price,desc
+Authorization: Bearer {{token}}
+
+> {%
+    client.test("order", () => client.assert(response.body.map(e => e.name).join(",") === "Gizmo Pro,Gadget", response.body.map(e => e.name).join(",")));
+%}
+
+### 3.7 candidates: column filter + startsWith on jsonb: DISCONTINUED with sku G-*
+GET {{host}}/api/_search-db/xm-entities/DBS-ORDER/{{o3}}/links/DBS-ORDER.ITEM?stateKey.eq=DISCONTINUED&data.sku.startsWith=G-
+Authorization: Bearer {{token}}
+
+> {%
+    client.test("total 1", () => client.assert(response.headers.valueOf("X-Total-Count") === "1", "total " + response.headers.valueOf("X-Total-Count")));
+%}
+
+### 3.8 candidates addressed by entity key instead of id
+GET {{host}}/api/_search-db/xm-entities/DBS-ORDER/DBS-ORDER-3/links/DBS-ORDER.ITEM
+Authorization: Bearer {{token}}
+
+> {%
+    client.test("total 3", () => client.assert(response.headers.valueOf("X-Total-Count") === "3", "total " + response.headers.valueOf("X-Total-Count")));
+%}
+
+### 3.9 candidates for a subtype source (o5 is DBS-ORDER.EXPRESS, link spec inherited from DBS-ORDER)
+GET {{host}}/api/_search-db/xm-entities/DBS-ORDER/{{o5}}/links/DBS-ORDER.ITEM
+Authorization: Bearer {{token}}
+
+> {%
+    client.test("total 3", () => client.assert(response.headers.valueOf("X-Total-Count") === "3", "total " + response.headers.valueOf("X-Total-Count")));
+%}
+
+### 3.10 candidates of another target type: customers for o3, vip only
+GET {{host}}/api/_search-db/xm-entities/DBS-ORDER/{{o3}}/links/DBS-ORDER.CUSTOMER?data.vip.eq=true
+Authorization: Bearer {{token}}
+
+> {%
+    client.test("total 1", () => client.assert(response.headers.valueOf("X-Total-Count") === "1", "total " + response.headers.valueOf("X-Total-Count")));
+    client.test("ACME Kyiv", () => client.assert(response.body[0].name === "ACME Kyiv", response.body[0].name));
+%}
+
+### 3.11 candidates, POST variant with typed filter
+POST {{host}}/api/_search-db/xm-entities/DBS-ORDER/{{o3}}/links/DBS-ORDER.ITEM?sort=data.price,asc
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{ "filter": { "data.price.lt": 50, "data.category.in": ["tools", "electronics"] } }
+
+> {%
+    client.test("total 2", () => client.assert(response.headers.valueOf("X-Total-Count") === "2", "total " + response.headers.valueOf("X-Total-Count")));
+    client.test("price asc", () => client.assert(response.body.map(e => e.name).join(",") === "Widget,Gadget", response.body.map(e => e.name).join(",")));
+%}
+
+### 3.12 candidates: unknown link type -> 400
+GET {{host}}/api/_search-db/xm-entities/DBS-ORDER/{{o1}}/links/NO_SUCH_LINK
+Authorization: Bearer {{token}}
+
+> {% client.test("400", () => client.assert(response.status === 400, "status " + response.status)); %}
+
+### 3.13 candidates: the source id is not of the given entityTypeKey -> 400
+GET {{host}}/api/_search-db/xm-entities/DBS-PRODUCT/{{o1}}/links/DBS-ORDER.ITEM
+Authorization: Bearer {{token}}
+
+> {% client.test("400", () => client.assert(response.status === 400, "status " + response.status)); %}
+
+# ---------- 3.B links of a source entity, filtered by target ----------
+
+### 3.14 all ITEM links of o1: l1 (Widget), l2 (Gadget)
+GET {{host}}/api/_search-db/xm-entities/{{o1}}/targets/DBS-ORDER.ITEM?sort=name,asc
+Authorization: Bearer {{token}}
+
+> {%
+    client.test("total 2", () => client.assert(response.headers.valueOf("X-Total-Count") === "2", "total " + response.headers.valueOf("X-Total-Count")));
+    client.test("link shape", () => client.assert(response.body[0].typeKey === "DBS-ORDER.ITEM" && response.body[0].target.name === "Gadget" && response.body[1].target.name === "Widget", JSON.stringify(response.body.map(l => l.target.name))));
+%}
+
+### 3.15 filter by target jsonb string
+GET {{host}}/api/_search-db/xm-entities/{{o1}}/targets/DBS-ORDER.ITEM?data.sku.eq=W-100
+Authorization: Bearer {{token}}
+
+> {%
+    client.test("total 1", () => client.assert(response.headers.valueOf("X-Total-Count") === "1", "total " + response.headers.valueOf("X-Total-Count")));
+    client.test("Widget", () => client.assert(response.body[0].target.data.sku === "W-100", JSON.stringify(response.body[0].target)));
+%}
+
+### 3.16 full text on the target
+GET {{host}}/api/_search-db/xm-entities/{{o1}}/targets/DBS-ORDER.ITEM?query=gadg
+Authorization: Bearer {{token}}
+
+> {%
+    client.test("total 1", () => client.assert(response.headers.valueOf("X-Total-Count") === "1", "total " + response.headers.valueOf("X-Total-Count")));
+%}
+
+### 3.17 target column filter + jsonb sort desc
+GET {{host}}/api/_search-db/xm-entities/{{o1}}/targets/DBS-ORDER.ITEM?stateKey.eq=AVAILABLE&sort=data.price,desc
+Authorization: Bearer {{token}}
+
+> {%
+    client.test("Gadget then Widget", () => client.assert(response.body.map(l => l.target.name).join(",") === "Gadget,Widget", response.body.map(l => l.target.name).join(",")));
+%}
+
+### 3.18 optional typeKey restricts the target type (matches the link spec here)
+GET {{host}}/api/_search-db/xm-entities/{{o1}}/targets/DBS-ORDER.ITEM?typeKey=DBS-PRODUCT&data.inStock.eq=false
+Authorization: Bearer {{token}}
+
+> {%
+    client.test("total 1", () => client.assert(response.headers.valueOf("X-Total-Count") === "1", "total " + response.headers.valueOf("X-Total-Count")));
+%}
+
+### 3.19 another link type of the same source: NOTE -> 1 link
+GET {{host}}/api/_search-db/xm-entities/{{o1}}/targets/DBS-ORDER.NOTE
+Authorization: Bearer {{token}}
+
+> {%
+    client.test("total 1", () => client.assert(response.headers.valueOf("X-Total-Count") === "1", "total " + response.headers.valueOf("X-Total-Count")));
+%}
+
+### 3.20 CUSTOMER links filtered by target boolean: o1 -> ACME (vip) matches, o2 -> Globex does not
+GET {{host}}/api/_search-db/xm-entities/{{o1}}/targets/DBS-ORDER.CUSTOMER?data.vip.eq=true
+Authorization: Bearer {{token}}
+
+> {%
+    client.test("o1 total 1", () => client.assert(response.headers.valueOf("X-Total-Count") === "1", "total " + response.headers.valueOf("X-Total-Count")));
+%}
+
+### 3.21 same filter on o2 -> 0
+GET {{host}}/api/_search-db/xm-entities/{{o2}}/targets/DBS-ORDER.CUSTOMER?data.vip.eq=true
+Authorization: Bearer {{token}}
+
+> {%
+    client.test("o2 total 0", () => client.assert(response.headers.valueOf("X-Total-Count") === "0", "total " + response.headers.valueOf("X-Total-Count")));
+%}
+
+### 3.22 links by source entity key, POST variant
+POST {{host}}/api/_search-db/xm-entities/DBS-ORDER-1/targets/DBS-ORDER.ITEM?sort=data.price,asc
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{ "filter": { "data.price.gte": 5 } }
+
+> {%
+    client.test("total 2", () => client.assert(response.headers.valueOf("X-Total-Count") === "2", "total " + response.headers.valueOf("X-Total-Count")));
+    client.test("price asc", () => client.assert(response.body.map(l => l.target.name).join(",") === "Widget,Gadget", response.body.map(l => l.target.name).join(",")));
+%}
+
+### 3.23 links: unknown link type for this source -> 400
+GET {{host}}/api/_search-db/xm-entities/{{o1}}/targets/NO_SUCH_LINK
+Authorization: Bearer {{token}}
+
+> {% client.test("400", () => client.assert(response.status === 400, "status " + response.status)); %}
+
+###############################################################################
+# 4. Add new links and see the searches change
+###############################################################################
+
+### 4.1 add o1 -ITEM-> p3 (the last free unique candidate)
+POST {{host}}/api/links
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{ "typeKey": "DBS-ORDER.ITEM", "source": { "id": {{o1}} }, "target": { "id": {{p3}} }, "startDate": "2026-09-15T00:00:00Z" }
+
+> {%
+    client.global.set("l7", response.body.id);
+    client.test("l7 created", () => client.assert(response.status === 201 && response.body.target.id == client.global.get("p3"), "status " + response.status));
+%}
+
+### 4.2 unique candidates for o1 ITEM are exhausted now
+GET {{host}}/api/_search-db/xm-entities/DBS-ORDER/{{o1}}/links/DBS-ORDER.ITEM
+Authorization: Bearer {{token}}
+
+> {%
+    client.test("total 0", () => client.assert(response.headers.valueOf("X-Total-Count") === "0", "total " + response.headers.valueOf("X-Total-Count")));
+%}
+
+### 4.3 o1 now has 3 ITEM links; the new one is found by target filter
+GET {{host}}/api/_search-db/xm-entities/{{o1}}/targets/DBS-ORDER.ITEM?data.sku.eq=G-300
+Authorization: Bearer {{token}}
+
+> {%
+    client.test("total 1", () => client.assert(response.headers.valueOf("X-Total-Count") === "1", "total " + response.headers.valueOf("X-Total-Count")));
+    client.test("is l7", () => client.assert(response.body[0].id == client.global.get("l7"), "id " + response.body[0].id));
+%}
+
+### 4.4 all ITEM links of o1 -> 3
+GET {{host}}/api/_search-db/xm-entities/{{o1}}/targets/DBS-ORDER.ITEM
+Authorization: Bearer {{token}}
+
+> {%
+    client.test("total 3", () => client.assert(response.headers.valueOf("X-Total-Count") === "3", "total " + response.headers.valueOf("X-Total-Count")));
+%}
+
+### 4.5 add o3 -CUSTOMER-> c1
+POST {{host}}/api/links
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{ "typeKey": "DBS-ORDER.CUSTOMER", "source": { "id": {{o3}} }, "target": { "id": {{c1}} }, "startDate": "2026-09-15T00:00:00Z" }
+
+> {%
+    client.global.set("l8", response.body.id);
+    client.test("l8 created", () => client.assert(response.status === 201, "status " + response.status));
+%}
+
+### 4.6 unique CUSTOMER candidates for o3: only Globex is left
+GET {{host}}/api/_search-db/xm-entities/DBS-ORDER/{{o3}}/links/DBS-ORDER.CUSTOMER
+Authorization: Bearer {{token}}
+
+> {%
+    client.test("total 1", () => client.assert(response.headers.valueOf("X-Total-Count") === "1", "total " + response.headers.valueOf("X-Total-Count")));
+    client.test("Globex Lviv", () => client.assert(response.body[0].name === "Globex Lviv", response.body[0].name));
+%}
+
+### 4.7 o3 CUSTOMER links filtered by target city
+GET {{host}}/api/_search-db/xm-entities/{{o3}}/targets/DBS-ORDER.CUSTOMER?data.city.eq=Kyiv
+Authorization: Bearer {{token}}
+
+> {%
+    client.test("total 1", () => client.assert(response.headers.valueOf("X-Total-Count") === "1", "total " + response.headers.valueOf("X-Total-Count")));
+%}
+
+###############################################################################
+# 5. JPQL templates: GET|POST /api/_search-db/xm-entities/template/{templateKey}
+#    Templates: config/tenants/T3C7D9636/entity/jpql-templates.yml
+#    ENTITY templates return XmEntityDto lists (sortable by column / data.<path>);
+#    RAW templates return rows as maps keyed by selection alias (sortable by alias; X-Total-Count needs countQuery).
+#    Link state at this point: o1 -ITEM-> p1,p2,p3; o2 -ITEM-> p1
+###############################################################################
+
+### 5.1 ENTITY: state + nested city, string params from the query string: o1, o2
+GET {{host}}/api/_search-db/xm-entities/template/DBS_ORDERS_BY_STATE_AND_CITY?stateKey=ACTIVE&city=Kyiv&sort=name,asc
+Authorization: Bearer {{token}}
+
+> {%
+    client.test("total 2", () => client.assert(response.headers.valueOf("X-Total-Count") === "2", "total " + response.headers.valueOf("X-Total-Count")));
+    client.test("names", () => client.assert(response.body.map(e => e.name).join(",") === "Alpha Kyiv,Beta Kyiv", response.body.map(e => e.name).join(",")));
+%}
+
+### 5.2 ENTITY: number param coerced by "params: orderNo: number"
+GET {{host}}/api/_search-db/xm-entities/template/DBS_ORDER_BY_NO?orderNo=1
+Authorization: Bearer {{token}}
+
+> {%
+    client.test("total 1", () => client.assert(response.headers.valueOf("X-Total-Count") === "1", "total " + response.headers.valueOf("X-Total-Count")));
+    client.test("Alpha Kyiv", () => client.assert(response.body[0].name === "Alpha Kyiv", response.body[0].name));
+%}
+
+### 5.3 ENTITY: list param (comma-separated on GET) bound to "in (:states)": o3, o4, o6
+GET {{host}}/api/_search-db/xm-entities/template/DBS_ORDERS_IN_STATES?states=NEW,CLOSED
+Authorization: Bearer {{token}}
+
+> {%
+    client.test("total 3", () => client.assert(response.headers.valueOf("X-Total-Count") === "3", "total " + response.headers.valueOf("X-Total-Count")));
+%}
+
+### 5.4 ENTITY: boolean param + sort by data path: orderNo 5, 3, 1
+GET {{host}}/api/_search-db/xm-entities/template/DBS_ACTIVE_FLAG_ORDERS?active=true&sort=data.orderNo,desc
+Authorization: Bearer {{token}}
+
+> {%
+    client.test("total 3", () => client.assert(response.headers.valueOf("X-Total-Count") === "3", "total " + response.headers.valueOf("X-Total-Count")));
+    client.test("orderNo desc", () => client.assert(response.body.map(e => e.data.orderNo).join(",") === "5,3,1", response.body.map(e => e.data.orderNo).join(",")));
+%}
+
+### 5.5 ENTITY: subject param :subjectUserKey, nothing to pass: all 6 orders were created by this user
+GET {{host}}/api/_search-db/xm-entities/template/DBS_MY_ORDERS
+Authorization: Bearer {{token}}
+
+> {%
+    client.test("total 6", () => client.assert(response.headers.valueOf("X-Total-Count") === "6", "total " + response.headers.valueOf("X-Total-Count")));
+%}
+
+### 5.6 ENTITY: instant param + paging: page 1 of size 4 -> 2 rows, total 6
+GET {{host}}/api/_search-db/xm-entities/template/DBS_ORDERS_SINCE?since=2020-01-01T00:00:00Z&page=1&size=4&sort=id,asc
+Authorization: Bearer {{token}}
+
+> {%
+    client.test("total 6", () => client.assert(response.headers.valueOf("X-Total-Count") === "6", "total " + response.headers.valueOf("X-Total-Count")));
+    client.test("2 rows on page 1", () => client.assert(response.body.length === 2, "rows " + response.body.length));
+%}
+
+### 5.7 ENTITY: instant in the future -> 0
+GET {{host}}/api/_search-db/xm-entities/template/DBS_ORDERS_SINCE?since=2100-01-01T00:00:00Z
+Authorization: Bearer {{token}}
+
+> {%
+    client.test("total 0", () => client.assert(response.headers.valueOf("X-Total-Count") === "0", "total " + response.headers.valueOf("X-Total-Count")));
+%}
+
+### 5.8 ENTITY, POST variant: the body is the params map with JSON types
+POST {{host}}/api/_search-db/xm-entities/template/DBS_ORDER_BY_NO
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{ "orderNo": 2 }
+
+> {%
+    client.test("Beta Kyiv", () => client.assert(response.headers.valueOf("X-Total-Count") === "1" && response.body[0].name === "Beta Kyiv", JSON.stringify(response.body.map(e => e.name))));
+%}
+
+### 5.9 RAW: scalar projection with aliases; rows are maps, count header from countQuery
+GET {{host}}/api/_search-db/xm-entities/template/DBS_ORDERS_SUMMARY?typeKeyPattern=DBS-ORDER.EXPRESS
+Authorization: Bearer {{token}}
+
+> {%
+    client.test("total 1", () => client.assert(response.headers.valueOf("X-Total-Count") === "1", "total " + response.headers.valueOf("X-Total-Count")));
+    client.test("row keys", () => client.assert(response.body[0].name === "Express Odesa" && response.body[0].stateKey === "ACTIVE" && "orderNo" in response.body[0] && "city" in response.body[0], JSON.stringify(response.body[0])));
+%}
+
+### 5.10 RAW, POST with a like pattern over all DBS-* types (12 entities); sort by a selection alias replaces the template's order by; paging
+POST {{host}}/api/_search-db/xm-entities/template/DBS_ORDERS_SUMMARY?sort=name,desc&page=0&size=2
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{ "typeKeyPattern": "DBS-%" }
+
+> {%
+    client.test("total 12", () => client.assert(response.headers.valueOf("X-Total-Count") === "12", "total " + response.headers.valueOf("X-Total-Count")));
+    client.test("name desc, 2 rows", () => client.assert(response.body.map(r => r.name).join(",") === "Widget,Quiet Kyiv", response.body.map(r => r.name).join(",")));
+%}
+
+### 5.11 RAW: aggregation with group by (exact DBS-ORDER only: ACTIVE 2, CLOSED 1, NEW 1); no countQuery -> no X-Total-Count
+GET {{host}}/api/_search-db/xm-entities/template/DBS_ORDERS_PER_STATE?typeKey=DBS-ORDER
+Authorization: Bearer {{token}}
+
+> {%
+    client.test("groups", () => client.assert(response.body.map(r => r.stateKey + "=" + r.total).join(",") === "ACTIVE=2,CLOSED=1,NEW=1", JSON.stringify(response.body)));
+    client.test("no count header", () => client.assert(response.headers.valueOf("X-Total-Count") === null, "header " + response.headers.valueOf("X-Total-Count")));
+%}
+
+### 5.12 RAW: whole entity selection is mapped to XmEntityDto under positional key col0
+GET {{host}}/api/_search-db/xm-entities/template/DBS_ENTITIES_RAW?typeKey=DBS-PRODUCT
+Authorization: Bearer {{token}}
+
+> {%
+    client.test("total 3", () => client.assert(response.headers.valueOf("X-Total-Count") === "3", "total " + response.headers.valueOf("X-Total-Count")));
+    client.test("dto in col0", () => client.assert(response.body[0].col0.typeKey === "DBS-PRODUCT" && response.body[0].col0.name === "Gadget", JSON.stringify(response.body[0])));
+%}
+
+### 5.13 RAW: join through Link, orders with their products (o1: Gadget, Gizmo Pro, Widget; o2: Widget)
+GET {{host}}/api/_search-db/xm-entities/template/DBS_ORDER_ITEMS?linkTypeKey=DBS-ORDER.ITEM
+Authorization: Bearer {{token}}
+
+> {%
+    client.test("total 4", () => client.assert(response.headers.valueOf("X-Total-Count") === "4", "total " + response.headers.valueOf("X-Total-Count")));
+    client.test("rows", () => client.assert(response.body.map(r => r.orderName + ":" + r.product).join(",") === "Alpha Kyiv:Gadget,Alpha Kyiv:Gizmo Pro,Alpha Kyiv:Widget,Beta Kyiv:Widget", JSON.stringify(response.body.map(r => r.orderName + ":" + r.product))));
+    client.test("sku column", () => client.assert(String(response.body[0].sku).indexOf("G-200") >= 0, "sku " + response.body[0].sku));
+%}
+
+### 5.14 RAW: join template sorted by alias from the target entity
+GET {{host}}/api/_search-db/xm-entities/template/DBS_ORDER_ITEMS?linkTypeKey=DBS-ORDER.ITEM&sort=product,desc&size=1
+Authorization: Bearer {{token}}
+
+> {%
+    client.test("Widget first", () => client.assert(response.body[0].product === "Widget", response.body[0].product));
+%}
+
+### 5.15 RAW: mixed selection without aliases -> positional keys col0 (DTO) and col1 (scalar)
+GET {{host}}/api/_search-db/xm-entities/template/DBS_MIXED_RAW?typeKey=DBS-CUSTOMER
+Authorization: Bearer {{token}}
+
+> {%
+    client.test("2 rows", () => client.assert(response.body.length === 2, "rows " + response.body.length));
+    client.test("col0/col1", () => client.assert(response.body[0].col0.name === "ACME Kyiv" && response.body[0].col1 === "ACME Kyiv", JSON.stringify(response.body[0])));
+%}
+
+### 5.16 unknown template -> 404
+GET {{host}}/api/_search-db/xm-entities/template/NO_SUCH_TEMPLATE
+Authorization: Bearer {{token}}
+
+> {% client.test("404", () => client.assert(response.status === 404, "status " + response.status)); %}
+
+### 5.17 missing template param -> 400
+GET {{host}}/api/_search-db/xm-entities/template/DBS_ORDER_BY_NO
+Authorization: Bearer {{token}}
+
+> {% client.test("400", () => client.assert(response.status === 400, "status " + response.status)); %}
+
+### 5.18 boolean param must be true/false -> 400
+GET {{host}}/api/_search-db/xm-entities/template/DBS_ACTIVE_FLAG_ORDERS?active=yes
+Authorization: Bearer {{token}}
+
+> {% client.test("400", () => client.assert(response.status === 400, "status " + response.status)); %}
+
+### 5.19 RAW sort by something that is not a selection alias -> 400
+GET {{host}}/api/_search-db/xm-entities/template/DBS_ORDERS_SUMMARY?typeKeyPattern=DBS-ORDER&sort=nope,asc
+Authorization: Bearer {{token}}
+
+> {% client.test("400", () => client.assert(response.status === 400, "status " + response.status)); %}
+
+###############################################################################
+# 6. Clean up: links first, then entities, then verify
+###############################################################################
+
+### 6.1 delete link l1
+DELETE {{host}}/api/links/{{l1}}
+Authorization: Bearer {{token}}
+
+> {% client.test("200", () => client.assert(response.status === 200, "status " + response.status)); %}
+
+### 6.2 delete link l2
+DELETE {{host}}/api/links/{{l2}}
+Authorization: Bearer {{token}}
+
+> {% client.test("200", () => client.assert(response.status === 200, "status " + response.status)); %}
+
+### 6.3 delete link l3
+DELETE {{host}}/api/links/{{l3}}
+Authorization: Bearer {{token}}
+
+> {% client.test("200", () => client.assert(response.status === 200, "status " + response.status)); %}
+
+### 6.4 delete link l4
+DELETE {{host}}/api/links/{{l4}}
+Authorization: Bearer {{token}}
+
+> {% client.test("200", () => client.assert(response.status === 200, "status " + response.status)); %}
+
+### 6.5 delete link l5
+DELETE {{host}}/api/links/{{l5}}
+Authorization: Bearer {{token}}
+
+> {% client.test("200", () => client.assert(response.status === 200, "status " + response.status)); %}
+
+### 6.6 delete link l6
+DELETE {{host}}/api/links/{{l6}}
+Authorization: Bearer {{token}}
+
+> {% client.test("200", () => client.assert(response.status === 200, "status " + response.status)); %}
+
+### 6.7 delete link l7
+DELETE {{host}}/api/links/{{l7}}
+Authorization: Bearer {{token}}
+
+> {% client.test("200", () => client.assert(response.status === 200, "status " + response.status)); %}
+
+### 6.8 delete link l8
+DELETE {{host}}/api/links/{{l8}}
+Authorization: Bearer {{token}}
+
+> {% client.test("200", () => client.assert(response.status === 200, "status " + response.status)); %}
+
+### 6.9 delete order 1
+DELETE {{host}}/api/xm-entities/{{o1}}
+Authorization: Bearer {{token}}
+
+> {% client.test("200", () => client.assert(response.status === 200, "status " + response.status)); %}
+
+### 6.10 delete order 2
+DELETE {{host}}/api/xm-entities/{{o2}}
+Authorization: Bearer {{token}}
+
+> {% client.test("200", () => client.assert(response.status === 200, "status " + response.status)); %}
+
+### 6.11 delete order 3
+DELETE {{host}}/api/xm-entities/{{o3}}
+Authorization: Bearer {{token}}
+
+> {% client.test("200", () => client.assert(response.status === 200, "status " + response.status)); %}
+
+### 6.12 delete order 4
+DELETE {{host}}/api/xm-entities/{{o4}}
+Authorization: Bearer {{token}}
+
+> {% client.test("200", () => client.assert(response.status === 200, "status " + response.status)); %}
+
+### 6.13 delete order 5
+DELETE {{host}}/api/xm-entities/{{o5}}
+Authorization: Bearer {{token}}
+
+> {% client.test("200", () => client.assert(response.status === 200, "status " + response.status)); %}
+
+### 6.14 delete order 6
+DELETE {{host}}/api/xm-entities/{{o6}}
+Authorization: Bearer {{token}}
+
+> {% client.test("200", () => client.assert(response.status === 200, "status " + response.status)); %}
+
+### 6.15 delete order 7 (DBS-ORDERX)
+DELETE {{host}}/api/xm-entities/{{o7}}
+Authorization: Bearer {{token}}
+
+> {% client.test("200", () => client.assert(response.status === 200, "status " + response.status)); %}
+
+### 6.16 delete product 1
+DELETE {{host}}/api/xm-entities/{{p1}}
+Authorization: Bearer {{token}}
+
+> {% client.test("200", () => client.assert(response.status === 200, "status " + response.status)); %}
+
+### 6.17 delete product 2
+DELETE {{host}}/api/xm-entities/{{p2}}
+Authorization: Bearer {{token}}
+
+> {% client.test("200", () => client.assert(response.status === 200, "status " + response.status)); %}
+
+### 6.18 delete product 3
+DELETE {{host}}/api/xm-entities/{{p3}}
+Authorization: Bearer {{token}}
+
+> {% client.test("200", () => client.assert(response.status === 200, "status " + response.status)); %}
+
+### 6.19 delete customer 1
+DELETE {{host}}/api/xm-entities/{{c1}}
+Authorization: Bearer {{token}}
+
+> {% client.test("200", () => client.assert(response.status === 200, "status " + response.status)); %}
+
+### 6.20 delete customer 2
+DELETE {{host}}/api/xm-entities/{{c2}}
+Authorization: Bearer {{token}}
+
+> {% client.test("200", () => client.assert(response.status === 200, "status " + response.status)); %}
+
+### 6.21 verify: no DBS-ORDER family left
+GET {{host}}/api/_search-db/xm-entities?typeKey=DBS-ORDER
+Authorization: Bearer {{token}}
+
+> {% client.test("0 orders", () => client.assert(response.headers.valueOf("X-Total-Count") === "0", "leftover ids: " + response.body.map(e => e.id))); %}
+
+### 6.22 verify: no DBS-ORDERX left
+GET {{host}}/api/_search-db/xm-entities?typeKey=DBS-ORDERX
+Authorization: Bearer {{token}}
+
+> {% client.test("0 lookalikes", () => client.assert(response.headers.valueOf("X-Total-Count") === "0", "leftover ids: " + response.body.map(e => e.id))); %}
+
+### 6.23 verify: no DBS-PRODUCT left
+GET {{host}}/api/_search-db/xm-entities?typeKey=DBS-PRODUCT
+Authorization: Bearer {{token}}
+
+> {% client.test("0 products", () => client.assert(response.headers.valueOf("X-Total-Count") === "0", "leftover ids: " + response.body.map(e => e.id))); %}
+
+### 6.24 verify: no DBS-CUSTOMER left
+GET {{host}}/api/_search-db/xm-entities?typeKey=DBS-CUSTOMER
+Authorization: Bearer {{token}}
+
+> {% client.test("0 customers", () => client.assert(response.headers.valueOf("X-Total-Count") === "0", "leftover ids: " + response.body.map(e => e.id))); %}
