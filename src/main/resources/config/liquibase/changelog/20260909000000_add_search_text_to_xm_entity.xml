@@ -19,18 +19,29 @@
         </addColumn>
     </changeSet>
 
-    <!-- pg_trgm may need superuser rights; do not fail the migration when it cannot be created -->
+    <!-- Always into public: without SCHEMA the extension lands in the first migrated schema and its operator class
+         is invisible to the other tenants. Some databases have no public schema (prod entity), so it is created first.
+         pg_trgm may need superuser rights; do not fail the migration when it cannot be created. -->
     <changeSet id="20260909000000-2" author="ssenko" dbms="postgresql" runInTransaction="false" failOnError="false">
-        <sql>CREATE EXTENSION IF NOT EXISTS pg_trgm</sql>
+        <validCheckSum>ANY</validCheckSum>
+        <sql>CREATE SCHEMA IF NOT EXISTS public</sql>
+        <sql>CREATE EXTENSION IF NOT EXISTS pg_trgm SCHEMA public</sql>
     </changeSet>
 
-    <!-- not CONCURRENTLY: it waits for every open transaction, and the app start-up holds one during migration -->
+    <!-- Skipped, not marked ran, while pg_trgm is not in public (older databases had it in the first migrated
+         schema, or another service installed it elsewhere): the app still starts, and the index is created on the
+         next start once the extension is moved with ALTER EXTENSION pg_trgm SET SCHEMA public.
+         Not CONCURRENTLY: it waits for every open transaction, and the app start-up holds one during migration. -->
     <changeSet id="20260909000000-3" author="ssenko" dbms="postgresql">
-        <preConditions onFail="MARK_RAN">
-            <sqlCheck expectedResult="1">select count(*) from pg_extension where extname = 'pg_trgm'</sqlCheck>
+        <validCheckSum>ANY</validCheckSum>
+        <preConditions onFail="CONTINUE">
+            <sqlCheck expectedResult="1">
+                select count(*) from pg_extension e join pg_namespace n on n.oid = e.extnamespace
+                where e.extname = 'pg_trgm' and n.nspname = 'public'
+            </sqlCheck>
         </preConditions>
         <sql>CREATE INDEX IF NOT EXISTS idx_xm_entity_search_text_trgm
-             ON xm_entity USING gin (search_text gin_trgm_ops) WHERE search_text IS NOT NULL</sql>
+             ON xm_entity USING gin (search_text public.gin_trgm_ops) WHERE search_text IS NOT NULL</sql>
     </changeSet>
 
 </databaseChangeLog>
