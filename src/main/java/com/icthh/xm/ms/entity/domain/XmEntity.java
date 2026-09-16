@@ -9,6 +9,7 @@ import static com.icthh.xm.ms.entity.config.Constants.REGEX_EOL;
 import com.icthh.xm.ms.entity.domain.converter.MapToStringConverter;
 import com.icthh.xm.ms.entity.domain.listener.AvatarUrlListener;
 import com.icthh.xm.ms.entity.domain.listener.XmEntityElasticSearchListener;
+import com.icthh.xm.ms.entity.domain.listener.XmEntitySearchTextListener;
 import com.icthh.xm.ms.entity.domain.serializer.NewSimpleLinkSerializer;
 import com.icthh.xm.ms.entity.domain.serializer.SimpleLinkSerializer;
 import com.icthh.xm.ms.entity.validator.JsonData;
@@ -81,7 +82,7 @@ import java.util.function.BiConsumer;
         @NamedAttributeNode("ratings"),
         @NamedAttributeNode("functionContexts")
     })
-@EntityListeners({AvatarUrlListener.class, XmEntityElasticSearchListener.class})
+@EntityListeners({AvatarUrlListener.class, XmEntityElasticSearchListener.class, XmEntitySearchTextListener.class})
 @NotNull(field = NAME)
 @NotNull(field = KEY)
 public class XmEntity implements Serializable, Persistable<Long>, EntityBaseFields {
@@ -169,6 +170,15 @@ public class XmEntity implements Serializable, Persistable<Long>, EntityBaseFiel
      */
     @Column(name = "description")
     private String description;
+
+    /**
+     * Denormalized text for DB full text search (name, description, configured data fields).
+     * Maintained by {@link com.icthh.xm.ms.entity.domain.listener.XmEntitySearchTextListener}; null when the type has
+     * no {@code fullTextSearch: true}.
+     */
+    @JsonIgnore
+    @Column(name = "search_text")
+    private String searchText;
 
     /**
      * Data property represents entity fields as JSON structure. Fields specified by
@@ -409,6 +419,19 @@ public class XmEntity implements Serializable, Persistable<Long>, EntityBaseFiel
     public XmEntity description(String description) {
         this.description = description;
         return this;
+    }
+
+    public XmEntity searchText(String searchText) {
+        this.searchText = searchText;
+        return this;
+    }
+
+    public String getSearchText() {
+        return searchText;
+    }
+
+    public void setSearchText(String searchText) {
+        this.searchText = searchText;
     }
 
     public void setDescription(String description) {

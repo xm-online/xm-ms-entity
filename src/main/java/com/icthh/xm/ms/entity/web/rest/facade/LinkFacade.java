@@ -8,6 +8,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -20,6 +23,15 @@ public class LinkFacade {
         Link entity = linkMapper.toEntity(dto);
         Link saved = linkService.save(entity);
         return linkMapper.toDto(saved);
+    }
+
+    /**
+     * Create links in bulk within a single transaction (all or nothing) using a single repository saveAll.
+     */
+    @Transactional
+    public List<LinkDto> createAll(List<LinkDto> dtos) {
+        List<Link> entities = dtos.stream().map(linkMapper::toEntity).toList();
+        return linkMapper.toDtoList(linkService.createAll(entities));
     }
 
     public Page<LinkDto> findAll(Pageable pageable, String privilegeKey) {

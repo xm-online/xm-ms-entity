@@ -6,11 +6,16 @@ import com.icthh.xm.commons.i18n.error.domain.vm.FieldErrorVM;
 import com.icthh.xm.commons.i18n.error.web.ExceptionTranslator;
 import com.icthh.xm.commons.i18n.spring.service.LocalizationMessageService;
 import org.springframework.context.annotation.Primary;
+import org.springframework.http.HttpStatus;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.validation.ObjectError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.method.annotation.HandlerMethodValidationException;
 
 /**
  * Extends the commons ExceptionTranslator to strip "Dto" suffix from validation
@@ -42,6 +47,19 @@ public class DtoAwareExceptionTranslator extends ExceptionTranslator {
             dto.add(stripDtoSuffix(globalError.getObjectName()), globalError.getObjectName(),
                 globalError.getCode(), globalError.getDefaultMessage());
         }
+        return dto;
+    }
+
+    @ExceptionHandler(HandlerMethodValidationException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ResponseBody
+    public ErrorVM processMethodValidationError(HandlerMethodValidationException ex) {
+        FieldErrorVM dto = new FieldErrorVM(ErrorConstants.ERR_VALIDATION,
+            localizationMessageService.getMessage(ErrorConstants.ERR_VALIDATION));
+        ex.getAllErrors().stream()
+            .filter(FieldError.class::isInstance)
+            .map(FieldError.class::cast)
+            .forEach(e -> dto.add(stripDtoSuffix(e.getObjectName()), e.getField(), e.getCode(), e.getDefaultMessage()));
         return dto;
     }
 

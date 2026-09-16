@@ -46,6 +46,9 @@ import com.icthh.xm.ms.entity.service.processor.XmEntityDataFormSpecProcessor;
 import com.icthh.xm.ms.entity.service.processor.XmEntityTypeSpecProcessor;
 import com.icthh.xm.ms.entity.service.spec.DataSpecJsonSchemaService;
 import com.icthh.xm.ms.entity.service.spec.XmEntitySpecCustomizer;
+import org.mockito.ArgumentCaptor;
+import org.springframework.context.ApplicationEventPublisher;
+import com.icthh.xm.ms.entity.service.spec.XmEntitySpecUpdatedEvent;
 import com.networknt.schema.Schema;
 import com.networknt.schema.SchemaRegistry;
 import com.networknt.schema.Error;
@@ -169,6 +172,8 @@ public class XmEntitySpecServiceUnitTest extends AbstractJupiterUnitTest {
         xmEntitySpecService = createXmEntitySpecService(ap, tenantContextHolder);
     }
 
+    private final ApplicationEventPublisher eventPublisher = mock(ApplicationEventPublisher.class);
+
     private void mockTenantContextHolder() {
         PrivilegedTenantContext context = mock(PrivilegedTenantContext.class);
         doAnswer(invocation -> {
@@ -207,7 +212,7 @@ public class XmEntitySpecServiceUnitTest extends AbstractJupiterUnitTest {
                                                 definitionSpecProcessor,
                                                 formSpecProcessor,
                                                 typeSpecProcessor
-                                            ), MAX_FILE_SIZE));
+                                            ), eventPublisher, MAX_FILE_SIZE));
     }
 
     @Test
@@ -543,6 +548,18 @@ public class XmEntitySpecServiceUnitTest extends AbstractJupiterUnitTest {
         String expectedCustomPrivileges = readFile("config/privileges/expected-custom-privileges-with-xm-entity.yml");
 
         testUpdateCustomerPrivileges(customPrivileges, expectedCustomPrivileges);
+    }
+
+    /** The search text updater and anything else that prepares per spec listens to this event. */
+    @Test
+    public void refreshFinishedPublishesSpecUpdatedEventPerTenant() {
+        // reading the specs loads the config and runs refreshFinished for the tenant
+        xmEntitySpecService.getTypeSpecs();
+
+        ArgumentCaptor<XmEntitySpecUpdatedEvent> event = ArgumentCaptor.forClass(XmEntitySpecUpdatedEvent.class);
+        verify(eventPublisher).publishEvent(event.capture());
+        assertEquals(TENANT, event.getValue().tenantKey());
+        assertTrue(event.getValue().specs().containsKey(KEY1));
     }
 
     @Test

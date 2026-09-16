@@ -2337,6 +2337,48 @@ entity:
     envCondition: null
     resourceCondition: null
     reactionStrategy: null
+  - privilegeKey: "XMENTITY.SEARCH.DB"
+    disabled: false
+    deleted: false
+    envCondition: null
+    resourceCondition: null
+    reactionStrategy: null
+  - privilegeKey: "XMENTITY.SEARCH.DB.QUERY"
+    disabled: false
+    deleted: false
+    envCondition: null
+    resourceCondition: null
+    reactionStrategy: null
+  - privilegeKey: "XMENTITY.SEARCH.DB.TO_LINK"
+    disabled: false
+    deleted: false
+    envCondition: null
+    resourceCondition: null
+    reactionStrategy: null
+  - privilegeKey: "XMENTITY.SEARCH.DB.TEMPLATE"
+    disabled: false
+    deleted: false
+    envCondition: null
+    resourceCondition: null
+    reactionStrategy: null
+  - privilegeKey: "XMENTITY.SEARCH.DB.REINDEX"
+    disabled: false
+    deleted: false
+    envCondition: null
+    resourceCondition: null
+    reactionStrategy: null
+  - privilegeKey: "LINK.SEARCH.DB"
+    disabled: false
+    deleted: false
+    envCondition: null
+    resourceCondition: null
+    reactionStrategy: null
+  - privilegeKey: "LINK.SEARCH.DB.TARGETS"
+    disabled: false
+    deleted: false
+    envCondition: null
+    resourceCondition: null
+    reactionStrategy: null
   - privilegeKey: "XMENTITY.SEARCH.TYPEKEY.TEMPLATE"
     disabled: false
     deleted: false
