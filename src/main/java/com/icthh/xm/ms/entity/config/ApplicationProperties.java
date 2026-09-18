@@ -28,6 +28,7 @@ public class ApplicationProperties {
     private final Retry retry = new Retry();
     private final Lep lep = new Lep();
     private final Jpa jpa = new Jpa();
+    private final Elasticsearch elasticsearch = new Elasticsearch();
 
     private List<String> tenantIgnoredPathList = Collections.emptyList();
     private List<String> timelineIgnoredHttpMethods = Collections.emptyList();
@@ -148,6 +149,20 @@ public class ApplicationProperties {
 
         private Duration readTimeout;
         private Duration connectionTimeout;
+    }
+
+    /**
+     * Bounds how long a single Elasticsearch call (search/scroll) is allowed to run from the
+     * application side. Protects against the legacy TransportClient blocking indefinitely
+     * (e.g. NodeNotConnectedException with no client-side bound) which otherwise exhausts the
+     * Undertow worker pool / Hikari connections during an ES-side incident.
+     */
+    @Getter
+    @Setter
+    public static class Elasticsearch {
+        private Duration queryTimeout = Duration.ofSeconds(15);
+        private int queryExecutorPoolSize = 100;
+        private int queryExecutorQueueCapacity = 200;
     }
 
 }
