@@ -183,6 +183,10 @@ application:
     jpa:
         findOneByIdForUpdateTimeout: 10000
         search-api-transaction-mode: READ_ONLY_TRANSACTION
+    elasticsearch:
+        query-timeout: 15s
+        query-executor-pool-size: 100
+        query-executor-queue-capacity: 200
     timeline-ignored-http-methods:
     scheduler-enabled: false
     tenant-ignored-path-list: /v2/api-docs, /api/profile-info, /swagger-resources/configuration/ui, /management/health

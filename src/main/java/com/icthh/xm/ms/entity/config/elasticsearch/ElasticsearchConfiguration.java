@@ -18,6 +18,12 @@ import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @Configuration
 public class ElasticsearchConfiguration {
@@ -28,6 +34,31 @@ public class ElasticsearchConfiguration {
                                                        SquigglyContextProvider contextProvider) {
         ObjectMapper objectMapper = jackson2ObjectMapperBuilder.createXmlMapper(false).build();
         return new ElasticsearchTemplate(client, new CustomEntityMapper(objectMapper, contextProvider));
+    }
+
+    /**
+     * Small, dedicated, bounded executor used only to bound the runtime of individual
+     * Elasticsearch calls (see {@link ElasticsearchQueryTimeoutGuard}). Kept isolated from the
+     * Undertow worker pool and the general async executor so that ES-side stalls cannot exhaust
+     * either of those.
+     */
+    @Bean(destroyMethod = "shutdown")
+    public ExecutorService elasticsearchQueryExecutor(ApplicationProperties applicationProperties) {
+        ApplicationProperties.Elasticsearch config = applicationProperties.getElasticsearch();
+        AtomicInteger threadCount = new AtomicInteger(1);
+        ThreadFactory threadFactory = runnable -> {
+            Thread thread = new Thread(runnable, "es-query-" + threadCount.getAndIncrement());
+            thread.setDaemon(true);
+            return thread;
+        };
+        return new ThreadPoolExecutor(
+            config.getQueryExecutorPoolSize(),
+            config.getQueryExecutorPoolSize(),
+            60L, TimeUnit.SECONDS,
+            new LinkedBlockingQueue<>(config.getQueryExecutorQueueCapacity()),
+            threadFactory,
+            new ThreadPoolExecutor.AbortPolicy()
+        );
     }
 
     @Component("indexName")
