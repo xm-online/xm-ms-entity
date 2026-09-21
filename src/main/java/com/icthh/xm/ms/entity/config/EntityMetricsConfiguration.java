@@ -4,10 +4,8 @@ import com.codahale.metrics.MetricRegistry;
 import com.icthh.xm.commons.scheduler.metric.SchedulerMetricsSet;
 import com.ryantenney.metrics.spring.config.annotation.EnableMetrics;
 import com.ryantenney.metrics.spring.config.annotation.MetricsConfigurerAdapter;
-import com.zaxxer.hikari.HikariDataSource;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 
 import javax.annotation.PostConstruct;
@@ -23,22 +21,12 @@ public class EntityMetricsConfiguration extends MetricsConfigurerAdapter {
     private final MetricRegistry metricRegistry;
     private final SchedulerMetricsSet schedulerMetricsSet;
 
-    private HikariDataSource hikariDataSource;
-
-    @Autowired(required = false)
-    public void setHikariDataSource(HikariDataSource hikariDataSource) {
-        this.hikariDataSource = hikariDataSource;
-    }
-
     @PostConstruct
     public void init() {
-        if (hikariDataSource != null) {
-            log.debug("Monitoring the datasource");
-            // remove the factory created by HikariDataSourceMetricsPostProcessor until JHipster migrate to Micrometer
-            hikariDataSource.setMetricsTrackerFactory(null);
-            hikariDataSource.setMetricRegistry(metricRegistry);
-        }
-
+        // Note: Hikari pool metrics are intentionally left to Spring Boot's default
+        // Micrometer HikariDataSourceMetricsBinder, so they are exported to
+        // /management/prometheus (hikaricp_connections_active, etc.) instead of
+        // being rerouted to this legacy Dropwizard MetricRegistry.
         metricRegistry.register(SCHEDULER, schedulerMetricsSet);
     }
 }
