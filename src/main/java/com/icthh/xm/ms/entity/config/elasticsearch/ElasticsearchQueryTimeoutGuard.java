@@ -1,8 +1,11 @@
 package com.icthh.xm.ms.entity.config.elasticsearch;
 
 import com.icthh.xm.commons.exceptions.BusinessException;
+import com.icthh.xm.commons.tenant.Tenant;
+import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.ms.entity.config.ApplicationProperties;
 import java.time.Duration;
+import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -36,15 +39,25 @@ public class ElasticsearchQueryTimeoutGuard {
 
     private final ExecutorService elasticsearchQueryExecutor;
     private final Duration queryTimeout;
+    private final TenantContextHolder tenantContextHolder;
 
     public ElasticsearchQueryTimeoutGuard(ExecutorService elasticsearchQueryExecutor,
-                                          ApplicationProperties applicationProperties) {
+                                          ApplicationProperties applicationProperties,
+                                          TenantContextHolder tenantContextHolder) {
         this.elasticsearchQueryExecutor = elasticsearchQueryExecutor;
         this.queryTimeout = applicationProperties.getElasticsearch().getQueryTimeout();
+        this.tenantContextHolder = tenantContextHolder;
     }
 
     public <T> T runWithTimeout(Supplier<T> elasticsearchCall) {
-        Future<T> future = elasticsearchQueryExecutor.submit(elasticsearchCall::get);
+        // the ES call runs on a dedicated executor thread which has no TenantContext of its own
+        // (it's a plain ThreadLocal, not inherited), so the caller's tenant must be propagated
+        // explicitly, otherwise index name resolution (and any other tenant-aware ES code) fails
+        // with "Tenant context doesn't have tenant key".
+        Optional<Tenant> tenant = tenantContextHolder.getContext().getTenant();
+        Future<T> future = elasticsearchQueryExecutor.submit(() -> tenant.isPresent()
+            ? tenantContextHolder.getPrivilegedContext().execute(tenant.get(), elasticsearchCall::get)
+            : elasticsearchCall.get());
         try {
             return future.get(queryTimeout.toMillis(), TimeUnit.MILLISECONDS);
         } catch (TimeoutException e) {
