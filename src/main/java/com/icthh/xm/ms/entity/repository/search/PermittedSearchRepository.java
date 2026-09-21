@@ -5,6 +5,7 @@ import static org.elasticsearch.index.query.QueryBuilders.queryStringQuery;
 import static org.springframework.data.elasticsearch.core.query.Query.DEFAULT_PAGE;
 
 import com.icthh.xm.commons.permission.service.PermissionCheckService;
+import com.icthh.xm.ms.entity.config.elasticsearch.ElasticsearchQueryTimeoutGuard;
 import com.icthh.xm.ms.entity.repository.search.translator.SpelToElasticTranslator;
 import com.icthh.xm.ms.entity.service.dto.SearchDto;
 import lombok.RequiredArgsConstructor;
@@ -36,6 +37,7 @@ public class PermittedSearchRepository {
     private final PermissionCheckService permissionCheckService;
     private final SpelToElasticTranslator spelToElasticTranslator;
     private final ElasticsearchTemplate elasticsearchTemplate;
+    private final ElasticsearchQueryTimeoutGuard elasticsearchQueryTimeoutGuard;
 
     /**
      * Search permitted entities.
@@ -49,7 +51,8 @@ public class PermittedSearchRepository {
         SearchQuery esQuery = buildQuery(permittedQuery, null, null);
 
         StopWatch stopWatch = StopWatch.createStarted();
-        List<T> results = getElasticsearchTemplate().queryForList(esQuery, entityClass);
+        List<T> results = elasticsearchQueryTimeoutGuard.runWithTimeout(
+            () -> getElasticsearchTemplate().queryForList(esQuery, entityClass));
         log.trace("search: query: {}, duration: {} ms", permittedQuery, stopWatch.getTime());
 
         return results;
@@ -94,8 +97,8 @@ public class PermittedSearchRepository {
             SearchQuery searchQuery = buildQuery(permittedQuery, pageable, null);
             StopWatch stopWatch = StopWatch.createStarted();
 
-            ScrolledPage<T> scrollResult = (ScrolledPage<T>) getElasticsearchTemplate()
-                .startScroll(scrollTimeInMillis, searchQuery, entityClass);
+            ScrolledPage<T> scrollResult = (ScrolledPage<T>) elasticsearchQueryTimeoutGuard.runWithTimeout(
+                () -> getElasticsearchTemplate().startScroll(scrollTimeInMillis, searchQuery, entityClass));
 
             scrollId = scrollResult.getScrollId();
 
@@ -103,8 +106,9 @@ public class PermittedSearchRepository {
                 resultList.addAll(scrollResult.getContent());
                 scrollId = scrollResult.getScrollId();
 
-                scrollResult = (ScrolledPage<T>) getElasticsearchTemplate()
-                    .continueScroll(scrollId, scrollTimeInMillis, entityClass);
+                String currentScrollId = scrollId;
+                scrollResult = (ScrolledPage<T>) elasticsearchQueryTimeoutGuard.runWithTimeout(
+                    () -> getElasticsearchTemplate().continueScroll(currentScrollId, scrollTimeInMillis, entityClass));
             }
             log.trace("searchWithScroll: query: {}, duration: {} ms", permittedQuery, stopWatch.getTime());
         } finally {
@@ -156,7 +160,8 @@ public class PermittedSearchRepository {
         SearchQuery query = buildQuery(permittedQuery, searchDto.getPageable(), searchDto.getFetchSourceFilter());
 
         StopWatch stopWatch = StopWatch.createStarted();
-        AggregatedPage queryResult = getElasticsearchTemplate().queryForPage(query, searchDto.getEntityClass());
+        AggregatedPage queryResult = elasticsearchQueryTimeoutGuard.runWithTimeout(
+            () -> getElasticsearchTemplate().queryForPage(query, searchDto.getEntityClass()));
         log.trace("searchForPage: query: {}, duration: {} ms", permittedQuery, stopWatch.getTime());
 
         return queryResult;
