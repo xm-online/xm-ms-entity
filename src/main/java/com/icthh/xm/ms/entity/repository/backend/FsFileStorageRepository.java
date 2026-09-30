@@ -122,10 +122,16 @@ public class FsFileStorageRepository implements StorageRepository {
     }
 
     private Path getFilePath(String fileName) {
-        return Paths.get(applicationProperties.getObjectStorage().getFileRoot())
+        Path tenantRoot = Paths.get(applicationProperties.getObjectStorage().getFileRoot())
             .resolve(tenantContextHolder.getTenantKey().toLowerCase())
-            .resolve(fileName)
+            .toAbsolutePath()
             .normalize();
+        Path filePath = tenantRoot.resolve(fileName).normalize();
+        // the file must stay inside the tenant folder (no "../" or absolute path escape)
+        if (!filePath.startsWith(tenantRoot) || filePath.equals(tenantRoot)) {
+            throw new BusinessException("error.file.path", "File path is outside of the tenant storage");
+        }
+        return filePath;
     }
 
     private String evaluateSubFolder() {
