@@ -62,7 +62,7 @@ public class S3StorageRepository implements StorageRepository {
 
     @Override
     public void delete(String contentUrl) {
-        Pair<String, String> s3BucketNameKey = getTenantBucketNameKey(contentUrl);
+        Pair<String, String> s3BucketNameKey = FileUtils.getS3BucketNameKey(contentUrl);
         amazonS3Template.delete(s3BucketNameKey.getKey(), s3BucketNameKey.getValue());
 
     }
@@ -74,23 +74,8 @@ public class S3StorageRepository implements StorageRepository {
 
     @SneakyThrows
     public S3ObjectDto getS3Object(String contentUrl) {
-        Pair<String, String> s3BucketNameKey = getTenantBucketNameKey(contentUrl);
-        return amazonS3Template.getS3Object(s3BucketNameKey.getKey(), s3BucketNameKey.getValue());
-    }
-
-    /**
-     * Parses the attachment content url and verifies that it points to the bucket of the current tenant,
-     * so a stored content url can not be used to read or delete objects of another tenant.
-     */
-    private Pair<String, String> getTenantBucketNameKey(String contentUrl) {
         Pair<String, String> s3BucketNameKey = FileUtils.getS3BucketNameKey(contentUrl);
-        TenantKey tenantKey = TenantContextUtils.getRequiredTenantKey(tenantContextHolder);
-        String tenantBucket = amazonS3Template.getBucketName(
-            applicationProperties.getAmazon().getS3().getBucketPrefix(), tenantKey.getValue());
-        if (!s3BucketNameKey.getKey().equals(tenantBucket)) {
-            throw new BusinessException("error.content.url.bucket", "Content url does not belong to the tenant bucket");
-        }
-        return s3BucketNameKey;
+        return amazonS3Template.getS3Object(s3BucketNameKey.getKey(), s3BucketNameKey.getValue());
     }
 
     private String store(InputStream stream, Integer size, String contentType, String name) {

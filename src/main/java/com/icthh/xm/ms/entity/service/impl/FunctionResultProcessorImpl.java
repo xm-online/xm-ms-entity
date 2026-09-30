@@ -12,11 +12,11 @@ import com.icthh.xm.ms.entity.domain.spec.FunctionSpec;
 import com.icthh.xm.ms.entity.service.FunctionContextService;
 import com.icthh.xm.ms.entity.service.XmEntityService;
 import com.icthh.xm.ms.entity.service.mapper.FunctionResultMapper;
+import java.util.concurrent.ThreadLocalRandom;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import java.security.SecureRandom;
 import java.time.Instant;
 import java.util.Map;
 
@@ -26,8 +26,6 @@ import static java.util.Collections.emptyList;
 @Service
 @RequiredArgsConstructor
 public class FunctionResultProcessorImpl implements FunctionResultProcessor<FunctionSpec> {
-
-    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
 
     private final XmEntityService xmEntityService;
     private final FunctionContextService functionContextService;
@@ -57,7 +55,8 @@ public class FunctionResultProcessorImpl implements FunctionResultProcessor<Func
 
         FunctionContext functionResult = new FunctionContext();
         // TODO review key & typeKey ...
-        String uniqueKey = Long.toHexString(SECURE_RANDOM.nextLong()) + Long.toHexString(SECURE_RANDOM.nextLong());
+        ThreadLocalRandom localRandom = ThreadLocalRandom.current();
+        String uniqueKey = Long.toHexString(localRandom.nextLong()) + Long.toHexString(localRandom.nextLong());
 
         functionResult.setKey(functionKey + "-" + uniqueKey);
         functionResult.setTypeKey(functionKey);
