@@ -68,4 +68,13 @@ public class FsFileStorageRepositoryUnitTest extends AbstractJupiterUnitTest {
         assertThrows(BusinessException.class, () -> repository.delete("file://../other/secret.txt"));
         assertThat(Files.exists(root.resolve("other/secret.txt"))).isTrue();
     }
+
+    @Test
+    public void shouldCheckContentUrlOnSaveOnlyWhenTenantAccessCheckIsOn() {
+        when(applicationProperties.isSecureAttachmentTenantAccess()).thenReturn(false);
+        repository.checkTenantContentUrl("file://../other/secret.txt");
+        when(applicationProperties.isSecureAttachmentTenantAccess()).thenReturn(true);
+        repository.checkTenantContentUrl("file://sub/file.txt");
+        assertThrows(BusinessException.class, () -> repository.checkTenantContentUrl("file://../other/secret.txt"));
+    }
 }

@@ -94,6 +94,14 @@ public class FsFileStorageRepository implements StorageRepository {
         }
     }
 
+    /**
+     * With {@code application.secure-attachment-tenant-access: true} rejects a content url outside the tenant folder.
+     */
+    public void checkTenantContentUrl(String fileContentUrl) {
+        getFilePath(StringUtils.startsWith(fileContentUrl, FILE_PREFIX)
+            ? StringUtils.substringAfter(fileContentUrl, FILE_PREFIX) : fileContentUrl);
+    }
+
     public Resource getFileFromFs(String fileContentUrl) {
         //fileName contains file name and details, the tenant subfolder is evaluated by getFilePath() function
         String simpleFileName = fileContentUrl;

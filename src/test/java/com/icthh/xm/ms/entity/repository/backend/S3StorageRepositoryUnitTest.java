@@ -89,6 +89,27 @@ public class S3StorageRepositoryUnitTest extends AbstractJupiterUnitTest {
         verify(amazonS3Template, never()).delete(any(), any());
     }
 
+    @Test
+    public void shouldRejectDownloadLinkAndSaveOfOtherTenantBucketWhenTenantAccessCheckIsOn() {
+        mockTenantBucket();
+        com.icthh.xm.ms.entity.domain.Attachment attachment = new com.icthh.xm.ms.entity.domain.Attachment();
+        attachment.setContentUrl("prefix-other::folder/key");
+        assertThrows(BusinessException.class, () -> s3StorageRepository.createExpirableLink(attachment, 1000L));
+        assertThrows(BusinessException.class, () -> s3StorageRepository.checkTenantContentUrl("prefix-other::folder/key"));
+        s3StorageRepository.checkTenantContentUrl("prefix-test::folder/key");
+        verify(amazonS3Template, never()).createExpirableLink(any(com.icthh.xm.ms.entity.domain.Attachment.class), any());
+    }
+
+    @Test
+    public void shouldCreateDownloadLinkOfAnyBucketWhenTenantAccessCheckIsOff() {
+        when(applicationProperties.isSecureAttachmentTenantAccess()).thenReturn(false);
+        com.icthh.xm.ms.entity.domain.Attachment attachment = new com.icthh.xm.ms.entity.domain.Attachment();
+        attachment.setContentUrl("prefix-other::folder/key");
+        s3StorageRepository.createExpirableLink(attachment, 1000L);
+        s3StorageRepository.checkTenantContentUrl("prefix-other::folder/key");
+        verify(amazonS3Template).createExpirableLink(attachment, 1000L);
+    }
+
     private void mockTenantBucket() {
         when(applicationProperties.isSecureAttachmentTenantAccess()).thenReturn(true);
         TenantContext tenantContext = org.mockito.Mockito.mock(TenantContext.class);

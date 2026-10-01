@@ -69,6 +69,7 @@ public class S3StorageRepository implements StorageRepository {
 
     @SneakyThrows
     public URL createExpirableLink(Attachment attachment, Long expireLinkTime) {
+        getBucketNameKey(attachment.getContentUrl());
         return amazonS3Template.createExpirableLink(attachment, expireLinkTime);
     }
 
@@ -76,6 +77,13 @@ public class S3StorageRepository implements StorageRepository {
     public S3ObjectDto getS3Object(String contentUrl) {
         Pair<String, String> s3BucketNameKey = getBucketNameKey(contentUrl);
         return amazonS3Template.getS3Object(s3BucketNameKey.getKey(), s3BucketNameKey.getValue());
+    }
+
+    /**
+     * With {@code application.secure-attachment-tenant-access: true} rejects a content url outside the tenant bucket.
+     */
+    public void checkTenantContentUrl(String contentUrl) {
+        getBucketNameKey(contentUrl);
     }
 
     /**
