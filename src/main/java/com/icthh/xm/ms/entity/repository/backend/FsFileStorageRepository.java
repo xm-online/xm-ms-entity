@@ -94,6 +94,14 @@ public class FsFileStorageRepository implements StorageRepository {
         }
     }
 
+    /**
+     * With {@code application.secure-attachment-tenant-access: true} rejects a content url outside the tenant folder.
+     */
+    public void checkTenantContentUrl(String fileContentUrl) {
+        getFilePath(StringUtils.startsWith(fileContentUrl, FILE_PREFIX)
+            ? StringUtils.substringAfter(fileContentUrl, FILE_PREFIX) : fileContentUrl);
+    }
+
     public Resource getFileFromFs(String fileContentUrl) {
         //fileName contains file name and details, the tenant subfolder is evaluated by getFilePath() function
         String simpleFileName = fileContentUrl;
@@ -122,10 +130,18 @@ public class FsFileStorageRepository implements StorageRepository {
     }
 
     private Path getFilePath(String fileName) {
-        return Paths.get(applicationProperties.getObjectStorage().getFileRoot())
-            .resolve(tenantContextHolder.getTenantKey().toLowerCase())
-            .resolve(fileName)
-            .normalize();
+        Path tenantRoot = Paths.get(applicationProperties.getObjectStorage().getFileRoot())
+            .resolve(tenantContextHolder.getTenantKey().toLowerCase());
+        Path filePath = tenantRoot.resolve(fileName).normalize();
+        if (applicationProperties.isSecureAttachmentTenantAccess()) {
+            // the file must stay inside the tenant folder (no "../" or absolute path escape)
+            Path normalizedRoot = tenantRoot.toAbsolutePath().normalize();
+            Path absoluteFile = filePath.toAbsolutePath().normalize();
+            if (!absoluteFile.startsWith(normalizedRoot) || absoluteFile.equals(normalizedRoot)) {
+                throw new BusinessException("error.file.path", "File path is outside of the tenant storage");
+            }
+        }
+        return filePath;
     }
 
     private String evaluateSubFolder() {

@@ -52,6 +52,7 @@ public class ContentService {
     public Attachment save(Attachment attachment, Content content) {
         // XmEntityServiceImpl.addFileAttachment(XmEntity entity, MultipartFile file) already save file
         if (attachment.getContentUrl() != null && content == null) {
+            checkTenantContentUrl(attachment.getContentUrl());
             return attachment;
         }
 
@@ -144,6 +145,14 @@ public class ContentService {
         content.setValue(resource.getContentAsByteArray());
         attachment.setValueContentSize(resource.contentLength());
         return attachment;
+    }
+
+    private void checkTenantContentUrl(String contentUrl) {
+        switch (AttachmentStoreType.byContentUrl(contentUrl)) {
+            case S3 -> s3StorageRepository.checkTenantContentUrl(contentUrl);
+            case FS -> fsFileStorageRepository.checkTenantContentUrl(contentUrl);
+            default -> { }
+        }
     }
 
     public String createExpirableLink(Attachment attachment) {
