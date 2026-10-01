@@ -46,6 +46,12 @@ public class ApplicationProperties {
     private boolean timelinesEnabled;
     private boolean kafkaEnabled;
     private boolean schedulerEnabled;
+    /**
+     * When true, attachment content is read and deleted only inside the current tenant storage: the S3 bucket of the
+     * tenant ({@code AmazonS3BucketNameFactory.prepareBucketName}) and the tenant folder under
+     * {@code object-storage.file-root}. Default false keeps the previous behaviour.
+     */
+    private boolean secureAttachmentTenantAccess;
     private List<String> tenantWithCreationAccessList;
     private List<String> tenantCreateServiceList;
     private Integer tenantClientConnectionTimeout;
