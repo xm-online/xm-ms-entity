@@ -8,6 +8,8 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.time.StopWatch;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.springframework.util.AntPathMatcher;
@@ -15,6 +17,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.web.util.ContentCachingRequestWrapper;
 import org.springframework.web.util.ContentCachingResponseWrapper;
 
+@Slf4j
 @RequiredArgsConstructor
 @Component
 @Order(1)
@@ -38,10 +41,32 @@ public class ContentCachingWrappingFilter extends OncePerRequestFilter {
                                                       new ContentCachingRequestWrapper(request);
 
         ContentCachingResponseWrapper responseWrapper = new ContentCachingResponseWrapper(response);
+        StopWatch stopWatch = StopWatch.createStarted();
         try {
             filterChain.doFilter(requestWrapper, responseWrapper);
         } finally {
+            logLargeResponse(request, responseWrapper, stopWatch.getTime());
             responseWrapper.copyBodyToResponse();
+        }
+    }
+
+    /**
+     * Logs an easily-greppable WARN for any response body at or above
+     * {@link ApplicationProperties#getLargeResponseLogThresholdBytes()}. Intended to let a huge
+     * payload (e.g. an unbounded/overly broad search or export) be identified directly from this
+     * instance's logs, rather than only showing up as a resource-contention symptom (heap/circuit
+     * breaker spikes) on the shared Elasticsearch cluster.
+     */
+    private void logLargeResponse(HttpServletRequest request,
+                                  ContentCachingResponseWrapper responseWrapper,
+                                  long durationMs) {
+        int responseSize = responseWrapper.getContentSize();
+        long threshold = applicationProperties.getLargeResponseLogThresholdBytes();
+        if (responseSize >= threshold) {
+            log.warn("Large HTTP response: method: {}, uri: {}, query: {}, status: {}, "
+                    + "responseSizeBytes: {}, duration: {} ms",
+                request.getMethod(), request.getRequestURI(), request.getQueryString(),
+                responseWrapper.getStatus(), responseSize, durationMs);
         }
     }
 

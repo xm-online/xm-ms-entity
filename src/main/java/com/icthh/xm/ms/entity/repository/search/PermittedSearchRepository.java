@@ -5,11 +5,14 @@ import static org.elasticsearch.index.query.QueryBuilders.queryStringQuery;
 import static org.springframework.data.elasticsearch.core.query.Query.DEFAULT_PAGE;
 
 import com.icthh.xm.commons.permission.service.PermissionCheckService;
+import com.icthh.xm.ms.entity.config.ApplicationProperties;
 import com.icthh.xm.ms.entity.config.elasticsearch.ElasticsearchQueryTimeoutGuard;
 import com.icthh.xm.ms.entity.repository.search.translator.SpelToElasticTranslator;
 import com.icthh.xm.ms.entity.service.dto.SearchDto;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.output.CountingOutputStream;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.springframework.data.domain.Page;
@@ -24,6 +27,8 @@ import org.springframework.data.elasticsearch.core.query.SearchQuery;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Repository;
 
+import java.io.IOException;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -38,6 +43,8 @@ public class PermittedSearchRepository {
     private final SpelToElasticTranslator spelToElasticTranslator;
     private final ElasticsearchTemplate elasticsearchTemplate;
     private final ElasticsearchQueryTimeoutGuard elasticsearchQueryTimeoutGuard;
+    private final ApplicationProperties applicationProperties;
+    private final ObjectMapper objectMapper;
 
     /**
      * Search permitted entities.
@@ -53,7 +60,7 @@ public class PermittedSearchRepository {
         StopWatch stopWatch = StopWatch.createStarted();
         List<T> results = elasticsearchQueryTimeoutGuard.runWithTimeout(
             () -> getElasticsearchTemplate().queryForList(esQuery, entityClass));
-        log.trace("search: query: {}, duration: {} ms", permittedQuery, stopWatch.getTime());
+        logSearchResult("search", permittedQuery, stopWatch.getTime(), results.size(), results);
 
         return results;
     }
@@ -110,7 +117,8 @@ public class PermittedSearchRepository {
                 scrollResult = (ScrolledPage<T>) elasticsearchQueryTimeoutGuard.runWithTimeout(
                     () -> getElasticsearchTemplate().continueScroll(currentScrollId, scrollTimeInMillis, entityClass));
             }
-            log.trace("searchWithScroll: query: {}, duration: {} ms", permittedQuery, stopWatch.getTime());
+            logSearchResult("searchWithScroll", permittedQuery, stopWatch.getTime(),
+                resultList.size(), resultList);
         } finally {
             if (nonNull(scrollId)) {
                 getElasticsearchTemplate().clearScroll(scrollId);
@@ -162,8 +170,57 @@ public class PermittedSearchRepository {
         StopWatch stopWatch = StopWatch.createStarted();
         AggregatedPage queryResult = elasticsearchQueryTimeoutGuard.runWithTimeout(
             () -> getElasticsearchTemplate().queryForPage(query, searchDto.getEntityClass()));
-        log.trace("searchForPage: query: {}, duration: {} ms", permittedQuery, stopWatch.getTime());
+        logSearchResult("searchForPage", permittedQuery, stopWatch.getTime(),
+            queryResult.getTotalElements(), queryResult.getContent());
 
         return queryResult;
+    }
+
+    /**
+     * Logs search outcome (query, duration, total matched hits, hits actually returned, and an
+     * estimated serialized response size). Logged at DEBUG unconditionally so it is available
+     * without enabling TRACE, and escalated to WARN when either total matched hits reach
+     * {@link ApplicationProperties.Elasticsearch#getLargeResultLogThresholdHits()} or the
+     * returned content's estimated size reaches
+     * {@link ApplicationProperties.Elasticsearch#getLargeResultLogThresholdBytes()}. The byte
+     * threshold is what catches a response made large by a handful of oversized documents
+     * (e.g. a product with a huge nested JSON payload), which a hit-count threshold alone misses.
+     */
+    void logSearchResult(String method, String query, long durationMs, long totalHits, List<?> content) {
+        ApplicationProperties.Elasticsearch config = applicationProperties.getElasticsearch();
+        int returnedHits = content.size();
+        long responseSizeBytes = estimateSerializedSizeBytes(content);
+        String sizeAsString = responseSizeBytes >= 0 ? String.valueOf(responseSizeBytes) : "n/a";
+
+        boolean large = totalHits >= config.getLargeResultLogThresholdHits()
+            || (responseSizeBytes >= 0 && responseSizeBytes >= config.getLargeResultLogThresholdBytes());
+
+        if (large) {
+            log.warn("{}: large ES result: query: '{}', totalHits: {}, returnedHits: {}, "
+                    + "responseSizeBytes: {}, duration: {} ms",
+                method, query, totalHits, returnedHits, sizeAsString, durationMs);
+        } else {
+            log.debug("{}: query: '{}', totalHits: {}, returnedHits: {}, responseSizeBytes: {}, duration: {} ms",
+                method, query, totalHits, returnedHits, sizeAsString, durationMs);
+        }
+    }
+
+    /**
+     * Estimates the response payload size by serializing {@code content} with the same
+     * {@link ObjectMapper} used for the HTTP response, counting bytes written to a null output
+     * stream (no extra copy of the JSON is retained in memory). Returns -1 if disabled via
+     * {@link ApplicationProperties.Elasticsearch#isLogResponseSizeEnabled()} or on failure.
+     */
+    private long estimateSerializedSizeBytes(List<?> content) {
+        if (!applicationProperties.getElasticsearch().isLogResponseSizeEnabled() || content.isEmpty()) {
+            return content.isEmpty() ? 0 : -1;
+        }
+        try (CountingOutputStream countingOutputStream = new CountingOutputStream(OutputStream.nullOutputStream())) {
+            objectMapper.writeValue(countingOutputStream, content);
+            return countingOutputStream.getByteCount();
+        } catch (IOException e) {
+            log.debug("Failed to estimate Elasticsearch response size", e);
+            return -1;
+        }
     }
 }

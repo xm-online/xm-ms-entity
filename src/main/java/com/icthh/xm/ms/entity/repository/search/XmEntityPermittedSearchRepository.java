@@ -10,9 +10,11 @@ import static org.elasticsearch.index.query.QueryBuilders.termsQuery;
 import static org.springframework.data.elasticsearch.core.query.Query.DEFAULT_PAGE;
 
 import com.icthh.xm.commons.permission.service.PermissionCheckService;
+import com.icthh.xm.ms.entity.config.ApplicationProperties;
 import com.icthh.xm.ms.entity.config.elasticsearch.ElasticsearchQueryTimeoutGuard;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.repository.search.translator.SpelToElasticTranslator;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.apache.commons.lang3.time.StopWatch;
@@ -40,8 +42,11 @@ public class XmEntityPermittedSearchRepository extends PermittedSearchRepository
     public XmEntityPermittedSearchRepository(PermissionCheckService permissionCheckService,
                                              SpelToElasticTranslator spelToElasticTranslator,
                                              ElasticsearchTemplate elasticsearchTemplate,
-                                             ElasticsearchQueryTimeoutGuard elasticsearchQueryTimeoutGuard) {
-        super(permissionCheckService, spelToElasticTranslator, elasticsearchTemplate, elasticsearchQueryTimeoutGuard);
+                                             ElasticsearchQueryTimeoutGuard elasticsearchQueryTimeoutGuard,
+                                             ApplicationProperties applicationProperties,
+                                             ObjectMapper objectMapper) {
+        super(permissionCheckService, spelToElasticTranslator, elasticsearchTemplate,
+            elasticsearchQueryTimeoutGuard, applicationProperties, objectMapper);
         this.elasticsearchQueryTimeoutGuard = elasticsearchQueryTimeoutGuard;
     }
 
@@ -75,7 +80,8 @@ public class XmEntityPermittedSearchRepository extends PermittedSearchRepository
         StopWatch stopWatch = StopWatch.createStarted();
         AggregatedPage<XmEntity> xmEntities = elasticsearchQueryTimeoutGuard.runWithTimeout(
             () -> getElasticsearchTemplate().queryForPage(queryBuilder, XmEntity.class));
-        log.trace("searchByQueryAndTypeKey: query: {}, duration: {} ms", esQuery, stopWatch.getTime());
+        logSearchResult("searchByQueryAndTypeKey[typeKey=" + typeKey + "]", esQuery.toString(),
+            stopWatch.getTime(), xmEntities.getTotalElements(), xmEntities.getContent());
 
         return xmEntities;
     }
@@ -110,7 +116,8 @@ public class XmEntityPermittedSearchRepository extends PermittedSearchRepository
         StopWatch stopWatch = StopWatch.createStarted();
         AggregatedPage<XmEntity> xmEntities = elasticsearchQueryTimeoutGuard.runWithTimeout(
             () -> getElasticsearchTemplate().queryForPage(queryBuilder, XmEntity.class));
-        log.trace("searchWithIdNotIn: query: {}, duration: {} ms", esQuery, stopWatch.getTime());
+        logSearchResult("searchWithIdNotIn[typeKey=" + targetEntityTypeKey + "]", esQuery.toString(),
+            stopWatch.getTime(), xmEntities.getTotalElements(), xmEntities.getContent());
 
         return xmEntities;
     }

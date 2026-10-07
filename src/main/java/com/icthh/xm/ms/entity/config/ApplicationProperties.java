@@ -65,6 +65,16 @@ public class ApplicationProperties {
     private Integer requestCacheLimit;
     private List<String> requestCacheIgnoredPathPatternList = Collections.emptyList();
 
+    /**
+     * Any HTTP response body at or above this size (bytes, as measured by
+     * {@link com.icthh.xm.ms.entity.web.filter.ContentCachingWrappingFilter}) is logged at WARN
+     * with request path/query/duration, so an unusually large payload (e.g. an unbounded search
+     * or export) can be identified from application logs instead of only being visible as a
+     * node-level resource-contention symptom on the Elasticsearch cluster.
+     * Default 1Mb.
+     */
+    private long largeResponseLogThresholdBytes = 1024 * 1024;
+
     private Integer periodicMetricPoolSize;
 
     private KafkaMetric kafkaMetric;
@@ -163,6 +173,32 @@ public class ApplicationProperties {
         private Duration queryTimeout = Duration.ofSeconds(15);
         private int queryExecutorPoolSize = 100;
         private int queryExecutorQueueCapacity = 200;
+
+        /**
+         * Any search/scroll call returning at least this many total matched hits (regardless of
+         * requested page size) is logged at WARN by {@code PermittedSearchRepository} /
+         * {@code XmEntityPermittedSearchRepository}, together with the query DSL, privilege key,
+         * pageable and duration, to help identify queries driving unusually large Elasticsearch
+         * responses.
+         */
+        private long largeResultLogThresholdHits = 500;
+
+        /**
+         * Any search/scroll call whose returned page/list serializes to at least this many bytes
+         * is logged at WARN, independent of {@link #largeResultLogThresholdHits}. This catches a
+         * response made large by a handful (or even a single) oversized document — e.g. a
+         * product with a huge nested JSON payload — which a hit-count threshold alone would miss.
+         * Default 1Mb.
+         */
+        private long largeResultLogThresholdBytes = 1024 * 1024;
+
+        /**
+         * Serializing the returned content to estimate its size adds CPU/GC overhead on top of
+         * the serialization Spring MVC performs anyway for the HTTP response. Allows disabling
+         * that estimate (hit-count based WARN logging still applies) if this overhead is ever a
+         * concern.
+         */
+        private boolean logResponseSizeEnabled = false;
     }
 
 }
