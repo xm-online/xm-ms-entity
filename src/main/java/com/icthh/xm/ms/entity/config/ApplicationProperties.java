@@ -198,7 +198,7 @@ public class ApplicationProperties {
          * that estimate (hit-count based WARN logging still applies) if this overhead is ever a
          * concern.
          */
-        private boolean logResponseSizeEnabled = true;
+        private boolean logResponseSizeEnabled = false;
     }
 
 }
