@@ -191,6 +191,8 @@ xm-config:
 
 application:
     elastic-enabled: false
+    # true: attachment content is read and deleted only inside the current tenant S3 bucket and file storage folder
+    secure-attachment-tenant-access: false
     dynamic-permission-check:
         enabled: false
     jpa:

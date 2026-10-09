@@ -128,6 +128,13 @@ public class AmazonS3Template {
      * @param bucket - bucket name
      * @return
      */
+    /**
+     * Returns the formatted bucket name for the given prefix and tenant without creating it.
+     */
+    public String getBucketName(String bucketPrefix, String bucket) {
+        return bucketNameFactory.prepareBucketName(bucketPrefix, bucket);
+    }
+
     public String createBucketIfNotExist(String bucketPrefix, String bucket) {
         String formattedBucketName = bucketNameFactory.prepareBucketName(bucketPrefix, bucket);
         String region = applicationProperties.getAmazon().getAws().getRegion();

@@ -62,20 +62,45 @@ public class S3StorageRepository implements StorageRepository {
 
     @Override
     public void delete(String contentUrl) {
-        Pair<String, String> s3BucketNameKey = FileUtils.getS3BucketNameKey(contentUrl);
+        Pair<String, String> s3BucketNameKey = getBucketNameKey(contentUrl);
         amazonS3Template.delete(s3BucketNameKey.getKey(), s3BucketNameKey.getValue());
 
     }
 
     @SneakyThrows
     public URL createExpirableLink(Attachment attachment, Long expireLinkTime) {
+        getBucketNameKey(attachment.getContentUrl());
         return amazonS3Template.createExpirableLink(attachment, expireLinkTime);
     }
 
     @SneakyThrows
     public S3ObjectDto getS3Object(String contentUrl) {
-        Pair<String, String> s3BucketNameKey = FileUtils.getS3BucketNameKey(contentUrl);
+        Pair<String, String> s3BucketNameKey = getBucketNameKey(contentUrl);
         return amazonS3Template.getS3Object(s3BucketNameKey.getKey(), s3BucketNameKey.getValue());
+    }
+
+    /**
+     * With {@code application.secure-attachment-tenant-access: true} rejects a content url outside the tenant bucket.
+     */
+    public void checkTenantContentUrl(String contentUrl) {
+        getBucketNameKey(contentUrl);
+    }
+
+    /**
+     * Parses the attachment content url. With {@code application.secure-attachment-tenant-access: true} the bucket
+     * must be the bucket of the current tenant.
+     */
+    private Pair<String, String> getBucketNameKey(String contentUrl) {
+        Pair<String, String> s3BucketNameKey = FileUtils.getS3BucketNameKey(contentUrl);
+        if (applicationProperties.isSecureAttachmentTenantAccess()) {
+            TenantKey tenantKey = TenantContextUtils.getRequiredTenantKey(tenantContextHolder);
+            String tenantBucket = amazonS3Template.getBucketName(
+                applicationProperties.getAmazon().getS3().getBucketPrefix(), tenantKey.getValue());
+            if (!s3BucketNameKey.getKey().equals(tenantBucket)) {
+                throw new BusinessException("error.content.url.bucket", "Content url does not belong to the tenant bucket");
+            }
+        }
+        return s3BucketNameKey;
     }
 
     private String store(InputStream stream, Integer size, String contentType, String name) {
