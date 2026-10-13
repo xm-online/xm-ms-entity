@@ -8,6 +8,7 @@ import com.icthh.xm.ms.entity.AbstractJupiterUnitTest;
 import com.icthh.xm.ms.entity.domain.Attachment;
 import com.icthh.xm.ms.entity.domain.Content;
 import com.icthh.xm.ms.entity.domain.XmEntity;
+import com.icthh.xm.ms.entity.domain.AttachmentStoreType;
 import com.icthh.xm.ms.entity.domain.spec.AttachmentSpec;
 import com.icthh.xm.ms.entity.repository.AttachmentRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
@@ -60,7 +61,7 @@ public class AttachmentServiceImplUnitTest extends AbstractJupiterUnitTest {
         attachmentContentTypeValidator = new AttachmentContentTypeValidator(xmEntitySpecService, xmEntityTenantConfigService);
         attachmentService = new AttachmentService(
             attachmentRepository, contentService, permittedRepository,
-            startUpdateDateGenerationStrategy, xmEntityRepository, xmEntitySpecService, attachmentContentTypeValidator
+            startUpdateDateGenerationStrategy, xmEntityRepository, xmEntitySpecService, attachmentContentTypeValidator, applicationProperties
         );
 
         XmEntityTenantConfigService.XmEntityTenantConfig tenantConfig = new XmEntityTenantConfigService.XmEntityTenantConfig();
@@ -416,11 +417,11 @@ public class AttachmentServiceImplUnitTest extends AbstractJupiterUnitTest {
     public void shouldDeleteItemInS3() {
         S3StorageRepository s3StorageRepository  = Mockito.mock(S3StorageRepository.class);
         FsFileStorageRepository fsFileStorageRepository = Mockito.mock(FsFileStorageRepository.class);
-        ContentService contentService = new ContentService(null, null, s3StorageRepository, fsFileStorageRepository, xmEntitySpecService);
+        ContentService contentService = new ContentService(null, null, s3StorageRepository, fsFileStorageRepository, xmEntitySpecService, new ApplicationProperties());
 
         attachmentService = new AttachmentService(
             attachmentRepository, contentService, permittedRepository,
-            startUpdateDateGenerationStrategy, xmEntityRepository, xmEntitySpecService, attachmentContentTypeValidator
+            startUpdateDateGenerationStrategy, xmEntityRepository, xmEntitySpecService, attachmentContentTypeValidator, applicationProperties
         );
 
 
@@ -437,7 +438,11 @@ public class AttachmentServiceImplUnitTest extends AbstractJupiterUnitTest {
         a.setContent(c);
         a.setXmEntity(e);
 
+        AttachmentSpec spec = new AttachmentSpec();
+        spec.setStoreType(AttachmentStoreType.S3);
+
         when(attachmentRepository.findById(1L)).thenReturn(Optional.of(a));
+        when(xmEntitySpecService.findAttachment("T", "A.T")).thenReturn(Optional.of(spec));
 
         attachmentService.delete(1L);
         verify(attachmentRepository, Mockito.times(1)).deleteById(1L);
@@ -474,11 +479,11 @@ public class AttachmentServiceImplUnitTest extends AbstractJupiterUnitTest {
 
     @Test
     public void shouldNOTPassContentTypeValidationWhenSpecContentTypesNotEq() {
-        ContentService contentService = new ContentService(null, null, null, null, xmEntitySpecService);
+        ContentService contentService = new ContentService(null, null, null, null, xmEntitySpecService, new ApplicationProperties());
 
         attachmentService = new AttachmentService(
                 attachmentRepository, contentService, permittedRepository,
-                startUpdateDateGenerationStrategy, xmEntityRepository, xmEntitySpecService, attachmentContentTypeValidator
+                startUpdateDateGenerationStrategy, xmEntityRepository, xmEntitySpecService, attachmentContentTypeValidator, applicationProperties
         );
 
         AttachmentSpec spec = new AttachmentSpec();

@@ -100,7 +100,7 @@ public class ContentServiceIntTest extends AbstractJupiterSpringBootTest {
         enrichAmazonProperties(applicationProperties.getAmazon());
 
         s3StorageRepository = new S3StorageRepository(applicationProperties, amazonS3Template, tenantContextHolder);
-        contentService = new ContentService(permittedRepository, contentRepository, s3StorageRepository, fsFileStorageRepository, xmEntitySpecService);
+        contentService = new ContentService(permittedRepository, contentRepository, s3StorageRepository, fsFileStorageRepository, xmEntitySpecService, applicationProperties);
     }
 
     private void enrichAmazonProperties(ApplicationProperties.Amazon amazon) {
@@ -186,6 +186,7 @@ public class ContentServiceIntTest extends AbstractJupiterSpringBootTest {
         attachment.setXmEntity(xmEntity);
 
         String contentPathUrl = "http://localhost:8090/" + bucketName + "/fileName";
+        Mockito.when(amazonS3Template.getBucketName(PREFIX, TENANT_KEY)).thenReturn(bucketName);
         Mockito.when(amazonS3Template.createExpirableLink(eq(attachment),
             eq(attachmentSpec.getExpireLinkTimeInMillis()))).thenReturn(new URL(contentPathUrl));
 

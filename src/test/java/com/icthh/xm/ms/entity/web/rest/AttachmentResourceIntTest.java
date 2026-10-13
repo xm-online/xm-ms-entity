@@ -24,6 +24,7 @@ import com.icthh.xm.commons.security.XmAuthenticationContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
 import com.icthh.xm.ms.entity.AbstractJupiterSpringBootTest;
+import com.icthh.xm.ms.entity.config.ApplicationProperties;
 import com.icthh.xm.ms.entity.domain.Attachment;
 import com.icthh.xm.ms.entity.domain.Content;
 import com.icthh.xm.ms.entity.domain.XmEntity;
@@ -149,6 +150,9 @@ public class AttachmentResourceIntTest extends AbstractJupiterSpringBootTest {
     @Autowired
     private AttachmentContentTypeValidator contentTypeValidator;
 
+    @Autowired
+    private ApplicationProperties applicationProperties;
+
     @BeforeTransaction
     public void beforeTransaction() {
         TenantContextUtils.setTenant(tenantContextHolder, "RESINTTEST");
@@ -171,8 +175,9 @@ public class AttachmentResourceIntTest extends AbstractJupiterSpringBootTest {
                                                   permittedRepository,
                                                   startUpdateDateGenerationStrategy,
                                                   xmEntityRepository,
-                                                  xmEntitySpecService, contentTypeValidator);
+                                                  xmEntitySpecService, contentTypeValidator, applicationProperties);
 
+        attachmentService.setSelf(attachmentService);
         AttachmentFacade attachmentFacade = new AttachmentFacade(attachmentService, attachmentMapper);
         AttachmentResource attachmentResourceMock = new AttachmentResource(attachmentFacade, attachmentResource);
         this.restAttachmentMockMvc = MockMvcBuilders.standaloneSetup(attachmentResourceMock)

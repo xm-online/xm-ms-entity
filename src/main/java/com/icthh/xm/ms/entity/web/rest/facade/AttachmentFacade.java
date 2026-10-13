@@ -21,7 +21,7 @@ public class AttachmentFacade {
 
     public AttachmentDto save(AttachmentDto dto) {
         Attachment entity = attachmentMapper.toEntity(dto);
-        Attachment saved = attachmentService.save(entity);
+        Attachment saved = attachmentService.saveFromClient(entity);
         return attachmentMapper.toDto(saved);
     }
 

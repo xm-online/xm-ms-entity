@@ -13,6 +13,8 @@ import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.repository.AttachmentRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
 import com.icthh.xm.ms.entity.service.AttachmentService;
+import com.icthh.xm.ms.entity.service.dto.AttachmentDto;
+import com.icthh.xm.commons.exceptions.BusinessException;
 import com.icthh.xm.ms.entity.service.ContentService;
 import com.icthh.xm.ms.entity.service.XmEntitySpecService;
 import com.icthh.xm.ms.entity.service.impl.StartUpdateDateGenerationStrategy;
@@ -37,15 +39,24 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.Validator;
 
+import java.io.IOException;
 import java.net.URISyntaxException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.UUID;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.StringUtils;
+import com.icthh.xm.ms.entity.config.ApplicationProperties;
 
 import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_AUTH_CONTEXT;
 import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_TENANT_CONTEXT;
 import static com.icthh.xm.ms.entity.config.Constants.FILE_PREFIX;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -140,6 +151,9 @@ public class AttachmentResourceFsIntTest extends AbstractJupiterSpringBootTest {
     @Autowired
     private AttachmentContentTypeValidator attachmentContentTypeValidator;
 
+    @Autowired
+    private ApplicationProperties applicationProperties;
+
     @BeforeTransaction
     public void beforeTransaction() {
         TenantContextUtils.setTenant(tenantContextHolder, "RESINTTEST");
@@ -162,8 +176,9 @@ public class AttachmentResourceFsIntTest extends AbstractJupiterSpringBootTest {
                                                   permittedRepository,
                                                   startUpdateDateGenerationStrategy,
                                                   xmEntityRepository,
-                                                  xmEntitySpecService, attachmentContentTypeValidator);
+                                                  xmEntitySpecService, attachmentContentTypeValidator, applicationProperties);
 
+        attachmentService.setSelf(attachmentService);
         AttachmentFacade attachmentFacade = new AttachmentFacade(attachmentService, attachmentMapper);
         AttachmentResource attachmentResourceMock = new AttachmentResource(attachmentFacade, attachmentResource);
         this.restAttachmentMockMvc = MockMvcBuilders.standaloneSetup(attachmentResourceMock)
@@ -350,6 +365,242 @@ public class AttachmentResourceFsIntTest extends AbstractJupiterSpringBootTest {
 
     }
 
+    @Test
+    @Transactional
+    public void shouldDeleteFileOfFsAttachment() throws Exception {
+        Attachment attachment = new Attachment();
+        attachment.setTypeKey(DEFAULT_TYPE_KEY);
+        attachment.setName(DEFAULT_NAME);
+        attachment.setValueContentType(DEFAULT_VALUE_CONTENT_TYPE);
+        attachment.setContent(createContent("A"));
+
+        XmEntity e = new XmEntity();
+        e.setId(xmEntity.getId());
+        attachment.setXmEntity(e);
+
+        restAttachmentMockMvc.perform(post("/api/attachments")
+                .contentType(TestUtil.APPLICATION_JSON_UTF8)
+                .content(TestUtil.assertObjectsAndConvertToJsonBytesDto(attachment, attachmentMapper.toDto(attachment))))
+            .andExpect(status().isCreated());
+
+        Attachment saved = attachmentRepository.findAll().getLast();
+        Path file = tenantRoot().resolve(StringUtils.substringAfter(saved.getContentUrl(), FILE_PREFIX));
+        assertThat(file).exists();
+
+        restAttachmentMockMvc.perform(delete("/api/attachments/{id}", saved.getId()))
+            .andExpect(status().is2xxSuccessful());
+
+        assertThat(file).doesNotExist();
+    }
+
+    @Test
+    @Transactional
+    public void shouldNotDeleteOutsideTenantFolderByContentUrlOfDbAttachment() throws Exception {
+        Path probe = createProbe();
+        try {
+            // DB store type in the spec, the content url points to a folder next to the tenant folder
+            Attachment attachment = attachmentRepository.saveAndFlush(
+                attachmentWithContentUrl("AAAAAAAAAA", FILE_PREFIX + "../" + probe.getFileName()));
+
+            restAttachmentMockMvc.perform(delete("/api/attachments/{id}", attachment.getId()))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("error.content.url.store.type"));
+
+            assertThat(probe.resolve("sentinel.txt")).exists();
+        } finally {
+            FileUtils.deleteQuietly(probe.toFile());
+        }
+    }
+
+    @Test
+    @Transactional
+    public void shouldRejectContentUrlOutsideTenantFolder() throws Exception {
+        Path probe = createProbe();
+        try {
+            // the service path (used by LEP) still checks the tenant folder
+            Attachment attachment = attachmentWithContentUrl(DEFAULT_TYPE_KEY,
+                FILE_PREFIX + "../" + probe.getFileName() + "/sentinel.txt");
+
+            assertThatThrownBy(() -> attachmentService.save(attachment))
+                .isInstanceOf(BusinessException.class)
+                .hasFieldOrPropertyWithValue("code", "error.file.path");
+        } finally {
+            FileUtils.deleteQuietly(probe.toFile());
+        }
+    }
+
+    @Test
+    @Transactional
+    public void shouldRejectStorageContentUrlOnCreate() throws Exception {
+        Attachment stored = createFsAttachment("A");
+
+        for (String contentUrl : List.of(stored.getContentUrl(), FILE_PREFIX + entityFolder(stored), "bucket::key")) {
+            Attachment attachment = attachmentWithContentUrl(DEFAULT_TYPE_KEY, contentUrl);
+            restAttachmentMockMvc.perform(post("/api/attachments")
+                    .contentType(TestUtil.APPLICATION_JSON_UTF8)
+                    .content(TestUtil.convertObjectToJsonBytes(attachmentMapper.toDto(attachment))))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("error.content.url.not.allowed"));
+        }
+    }
+
+    @Test
+    @Transactional
+    public void shouldAcceptStorageContentUrlOnCreateWhenContentUrlCheckIsOff() throws Exception {
+        Attachment stored = createFsAttachment("A");
+        applicationProperties.setSecureAttachmentContentUrl(false);
+        try {
+            Attachment attachment = attachmentWithContentUrl(DEFAULT_TYPE_KEY, stored.getContentUrl());
+            restAttachmentMockMvc.perform(post("/api/attachments")
+                    .contentType(TestUtil.APPLICATION_JSON_UTF8)
+                    .content(TestUtil.convertObjectToJsonBytes(attachmentMapper.toDto(attachment))))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.contentUrl").value(stored.getContentUrl()));
+        } finally {
+            applicationProperties.setSecureAttachmentContentUrl(true);
+        }
+    }
+
+    @Test
+    @Transactional
+    public void shouldKeepStoredContentUrlOnUpdate() throws Exception {
+        Attachment stored = createFsAttachment("A");
+        String contentUrl = stored.getContentUrl();
+
+        AttachmentDto dto = attachmentMapper.toDto(stored);
+        dto.setContent(null);
+        dto.setDescription(UPDATED_DESCRIPTION);
+
+        restAttachmentMockMvc.perform(put("/api/attachments")
+                .contentType(TestUtil.APPLICATION_JSON_UTF8)
+                .content(TestUtil.convertObjectToJsonBytes(dto)))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.contentUrl").value(contentUrl))
+            .andExpect(jsonPath("$.description").value(UPDATED_DESCRIPTION));
+    }
+
+    @Test
+    @Transactional
+    public void shouldRejectChangedContentUrlOnUpdate() throws Exception {
+        Attachment victim = createFsAttachment("A");
+        String victimUrl = victim.getContentUrl();
+        Attachment own = createFsAttachment("B");
+
+        AttachmentDto dto = attachmentMapper.toDto(own);
+        dto.setContent(null);
+        dto.setContentUrl(victimUrl);
+
+        restAttachmentMockMvc.perform(put("/api/attachments")
+                .contentType(TestUtil.APPLICATION_JSON_UTF8)
+                .content(TestUtil.convertObjectToJsonBytes(dto)))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.error").value("error.content.url.not.allowed"));
+    }
+
+    @Test
+    @Transactional
+    public void shouldAcceptStorageContentUrlInSave() {
+        // LEP and addFileAttachment call save with a ready content url and without content
+        Attachment stored = createFsAttachment("A");
+
+        Attachment saved = attachmentService.save(attachmentWithContentUrl(DEFAULT_TYPE_KEY, stored.getContentUrl()));
+
+        assertThat(saved.getId()).isNotNull();
+        assertThat(saved.getContentUrl()).isEqualTo(stored.getContentUrl());
+    }
+
+    @Test
+    @Transactional
+    public void shouldNotDeleteDirectoryByContentUrl() throws Exception {
+        Attachment victim = createFsAttachment("A");
+        Path victimFile = tenantRoot().resolve(StringUtils.substringAfter(victim.getContentUrl(), FILE_PREFIX));
+
+        // content url points to the folder with the files of all attachments of the type
+        Attachment attachment = attachmentRepository.saveAndFlush(
+            attachmentWithContentUrl(DEFAULT_TYPE_KEY, FILE_PREFIX + entityFolder(victim)));
+
+        restAttachmentMockMvc.perform(delete("/api/attachments/{id}", attachment.getId()))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.error").value("error.file.path"));
+
+        assertThat(victimFile).exists();
+    }
+
+    @Test
+    @Transactional
+    public void shouldNotUseAttachmentNameAsFilePath() throws Exception {
+        Attachment victim = createFsAttachment("victim");
+        String victimPath = StringUtils.substringAfter(victim.getContentUrl(), FILE_PREFIX);
+        Path victimFile = tenantRoot().resolve(victimPath);
+
+        // the name points from the entity folder to the file of another attachment
+        Attachment attachment = attachmentWithContentUrl(DEFAULT_TYPE_KEY, null);
+        attachment.setName("x/../../" + victimPath);
+        attachment.setValueContentType(DEFAULT_VALUE_CONTENT_TYPE);
+        attachment.setContent(createContent("attacker"));
+
+        restAttachmentMockMvc.perform(post("/api/attachments")
+                .contentType(TestUtil.APPLICATION_JSON_UTF8)
+                .content(TestUtil.convertObjectToJsonBytes(attachmentMapper.toDto(attachment))))
+            .andExpect(status().isCreated());
+
+        assertThat(victimFile).hasContent("victim");
+        Attachment saved = attachmentRepository.findAll().getLast();
+        assertThat(saved.getContentUrl()).doesNotContain("..");
+        assertThat(entityFolder(saved)).isEqualTo(entityFolder(victim));
+
+        restAttachmentMockMvc.perform(delete("/api/attachments/{id}", saved.getId()))
+            .andExpect(status().is2xxSuccessful());
+
+        assertThat(victimFile).hasContent("victim");
+    }
+
+    private Attachment createFsAttachment(String value) {
+        Attachment attachment = attachmentWithContentUrl(DEFAULT_TYPE_KEY, null);
+        attachment.setContent(createContent(value));
+        return attachmentService.save(attachment);
+    }
+
+    private static String entityFolder(Attachment attachment) {
+        return StringUtils.substringBefore(StringUtils.substringAfter(attachment.getContentUrl(), FILE_PREFIX), "/");
+    }
+
+    @Test
+    @Transactional
+    public void shouldNotReadFileOutsideTenantFolder() throws Exception {
+        Path probe = createProbe();
+        try {
+            Attachment attachment = attachmentRepository.saveAndFlush(attachmentWithContentUrl(DEFAULT_TYPE_KEY,
+                FILE_PREFIX + "../" + probe.getFileName() + "/sentinel.txt"));
+
+            restAttachmentMockMvc.perform(get("/api/attachments/{id}", attachment.getId()))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("error.file.path"));
+        } finally {
+            FileUtils.deleteQuietly(probe.toFile());
+        }
+    }
+
+    private Attachment attachmentWithContentUrl(String typeKey, String contentUrl) {
+        Attachment attachment = new Attachment();
+        attachment.setTypeKey(typeKey);
+        attachment.setName(DEFAULT_NAME);
+        attachment.setStartDate(DEFAULT_START_DATE);
+        attachment.setContentUrl(contentUrl);
+        attachment.setXmEntity(xmEntity);
+        return attachment;
+    }
+
+    private Path tenantRoot() {
+        return Paths.get(applicationProperties.getObjectStorage().getFileRoot()).resolve("resinttest");
+    }
+
+    private Path createProbe() throws IOException {
+        Path probe = tenantRoot().resolveSibling("probe-" + UUID.randomUUID());
+        Files.createDirectories(probe);
+        Files.writeString(probe.resolve("sentinel.txt"), "secret");
+        return probe;
+    }
 
     private static Content createContent(String value) {
         Content content = new Content();

@@ -123,6 +123,19 @@ public class EventService extends TransactionPropagationService<EventService> {
         return eventQueryService.findAll(filter);
     }
 
+    /**
+     * Get all the events by filter, restricted by the privilege and its resource condition.
+     *
+     * @param filter the filter
+     * @param privilegeKey the privilege key
+     * @return the list of entities
+     */
+    @Transactional(readOnly = true)
+    @FindWithPermission("EVENT.GET_LIST")
+    public List<Event> findAllByFilter(EventFilter filter, String privilegeKey) {
+        return eventQueryService.findAll(filter, privilegeKey);
+    }
+
     @Transactional(readOnly = true)
     public Page<Event> findAll(Specification<Event> spec, Pageable pageable) {
         return eventRepository.findAll(spec, pageable);

@@ -11,6 +11,7 @@ import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantKey;
 import com.icthh.xm.ms.entity.AbstractJupiterUnitTest;
 import com.icthh.xm.ms.entity.config.ApplicationProperties;
+import java.util.Map;
 import java.util.Optional;
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.BeforeEach;
@@ -27,6 +28,7 @@ public class XmEntityTemplatesSpecServiceUnitTest extends AbstractJupiterUnitTes
     private static final String URL = "/config/tenants/{tenantName}/entity/templates/search-templates.yml";
 
     private XmEntityTemplatesSpecService target;
+    private ApplicationProperties ap;
 
     @Mock
     private TenantContextHolder tenantContextHolder;
@@ -40,7 +42,7 @@ public class XmEntityTemplatesSpecServiceUnitTest extends AbstractJupiterUnitTes
         when(tenantContext.getTenantKey()).thenReturn(Optional.of(TenantKey.valueOf(TENANT)));
         when(tenantContextHolder.getContext()).thenReturn(tenantContext);
 
-        ApplicationProperties ap = new ApplicationProperties();
+        ap = new ApplicationProperties();
         ap.setSpecificationTemplatesPathPattern(URL);
         target = new XmEntityTemplatesSpecService(ap, tenantContextHolder);
         String tenantName = getRequiredTenantKeyValue(tenantContextHolder);
@@ -60,5 +62,28 @@ public class XmEntityTemplatesSpecServiceUnitTest extends AbstractJupiterUnitTes
         assertThatThrownBy(() -> target.findTemplate("BAD_KEY"))
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessage("Template query not found: BAD_KEY");
+    }
+
+    @Test
+    public void shouldEscapeTemplateParams() {
+        target.onRefresh(URL.replace("{tenantName}", TENANT), "BY_NAME:\n    query: typeKey:ACCOUNT AND name:${name}\n");
+
+        assertThat(target.getQuery("BY_NAME", Map.of("name", "John Smith")))
+            .isEqualTo("typeKey:ACCOUNT AND name:John\\ Smith");
+        assertThat(target.getQuery("BY_NAME", Map.of("name", "x OR typeKey:SECRET")))
+            .isEqualTo("typeKey:ACCOUNT AND name:x\\ OR\\ typeKey\\:SECRET");
+        assertThat(target.getQuery("BY_NAME", Map.of("name", "x\\")))
+            .isEqualTo("typeKey:ACCOUNT AND name:x\\\\");
+        assertThat(target.getQuery("BY_NAME", Map.of("name", "(*) || id:>0")))
+            .isEqualTo("typeKey:ACCOUNT AND name:\\(\\*\\)\\ \\|\\|\\ id\\:\\>0");
+    }
+
+    @Test
+    public void shouldNotEscapeTemplateParamsWhenCheckIsOff() {
+        ap.setSecureSearchTemplateParams(false);
+        target.onRefresh(URL.replace("{tenantName}", TENANT), "BY_NAME:\n    query: typeKey:ACCOUNT AND name:${name}\n");
+
+        assertThat(target.getQuery("BY_NAME", Map.of("name", "x OR typeKey:SECRET")))
+            .isEqualTo("typeKey:ACCOUNT AND name:x OR typeKey:SECRET");
     }
 }

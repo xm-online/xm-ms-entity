@@ -72,7 +72,8 @@ public class FsFileStorageRepository implements StorageRepository {
     @Override
     public UploadResultDto store(Content content, String folderName, String fileName) {
 
-        String fullFileName = fileNameWithSubfolder(fileName);
+        // the attachment name is set by a client, only its last part is used as a file name
+        String fullFileName = fileNameWithSubfolder(FilenameUtils.getName(fileName));
 
         if (StringUtils.isNotEmpty(folderName)) {
             fullFileName = folderName + "/" + fullFileName;
@@ -126,6 +127,9 @@ public class FsFileStorageRepository implements StorageRepository {
         //fileName contains file name and details, tenant subfolder is evaluated by getFilePath() function
         String simpleFileName = StringUtils.substringAfter(contentUrl, FILE_PREFIX);
         Path filePath = getFilePath(simpleFileName);
+        if (applicationProperties.isSecureAttachmentContentUrl() && Files.isDirectory(filePath)) {
+            throw new BusinessException("error.file.path", "Content url points to a directory");
+        }
         org.apache.commons.io.FileUtils.deleteQuietly(filePath.toFile());
     }
 

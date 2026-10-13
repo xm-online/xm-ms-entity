@@ -1,6 +1,7 @@
 package com.icthh.xm.ms.entity.service;
 
 import static com.google.common.collect.ImmutableMap.of;
+import static com.icthh.xm.ms.entity.domain.AttachmentStoreType.byContentUrl;
 
 import com.icthh.xm.commons.exceptions.BusinessException;
 import com.icthh.xm.commons.exceptions.EntityNotFoundException;
@@ -9,7 +10,9 @@ import com.icthh.xm.commons.lep.spring.LepService;
 import com.icthh.xm.commons.permission.annotation.FindWithPermission;
 import com.icthh.xm.commons.permission.repository.PermittedRepository;
 import com.icthh.xm.commons.permission.annotation.PrivilegeDescription;
+import com.icthh.xm.ms.entity.config.ApplicationProperties;
 import com.icthh.xm.ms.entity.domain.Attachment;
+import com.icthh.xm.ms.entity.domain.AttachmentStoreType;
 import com.icthh.xm.ms.entity.domain.Content;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.domain.spec.AttachmentSpec;
@@ -37,7 +40,7 @@ import java.util.Optional;
 @LepService(group = "service.attachment")
 @Transactional
 @RequiredArgsConstructor
-public class AttachmentService {
+public class AttachmentService extends TransactionPropagationService<AttachmentService> {
 
     public static final String ZERO_RESTRICTION = "error.attachment.zero";
     public static final String MAX_RESTRICTION = "error.attachment.max";
@@ -55,6 +58,32 @@ public class AttachmentService {
 
     private final XmEntitySpecService xmEntitySpecService;
     private final AttachmentContentTypeValidator contentTypeValidator;
+    private final ApplicationProperties applicationProperties;
+
+    /**
+     * Save an attachment received from a client: the client can keep the stored FS/S3 content url, but can not point
+     * the attachment to another stored file. Internal callers (LEP, addFileAttachment, import) use {@link #save}.
+     * The check is switched off by {@code application.secure-attachment-content-url: false}.
+     *
+     * @param attachment the entity to save
+     * @return the persisted entity
+     */
+    public Attachment saveFromClient(Attachment attachment) {
+        String contentUrl = attachment.getContentUrl();
+        if (applicationProperties.isSecureAttachmentContentUrl()
+            && attachment.getContent() == null && byContentUrl(contentUrl) != AttachmentStoreType.DB
+            && !isStoredContentUrl(attachment.getId(), contentUrl)) {
+            throw new BusinessException("error.content.url.not.allowed", "Content url of the file storage can not be set with empty content");
+        }
+        return self.save(attachment);
+    }
+
+    private boolean isStoredContentUrl(Long id, String contentUrl) {
+        return id != null && attachmentRepository.findById(id)
+            .map(Attachment::getContentUrl)
+            .filter(contentUrl::equals)
+            .isPresent();
+    }
 
     /**
      * Save a attachment.

@@ -2,10 +2,12 @@ package com.icthh.xm.ms.entity.service;
 
 
 import com.amazonaws.util.IOUtils;
+import com.icthh.xm.commons.exceptions.BusinessException;
 import com.icthh.xm.commons.exceptions.EntityNotFoundException;
 import com.icthh.xm.commons.permission.annotation.FindWithPermission;
 import com.icthh.xm.commons.permission.annotation.PrivilegeDescription;
 import com.icthh.xm.commons.permission.repository.PermittedRepository;
+import com.icthh.xm.ms.entity.config.ApplicationProperties;
 import com.icthh.xm.ms.entity.domain.Attachment;
 import com.icthh.xm.ms.entity.domain.AttachmentStoreType;
 import com.icthh.xm.ms.entity.domain.Content;
@@ -41,6 +43,7 @@ public class ContentService {
     private final S3StorageRepository s3StorageRepository;
     private final FsFileStorageRepository fsFileStorageRepository;
     private final XmEntitySpecService xmEntitySpecService;
+    private final ApplicationProperties applicationProperties;
 
     @Transactional(readOnly = true)
     @FindWithPermission("CONTENT.GET_LIST")
@@ -78,13 +81,35 @@ public class ContentService {
 
     }
 
+    /**
+     * Deletes the attachment content from the storage set in the attachment spec. A content url of another storage is
+     * rejected, so a client supplied url can not route the deletion to another storage.
+     */
     public void delete(Attachment attachment) {
-        AttachmentStoreType storeType = AttachmentStoreType.byContentUrl(attachment.getContentUrl());
-        switch (storeType) {
+        switch (getStoreType(attachment)) {
             case S3 -> s3StorageRepository.delete(attachment.getContentUrl());
             case FS -> fsFileStorageRepository.delete(attachment.getContentUrl());
             default -> {}
         }
+    }
+
+    /**
+     * Returns the store type set in the attachment spec. A content url of another storage is rejected.
+     * With {@code application.secure-attachment-content-url: false} returns the store type of the content url.
+     */
+    private AttachmentStoreType getStoreType(Attachment attachment) {
+        if (!applicationProperties.isSecureAttachmentContentUrl()) {
+            return AttachmentStoreType.byContentUrl(attachment.getContentUrl());
+        }
+        AttachmentStoreType storeType = xmEntitySpecService
+            .findAttachment(attachment.getXmEntity().getTypeKey(), attachment.getTypeKey())
+            .map(AttachmentSpec::getStoreType)
+            .orElse(AttachmentStoreType.DB);
+        if (AttachmentStoreType.byContentUrl(attachment.getContentUrl()) != storeType) {
+            throw new BusinessException("error.content.url.store.type",
+                "Content url does not match the store type " + storeType + " of the attachment spec");
+        }
+        return storeType;
     }
 
     @SneakyThrows
@@ -162,11 +187,7 @@ public class ContentService {
     }
 
     public boolean supportDownloadLink (Attachment attachment) {
-        return isS3Compatible(attachment.getContentUrl());
-    }
-
-    private boolean isS3Compatible(String contentUrl) {
-        return AttachmentStoreType.S3 == AttachmentStoreType.byContentUrl(contentUrl);
+        return AttachmentStoreType.S3 == getStoreType(attachment);
     }
 
     private AttachmentSpec getSpec(XmEntity entity, Attachment attachment) {

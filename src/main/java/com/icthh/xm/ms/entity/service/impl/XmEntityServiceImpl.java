@@ -66,7 +66,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.lang3.text.StrSubstitutor;
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.modelmapper.ModelMapper;
@@ -610,8 +609,7 @@ public class XmEntityServiceImpl implements XmEntityService {
     }
 
     private String getTemplateQuery(String template, TemplateParamsHolder templateParamsHolder) {
-        return StrSubstitutor.replace(xmEntityTemplatesSpecService.findTemplate(template), templateParamsHolder
-            .getTemplateParams());
+        return xmEntityTemplatesSpecService.getQuery(template, templateParamsHolder.getTemplateParams());
     }
 
     @Override

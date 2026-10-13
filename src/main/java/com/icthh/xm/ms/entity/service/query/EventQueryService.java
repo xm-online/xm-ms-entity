@@ -5,6 +5,7 @@ import com.icthh.xm.ms.entity.domain.Event;
 import com.icthh.xm.ms.entity.domain.Event_;
 import com.icthh.xm.ms.entity.domain.XmEntity_;
 import com.icthh.xm.ms.entity.repository.EventRepository;
+import com.icthh.xm.ms.entity.repository.search.db.PermittedSpecificationRepository;
 import com.icthh.xm.ms.entity.service.query.filter.EventFilter;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -27,6 +28,7 @@ import tech.jhipster.service.QueryService;
 public class EventQueryService extends QueryService<Event> {
 
     private final EventRepository eventRepository;
+    private final PermittedSpecificationRepository permittedSpecificationRepository;
 
     /**
      * Return a {@link List} of {@link Event} which matches the criteria from the database.
@@ -48,6 +50,18 @@ public class EventQueryService extends QueryService<Event> {
     public List<Event> findAll(EventFilter filter) {
         Specification<Event> specification = createSpecification(filter);
         return eventRepository.findAll(specification);
+    }
+
+    /**
+     * Return a {@link List} of {@link Event} which matches the criteria and the resource condition of the privilege.
+     * @param filter The object which holds all the filters, which the entities should match.
+     * @param privilegeKey the privilege key whose resource condition restricts the result.
+     * @return the matching entities.
+     */
+    public List<Event> findAll(EventFilter filter, String privilegeKey) {
+        return permittedSpecificationRepository
+            .findAll(Event.class, createSpecification(filter), null, Pageable.unpaged(), privilegeKey)
+            .getContent();
     }
 
     private Specification<Event> createSpecification(Long calendarId, EventFilter filter) {

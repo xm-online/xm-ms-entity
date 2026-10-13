@@ -151,8 +151,9 @@ public class AttachmentResourceExtendedIntTest extends AbstractJupiterSpringBoot
             permittedRepository,
             startUpdateDateGenerationStrategy,
             xmEntityRepository,
-            xmEntitySpecService, attachmentContentTypeValidator);
+            xmEntitySpecService, attachmentContentTypeValidator, applicationProperties);
 
+        attachmentService.setSelf(attachmentService);
         AttachmentFacade attachmentFacade = new AttachmentFacade(attachmentService, attachmentMapper);
         AttachmentResource attachmentResourceMock = new AttachmentResource(attachmentFacade, attachmentResource);
         this.restAttachmentMockMvc = MockMvcBuilders.standaloneSetup(attachmentResourceMock)

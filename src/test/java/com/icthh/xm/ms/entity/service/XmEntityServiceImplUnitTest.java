@@ -7,6 +7,7 @@ import com.icthh.xm.commons.exceptions.BusinessException;
 import com.icthh.xm.commons.security.XmAuthenticationContext;
 import com.icthh.xm.commons.security.XmAuthenticationContextHolder;
 import com.icthh.xm.ms.entity.AbstractJupiterUnitTest;
+import com.icthh.xm.ms.entity.config.ApplicationProperties;
 import com.icthh.xm.ms.entity.domain.Comment;
 import com.icthh.xm.ms.entity.domain.FunctionContext;
 import com.icthh.xm.ms.entity.domain.Link;
@@ -16,10 +17,12 @@ import com.icthh.xm.ms.entity.domain.ext.IdOrKey;
 import com.icthh.xm.ms.entity.domain.spec.StateSpec;
 import com.icthh.xm.ms.entity.domain.spec.TypeSpec;
 import com.icthh.xm.ms.entity.domain.spec.UniqueFieldSpec;
+import com.icthh.xm.ms.entity.domain.template.TemplateParamsHolder;
 import com.icthh.xm.ms.entity.lep.keyresolver.TypeKeyWithExtends;
 import com.icthh.xm.ms.entity.projection.XmEntityStateProjection;
 import com.icthh.xm.ms.entity.repository.UniqueFieldRepository;
 import com.icthh.xm.ms.entity.repository.XmEntityRepositoryInternal;
+import com.icthh.xm.ms.entity.repository.search.XmEntityPermittedSearchRepository;
 import com.icthh.xm.ms.entity.repository.search.XmEntitySearchRepository;
 import com.icthh.xm.ms.entity.service.impl.StartUpdateDateGenerationStrategy;
 import com.icthh.xm.ms.entity.service.impl.XmEntityServiceImpl;
@@ -56,6 +59,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -87,6 +91,10 @@ public class XmEntityServiceImplUnitTest extends AbstractJupiterUnitTest {
     XmAuthenticationContextHolder authContextHolder;
     @Mock
     XmAuthenticationContext authContext;
+    @Mock
+    XmEntityPermittedSearchRepository xmEntityPermittedSearchRepository;
+    @Spy
+    XmEntityTemplatesSpecService xmEntityTemplatesSpecService = new XmEntityTemplatesSpecService(new ApplicationProperties(), null);
 
     @Spy
     private ObjectMapper mapper = JsonMapperUtils.getDefaultJsonMapper();
@@ -96,6 +104,18 @@ public class XmEntityServiceImplUnitTest extends AbstractJupiterUnitTest {
     @BeforeEach
     public void before(){
         xmEntityService.setSelf(xmEntityService);
+    }
+
+    @Test
+    public void shouldSearchByTemplateWithEscapedParams() {
+        doReturn("typeKey:ACCOUNT AND name:${name}").when(xmEntityTemplatesSpecService).findTemplate("BY_NAME");
+        TemplateParamsHolder params = new TemplateParamsHolder();
+        params.getTemplateParams().put("name", "x OR typeKey:SECRET");
+
+        xmEntityService.search("BY_NAME", params, null, "XMENTITY.SEARCH.TEMPLATE");
+
+        verify(xmEntityPermittedSearchRepository).search("typeKey:ACCOUNT AND name:x\\ OR\\ typeKey\\:SECRET",
+            null, XmEntity.class, "XMENTITY.SEARCH.TEMPLATE");
     }
 
     @Test

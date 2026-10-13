@@ -107,7 +107,7 @@ public class EventResource {
     @GetMapping("/events")
     
     public List<EventDto> getAllEvents(EventFilter eventFilter) {
-        return eventFilter == null ? eventFacade.findAll(null) : eventFacade.findAllByFilter(eventFilter);
+        return eventFacade.findAllByFilter(eventFilter, null);
     }
 
     /**
