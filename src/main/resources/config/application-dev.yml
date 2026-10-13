@@ -73,7 +73,8 @@ spring:
                     uaa:
                         authorization-grant-type: client_credentials
                         client-id: internal
-                        client-secret: internal
+                        # used only by lepContext.services.xmTenantLifeCycle, the secret is set by
+                        # SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_UAA_CLIENT_SECRET
     mail:
         host:
         port:
