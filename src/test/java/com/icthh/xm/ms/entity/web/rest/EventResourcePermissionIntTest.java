@@ -3,6 +3,8 @@ package com.icthh.xm.ms.entity.web.rest;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.icthh.xm.commons.exceptions.BusinessException;
+import com.icthh.xm.commons.lep.XmLepScriptConfigServerResourceLoader;
 import com.icthh.xm.commons.lep.api.LepEngineSession;
 import com.icthh.xm.commons.lep.api.LepManagementService;
 import com.icthh.xm.commons.permission.service.PermissionService;
@@ -36,6 +38,8 @@ public class EventResourcePermissionIntTest extends AbstractJupiterSpringBootTes
     private static final String ROLES_CONFIG_KEY = "/config/tenants/" + TENANT + "/roles.yml";
     private static final String PERMISSIONS_CONFIG_KEY = "/config/tenants/" + TENANT + "/permissions.yml";
 
+    private static final String FIND_ALL_LEP_KEY = "/config/tenants/" + TENANT + "/entity/lep/service/event/FindAll$$around.groovy";
+
     private static final String PRIVILEGE = "EVENT.GET_LIST";
     private static final String VISIBLE_TYPE_KEY = "TEST_EVENT_TYPEKEY_1";
     private static final String HIDDEN_TYPE_KEY = "TEST_EVENT_TYPEKEY_2";
@@ -62,6 +66,9 @@ public class EventResourcePermissionIntTest extends AbstractJupiterSpringBootTes
 
     @Autowired
     private LepManagementService lepManagementService;
+
+    @Autowired
+    private XmLepScriptConfigServerResourceLoader lepLoader;
 
     private LepEngineSession lepEngineSession;
 
@@ -153,5 +160,23 @@ public class EventResourcePermissionIntTest extends AbstractJupiterSpringBootTes
 
         List<EventDto> filtered = eventResource.getAllEvents(typeKeyFilter(HIDDEN_TYPE_KEY));
         assertThat(filtered).isEmpty();
+    }
+
+    @Test
+    @Transactional
+    @WithMockUser(authorities = TEST_ROLE)
+    public void getAllEvents_callsFindAllLep_onlyWhenFilterIsEmpty() {
+        persistEvent(VISIBLE_TYPE_KEY);
+        pushPermission(PRIVILEGE, null);
+        lepLoader.onRefresh(FIND_ALL_LEP_KEY, "throw new com.icthh.xm.commons.exceptions.BusinessException('lep', 'FindAll')");
+        try {
+            assertThatThrownBy(() -> eventResource.getAllEvents(new EventFilter()))
+                .isInstanceOf(BusinessException.class)
+                .hasMessage("FindAll");
+
+            assertThat(eventResource.getAllEvents(typeKeyFilter(VISIBLE_TYPE_KEY))).isNotEmpty();
+        } finally {
+            lepLoader.onRefresh(FIND_ALL_LEP_KEY, null);
+        }
     }
 }

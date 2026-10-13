@@ -25,6 +25,12 @@ public class EventFacade {
         return eventMapper.toDto(saved);
     }
 
+    public List<EventDto> findAll(String privilegeKey) {
+        return eventService.findAll(privilegeKey).stream()
+            .map(eventMapper::toDto)
+            .toList();
+    }
+
     public List<EventDto> findAllByFilter(EventFilter filter, String privilegeKey) {
         return eventService.findAllByFilter(filter, privilegeKey).stream()
             .map(eventMapper::toDto)
