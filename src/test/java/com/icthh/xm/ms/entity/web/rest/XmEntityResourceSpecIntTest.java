@@ -205,7 +205,8 @@ public class XmEntityResourceSpecIntTest extends AbstractJupiterSpringBootTest {
             new SimpleTemplateProcessor(objectMapper),
             eventRepository,
             validationService,
-            xmEntityProjectionService);
+            xmEntityProjectionService,
+            applicationProperties);
 
         xmEntityServiceImpl.setSelf(xmEntityServiceImpl);
 

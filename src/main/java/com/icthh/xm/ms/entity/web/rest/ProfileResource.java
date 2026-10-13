@@ -10,6 +10,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PostAuthorize;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -52,7 +53,7 @@ public class ProfileResource {
      */
     @PutMapping("/profile")
     
-    @PostAuthorize("hasPermission({'returnObject': returnObject.body}, 'ENTITY.PROFILE.SELF.UPDATE')")
+    @PreAuthorize("hasPermission({'xmEntity': #xmEntity}, 'ENTITY.PROFILE.SELF.UPDATE')")
     @PrivilegeDescription("Privilege to update the profile of current user")
     public ResponseEntity<XmEntityDto> updateProfile(@Valid @RequestBody XmEntityDto xmEntity) {
         XmEntityDto result = profileFacade.updateProfile(xmEntity);

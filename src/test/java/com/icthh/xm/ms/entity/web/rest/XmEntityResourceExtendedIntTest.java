@@ -391,7 +391,8 @@ public class XmEntityResourceExtendedIntTest extends AbstractJupiterSpringBootTe
                                                                       new SimpleTemplateProcessor(objectMapper),
                                                                       eventRepository,
                                                                       mock(JsonValidationService.class),
-                                                                      xmEntityProjectionService);
+                                                                      xmEntityProjectionService,
+                                                                      applicationProperties);
 
         xmEntityService.setSelf(xmEntityService);
         this.xmEntityService = xmEntityService;

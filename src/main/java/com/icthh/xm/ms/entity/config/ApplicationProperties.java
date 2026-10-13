@@ -63,6 +63,11 @@ public class ApplicationProperties {
      * not add a query syntax with it. False switches the escaping off.
      */
     private boolean secureSearchTemplateParams = true;
+    /**
+     * When true, a client can not change the avatar url of an xmEntity on create/update, the stored value is kept (the
+     * avatar is set by the avatar endpoint and by internal callers). False switches the check off.
+     */
+    private boolean secureAvatarUrl = true;
     private List<String> tenantWithCreationAccessList;
     private List<String> tenantCreateServiceList;
     private Integer tenantClientConnectionTimeout;

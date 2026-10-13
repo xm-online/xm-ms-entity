@@ -32,7 +32,7 @@ public class XmEntityFacade {
 
     public XmEntityDto save(XmEntityDto dto) {
         XmEntity entity = xmEntityMapper.toEntity(dto);
-        XmEntity saved = xmEntityService.save(entity);
+        XmEntity saved = xmEntityService.saveFromClient(entity);
         return xmEntityMapper.toDto(saved);
     }
 

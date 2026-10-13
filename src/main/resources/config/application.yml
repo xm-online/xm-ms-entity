@@ -197,6 +197,8 @@ application:
     secure-attachment-content-url: true
     # true: a parameter of an elasticsearch search template is escaped, a client can not add a query syntax with it
     secure-search-template-params: true
+    # true: a client can not change the avatar url of an xmEntity on create/update, the stored value is kept
+    secure-avatar-url: true
     dynamic-permission-check:
         enabled: false
     jpa:
