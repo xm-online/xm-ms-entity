@@ -2,6 +2,8 @@ package com.icthh.xm.ms.entity.service;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import com.google.common.collect.Maps;
+import com.icthh.xm.commons.search.utils.QueryParserUtil;
 import com.icthh.xm.commons.tenant.YamlMapperUtils;
 import tools.jackson.core.type.TypeReference;
 import tools.jackson.databind.ObjectMapper;
@@ -15,6 +17,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.text.StrSubstitutor;
 import org.springframework.stereotype.Service;
 import org.springframework.util.AntPathMatcher;
 
@@ -44,6 +47,21 @@ public class XmEntityTemplatesSpecService implements RefreshableConfiguration {
             }
         }
         throw new IllegalArgumentException("Template query not found: " + key);
+    }
+
+    /**
+     * Returns the template query with the params. With {@code application.secure-search-template-params: true} a param
+     * is escaped (query syntax characters and whitespace), so it is searched as a value.
+     */
+    public String getQuery(String key, Map<String, String> params) {
+        if (applicationProperties.isSecureSearchTemplateParams()) {
+            params = Maps.transformValues(params, this::escape);
+        }
+        return StrSubstitutor.replace(findTemplate(key), params);
+    }
+
+    private String escape(String value) {
+        return value == null ? null : QueryParserUtil.escape(value).replaceAll("[\\s<>=]", "\\\\$0");
     }
 
     @Override

@@ -192,7 +192,13 @@ xm-config:
 application:
     elastic-enabled: false
     # true: attachment content is read and deleted only inside the current tenant S3 bucket and file storage folder
-    secure-attachment-tenant-access: false
+    secure-attachment-tenant-access: true
+    # true: a client can not set a file storage content url; deletion and download link use the storage of the attachment spec
+    secure-attachment-content-url: true
+    # true: a parameter of an elasticsearch search template is escaped, a client can not add a query syntax with it
+    secure-search-template-params: true
+    # true: a client can not change the avatar url of an xmEntity on create/update, the stored value is kept
+    secure-avatar-url: true
     dynamic-permission-check:
         enabled: false
     jpa:

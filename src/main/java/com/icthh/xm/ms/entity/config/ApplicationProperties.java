@@ -49,9 +49,25 @@ public class ApplicationProperties {
     /**
      * When true, attachment content is read and deleted only inside the current tenant storage: the S3 bucket of the
      * tenant ({@code AmazonS3BucketNameFactory.prepareBucketName}) and the tenant folder under
-     * {@code object-storage.file-root}. Default false keeps the previous behaviour.
+     * {@code object-storage.file-root}. False switches the check off.
      */
-    private boolean secureAttachmentTenantAccess;
+    private boolean secureAttachmentTenantAccess = true;
+    /**
+     * When true, the attachment content url is checked: a client can not set a file storage url, the storage for
+     * deletion and download link is taken from the attachment spec, a directory is not deleted. False switches the
+     * checks off and restores the previous behaviour (the storage is taken from the content url).
+     */
+    private boolean secureAttachmentContentUrl = true;
+    /**
+     * When true, a parameter of an elasticsearch search template is escaped and is searched as a value, a client can
+     * not add a query syntax with it. False switches the escaping off.
+     */
+    private boolean secureSearchTemplateParams = true;
+    /**
+     * When true, a client can not change the avatar url of an xmEntity on create/update, the stored value is kept (the
+     * avatar is set by the avatar endpoint and by internal callers). False switches the check off.
+     */
+    private boolean secureAvatarUrl = true;
     private List<String> tenantWithCreationAccessList;
     private List<String> tenantCreateServiceList;
     private Integer tenantClientConnectionTimeout;

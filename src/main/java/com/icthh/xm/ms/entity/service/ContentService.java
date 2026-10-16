@@ -78,6 +78,10 @@ public class ContentService {
 
     }
 
+    /**
+     * Deletes the content from the storage of the content url (the store type of the spec may change after the
+     * attachment is saved). A client can not set a storage content url, see {@link AttachmentService#saveFromClient}.
+     */
     public void delete(Attachment attachment) {
         AttachmentStoreType storeType = AttachmentStoreType.byContentUrl(attachment.getContentUrl());
         switch (storeType) {

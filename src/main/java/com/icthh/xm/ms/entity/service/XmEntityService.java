@@ -33,6 +33,11 @@ public interface XmEntityService extends ResourceRepository<XmEntity, Object> {
 
     XmEntity save(XmEntity xmEntity);
 
+    /**
+     * Save an entity received from a client (REST create/update), see the implementation.
+     */
+    XmEntity saveFromClient(XmEntity xmEntity);
+
     Page<XmEntity> findAll(Pageable pageable, String typeGroup, String privilegeKey);
 
     Set<String> getTypeKeyHierarchy(String typeKey);

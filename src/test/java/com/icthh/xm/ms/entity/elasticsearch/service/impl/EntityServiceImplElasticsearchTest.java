@@ -199,7 +199,8 @@ public class EntityServiceImplElasticsearchTest extends AbstractElasticSpringBoo
             new SimpleTemplateProcessor(objectMapper),
             eventRepository,
             mock(JsonValidationService.class),
-            xmEntityProjectionService
+            xmEntityProjectionService,
+            applicationProperties
         );
         xmEntityService.setSelf(xmEntityService);
 

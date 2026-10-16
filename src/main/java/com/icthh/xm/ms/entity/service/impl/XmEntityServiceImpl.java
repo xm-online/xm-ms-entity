@@ -10,6 +10,7 @@ import com.icthh.xm.commons.logging.aop.IgnoreLogginAspect;
 import com.icthh.xm.commons.permission.annotation.FindWithPermission;
 import com.icthh.xm.commons.permission.annotation.PrivilegeDescription;
 import com.icthh.xm.commons.security.XmAuthenticationContextHolder;
+import com.icthh.xm.ms.entity.config.ApplicationProperties;
 import com.icthh.xm.ms.entity.config.Constants;
 import com.icthh.xm.ms.entity.domain.Attachment;
 import com.icthh.xm.ms.entity.domain.Calendar;
@@ -66,7 +67,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.lang3.text.StrSubstitutor;
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.modelmapper.ModelMapper;
@@ -88,6 +88,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -140,6 +141,7 @@ public class XmEntityServiceImpl implements XmEntityService {
     private final JsonValidationService validator;
 
     private final XmEntityProjectionService xmEntityProjectionService;
+    private final ApplicationProperties applicationProperties;
 
     private XmEntityServiceImpl self;
 
@@ -155,6 +157,38 @@ public class XmEntityServiceImpl implements XmEntityService {
     public XmEntity save(XmEntity xmEntity) {
         // without self for avoid call lep
         return save(xmEntity, xmEntity.getTypeKey());
+    }
+
+    /**
+     * Save an entity received from a client (REST create/update): the client can not change the avatar url, it is set
+     * by the avatar endpoint and by internal callers (LEP, events), which use {@link #save}. The stored avatar url is
+     * kept, an empty avatar url of the client is saved as is. Switched off by {@code application.secure-avatar-url: false}.
+     */
+    @Override
+    public XmEntity saveFromClient(XmEntity xmEntity) {
+        if (applicationProperties.isSecureAvatarUrl()) {
+            keepStoredAvatarUrl(xmEntity);
+        }
+        return self.save(xmEntity);
+    }
+
+    private void keepStoredAvatarUrl(XmEntity xmEntity) {
+        String clientUrl = xmEntity.getAvatarUrlRelative();
+        if (StringUtils.isEmpty(clientUrl)) {
+            // an empty avatar url does not point to any content, the stored entity is not read
+            return;
+        }
+        // saveXmEntity reads the stored entity again in this transaction and gets it from the persistence context
+        XmEntity stored = xmEntity.getId() == null ? null
+            : springXmEntityRepository.findById(xmEntity.getId()).orElse(null);
+        String storedUrl = stored == null ? null : stored.getAvatarUrlRelative();
+        String storedFullUrl = stored == null ? null : stored.getAvatarUrl();
+        if (!Objects.equals(clientUrl, storedUrl) && !Objects.equals(clientUrl, storedFullUrl)) {
+            log.warn("Avatar url of xmEntity id={} can not be changed by a client, the stored value is kept. "
+                + "Set application.secure-avatar-url: false to restore the previous behaviour", xmEntity.getId());
+        }
+        xmEntity.setAvatarUrlRelative(storedUrl);
+        xmEntity.setAvatarUrlFull(storedFullUrl);
     }
 
     @LoggingAspectConfig(inputExcludeParams = "xmEntity", resultDetails = false)
@@ -610,8 +644,7 @@ public class XmEntityServiceImpl implements XmEntityService {
     }
 
     private String getTemplateQuery(String template, TemplateParamsHolder templateParamsHolder) {
-        return StrSubstitutor.replace(xmEntityTemplatesSpecService.findTemplate(template), templateParamsHolder
-            .getTemplateParams());
+        return xmEntityTemplatesSpecService.getQuery(template, templateParamsHolder.getTemplateParams());
     }
 
     @Override

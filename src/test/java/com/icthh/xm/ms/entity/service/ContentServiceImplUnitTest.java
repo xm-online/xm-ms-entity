@@ -2,7 +2,6 @@ package com.icthh.xm.ms.entity.service;
 
 import com.icthh.xm.commons.permission.repository.PermittedRepository;
 import com.icthh.xm.ms.entity.AbstractJupiterUnitTest;
-import com.icthh.xm.ms.entity.config.ApplicationProperties;
 import com.icthh.xm.ms.entity.config.XmEntityTenantConfigService;
 import com.icthh.xm.ms.entity.domain.Attachment;
 import com.icthh.xm.ms.entity.domain.AttachmentStoreType;
@@ -22,6 +21,8 @@ import org.mockito.Mockito;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 public class ContentServiceImplUnitTest extends AbstractJupiterUnitTest {
@@ -131,6 +132,47 @@ public class ContentServiceImplUnitTest extends AbstractJupiterUnitTest {
         assertThat(save.getContentUrl()).isEqualTo("bebe::fileName");
         assertThat(save.getContentChecksum()).isEqualTo("123");
         assertThat(save.getValueContentSize()).isEqualTo(c.getValue().length);
+    }
+
+    @Test
+    public void shouldDeleteContentFromStorageOfContentUrl() {
+        // the store type of the spec may change after the attachment is saved: the storage of the content url is used
+        contentService.delete(attachmentWithSpec(null, "file://T/abc-file"));
+        verify(fsFileStorageRepository).delete("file://T/abc-file");
+
+        contentService.delete(attachmentWithSpec(AttachmentStoreType.FS, "bucket::T/key"));
+        verify(s3StorageRepository).delete("bucket::T/key");
+    }
+
+    @Test
+    public void shouldNotTouchStorageWhenDbAttachmentIsDeleted() {
+        contentService.delete(attachmentWithSpec(AttachmentStoreType.FS, null));
+        contentService.delete(attachmentWithSpec(null, "https://example.com/doc.pdf"));
+
+        verifyNoInteractions(fsFileStorageRepository, s3StorageRepository);
+    }
+
+    @Test
+    public void shouldSupportDownloadLinkOnlyForS3ContentUrl() {
+        assertThat(contentService.supportDownloadLink(attachmentWithSpec(null, "bucket::T/key"))).isTrue();
+        assertThat(contentService.supportDownloadLink(attachmentWithSpec(AttachmentStoreType.S3, "file://T/abc-file"))).isFalse();
+        assertThat(contentService.supportDownloadLink(attachmentWithSpec(AttachmentStoreType.S3, null))).isFalse();
+    }
+
+    private Attachment attachmentWithSpec(AttachmentStoreType storeType, String contentUrl) {
+        AttachmentSpec attachmentSpec = new AttachmentSpec();
+        attachmentSpec.setStoreType(storeType);
+
+        XmEntity e = new XmEntity();
+        e.setTypeKey("T");
+
+        Attachment a = new Attachment();
+        a.setTypeKey("A.T");
+        a.setContentUrl(contentUrl);
+        a.setXmEntity(e);
+
+        when(xmEntitySpecService.findAttachment("T", "A.T")).thenReturn(Optional.of(attachmentSpec));
+        return a;
     }
 
 }

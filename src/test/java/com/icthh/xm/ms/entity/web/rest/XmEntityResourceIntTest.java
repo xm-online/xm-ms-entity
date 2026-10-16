@@ -93,6 +93,7 @@ import org.springframework.validation.Validator;
 
 import java.net.URI;
 import java.time.Instant;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -100,6 +101,7 @@ import java.util.Optional;
 
 import static software.amazon.awssdk.utils.StringUtils.repeat;
 import com.icthh.xm.ms.entity.web.rest.facade.XmEntityFacade;
+import com.icthh.xm.ms.entity.service.dto.XmEntityDto;
 import com.icthh.xm.ms.entity.service.mapper.XmEntityMapper;
 import com.icthh.xm.ms.entity.service.mapper.LinkMapper;
 
@@ -294,7 +296,8 @@ public class XmEntityResourceIntTest extends AbstractJupiterSpringBootTest {
                                                       new SimpleTemplateProcessor(objectMapper),
                                                       eventRepository,
                                                       mock(JsonValidationService.class),
-                                                      xmEntityProjectionService);
+                                                      xmEntityProjectionService,
+                                                      applicationProperties);
 
         xmEntityServiceImpl.setSelf(xmEntityServiceImpl);
 
@@ -617,6 +620,76 @@ public class XmEntityResourceIntTest extends AbstractJupiterSpringBootTest {
             .andExpect(jsonPath("$.description").value(DEFAULT_DESCRIPTION.toString()))
             .andExpect(jsonPath("$.data.AAAAAAAAAA").value("BBBBBBBBBB"))
             .andExpect(jsonPath("$.removed").value(DEFAULT_REMOVED.booleanValue()));
+    }
+
+    @Test
+    @Transactional
+    public void shouldIgnoreAvatarUrlOfClientOnCreate() throws Exception {
+        XmEntity entity = createEntity().key("AVATAR-CREATE").avatarUrl("5012/x.pdf");
+
+        restXmEntityMockMvc.perform(post("/api/xm-entities")
+                .contentType(TestUtil.APPLICATION_JSON_UTF8)
+                .content(TestUtil.convertObjectToJsonBytes(xmEntityMapper.toDto(entity))))
+            .andExpect(status().isCreated());
+
+        XmEntity saved = springXmEntityRepository.findAll().stream()
+            .filter(it -> "AVATAR-CREATE".equals(it.getKey())).findFirst().orElseThrow();
+        assertThat(saved.getAvatarUrlRelative()).isNull();
+    }
+
+    @Test
+    @Transactional
+    public void shouldKeepStoredAvatarUrlOnUpdate() throws Exception {
+        XmEntity stored = springXmEntityRepository.saveAndFlush(createEntity().avatarUrl("123/avatar.png"));
+
+        for (String clientUrl : Arrays.asList("5012/x.pdf", "123/avatar.png")) {
+            XmEntityDto dto = xmEntityMapper.toDto(springXmEntityRepository.findById(stored.getId()).orElseThrow());
+            dto.setAvatarUrl(clientUrl);
+
+            restXmEntityMockMvc.perform(put("/api/xm-entities")
+                    .contentType(TestUtil.APPLICATION_JSON_UTF8)
+                    .content(TestUtil.convertObjectToJsonBytes(dto)))
+                .andExpect(status().isOk());
+
+            assertThat(springXmEntityRepository.findById(stored.getId()).orElseThrow().getAvatarUrlRelative())
+                .isEqualTo("123/avatar.png");
+        }
+    }
+
+    @Test
+    @Transactional
+    public void shouldSaveEmptyAvatarUrlOfClientOnUpdate() throws Exception {
+        XmEntity stored = springXmEntityRepository.saveAndFlush(createEntity().avatarUrl("123/avatar.png"));
+        XmEntityDto dto = xmEntityMapper.toDto(stored);
+        dto.setAvatarUrl(null);
+
+        restXmEntityMockMvc.perform(put("/api/xm-entities")
+                .contentType(TestUtil.APPLICATION_JSON_UTF8)
+                .content(TestUtil.convertObjectToJsonBytes(dto)))
+            .andExpect(status().isOk());
+
+        assertThat(springXmEntityRepository.findById(stored.getId()).orElseThrow().getAvatarUrlRelative()).isNull();
+    }
+
+    @Test
+    @Transactional
+    public void shouldUpdateAvatarUrlOfClientWhenCheckIsOff() throws Exception {
+        XmEntity stored = springXmEntityRepository.saveAndFlush(createEntity().avatarUrl("123/avatar.png"));
+        applicationProperties.setSecureAvatarUrl(false);
+        try {
+            XmEntityDto dto = xmEntityMapper.toDto(stored);
+            dto.setAvatarUrl("5012/x.pdf");
+
+            restXmEntityMockMvc.perform(put("/api/xm-entities")
+                    .contentType(TestUtil.APPLICATION_JSON_UTF8)
+                    .content(TestUtil.convertObjectToJsonBytes(dto)))
+                .andExpect(status().isOk());
+
+            assertThat(springXmEntityRepository.findById(stored.getId()).orElseThrow().getAvatarUrlRelative())
+                .isEqualTo("5012/x.pdf");
+        } finally {
+            applicationProperties.setSecureAvatarUrl(true);
+        }
     }
 
     @Test

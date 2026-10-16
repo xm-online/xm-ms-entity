@@ -107,7 +107,12 @@ public class EventResource {
     @GetMapping("/events")
     
     public List<EventDto> getAllEvents(EventFilter eventFilter) {
-        return eventFilter == null ? eventFacade.findAll(null) : eventFacade.findAllByFilter(eventFilter);
+        return isEmpty(eventFilter) ? eventFacade.findAll(null) : eventFacade.findAllByFilter(eventFilter, null);
+    }
+
+    // Spring always binds a non-null EventFilter, so a request without filter params arrives as an empty instance
+    private static boolean isEmpty(EventFilter eventFilter) {
+        return eventFilter == null || eventFilter.equals(new EventFilter());
     }
 
     /**
