@@ -22,6 +22,8 @@ import com.icthh.xm.ms.entity.repository.XmEntityRepository;
 import com.icthh.xm.ms.entity.service.impl.StartUpdateDateGenerationStrategy;
 import com.icthh.xm.ms.entity.validator.AttachmentContentTypeValidator;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -36,6 +38,7 @@ import java.util.Optional;
 /**
  * Service Implementation for managing Attachment.
  */
+@Slf4j
 @Service
 @LepService(group = "service.attachment")
 @Transactional
@@ -61,21 +64,68 @@ public class AttachmentService extends TransactionPropagationService<AttachmentS
     private final ApplicationProperties applicationProperties;
 
     /**
-     * Save an attachment received from a client: the client can keep the stored FS/S3 content url, but can not point
-     * the attachment to another stored file. Internal callers (LEP, addFileAttachment, import) use {@link #save}.
+     * Save an attachment received from a client (REST create/update). The client sets the content url only of a DB
+     * attachment and only a url of the DB type (not {@code file://} or {@code bucket::key}), or keeps the stored one.
+     * The FS/S3 content url is set by the storage when the content is saved and is kept on update, so a client can not
+     * point the attachment to another stored file. Internal callers (LEP, addFileAttachment, import) use {@link #save}.
      * The check is switched off by {@code application.secure-attachment-content-url: false}.
      *
      * @param attachment the entity to save
      * @return the persisted entity
      */
     public Attachment saveFromClient(Attachment attachment) {
-        String contentUrl = attachment.getContentUrl();
-        if (applicationProperties.isSecureAttachmentContentUrl()
-            && attachment.getContent() == null && byContentUrl(contentUrl) != AttachmentStoreType.DB
-            && !isStoredContentUrl(attachment.getId(), contentUrl)) {
-            throw new BusinessException("error.content.url.not.allowed", "Content url of the file storage can not be set with empty content");
+        if (applicationProperties.isSecureAttachmentContentUrl()) {
+            checkClientContentUrl(attachment);
         }
         return self.save(attachment);
+    }
+
+    private void checkClientContentUrl(Attachment attachment) {
+        if (attachment.getId() == null && StringUtils.isEmpty(attachment.getContentUrl())) {
+            return;
+        }
+        // save reads the entity and the stored attachment again in this transaction from the persistence context
+        XmEntity entity = xmEntityRepository.findById(attachment.getXmEntity().getId()).orElseThrow(
+            () -> new EntityNotFoundException("No entity found by id: " + attachment.getXmEntity().getId())
+        );
+        AttachmentStoreType storeType = Optional.ofNullable(getSpec(entity, attachment).getStoreType())
+            .orElse(AttachmentStoreType.DB);
+        for (var task: List.of(
+
+        )) {
+            if (task.apply(attachment, storeType)) {
+                return;
+            }
+        }
+        if (attachment.getId() == null) {
+            if (attachment.getContent() == null) {
+                throw new BusinessException("error.content.url.not.allowed",
+                    "Attachment of the " + storeType + " store type is created only with the content");
+            }
+            // the content url is set by the storage
+            attachment.setContentUrl(null);
+            return;
+        }
+
+        String storedUrl = attachmentRepository.findById(id).map(Attachment::getContentUrl).orElse(null);
+        if (!Objects.equals(attachment.getContentUrl(), storedUrl)) {
+            log.warn("Content url of attachment id={} can not be changed by a client, the stored value is kept. "
+                + "Set application.secure-attachment-content-url: false to restore the previous behaviour", id);
+        }
+        attachment.setContentUrl(storedUrl);
+    }
+
+    private boolean contentUrlDataBaseTypeOrNull(Attachment attachment, AttachmentStoreType storeType) {
+        Long id = attachment.getId();
+        String clientUrl = attachment.getContentUrl();
+        if (storeType == AttachmentStoreType.DB) {
+            if (byContentUrl(clientUrl) != AttachmentStoreType.DB && !isStoredContentUrl(id, clientUrl)) {
+                throw new BusinessException("error.content.url.not.allowed",
+                    "Content url of the file storage can not be set by a client");
+            }
+            return true;
+        }
+        return false;
     }
 
     private boolean isStoredContentUrl(Long id, String contentUrl) {

@@ -1,9 +1,7 @@
 package com.icthh.xm.ms.entity.service;
 
-import com.icthh.xm.commons.exceptions.BusinessException;
 import com.icthh.xm.commons.permission.repository.PermittedRepository;
 import com.icthh.xm.ms.entity.AbstractJupiterUnitTest;
-import com.icthh.xm.ms.entity.config.ApplicationProperties;
 import com.icthh.xm.ms.entity.config.XmEntityTenantConfigService;
 import com.icthh.xm.ms.entity.domain.Attachment;
 import com.icthh.xm.ms.entity.domain.AttachmentStoreType;
@@ -23,7 +21,6 @@ import org.mockito.Mockito;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -34,7 +31,6 @@ public class ContentServiceImplUnitTest extends AbstractJupiterUnitTest {
     private S3StorageRepository s3StorageRepository;
     private FsFileStorageRepository fsFileStorageRepository;
     private XmEntitySpecService xmEntitySpecService;
-    private ApplicationProperties applicationProperties;
 
     private ContentService contentService;
 
@@ -45,9 +41,8 @@ public class ContentServiceImplUnitTest extends AbstractJupiterUnitTest {
         s3StorageRepository = Mockito.mock(S3StorageRepository.class);
         fsFileStorageRepository = Mockito.mock(FsFileStorageRepository.class);
         xmEntitySpecService = Mockito.mock(XmEntitySpecService.class);
-        applicationProperties = new ApplicationProperties();
         contentService = new ContentService(
-            permittedRepository, contentRepository, s3StorageRepository, fsFileStorageRepository, xmEntitySpecService, applicationProperties
+            permittedRepository, contentRepository, s3StorageRepository, fsFileStorageRepository, xmEntitySpecService
         );
     }
 
@@ -140,99 +135,28 @@ public class ContentServiceImplUnitTest extends AbstractJupiterUnitTest {
     }
 
     @Test
-    public void shouldDeleteContentFromFsSetInSpec() {
-        Attachment a = attachmentWithSpec(AttachmentStoreType.FS, "file://T/abc-file");
-
-        contentService.delete(a);
-
+    public void shouldDeleteContentFromStorageOfContentUrl() {
+        // the store type of the spec may change after the attachment is saved: the storage of the content url is used
+        contentService.delete(attachmentWithSpec(null, "file://T/abc-file"));
         verify(fsFileStorageRepository).delete("file://T/abc-file");
-        verifyNoInteractions(s3StorageRepository);
-    }
 
-    @Test
-    public void shouldDeleteContentFromS3SetInSpec() {
-        Attachment a = attachmentWithSpec(AttachmentStoreType.S3, "bucket::T/key");
-
-        contentService.delete(a);
-
+        contentService.delete(attachmentWithSpec(AttachmentStoreType.FS, "bucket::T/key"));
         verify(s3StorageRepository).delete("bucket::T/key");
-        verifyNoInteractions(fsFileStorageRepository);
     }
 
     @Test
     public void shouldNotTouchStorageWhenDbAttachmentIsDeleted() {
-        contentService.delete(attachmentWithSpec(null, null));
+        contentService.delete(attachmentWithSpec(AttachmentStoreType.FS, null));
         contentService.delete(attachmentWithSpec(null, "https://example.com/doc.pdf"));
 
         verifyNoInteractions(fsFileStorageRepository, s3StorageRepository);
     }
 
     @Test
-    public void shouldRejectFileContentUrlWhenSpecStoreTypeIsDb() {
-        Attachment a = attachmentWithSpec(null, "file://../");
-
-        assertThatThrownBy(() -> contentService.delete(a))
-            .isInstanceOf(BusinessException.class)
-            .hasFieldOrPropertyWithValue("code", "error.content.url.store.type");
-
-        verifyNoInteractions(fsFileStorageRepository, s3StorageRepository);
-    }
-
-    @Test
-    public void shouldRejectContentUrlNotMatchingSpecStoreType() {
-        Attachment s3UrlInFsSpec = attachmentWithSpec(AttachmentStoreType.FS, "bucket::T/key");
-        assertThatThrownBy(() -> contentService.delete(s3UrlInFsSpec)).isInstanceOf(BusinessException.class);
-
-        Attachment noUrlInFsSpec = attachmentWithSpec(AttachmentStoreType.FS, null);
-        assertThatThrownBy(() -> contentService.delete(noUrlInFsSpec)).isInstanceOf(BusinessException.class);
-
-        Attachment fileUrlInS3Spec = attachmentWithSpec(AttachmentStoreType.S3, "file://../");
-        assertThatThrownBy(() -> contentService.delete(fileUrlInS3Spec)).isInstanceOf(BusinessException.class);
-
-        verifyNoInteractions(fsFileStorageRepository, s3StorageRepository);
-    }
-
-    @Test
-    public void shouldRejectFileContentUrlWhenSpecIsMissing() {
-        XmEntity e = new XmEntity();
-        e.setTypeKey("T");
-
-        Attachment a = new Attachment();
-        a.setTypeKey("A.T");
-        a.setContentUrl("file://../");
-        a.setXmEntity(e);
-
-        when(xmEntitySpecService.findAttachment("T", "A.T")).thenReturn(Optional.empty());
-
-        assertThatThrownBy(() -> contentService.delete(a)).isInstanceOf(BusinessException.class);
-
-        verifyNoInteractions(fsFileStorageRepository, s3StorageRepository);
-    }
-
-    @Test
-    public void shouldSupportDownloadLinkOnlyForS3SetInSpec() {
-        assertThat(contentService.supportDownloadLink(attachmentWithSpec(AttachmentStoreType.S3, "bucket::T/key"))).isTrue();
-        assertThat(contentService.supportDownloadLink(attachmentWithSpec(AttachmentStoreType.FS, "file://T/abc-file"))).isFalse();
-        assertThat(contentService.supportDownloadLink(attachmentWithSpec(null, null))).isFalse();
-    }
-
-    @Test
-    public void shouldRejectDownloadLinkForS3ContentUrlWhenSpecStoreTypeIsDb() {
-        Attachment a = attachmentWithSpec(null, "bucket::T/other-key");
-
-        assertThatThrownBy(() -> contentService.supportDownloadLink(a))
-            .isInstanceOf(BusinessException.class)
-            .hasFieldOrPropertyWithValue("code", "error.content.url.store.type");
-    }
-
-    @Test
-    public void shouldUseStoreTypeOfContentUrlWhenContentUrlCheckIsOff() {
-        applicationProperties.setSecureAttachmentContentUrl(false);
-
-        contentService.delete(attachmentWithSpec(null, "file://T/abc-file"));
-        verify(fsFileStorageRepository).delete("file://T/abc-file");
-
+    public void shouldSupportDownloadLinkOnlyForS3ContentUrl() {
         assertThat(contentService.supportDownloadLink(attachmentWithSpec(null, "bucket::T/key"))).isTrue();
+        assertThat(contentService.supportDownloadLink(attachmentWithSpec(AttachmentStoreType.S3, "file://T/abc-file"))).isFalse();
+        assertThat(contentService.supportDownloadLink(attachmentWithSpec(AttachmentStoreType.S3, null))).isFalse();
     }
 
     private Attachment attachmentWithSpec(AttachmentStoreType storeType, String contentUrl) {

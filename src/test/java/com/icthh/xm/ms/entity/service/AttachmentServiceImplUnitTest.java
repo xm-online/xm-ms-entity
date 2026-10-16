@@ -417,7 +417,7 @@ public class AttachmentServiceImplUnitTest extends AbstractJupiterUnitTest {
     public void shouldDeleteItemInS3() {
         S3StorageRepository s3StorageRepository  = Mockito.mock(S3StorageRepository.class);
         FsFileStorageRepository fsFileStorageRepository = Mockito.mock(FsFileStorageRepository.class);
-        ContentService contentService = new ContentService(null, null, s3StorageRepository, fsFileStorageRepository, xmEntitySpecService, new ApplicationProperties());
+        ContentService contentService = new ContentService(null, null, s3StorageRepository, fsFileStorageRepository, xmEntitySpecService);
 
         attachmentService = new AttachmentService(
             attachmentRepository, contentService, permittedRepository,
@@ -479,7 +479,7 @@ public class AttachmentServiceImplUnitTest extends AbstractJupiterUnitTest {
 
     @Test
     public void shouldNOTPassContentTypeValidationWhenSpecContentTypesNotEq() {
-        ContentService contentService = new ContentService(null, null, null, null, xmEntitySpecService, new ApplicationProperties());
+        ContentService contentService = new ContentService(null, null, null, null, xmEntitySpecService);
 
         attachmentService = new AttachmentService(
                 attachmentRepository, contentService, permittedRepository,

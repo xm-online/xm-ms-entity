@@ -46,6 +46,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 import org.apache.commons.io.FileUtils;
@@ -57,7 +58,9 @@ import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_TENANT_
 import static com.icthh.xm.ms.entity.config.Constants.FILE_PREFIX;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.notNullValue;
+import static org.hamcrest.Matchers.startsWith;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -74,6 +77,7 @@ import com.icthh.xm.ms.entity.service.mapper.AttachmentMapper;
 public class AttachmentResourceFsIntTest extends AbstractJupiterSpringBootTest {
 
     public static final String DEFAULT_TYPE_KEY = "AAAAAAAAFS";
+    public static final String DB_TYPE_KEY = "AAAAAAAAAA";
     public static final String UPDATED_TYPE_KEY = "BBBBBBBBFS";
 
     public static final String DEFAULT_NAME = "AAAAAAAAFS";
@@ -404,7 +408,7 @@ public class AttachmentResourceFsIntTest extends AbstractJupiterSpringBootTest {
 
             restAttachmentMockMvc.perform(delete("/api/attachments/{id}", attachment.getId()))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.error").value("error.content.url.store.type"));
+                .andExpect(jsonPath("$.error").value("error.file.path"));
 
             assertThat(probe.resolve("sentinel.txt")).exists();
         } finally {
@@ -434,7 +438,8 @@ public class AttachmentResourceFsIntTest extends AbstractJupiterSpringBootTest {
     public void shouldRejectStorageContentUrlOnCreate() throws Exception {
         Attachment stored = createFsAttachment("A");
 
-        for (String contentUrl : List.of(stored.getContentUrl(), FILE_PREFIX + entityFolder(stored), "bucket::key")) {
+        // an FS attachment is created by a client only with the content, the content url is set by the storage
+        for (String contentUrl : List.of(stored.getContentUrl(), FILE_PREFIX + entityFolder(stored), "bucket::key", "report.pdf")) {
             Attachment attachment = attachmentWithContentUrl(DEFAULT_TYPE_KEY, contentUrl);
             restAttachmentMockMvc.perform(post("/api/attachments")
                     .contentType(TestUtil.APPLICATION_JSON_UTF8)
@@ -481,15 +486,108 @@ public class AttachmentResourceFsIntTest extends AbstractJupiterSpringBootTest {
 
     @Test
     @Transactional
-    public void shouldRejectChangedContentUrlOnUpdate() throws Exception {
+    public void shouldKeepStoredContentUrlOnUpdateWithChangedContentUrl() throws Exception {
         Attachment victim = createFsAttachment("A");
-        String victimUrl = victim.getContentUrl();
+        Path victimFile = tenantRoot().resolve(StringUtils.substringAfter(victim.getContentUrl(), FILE_PREFIX));
         Attachment own = createFsAttachment("B");
+        String ownUrl = own.getContentUrl();
 
-        AttachmentDto dto = attachmentMapper.toDto(own);
+        for (String contentUrl : Arrays.asList(victim.getContentUrl(), FILE_PREFIX + entityFolder(victim), "bucket::key", null)) {
+            AttachmentDto dto = attachmentMapper.toDto(own);
+            dto.setContent(null);
+            dto.setContentUrl(contentUrl);
+
+            restAttachmentMockMvc.perform(put("/api/attachments")
+                    .contentType(TestUtil.APPLICATION_JSON_UTF8)
+                    .content(TestUtil.convertObjectToJsonBytes(dto)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.contentUrl").value(ownUrl));
+        }
+        assertThat(attachmentRepository.findById(own.getId()).orElseThrow().getContentUrl()).isEqualTo(ownUrl);
+
+        restAttachmentMockMvc.perform(delete("/api/attachments/{id}", own.getId()))
+            .andExpect(status().is2xxSuccessful());
+        assertThat(victimFile).hasContent("A");
+    }
+
+    @Test
+    @Transactional
+    public void shouldIgnoreClientContentUrlOnCreateWithContent() throws Exception {
+        Attachment victim = createFsAttachment("A");
+        Path victimFile = tenantRoot().resolve(StringUtils.substringAfter(victim.getContentUrl(), FILE_PREFIX));
+
+        // the webapp sends the file name as the content url, a storage url of another file is ignored as well
+        for (String contentUrl : List.of("report.pdf", victim.getContentUrl())) {
+            Attachment attachment = attachmentWithContentUrl(DEFAULT_TYPE_KEY, contentUrl);
+            attachment.setValueContentType(DEFAULT_VALUE_CONTENT_TYPE);
+            attachment.setContent(createContent("B"));
+
+            restAttachmentMockMvc.perform(post("/api/attachments")
+                    .contentType(TestUtil.APPLICATION_JSON_UTF8)
+                    .content(TestUtil.convertObjectToJsonBytes(attachmentMapper.toDto(attachment))))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.contentUrl").value(startsWith(FILE_PREFIX)))
+                .andExpect(jsonPath("$.contentUrl").value(not(victim.getContentUrl())));
+        }
+        assertThat(victimFile).hasContent("A");
+    }
+
+    @Test
+    @Transactional
+    public void shouldRejectStorageContentUrlOfDbAttachment() throws Exception {
+        Attachment stored = createFsAttachment("A");
+
+        for (String contentUrl : List.of(stored.getContentUrl(), "bucket::key")) {
+            for (Content content : Arrays.asList(createContent("B"), null)) {
+                Attachment attachment = attachmentWithContentUrl(DB_TYPE_KEY, contentUrl);
+                attachment.setValueContentType(DEFAULT_VALUE_CONTENT_TYPE);
+                attachment.setContent(content);
+
+                restAttachmentMockMvc.perform(post("/api/attachments")
+                        .contentType(TestUtil.APPLICATION_JSON_UTF8)
+                        .content(TestUtil.convertObjectToJsonBytes(attachmentMapper.toDto(attachment))))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.error").value("error.content.url.not.allowed"));
+            }
+        }
+    }
+
+    @Test
+    @Transactional
+    public void shouldAcceptDbContentUrlOfDbAttachment() throws Exception {
+        for (String contentUrl : List.of("report.pdf", "https://example.com/doc.pdf")) {
+            Attachment attachment = attachmentWithContentUrl(DB_TYPE_KEY, contentUrl);
+            attachment.setValueContentType(DEFAULT_VALUE_CONTENT_TYPE);
+            attachment.setContent(createContent("B"));
+
+            restAttachmentMockMvc.perform(post("/api/attachments")
+                    .contentType(TestUtil.APPLICATION_JSON_UTF8)
+                    .content(TestUtil.convertObjectToJsonBytes(attachmentMapper.toDto(attachment))))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.contentUrl").value(contentUrl));
+        }
+    }
+
+    @Test
+    @Transactional
+    public void shouldKeepStoredStorageContentUrlOfDbAttachmentOnUpdate() throws Exception {
+        // the store type of the spec changed to DB after the attachment was saved to the FS
+        Attachment stored = createFsAttachment("A");
+        stored.setTypeKey(DB_TYPE_KEY);
+        stored = attachmentRepository.saveAndFlush(stored);
+        Attachment other = createFsAttachment("B");
+
+        AttachmentDto dto = attachmentMapper.toDto(stored);
         dto.setContent(null);
-        dto.setContentUrl(victimUrl);
+        dto.setDescription(UPDATED_DESCRIPTION);
+        restAttachmentMockMvc.perform(put("/api/attachments")
+                .contentType(TestUtil.APPLICATION_JSON_UTF8)
+                .content(TestUtil.convertObjectToJsonBytes(dto)))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.contentUrl").value(stored.getContentUrl()))
+            .andExpect(jsonPath("$.description").value(UPDATED_DESCRIPTION));
 
+        dto.setContentUrl(other.getContentUrl());
         restAttachmentMockMvc.perform(put("/api/attachments")
                 .contentType(TestUtil.APPLICATION_JSON_UTF8)
                 .content(TestUtil.convertObjectToJsonBytes(dto)))
