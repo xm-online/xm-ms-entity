@@ -1,15 +1,12 @@
 package com.icthh.xm.ms.entity.service;
 
-import static com.google.common.collect.ImmutableMap.of;
-import static com.icthh.xm.ms.entity.domain.AttachmentStoreType.byContentUrl;
-
 import com.icthh.xm.commons.exceptions.BusinessException;
 import com.icthh.xm.commons.exceptions.EntityNotFoundException;
 import com.icthh.xm.commons.lep.LogicExtensionPoint;
 import com.icthh.xm.commons.lep.spring.LepService;
 import com.icthh.xm.commons.permission.annotation.FindWithPermission;
-import com.icthh.xm.commons.permission.repository.PermittedRepository;
 import com.icthh.xm.commons.permission.annotation.PrivilegeDescription;
+import com.icthh.xm.commons.permission.repository.PermittedRepository;
 import com.icthh.xm.ms.entity.config.ApplicationProperties;
 import com.icthh.xm.ms.entity.domain.Attachment;
 import com.icthh.xm.ms.entity.domain.AttachmentStoreType;
@@ -34,6 +31,11 @@ import org.springframework.util.unit.DataSize;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.BiConsumer;
+
+import static com.google.common.collect.ImmutableMap.of;
+import static com.icthh.xm.ms.entity.domain.AttachmentStoreType.DB;
+import static com.icthh.xm.ms.entity.domain.AttachmentStoreType.byContentUrl;
 
 /**
  * Service Implementation for managing Attachment.
@@ -89,43 +91,43 @@ public class AttachmentService extends TransactionPropagationService<AttachmentS
             () -> new EntityNotFoundException("No entity found by id: " + attachment.getXmEntity().getId())
         );
         AttachmentStoreType storeType = Optional.ofNullable(getSpec(entity, attachment).getStoreType())
-            .orElse(AttachmentStoreType.DB);
-        for (var task: List.of(
+            .orElse(DB);
+        this.contentUrlDataBaseTypeOrNull(attachment, storeType);
+        this.contentRequiredForAnyStoreExceptDb(attachment, storeType);
+        this.clientCanNotUpdateContentUrlForAnyStoreExceptDb(attachment, storeType);
+    }
 
-        )) {
-            if (task.apply(attachment, storeType)) {
-                return;
-            }
+    private void clientCanNotUpdateContentUrlForAnyStoreExceptDb(Attachment attachment, AttachmentStoreType storeType) {
+        if (attachment.getId() == null || storeType == DB) {
+            return;
         }
-        if (attachment.getId() == null) {
+
+        String storedUrl = attachmentRepository.findById(attachment.getId()).map(Attachment::getContentUrl).orElse(null);
+        if (!Objects.equals(attachment.getContentUrl(), storedUrl)) {
+            log.warn("Content url of attachment id={} can not be changed by a client, the stored value is kept. "
+                + "Set application.secure-attachment-content-url: false to restore the previous behaviour", attachment.getId());
+        }
+        attachment.setContentUrl(storedUrl);
+    }
+
+    private void contentRequiredForAnyStoreExceptDb(Attachment attachment, AttachmentStoreType storeType) {
+        if (attachment.getId() == null && storeType != DB) {
             if (attachment.getContent() == null) {
                 throw new BusinessException("error.content.url.not.allowed",
                     "Attachment of the " + storeType + " store type is created only with the content");
             }
             // the content url is set by the storage
             attachment.setContentUrl(null);
-            return;
         }
-
-        String storedUrl = attachmentRepository.findById(id).map(Attachment::getContentUrl).orElse(null);
-        if (!Objects.equals(attachment.getContentUrl(), storedUrl)) {
-            log.warn("Content url of attachment id={} can not be changed by a client, the stored value is kept. "
-                + "Set application.secure-attachment-content-url: false to restore the previous behaviour", id);
-        }
-        attachment.setContentUrl(storedUrl);
     }
 
-    private boolean contentUrlDataBaseTypeOrNull(Attachment attachment, AttachmentStoreType storeType) {
+    private void contentUrlDataBaseTypeOrNull(Attachment attachment, AttachmentStoreType storeType) {
         Long id = attachment.getId();
         String clientUrl = attachment.getContentUrl();
-        if (storeType == AttachmentStoreType.DB) {
-            if (byContentUrl(clientUrl) != AttachmentStoreType.DB && !isStoredContentUrl(id, clientUrl)) {
-                throw new BusinessException("error.content.url.not.allowed",
-                    "Content url of the file storage can not be set by a client");
-            }
-            return true;
+        if (storeType == DB && byContentUrl(clientUrl) != DB && !isStoredContentUrl(id, clientUrl)) {
+            throw new BusinessException("error.content.url.not.allowed",
+                "Content url of the file storage can not be set by a client");
         }
-        return false;
     }
 
     private boolean isStoredContentUrl(Long id, String contentUrl) {
