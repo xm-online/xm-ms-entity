@@ -2,6 +2,11 @@
 <!DOCTYPE configuration>
 
 <configuration scan="true">
+    <conversionRule conversionWord="m" class="com.icthh.xm.commons.logging.pattern.CrlfSafeMessageConverter"/>
+    <conversionRule conversionWord="msg" class="com.icthh.xm.commons.logging.pattern.CrlfSafeMessageConverter"/>
+    <conversionRule conversionWord="message" class="com.icthh.xm.commons.logging.pattern.CrlfSafeMessageConverter"/>
+    <conversionRule conversionWord="X" class="com.icthh.xm.commons.logging.pattern.CrlfSafeMdcConverter"/>
+    <conversionRule conversionWord="mdc" class="com.icthh.xm.commons.logging.pattern.CrlfSafeMdcConverter"/>
     <springProperty scope="context" name="springAppName" source="spring.application.name"/>
     <!--<include resource="org/springframework/boot/logging/logback/base.xml"/>-->
 
