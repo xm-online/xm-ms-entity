@@ -13,6 +13,7 @@ import java.util.Base64;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -37,6 +38,9 @@ public class MicroserviceSecurityConfiguration extends ResourceServerConfigurerA
 
     private final DiscoveryClient discoveryClient;
 
+    @Value("${springdoc.api-docs.enabled:true}")
+    private boolean apiSpecEnabled;
+
     @Override
     public void configure(HttpSecurity http) throws Exception {
         http
@@ -53,13 +57,14 @@ public class MicroserviceSecurityConfiguration extends ResourceServerConfigurerA
             .antMatchers("/api/profile-info").permitAll()
             .antMatchers("/api/xm-entities/registration").permitAll()
             .antMatchers("/api/functions/anonymous/**").permitAll()
-            .antMatchers("/api/functions/api-docs").permitAll()
+            .antMatchers("/api/functions/api-docs").access(apiSpecEnabled ? "permitAll" : "denyAll")
+            .antMatchers("/v2/api-docs/**").access(apiSpecEnabled ? "permitAll" : "denyAll")
+            .antMatchers("/swagger-resources/**").access(apiSpecEnabled ? "permitAll" : "denyAll")
             .antMatchers("/api/xm-entities/registration/activate/*").permitAll()
             .antMatchers("/api/**").authenticated()
             .antMatchers("/management/health").permitAll()
             .antMatchers("/management/prometheus/**").permitAll()
-            .antMatchers("/management/**").hasAuthority(RoleConstant.SUPER_ADMIN)
-            .antMatchers("/swagger-resources/configuration/ui").permitAll();
+            .antMatchers("/management/**").hasAuthority(RoleConstant.SUPER_ADMIN);
     }
 
     @Bean
