@@ -276,12 +276,13 @@ nohttp {
 }
 
 repositories {
+    maven {
+        name "reposiliteRepository"
+        url "https://reposilite.jevera.software/releases"
+    }
     mavenLocal()
     mavenCentral()
     //jhipster-needle-gradle-repositories - JHipster will add additional repositories
-    maven {
-        url "https://reposilite.jevera.software/releases"
-    }
 }
 
 def withElastic = !project.hasProperty("noElastic") || project.property("noElastic") != "true"
