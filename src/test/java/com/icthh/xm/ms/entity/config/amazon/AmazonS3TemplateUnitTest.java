@@ -43,7 +43,7 @@ public class AmazonS3TemplateUnitTest extends AbstractJupiterUnitTest {
     private final AmazonS3Template s3Template = new AmazonS3Template(applicationProperties, this::createS3Client, new AmazonS3BucketNameFactory());
 
     @Container
-    public static GenericContainer mockS3 = new GenericContainer("adobe/s3mock")
+    public static GenericContainer mockS3 = new GenericContainer("adobe/s3mock:5.1.0")
         .withExposedPorts(9090);
 
     public AmazonS3 createS3Client() {

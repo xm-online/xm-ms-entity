@@ -61,7 +61,7 @@ public class S3StorageRepositoryIntTest extends AbstractJupiterSpringBootTest {
     private S3StorageRepository s3StorageRepository;
 
     @Container
-    public static GenericContainer<?> mockS3 = new GenericContainer<>("adobe/s3mock")
+    public static GenericContainer<?> mockS3 = new GenericContainer<>("adobe/s3mock:5.1.0")
         .withExposedPorts(9090);
 
     public AmazonS3 createS3Client() {
