@@ -215,7 +215,7 @@ application:
         findOneByIdForUpdateTimeout: 10000
     timeline-ignored-http-methods:
     scheduler-enabled: false
-    tenant-ignored-path-list: /v3/api-docs, /api/profile-info, /swagger-resources/configuration/ui, /management/health, /management/health/liveness, /management/health/readiness
+    tenant-ignored-path-list: /v3/api-docs, /api/profile-info, /swagger-resources/configuration/ui, /management/health, /management/health/liveness, /management/health/readiness, /error
     timelines-enabled: true
     kafka-enabled: true
     tenant-with-creation-access-list: XM, MANAGER
