@@ -30,6 +30,13 @@ management:
     endpoint:
         health:
             show-details: when_authorized
+            probes:
+                enabled: true
+            group:
+                liveness:
+                    include: livenessState
+                readiness:
+                    include: readinessState
     info:
         git:
             mode: full
@@ -123,6 +130,7 @@ spring:
         producer:
             key-serializer: org.apache.kafka.common.serialization.StringSerializer
             value-serializer: org.apache.kafka.common.serialization.StringSerializer
+        # Kafka connection by environment variables, PLAINTEXT when not set: https://github.com/xm-online/xm-ms-template/blob/main/README.md#kafka-connection
     mail:
         host: localhost
         port: 25
@@ -175,6 +183,8 @@ jhipster:
         description: Entity API documentation
     mail:
         from: entity@localhost
+    security:
+        content-security-policy: "default-src 'self'; frame-src 'self' data:; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://storage.googleapis.com; style-src 'self' https://fonts.googleapis.com 'unsafe-inline'; img-src 'self' data:; font-src 'self' https://fonts.gstatic.com data:"
 
 # ===================================================================
 # Application specific properties
@@ -205,7 +215,7 @@ application:
         findOneByIdForUpdateTimeout: 10000
     timeline-ignored-http-methods:
     scheduler-enabled: false
-    tenant-ignored-path-list: /v3/api-docs, /api/profile-info, /swagger-resources/configuration/ui, /management/health
+    tenant-ignored-path-list: /v3/api-docs, /api/profile-info, /swagger-resources/configuration/ui, /management/health, /management/health/liveness, /management/health/readiness, /error
     timelines-enabled: true
     kafka-enabled: true
     tenant-with-creation-access-list: XM, MANAGER
@@ -274,6 +284,9 @@ application:
         metricTopics: system_topic
     domain-event:
         enabled: true
+    api-docs:
+        privilege-check: true
+    config-private-key: # APPLICATION_CONFIG_PRIVATE_KEY=MC4CAQAwBQYDK2Vw..., base64 Ed25519 private key (PKCS#8 DER) to read the configuration from xm-ms-config, not needed with the profile migration
 
 # ===================================================================
 # Timeline specific properties
