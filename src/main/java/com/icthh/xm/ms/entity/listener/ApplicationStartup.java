@@ -4,14 +4,15 @@ import com.icthh.xm.commons.logging.util.MdcUtils;
 import com.icthh.xm.commons.permission.inspector.PrivilegeInspector;
 import com.icthh.xm.ms.entity.config.ApplicationProperties;
 import com.icthh.xm.ms.entity.repository.kafka.SystemTopicConsumer;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
+import org.apache.kafka.common.serialization.StringDeserializer;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
-import org.springframework.boot.kafka.autoconfigure.KafkaProperties;
 import org.springframework.context.ApplicationListener;
 import org.springframework.kafka.core.ConsumerFactory;
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
@@ -29,7 +30,6 @@ public class ApplicationStartup implements ApplicationListener<ApplicationReadyE
     private final ApplicationProperties applicationProperties;
     private final ConsumerFactory<String, String> consumerFactory;
     private final SystemTopicConsumer systemTopicConsumer;
-    private final KafkaProperties kafkaProperties;
     private final PrivilegeInspector privilegeInspector;
 
     @Override
@@ -52,12 +52,13 @@ public class ApplicationStartup implements ApplicationListener<ApplicationReadyE
         ContainerProperties containerProps = new ContainerProperties(name);
         containerProps.setObservationEnabled(true);
 
-        Map<String, Object> props = kafkaProperties.buildConsumerProperties();
+        Map<String, Object> props = new HashMap<>(consumerFactory.getConfigurationProperties());
         if (name.equals(applicationProperties.getKafkaSystemTopic())) {
             props.put(ConsumerConfig.GROUP_ID_CONFIG, UUID.randomUUID().toString());
         }
         props.put(ConsumerConfig.METADATA_MAX_AGE_CONFIG, applicationProperties.getKafkaMetadataMaxAge());
-        ConsumerFactory<String, String> factory = new DefaultKafkaConsumerFactory<>(props);
+        ConsumerFactory<String, String> factory = new DefaultKafkaConsumerFactory<>(props,
+            new StringDeserializer(), new StringDeserializer());
 
         ConcurrentMessageListenerContainer<String, String> container =
             new ConcurrentMessageListenerContainer<>(factory, containerProps);

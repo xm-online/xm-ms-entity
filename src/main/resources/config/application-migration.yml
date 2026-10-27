@@ -1,0 +1,3 @@
+application:
+    api-docs:
+        privilege-check: false
