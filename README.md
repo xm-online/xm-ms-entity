@@ -22,7 +22,7 @@ To start your application in the dev profile, simply run:
 
 For further instructions on how to develop with JHipster, have a look at [Using JHipster in development][].
 
-## Kafka connection
+### Kafka connection
 
 The connection to Kafka (SASL login and password, SSL, OAUTHBEARER, GSSAPI, `spring.ssl.bundle`) is set by environment
 variables, `PLAINTEXT` when they are not set. The full sets of variables for each `security.protocol` and

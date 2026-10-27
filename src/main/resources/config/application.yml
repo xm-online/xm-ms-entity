@@ -131,45 +131,6 @@ spring:
             key-serializer: org.apache.kafka.common.serialization.StringSerializer
             value-serializer: org.apache.kafka.common.serialization.StringSerializer
         # Kafka connection by environment variables, PLAINTEXT when not set: https://github.com/xm-online/xm-ms-template/blob/main/README.md#kafka-connection
-        properties:
-            security.protocol: PLAINTEXT # SPRING_KAFKA_PROPERTIES_SECURITY_PROTOCOL=SASL_PLAINTEXT, protocol to the brokers: PLAINTEXT, SASL_PLAINTEXT, SSL, SASL_SSL; empty is not allowed
-            sasl.mechanism: # SPRING_KAFKA_PROPERTIES_SASL_MECHANISM=SCRAM-SHA-512, SASL mechanism: PLAIN, SCRAM-SHA-256, SCRAM-SHA-512
-            # sasl.jaas.config: # SPRING_KAFKA_PROPERTIES_SASL_JAAS_CONFIG=org.apache.kafka.common.security.scram.ScramLoginModule required username="user" password="secret";, SASL login and password
-            # ssl.endpoint.identification.algorithm: # SPRING_KAFKA_PROPERTIES_SSL_ENDPOINT_IDENTIFICATION_ALGORITHM=https, check of the broker host name in its certificate, https when not set; empty switches the check off
-            # OAUTHBEARER (SPRING_KAFKA_PROPERTIES_SASL_MECHANISM=OAUTHBEARER, SASL_JAAS_CONFIG with org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginModule required clientId="id" clientSecret="secret";, SASL_LOGIN_CALLBACK_HANDLER_CLASS below, JAVA_TOOL_OPTIONS=-Dorg.apache.kafka.sasl.oauthbearer.allowed.urls=https://idp/oauth/token, URLs Kafka 4 may open: the token URL and the JWKS URL when set):
-            sasl.oauthbearer.token.endpoint.url: # SPRING_KAFKA_PROPERTIES_SASL_OAUTHBEARER_TOKEN_ENDPOINT_URL=https://idp/oauth/token, where the client gets the token
-            # sasl.oauthbearer.jwks.endpoint.url: # SPRING_KAFKA_PROPERTIES_SASL_OAUTHBEARER_JWKS_ENDPOINT_URL=https://idp/oauth/jwks, keys to validate the token, when the client validates it; empty breaks OAUTHBEARER
-            # sasl.oauthbearer.scope.claim.name: # SPRING_KAFKA_PROPERTIES_SASL_OAUTHBEARER_SCOPE_CLAIM_NAME=scope, claim of the scope in the token, scope when not set
-            # sasl.oauthbearer.sub.claim.name: # SPRING_KAFKA_PROPERTIES_SASL_OAUTHBEARER_SUB_CLAIM_NAME=sub, claim of the principal in the token, sub when not set
-            # sasl.login.callback.handler.class: # SPRING_KAFKA_PROPERTIES_SASL_LOGIN_CALLBACK_HANDLER_CLASS=org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginCallbackHandler, gets the token for OAUTHBEARER, required for OAUTHBEARER
-            # sasl.client.callback.handler.class: # SPRING_KAFKA_PROPERTIES_SASL_CLIENT_CALLBACK_HANDLER_CLASS=com.example.CustomClientCallbackHandler, custom SASL client callback handler
-            # sasl.login.class: # SPRING_KAFKA_PROPERTIES_SASL_LOGIN_CLASS=org.apache.kafka.common.security.oauthbearer.internals.OAuthBearerRefreshingLogin, custom login class
-            # sasl.login.connect.timeout.ms: # SPRING_KAFKA_PROPERTIES_SASL_LOGIN_CONNECT_TIMEOUT_MS=10000, connect timeout to the token endpoint
-            # sasl.login.read.timeout.ms: # SPRING_KAFKA_PROPERTIES_SASL_LOGIN_READ_TIMEOUT_MS=10000, read timeout from the token endpoint
-            # GSSAPI (SPRING_KAFKA_PROPERTIES_SASL_MECHANISM=GSSAPI, SASL_JAAS_CONFIG with com.sun.security.auth.module.Krb5LoginModule required useKeyTab=true keyTab="/etc/kafka.keytab" principal="entity@REALM";):
-            sasl.kerberos.service.name: # SPRING_KAFKA_PROPERTIES_SASL_KERBEROS_SERVICE_NAME=kafka, Kerberos principal name of the broker
-        ssl: # the commented out properties break SSL when empty, set them by the environment variables when needed
-            trust-store-location: # SPRING_KAFKA_SSL_TRUST_STORE_LOCATION=file:/certs/ca.p12, CA of the broker certificate, for SSL and SASL_SSL
-            # trust-store-password: # SPRING_KAFKA_SSL_TRUST_STORE_PASSWORD=changeit, password of the trust store
-            # trust-store-type: # SPRING_KAFKA_SSL_TRUST_STORE_TYPE=PKCS12, type of the trust store: PKCS12, JKS, PEM
-            key-store-location: # SPRING_KAFKA_SSL_KEY_STORE_LOCATION=file:/certs/entity.p12, client certificate, for SSL and SASL_SSL
-            # key-store-password: # SPRING_KAFKA_SSL_KEY_STORE_PASSWORD=changeit, password of the key store file
-            # key-store-type: # SPRING_KAFKA_SSL_KEY_STORE_TYPE=PKCS12, type of the key store: PKCS12, JKS, PEM
-            # key-password: # SPRING_KAFKA_SSL_KEY_PASSWORD=changeit, password of the private key, when it differs from the key store password
-            # protocol: # SPRING_KAFKA_SSL_PROTOCOL=TLSv1.3, TLS protocol, Kafka default when not set
-            bundle: # SPRING_KAFKA_SSL_BUNDLE=kafka, name of a spring.ssl.bundle instead of the key store and trust store above
-            # PEM instead of the store files above:
-            # key-store-certificate-chain: # SPRING_KAFKA_SSL_KEY_STORE_CERTIFICATE_CHAIN=-----BEGIN CERTIFICATE-----..., client certificate chain in PEM, with SPRING_KAFKA_SSL_KEY_STORE_TYPE=PEM
-            # key-store-key: # SPRING_KAFKA_SSL_KEY_STORE_KEY=-----BEGIN PRIVATE KEY-----..., client private key in PEM, with SPRING_KAFKA_SSL_KEY_STORE_TYPE=PEM
-            # trust-store-certificates: # SPRING_KAFKA_SSL_TRUST_STORE_CERTIFICATES=-----BEGIN CERTIFICATE-----..., CA certificates in PEM, with SPRING_KAFKA_SSL_TRUST_STORE_TYPE=PEM
-    # the bundle of spring.kafka.ssl.bundle, SPRING_SSL_BUNDLE_JKS_KAFKA_*; empty values break the bundle, set them by the environment variables when needed:
-    # ssl:
-    #     bundle.jks.kafka.truststore.location: # SPRING_SSL_BUNDLE_JKS_KAFKA_TRUSTSTORE_LOCATION=file:/certs/ca.p12, CA of the broker certificate
-    #     bundle.jks.kafka.truststore.password: # SPRING_SSL_BUNDLE_JKS_KAFKA_TRUSTSTORE_PASSWORD=changeit, password of the trust store
-    #     bundle.jks.kafka.truststore.type: # SPRING_SSL_BUNDLE_JKS_KAFKA_TRUSTSTORE_TYPE=PKCS12, type of the trust store
-    #     bundle.jks.kafka.keystore.location: # SPRING_SSL_BUNDLE_JKS_KAFKA_KEYSTORE_LOCATION=file:/certs/entity.p12, client certificate
-    #     bundle.jks.kafka.keystore.password: # SPRING_SSL_BUNDLE_JKS_KAFKA_KEYSTORE_PASSWORD=changeit, password of the key store
-    #     bundle.jks.kafka.keystore.type: # SPRING_SSL_BUNDLE_JKS_KAFKA_KEYSTORE_TYPE=PKCS12, type of the key store
     mail:
         host: localhost
         port: 25
