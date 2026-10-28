@@ -9,6 +9,9 @@ import com.icthh.xm.commons.tenant.TenantContextHolder;
 import com.icthh.xm.commons.tenant.TenantContextUtils;
 import com.icthh.xm.ms.entity.config.ApplicationProperties;
 import com.icthh.xm.ms.entity.domain.Content;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Tags;
+import io.micrometer.core.instrument.binder.jvm.ExecutorServiceMetrics;
 import org.elasticsearch.client.Client;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -43,7 +46,8 @@ public class ElasticsearchConfiguration {
      * either of those.
      */
     @Bean(destroyMethod = "shutdown")
-    public ExecutorService elasticsearchQueryExecutor(ApplicationProperties applicationProperties) {
+    public ExecutorService elasticsearchQueryExecutor(ApplicationProperties applicationProperties,
+                                                      MeterRegistry meterRegistry) {
         ApplicationProperties.Elasticsearch config = applicationProperties.getElasticsearch();
         AtomicInteger threadCount = new AtomicInteger(1);
         ThreadFactory threadFactory = runnable -> {
@@ -51,7 +55,7 @@ public class ElasticsearchConfiguration {
             thread.setDaemon(true);
             return thread;
         };
-        return new ThreadPoolExecutor(
+        ThreadPoolExecutor executor = new ThreadPoolExecutor(
             config.getQueryExecutorPoolSize(),
             config.getQueryExecutorPoolSize(),
             60L, TimeUnit.SECONDS,
@@ -59,6 +63,9 @@ public class ElasticsearchConfiguration {
             threadFactory,
             new ThreadPoolExecutor.AbortPolicy()
         );
+        // bind only (no timed wrapper) so pool/queue gauges are exported as executor_*{name="es-query"}
+        new ExecutorServiceMetrics(executor, "es-query", Tags.empty()).bindTo(meterRegistry);
+        return executor;
     }
 
     @Component("indexName")
