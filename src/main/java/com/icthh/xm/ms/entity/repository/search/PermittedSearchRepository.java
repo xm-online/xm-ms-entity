@@ -30,7 +30,9 @@ import org.springframework.stereotype.Repository;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @Repository
@@ -38,6 +40,8 @@ import java.util.List;
 public class PermittedSearchRepository {
 
     private static final String AND = " AND ";
+    private static final String QUERY = "query";
+    private static final String ENTITY_CLASS = "entityClass";
 
     private final PermissionCheckService permissionCheckService;
     private final SpelToElasticTranslator spelToElasticTranslator;
@@ -54,7 +58,7 @@ public class PermittedSearchRepository {
      * @return permitted entities
      */
     public <T> List<T> search(String query, Class<T> entityClass, String privilegeKey) {
-        String permittedQuery = buildPermittedQuery(query, privilegeKey);
+        String permittedQuery = buildPermittedQuery(query, privilegeKey, entityClass);
         SearchQuery esQuery = buildQuery(permittedQuery, null, null);
 
         StopWatch stopWatch = StopWatch.createStarted();
@@ -100,7 +104,7 @@ public class PermittedSearchRepository {
         String scrollId = null;
         List<T> resultList = new ArrayList<>();
         try {
-            String permittedQuery = buildPermittedQuery(query, privilegeKey);
+            String permittedQuery = buildPermittedQuery(query, privilegeKey, entityClass);
             SearchQuery searchQuery = buildQuery(permittedQuery, pageable, null);
             StopWatch stopWatch = StopWatch.createStarted();
 
@@ -138,9 +142,13 @@ public class PermittedSearchRepository {
     }
 
     String buildPermittedQuery(String query, String privilegeKey) {
+        return buildPermittedQuery(query, privilegeKey, null);
+    }
+
+    String buildPermittedQuery(String query, String privilegeKey, Class<?> entityClass) {
         String permittedQuery = query;
 
-        String permittedCondition = createPermissionCondition(privilegeKey);
+        String permittedCondition = createPermissionCondition(privilegeKey, contextParams(query, entityClass));
         if (StringUtils.isNotBlank(permittedCondition)) {
             if (StringUtils.isBlank(query)) {
                 permittedQuery = permittedCondition;
@@ -152,10 +160,17 @@ public class PermittedSearchRepository {
         return permittedQuery;
     }
 
-    private String createPermissionCondition(String privilegeKey) {
+    private String createPermissionCondition(String privilegeKey, Map<String, Object> contextParams) {
         return permissionCheckService.createCondition(
             SecurityContextHolder.getContext().getAuthentication(), privilegeKey,
-            spelToElasticTranslator);
+            spelToElasticTranslator, contextParams);
+    }
+
+    private static Map<String, Object> contextParams(String query, Class<?> entityClass) {
+        Map<String, Object> contextParams = new HashMap<>();
+        contextParams.put(QUERY, query);
+        contextParams.put(ENTITY_CLASS, entityClass);
+        return contextParams;
     }
 
     // do not renamed! called from lep for not simple string query
@@ -164,7 +179,8 @@ public class PermittedSearchRepository {
     }
 
     public <T> Page<T> searchForPage(SearchDto searchDto, String privilegeKey) {
-        String permittedQuery = buildPermittedQuery(searchDto.getQuery(), privilegeKey);
+        String permittedQuery = buildPermittedQuery(searchDto.getQuery(), privilegeKey,
+            searchDto.getEntityClass());
         SearchQuery query = buildQuery(permittedQuery, searchDto.getPageable(), searchDto.getFetchSourceFilter());
 
         StopWatch stopWatch = StopWatch.createStarted();
