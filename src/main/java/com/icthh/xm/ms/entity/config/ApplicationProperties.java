@@ -1,5 +1,6 @@
 package com.icthh.xm.ms.entity.config;
 
+import com.icthh.xm.commons.config.XmCommonsApplicationProperties;
 import com.icthh.xm.commons.lep.TenantScriptStorage;
 import lombok.Getter;
 import lombok.Setter;
@@ -22,7 +23,7 @@ import static com.icthh.xm.ms.entity.config.Constants.DEFAULT_AVATAR_URL_PREFIX;
 @ConfigurationProperties(prefix = "application", ignoreUnknownFields = false)
 @Getter
 @Setter
-public class ApplicationProperties {
+public class ApplicationProperties extends XmCommonsApplicationProperties {
 
     public static final Integer DEFAULT_MAX_AVATAR_SIZE = 1024 * 1024;
     public static final Integer DEFAULT_MAX_IMAGE_SIZE = 100;

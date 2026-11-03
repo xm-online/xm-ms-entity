@@ -121,18 +121,13 @@ jhipster:
             port: 5000
             ring-buffer-size: 512
     security:
+        content-security-policy: "default-src 'self'; frame-src 'self' data:; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://storage.googleapis.com; style-src 'self' https://fonts.googleapis.com 'unsafe-inline'; img-src 'self' data:; font-src 'self' https://fonts.gstatic.com data:"
         authentication:
             jwt:
                 # This token must be encoded using Base64 (you can type `echo 'secret-key'|base64` on your command line)
                 base64-secret: b5838c74b2228da2189310693b41bac7c3162d51
                 # Token is valid 24 hours
                 token-validity-in-seconds: 86400
-        client-authorization:
-            access-token-uri: http://uaa/oauth/token
-            token-service-id: uaa
-            client-id: internal
-            client-secret: internal
-
 # ===================================================================
 # Application specific properties
 # Add your own application properties here, see the ApplicationProperties class
