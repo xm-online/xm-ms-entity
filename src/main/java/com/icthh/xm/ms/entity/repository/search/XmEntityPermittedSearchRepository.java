@@ -62,7 +62,7 @@ public class XmEntityPermittedSearchRepository extends PermittedSearchRepository
                                                   String typeKey,
                                                   Pageable pageable,
                                                   String privilegeKey) {
-        String permittedQuery = buildPermittedQuery(query, privilegeKey);
+        String permittedQuery = buildPermittedQuery(query, privilegeKey, XmEntity.class);
 
         BoolQueryBuilder typeKeyQuery = typeKeyQuery(typeKey);
 
@@ -97,7 +97,7 @@ public class XmEntityPermittedSearchRepository extends PermittedSearchRepository
     public Page<XmEntity> searchWithIdNotIn(String query, Set<Long> ids,
                                             String targetEntityTypeKey,
                                             Pageable pageable, String privilegeKey) {
-        String permittedQuery = buildPermittedQuery(query, privilegeKey);
+        String permittedQuery = buildPermittedQuery(query, privilegeKey, XmEntity.class);
 
         BoolQueryBuilder typeKeyQuery = typeKeyQuery(targetEntityTypeKey);
 
