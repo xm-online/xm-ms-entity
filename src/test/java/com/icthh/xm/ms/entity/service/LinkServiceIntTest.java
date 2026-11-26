@@ -26,7 +26,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.test.context.support.WithMockUser;
-import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import org.springframework.test.context.transaction.BeforeTransaction;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -58,7 +57,7 @@ public class LinkServiceIntTest extends AbstractJupiterSpringBootTest {
     private TenantContextHolder tenantContextHolder;
     @Autowired
     private LepManager lepManager;
-    @MockitoSpyBean
+    @Autowired
     private XmEntityDynamicPermissionCheckService dynamicPermissionCheckService;
     @Autowired
     private XmAuthenticationContextHolder authContextHolder;

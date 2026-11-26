@@ -10,7 +10,8 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 import tools.jackson.databind.ObjectMapper;
 import com.icthh.xm.commons.security.XmAuthenticationContext;
 import com.icthh.xm.commons.security.XmAuthenticationContextHolder;
@@ -57,14 +58,15 @@ public class XmEntityGeneratorServiceIntTest extends AbstractJupiterSpringBootTe
     @Autowired
     private ObjectMapper objectMapper;
 
-    @MockitoBean
+    @Mock
     private XmAuthenticationContextHolder authContextHolder;
 
-    @MockitoBean
+    @Mock
     private XmAuthenticationContext context;
 
     @BeforeEach
     public void init() {
+        MockitoAnnotations.openMocks(this);
         TenantContextUtils.setTenant(tenantContextHolder, "TEST");
 
         when(authContextHolder.getContext()).thenReturn(context);

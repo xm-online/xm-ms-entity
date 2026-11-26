@@ -15,7 +15,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.transaction.BeforeTransaction;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -36,7 +35,7 @@ public class LocationServiceIntTest extends AbstractJupiterSpringBootTest {
     private TenantContextHolder tenantContextHolder;
     @Autowired
     private LepManager lepManager;
-    @MockitoBean
+    @Autowired
     private XmAuthenticationContextHolder authContextHolder;
 
     private List<Location> expected;

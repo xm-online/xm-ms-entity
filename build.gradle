@@ -161,13 +161,18 @@ String[] testCategories = ['com.icthh.xm.ms.entity.AbstractSpringBootTest',
                            'com.icthh.xm.ms.entity.AbstractWebMvcTest',
                            'com.icthh.xm.lep.AbstractGroovyUnitTest']
 
+// Full application contexts a test run may start: default, avatar-file, no-elastic, non-async, pg-test, oracle-test.
+int maxSpringApplicationContexts = 6
+
 Closure testLoggingConf = {
     exceptionFormat = 'short'
     events "failed"//, "standardError" //, "standardOut"
 }
 
 test {
-    useJUnitPlatform()
+    useJUnitPlatform {
+        excludeTags(testCategories)
+    }
 
     doFirst {
         println '!!! ATTENTION: start execution of non-categorized tests. it may impact test performance !!!'
@@ -211,6 +216,20 @@ tasks.register('runCategorizedTests', Test) {
     classpath = sourceSets.test.runtimeClasspath
 
     testLogging testLoggingConf
+
+    def junitXmlDir = reports.junitXml.outputLocation
+
+    doLast {
+        // SecurityBeanOverrideConfiguration prints this marker once per full application context
+        int started = junitXmlDir.get().asFile.listFiles({ File f -> f.name.endsWith('.xml') } as FileFilter)
+            .sum(0) { File f -> f.text.count('SecurityBeanOverrideConfiguration inited') }
+        println "Spring application contexts started: ${started} (limit ${maxSpringApplicationContexts})"
+        if (started > maxSpringApplicationContexts) {
+            throw new GradleException("${started} Spring application contexts started, limit is ${maxSpringApplicationContexts}. " +
+                "@MockitoBean, @MockitoSpyBean, @ActiveProfiles, @TestPropertySource, @Import and @DynamicPropertySource " +
+                "on a test class each add a context: declare shared doubles on AbstractJupiterSpringBootTest instead.")
+        }
+    }
 }
 
 tasks.register('runElasticsearchTest', Test) {

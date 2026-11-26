@@ -48,7 +48,6 @@ import org.springframework.http.converter.json.JacksonJsonHttpMessageConverter;
 import tools.jackson.databind.json.JsonMapper;
 
 import org.springframework.security.test.context.support.WithMockUser;
-import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import org.springframework.test.context.transaction.BeforeTransaction;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -107,7 +106,7 @@ public class AttachmentResourceExtendedIntTest extends AbstractJupiterSpringBoot
     @Autowired
     private XmEntityRepository xmEntityRepository;
 
-    @MockitoSpyBean
+    @Autowired
     private XmEntitySpecService xmEntitySpecService;
 
     @Autowired
@@ -116,7 +115,7 @@ public class AttachmentResourceExtendedIntTest extends AbstractJupiterSpringBoot
     @Autowired
     private ApplicationProperties applicationProperties;
 
-    @MockitoSpyBean
+    @Autowired
     private XmEntityTenantConfigService xmEntityTenantConfigService;
 
     @Autowired
