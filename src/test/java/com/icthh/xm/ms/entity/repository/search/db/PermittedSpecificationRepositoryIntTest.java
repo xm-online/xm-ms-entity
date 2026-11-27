@@ -8,26 +8,29 @@ import com.icthh.xm.ms.entity.AbstractPostgresIntTest;
 import com.icthh.xm.ms.entity.domain.XmEntity;
 import com.icthh.xm.ms.entity.domain.XmEntity_;
 import com.icthh.xm.ms.entity.repository.XmEntityRepository;
+import jakarta.persistence.EntityManager;
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
 import org.mockito.Mockito;
+import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.jpa.domain.Specification;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.transaction.annotation.Transactional;
 
 @Transactional
 public class PermittedSpecificationRepositoryIntTest extends AbstractPostgresIntTest {
 
     @Autowired
+    private EntityManager em;
     private PermittedSpecificationRepository repository;
     @Autowired
     private XmEntityRepository xmEntityRepository;
-    @MockitoBean
+    @Mock
     private PermissionCheckService permissionCheckService;
 
     private static final String TYPE = "SILENT";
@@ -37,6 +40,8 @@ public class PermittedSpecificationRepositoryIntTest extends AbstractPostgresInt
 
     @BeforeEach
     public void seed() {
+        MockitoAnnotations.openMocks(this);
+        repository = new PermittedSpecificationRepository(em, permissionCheckService);
         pushDbSearchSpec();
         mine = xmEntityRepository.save(newEntity(TYPE, "mine", Map.of("orderNo", 1)).createdBy("user-1"));
         other = xmEntityRepository.save(newEntity(TYPE, "other", Map.of("orderNo", 2)).createdBy("user-2"));

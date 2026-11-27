@@ -65,12 +65,13 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.Mockito;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.util.AopTestUtils;
 import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -157,7 +158,7 @@ public class XmEntityResourceIntTest extends AbstractJupiterSpringBootTest {
     @Autowired
     private XmEntityFunctionServiceFacade functionService;
 
-    @MockitoBean
+    @Autowired
     private XmEntityFunctionExecutorService functionExecutorService;
 
     @Autowired
@@ -739,8 +740,9 @@ public class XmEntityResourceIntTest extends AbstractJupiterSpringBootTest {
     @Transactional
     public void callEntityFunctionByPath() throws Exception {
         XmEntity saved = xmEntityServiceImpl.save(xmEntity);
-        when(functionExecutorService.execute(eq("TEST_ENTITY_FUNC_PATH"), any(), eq(DEFAULT_TYPE_KEY), any()))
-            .thenAnswer(invocation -> invocation.getArgument(3));
+        // stub the spy itself: through the Spring proxy the LEP aspect would resolve the key from matcher placeholders
+        doAnswer(invocation -> invocation.getArgument(3)).when(AopTestUtils.<XmEntityFunctionExecutorService>getUltimateTargetObject(functionExecutorService))
+            .execute(eq("TEST_ENTITY_FUNC_PATH"), any(), eq(DEFAULT_TYPE_KEY), any());
         restXmEntityMockMvc.perform(get("/api/xm-entities/" + saved.getId() + "/functions/test/entity/inputValue/path?test=value"))
             .andDo(print())
             .andExpect(jsonPath("$.data.test").value("value"))

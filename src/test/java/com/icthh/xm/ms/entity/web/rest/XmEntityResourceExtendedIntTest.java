@@ -97,6 +97,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
@@ -108,8 +109,6 @@ import org.springframework.http.MediaType;
 import org.springframework.http.converter.ByteArrayHttpMessageConverter;
 import org.springframework.http.converter.json.JacksonJsonHttpMessageConverter;
 import org.springframework.security.test.context.support.WithMockUser;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import org.springframework.test.context.transaction.BeforeTransaction;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
@@ -308,7 +307,7 @@ public class XmEntityResourceExtendedIntTest extends AbstractJupiterSpringBootTe
     @Autowired
     XmEntityPermittedSearchRepositoryImpl xmEntityPermittedSearchRepository;
 
-    @MockitoBean
+    @Mock
     private XmAuthenticationContextHolder authContextHolder;
 
     @Autowired
@@ -332,10 +331,10 @@ public class XmEntityResourceExtendedIntTest extends AbstractJupiterSpringBootTe
     @Autowired
     private CalendarMapper calendarMapper;
 
-    @MockitoBean
+    @Mock
     private XmAuthenticationContext context;
 
-    @MockitoSpyBean
+    @Autowired
     private StartUpdateDateGenerationStrategy startUpdateDateGenerationStrategy;
 
     @Autowired

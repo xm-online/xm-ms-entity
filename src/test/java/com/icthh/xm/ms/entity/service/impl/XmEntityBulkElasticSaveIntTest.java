@@ -18,7 +18,6 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.stubbing.Answer;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -28,6 +27,7 @@ import static com.icthh.xm.commons.lep.XmLepConstants.THREAD_CONTEXT_KEY_TENANT_
 import static java.util.UUID.randomUUID;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.anyCollection;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -35,7 +35,7 @@ import static org.mockito.Mockito.when;
 @Slf4j
 public class XmEntityBulkElasticSaveIntTest extends AbstractJupiterSpringBootTest {
 
-    @MockitoBean
+    @Autowired
     private XmEntitySearchRepository searchRepository;
     @Autowired
     private TenantContextHolder tenantContextHolder;
@@ -80,11 +80,11 @@ public class XmEntityBulkElasticSaveIntTest extends AbstractJupiterSpringBootTes
 
         // argument captor and verify statement capture only object reference, but we need collection value to assert,
         // than erased by logic before activation finished
-        when(searchRepository.saveAll(anyCollection())).then((Answer<List<XmEntity>>) invocation -> {
+        doAnswer((Answer<List<XmEntity>>) invocation -> {
             List<XmEntity> entities = (List<XmEntity>) invocation.getArguments()[0];
             savedActual.setValue(new ArrayList<>(entities));
             return entities;
-        });
+        }).when(searchRepository).saveAll(anyCollection());
 
         transactionExecutor.doInSeparateTransaction(() -> {
             savedGlobal.add(xmEntityService.save(new XmEntity().name(inGlobalTransaction).key(randomUUID())

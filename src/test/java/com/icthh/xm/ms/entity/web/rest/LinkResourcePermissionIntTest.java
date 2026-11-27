@@ -23,7 +23,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.test.context.support.WithMockUser;
-import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import org.springframework.test.context.transaction.BeforeTransaction;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -55,7 +54,7 @@ public class LinkResourcePermissionIntTest extends AbstractJupiterSpringBootTest
     @Autowired
     private LinkResource linkResource;
 
-    @MockitoSpyBean
+    @Autowired
     private LinkFacade linkFacade;
 
     @Autowired
